@@ -1,6 +1,38 @@
 {
   "HomePage": {
     "title": "Trang chủ",
-    "description": "Trang chủ của ứng dụng"
+    "description": "Trang chủ của ứng dụng",
+    "meta": {
+      "title": "Trang chủ - StudyStudio",
+      "description": "Chào mừng đến StudyStudio"
+    },
+    "features": {
+      "title": "Tính năng",
+      "item1": "Tính năng 1",
+      "item2": "Tính năng 2",
+      "item3": "Tính năng 3"
+    },
+    "footer": "© 2024 StudyStudio. Bảo lưu mọi quyền."
+  },
+  "LoginPage": {
+    "title": "Chào mừng trở lại",
+    "subtitle": "Đăng nhập vào tài khoản Study Studio của bạn",
+    "email": "Email",
+    "emailPlaceholder": "Nhập email của bạn",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không hợp lệ",
+    "password": "Mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu của bạn",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "forgotPassword": "Quên mật khẩu?",
+    "signInButton": "Đăng nhập",
+    "continueWithGoogle": "Tiếp tục với Google",
+    "orContinueWith": "HOẶC TIẾP TỤC VỚI",
+    "noAccount": "Chưa có tài khoản?",
+    "signUpLink": "Đăng ký",
+    "meta": {
+      "title": "Đăng Nhập - StudyStudio",
+      "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
+    }
   }
 }

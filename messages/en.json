@@ -2,5 +2,26 @@
   "HomePage": {
     "title": "Home",
     "description": "Home page of the application"
+  },
+  "LoginPage": {
+    "title": "Welcome back",
+    "subtitle": "Sign in to your Study Studio account",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordRequired": "Password is required",
+    "forgotPassword": "Forgot password?",
+    "signInButton": "Sign in",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWith": "OR CONTINUE WITH",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign up",
+    "meta": {
+      "title": "Sign In - StudyStudio",
+      "description": "Sign in to your StudyStudio account"
+    }
   }
 }
