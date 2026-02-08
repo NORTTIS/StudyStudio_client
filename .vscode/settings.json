@@ -8,5 +8,11 @@
   "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
   "[javascriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
   "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
-  "[typescriptreact]": { "editor.defaultFormatter": "vscode.typescript-language-features" }
+"[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+},
+"i18n-ally.localesPaths": [
+    "messages",
+    "src/i18n"
+]
 }
