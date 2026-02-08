@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "api:types": "openapi-typescript http://localhost:5000/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
+    "build": "pnpm api:types && next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "biome check",
+    "format": "biome format --write",
     "commit": "cz"
   },
   "dependencies": {
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
+    "@openapitools/openapi-generator-cli": "^2.28.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
