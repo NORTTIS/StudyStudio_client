@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
-export function ForgotPasswordSuccess() {
-    const searchParams = useSearchParams()
-    const email = searchParams.get('email')
+type Props = {
+    email?: string
+}
+
+export function ForgotPasswordSuccess({ email }: Props) {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
