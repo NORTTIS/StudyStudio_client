@@ -102,5 +102,83 @@
     "notifications": {
       "comingSoon": "Notification features coming soon"
     }
+  },
+  "AnnouncementsPage": {
+    "title": "Announcements",
+    "subtitle": "Track all notifications and system updates",
+    "searchPlaceholder": "Search announcements...",
+    "nav": {
+      "home": "Home",
+      "groups": "Groups",
+      "announcements": "Announcements"
+    },
+    "filters": {
+      "all": "All",
+      "unread": "Unread",
+      "important": "Important"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "announcements": {
+      "upgrade": {
+        "title": "Upgrade Free Plan",
+        "description": "You've used all 3 spaces in the Free plan. Upgrade to Pro for more spaces and advanced features.",
+        "date": "2 hours ago"
+      },
+      "maintenance": {
+        "title": "System Maintenance",
+        "description": "The system will be maintained on 02/15 from 00:00 - 03:00. Please save your work beforehand.",
+        "date": "5 hours ago"
+      },
+      "feature": {
+        "title": "New Feature Update",
+        "description": "We just added project sharing with permissions. Now you can better control who has what access.",
+        "date": "1 day ago"
+      },
+      "member": {
+        "title": "Notification from Member",
+        "description": "Nguyen Van A added you to project SEP490-Q62. Check it out and start collaborating.",
+        "date": "2 days ago"
+      },
+      "achievement": {
+        "title": "Goal Completed",
+        "description": "Congratulations! You've completed all tasks in this sprint.",
+        "date": "3 days ago"
+      }
+    },
+    "upgradeNow": "Upgrade Now",
+    "noAnnouncements": "No announcements"
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View all notifications",
+    "noNotifications": "No notifications",
+    "items": {
+      "upgrade": {
+        "title": "Upgrade Free Plan",
+        "description": "You've used all 3 spaces. Upgrade to Pro for more.",
+        "date": "2h ago"
+      },
+      "maintenance": {
+        "title": "System Maintenance",
+        "description": "System maintenance on 02/15 from 00:00 - 03:00.",
+        "date": "5h ago"
+      },
+      "feature": {
+        "title": "New Feature",
+        "description": "Project sharing with permissions is now available.",
+        "date": "1d ago"
+      }
+    }
+  },
+  "Header": {
+    "searchPlaceholder": "Search projects, tasks...",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout"
   }
 }

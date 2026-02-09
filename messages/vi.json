@@ -113,5 +113,83 @@
     "notifications": {
       "comingSoon": "Tính năng thông báo sẽ sớm có"
     }
+  },
+  "AnnouncementsPage": {
+    "title": "Thông báo",
+    "subtitle": "Theo dõi tất cả thông báo và cập nhật hệ thống",
+    "searchPlaceholder": "Tìm kiếm thông báo...",
+    "nav": {
+      "home": "Trang chủ",
+      "groups": "Nhóm",
+      "announcements": "Thông báo"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "unread": "Chưa đọc",
+      "important": "Quan trọng"
+    },
+    "priority": {
+      "high": "Cao",
+      "medium": "Trung bình",
+      "low": "Thấp"
+    },
+    "announcements": {
+      "upgrade": {
+        "title": "Nâng cấp gói Miễn phí",
+        "description": "Bạn đã dùng hết 3 không gian của gói Miễn phí. Nâng cấp lên Pro để có thêm không gian và các tính năng nâng cao.",
+        "date": "2 giờ trước"
+      },
+      "maintenance": {
+        "title": "Bảo trì hệ thống",
+        "description": "Hệ thống sẽ được bảo trì vào ngày 15/02 từ 00:00 - 03:00. Vui lòng lưu lại công việc của bạn trước đó.",
+        "date": "5 giờ trước"
+      },
+      "feature": {
+        "title": "Cập nhật tính năng mới",
+        "description": "Chúng tôi vừa thêm tính năng chia sẻ project với quyền hạn. Bây giờ bạn có thể kiểm soát tốt hơn ai có quyền gì.",
+        "date": "1 ngày trước"
+      },
+      "member": {
+        "title": "Thông báo từ Thành viên",
+        "description": "Nguyễn Văn A đã thêm bạn vào project SEP490-Q62. Hãy kiểm tra và bắt đầu cộng tác.",
+        "date": "2 ngày trước"
+      },
+      "achievement": {
+        "title": "Hoàn thành mục tiêu",
+        "description": "Chúc mừng! Bạn đã hoàn thành tất cả các task trong sprint này.",
+        "date": "3 ngày trước"
+      }
+    },
+    "upgradeNow": "Nâng cấp ngay",
+    "noAnnouncements": "Không có thông báo nào"
+  },
+  "Notifications": {
+    "title": "Thông báo",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "viewAll": "Xem tất cả thông báo",
+    "noNotifications": "Không có thông báo",
+    "items": {
+      "upgrade": {
+        "title": "Nâng cấp gói Miễn phí",
+        "description": "Bạn đã dùng hết 3 không gian. Nâng cấp lên Pro.",
+        "date": "2 giờ trước"
+      },
+      "maintenance": {
+        "title": "Bảo trì hệ thống",
+        "description": "Bảo trì hệ thống ngày 15/02 từ 00:00 - 03:00.",
+        "date": "5 giờ trước"
+      },
+      "feature": {
+        "title": "Tính năng mới",
+        "description": "Chia sẻ project với quyền hạn đã có sẵn.",
+        "date": "1 ngày trước"
+      }
+    }
+  },
+  "Header": {
+    "searchPlaceholder": "Tìm kiếm dự án, công việc...",
+    "settings": "Cài đặt",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất"
   }
 }
