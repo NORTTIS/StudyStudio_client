@@ -11,13 +11,17 @@ export const metadata: Metadata = {
   description: "Collaborate and manage easily with study studio"
 };
 
-export default function RootLayout({
-  children
+export default async function RootLayout({
+  children,
+  params
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale?: string }>;
 }>) {
+  const { locale } = await params;
+
   return (
-    <html lang="en">
+    <html lang={locale || "en"}>
       <body className={`${interSans.variable} antialiased`}>{children}</body>
     </html>
   );
