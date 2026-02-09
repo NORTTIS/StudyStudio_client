@@ -1,8 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { RegisterForm } from "./RegisterForm";
 
 export function RegisterLayout() {
+  const t = useTranslations("RegisterPage");
+
   return (
     <div className="flex min-h-screen w-full bg-[#F4F5FA]">
       <div className="flex w-full overflow-hidden bg-white shadow-2xl">
@@ -59,10 +64,8 @@ export function RegisterLayout() {
 
             {/* Bottom Text */}
             <div className="pb-8 text-center">
-              <h2 className="mb-3 font-bold text-2xl text-[#261E33]">Quản lý học tập. Kết nối đội nhóm</h2>
-              <p className="mx-auto max-w-sm text-[#6F6B99] text-sm leading-relaxed">
-                Một nơi để học tập, chia sẻ và cùng nhau hoàn thành mục tiêu.
-              </p>
+              <h2 className="mb-3 font-bold text-2xl text-[#261E33]">{t("sidebarTitle")}</h2>
+              <p className="mx-auto max-w-sm text-[#6F6B99] text-sm leading-relaxed">{t("sidebarDescription")}</p>
             </div>
           </div>
         </div>

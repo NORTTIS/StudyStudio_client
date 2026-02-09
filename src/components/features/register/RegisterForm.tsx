@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ interface FormErrors {
 }
 
 export function RegisterForm() {
+  const t = useTranslations("RegisterPage");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,35 +80,30 @@ export function RegisterForm() {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Validate firstName
     if (!formData.firstName.trim()) {
-      newErrors.firstName = "Họ không được để trống";
+      newErrors.firstName = t("firstNameRequired");
     }
 
-    // Validate lastName
     if (!formData.lastName.trim()) {
-      newErrors.lastName = "Tên không được để trống";
+      newErrors.lastName = t("lastNameRequired");
     }
 
-    // Validate email
     if (!formData.email.trim()) {
-      newErrors.email = "Email không được để trống";
+      newErrors.email = t("emailRequired");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Email không hợp lệ";
+      newErrors.email = t("emailInvalid");
     }
 
-    // Validate password
     if (!formData.password) {
-      newErrors.password = "Mật khẩu không được để trống";
+      newErrors.password = t("passwordRequired");
     } else if (formData.password.length < 8) {
-      newErrors.password = "Mật khẩu phải có ít nhất 8 ký tự";
+      newErrors.password = t("passwordMinLength");
     }
 
-    // Validate confirmPassword
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Vui lòng xác nhận mật khẩu";
+      newErrors.confirmPassword = t("confirmPasswordRequired");
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Mật khẩu không khớp";
+      newErrors.confirmPassword = t("passwordMismatch");
     }
 
     setErrors(newErrors);
@@ -115,7 +112,6 @@ export function RegisterForm() {
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
@@ -133,39 +129,31 @@ export function RegisterForm() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Get existing users from localStorage
       const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
-
-      // Check if email already exists
       const emailExists = existingUsers.some((user: FormData) => user.email === formData.email);
 
       if (emailExists) {
-        setErrors({ email: "Email đã được sử dụng" });
+        setErrors({ email: t("emailInvalid") });
         setIsSubmitting(false);
         return;
       }
 
-      // Create user object (without confirmPassword)
       const newUser = {
         id: Date.now().toString(),
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        password: formData.password, // In production, this should be hashed
+        password: formData.password,
         createdAt: new Date().toISOString()
       };
 
-      // Save to localStorage
       existingUsers.push(newUser);
       localStorage.setItem("users", JSON.stringify(existingUsers));
 
-      // Show success message
-      setSuccessMessage("Đăng ký thành công! Chuyển hướng...");
+      setSuccessMessage(`${t("signUpButton")} successful! Redirecting...`);
 
-      // Reset form
       setFormData({
         firstName: "",
         lastName: "",
@@ -174,38 +162,34 @@ export function RegisterForm() {
         confirmPassword: ""
       });
 
-      // Redirect after 2 seconds
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
     } catch (error) {
       console.error("Registration failed:", error);
-      setErrors({ email: "Đã có lỗi xảy ra. Vui lòng thử lại." });
+      setErrors({ email: t("emailInvalid") });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    alert("Tính năng đăng nhập Google sẽ được tích hợp sau!");
+    alert(t("continueWithGoogle"));
   };
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-8">
-        <h1 className="mb-2 font-bold text-3xl text-[#261E33]">Tạo tài khoản</h1>
-        <p className="text-[#6F6B99]">Bắt đầu sử dụng Study Studio miễn phí</p>
+        <h1 className="mb-2 font-bold text-3xl text-[#261E33]">{t("title")}</h1>
+        <p className="text-[#6F6B99]">{t("subtitle")}</p>
       </div>
 
-      {/* Success Message */}
       {successMessage && (
         <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-center">
           <p className="font-medium text-green-800 text-sm">{successMessage}</p>
         </div>
       )}
 
-      {/* Google Sign In Button */}
       <Button
         type="button"
         variant="outline"
@@ -229,30 +213,28 @@ export function RegisterForm() {
             fill="#EA4335"
           />
         </svg>
-        Tiếp tục với Google
+        {t("continueWithGoogle")}
       </Button>
 
-      {/* Divider */}
       <div className="relative mb-8">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-[#F0F0F0] border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase tracking-wider">
-          <span className="bg-white px-4 text-[#9CA3AF]">Hoặc tiếp tục bằng</span>
+          <span className="bg-white px-4 text-[#9CA3AF]">{t("orContinueWith")}</span>
         </div>
       </div>
 
-      {/* Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex gap-4">
           <div className="w-1/2">
             <label htmlFor="firstName" className="mb-2 block font-semibold text-[#261E33] text-sm">
-              Họ
+              {t("firstName")}
             </label>
             <Input
               id="firstName"
               type="text"
-              placeholder="Nguyễn"
+              placeholder={t("firstNamePlaceholder")}
               value={formData.firstName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
               className={`rounded-xl border-[#E5E5E5] bg-white py-2.5 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] ${
@@ -263,12 +245,12 @@ export function RegisterForm() {
           </div>
           <div className="w-1/2">
             <label htmlFor="lastName" className="mb-2 block font-semibold text-[#261E33] text-sm">
-              Tên
+              {t("lastName")}
             </label>
             <Input
               id="lastName"
               type="text"
-              placeholder="Văn A"
+              placeholder={t("lastNamePlaceholder")}
               value={formData.lastName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
               className={`rounded-xl border-[#E5E5E5] bg-white py-2.5 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] ${
@@ -281,12 +263,12 @@ export function RegisterForm() {
 
         <div>
           <label htmlFor="email" className="mb-2 block font-semibold text-[#261E33] text-sm">
-            Email
+            {t("email")}
           </label>
           <Input
             id="email"
             type="email"
-            placeholder="you@university.edu"
+            placeholder={t("emailPlaceholder")}
             value={formData.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
             className={`rounded-xl border-[#E5E5E5] bg-white py-2.5 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] ${
@@ -298,13 +280,13 @@ export function RegisterForm() {
 
         <div>
           <label htmlFor="password" className="mb-2 block font-semibold text-[#261E33] text-sm">
-            Mật khẩu
+            {t("password")}
           </label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Nhập mật khẩu của bạn"
+              placeholder={t("passwordPlaceholder")}
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
               className={`rounded-xl border-[#E5E5E5] bg-white py-2.5 pr-10 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] ${
@@ -318,13 +300,13 @@ export function RegisterForm() {
 
         <div>
           <label htmlFor="confirmPassword" className="mb-2 block font-semibold text-[#261E33] text-sm">
-            Nhập lại mật khẩu
+            {t("confirmPassword")}
           </label>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
-              placeholder="Nhập lại mật khẩu của bạn"
+              placeholder={t("confirmPasswordPlaceholder")}
               value={formData.confirmPassword}
               onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
               className={`rounded-xl border-[#E5E5E5] bg-white py-2.5 pr-10 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] ${
@@ -340,14 +322,14 @@ export function RegisterForm() {
           type="submit"
           disabled={isSubmitting}
           className="mt-6 h-auto w-full rounded-xl bg-[#FF5F3D] py-3 font-semibold text-base text-white shadow-sm transition-all hover:bg-[#ff4620] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50">
-          {isSubmitting ? "Đang xử lý..." : "Tạo tài khoản"}
+          {isSubmitting ? `${t("signUpButton")}...` : t("signUpButton")}
         </Button>
       </form>
 
       <p className="mt-8 text-center text-[#6F6B99] text-sm">
-        Đã có tài khoản?{" "}
+        {t("haveAccount")}{" "}
         <Link href="/login" className="font-semibold text-[#FF5F3D] hover:underline">
-          Đăng nhập
+          {t("signInLink")}
         </Link>
       </p>
     </div>

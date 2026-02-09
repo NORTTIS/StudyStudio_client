@@ -34,5 +34,84 @@
       "title": "Đăng Nhập - StudyStudio",
       "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
     }
+  },
+  "RegisterPage": {
+    "title": "Tạo tài khoản của bạn",
+    "subtitle": "Tham gia Study Studio ngay hôm nay",
+    "sidebarTitle": "Quản lý học tập. Kết nối đội nhóm",
+    "sidebarDescription": "Một nơi để học tập, chia sẻ và cùng nhau hoàn thành mục tiêu.",
+    "firstName": "Họ",
+    "firstNamePlaceholder": "Nhập họ của bạn",
+    "firstNameRequired": "Họ là bắt buộc",
+    "lastName": "Tên",
+    "lastNamePlaceholder": "Nhập tên của bạn",
+    "lastNameRequired": "Tên là bắt buộc",
+    "email": "Email",
+    "emailPlaceholder": "Nhập email của bạn",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không hợp lệ",
+    "password": "Mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu của bạn",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "passwordMinLength": "Mật khẩu phải có ít nhất 8 ký tự",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "confirmPasswordPlaceholder": "Xác nhận mật khẩu của bạn",
+    "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "agreeToTerms": "Tôi đồng ý với Điều khoản dịch vụ và Chính sách bảo mật",
+    "termsRequired": "Bạn phải đồng ý với các điều khoản",
+    "signUpButton": "Đăng ký",
+    "continueWithGoogle": "Tiếp tục với Google",
+    "orContinueWith": "HOẶC TIẾP TỤC VỚI",
+    "haveAccount": "Đã có tài khoản?",
+    "signInLink": "Đăng nhập",
+    "meta": {
+      "title": "Đăng Ký - StudyStudio",
+      "description": "Tạo tài khoản StudyStudio của bạn"
+    }
+  },
+  "SettingsPage": {
+    "title": "Cài đặt",
+    "backToDashboard": "Quay lại Dashboard",
+    "menu": {
+      "profile": "Hồ sơ",
+      "security": "Bảo mật",
+      "billing": "Gói dùng kỳ & Thanh toán",
+      "notifications": "Tự động báo cáo"
+    },
+    "profile": {
+      "avatarTitle": "Hình ảnh hiển thị",
+      "changeAvatar": "Thay đổi ảnh",
+      "avatarSupport": "Tệp hỗ trợ: JPG, PNG (tối đa 5MB)",
+      "userInfoTitle": "Thông tin người dùng",
+      "userInfoSubtitle": "Cập nhật thông tin cá nhân của bạn",
+      "firstName": "Họ",
+      "lastName": "Tên",
+      "email": "Email",
+      "phoneNumber": "Số điện thoại",
+      "bio": "Tiểu sử",
+      "bioPlaceholder": "Viết gì đó về bạn...",
+      "preferencesTitle": "Tùy chọn",
+      "preferencesSubtitle": "Tùy chỉnh trải nghiệm của bạn",
+      "language": "Ngôn ngữ",
+      "notificationsTitle": "Thông báo qua email",
+      "notificationsSubtitle": "Quản lý các thông báo qua email của bạn",
+      "studioNotifications": "Thông báo từ Studio",
+      "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
+      "cancelButton": "Hủy bỏ",
+      "saveButton": "Lưu thay đổi",
+      "savingButton": "Đang lưu...",
+      "saveSuccess": "Cài đặt đã được lưu thành công!",
+      "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!"
+    },
+    "security": {
+      "comingSoon": "Tính năng bảo mật sẽ sớm có"
+    },
+    "billing": {
+      "comingSoon": "Tính năng thanh toán sẽ sớm có"
+    },
+    "notifications": {
+      "comingSoon": "Tính năng thông báo sẽ sớm có"
+    }
   }
 }

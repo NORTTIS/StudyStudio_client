@@ -23,5 +23,84 @@
       "title": "Sign In - StudyStudio",
       "description": "Sign in to your StudyStudio account"
     }
+  },
+  "RegisterPage": {
+    "title": "Create your account",
+    "subtitle": "Join Study Studio today",
+    "sidebarTitle": "Manage Learning. Connect Teams",
+    "sidebarDescription": "A place to learn, share and achieve goals together.",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "Enter your first name",
+    "firstNameRequired": "First name is required",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Enter your last name",
+    "lastNameRequired": "Last name is required",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordMismatch": "Passwords do not match",
+    "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
+    "termsRequired": "You must agree to the terms",
+    "signUpButton": "Sign up",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWith": "OR CONTINUE WITH",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "meta": {
+      "title": "Sign Up - StudyStudio",
+      "description": "Create your StudyStudio account"
+    }
+  },
+  "SettingsPage": {
+    "title": "Settings",
+    "backToDashboard": "Back to Dashboard",
+    "menu": {
+      "profile": "Profile",
+      "security": "Security",
+      "billing": "Billing & Subscription",
+      "notifications": "Notifications"
+    },
+    "profile": {
+      "avatarTitle": "Profile Picture",
+      "changeAvatar": "Change Photo",
+      "avatarSupport": "Supported files: JPG, PNG (max 5MB)",
+      "userInfoTitle": "User Information",
+      "userInfoSubtitle": "Update your personal information",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phoneNumber": "Phone Number",
+      "bio": "Bio",
+      "bioPlaceholder": "Write something about yourself...",
+      "preferencesTitle": "Preferences",
+      "preferencesSubtitle": "Customize your experience",
+      "language": "Language",
+      "notificationsTitle": "Email Notifications",
+      "notificationsSubtitle": "Manage your email notification preferences",
+      "studioNotifications": "Notifications from Studio",
+      "studioNotificationsDesc": "Receive email notifications when work is completed",
+      "cancelButton": "Cancel",
+      "saveButton": "Save Changes",
+      "savingButton": "Saving...",
+      "saveSuccess": "Settings saved successfully!",
+      "saveError": "Failed to save settings. Please try again!"
+    },
+    "security": {
+      "comingSoon": "Security features coming soon"
+    },
+    "billing": {
+      "comingSoon": "Billing features coming soon"
+    },
+    "notifications": {
+      "comingSoon": "Notification features coming soon"
+    }
   }
 }
