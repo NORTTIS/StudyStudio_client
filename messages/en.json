@@ -3,6 +3,61 @@
     "loading": "Loading...",
     "checkingAuth": "Checking authentication..."
   },
+  "GuestNavbar": {
+    "personal": "Personal Studio",
+    "group": "Group Studio",
+    "management": "Master Studio",
+    "plan": "Subscription Plans",
+    "login": "Sign in",
+    "register": "Sign up",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "GuestFooter": {
+    "personal": "Personal Studio",
+    "group": "Group Studio",
+    "management": "Master Studio",
+    "plan": "Subscription Plans",
+    "language": "English",
+    "contactUs": "Contact us",
+    "products": "Products"
+  },
+  "LandingPage": {
+    "hero": {
+      "title": "Collaborative workspace",
+      "subtitle": "Manage your work",
+      "description": "Study Studio helps university students and lecturers manage personal and group projects with transparent and fair contribution tracking, supported by AI.",
+      "registerButton": "Sign up – completely free"
+    },
+    "architecture": {
+      "title": "3-Tier Workspace Architecture",
+      "subtitle": "We provide separate workspaces"
+    },
+    "management": {
+      "title": "Master Studio",
+      "description": "Manage your spaces and groups",
+      "createButton": "Create Master Studio for free",
+      "learnMore": "Learn more"
+    },
+    "group": {
+      "title": "Group Studio",
+      "description": "Manage and monitor personal and group tasks",
+      "createButton": "Create Group Studio for free",
+      "learnMore": "Learn more"
+    },
+    "personal": {
+      "title": "Personal Studio",
+      "description": "Manage your own tasks",
+      "createButton": "Create Personal Studio for free",
+      "learnMore": "Learn more"
+    },
+    "ai": {
+      "title": "Manage work more efficiently",
+      "subtitle": "with AI support",
+      "feature1": "Provide reports on group work status",
+      "feature2": "Answer questions about information provided in groups"
+    }
+  },
   "HomePage": {
     "title": "Home",
     "description": "Home page of the application"
@@ -371,6 +426,212 @@
         "question": "Are there any limitations for free accounts?",
         "answer": "Yes, free accounts have some limitations such as maximum 1GB storage, basic tools, and community support. If you need more resources and support, consider upgrading to our paid plans."
       }
+    }
+  },
+  "LandingGroupPage": {
+    "hero": {
+      "title": "Shared workspace for",
+      "titleHighlight": "learning & projects",
+      "createButton": "Create a group →",
+      "imageAlt": "Group collaboration"
+    },
+    "howToUse": {
+      "title": "How to use",
+      "step1": "Create a new group with available templates",
+      "step2": "Then share the board with other users",
+      "step3": "Create tasks, assign members",
+      "step4": "Collaborate to complete work together."
+    },
+    "features": {
+      "title": "What can groups do?",
+      "manageGroup": {
+        "title": "Manage groups",
+        "description": "Create and organize study groups\nor projects in seconds"
+      },
+      "trackWork": {
+        "title": "Track work",
+        "description": "Know who does what, and\ntrack progress"
+      },
+      "permissions": {
+        "title": "Smart permissions",
+        "description": "Create and organize study groups\nor projects in seconds"
+      },
+      "aiSupport": {
+        "title": "AI learning support",
+        "description": "Q&A, requirements analysis,\ngenerate reports"
+      }
+    },
+    "users": {
+      "title": "Who's using Study Studio",
+      "subtitle": "Over xxx people use boards each month.",
+      "personal": {
+        "title": "Individuals & Groups",
+        "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
+      },
+      "education": {
+        "title": "Education",
+        "description": "Classrooms, universities, and adult\neducation programs."
+      }
+    },
+    "ai": {
+      "title": "Manage work more efficiently",
+      "subtitle": "with AI support",
+      "feature1": "Provide reports on group work status",
+      "feature2": "Answer questions about information provided in groups"
+    }
+  },
+  "LandingPersonalPage": {
+    "hero": {
+      "title": "Workspace",
+      "titleHighlight": "just for you",
+      "subtitle": "Organize notes, documents, and study plans.",
+      "subtitleExtra": "All in one intuitive, easy-to-use personal space.",
+      "createButton": "Create your space →",
+      "imageAlt": "Landing illustration"
+    },
+    "howToUse": {
+      "title": "How to use",
+      "step1": {
+        "title": "Create personal space",
+        "description": "Start with a blank space\nArrange it your way"
+      },
+      "step2": {
+        "title": "Add notes, documents",
+        "description": "Add text, images, links, and files\nAll organized on one board"
+      },
+      "step3": {
+        "title": "Plan your studies",
+        "description": "Create to-do lists, set goals\nand track daily progress"
+      },
+      "step4": {
+        "title": "Study more effectively",
+        "description": "AI helps you summarize, review, and suggests\noptimal learning methods"
+      }
+    },
+    "features": {
+      "title": "What can you do?",
+      "smartNotes": {
+        "title": "Smart notes",
+        "description": "Create notes with text,\nimages, and links"
+      },
+      "tasks": {
+        "title": "Tasks & goals",
+        "description": "Make to-do lists,\nset deadlines and track progress\ndaily"
+      },
+      "documents": {
+        "title": "Organize documents",
+        "description": "Store and organize learning materials\nby topic, subject, or\nproject"
+      },
+      "aiSupport": {
+        "title": "AI learning support",
+        "description": "AI summarizes documents, suggests reviews\nand answers your questions"
+      },
+      "schedule": {
+        "title": "Study schedule",
+        "description": "Schedule study time and manage\ntime effectively"
+      },
+      "progress": {
+        "title": "Track progress",
+        "description": "View study progress overview\nand statistics"
+      }
+    },
+    "users": {
+      "title": "Who's using Study Studio",
+      "subtitle": "Over xxx people use boards each month.",
+      "students": {
+        "title": "Students",
+        "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working\ntogether effectively."
+      },
+      "selfLearners": {
+        "title": "Self-learners",
+        "description": "Organize learning paths,\nstore reference materials\nand set personal\ndevelopment goals"
+      }
+    }
+  },
+  "LandingManagementPage": {
+    "hero": {
+      "title": "Manage all groups",
+      "titleHighlight": "from one place",
+      "createButton": "Start managing →",
+      "imageAlt": "Management Illustration"
+    },
+    "howToUse": {
+      "title": "How to use",
+      "step1": {
+        "title": "Create management space",
+        "description": "Set up space and configure according to your organization's needs"
+      },
+      "step2": {
+        "title": "Add groups & members",
+        "description": "Invite members, create study groups in just a few clicks"
+      },
+      "step3": {
+        "title": "Assign permissions, setup",
+        "description": "Assign management and member permissions for each separate group"
+      },
+      "step4": {
+        "title": "Track & report",
+        "description": "View progress, activity reports, and evaluate effectiveness"
+      }
+    },
+    "features": {
+      "title": "What can managers do?",
+      "manageMembers": {
+        "title": "Manage members",
+        "description": "Add, remove, and manage members in your organization"
+      },
+      "trackProgress": {
+        "title": "Track progress",
+        "description": "View progress of each group and member"
+      },
+      "permissions": {
+        "title": "Smart permissions",
+        "description": "Set permissions for each role: manager, member, guest"
+      },
+      "overview": {
+        "title": "Overview",
+        "description": "Overview dashboard, metrics"
+      }
+    },
+    "users": {
+      "title": "Who's using Study Studio",
+      "subtitle": "Over xx million people use boards each month.",
+      "personal": {
+        "title": "Individuals & Groups",
+        "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
+      },
+      "education": {
+        "title": "Educational organizations",
+        "description": "Classrooms, universities, and adult\neducation programs."
+      }
+    }
+  },
+  "LandingPlanPage": {
+    "hero": {
+      "title": "Our subscription",
+      "titleHighlight": "plans"
+    },
+    "freePlan": {
+      "title": "Free plan",
+      "price": "0 VND",
+      "description": "Suitable for individuals and\nsmall groups to try out",
+      "registerButton": "Sign up",
+      "feature1": "Up to 3 separate management spaces",
+      "feature2": "Up to 5 group spaces",
+      "feature3": "Up to 10 members per group space",
+      "feature4": "500 MB document storage per group space",
+      "feature5": "20 AI requests per day"
+    },
+    "premiumPlan": {
+      "title": "Premium plan",
+      "price": "299,000 VND / Month",
+      "description": "Suitable for large groups needing\nmore flexibility",
+      "registerButton": "Sign up",
+      "feature1": "Up to 10 separate management spaces",
+      "feature2": "Up to 10 group spaces",
+      "feature3": "Up to 50 members per group space",
+      "feature4": "1 GB document storage per group space",
+      "feature5": "100 AI requests per day"
     }
   }
 }

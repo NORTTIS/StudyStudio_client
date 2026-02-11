@@ -3,7 +3,9 @@ import { locales } from "./i18n/request";
 
 export default createMiddleware({
   locales,
-  defaultLocale: "vi"
+  defaultLocale: "vi",
+  localePrefix: "always",
+  localeDetection: false
 });
 
 export const config = {

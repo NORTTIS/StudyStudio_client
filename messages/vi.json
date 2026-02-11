@@ -3,6 +3,61 @@
     "loading": "Đang tải...",
     "checkingAuth": "Đang kiểm tra xác thực..."
   },
+  "GuestNavbar": {
+    "personal": "Không gian cá nhân",
+    "group": "Không gian nhóm",
+    "management": "Không gian quản lý",
+    "plan": "Gói đăng ký",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu"
+  },
+  "GuestFooter": {
+    "personal": "Không gian cá nhân",
+    "group": "Không gian nhóm",
+    "management": "Không gian quản lý",
+    "plan": "Gói đăng ký",
+    "language": "Tiếng Việt",
+    "contactUs": "Liên hệ với chúng tôi",
+    "products": "Sản phẩm"
+  },
+  "LandingPage": {
+    "hero": {
+      "title": "Không gian cộng tác",
+      "subtitle": "Quản lý công việc của bạn",
+      "description": "Study Studio giúp sinh viên và giảng viên đại học quản lý các dự án cá nhân và nhóm với việc theo dõi, đánh giá mức độ đóng góp một cách minh bạch, công bằng đi cùng với đó là sự hỗ trợ tới từ AI.",
+      "registerButton": "Đăng ký – hoàn toàn miễn phí"
+    },
+    "architecture": {
+      "title": "Kiến trúc không gian làm việc 3 tầng",
+      "subtitle": "Chúng tôi cung cấp các không gian làm việc riêng biệt"
+    },
+    "management": {
+      "title": "Không gian quản lý",
+      "description": "Quản lý các không gian và nhóm của riêng bạn",
+      "createButton": "Tạo Không gian quản lý miễn phí",
+      "learnMore": "Tìm hiểu thêm"
+    },
+    "group": {
+      "title": "Không gian nhóm",
+      "description": "Quản lý, giám sát việc cá nhân và việc nhóm",
+      "createButton": "Tạo Không gian nhóm miễn phí",
+      "learnMore": "Tìm hiểu thêm"
+    },
+    "personal": {
+      "title": "Không gian cá nhân",
+      "description": "Quản lý các công việc của riêng bạn",
+      "createButton": "Tạo Không gian cá nhân miễn phí",
+      "learnMore": "Tìm hiểu thêm"
+    },
+    "ai": {
+      "title": "Quản lý công việc hiệu quả hơn",
+      "subtitle": "với sự giúp sức của AI",
+      "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
+      "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
+    }
+  },
   "HomePage": {
     "title": "Trang chủ",
     "description": "Trang chủ của ứng dụng",
@@ -382,6 +437,212 @@
         "question": "Có giới hạn nào cho tài khoản miễn phí?",
         "answer": "Có, tài khoản miễn phí có một số giới hạn như lưu trữ tối đa 1GB, công cụ cơ bản, và hỗ trợ cộng đồng. Nếu bạn cần tài nguyên và hỗ trợ nhiều hơn, hãy xem xét nâng cấp lên gói trả phí của chúng tôi."
       }
+    }
+  },
+  "LandingGroupPage": {
+    "hero": {
+      "title": "Không gian làm việc chung cho",
+      "titleHighlight": "học tập & dự án",
+      "createButton": "Tạo nhóm →",
+      "imageAlt": "Group collaboration"
+    },
+    "howToUse": {
+      "title": "Cách sử dụng",
+      "step1": "Tạo mới một nhóm với template có sẵn",
+      "step2": "Sau đó chia sẻ bảng với những người dùng khác",
+      "step3": "Tạo công việc, giao nhiệm vụ cho thành viên",
+      "step4": "Cộng tác để cùng nhau hoàn thành công việc."
+    },
+    "features": {
+      "title": "Nhóm có thể làm gì?",
+      "manageGroup": {
+        "title": "Quản lý nhóm",
+        "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
+      },
+      "trackWork": {
+        "title": "Theo dõi công việc",
+        "description": "Nắm rõ ai làm gì, tiến độ\nđến đâu"
+      },
+      "permissions": {
+        "title": "Phân quyền thông minh",
+        "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
+      },
+      "aiSupport": {
+        "title": "AI hỗ trợ học tập",
+        "description": "Hỏi đáp, phân tích yêu cầu,\ntạo báo cáo"
+      }
+    },
+    "users": {
+      "title": "Ai đang sử dụng Study Studio",
+      "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
+      "personal": {
+        "title": "Cá nhân & Nhóm",
+        "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ cùng\nnhau học tập và làm việc hiệu quả."
+      },
+      "education": {
+        "title": "Giáo dục",
+        "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho\nngười trưởng thành."
+      }
+    },
+    "ai": {
+      "title": "Quản lý công việc hiệu quả hơn",
+      "subtitle": "với sự giúp sức của AI",
+      "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
+      "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
+    }
+  },
+  "LandingPersonalPage": {
+    "hero": {
+      "title": "Không gian làm việc",
+      "titleHighlight": "dành riêng cho bạn",
+      "subtitle": "Tổ chức ghi chú, tài liệu và kế hoạch học tập.",
+      "subtitleExtra": "Tất cả trong một Không gian cá nhân trực quan, dễ sử dụng.",
+      "createButton": "Tạo không gian của bạn →",
+      "imageAlt": "Landing illustration"
+    },
+    "howToUse": {
+      "title": "Cách sử dụng",
+      "step1": {
+        "title": "Tạo Không gian cá nhân",
+        "description": "Bắt đầu với một không gian trống\nTự do sắp xếp theo cách của bạn"
+      },
+      "step2": {
+        "title": "Thêm ghi chú, tài liệu",
+        "description": "Thêm văn bản, hình ảnh, link và file\nTất cả gọn gàng trên một bảng"
+      },
+      "step3": {
+        "title": "Lập kế hoạch học tập",
+        "description": "Tạo danh sách công việc đặt mục tiêu\nvà theo dõi tiến độ mỗi ngày"
+      },
+      "step4": {
+        "title": "Học tập hiệu quả hơn",
+        "description": "AI giúp bạn tóm tắt, ôn tập và gợi ý\nphương pháp học tối ưu hơn"
+      }
+    },
+    "features": {
+      "title": "Bạn có thể làm gì?",
+      "smartNotes": {
+        "title": "Ghi chú thông minh",
+        "description": "Tạo và ghi chú với văn bản,\nhình ảnh, link"
+      },
+      "tasks": {
+        "title": "Công việc, mục tiêu",
+        "description": "Lập danh sách việc cần làm\nđặt deadline và theo dõi tiến độ\nmỗi ngày"
+      },
+      "documents": {
+        "title": "Tổ chức tài liệu",
+        "description": "Lưu trữ và sắp xếp tài liệu học\ntập theo chủ đề, môn học hoặc\ndự án"
+      },
+      "aiSupport": {
+        "title": "AI hỗ trợ học tập",
+        "description": "AI tóm tắt tài liệu, gợi ý ôn tập\nvà trả lời câu hỏi của bạn"
+      },
+      "schedule": {
+        "title": "Lịch học tập",
+        "description": "Lên lịch học và quản lý\nthời gian hiệu quả"
+      },
+      "progress": {
+        "title": "Theo dõi tiến độ",
+        "description": "Xem tổng quan tiến độ học tập\nvà thống kê"
+      }
+    },
+    "users": {
+      "title": "Ai đang sử dụng Study Studio",
+      "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
+      "students": {
+        "title": "Học sinh, sinh viên",
+        "description": "Sinh viên, người tự học, nhóm\nbạn, đội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc\nhiệu quả."
+      },
+      "selfLearners": {
+        "title": "Người tự học",
+        "description": "Tự tổ chức lộ trình học,\nlưu trữ tài liệu tham khảo\nvà đặt mục tiêu phát triển\ncủa bản thân"
+      }
+    }
+  },
+  "LandingManagementPage": {
+    "hero": {
+      "title": "Quản lý toàn bộ nhóm",
+      "titleHighlight": "từ một nơi",
+      "createButton": "Bắt đầu quản lý →",
+      "imageAlt": "Management Illustration"
+    },
+    "howToUse": {
+      "title": "Cách sử dụng",
+      "step1": {
+        "title": "Tạo Không gian quản lý",
+        "description": "Thiết lập không gian và cấu hình theo nhu cầu tổ chức của bạn"
+      },
+      "step2": {
+        "title": "Thêm nhóm & thành viên",
+        "description": "Mời thành viên, tạo nhóm học tập chỉ trong vài click"
+      },
+      "step3": {
+        "title": "Phân quyền, thiết lập",
+        "description": "Phân quyền quản lý, thành viên cho từng nhóm riêng biệt"
+      },
+      "step4": {
+        "title": "Theo dõi & báo cáo",
+        "description": "Xem tiến độ, báo cáo hoạt động và đánh giá hiệu quả"
+      }
+    },
+    "features": {
+      "title": "Quản lý có thể làm gì?",
+      "manageMembers": {
+        "title": "Quản lý thành viên",
+        "description": "Thêm, xóa quản lý thành viên trong tổ chức của bạn"
+      },
+      "trackProgress": {
+        "title": "Theo dõi tiến độ",
+        "description": "Xem tiến độ của từng nhóm, thành viên"
+      },
+      "permissions": {
+        "title": "Phân quyền thông minh",
+        "description": "Thiết lập quyền hạn cho từng vai trò: quản lý, thành viên, khách"
+      },
+      "overview": {
+        "title": "Tổng quan",
+        "description": "Dashboard tổng quan, số liệu"
+      }
+    },
+    "users": {
+      "title": "Ai đang sử dụng Study Studio",
+      "subtitle": "Hơn xx triệu người sử dụng bảng mỗi tháng.",
+      "personal": {
+        "title": "Cá nhân & Nhóm",
+        "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc hiệu quả."
+      },
+      "education": {
+        "title": "Tổ chức giáo dục",
+        "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho người trưởng thành."
+      }
+    }
+  },
+  "LandingPlanPage": {
+    "hero": {
+      "title": "Các gói đăng ký trả phí",
+      "titleHighlight": "của chúng tôi"
+    },
+    "freePlan": {
+      "title": "Gói miễn phí",
+      "price": "0 VND",
+      "description": "Phù hợp cho người dùng cá nhân và các\nnhóm nhỏ trải nghiệm",
+      "registerButton": "Đăng ký",
+      "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
+      "feature2": "Tối đa 5 Không gian nhóm",
+      "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+      "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+      "feature5": "20 lượt yêu cầu AI mỗi ngày"
+    },
+    "premiumPlan": {
+      "title": "Gói nâng cấp",
+      "price": "299.000 VND / Tháng",
+      "description": "Phù hợp cho các nhóm lớn cần sự linh\nhoạt hơn",
+      "registerButton": "Đăng ký",
+      "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
+      "feature2": "Tối đa 10 Không gian nhóm",
+      "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
+      "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
+      "feature5": "100 lượt yêu cầu AI mỗi ngày"
     }
   }
 }
