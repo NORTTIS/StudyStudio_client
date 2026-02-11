@@ -34,7 +34,7 @@ export default function ErrorDisplay({
                 <button
                     type="button"
                     onClick={() => window.location.reload()}
-                    className="rounded-lg bg-[#4C6AA8] px-6 py-2.5 font-medium text-sm text-white transition-colors hover:bg-[#4C6AA8]/90">
+                    className="rounded-lg bg-[#E26060] px-6 py-2.5 font-medium text-sm text-white transition-colors hover:bg-[#E26060]/90">
                     Thử lại
                 </button>
             </div>
