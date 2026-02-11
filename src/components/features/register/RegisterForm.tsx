@@ -12,7 +12,6 @@ import { Eye, EyeOff } from "lucide-react";
 export function RegisterForm() {
   const locale = useLocale();
 
-  // ================= STATE =================
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,9 +25,9 @@ export function RegisterForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // ================= VALIDATORS =================
-  const nameRegex = /^[A-Za-zÀ-ỹ\s]{1,10}$/;
-  const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,20}$/;
+  const nameRegex = /^[A-Za-zÀ-ỹ\s]{1,20}$/;
+
+  const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{10,20}$/;
 
   const validateEmail = (value: string): string | null => {
     if (!value) return "Vui lòng nhập email.";
@@ -41,14 +40,12 @@ export function RegisterForm() {
     return null;
   };
 
-  // ================= SUBMIT REGISTER =================
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setError("");
     setSuccess("");
 
-    // ✅ Validate required fields
     if (
       !lastName.trim() ||
       !firstName.trim() ||
@@ -60,37 +57,34 @@ export function RegisterForm() {
       return;
     }
 
-    // ✅ Validate name
     if (!nameRegex.test(lastName)) {
-      setError("Họ không được chứa số và tối đa 10 ký tự.");
+      setError("Họ không được chứa số và tối đa 20 ký tự.");
       return;
     }
 
     if (!nameRegex.test(firstName)) {
-      setError("Tên không được chứa số và tối đa 10 ký tự.");
+      setError("Tên không được chứa số và tối đa 20 ký tự.");
       return;
     }
 
-    // ✅ Validate email
     const emailError = validateEmail(email);
     if (emailError) {
       setError(emailError);
       return;
     }
 
-    // ✅ Validate password
     if (!passwordRegex.test(password)) {
-      setError("Mật khẩu phải từ 8–20 ký tự, gồm 1 chữ in hoa và 1 số.");
+      setError(
+        "Mật khẩu phải từ 10–20 ký tự, gồm ít nhất 1 chữ in hoa và 1 số."
+      );
       return;
     }
 
-    // ✅ Confirm password match
     if (password !== confirmPassword) {
       setError("Mật khẩu nhập lại không khớp.");
       return;
     }
 
-    // ================= CALL API REGISTER =================
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`,
@@ -111,16 +105,13 @@ export function RegisterForm() {
 
       const data = await res.json();
 
-      // ❌ Register failed
       if (!res.ok) {
         setError(data.message || "Đăng ký thất bại. Vui lòng thử lại.");
         return;
       }
 
-      // ✅ Register success → BE sends verify email
       setSuccess(data.message);
 
-      // Redirect login after 2s
       setTimeout(() => {
         window.location.href = `/${locale}/login`;
       }, 2000);
@@ -130,14 +121,12 @@ export function RegisterForm() {
     }
   };
 
-  // ================= REGISTER WITH GOOGLE =================
   const handleRegisterWithGoogle = () => {
     window.location.href = `/${locale}/register-gg`;
   };
 
   return (
     <div className="space-y-6">
-      {/* Title */}
       <div>
         <h1 className="text-2xl font-bold">Tạo tài khoản</h1>
         <p className="text-sm text-muted-foreground">
@@ -180,16 +169,13 @@ export function RegisterForm() {
         Tiếp tục với Google
       </Button>
 
-      {/* Divider */}
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
         <div className="h-px flex-1 bg-border" />
         Hoặc tiếp tục với
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Name */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label>Họ</Label>
@@ -208,7 +194,6 @@ export function RegisterForm() {
           </div>
         </div>
 
-        {/* Email */}
         <div className="space-y-1">
           <Label>Email</Label>
           <Input
@@ -218,7 +203,6 @@ export function RegisterForm() {
           />
         </div>
 
-        {/* Password */}
         <div className="space-y-1">
           <Label>Mật khẩu</Label>
           <div className="relative">
@@ -239,7 +223,6 @@ export function RegisterForm() {
           </div>
         </div>
 
-        {/* Confirm Password */}
         <div className="space-y-1">
           <Label>Nhập lại mật khẩu</Label>
           <div className="relative">
@@ -260,14 +243,12 @@ export function RegisterForm() {
           </div>
         </div>
 
-        {/* ERROR */}
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </div>
         )}
 
-        {/* SUCCESS */}
         {success && (
           <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             {success}
@@ -277,13 +258,11 @@ export function RegisterForm() {
           </div>
         )}
 
-        {/* Submit */}
         <Button className="w-full bg-orange-500 hover:bg-orange-600">
           Tạo tài khoản
         </Button>
       </form>
 
-      {/* Footer */}
       <p className="text-center text-sm text-muted-foreground">
         Đã có tài khoản?{" "}
         <Link
