@@ -4,17 +4,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import type { Announcement } from "@/api/notifications";
+import { markAnnouncementAsRead } from "@/api/notifications";
 import { Button } from "@/components/ui/button";
-
-interface Announcement {
-  id: string;
-  title: string;
-  description: string;
-  type: "system" | "warning" | "info" | "success";
-  date: string;
-  read: boolean;
-  priority: "high" | "medium" | "low";
-}
 
 const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -189,26 +181,19 @@ export default function AnnouncementsPage() {
 
   const [filter, setFilter] = useState<"all" | "unread" | "warning">("all");
 
-  // Save to localStorage whenever announcements change
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("announcements", JSON.stringify(announcements));
-    }
-  }, [announcements]);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("announcements");
-      if (saved) {
-        try {
-          setAnnouncements(JSON.parse(saved));
-        } catch (error) {
-          console.error("Failed to load announcements:", error);
-        }
-      }
-    }
-  }, []);
+  // TODO: Fetch announcements from API
+  // useEffect(() => {
+  //   const fetchAnnouncements = async () => {
+  //     try {
+  //       const response = await fetch('/api/announcements');
+  //       const data = await response.json();
+  //       setAnnouncements(data);
+  //     } catch (error) {
+  //       console.error('Failed to fetch announcements:', error);
+  //     }
+  //   };
+  //   fetchAnnouncements();
+  // }, []);
 
   // Scroll to selected notification
   useEffect(() => {
@@ -221,6 +206,18 @@ export default function AnnouncementsPage() {
       }, 100);
     }
   }, [selectedId]);
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      // Call API to mark announcement as read
+      await markAnnouncementAsRead(id);
+    } catch (error) {
+      console.error("Failed to mark announcement as read:", error);
+    }
+
+    // Optimistically update UI
+    setAnnouncements(announcements.map((a) => (a.id === id ? { ...a, read: true } : a)));
+  };
 
   const getTypeStyles = (type: string) => {
     switch (type) {
@@ -284,10 +281,6 @@ export default function AnnouncementsPage() {
   });
 
   const unreadCount = announcements.filter((a) => !a.read).length;
-
-  const markAsRead = (id: string) => {
-    setAnnouncements(announcements.map((a) => (a.id === id ? { ...a, read: true } : a)));
-  };
 
   return (
     <div className="flex h-screen bg-[#F4F5FA]">
@@ -403,7 +396,7 @@ export default function AnnouncementsPage() {
                       key={announcement.id}
                       type="button"
                       id={`announcement-${announcement.id}`}
-                      onClick={() => markAsRead(announcement.id)}
+                      onClick={() => handleMarkAsRead(announcement.id)}
                       className={`w-full cursor-pointer rounded-xl border-2 p-4 text-left transition-all hover:shadow-md ${styles.bg} ${styles.border} ${
                         !announcement.read ? "ring-2 ring-orange-400" : ""
                       } ${isSelected ? "shadow-lg ring-2 ring-[#FF5F3D]" : ""}`}>

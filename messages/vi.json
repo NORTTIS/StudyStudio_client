@@ -141,5 +141,247 @@
       "title": "Xác Thực Email - StudyStudio",
       "description": "Xác thực tài khoản StudyStudio của bạn"
     }
+  },
+  "SettingsPage": {
+    "title": "Cài đặt",
+    "backToDashboard": "Quay lại Dashboard",
+    "menu": {
+      "profile": "Hồ sơ",
+      "security": "Bảo mật",
+      "billing": "Gói dùng kỳ & Thanh toán",
+      "notifications": "Tự động báo cáo",
+      "help": "Trợ giúp & Báo cáo"
+    },
+    "profile": {
+      "avatarTitle": "Hình ảnh hiển thị",
+      "changeAvatar": "Thay đổi ảnh",
+      "avatarSupport": "Tệp hỗ trợ: JPG, PNG (tối đa 5MB)",
+      "userInfoTitle": "Thông tin người dùng",
+      "userInfoSubtitle": "Cập nhật thông tin cá nhân của bạn",
+      "firstName": "Họ",
+      "lastName": "Tên",
+      "email": "Email",
+      "phoneNumber": "Số điện thoại",
+      "bio": "Tiểu sử",
+      "bioPlaceholder": "Viết gì đó về bạn...",
+      "preferencesTitle": "Tùy chọn",
+      "preferencesSubtitle": "Tùy chỉnh trải nghiệm của bạn",
+      "language": "Ngôn ngữ",
+      "notificationsTitle": "Thông báo qua email",
+      "notificationsSubtitle": "Quản lý các thông báo qua email của bạn",
+      "studioNotifications": "Thông báo từ Studio",
+      "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
+      "cancelButton": "Hủy bỏ",
+      "saveButton": "Lưu thay đổi",
+      "savingButton": "Đang lưu...",
+      "saveSuccess": "Cài đặt đã được lưu thành công!",
+      "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!"
+    },
+    "security": {
+      "comingSoon": "Tính năng bảo mật sẽ sớm có"
+    },
+    "billing": {
+      "comingSoon": "Tính năng thanh toán sẽ sớm có"
+    },
+    "notifications": {
+      "comingSoon": "Tính năng thông báo sẽ sớm có"
+    }
+  },
+  "AnnouncementsPage": {
+    "title": "Thông báo",
+    "subtitle": "Theo dõi tất cả thông báo và cập nhật hệ thống",
+    "searchPlaceholder": "Tìm kiếm thông báo...",
+    "nav": {
+      "home": "Trang chủ",
+      "groups": "Nhóm",
+      "announcements": "Thông báo"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "unread": "Chưa đọc",
+      "important": "Quan trọng"
+    },
+    "priority": {
+      "high": "Cao",
+      "medium": "Trung bình",
+      "low": "Thấp"
+    },
+    "announcements": {
+      "upgrade": {
+        "title": "Nâng cấp gói Miễn phí",
+        "description": "Bạn đã dùng hết 3 không gian của gói Miễn phí. Nâng cấp lên Pro để có thêm không gian và các tính năng nâng cao.",
+        "date": "2 giờ trước"
+      },
+      "maintenance": {
+        "title": "Bảo trì hệ thống",
+        "description": "Hệ thống sẽ được bảo trì vào ngày 15/02 từ 00:00 - 03:00. Vui lòng lưu lại công việc của bạn trước đó.",
+        "date": "5 giờ trước"
+      },
+      "feature": {
+        "title": "Cập nhật tính năng mới",
+        "description": "Chúng tôi vừa thêm tính năng chia sẻ project với quyền hạn. Bây giờ bạn có thể kiểm soát tốt hơn ai có quyền gì.",
+        "date": "1 ngày trước"
+      },
+      "member": {
+        "title": "Thông báo từ Thành viên",
+        "description": "Nguyễn Văn A đã thêm bạn vào project SEP490-Q62. Hãy kiểm tra và bắt đầu cộng tác.",
+        "date": "2 ngày trước"
+      },
+      "achievement": {
+        "title": "Hoàn thành mục tiêu",
+        "description": "Chúc mừng! Bạn đã hoàn thành tất cả các task trong sprint này.",
+        "date": "3 ngày trước"
+      }
+    },
+    "upgradeNow": "Nâng cấp ngay",
+    "noAnnouncements": "Không có thông báo nào"
+  },
+  "Notifications": {
+    "title": "Thông báo",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "viewAll": "Xem tất cả thông báo",
+    "noNotifications": "Không có thông báo",
+    "items": {
+      "upgrade": {
+        "title": "Nâng cấp gói Miễn phí",
+        "description": "Bạn đã dùng hết 3 không gian. Nâng cấp lên Pro.",
+        "date": "2 giờ trước"
+      },
+      "maintenance": {
+        "title": "Bảo trì hệ thống",
+        "description": "Bảo trì hệ thống ngày 15/02 từ 00:00 - 03:00.",
+        "date": "5 giờ trước"
+      },
+      "feature": {
+        "title": "Tính năng mới",
+        "description": "Chia sẻ project với quyền hạn đã có sẵn.",
+        "date": "1 ngày trước"
+      }
+    }
+  },
+  "Header": {
+    "searchPlaceholder": "Tìm kiếm dự án, công việc...",
+    "settings": "Cài đặt",
+    "profile": "Hồ sơ",
+    "logout": "Đăng xuất"
+  },
+  "SecurityPage": {
+    "title": "Bảo mật",
+    "backToSettings": "Quay lại Cài đặt",
+    "changePasswordTitle": "Đổi mật khẩu",
+    "changePasswordSubtitle": "Cập nhật mật khẩu thường xuyên để giữ cho tài khoản của bạn an toàn.",
+    "currentPassword": "Mật khẩu hiện tại",
+    "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+    "currentPasswordRequired": "Mật khẩu hiện tại không được để trống",
+    "newPassword": "Mật khẩu mới",
+    "newPasswordPlaceholder": "Nhập mật khẩu mới",
+    "newPasswordRequired": "Mật khẩu mới không được để trống",
+    "passwordMinLength": "Mật khẩu mới phải có ít nhất 8 ký tự",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+    "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+    "passwordMismatch": "Mật khẩu không khớp",
+    "cancelButton": "Hủy",
+    "updateButton": "Cập nhật mật khẩu",
+    "updatingButton": "Đang cập nhật...",
+    "changePasswordSuccess": "Cập nhật mật khẩu thành công!",
+    "changePasswordError": "Cập nhật mật khẩu thất bại. Vui lòng thử lại!"
+  },
+  "BillingPage": {
+    "plansTitle": "Gói đăng ký",
+    "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
+    "plansDescription": "Tất cả các tính năng cơ bản",
+    "recommended": "Đề xuất",
+    "plans": {
+      "period": "/tháng",
+      "free": {
+        "name": "Miễn phí",
+        "feature1": "3 không gian làm việc",
+        "feature2": "Lưu trữ 5GB",
+        "feature3": "Hỗ trợ cơ bản",
+        "feature4": "Tối đa 5 thành viên",
+        "button": "Gói hiện tại"
+      },
+      "pro": {
+        "name": "Pro",
+        "feature1": "Không gian không giới hạn",
+        "feature2": "Lưu trữ 100GB",
+        "feature3": "Hỗ trợ ưu tiên",
+        "feature4": "Không giới hạn thành viên",
+        "button": "Nâng cấp lên Pro"
+      },
+      "premium": {
+        "name": "Premium",
+        "feature1": "Tất cả tính năng Pro",
+        "feature2": "Lưu trữ 1TB",
+        "feature3": "Hỗ trợ 24/7",
+        "feature4": "Tính năng nâng cao",
+        "button": "Nâng cấp lên Premium"
+      }
+    },
+    "historyTitle": "Lịch sử thanh toán",
+    "historySubtitle": "Xem tất cả các giao dịch và hóa đơn của bạn",
+    "history": {
+      "today": "Hôm nay",
+      "lastMonth": "Tháng trước",
+      "twoMonthsAgo": "2 tháng trước",
+      "threeMonthsAgo": "3 tháng trước",
+      "annual": "Gói năm",
+      "subscription": "Đăng ký hàng tháng"
+    },
+    "table": {
+      "invoice": "Số hóa đơn",
+      "date": "Ngày",
+      "description": "Mô tả",
+      "amount": "Số tiền"
+    },
+    "invoiceInfo": {
+      "title": "Thông tin hóa đơn",
+      "subtitle": "Cập nhật thông tin thanh toán và hóa đơn của bạn",
+      "email": "Email nhận hóa đơn",
+      "paymentMethod": "Phương thức thanh toán",
+      "emailNotification": "Nhận thông báo qua email khi có hóa đơn mới",
+      "cancelButton": "Hủy",
+      "saveButton": "Lưu thay đổi",
+      "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!"
+    }
+  },
+  "HelpPage": {
+    "form": {
+      "formTitle": "Gửi lời than phiền hoặc Liên hệ hỗ trợ",
+      "subtitle": "Hãy cho chúng tôi biết nếu bạn gặp sự cố hoặc có bất kỳ câu hỏi nào",
+      "localPhoneId": "Local phone ID",
+      "localPhoneIdPlaceholder": "Mã cục bộ",
+      "email": "Email",
+      "emailPlaceholder": "dat@studist.edu.vn",
+      "title": "Tiêu đề",
+      "titlePlaceholder": "Một vài từ mô tả vấn đề",
+      "content": "Nội dung",
+      "contentPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
+      "cancelButton": "Hủy",
+      "submitButton": "Gửi báo cáo",
+      "validationError": "Vui lòng điền tất cả các trường",
+      "submitSuccess": "Báo cáo của bạn đã được gửi thành công!"
+    },
+    "faq": {
+      "title": "Các câu hỏi thường gặp",
+      "subtitle": "Tìm kiếm các câu trả lời cho những câu hỏi phổ biến",
+      "item1": {
+        "question": "Làm thế nào để bắt đầu?",
+        "answer": "Để bắt đầu sử dụng Study Studio, bạn chỉ cần tạo tài khoản miễn phí và hoàn tất hồ sơ cá nhân. Sau đó, bạn có thể khám phá các tính năng và tham gia các lớp học hoặc nhóm học."
+      },
+      "item2": {
+        "question": "Tôi có cần đăng ký không?",
+        "answer": "Không, bạn không cần đăng ký bắt buộc. Study Studio cung cấp gói miễn phí với các tính năng cơ bản. Nếu bạn muốn truy cập các tính năng cao cấp, bạn có thể nâng cấp lên gói Pro hoặc Premium."
+      },
+      "item3": {
+        "question": "Làm thế nào để quản lý tài khoản của tôi?",
+        "answer": "Bạn có thể quản lý tài khoản của mình bằng cách vào phần Cài đặt. Tại đây, bạn có thể cập nhật thông tin cá nhân, thay đổi mật khẩu, quản lý đăng ký, và điều chỉnh các tùy chọn thông báo."
+      },
+      "item4": {
+        "question": "Có giới hạn nào cho tài khoản miễn phí?",
+        "answer": "Có, tài khoản miễn phí có một số giới hạn như lưu trữ tối đa 1GB, công cụ cơ bản, và hỗ trợ cộng đồng. Nếu bạn cần tài nguyên và hỗ trợ nhiều hơn, hãy xem xét nâng cấp lên gói trả phí của chúng tôi."
+      }
+    }
   }
 }

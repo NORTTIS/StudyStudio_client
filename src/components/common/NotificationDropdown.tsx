@@ -4,16 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-
-interface Notification {
-  id: string;
-  title: string;
-  description: string;
-  type: "system" | "warning" | "info" | "success";
-  date: string;
-  read: boolean;
-  link?: string;
-}
+import type { Notification } from "@/api/notifications";
+import { markAllNotificationsAsRead, markNotificationAsRead } from "@/api/notifications";
 
 const BellIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -78,50 +70,47 @@ export function NotificationDropdown() {
   // Get current locale from pathname
   const currentLocale = pathname.split("/")[1] || "vi";
 
-  const getInitialNotifications = (): Notification[] => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("notifications");
-      if (saved) {
-        return JSON.parse(saved);
-      }
+  // Mock notifications data - In production, this should come from API
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: "1",
+      title: t("items.upgrade.title"),
+      description: t("items.upgrade.description"),
+      type: "warning",
+      date: t("items.upgrade.date"),
+      read: false
+    },
+    {
+      id: "2",
+      title: t("items.maintenance.title"),
+      description: t("items.maintenance.description"),
+      type: "system",
+      date: t("items.maintenance.date"),
+      read: false
+    },
+    {
+      id: "3",
+      title: t("items.feature.title"),
+      description: t("items.feature.description"),
+      type: "success",
+      date: t("items.feature.date"),
+      read: true
     }
+  ]);
 
-    return [
-      {
-        id: "1",
-        title: t("items.upgrade.title"),
-        description: t("items.upgrade.description"),
-        type: "warning",
-        date: t("items.upgrade.date"),
-        read: false
-      },
-      {
-        id: "2",
-        title: t("items.maintenance.title"),
-        description: t("items.maintenance.description"),
-        type: "system",
-        date: t("items.maintenance.date"),
-        read: false
-      },
-      {
-        id: "3",
-        title: t("items.feature.title"),
-        description: t("items.feature.description"),
-        type: "success",
-        date: t("items.feature.date"),
-        read: true
-      }
-    ];
-  };
-
-  const [notifications, setNotifications] = useState<Notification[]>(getInitialNotifications());
-
-  // Save to localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("notifications", JSON.stringify(notifications));
-    }
-  }, [notifications]);
+  // TODO: Fetch notifications from API
+  // useEffect(() => {
+  //   const fetchNotifications = async () => {
+  //     try {
+  //       const response = await fetch('/api/notifications');
+  //       const data = await response.json();
+  //       setNotifications(data);
+  //     } catch (error) {
+  //       console.error('Failed to fetch notifications:', error);
+  //     }
+  //   };
+  //   fetchNotifications();
+  // }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -137,8 +126,15 @@ export function NotificationDropdown() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      // Call API to mark notification as read
+      await markNotificationAsRead(notification.id);
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+
+    // Optimistically update UI
     setNotifications(notifications.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
 
     // Close dropdown
@@ -148,7 +144,15 @@ export function NotificationDropdown() {
     router.push(`/${currentLocale}/announcements?id=${notification.id}`);
   };
 
-  const markAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
+    try {
+      // Call API to mark all notifications as read
+      await markAllNotificationsAsRead();
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
+
+    // Optimistically update UI
     setNotifications(notifications.map((n) => ({ ...n, read: true })));
   };
 
@@ -202,7 +206,7 @@ export function NotificationDropdown() {
           <div className="flex items-center justify-between border-[#E5E5E5] border-b px-4 py-3">
             <h3 className="font-semibold text-[#261E33]">{t("title")}</h3>
             {unreadCount > 0 && (
-              <button type="button" onClick={markAllAsRead} className="text-[#FF5F3D] text-xs hover:underline">
+              <button type="button" onClick={handleMarkAllAsRead} className="text-[#FF5F3D] text-xs hover:underline">
                 {t("markAllRead")}
               </button>
             )}

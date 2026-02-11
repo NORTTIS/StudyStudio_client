@@ -3,30 +3,33 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { isAuthenticated } from "@/api/auth";
 import { LoadingPage } from "@/components/common";
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const locale = useLocale();
+  const _router = useRouter();
+  const _pathname = usePathname();
+  const _locale = useLocale();
   const _t = useTranslations("Common");
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Check authentication on mount
-    const checkAuth = () => {
-      if (!isAuthenticated()) {
-        // Store intended destination for redirect after login
-        const redirectUrl = encodeURIComponent(pathname);
-        router.replace(`/${locale}/login?redirect=${redirectUrl}`);
-      } else {
-        setIsChecking(false);
-      }
-    };
+    // TEMPORARY: Disable authentication check for development
+    // TODO: Re-enable authentication before production
+    setIsChecking(false);
 
-    checkAuth();
-  }, [router, locale, pathname]);
+    // Check authentication on mount
+    // const checkAuth = () => {
+    //   if (!isAuthenticated()) {
+    //     // Store intended destination for redirect after login
+    //     const redirectUrl = encodeURIComponent(pathname);
+    //     router.replace(`/${locale}/login?redirect=${redirectUrl}`);
+    //   } else {
+    //     setIsChecking(false);
+    //   }
+    // };
+
+    // checkAuth();
+  }, []);
 
   // Show loading state while checking authentication
   if (isChecking) {
