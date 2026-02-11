@@ -23,7 +23,7 @@ export default function Login() {
   // ✅ Schema validation
   const loginSchema = z.object({
     email: z.string().min(1, t("emailRequired")).email(t("emailInvalid")),
-    password: z.string().min(1, t("passwordRequired")),
+    password: z.string().min(1, t("passwordRequired"))
   });
 
   type LoginFormData = z.infer<typeof loginSchema>;
@@ -31,9 +31,9 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting }
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema)
   });
 
   // ✅ Submit handler
@@ -55,10 +55,7 @@ export default function Login() {
           <div className="mb-6 flex items-center justify-center gap-3">
             <svg width="48" height="48" viewBox="0 0 64 64">
               <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
-              <path
-                d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z"
-                fill="#FB923C"
-              />
+              <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
             </svg>
 
             <span className="font-bold text-3xl text-orange-500 leading-tight">
@@ -68,9 +65,7 @@ export default function Login() {
 
           {/* ✅ HEADER */}
           <div className="mb-6 text-center">
-            <h1 className="mb-2 font-bold text-2xl text-[#261E33]">
-              {t("title")}
-            </h1>
+            <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("title")}</h1>
             <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
           </div>
 
@@ -80,15 +75,9 @@ export default function Login() {
             variant="outline"
             fullWidth
             className="mb-6 flex items-center justify-center gap-2"
-            onClick={handleGoogleLogin}
-          >
+            onClick={handleGoogleLogin}>
             {/* Google Icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 48 48"
-              width="18"
-              height="18"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18">
               <path
                 fill="#EA4335"
                 d="M24 9.5c3.54 0 6.2 1.53 7.63 2.8l5.56-5.56C33.64 3.36 29.24 1.5 24 1.5 14.98 1.5 7.21 6.98 3.69 14.91l6.91 5.36C12.4 14.3 17.77 9.5 24 9.5z"
@@ -132,15 +121,12 @@ export default function Login() {
             {/* PASSWORD + Eye Icon */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="font-medium text-sm text-[#261E33]">
-                  {t("password")}
-                </label>
+                <label className="font-medium text-sm text-[#261E33]">{t("password")}</label>
 
                 {/* ✅ FIX locale link */}
                 <Link
                   href={`/${locale}/forgot-password`}
-                  className="text-sm text-muted-foreground hover:text-orange-500"
-                >
+                  className="text-sm text-muted-foreground hover:text-orange-500">
                   {t("forgotPassword")}
                 </Link>
               </div>
@@ -159,8 +145,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                >
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
@@ -171,8 +156,7 @@ export default function Login() {
               type="submit"
               fullWidth
               isLoading={isSubmitting}
-              className="w-full bg-orange-500 hover:bg-orange-600"
-            >
+              className="w-full bg-orange-500 hover:bg-orange-600">
               {t("signInButton")}
             </Button>
           </form>
@@ -180,10 +164,7 @@ export default function Login() {
           {/* ✅ FOOTER REGISTER LINK FIX */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {t("noAccount")}{" "}
-            <Link
-              href={`/${locale}/register`}
-              className="text-orange-600 font-medium hover:underline"
-            >
+            <Link href={`/${locale}/register`} className="text-orange-600 font-medium hover:underline">
               {t("signUpLink")}
             </Link>
           </p>

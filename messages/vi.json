@@ -34,5 +34,106 @@
       "title": "Đăng Nhập - StudyStudio",
       "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
     }
+  },
+  "RegisterPage": {
+    "title": "Tạo tài khoản",
+    "subtitle": "Bắt đầu sử dụng Study Studio miễn phí",
+    "firstName": "Tên",
+    "lastName": "Họ",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "confirmPassword": "Nhập lại mật khẩu",
+    "firstNameRequired": "Tên là bắt buộc",
+    "firstNameInvalid": "Tên không được chứa số và tối đa 10 ký tự",
+    "lastNameRequired": "Họ là bắt buộc",
+    "lastNameInvalid": "Họ không được chứa số và tối đa 10 ký tự",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không đúng định dạng (ví dụ: abc@gmail.com)",
+    "emailNoSpaces": "Email không được chứa khoảng trắng",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, gồm 1 chữ in hoa và 1 số",
+    "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+    "confirmPasswordMismatch": "Mật khẩu nhập lại không khớp",
+    "continueWithGoogle": "Tiếp tục với Google",
+    "orContinueWith": "Hoặc tiếp tục với",
+    "createAccountButton": "Tạo tài khoản",
+    "hasAccount": "Đã có tài khoản?",
+    "signInLink": "Đăng nhập",
+    "successMessage": "Đăng ký thành công!",
+    "verificationEmailSent": "Email xác thực đã được gửi. Đang chuyển sang trang đăng nhập...",
+    "registrationFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+    "verifyEmailTitle": "Xác thực Email",
+    "verifyEmailSubtitle": "Hãy kiểm tra email của bạn để biết các bước tiếp theo",
+    "checkYourEmail": "Kiểm tra email của bạn",
+    "verificationLinkSentTo": "Chúng tôi đã gửi liên kết xác thực đến:",
+    "linkExpiresIn5Minutes": "Liên kết sẽ hết hạn sau 5 phút.",
+    "checkSpamFolder": "Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.",
+    "backToLogin": "Quay lại đăng nhập",
+    "meta": {
+      "title": "Đăng Ký - StudyStudio",
+      "description": "Tạo tài khoản StudyStudio của bạn"
+    }
+  },
+  "ForgotPasswordPage": {
+    "title": "Quên mật khẩu?",
+    "subtitle": "Nhập email của bạn để nhận liên kết đặt lại mật khẩu",
+    "email": "Email",
+    "emailPlaceholder": "Nhập email của bạn",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không đúng định dạng",
+    "emailNoSpaces": "Email không được chứa khoảng trắng",
+    "emailNotRegistered": "Email chưa được đăng ký",
+    "sendResetLink": "Gửi liên kết đặt lại",
+    "backToLogin": "Quay lại đăng nhập",
+    "successTitle": "Đã gửi email!",
+    "successSubtitle": "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến",
+    "successInstructions": "Vui lòng kiểm tra hộp thư đến và nhấp vào liên kết để đặt lại mật khẩu.",
+    "notReceived": "Chưa nhận được email?",
+    "resendLink": "Gửi lại",
+    "meta": {
+      "title": "Quên Mật Khẩu - StudyStudio",
+      "description": "Đặt lại mật khẩu StudyStudio của bạn"
+    }
+  },
+  "ResetPasswordPage": {
+    "title": "Tạo mật khẩu mới",
+    "subtitle": "Nhập mật khẩu mới cho tài khoản của bạn",
+    "password": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "passwordInvalid": "Mật khẩu phải từ 10 đến 20 ký tự, bao gồm ít nhất 1 chữ viết hoa và 1 chữ số",
+    "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+    "confirmPasswordMismatch": "Mật khẩu xác nhận không khớp",
+    "resetPasswordButton": "Đặt lại mật khẩu",
+    "invalidTokenTitle": "Liên kết đặt lại mật khẩu không hợp lệ",
+    "invalidTokenMessage": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+    "backToLogin": "Quay lại trang đăng nhập",
+    "successTitle": "Đặt lại mật khẩu thành công!",
+    "successMessage": "Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
+    "goToLogin": "Đi đến trang đăng nhập",
+    "meta": {
+      "title": "Đặt Lại Mật Khẩu - StudyStudio",
+      "description": "Đặt lại mật khẩu StudyStudio của bạn"
+    }
+  },
+  "VerifyEmailPage": {
+    "title": "Xác thực Email",
+    "subtitle": "Kích hoạt tài khoản Study Studio của bạn",
+    "loading": "Đang xác thực email, vui lòng chờ...",
+    "successTitle": "Xác thực thành công",
+    "successMessage": "Tài khoản của bạn đã được xác thực thành công.",
+    "successDescription": "Bạn có thể đăng nhập để bắt đầu sử dụng hệ thống.",
+    "alreadyVerifiedMessage": "Tài khoản của bạn đã được xác thực trước đó.",
+    "invalidTokenTitle": "Liên kết không hợp lệ",
+    "invalidTokenMessage": "Liên kết xác thực không hợp lệ hoặc đã hết hạn.",
+    "invalidTokenDescription": "Vui lòng đăng nhập để tiếp tục xác thực tài khoản.",
+    "errorTitle": "Có lỗi xảy ra",
+    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+    "backToLogin": "Quay lại đăng nhập",
+    "meta": {
+      "title": "Xác Thực Email - StudyStudio",
+      "description": "Xác thực tài khoản StudyStudio của bạn"
+    }
   }
 }
