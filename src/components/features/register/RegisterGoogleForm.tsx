@@ -1,6 +1,6 @@
 "use client";
 
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 
@@ -45,11 +45,11 @@ export function RegisterGoogleForm() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8 space-y-6">
-          <h1 className="text-2xl font-bold text-center">Tạo tài khoản với Google</h1>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-md space-y-6 rounded-xl bg-white p-8 shadow-lg">
+          <h1 className="text-center font-bold text-2xl">Tạo tài khoản với Google</h1>
 
-          <p className="text-center text-sm text-muted-foreground">Chọn tài khoản Google để đăng ký Study Studio</p>
+          <p className="text-center text-muted-foreground text-sm">Chọn tài khoản Google để đăng ký Study Studio</p>
 
           <div className="flex justify-center">
             <GoogleLogin
@@ -60,7 +60,7 @@ export function RegisterGoogleForm() {
 
           <button
             onClick={() => router.push(`/${locale}/register`)}
-            className="w-full text-center text-sm text-orange-600 hover:underline">
+            className="w-full text-center text-orange-600 text-sm hover:underline">
             ← Quay lại đăng ký thường
           </button>
         </div>

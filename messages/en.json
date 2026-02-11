@@ -130,5 +130,247 @@
       "title": "Verify Email - StudyStudio",
       "description": "Verify your StudyStudio account"
     }
+  },
+  "SettingsPage": {
+    "title": "Settings",
+    "backToDashboard": "Back to Dashboard",
+    "menu": {
+      "profile": "Profile",
+      "security": "Security",
+      "billing": "Billing & Subscription",
+      "notifications": "Notifications",
+      "help": "Help & Support"
+    },
+    "profile": {
+      "avatarTitle": "Profile Picture",
+      "changeAvatar": "Change Photo",
+      "avatarSupport": "Supported files: JPG, PNG (max 5MB)",
+      "userInfoTitle": "User Information",
+      "userInfoSubtitle": "Update your personal information",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phoneNumber": "Phone Number",
+      "bio": "Bio",
+      "bioPlaceholder": "Write something about yourself...",
+      "preferencesTitle": "Preferences",
+      "preferencesSubtitle": "Customize your experience",
+      "language": "Language",
+      "notificationsTitle": "Email Notifications",
+      "notificationsSubtitle": "Manage your email notification preferences",
+      "studioNotifications": "Notifications from Studio",
+      "studioNotificationsDesc": "Receive email notifications when work is completed",
+      "cancelButton": "Cancel",
+      "saveButton": "Save Changes",
+      "savingButton": "Saving...",
+      "saveSuccess": "Settings saved successfully!",
+      "saveError": "Failed to save settings. Please try again!"
+    },
+    "security": {
+      "comingSoon": "Security features coming soon"
+    },
+    "billing": {
+      "comingSoon": "Billing features coming soon"
+    },
+    "notifications": {
+      "comingSoon": "Notification features coming soon"
+    }
+  },
+  "AnnouncementsPage": {
+    "title": "Announcements",
+    "subtitle": "Track all notifications and system updates",
+    "searchPlaceholder": "Search announcements...",
+    "nav": {
+      "home": "Home",
+      "groups": "Groups",
+      "announcements": "Announcements"
+    },
+    "filters": {
+      "all": "All",
+      "unread": "Unread",
+      "important": "Important"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "announcements": {
+      "upgrade": {
+        "title": "Upgrade Free Plan",
+        "description": "You've used all 3 spaces in the Free plan. Upgrade to Pro for more spaces and advanced features.",
+        "date": "2 hours ago"
+      },
+      "maintenance": {
+        "title": "System Maintenance",
+        "description": "The system will be maintained on 02/15 from 00:00 - 03:00. Please save your work beforehand.",
+        "date": "5 hours ago"
+      },
+      "feature": {
+        "title": "New Feature Update",
+        "description": "We just added project sharing with permissions. Now you can better control who has what access.",
+        "date": "1 day ago"
+      },
+      "member": {
+        "title": "Notification from Member",
+        "description": "Nguyen Van A added you to project SEP490-Q62. Check it out and start collaborating.",
+        "date": "2 days ago"
+      },
+      "achievement": {
+        "title": "Goal Completed",
+        "description": "Congratulations! You've completed all tasks in this sprint.",
+        "date": "3 days ago"
+      }
+    },
+    "upgradeNow": "Upgrade Now",
+    "noAnnouncements": "No announcements"
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View all notifications",
+    "noNotifications": "No notifications",
+    "items": {
+      "upgrade": {
+        "title": "Upgrade Free Plan",
+        "description": "You've used all 3 spaces. Upgrade to Pro for more.",
+        "date": "2h ago"
+      },
+      "maintenance": {
+        "title": "System Maintenance",
+        "description": "System maintenance on 02/15 from 00:00 - 03:00.",
+        "date": "5h ago"
+      },
+      "feature": {
+        "title": "New Feature",
+        "description": "Project sharing with permissions is now available.",
+        "date": "1d ago"
+      }
+    }
+  },
+  "Header": {
+    "searchPlaceholder": "Search projects, tasks...",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "SecurityPage": {
+    "title": "Security",
+    "backToSettings": "Back to Settings",
+    "changePasswordTitle": "Change Password",
+    "changePasswordSubtitle": "Update your password regularly to keep your account secure.",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Enter current password",
+    "currentPasswordRequired": "Current password is required",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password",
+    "newPasswordRequired": "New password is required",
+    "passwordMinLength": "New password must be at least 8 characters",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Re-enter new password",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordMismatch": "Passwords do not match",
+    "cancelButton": "Cancel",
+    "updateButton": "Update Password",
+    "updatingButton": "Updating...",
+    "changePasswordSuccess": "Password updated successfully!",
+    "changePasswordError": "Failed to update password. Please try again!"
+  },
+  "BillingPage": {
+    "plansTitle": "Subscription Plans",
+    "plansSubtitle": "Choose the plan that fits your needs",
+    "plansDescription": "All basic features included",
+    "recommended": "Recommended",
+    "plans": {
+      "period": "/month",
+      "free": {
+        "name": "Free",
+        "feature1": "3 workspaces",
+        "feature2": "5GB storage",
+        "feature3": "Basic support",
+        "feature4": "Up to 5 members",
+        "button": "Current Plan"
+      },
+      "pro": {
+        "name": "Pro",
+        "feature1": "Unlimited workspaces",
+        "feature2": "100GB storage",
+        "feature3": "Priority support",
+        "feature4": "Unlimited members",
+        "button": "Upgrade to Pro"
+      },
+      "premium": {
+        "name": "Premium",
+        "feature1": "All Pro features",
+        "feature2": "1TB storage",
+        "feature3": "24/7 support",
+        "feature4": "Advanced features",
+        "button": "Upgrade to Premium"
+      }
+    },
+    "historyTitle": "Billing History",
+    "historySubtitle": "View all your transactions and invoices",
+    "history": {
+      "today": "Today",
+      "lastMonth": "Last month",
+      "twoMonthsAgo": "2 months ago",
+      "threeMonthsAgo": "3 months ago",
+      "annual": "Annual plan",
+      "subscription": "Monthly subscription"
+    },
+    "table": {
+      "invoice": "Invoice",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount"
+    },
+    "invoiceInfo": {
+      "title": "Invoice Information",
+      "subtitle": "Update your billing and invoice information",
+      "email": "Invoice Email",
+      "paymentMethod": "Payment Method",
+      "emailNotification": "Receive email notifications for new invoices",
+      "cancelButton": "Cancel",
+      "saveButton": "Save Changes",
+      "saveSuccess": "Invoice information saved successfully!"
+    }
+  },
+  "HelpPage": {
+    "form": {
+      "formTitle": "Submit Complaint or Contact Support",
+      "subtitle": "Let us know if you're experiencing any issues or have questions",
+      "localPhoneId": "Local phone ID",
+      "localPhoneIdPlaceholder": "Local code",
+      "email": "Email",
+      "emailPlaceholder": "dat@studist.edu.vn",
+      "title": "Title",
+      "titlePlaceholder": "A few words describing the issue",
+      "content": "Content",
+      "contentPlaceholder": "Describe your issue in detail...",
+      "cancelButton": "Cancel",
+      "submitButton": "Submit Report",
+      "validationError": "Please fill in all fields",
+      "submitSuccess": "Your report has been submitted successfully!"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find answers to common questions",
+      "item1": {
+        "question": "How do I get started?",
+        "answer": "To start using Study Studio, simply create a free account and complete your personal profile. Then you can explore features and join classes or study groups."
+      },
+      "item2": {
+        "question": "Do I need a subscription?",
+        "answer": "No, you don't need a mandatory subscription. Study Studio offers a free plan with basic features. If you want access to premium features, you can upgrade to Pro or Premium plans."
+      },
+      "item3": {
+        "question": "How do I manage my account?",
+        "answer": "You can manage your account by going to Settings. There you can update personal information, change password, manage subscriptions, and adjust notification preferences."
+      },
+      "item4": {
+        "question": "Are there any limitations for free accounts?",
+        "answer": "Yes, free accounts have some limitations such as maximum 1GB storage, basic tools, and community support. If you need more resources and support, consider upgrading to our paid plans."
+      }
+    }
   }
 }

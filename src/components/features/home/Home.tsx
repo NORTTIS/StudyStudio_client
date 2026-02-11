@@ -15,7 +15,7 @@ export default function HomePage({ data }: HomePageProps) {
         <DashboardSidebar />
 
         <main className="flex-1 px-6 py-6 lg:px-8">
-          <Header userInitials={data.userInitials} />
+          <Header />
           <HomeSummary statusChips={data.statusChips} />
           <HomeBoard sections={data.boardSections} />
         </main>

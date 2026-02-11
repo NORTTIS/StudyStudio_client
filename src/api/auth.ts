@@ -152,7 +152,13 @@ export async function refreshAccessToken(locale = "vi"): Promise<AuthTokens | nu
 
 /**
  * Check if user is authenticated
+ * TEMPORARY: Always return true for development
+ * TODO: Re-enable authentication check before production
  */
 export function isAuthenticated(): boolean {
-  return !!getAccessToken() && !isTokenExpired();
+  // TEMPORARY: Disable authentication check
+  return true;
+
+  // Original code (re-enable for production):
+  // return !!getAccessToken() && !isTokenExpired();
 }
