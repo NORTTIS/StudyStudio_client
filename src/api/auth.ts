@@ -34,7 +34,7 @@ const STORAGE_KEYS = {
 const isBrowser = typeof window !== "undefined";
 
 /**
- * Store authentication tokens and user data in localStorage
+ * Store authentication tokens and user data in localStorage and cookies
  */
 export function setAuthTokens(data: AuthTokens): void {
   if (!isBrowser) return;
@@ -44,10 +44,20 @@ export function setAuthTokens(data: AuthTokens): void {
   // Calculate expiry timestamp (current time + expireIn milliseconds)
   const expiryTime = Date.now() + accessExpireIn;
 
+  // Store in localStorage
   localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
   localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
   localStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiryTime.toString());
   localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+
+  // Also store access token in cookies for server-side access
+  // Note: This is not httpOnly, so less secure than server-set cookies
+  // For production, consider having the API set httpOnly cookies
+  const expiryDate = new Date(expiryTime);
+  /* eslint-disable */
+  document.cookie = `accessToken=${accessToken}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+  document.cookie = `refreshToken=${refreshToken}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+  /* eslint-enable */
 }
 
 /**
@@ -100,15 +110,22 @@ export function isTokenExpired(): boolean {
 }
 
 /**
- * Clear all authentication data from localStorage
+ * Clear all authentication data from localStorage and cookies
  */
 export function clearAuthTokens(): void {
   if (!isBrowser) return;
 
+  // Clear localStorage
   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
   localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+
+  // Clear cookies
+  /* eslint-disable */
+  document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
+  document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
+  /* eslint-enable */
 }
 
 /**
@@ -152,13 +169,38 @@ export async function refreshAccessToken(locale = "vi"): Promise<AuthTokens | nu
 
 /**
  * Check if user is authenticated
- * TEMPORARY: Always return true for development
- * TODO: Re-enable authentication check before production
  */
 export function isAuthenticated(): boolean {
-  // TEMPORARY: Disable authentication check
-  return true;
+  return !!getAccessToken() && !isTokenExpired();
+}
 
-  // Original code (re-enable for production):
-  // return !!getAccessToken() && !isTokenExpired();
+/**
+ * Logout user - Clear tokens and call logout API
+ * @param locale - Current locale for Accept-Language header
+ */
+export async function logout(locale = "vi"): Promise<boolean> {
+  const accessToken = getAccessToken();
+
+  // Clear local tokens first
+  clearAuthTokens();
+
+  // Call logout API if we have a token
+  if (accessToken) {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept-Language": locale,
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+      return true;
+    } catch {
+      // Even if API call fails, tokens are already cleared
+      return true;
+    }
+  }
+
+  return true;
 }
