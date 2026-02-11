@@ -153,8 +153,9 @@ export default function BillingPage() {
           {subscriptionPlans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative overflow-hidden rounded-2xl border-2 transition-all ${plan.isFeatured ? "border-[#FF5F3D] bg-white shadow-lg" : "border-[#E5E5E5] bg-white"
-                }`}>
+              className={`relative overflow-hidden rounded-2xl border-2 transition-all ${
+                plan.isFeatured ? "border-[#FF5F3D] bg-white shadow-lg" : "border-[#E5E5E5] bg-white"
+              }`}>
               {plan.isFeatured && (
                 <div className="absolute top-0 right-0 rounded-bl-lg bg-[#FF5F3D] px-4 py-1 font-bold text-white text-xs">
                   {t("recommended")}
@@ -170,10 +171,11 @@ export default function BillingPage() {
                 <Button
                   onClick={() => handlePlanChange(plan.id)}
                   disabled={currentPlan === plan.id}
-                  className={`mb-6 w-full rounded-lg py-2.5 font-semibold ${plan.isFeatured
+                  className={`mb-6 w-full rounded-lg py-2.5 font-semibold ${
+                    plan.isFeatured
                       ? "bg-[#FF5F3D] text-white hover:bg-[#ff4620]"
                       : "bg-[#261E33] text-white hover:bg-[#1a1424]"
-                    } disabled:cursor-not-allowed disabled:opacity-50`}>
+                  } disabled:cursor-not-allowed disabled:opacity-50`}>
                   {currentPlan === plan.id ? t("plans.free.button") : plan.buttonText}
                 </Button>
                 <div className="space-y-3 border-[#E5E5E5] border-t pt-6">
