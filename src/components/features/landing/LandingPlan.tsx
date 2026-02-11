@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { FaFacebook, FaInstagram, FaLinkedin, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
-
-import { FaXTwitter, FaYoutube, FaInstagram, FaFacebook, FaLinkedin } from "react-icons/fa6";
 
 export default function LandingPlan() {
   return (
@@ -15,21 +14,21 @@ export default function LandingPlan() {
             <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
           </svg>
 
-          <span className="text-2xl font-extrabold leading-tight text-orange-500 md:text-3xl">
+          <span className="font-extrabold text-2xl text-orange-500 leading-tight md:text-3xl">
             Study <br /> Studio
           </span>
         </Link>
 
         <nav className="hidden items-center divide-x divide-gray-300 text-base md:flex">
-          <Link href="/landing/personal" className="px-6 font-medium hover:text-orange-500 transition">
+          <Link href="/landing/personal" className="px-6 font-medium transition hover:text-orange-500">
             Không gian cá nhân
           </Link>
 
-          <Link href="/landing/group" className="px-6 font-medium hover:text-orange-500 transition">
+          <Link href="/landing/group" className="px-6 font-medium transition hover:text-orange-500">
             Không gian nhóm
           </Link>
 
-          <Link href="/landing/management" className="px-6 font-medium hover:text-orange-500 transition">
+          <Link href="/landing/management" className="px-6 font-medium transition hover:text-orange-500">
             Không gian quản lý
           </Link>
 
@@ -50,7 +49,7 @@ export default function LandingPlan() {
       </header>
 
       <section className="py-20 text-center">
-        <h1 className="text-5xl font-extrabold text-gray-700 md:text-6xl">
+        <h1 className="font-extrabold text-5xl text-gray-700 md:text-6xl">
           Các gói đăng ký trả phí <br />
           của chúng tôi
         </h1>
@@ -61,22 +60,22 @@ export default function LandingPlan() {
         <div className="mx-auto flex max-w-6xl justify-between gap-24 px-16">
           {/* ===== FREE PLAN ===== */}
           <div className="w-[460px] rounded-2xl border border-orange-500 px-14 py-12 text-center">
-            <h2 className="text-2xl font-extrabold text-gray-700">Gói miễn phí</h2>
+            <h2 className="font-extrabold text-2xl text-gray-700">Gói miễn phí</h2>
 
-            <p className="mt-2 text-lg font-bold text-orange-500">0 VND</p>
+            <p className="mt-2 font-bold text-lg text-orange-500">0 VND</p>
 
-            <p className="mt-4 text-sm leading-relaxed text-gray-500">
+            <p className="mt-4 text-gray-500 text-sm leading-relaxed">
               Phù hợp cho người dùng cá nhân và các <br />
               nhóm nhỏ trải nghiệm
             </p>
 
             <Link href="/register">
-              <Button className="mt-8 w-[65%] rounded-full bg-orange-500 py-6 text-lg font-semibold hover:bg-orange-600">
+              <Button className="mt-8 w-[65%] rounded-full bg-orange-500 py-6 font-semibold text-lg hover:bg-orange-600">
                 Đăng ký
               </Button>
             </Link>
 
-            <ul className="mt-12 flex flex-col items-center gap-7 text-sm text-gray-600">
+            <ul className="mt-12 flex flex-col items-center gap-7 text-gray-600 text-sm">
               <li className="flex items-center gap-2">
                 <span className="text-orange-500">▣</span>
                 Tối đa 3 không gian quản lý riêng biệt
@@ -106,22 +105,22 @@ export default function LandingPlan() {
 
           {/* ===== PREMIUM PLAN ===== */}
           <div className="w-[460px] rounded-2xl border border-orange-500 px-14 py-12 text-center">
-            <h2 className="text-2xl font-extrabold text-gray-700">Gói nâng cấp</h2>
+            <h2 className="font-extrabold text-2xl text-gray-700">Gói nâng cấp</h2>
 
-            <p className="mt-2 text-lg font-bold text-orange-500">299.000 VND / Tháng</p>
+            <p className="mt-2 font-bold text-lg text-orange-500">299.000 VND / Tháng</p>
 
-            <p className="mt-4 text-sm leading-relaxed text-gray-500">
+            <p className="mt-4 text-gray-500 text-sm leading-relaxed">
               Phù hợp cho các nhóm lớn cần sự linh <br />
               hoạt hơn
             </p>
 
             <Link href="/register">
-              <Button className="mt-8 w-[65%] rounded-full bg-orange-500 py-6 text-lg font-semibold hover:bg-orange-600">
+              <Button className="mt-8 w-[65%] rounded-full bg-orange-500 py-6 font-semibold text-lg hover:bg-orange-600">
                 Đăng ký
               </Button>
             </Link>
 
-            <ul className="mt-12 flex flex-col items-center gap-7 text-sm text-gray-600">
+            <ul className="mt-12 flex flex-col items-center gap-7 text-gray-600 text-sm">
               <li className="flex items-center gap-2">
                 <span className="text-orange-500">▣</span>
                 Tối đa 10 không gian quản lý riêng biệt
@@ -150,7 +149,7 @@ export default function LandingPlan() {
         </div>
       </section>
 
-      <section className="bg-white py-28"></section>
+      <section className="bg-white py-28" />
 
       <footer className="bg-orange-200 py-10">
         <div className="mx-auto flex w-[90%] max-w-7xl items-center justify-between">
@@ -160,7 +159,7 @@ export default function LandingPlan() {
                 <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
                 <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
               </svg>
-              <div className="text-xl font-bold leading-tight text-orange-600">
+              <div className="font-bold text-orange-600 text-xl leading-tight">
                 Study
                 <br />
                 Studio
@@ -169,7 +168,7 @@ export default function LandingPlan() {
 
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F3CFA8] text-gray-700">🌐</div>
-              <button className="flex items-center gap-2 rounded-full bg-[#F3CFA8] px-5 py-2 text-sm font-medium text-gray-800 hover:bg-[#EBC190] transition">
+              <button className="flex items-center gap-2 rounded-full bg-[#F3CFA8] px-5 py-2 font-medium text-gray-800 text-sm transition hover:bg-[#EBC190]">
                 Tiếng Việt
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-gray-600">
                   <path
@@ -185,7 +184,7 @@ export default function LandingPlan() {
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <p className="text-sm text-gray-700">Liên hệ với chúng tôi</p>
+            <p className="text-gray-700 text-sm">Liên hệ với chúng tôi</p>
 
             <div className="flex items-center gap-4">
               <a className="flex h-9 w-9 items-center justify-center rounded-md bg-black text-white">
@@ -210,7 +209,7 @@ export default function LandingPlan() {
             </div>
           </div>
 
-          <div className="text-sm text-gray-700">
+          <div className="text-gray-700 text-sm">
             <p className="mb-3 font-semibold text-black">Sản phẩm</p>
             <ul className="space-y-2">
               <li>Không gian cá nhân</li>

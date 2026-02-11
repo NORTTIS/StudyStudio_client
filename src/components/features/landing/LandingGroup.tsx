@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import { FaFacebook, FaInstagram, FaLinkedin, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
-
-import { FaXTwitter, FaYoutube, FaInstagram, FaFacebook, FaLinkedin } from "react-icons/fa6";
 
 export default function LandingGroup() {
   return (
@@ -16,13 +15,13 @@ export default function LandingGroup() {
             <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
           </svg>
 
-          <span className="text-2xl font-extrabold leading-tight text-orange-500 md:text-3xl">
+          <span className="font-extrabold text-2xl text-orange-500 leading-tight md:text-3xl">
             Study <br /> Studio
           </span>
         </Link>
 
         <nav className="hidden items-center divide-x divide-gray-300 text-base md:flex">
-          <Link href="/landing/personal" className="px-6 font-medium hover:text-orange-500 transition">
+          <Link href="/landing/personal" className="px-6 font-medium transition hover:text-orange-500">
             Không gian cá nhân
           </Link>
 
@@ -30,11 +29,11 @@ export default function LandingGroup() {
             Không gian nhóm
           </Link>
 
-          <Link href="/landing/management" className="px-6 font-medium hover:text-orange-500 transition">
+          <Link href="/landing/management" className="px-6 font-medium transition hover:text-orange-500">
             Không gian quản lý
           </Link>
 
-          <Link href="/landing/plan" className="px-6 font-medium hover:text-orange-500 transition">
+          <Link href="/landing/plan" className="px-6 font-medium transition hover:text-orange-500">
             Gói đăng ký
           </Link>
         </nav>
@@ -52,13 +51,13 @@ export default function LandingGroup() {
 
       <section className="bg-white py-20">
         <div className="mx-auto max-w-5xl text-center">
-          <h1 className="text-5xl font-extrabold leading-tight text-gray-700 md:text-6xl">
+          <h1 className="font-extrabold text-5xl text-gray-700 leading-tight md:text-6xl">
             Không gian làm việc chung cho <br />
             học tập & dự án
           </h1>
 
           <Link href="/group/create">
-            <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 text-lg font-semibold text-white hover:bg-orange-600">
+            <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 font-semibold text-lg text-white hover:bg-orange-600">
               Tạo nhóm →
             </Button>
           </Link>
@@ -77,7 +76,7 @@ export default function LandingGroup() {
       </section>
 
       <section className="bg-[#FFF3E6] py-24">
-        <h2 className="text-center text-5xl font-extrabold text-gray-700">Cách sử dụng</h2>
+        <h2 className="text-center font-extrabold text-5xl text-gray-700">Cách sử dụng</h2>
 
         <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-10 px-6 md:grid-cols-4">
           {[
@@ -87,61 +86,61 @@ export default function LandingGroup() {
             "Cộng tác để cùng nhau hoàn thành công việc."
           ].map((text, i) => (
             <div key={i} className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] text-lg font-bold text-white">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] font-bold text-lg text-white">
                 {i + 1}
               </div>
 
-              <p className="mt-4 text-base font-semibold leading-snug text-black">{text}</p>
+              <p className="mt-4 font-semibold text-base text-black leading-snug">{text}</p>
             </div>
           ))}
         </div>
 
-        <div className="mx-auto mt-16 flex h-[420px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-transparent"></div>
+        <div className="mx-auto mt-16 flex h-[420px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-transparent" />
       </section>
 
       <section className="bg-white py-24">
-        <h2 className="text-center text-5xl font-extrabold text-gray-700">Nhóm có thể làm gì?</h2>
+        <h2 className="text-center font-extrabold text-5xl text-gray-700">Nhóm có thể làm gì?</h2>
 
         <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-x-16 gap-y-14 px-6 md:grid-cols-2">
           <div className="rounded-2xl bg-[#FFD9D2] px-10 py-10 text-center">
-            <h3 className="text-2xl font-extrabold text-black">Quản lý nhóm</h3>
+            <h3 className="font-extrabold text-2xl text-black">Quản lý nhóm</h3>
 
             <div className="my-5 h-px bg-black/20" />
 
-            <p className="text-lg leading-relaxed text-black">
+            <p className="text-black text-lg leading-relaxed">
               Tạo và tổ chức nhóm học tập <br />
               hoặc dự án chỉ trong vài giây
             </p>
           </div>
 
           <div className="rounded-2xl bg-[#FFD9D2] px-10 py-10 text-center">
-            <h3 className="text-2xl font-extrabold text-black">Theo dõi công việc</h3>
+            <h3 className="font-extrabold text-2xl text-black">Theo dõi công việc</h3>
 
             <div className="my-5 h-px bg-black/20" />
 
-            <p className="text-lg leading-relaxed text-black">
+            <p className="text-black text-lg leading-relaxed">
               Nắm rõ ai làm gì, tiến độ <br />
               đến đâu
             </p>
           </div>
 
           <div className="rounded-2xl bg-[#FFD9D2] px-10 py-10 text-center">
-            <h3 className="text-2xl font-extrabold text-black">Phân quyền thông minh</h3>
+            <h3 className="font-extrabold text-2xl text-black">Phân quyền thông minh</h3>
 
             <div className="my-5 h-px bg-black/20" />
 
-            <p className="text-lg leading-relaxed text-black">
+            <p className="text-black text-lg leading-relaxed">
               Tạo và tổ chức nhóm học tập <br />
               hoặc dự án chỉ trong vài giây
             </p>
           </div>
 
           <div className="rounded-2xl bg-[#FFD9D2] px-10 py-10 text-center">
-            <h3 className="text-2xl font-extrabold text-black">AI hỗ trợ học tập</h3>
+            <h3 className="font-extrabold text-2xl text-black">AI hỗ trợ học tập</h3>
 
             <div className="my-5 h-px bg-black/20" />
 
-            <p className="text-lg leading-relaxed text-black">
+            <p className="text-black text-lg leading-relaxed">
               Hỏi đáp, phân tích yêu cầu, <br />
               tạo báo cáo
             </p>
@@ -150,17 +149,17 @@ export default function LandingGroup() {
       </section>
 
       <section className="bg-[#FFF3E6] py-24">
-        <h2 className="text-center text-4xl font-extrabold text-gray-700">Ai đang sử dụng Study Studio</h2>
+        <h2 className="text-center font-extrabold text-4xl text-gray-700">Ai đang sử dụng Study Studio</h2>
 
-        <p className="mt-3 text-center text-lg text-gray-500">Hơn xxx người sử dụng bảng mỗi tháng.</p>
+        <p className="mt-3 text-center text-gray-500 text-lg">Hơn xxx người sử dụng bảng mỗi tháng.</p>
 
         <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-16 px-6 md:grid-cols-2">
           <div className="rounded-2xl bg-[#FAD7A7] px-12 py-10 text-center">
-            <h3 className="text-2xl font-extrabold text-black">Cá nhân & Nhóm</h3>
+            <h3 className="font-extrabold text-2xl text-black">Cá nhân & Nhóm</h3>
 
             <div className="my-6 h-px bg-black/20" />
 
-            <p className="text-lg leading-relaxed text-black text-center">
+            <p className="text-center text-black text-lg leading-relaxed">
               Sinh viên, người tự học, nhóm bạn, <br />
               đội dự án và cộng đồng nhỏ cùng <br />
               nhau học tập và làm việc hiệu quả.
@@ -168,11 +167,11 @@ export default function LandingGroup() {
           </div>
 
           <div className="rounded-2xl bg-[#FAD7A7] px-12 py-10 text-center">
-            <h3 className="text-2xl font-extrabold text-black">Giáo dục</h3>
+            <h3 className="font-extrabold text-2xl text-black">Giáo dục</h3>
 
             <div className="my-6 h-px bg-black/20" />
 
-            <p className="text-lg leading-relaxed text-black text-center">
+            <p className="text-center text-black text-lg leading-relaxed">
               Lớp học, các trường đại học và các <br />
               chương trình giáo dục dành cho <br />
               người trưởng thành.
@@ -183,7 +182,7 @@ export default function LandingGroup() {
 
       <section className="bg-white py-20">
         <div className="mx-auto w-[90%] max-w-6xl">
-          <h3 className="text-center text-2xl font-bold text-gray-800 md:text-3xl">
+          <h3 className="text-center font-bold text-2xl text-gray-800 md:text-3xl">
             Quản lý công việc hiệu quả hơn <br />
             với sự giúp sức của AI
           </h3>
@@ -191,14 +190,14 @@ export default function LandingGroup() {
           <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="rounded-xl border border-gray-200 p-6">
               <h4 className="font-semibold text-gray-800">📊 Cung cấp báo cáo về tình trạng công việc của các nhóm</h4>
-              <div className="mt-6 h-[240px] rounded-lg border-2 border-dashed border-gray-300 bg-gray-50" />
+              <div className="mt-6 h-[240px] rounded-lg border-2 border-gray-300 border-dashed bg-gray-50" />
             </div>
 
             <div className="rounded-xl border border-gray-200 p-6">
               <h4 className="font-semibold text-gray-800">
                 ✨ Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm
               </h4>
-              <div className="mt-6 h-[240px] rounded-lg border-2 border-dashed border-gray-300 bg-gray-50" />
+              <div className="mt-6 h-[240px] rounded-lg border-2 border-gray-300 border-dashed bg-gray-50" />
             </div>
           </div>
         </div>
@@ -212,7 +211,7 @@ export default function LandingGroup() {
                 <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
                 <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
               </svg>
-              <div className="text-xl font-bold leading-tight text-orange-600">
+              <div className="font-bold text-orange-600 text-xl leading-tight">
                 Study
                 <br />
                 Studio
@@ -221,7 +220,7 @@ export default function LandingGroup() {
 
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F3CFA8] text-gray-700">🌐</div>
-              <button className="flex items-center gap-2 rounded-full bg-[#F3CFA8] px-5 py-2 text-sm font-medium text-gray-800 hover:bg-[#EBC190] transition">
+              <button className="flex items-center gap-2 rounded-full bg-[#F3CFA8] px-5 py-2 font-medium text-gray-800 text-sm transition hover:bg-[#EBC190]">
                 Tiếng Việt
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-gray-600">
                   <path
@@ -237,7 +236,7 @@ export default function LandingGroup() {
           </div>
 
           <div className="flex flex-col items-center gap-4">
-            <p className="text-sm text-gray-700">Liên hệ với chúng tôi</p>
+            <p className="text-gray-700 text-sm">Liên hệ với chúng tôi</p>
 
             <div className="flex items-center gap-4">
               <a className="flex h-9 w-9 items-center justify-center rounded-md bg-black text-white">
@@ -262,7 +261,7 @@ export default function LandingGroup() {
             </div>
           </div>
 
-          <div className="text-sm text-gray-700">
+          <div className="text-gray-700 text-sm">
             <p className="mb-3 font-semibold text-black">Sản phẩm</p>
             <ul className="space-y-2">
               <li>Không gian cá nhân</li>
