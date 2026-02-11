@@ -27,8 +27,6 @@ export function RegisterForm() {
 
   const nameRegex = /^[A-Za-zÀ-ỹ\s]{1,20}$/;
 
-  const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{10,20}$/;
-
   const validateEmail = (value: string): string | null => {
     if (!value) return "Vui lòng nhập email.";
     if (value.includes(" ")) return "Email không được chứa khoảng trắng.";
@@ -36,6 +34,22 @@ export function RegisterForm() {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!regex.test(value))
       return "Email không đúng định dạng (ví dụ: abc@gmail.com).";
+
+    return null;
+  };
+
+  const validatePassword = (value: string): string | null => {
+    if (value.length < 10 || value.length > 20) {
+      return "Mật khẩu phải từ 10–20 ký tự.";
+    }
+
+    if (!/[A-Z]/.test(value)) {
+      return "Mật khẩu phải chứa ít nhất 1 chữ in hoa (A-Z).";
+    }
+
+    if (!/[0-9]/.test(value)) {
+      return "Mật khẩu phải chứa ít nhất 1 chữ số (0-9).";
+    }
 
     return null;
   };
@@ -73,10 +87,9 @@ export function RegisterForm() {
       return;
     }
 
-    if (!passwordRegex.test(password)) {
-      setError(
-        "Mật khẩu phải từ 10–20 ký tự, gồm ít nhất 1 chữ in hoa và 1 số."
-      );
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -134,14 +147,12 @@ export function RegisterForm() {
         </p>
       </div>
 
-      {/* Google button */}
       <Button
         type="button"
         variant="outline"
         className="w-full gap-2 hover:bg-gray-100 flex items-center justify-center"
         onClick={handleRegisterWithGoogle}
       >
-        {/* Google Icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 48 48"
@@ -165,7 +176,6 @@ export function RegisterForm() {
             d="M24 46.5c6.48 0 11.92-2.13 15.9-5.78l-7.05-5.49c-1.96 1.32-4.47 2.1-8.85 2.1-6.2 0-11.45-4.19-13.3-9.83l-6.3 6.47C7.9 41.94 15.5 46.5 24 46.5z"
           />
         </svg>
-
         Tiếp tục với Google
       </Button>
 
@@ -212,7 +222,6 @@ export function RegisterForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -232,7 +241,6 @@ export function RegisterForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
-
             <button
               type="button"
               onClick={() => setShowConfirm(!showConfirm)}
