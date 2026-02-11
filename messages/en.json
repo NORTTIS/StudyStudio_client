@@ -1,4 +1,8 @@
 {
+  "Common": {
+    "loading": "Loading...",
+    "checkingAuth": "Checking authentication..."
+  },
   "HomePage": {
     "title": "Home",
     "description": "Home page of the application"
@@ -19,6 +23,8 @@
     "orContinueWith": "OR CONTINUE WITH",
     "noAccount": "Don't have an account?",
     "signUpLink": "Sign up",
+    "loginFailed": "Login failed. Please try again.",
+    "connectionError": "Cannot connect to server. Please try again.",
     "meta": {
       "title": "Sign In - StudyStudio",
       "description": "Sign in to your StudyStudio account"

@@ -1,4 +1,8 @@
 {
+  "Common": {
+    "loading": "Đang tải...",
+    "checkingAuth": "Đang kiểm tra xác thực..."
+  },
   "HomePage": {
     "title": "Trang chủ",
     "description": "Trang chủ của ứng dụng",
@@ -30,6 +34,8 @@
     "orContinueWith": "HOẶC TIẾP TỤC VỚI",
     "noAccount": "Chưa có tài khoản?",
     "signUpLink": "Đăng ký",
+    "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
     "meta": {
       "title": "Đăng Nhập - StudyStudio",
       "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
