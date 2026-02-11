@@ -318,7 +318,8 @@
     "searchPlaceholder": "Tìm kiếm dự án, công việc...",
     "settings": "Cài đặt",
     "profile": "Hồ sơ",
-    "logout": "Đăng xuất"
+    "logout": "Đăng xuất",
+    "loggingOut": "Đang đăng xuất..."
   },
   "SecurityPage": {
     "title": "Bảo mật",
