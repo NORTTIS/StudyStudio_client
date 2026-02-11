@@ -1,4 +1,8 @@
 {
+  "Common": {
+    "loading": "Đang tải...",
+    "checkingAuth": "Đang kiểm tra xác thực..."
+  },
   "HomePage": {
     "title": "Trang chủ",
     "description": "Trang chủ của ứng dụng",
@@ -30,166 +34,112 @@
     "orContinueWith": "HOẶC TIẾP TỤC VỚI",
     "noAccount": "Chưa có tài khoản?",
     "signUpLink": "Đăng ký",
+    "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
     "meta": {
       "title": "Đăng Nhập - StudyStudio",
       "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
     }
   },
   "RegisterPage": {
-    "title": "Tạo tài khoản của bạn",
-    "subtitle": "Tham gia Study Studio ngay hôm nay",
-    "sidebarTitle": "Quản lý học tập. Kết nối đội nhóm",
-    "sidebarDescription": "Một nơi để học tập, chia sẻ và cùng nhau hoàn thành mục tiêu.",
-    "firstName": "Họ",
-    "firstNamePlaceholder": "Nhập họ của bạn",
-    "firstNameRequired": "Họ là bắt buộc",
-    "lastName": "Tên",
-    "lastNamePlaceholder": "Nhập tên của bạn",
-    "lastNameRequired": "Tên là bắt buộc",
+    "title": "Tạo tài khoản",
+    "subtitle": "Bắt đầu sử dụng Study Studio miễn phí",
+    "firstName": "Tên",
+    "lastName": "Họ",
     "email": "Email",
-    "emailPlaceholder": "Nhập email của bạn",
-    "emailRequired": "Email là bắt buộc",
-    "emailInvalid": "Email không hợp lệ",
     "password": "Mật khẩu",
-    "passwordPlaceholder": "Nhập mật khẩu của bạn",
+    "confirmPassword": "Nhập lại mật khẩu",
+    "firstNameRequired": "Tên là bắt buộc",
+    "firstNameInvalid": "Tên không được chứa số và tối đa 10 ký tự",
+    "lastNameRequired": "Họ là bắt buộc",
+    "lastNameInvalid": "Họ không được chứa số và tối đa 10 ký tự",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không đúng định dạng (ví dụ: abc@gmail.com)",
+    "emailNoSpaces": "Email không được chứa khoảng trắng",
     "passwordRequired": "Mật khẩu là bắt buộc",
-    "passwordMinLength": "Mật khẩu phải có ít nhất 8 ký tự",
-    "confirmPassword": "Xác nhận mật khẩu",
-    "confirmPasswordPlaceholder": "Xác nhận mật khẩu của bạn",
-    "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
-    "passwordMismatch": "Mật khẩu không khớp",
-    "agreeToTerms": "Tôi đồng ý với Điều khoản dịch vụ và Chính sách bảo mật",
-    "termsRequired": "Bạn phải đồng ý với các điều khoản",
-    "signUpButton": "Đăng ký",
+    "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, gồm 1 chữ in hoa và 1 số",
+    "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+    "confirmPasswordMismatch": "Mật khẩu nhập lại không khớp",
     "continueWithGoogle": "Tiếp tục với Google",
-    "orContinueWith": "HOẶC TIẾP TỤC VỚI",
-    "haveAccount": "Đã có tài khoản?",
+    "orContinueWith": "Hoặc tiếp tục với",
+    "createAccountButton": "Tạo tài khoản",
+    "hasAccount": "Đã có tài khoản?",
     "signInLink": "Đăng nhập",
+    "successMessage": "Đăng ký thành công!",
+    "verificationEmailSent": "Email xác thực đã được gửi. Đang chuyển sang trang đăng nhập...",
+    "registrationFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+    "verifyEmailTitle": "Xác thực Email",
+    "verifyEmailSubtitle": "Hãy kiểm tra email của bạn để biết các bước tiếp theo",
+    "checkYourEmail": "Kiểm tra email của bạn",
+    "verificationLinkSentTo": "Chúng tôi đã gửi liên kết xác thực đến:",
+    "linkExpiresIn5Minutes": "Liên kết sẽ hết hạn sau 5 phút.",
+    "checkSpamFolder": "Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.",
+    "backToLogin": "Quay lại đăng nhập",
     "meta": {
       "title": "Đăng Ký - StudyStudio",
       "description": "Tạo tài khoản StudyStudio của bạn"
     }
   },
-  "SettingsPage": {
-    "title": "Cài đặt",
-    "backToDashboard": "Quay lại Dashboard",
-    "menu": {
-      "profile": "Hồ sơ",
-      "security": "Bảo mật",
-      "billing": "Gói dùng kỳ & Thanh toán",
-      "notifications": "Tự động báo cáo"
-    },
-    "profile": {
-      "avatarTitle": "Hình ảnh hiển thị",
-      "changeAvatar": "Thay đổi ảnh",
-      "avatarSupport": "Tệp hỗ trợ: JPG, PNG (tối đa 5MB)",
-      "userInfoTitle": "Thông tin người dùng",
-      "userInfoSubtitle": "Cập nhật thông tin cá nhân của bạn",
-      "firstName": "Họ",
-      "lastName": "Tên",
-      "email": "Email",
-      "phoneNumber": "Số điện thoại",
-      "bio": "Tiểu sử",
-      "bioPlaceholder": "Viết gì đó về bạn...",
-      "preferencesTitle": "Tùy chọn",
-      "preferencesSubtitle": "Tùy chỉnh trải nghiệm của bạn",
-      "language": "Ngôn ngữ",
-      "notificationsTitle": "Thông báo qua email",
-      "notificationsSubtitle": "Quản lý các thông báo qua email của bạn",
-      "studioNotifications": "Thông báo từ Studio",
-      "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
-      "cancelButton": "Hủy bỏ",
-      "saveButton": "Lưu thay đổi",
-      "savingButton": "Đang lưu...",
-      "saveSuccess": "Cài đặt đã được lưu thành công!",
-      "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!"
-    },
-    "security": {
-      "comingSoon": "Tính năng bảo mật sẽ sớm có"
-    },
-    "billing": {
-      "comingSoon": "Tính năng thanh toán sẽ sớm có"
-    },
-    "notifications": {
-      "comingSoon": "Tính năng thông báo sẽ sớm có"
+  "ForgotPasswordPage": {
+    "title": "Quên mật khẩu?",
+    "subtitle": "Nhập email của bạn để nhận liên kết đặt lại mật khẩu",
+    "email": "Email",
+    "emailPlaceholder": "Nhập email của bạn",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không đúng định dạng",
+    "emailNoSpaces": "Email không được chứa khoảng trắng",
+    "emailNotRegistered": "Email chưa được đăng ký",
+    "sendResetLink": "Gửi liên kết đặt lại",
+    "backToLogin": "Quay lại đăng nhập",
+    "successTitle": "Đã gửi email!",
+    "successSubtitle": "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến",
+    "successInstructions": "Vui lòng kiểm tra hộp thư đến và nhấp vào liên kết để đặt lại mật khẩu.",
+    "notReceived": "Chưa nhận được email?",
+    "resendLink": "Gửi lại",
+    "meta": {
+      "title": "Quên Mật Khẩu - StudyStudio",
+      "description": "Đặt lại mật khẩu StudyStudio của bạn"
     }
   },
-  "AnnouncementsPage": {
-    "title": "Thông báo",
-    "subtitle": "Theo dõi tất cả thông báo và cập nhật hệ thống",
-    "searchPlaceholder": "Tìm kiếm thông báo...",
-    "nav": {
-      "home": "Trang chủ",
-      "groups": "Nhóm",
-      "announcements": "Thông báo"
-    },
-    "filters": {
-      "all": "Tất cả",
-      "unread": "Chưa đọc",
-      "important": "Quan trọng"
-    },
-    "priority": {
-      "high": "Cao",
-      "medium": "Trung bình",
-      "low": "Thấp"
-    },
-    "announcements": {
-      "upgrade": {
-        "title": "Nâng cấp gói Miễn phí",
-        "description": "Bạn đã dùng hết 3 không gian của gói Miễn phí. Nâng cấp lên Pro để có thêm không gian và các tính năng nâng cao.",
-        "date": "2 giờ trước"
-      },
-      "maintenance": {
-        "title": "Bảo trì hệ thống",
-        "description": "Hệ thống sẽ được bảo trì vào ngày 15/02 từ 00:00 - 03:00. Vui lòng lưu lại công việc của bạn trước đó.",
-        "date": "5 giờ trước"
-      },
-      "feature": {
-        "title": "Cập nhật tính năng mới",
-        "description": "Chúng tôi vừa thêm tính năng chia sẻ project với quyền hạn. Bây giờ bạn có thể kiểm soát tốt hơn ai có quyền gì.",
-        "date": "1 ngày trước"
-      },
-      "member": {
-        "title": "Thông báo từ Thành viên",
-        "description": "Nguyễn Văn A đã thêm bạn vào project SEP490-Q62. Hãy kiểm tra và bắt đầu cộng tác.",
-        "date": "2 ngày trước"
-      },
-      "achievement": {
-        "title": "Hoàn thành mục tiêu",
-        "description": "Chúc mừng! Bạn đã hoàn thành tất cả các task trong sprint này.",
-        "date": "3 ngày trước"
-      }
-    },
-    "upgradeNow": "Nâng cấp ngay",
-    "noAnnouncements": "Không có thông báo nào"
-  },
-  "Notifications": {
-    "title": "Thông báo",
-    "markAllRead": "Đánh dấu tất cả đã đọc",
-    "viewAll": "Xem tất cả thông báo",
-    "noNotifications": "Không có thông báo",
-    "items": {
-      "upgrade": {
-        "title": "Nâng cấp gói Miễn phí",
-        "description": "Bạn đã dùng hết 3 không gian. Nâng cấp lên Pro.",
-        "date": "2 giờ trước"
-      },
-      "maintenance": {
-        "title": "Bảo trì hệ thống",
-        "description": "Bảo trì hệ thống ngày 15/02 từ 00:00 - 03:00.",
-        "date": "5 giờ trước"
-      },
-      "feature": {
-        "title": "Tính năng mới",
-        "description": "Chia sẻ project với quyền hạn đã có sẵn.",
-        "date": "1 ngày trước"
-      }
+  "ResetPasswordPage": {
+    "title": "Tạo mật khẩu mới",
+    "subtitle": "Nhập mật khẩu mới cho tài khoản của bạn",
+    "password": "Mật khẩu mới",
+    "confirmPassword": "Xác nhận mật khẩu mới",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "passwordInvalid": "Mật khẩu phải từ 10 đến 20 ký tự, bao gồm ít nhất 1 chữ viết hoa và 1 chữ số",
+    "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+    "confirmPasswordMismatch": "Mật khẩu xác nhận không khớp",
+    "resetPasswordButton": "Đặt lại mật khẩu",
+    "invalidTokenTitle": "Liên kết đặt lại mật khẩu không hợp lệ",
+    "invalidTokenMessage": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+    "backToLogin": "Quay lại trang đăng nhập",
+    "successTitle": "Đặt lại mật khẩu thành công!",
+    "successMessage": "Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
+    "goToLogin": "Đi đến trang đăng nhập",
+    "meta": {
+      "title": "Đặt Lại Mật Khẩu - StudyStudio",
+      "description": "Đặt lại mật khẩu StudyStudio của bạn"
     }
   },
-  "Header": {
-    "searchPlaceholder": "Tìm kiếm dự án, công việc...",
-    "settings": "Cài đặt",
-    "profile": "Hồ sơ",
-    "logout": "Đăng xuất"
+  "VerifyEmailPage": {
+    "title": "Xác thực Email",
+    "subtitle": "Kích hoạt tài khoản Study Studio của bạn",
+    "loading": "Đang xác thực email, vui lòng chờ...",
+    "successTitle": "Xác thực thành công",
+    "successMessage": "Tài khoản của bạn đã được xác thực thành công.",
+    "successDescription": "Bạn có thể đăng nhập để bắt đầu sử dụng hệ thống.",
+    "alreadyVerifiedMessage": "Tài khoản của bạn đã được xác thực trước đó.",
+    "invalidTokenTitle": "Liên kết không hợp lệ",
+    "invalidTokenMessage": "Liên kết xác thực không hợp lệ hoặc đã hết hạn.",
+    "invalidTokenDescription": "Vui lòng đăng nhập để tiếp tục xác thực tài khoản.",
+    "errorTitle": "Có lỗi xảy ra",
+    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+    "backToLogin": "Quay lại đăng nhập",
+    "meta": {
+      "title": "Xác Thực Email - StudyStudio",
+      "description": "Xác thực tài khoản StudyStudio của bạn"
+    }
   }
 }

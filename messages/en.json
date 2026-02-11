@@ -1,4 +1,8 @@
 {
+  "Common": {
+    "loading": "Loading...",
+    "checkingAuth": "Checking authentication..."
+  },
   "HomePage": {
     "title": "Home",
     "description": "Home page of the application"
@@ -19,166 +23,112 @@
     "orContinueWith": "OR CONTINUE WITH",
     "noAccount": "Don't have an account?",
     "signUpLink": "Sign up",
+    "loginFailed": "Login failed. Please try again.",
+    "connectionError": "Cannot connect to server. Please try again.",
     "meta": {
       "title": "Sign In - StudyStudio",
       "description": "Sign in to your StudyStudio account"
     }
   },
   "RegisterPage": {
-    "title": "Create your account",
-    "subtitle": "Join Study Studio today",
-    "sidebarTitle": "Manage Learning. Connect Teams",
-    "sidebarDescription": "A place to learn, share and achieve goals together.",
+    "title": "Create account",
+    "subtitle": "Start using Study Studio for free",
     "firstName": "First Name",
-    "firstNamePlaceholder": "Enter your first name",
-    "firstNameRequired": "First name is required",
     "lastName": "Last Name",
-    "lastNamePlaceholder": "Enter your last name",
-    "lastNameRequired": "Last name is required",
     "email": "Email",
-    "emailPlaceholder": "Enter your email",
-    "emailRequired": "Email is required",
-    "emailInvalid": "Invalid email",
     "password": "Password",
-    "passwordPlaceholder": "Enter your password",
-    "passwordRequired": "Password is required",
-    "passwordMinLength": "Password must be at least 8 characters",
     "confirmPassword": "Confirm Password",
-    "confirmPasswordPlaceholder": "Confirm your password",
+    "firstNameRequired": "First name is required",
+    "firstNameInvalid": "First name must not contain numbers and be max 10 characters",
+    "lastNameRequired": "Last name is required",
+    "lastNameInvalid": "Last name must not contain numbers and be max 10 characters",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format (e.g., abc@gmail.com)",
+    "emailNoSpaces": "Email must not contain spaces",
+    "passwordRequired": "Password is required",
+    "passwordInvalid": "Password must be 10-20 characters, include 1 uppercase letter and 1 number",
     "confirmPasswordRequired": "Please confirm your password",
-    "passwordMismatch": "Passwords do not match",
-    "agreeToTerms": "I agree to the Terms of Service and Privacy Policy",
-    "termsRequired": "You must agree to the terms",
-    "signUpButton": "Sign up",
+    "confirmPasswordMismatch": "Passwords do not match",
     "continueWithGoogle": "Continue with Google",
-    "orContinueWith": "OR CONTINUE WITH",
-    "haveAccount": "Already have an account?",
+    "orContinueWith": "Or continue with",
+    "createAccountButton": "Create account",
+    "hasAccount": "Already have an account?",
     "signInLink": "Sign in",
+    "successMessage": "Registration successful!",
+    "verificationEmailSent": "Verification email has been sent. Redirecting to login page...",
+    "registrationFailed": "Registration failed. Please try again.",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "verifyEmailTitle": "Verify Email",
+    "verifyEmailSubtitle": "Check your email to proceed with the next step",
+    "checkYourEmail": "Check your email",
+    "verificationLinkSentTo": "We've sent a verification link to:",
+    "linkExpiresIn5Minutes": "The link will expire in 5 minutes.",
+    "checkSpamFolder": "If you don't see the email, please check your spam folder.",
+    "backToLogin": "Back to login",
     "meta": {
       "title": "Sign Up - StudyStudio",
       "description": "Create your StudyStudio account"
     }
   },
-  "SettingsPage": {
-    "title": "Settings",
-    "backToDashboard": "Back to Dashboard",
-    "menu": {
-      "profile": "Profile",
-      "security": "Security",
-      "billing": "Billing & Subscription",
-      "notifications": "Notifications"
-    },
-    "profile": {
-      "avatarTitle": "Profile Picture",
-      "changeAvatar": "Change Photo",
-      "avatarSupport": "Supported files: JPG, PNG (max 5MB)",
-      "userInfoTitle": "User Information",
-      "userInfoSubtitle": "Update your personal information",
-      "firstName": "First Name",
-      "lastName": "Last Name",
-      "email": "Email",
-      "phoneNumber": "Phone Number",
-      "bio": "Bio",
-      "bioPlaceholder": "Write something about yourself...",
-      "preferencesTitle": "Preferences",
-      "preferencesSubtitle": "Customize your experience",
-      "language": "Language",
-      "notificationsTitle": "Email Notifications",
-      "notificationsSubtitle": "Manage your email notification preferences",
-      "studioNotifications": "Notifications from Studio",
-      "studioNotificationsDesc": "Receive email notifications when work is completed",
-      "cancelButton": "Cancel",
-      "saveButton": "Save Changes",
-      "savingButton": "Saving...",
-      "saveSuccess": "Settings saved successfully!",
-      "saveError": "Failed to save settings. Please try again!"
-    },
-    "security": {
-      "comingSoon": "Security features coming soon"
-    },
-    "billing": {
-      "comingSoon": "Billing features coming soon"
-    },
-    "notifications": {
-      "comingSoon": "Notification features coming soon"
+  "ForgotPasswordPage": {
+    "title": "Forgot password?",
+    "subtitle": "Enter your email to receive a password reset link",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "emailNoSpaces": "Email must not contain spaces",
+    "emailNotRegistered": "Email has not been registered",
+    "sendResetLink": "Send reset link",
+    "backToLogin": "Back to login",
+    "successTitle": "Email sent!",
+    "successSubtitle": "We've sent a password reset link to",
+    "successInstructions": "Please check your inbox and click the link to reset your password.",
+    "notReceived": "Didn't receive the email?",
+    "resendLink": "Resend",
+    "meta": {
+      "title": "Forgot Password - StudyStudio",
+      "description": "Reset your StudyStudio password"
     }
   },
-  "AnnouncementsPage": {
-    "title": "Announcements",
-    "subtitle": "Track all notifications and system updates",
-    "searchPlaceholder": "Search announcements...",
-    "nav": {
-      "home": "Home",
-      "groups": "Groups",
-      "announcements": "Announcements"
-    },
-    "filters": {
-      "all": "All",
-      "unread": "Unread",
-      "important": "Important"
-    },
-    "priority": {
-      "high": "High",
-      "medium": "Medium",
-      "low": "Low"
-    },
-    "announcements": {
-      "upgrade": {
-        "title": "Upgrade Free Plan",
-        "description": "You've used all 3 spaces in the Free plan. Upgrade to Pro for more spaces and advanced features.",
-        "date": "2 hours ago"
-      },
-      "maintenance": {
-        "title": "System Maintenance",
-        "description": "The system will be maintained on 02/15 from 00:00 - 03:00. Please save your work beforehand.",
-        "date": "5 hours ago"
-      },
-      "feature": {
-        "title": "New Feature Update",
-        "description": "We just added project sharing with permissions. Now you can better control who has what access.",
-        "date": "1 day ago"
-      },
-      "member": {
-        "title": "Notification from Member",
-        "description": "Nguyen Van A added you to project SEP490-Q62. Check it out and start collaborating.",
-        "date": "2 days ago"
-      },
-      "achievement": {
-        "title": "Goal Completed",
-        "description": "Congratulations! You've completed all tasks in this sprint.",
-        "date": "3 days ago"
-      }
-    },
-    "upgradeNow": "Upgrade Now",
-    "noAnnouncements": "No announcements"
-  },
-  "Notifications": {
-    "title": "Notifications",
-    "markAllRead": "Mark all as read",
-    "viewAll": "View all notifications",
-    "noNotifications": "No notifications",
-    "items": {
-      "upgrade": {
-        "title": "Upgrade Free Plan",
-        "description": "You've used all 3 spaces. Upgrade to Pro for more.",
-        "date": "2h ago"
-      },
-      "maintenance": {
-        "title": "System Maintenance",
-        "description": "System maintenance on 02/15 from 00:00 - 03:00.",
-        "date": "5h ago"
-      },
-      "feature": {
-        "title": "New Feature",
-        "description": "Project sharing with permissions is now available.",
-        "date": "1d ago"
-      }
+  "ResetPasswordPage": {
+    "title": "Create new password",
+    "subtitle": "Enter a new password for your account",
+    "password": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordRequired": "Password is required",
+    "passwordInvalid": "Password must be 10-20 characters, include at least 1 uppercase letter and 1 number",
+    "confirmPasswordRequired": "Please confirm your password",
+    "confirmPasswordMismatch": "Passwords do not match",
+    "resetPasswordButton": "Reset password",
+    "invalidTokenTitle": "Invalid reset link",
+    "invalidTokenMessage": "The password reset link is invalid or has expired.",
+    "backToLogin": "Back to login",
+    "successTitle": "Password reset successful!",
+    "successMessage": "Your password has been successfully reset. You can now sign in with your new password.",
+    "goToLogin": "Go to login",
+    "meta": {
+      "title": "Reset Password - StudyStudio",
+      "description": "Reset your StudyStudio password"
     }
   },
-  "Header": {
-    "searchPlaceholder": "Search projects, tasks...",
-    "settings": "Settings",
-    "profile": "Profile",
-    "logout": "Logout"
+  "VerifyEmailPage": {
+    "title": "Verify Email",
+    "subtitle": "Activate your Study Studio account",
+    "loading": "Verifying email, please wait...",
+    "successTitle": "Verification successful",
+    "successMessage": "Your account has been successfully verified.",
+    "successDescription": "You can now log in to start using the system.",
+    "alreadyVerifiedMessage": "Your account has been verified previously.",
+    "invalidTokenTitle": "Invalid link",
+    "invalidTokenMessage": "The verification link is invalid or has expired.",
+    "invalidTokenDescription": "Please log in to continue verifying your account",
+    "errorTitle": "An error occurred",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "backToLogin": "Back to login",
+    "meta": {
+      "title": "Verify Email - StudyStudio",
+      "description": "Verify your StudyStudio account"
+    }
   }
 }

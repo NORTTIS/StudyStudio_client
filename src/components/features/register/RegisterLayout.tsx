@@ -1,80 +1,44 @@
-"use client";
-
 import Image from "next/image";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
 import { RegisterForm } from "./RegisterForm";
 
 export function RegisterLayout() {
-  const t = useTranslations("RegisterPage");
-
   return (
-    <div className="flex min-h-screen w-full bg-[#F4F5FA]">
-      <div className="flex w-full overflow-hidden bg-white shadow-2xl">
-        {/* LEFT SIDE - Illustration */}
-        <div className="relative hidden w-1/2 flex-col bg-gradient-to-br from-[#FFE5D9] to-[#FFDCCE] md:flex">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="absolute top-8 left-8 z-10 flex items-center gap-3 transition-opacity hover:opacity-90">
-            <div className="text-[#FF5F3D]">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M20 5L3.75 12.5L20 20L36.25 12.5L20 5Z"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M10 25V31.25C10 32.2446 10.3951 33.1984 11.0983 33.9017C11.8016 34.6049 12.7554 35 13.75 35H26.25C27.2446 35 28.1984 34.6049 28.9017 33.9017C29.6049 33.1984 30 32.2446 30 31.25V25"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M36.25 27.5V12.5"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="font-bold text-[#FF5F3D] text-xl">Study</span>
-              <span className="font-bold text-[#FF5F3D] text-xl">Studio</span>
-            </div>
-          </Link>
+    <div className="grid h-screen grid-cols-1 overflow-hidden lg:grid-cols-2">
+      <div className="relative hidden items-center justify-center bg-[#FFE6D8] lg:flex">
+        <Image
+          src="/images/register-illustration1.png"
+          alt="Study Studio Illustration"
+          width={1200}
+          height={1200}
+          priority
+          className="h-full w-full object-cover"
+        />
 
-          {/* Illustration - Full Height */}
-          <div className="absolute inset-0 flex flex-col justify-between p-12 pt-24">
-            <div className="flex flex-1 items-center justify-center">
-              <div className="relative h-full w-full max-w-[500px]">
-                <Image
-                  src="/images/image-removebg-preview.png"
-                  alt="Students Collaborating"
-                  fill
-                  className="object-contain mix-blend-multiply"
-                  priority
-                />
-              </div>
-            </div>
+        <div className="absolute top-10 left-10 flex items-center gap-3">
+          <svg width="42" height="42" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
+            <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
+            <path d="M52 20V38" stroke="#F97316" strokeWidth="3" strokeLinecap="round" />
+            <circle cx="52" cy="40" r="3" fill="#F97316" />
+          </svg>
 
-            {/* Bottom Text */}
-            <div className="pb-8 text-center">
-              <h2 className="mb-3 font-bold text-2xl text-[#261E33]">{t("sidebarTitle")}</h2>
-              <p className="mx-auto max-w-sm text-[#6F6B99] text-sm leading-relaxed">{t("sidebarDescription")}</p>
-            </div>
-          </div>
+          <span className="font-bold text-2xl text-orange-600 leading-tight">
+            Study <br /> Studio
+          </span>
         </div>
 
-        {/* RIGHT SIDE - Form */}
-        <div className="flex w-full flex-col justify-center bg-white px-8 py-12 md:w-1/2 md:px-16">
-          <div className="mx-auto w-full max-w-md">
-            <RegisterForm />
-          </div>
+        <div className="absolute bottom-50 space-y-3 px-10 text-center">
+          <h2 className="font-semibold text-black text-xl">Quản lý học tập. Kết nối đội nhóm</h2>
+
+          <p className="mx-auto max-w-md text-gray-600 text-sm leading-relaxed">
+            Một nơi để học tập, chia sẻ và cùng nhau hoàn thành mục tiêu.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center px-6">
+        <div className="w-full max-w-md">
+          <RegisterForm />
         </div>
       </div>
     </div>
