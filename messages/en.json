@@ -1,4 +1,8 @@
 {
+  "Common": {
+    "loading": "Loading...",
+    "checkingAuth": "Checking authentication..."
+  },
   "HomePage": {
     "title": "Home",
     "description": "Home page of the application"
@@ -19,9 +23,112 @@
     "orContinueWith": "OR CONTINUE WITH",
     "noAccount": "Don't have an account?",
     "signUpLink": "Sign up",
+    "loginFailed": "Login failed. Please try again.",
+    "connectionError": "Cannot connect to server. Please try again.",
     "meta": {
       "title": "Sign In - StudyStudio",
       "description": "Sign in to your StudyStudio account"
+    }
+  },
+  "RegisterPage": {
+    "title": "Create account",
+    "subtitle": "Start using Study Studio for free",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstNameRequired": "First name is required",
+    "firstNameInvalid": "First name must not contain numbers and be max 10 characters",
+    "lastNameRequired": "Last name is required",
+    "lastNameInvalid": "Last name must not contain numbers and be max 10 characters",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format (e.g., abc@gmail.com)",
+    "emailNoSpaces": "Email must not contain spaces",
+    "passwordRequired": "Password is required",
+    "passwordInvalid": "Password must be 10-20 characters, include 1 uppercase letter and 1 number",
+    "confirmPasswordRequired": "Please confirm your password",
+    "confirmPasswordMismatch": "Passwords do not match",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWith": "Or continue with",
+    "createAccountButton": "Create account",
+    "hasAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "successMessage": "Registration successful!",
+    "verificationEmailSent": "Verification email has been sent. Redirecting to login page...",
+    "registrationFailed": "Registration failed. Please try again.",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "verifyEmailTitle": "Verify Email",
+    "verifyEmailSubtitle": "Check your email to proceed with the next step",
+    "checkYourEmail": "Check your email",
+    "verificationLinkSentTo": "We've sent a verification link to:",
+    "linkExpiresIn5Minutes": "The link will expire in 5 minutes.",
+    "checkSpamFolder": "If you don't see the email, please check your spam folder.",
+    "backToLogin": "Back to login",
+    "meta": {
+      "title": "Sign Up - StudyStudio",
+      "description": "Create your StudyStudio account"
+    }
+  },
+  "ForgotPasswordPage": {
+    "title": "Forgot password?",
+    "subtitle": "Enter your email to receive a password reset link",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "emailNoSpaces": "Email must not contain spaces",
+    "emailNotRegistered": "Email has not been registered",
+    "sendResetLink": "Send reset link",
+    "backToLogin": "Back to login",
+    "successTitle": "Email sent!",
+    "successSubtitle": "We've sent a password reset link to",
+    "successInstructions": "Please check your inbox and click the link to reset your password.",
+    "notReceived": "Didn't receive the email?",
+    "resendLink": "Resend",
+    "meta": {
+      "title": "Forgot Password - StudyStudio",
+      "description": "Reset your StudyStudio password"
+    }
+  },
+  "ResetPasswordPage": {
+    "title": "Create new password",
+    "subtitle": "Enter a new password for your account",
+    "password": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordRequired": "Password is required",
+    "passwordInvalid": "Password must be 10-20 characters, include at least 1 uppercase letter and 1 number",
+    "confirmPasswordRequired": "Please confirm your password",
+    "confirmPasswordMismatch": "Passwords do not match",
+    "resetPasswordButton": "Reset password",
+    "invalidTokenTitle": "Invalid reset link",
+    "invalidTokenMessage": "The password reset link is invalid or has expired.",
+    "backToLogin": "Back to login",
+    "successTitle": "Password reset successful!",
+    "successMessage": "Your password has been successfully reset. You can now sign in with your new password.",
+    "goToLogin": "Go to login",
+    "meta": {
+      "title": "Reset Password - StudyStudio",
+      "description": "Reset your StudyStudio password"
+    }
+  },
+  "VerifyEmailPage": {
+    "title": "Verify Email",
+    "subtitle": "Activate your Study Studio account",
+    "loading": "Verifying email, please wait...",
+    "successTitle": "Verification successful",
+    "successMessage": "Your account has been successfully verified.",
+    "successDescription": "You can now log in to start using the system.",
+    "alreadyVerifiedMessage": "Your account has been verified previously.",
+    "invalidTokenTitle": "Invalid link",
+    "invalidTokenMessage": "The verification link is invalid or has expired.",
+    "invalidTokenDescription": "Please log in to continue verifying your account",
+    "errorTitle": "An error occurred",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "backToLogin": "Back to login",
+    "meta": {
+      "title": "Verify Email - StudyStudio",
+      "description": "Verify your StudyStudio account"
     }
   }
 }

@@ -3,9 +3,9 @@ import { locales } from "./i18n/request";
 
 export default createMiddleware({
   locales,
-  defaultLocale: "vi",
+  defaultLocale: "vi"
 });
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: ["/((?!api|_next|.*\\..*).*)"]
 };

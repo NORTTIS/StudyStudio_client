@@ -1,5 +1,5 @@
-import LandingPlan from '@/components/features/landing/LandingPlan'
+import LandingPlan from "@/components/features/landing/LandingPlan";
 
 export default function Page() {
-    return <LandingPlan />
+  return <LandingPlan />;
 }

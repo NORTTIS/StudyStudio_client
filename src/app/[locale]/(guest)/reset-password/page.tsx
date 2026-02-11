@@ -1,11 +1,11 @@
 import { ResetPassword } from "@/components/features/reset-password/ResetPassword";
 
 export default function Page({
-    searchParams,
+  searchParams
 }: {
-    searchParams: {
-        token?: string;
-    };
+  searchParams: {
+    token?: string;
+  };
 }) {
-    return <ResetPassword token={searchParams?.token} />;
+  return <ResetPassword token={searchParams?.token} />;
 }

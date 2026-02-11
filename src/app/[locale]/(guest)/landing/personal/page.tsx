@@ -1,5 +1,5 @@
-import LandingPersonal from '@/components/features/landing/LandingPersonal'
+import LandingPersonal from "@/components/features/landing/LandingPersonal";
 
 export default function Page() {
-    return <LandingPersonal />
+  return <LandingPersonal />;
 }
