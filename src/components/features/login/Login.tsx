@@ -2,18 +2,28 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { Eye, EyeOff } from "lucide-react";
+
 import { Button, Input } from "@/components/common";
 
 export default function Login() {
   const t = useTranslations("LoginPage");
 
-  // Create schema with translated messages
+  // ✅ Get current locale (vi/en)
+  const locale = useLocale();
+
+  // ✅ Toggle show/hide password
+  const [showPassword, setShowPassword] = useState(false);
+
+  // ✅ Schema validation
   const loginSchema = z.object({
     email: z.string().min(1, t("emailRequired")).email(t("emailInvalid")),
-    password: z.string().min(1, t("passwordRequired"))
+    password: z.string().min(1, t("passwordRequired")),
   });
 
   type LoginFormData = z.infer<typeof loginSchema>;
@@ -21,84 +31,95 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting }
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
+    resolver: zodResolver(loginSchema),
   });
 
+  // ✅ Submit handler
   const onSubmit = async (data: LoginFormData) => {
-    // TODO: Implement login logic
     console.warn("Login data:", data);
   };
 
+  // ✅ Google login handler
   const handleGoogleLogin = () => {
-    // TODO: Implement Google login
     console.warn("Google login clicked");
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F8F8F8] px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
       <div className="w-full max-w-md">
-        {/* Logo/Icon */}
-        <div className="mb-6 flex justify-center">
-          <svg
-            className="h-16 w-16 text-[#261E33]"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z" />
-          </svg>
-        </div>
+        {/* ✅ CARD */}
+        <div className="rounded-xl bg-white p-8 shadow-xl">
+          {/* ✅ LOGO Study Studio */}
+          <div className="mb-6 flex items-center justify-center gap-3">
+            <svg width="48" height="48" viewBox="0 0 64 64">
+              <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
+              <path
+                d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z"
+                fill="#FB923C"
+              />
+            </svg>
 
-        {/* Card Container */}
-        <div className="rounded-lg bg-white px-6 py-8 shadow-sm sm:px-8">
-          {/* Header */}
-          <div className="mb-6 text-center">
-            <h1 className="mb-2 font-semibold text-3xl text-[#261E33]">{t("title")}</h1>
-            <p className="text-[#6F6B99]">{t("subtitle")}</p>
+            <span className="font-bold text-3xl text-orange-500 leading-tight">
+              Study <br /> Studio
+            </span>
           </div>
 
-          {/* Google Sign In Button */}
+          {/* ✅ HEADER */}
+          <div className="mb-6 text-center">
+            <h1 className="mb-2 font-bold text-2xl text-[#261E33]">
+              {t("title")}
+            </h1>
+            <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+          </div>
+
+          {/* ✅ GOOGLE LOGIN BUTTON */}
           <Button
             type="button"
             variant="outline"
             fullWidth
             className="mb-6 flex items-center justify-center gap-2"
-            onClick={handleGoogleLogin}>
-            <svg className="h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            onClick={handleGoogleLogin}
+          >
+            {/* Google Icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 48 48"
+              width="18"
+              height="18"
+            >
               <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 fill="#EA4335"
+                d="M24 9.5c3.54 0 6.2 1.53 7.63 2.8l5.56-5.56C33.64 3.36 29.24 1.5 24 1.5 14.98 1.5 7.21 6.98 3.69 14.91l6.91 5.36C12.4 14.3 17.77 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.14 24.5c0-1.64-.15-3.22-.43-4.75H24v9h12.46c-.54 2.88-2.16 5.32-4.6 6.98l7.05 5.49C43.73 36.36 46.14 30.9 46.14 24.5z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.6 28.27A14.5 14.5 0 0 1 9.5 24c0-1.48.26-2.91.72-4.27l-6.9-5.36A23.9 23.9 0 0 0 1.5 24c0 3.86.93 7.5 2.82 10.73l6.28-6.46z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 46.5c6.48 0 11.92-2.13 15.9-5.78l-7.05-5.49c-1.96 1.32-4.47 2.1-8.85 2.1-6.2 0-11.45-4.19-13.3-9.83l-6.3 6.47C7.9 41.94 15.5 46.5 24 46.5z"
               />
             </svg>
+
             {t("continueWithGoogle")}
           </Button>
 
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-[#8A8A8A] border-t" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-[#6F6B99]">{t("orContinueWith")}</span>
-            </div>
+          {/* ✅ DIVIDER */}
+          <div className="flex items-center gap-3 text-sm text-muted-foreground mb-6">
+            <div className="h-px flex-1 bg-border" />
+            {t("orContinueWith")}
+            <div className="h-px flex-1 bg-border" />
           </div>
 
-          {/* Login Form */}
+          {/* ✅ LOGIN FORM */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Input */}
+            {/* EMAIL */}
             <Input
               {...register("email")}
               type="email"
@@ -108,36 +129,61 @@ export default function Login() {
               fullWidth
             />
 
-            {/* Password Input */}
-            <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label htmlFor="password" className="font-medium text-[#261E33] text-sm">
+            {/* PASSWORD + Eye Icon */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="font-medium text-sm text-[#261E33]">
                   {t("password")}
                 </label>
-                <Link href="/forgot-password" className="text-[#6F6B99] text-sm hover:text-[#4C6AA8]">
+
+                {/* ✅ FIX locale link */}
+                <Link
+                  href={`/${locale}/forgot-password`}
+                  className="text-sm text-muted-foreground hover:text-orange-500"
+                >
                   {t("forgotPassword")}
                 </Link>
               </div>
-              <Input
-                {...register("password")}
-                type="password"
-                id="password"
-                placeholder={t("passwordPlaceholder")}
-                error={errors.password?.message}
-                fullWidth
-              />
+
+              <div className="relative">
+                <Input
+                  {...register("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder={t("passwordPlaceholder")}
+                  error={errors.password?.message}
+                  fullWidth
+                  className="pr-10"
+                />
+
+                {/* 👁 Eye Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
-            {/* Submit Button */}
-            <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isSubmitting} className="mt-6">
+            {/* SUBMIT */}
+            <Button
+              type="submit"
+              fullWidth
+              isLoading={isSubmitting}
+              className="w-full bg-orange-500 hover:bg-orange-600"
+            >
               {t("signInButton")}
             </Button>
           </form>
 
-          {/* Sign Up Link */}
-          <p className="mt-6 text-center text-[#6F6B99] text-sm">
+          {/* ✅ FOOTER REGISTER LINK FIX */}
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             {t("noAccount")}{" "}
-            <Link href="/register" className="font-medium text-[#4C6AA8] hover:underline">
+            <Link
+              href={`/${locale}/register`}
+              className="text-orange-600 font-medium hover:underline"
+            >
               {t("signUpLink")}
             </Link>
           </p>

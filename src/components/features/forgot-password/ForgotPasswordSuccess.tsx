@@ -1,72 +1,82 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import Link from "next/link";
+import { useLocale } from "next-intl";
 
 type Props = {
-    email?: string
-}
+    email?: string;
+};
 
 export function ForgotPasswordSuccess({ email }: Props) {
+    const locale = useLocale();
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-            <Card className="w-full max-w-md rounded-xl shadow-xl">
-                <CardHeader className="flex flex-col items-center gap-4 pt-8">
-                    {/* LOGO */}
-                    <div className="flex items-center gap-3">
-                        <svg width="48" height="48" viewBox="0 0 64 64">
-                            <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
-                            <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
-                        </svg>
+            <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-xl">
 
-                        <span className="text-3xl font-bold text-orange-500">
-                            Study <br /> Studio
-                        </span>
-                    </div>
+                <div className="mb-6 flex items-center justify-center gap-3">
+                    <svg width="48" height="48" viewBox="0 0 64 64">
+                        <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
+                        <path
+                            d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z"
+                            fill="#FB923C"
+                        />
+                    </svg>
 
-                    <h1 className="text-2xl font-bold text-center">
-                        Đặt lại mật khẩu
-                    </h1>
+                    <span className="font-bold text-3xl text-orange-500 leading-tight">
+                        Study <br /> Studio
+                    </span>
+                </div>
 
-                    <p className="text-center text-muted-foreground text-sm">
-                        Hãy kiểm tra email của bạn để biết các bước tiếp theo
-                    </p>
+                <h1 className="mb-2 text-center font-bold text-2xl">
+                    Đặt lại mật khẩu
+                </h1>
 
-                    <div className="mt-2 flex h-12 w-12 items-center justify-center rounded-full border-2 border-orange-500">
-                        <svg width="24" height="24" viewBox="0 0 24 24" stroke="#F97316" strokeWidth="3" fill="none">
+                <p className="mb-6 text-center text-muted-foreground text-sm">
+                    Hãy kiểm tra email của bạn để biết các bước tiếp theo
+                </p>
+
+                <div className="mb-6 flex justify-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-orange-500">
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            stroke="#F97316"
+                            strokeWidth="3"
+                            fill="none"
+                        >
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
                     </div>
-                </CardHeader>
+                </div>
 
-                <CardContent className="px-6 pb-8 text-center">
-                    <h2 className="text-lg font-semibold mb-3">
-                        Kiểm tra email của bạn
-                    </h2>
+                <h2 className="mb-2 text-center font-semibold text-base">
+                    Kiểm tra email của bạn
+                </h2>
 
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                        Chúng tôi đã gửi liên kết đặt lại mật khẩu đến
-                        <br />
-                        <span className="font-medium text-foreground">
-                            {email || 'email của bạn'}
-                        </span>
-                        <br />
-                        Liên kết sẽ hết hạn sau 24 giờ.
-                        <br />
-                        Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.
-                    </p>
+                <p className="mb-6 text-center text-sm text-muted-foreground leading-relaxed">
+                    Chúng tôi đã gửi liên kết đặt lại mật khẩu đến:
+                    <br />
+                    <span className="font-medium text-gray-900">
+                        {email || "email của bạn"}
+                    </span>
+                    <br />
+                    Liên kết sẽ hết hạn sau <b>30 phút</b>.
+                    <br />
+                    Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.
+                </p>
 
-                    <div className="mt-6 border-t pt-4">
-                        <Link
-                            href="/login"
-                            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-orange-500 transition-colors"
-                        >
-                            ← Quay lại đăng nhập
-                        </Link>
-                    </div>
-                </CardContent>
-            </Card>
+                <div className="mt-4 flex items-center gap-2 text-gray-500 transition hover:text-orange-500 justify-center">
+                    <span className="text-xl">←</span>
+                    <Link
+                        href={`/${locale}/login`}
+                        className="font-medium text-sm"
+                    >
+                        Quay lại đăng nhập
+                    </Link>
+                </div>
+            </div>
         </div>
-    )
+    );
 }
