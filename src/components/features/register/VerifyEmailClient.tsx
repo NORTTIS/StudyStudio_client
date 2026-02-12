@@ -38,10 +38,9 @@ export default function VerifyEmailClient() {
         const result = await apiGet(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/verify-email?token=${encodeURIComponent(token)}`,
           locale,
-          true // skipAuth - email verification doesn't require authentication
+          true
         );
 
-        // ✅ Verify success
         if (result.status === "success") {
           setStatus("success");
           setMessage(result.message);
@@ -49,7 +48,6 @@ export default function VerifyEmailClient() {
           return;
         }
 
-        // ❌ Error - parse message to determine type
         const msg = result.message.toLowerCase();
 
         // Case: Already verified

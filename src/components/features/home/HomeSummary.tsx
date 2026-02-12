@@ -10,8 +10,8 @@ export function HomeSummary({ statusChips }: HomeSummaryProps) {
     <section className="mt-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="font-semibold text-2xl">Dashboard</h1>
-          <p className="text-[#6F6B99] text-sm">Overview of your tasks and activities</p>
+          <h1 className="font-semibold text-2xl">Bảng điều khiển</h1>
+          <p className="text-[#6F6B99] text-sm">Tổng quan công việc và hoạt động của bạn</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button

@@ -9,33 +9,50 @@ const navigation = [
   { name: "Home", href: "/Home", icon: LayoutDashboard },
   { name: "Groups", href: "/groups", icon: Users },
   { name: "Master", href: "/master", icon: BarChart3 },
-  { name: "AI Q&A", href: "/ai-qna", icon: GraduationCap }
+  { name: "AI Q&A", href: "/ai-qna", icon: GraduationCap },
 ];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden min-h-screen w-64 border-border border-r bg-sidebar lg:block">
-      <div className="border-sidebar-border border-b p-4">
+    <aside
+      className="
+        fixed top-0 left-0
+        h-screen w-64
+        border-r border-[#E5E5E5]
+        bg-white
+        z-50
+      "
+    >
+      {/* LOGO */}
+      <div className="flex h-16 items-center gap-2 border-b px-6">
         <Link href="/Home" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center bg-primary font-bold text-sm text-white">SS</div>
-          <span className="font-bold text-foreground">Study Studio</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#FF5F3D] font-bold text-white">
+            SS
+          </div>
+          <span className="font-semibold text-[#261E33]">Study Studio</span>
         </Link>
       </div>
-      <nav className="space-y-1 p-4">
+
+      {/* NAV */}
+      <nav className="space-y-2 p-4">
         {navigation.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive =
+            pathname === item.href ||
+            pathname.startsWith(item.href + "/");
+
           return (
             <Link
               key={item.name}
               href={item.href}
               className={twMerge(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition",
                 isActive
-                  ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground hover:bg-muted"
-              )}>
+                  ? "bg-[#2D2D2D] text-white"
+                  : "text-[#6F6B99] hover:bg-[#F5F5F5] hover:text-[#261E33]"
+              )}
+            >
               <item.icon className="h-4 w-4" />
               {item.name}
             </Link>

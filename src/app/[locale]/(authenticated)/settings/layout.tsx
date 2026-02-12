@@ -127,8 +127,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             key={item.id}
                             href={item.href}
                             className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left font-medium text-sm transition-all ${isActive(item.href)
-                                    ? "bg-[#2D2D2D] text-white"
-                                    : "text-[#6F6B99] hover:bg-[#F5F5F5] hover:text-[#261E33]"
+                                ? "bg-[#2D2D2D] text-white"
+                                : "text-[#6F6B99] hover:bg-[#F5F5F5] hover:text-[#261E33]"
                                 }`}>
                             <span className="flex-shrink-0">{item.icon}</span>
                             {item.label}

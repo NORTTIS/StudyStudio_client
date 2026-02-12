@@ -39,12 +39,17 @@ export function HomeBoard({ sections }: HomeBoardProps) {
                 className="min-w-[300px] max-w-[300px] rounded-2xl border border-gray-200 bg-[#F7F7F7]"
               >
                 {/* Column Header */}
+                {/* Column Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-white rounded-t-2xl">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">
+
+                  {/* Title + Count inline */}
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-900">
                       {column.name}
                     </p>
-                    <span className="text-xs font-medium text-gray-400">
+
+                    {/* Count Badge */}
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-100 px-2 text-[11px] font-medium text-gray-500">
                       {column.count}
                     </span>
                   </div>
@@ -53,11 +58,9 @@ export function HomeBoard({ sections }: HomeBoardProps) {
                   <button
                     type="button"
                     onClick={() =>
-                      setOpenColumn(
-                        openColumn === column.name ? null : column.name
-                      )
+                      setOpenColumn(openColumn === column.name ? null : column.name)
                     }
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
