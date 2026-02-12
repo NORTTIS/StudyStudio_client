@@ -78,8 +78,12 @@
     "orContinueWith": "OR CONTINUE WITH",
     "noAccount": "Don't have an account?",
     "signUpLink": "Sign up",
-    "loginFailed": "Login failed. Please try again.",
+    "loginFailed": "Login failed",
+    "loginSuccess": "Login successful",
+    "emailNotVerified": "Email not verified",
     "connectionError": "Cannot connect to server. Please try again.",
+    "error": "Error",
+    "credentialError": "Failed to get credential from Google",
     "meta": {
       "title": "Sign In - StudyStudio",
       "description": "Sign in to your StudyStudio account"
@@ -184,6 +188,29 @@
     "meta": {
       "title": "Verify Email - StudyStudio",
       "description": "Verify your StudyStudio account"
+    }
+  },
+  "ResendEmailVerifyPage": {
+    "title": "Verify Your Email",
+    "subtitle": "Resend verification link",
+    "description": "Enter your email address and we'll send you a new verification link.",
+    "email": "Email Address",
+    "emailPlaceholder": "your@email.com",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "sendButton": "Send Verification Link",
+    "sendFailed": "Failed to send verification link",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "successTitle": "Check your email",
+    "successMessage": "We've sent a verification link to your email address.",
+    "successDescription": "Please check your email inbox and click the verification link. If you don't see it, check your spam folder.",
+    "backToLogin": "Back to Login",
+    "sendAnother": "Send Another",
+    "alreadyHaveEmail": "Already verified your email?",
+    "backToLoginLink": "Go to Login",
+    "meta": {
+      "title": "Resend Email Verification - StudyStudio",
+      "description": "Resend email verification link"
     }
   },
   "SettingsPage": {

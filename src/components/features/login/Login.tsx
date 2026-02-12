@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,176 +13,259 @@ import { z } from "zod";
 import { apiPost } from "@/api/api-client";
 import type { AuthTokens } from "@/api/auth";
 import { setAuthTokens } from "@/api/auth";
-import { Button, GoogleIcon, Input, Logo } from "@/components/common";
+import type { components } from "@/api/types";
+import { Button, Input, Logo } from "@/components/common";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Login() {
-  const t = useTranslations("LoginPage");
-  const router = useRouter();
-  const searchParams = useSearchParams();
+    const t = useTranslations("LoginPage");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { toast } = useToast();
 
-  // ✅ Get current locale (vi/en)
-  const locale = useLocale();
+    // ✅ Get current locale (vi/en)
+    const locale = useLocale();
 
-  // ✅ Toggle show/hide password
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+    // ✅ Toggle show/hide password
+    const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ Schema validation
-  const loginSchema = z.object({
-    email: z.string().min(1, t("emailRequired")).email(t("emailInvalid")),
-    password: z.string().min(1, t("passwordRequired"))
-  });
+    // ✅ Schema validation
+    const loginSchema = z.object({
+        email: z.string().min(1, t("emailRequired")).email(t("emailInvalid")),
+        password: z.string().min(1, t("passwordRequired"))
+    });
 
-  type LoginFormData = z.infer<typeof loginSchema>;
+    type LoginFormData = z.infer<typeof loginSchema>;
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting }
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema)
-  });
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting }
+    } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema)
+    });
 
-  // ✅ Submit handler
-  const onSubmit = async (data: LoginFormData) => {
-    setError("");
+    // ✅ Submit handler
+    const onSubmit = async (data: LoginFormData) => {
 
-    try {
-      const result = await apiPost<AuthTokens>(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
-        data,
-        locale,
-        true // skipAuth - no authentication required for login
-      );
+        try {
+            const result = await apiPost<AuthTokens>(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
+                data,
+                locale,
+                true // skipAuth - no authentication required for login
+            );
 
-      if (result.status === "error") {
-        setError(result.message || t("loginFailed"));
-        return;
-      }
+            if (result.status === "error") {
+                // Check if error is due to unverified email (code === "AUTH005")
+                if (result.code === "AUTH005") {
+                    toast({
+                        title: t("emailNotVerified"),
+                        description: result.message,
+                        variant: "destructive"
+                    });
+                    // Redirect to resend email verification page
+                    const email = encodeURIComponent(data.email);
+                    router.push(`/${locale}/resend-email-verify?email=${email}`);
+                    return;
+                }
 
-      if (result.data) {
-        // Store tokens in localStorage
-        setAuthTokens(result.data);
+                // Show error toast for other errors
+                toast({
+                    title: t("loginFailed"),
+                    description: result.message,
+                    variant: "destructive"
+                });
+                return;
+            }
 
-        // Redirect to intended destination or home page
-        const redirectUrl = searchParams.get("redirect");
-        if (redirectUrl) {
-          router.push(decodeURIComponent(redirectUrl));
-        } else {
-          router.push(`/${locale}/home`);
+            if (result.data) {
+                // Store tokens in localStorage
+                setAuthTokens(result.data);
+
+                // Show success toast
+                toast({
+                    title: t("loginSuccess"),
+                    description: "Đăng nhập thành công"
+                });
+
+                // Redirect to intended destination or home page
+                const redirectUrl = searchParams.get("redirect");
+                if (redirectUrl) {
+                    router.push(decodeURIComponent(redirectUrl));
+                } else {
+                    router.push(`/${locale}/home`);
+                }
+            }
+        } catch {
+            toast({
+                title: t("error"),
+                description: t("connectionError"),
+                variant: "destructive"
+            });
         }
-      }
-    } catch {
-      setError(t("connectionError"));
-    }
-  };
+    };
 
-  // ✅ Google login handler
-  const handleGoogleLogin = () => {
-    console.warn("Google login clicked");
-  };
+    type GoogleLoginRequest = components["schemas"]["GoogleLoginRequest"];
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
-      <div className="w-full max-w-md">
-        {/* ✅ CARD */}
-        <div className="rounded-xl bg-white p-8 shadow-xl">
-          {/* ✅ LOGO Study Studio */}
-          <Logo className="mb-6" />
+    const handleGoogleLogin = async (credential: string | undefined) => {
+        if (!credential) {
+            toast({
+                title: t("loginFailed"),
+                description: t("credentialError"),
+                variant: "destructive"
+            });
+            return;
+        }
 
-          {/* ✅ HEADER */}
-          <div className="mb-6 text-center">
-            <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("title")}</h1>
-            <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
-          </div>
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+            const payload: GoogleLoginRequest = { idToken: credential };
 
-          {/* ✅ GOOGLE LOGIN BUTTON */}
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            className="mb-6 flex items-center justify-center gap-2"
-            onClick={handleGoogleLogin}>
-            <GoogleIcon />
-            {t("continueWithGoogle")}
-          </Button>
+            const result = await apiPost<AuthTokens>(`${baseUrl}/auth/google`, payload, locale, true);
 
-          {/* ✅ DIVIDER */}
-          <div className="mb-6 flex items-center gap-3 text-muted-foreground text-sm">
-            <div className="h-px flex-1 bg-border" />
-            {t("orContinueWith")}
-            <div className="h-px flex-1 bg-border" />
-          </div>
+            if (result.status === "error" || !result.data) {
+                // Check if error is due to unverified email (code === "AUTH005")
+                if (result.code === "AUTH005") {
+                    toast({
+                        title: t("emailNotVerified"),
+                        description: result.message,
+                        variant: "destructive"
+                    });
+                    // Redirect to resend email verification page without email (will be filled by user)
+                    router.push(`/${locale}/resend-email-verify`);
+                    return;
+                }
 
-          {/* ✅ LOGIN FORM */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* EMAIL */}
-            <Input
-              {...register("email")}
-              type="email"
-              label={t("email")}
-              placeholder={t("emailPlaceholder")}
-              error={errors.email?.message}
-              fullWidth
-            />
+                toast({
+                    title: t("loginFailed"),
+                    description: result.message,
+                    variant: "destructive"
+                });
+                return;
+            }
 
-            {/* PASSWORD + Eye Icon */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-[#261E33] text-sm">{t("password")}</span>
+            setAuthTokens(result.data);
 
-                {/* ✅ FIX locale link */}
-                <Link
-                  href={`/${locale}/forgot-password`}
-                  className="text-muted-foreground text-sm hover:text-orange-500">
-                  {t("forgotPassword")}
-                </Link>
-              </div>
+            toast({
+                title: t("loginSuccess"),
+                description: "Đăng nhập thành công"
+            });
 
-              <div className="relative">
-                <Input
-                  {...register("password")}
-                  type={showPassword ? "text" : "password"}
-                  placeholder={t("passwordPlaceholder")}
-                  error={errors.password?.message}
-                  fullWidth
-                  className="pr-10"
-                />
+            const redirectUrl = searchParams.get("redirect");
+            if (redirectUrl) {
+                router.push(decodeURIComponent(redirectUrl));
+            } else {
+                router.push(`/${locale}/home`);
+            }
+        } catch {
+            toast({
+                title: t("error"),
+                description: t("connectionError"),
+                variant: "destructive"
+            });
+        }
+    };
 
-                {/* 👁 Eye Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
+            <div className="w-full max-w-md">
+                {/* ✅ CARD */}
+                <div className="rounded-xl bg-white p-8 shadow-xl">
+                    {/* ✅ LOGO Study Studio */}
+                    <Logo className="mb-6" />
+
+                    {/* ✅ HEADER */}
+                    <div className="mb-6 text-center">
+                        <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("title")}</h1>
+                        <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
+                    </div>
+
+                    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+                        <div className="mb-6 flex justify-center">
+                            <GoogleLogin
+                                onSuccess={(res) => handleGoogleLogin(res.credential)}
+                                onError={() => toast({
+                                    title: t("loginFailed"),
+                                    description: "Google authentication failed",
+                                    variant: "destructive"
+                                })}
+                            />
+                        </div>
+                    </GoogleOAuthProvider>
+
+                    {/* ✅ DIVIDER */}
+                    <div className="mb-6 flex items-center gap-3 text-muted-foreground text-sm">
+                        <div className="h-px flex-1 bg-border" />
+                        {t("orContinueWith")}
+                        <div className="h-px flex-1 bg-border" />
+                    </div>
+
+                    {/* ✅ LOGIN FORM */}
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        {/* EMAIL */}
+                        <Input
+                            {...register("email")}
+                            type="email"
+                            label={t("email")}
+                            placeholder={t("emailPlaceholder")}
+                            error={errors.email?.message}
+                            fullWidth
+                        />
+
+                        {/* PASSWORD + Eye Icon */}
+                        <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                                <span className="font-medium text-[#261E33] text-sm">{t("password")}</span>
+
+                                {/* ✅ FIX locale link */}
+                                <Link
+                                    href={`/${locale}/forgot-password`}
+                                    className="text-muted-foreground text-sm hover:text-orange-500">
+                                    {t("forgotPassword")}
+                                </Link>
+                            </div>
+
+                            <div className="relative">
+                                <Input
+                                    {...register("password")}
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder={t("passwordPlaceholder")}
+                                    error={errors.password?.message}
+                                    fullWidth
+                                    className="pr-10"
+                                />
+
+                                {/* 👁 Eye Toggle */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* SUBMIT */}
+                        <Button
+                            type="submit"
+                            fullWidth
+                            isLoading={isSubmitting}
+                            className="w-full bg-orange-500 hover:bg-orange-600">
+                            {t("signInButton")}
+                        </Button>
+                    </form>
+
+                    {/* ✅ FOOTER REGISTER LINK FIX */}
+                    <p className="mt-6 text-center text-muted-foreground text-sm">
+                        {t("noAccount")}{" "}
+                        <Link href={`/${locale}/register`} className="font-medium text-orange-600 hover:underline">
+                            {t("signUpLink")}
+                        </Link>
+                    </p>
+                </div>
             </div>
-
-            {/* ERROR */}
-            {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-600 text-sm">{error}</div>
-            )}
-
-            {/* SUBMIT */}
-            <Button
-              type="submit"
-              fullWidth
-              isLoading={isSubmitting}
-              className="w-full bg-orange-500 hover:bg-orange-600">
-              {t("signInButton")}
-            </Button>
-          </form>
-
-          {/* ✅ FOOTER REGISTER LINK FIX */}
-          <p className="mt-6 text-center text-muted-foreground text-sm">
-            {t("noAccount")}{" "}
-            <Link href={`/${locale}/register`} className="font-medium text-orange-600 hover:underline">
-              {t("signUpLink")}
-            </Link>
-          </p>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
