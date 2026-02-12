@@ -1,4 +1,13 @@
-import { Clock, MessageSquare, MoreHorizontal, Paperclip } from "lucide-react";
+"use client";
+
+import {
+  Clock,
+  MessageSquare,
+  MoreHorizontal,
+  Paperclip,
+  Plus,
+} from "lucide-react";
+import { useState } from "react";
 import type { BoardSection, TaskPriority } from "@/components/features/home/types";
 
 interface HomeBoardProps {
@@ -6,63 +15,129 @@ interface HomeBoardProps {
 }
 
 const priorityClasses: Record<TaskPriority, string> = {
-  low: "bg-[#E8F5E9] text-[#2E7D32]",
-  medium: "bg-[#FFE0B2] text-[#E65100]",
-  high: "bg-[#FFCDD2] text-[#C62828]",
-  urgent: "bg-[#D32F2F] text-white"
+  low: "bg-gray-100 text-gray-600",
+  medium: "bg-orange-100 text-orange-600",
+  high: "bg-red-100 text-red-600",
+  urgent: "bg-red-600 text-white",
 };
 
 export function HomeBoard({ sections }: HomeBoardProps) {
+  const [openColumn, setOpenColumn] = useState<string | null>(null);
+
   return (
-    <div className="mt-8 space-y-10">
+    <div className="mt-8 space-y-12">
       {sections.map((section) => (
         <section key={section.title}>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-[#261E33] text-sm">{section.title}</h2>
-          </div>
-          <div className="mt-4 grid gap-4 lg:grid-cols-4">
+          <h2 className="mb-4 text-sm font-semibold text-gray-400 uppercase tracking-wide">
+            {section.title}
+          </h2>
+
+          <div className="flex items-start gap-6 overflow-x-auto pb-4">
             {section.columns.map((column) => (
-              <div key={column.name} className="space-y-3">
-                <div className="flex items-center justify-between font-semibold text-[#6F6B99] text-[11px] uppercase tracking-wide">
-                  <span>{column.name}</span>
-                  <span>{column.count}</span>
+              <div
+                key={column.name}
+                className="min-w-[300px] max-w-[300px] rounded-2xl border border-gray-200 bg-[#F7F7F7]"
+              >
+                {/* Column Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b bg-white rounded-t-2xl">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {column.name}
+                    </p>
+                    <span className="text-xs font-medium text-gray-400">
+                      {column.count}
+                    </span>
+                  </div>
+
+                  {/* Plus Button */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenColumn(
+                        openColumn === column.name ? null : column.name
+                      )
+                    }
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
 
-                <div className="space-y-3">
+                {/* Task List */}
+                <div className="space-y-4 px-4 py-4">
+                  {/* Create Task UI */}
+                  {openColumn === column.name && (
+                    <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+                      <input
+                        type="text"
+                        placeholder="Nhập tên công việc..."
+                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      />
+
+                      <div className="mt-3 flex justify-end gap-2">
+                        <button
+                          onClick={() => setOpenColumn(null)}
+                          className="rounded-md px-3 py-1 text-xs text-gray-500 hover:bg-gray-100"
+                        >
+                          Hủy
+                        </button>
+                        <button className="rounded-md bg-orange-500 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-600">
+                          Tạo
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
                   {column.tasks.length === 0 ? (
-                    <div className="rounded-[12px] border border-[#E0E0E0] border-dashed bg-white px-4 py-6 text-center text-[#8A8A8A] text-xs">
-                      No tasks
+                    <div className="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-xs text-gray-400">
+                      Không có công việc
                     </div>
                   ) : (
                     column.tasks.map((task) => (
                       <article
                         key={task.title}
-                        className="rounded-[12px] border border-[#E6E6E6] bg-white p-3 shadow-sm">
-                        <div className="flex items-start justify-between gap-3">
-                          <h3 className="font-semibold text-[#261E33] text-sm">{task.title}</h3>
-                          <button type="button" className="text-[#8A8A8A]" aria-label="Task options">
+                        className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-sm font-semibold text-gray-900">
+                            {task.title}
+                          </h3>
+
+                          <button className="text-gray-400 hover:text-gray-600">
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
                         </div>
+
                         <div className="mt-2">
                           <span
-                            className={`inline-flex rounded-full px-2 py-[2px] font-semibold text-[10px] ${priorityClasses[task.priority]}`}>
-                            {task.priority.toUpperCase()}
+                            className={`inline-flex rounded-md px-2 py-[2px] text-[10px] font-semibold ${priorityClasses[task.priority]}`}
+                          >
+                            {task.priority}
                           </span>
                         </div>
-                        <div className="mt-3 flex flex-wrap items-center gap-3 text-[#6F6B99] text-[11px]">
-                          <span className="inline-flex items-center gap-1">
+
+                        <div className="mt-4 flex items-center gap-4 text-[11px] text-gray-500">
+                          <span className="flex items-center gap-1">
                             <MessageSquare className="h-3 w-3" />
                             {task.stats.comments ?? 0}
                           </span>
-                          <span className="inline-flex items-center gap-1">
+
+                          <span className="flex items-center gap-1">
                             <Paperclip className="h-3 w-3" />
                             {task.stats.attachments ?? 0}
                           </span>
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {task.stats.date}
-                          </span>
+
+                          {task.stats.date && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {task.stats.date}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-3 rounded-md bg-gray-100 px-2 py-1 text-[10px] text-gray-500">
+                          {section.title}
                         </div>
                       </article>
                     ))

@@ -661,5 +661,109 @@
       "feature4": "1 GB document storage per group space",
       "feature5": "100 AI requests per day"
     }
+  },
+  "HelpPage": {
+  "form": {
+    "formTitle": "Submit Complaint or Contact Support",
+    "subtitle": "Let us know if you're experiencing any issues or have questions",
+
+    "feedbackType": "Feedback type",
+    "feedbackOptions": {
+      "bug": "Bug report",
+      "feedback": "Suggestion",
+      "support": "Support request",
+      "other": "Other"
+    },
+
+    "email": "Email",
+    "emailPlaceholder": "dat@studist.edu.vn",
+    "title": "Title",
+    "titlePlaceholder": "A few words describing the issue",
+    "content": "Content",
+    "contentPlaceholder": "Describe your issue in detail...",
+    "cancelButton": "Cancel",
+    "submitButton": "Submit Report",
+    "validationError": "Please fill in all fields",
+    "submitSuccess": "Your report has been submitted successfully!"
   }
+},
+"currentPlan": {
+  "title": "Current Plan",
+  "subtitle": "You are currently using",
+  "active": "Active",
+  "changePlan": "Change Plan",
+  "cancelPlan": "Cancel Subscription",
+  "currentButton": "Current Plan"
+},
+"invoiceInfo": {
+  "editButton": "Edit invoice information",
+  "updateButton": "Update invoice information",
+  "visaText": "Visa ****1234"
+},
+"BillingPage": {
+  "plansTitle": "Subscription Plans",
+  "plansSubtitle": "Choose the plan that fits your needs",
+
+  "currentPlan": {
+    "title": "Current Subscription Plan",
+    "subtitle": "You are currently using the",
+    "changeButton": "Change Plan",
+    "cancelButton": "Cancel Subscription",
+    "activeBadge": "Active"
+  },
+
+  "plans": {
+    "period": "/month",
+    "current": "Current Plan",
+
+    "free": {
+      "name": "Free",
+      "feature1": "Up to 3 separate Management Studios",
+      "feature2": "Up to 5 Group Studios",
+      "feature3": "Up to 10 members per Group Studio",
+      "feature4": "500 MB document storage per Group Studio",
+      "feature5": "20 AI requests per day",
+      "button": "Current Plan"
+    },
+
+    "premium": {
+      "name": "Premium",
+      "feature1": "Up to 10 separate Management Studios",
+      "feature2": "Up to 10 Group Studios",
+      "feature3": "Up to 50 members per Group Studio",
+      "feature4": "1 GB document storage per Group Studio",
+      "feature5": "100 AI requests per day",
+      "button": "Upgrade to Premium"
+    }
+  },
+
+  "historyTitle": "Billing History",
+
+  "history": {
+    "today": "Today",
+    "lastMonth": "Last month",
+    "twoMonthsAgo": "2 months ago",
+    "threeMonthsAgo": "3 months ago",
+    "annual": "Annual plan",
+    "subscription": "Monthly subscription"
+  },
+
+  "table": {
+    "invoice": "Invoice",
+    "date": "Date",
+    "description": "Description",
+    "amount": "Amount"
+  },
+
+  "invoiceInfo": {
+    "title": "Invoice Information",
+    "subtitle": "Update your billing and invoice information",
+    "email": "Invoice Email",
+    "paymentMethod": "Payment Method",
+    "emailNotification": "Receive email notifications for new invoices",
+    "saveSuccess": "Invoice information saved successfully!",
+    "editButton": "Edit Invoice Information",
+    "updateButton": "Update Invoice Information"
+  }
+}
 }

@@ -125,183 +125,226 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     };
 
     return (
-        <div className="mx-auto max-w-2xl">
-            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    <div>
-                        <h2 className="mb-4 font-semibold text-[#261E33] text-lg">{t("profile.avatarTitle")}</h2>
-                        <div className="flex items-center gap-6">
-                            <div className="relative h-24 w-24 overflow-hidden rounded-full bg-linear-to-br from-[#FF5F3D] to-[#FF8A7A]">
-                                <Image src={avatarPreview || "/placeholder.svg"} alt="User Avatar" fill className="object-cover" />
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleAvatarChange}
-                                    className="hidden"
-                                />
-                                <Button
-                                    type="button"
-                                    className="bg-[#261E33] text-white hover:bg-[#1a1424]"
-                                    onClick={() => fileInputRef.current?.click()}>
-                                    {t("profile.changeAvatar")}
-                                </Button>
-                                <p className="text-[#9CA3AF] text-xs">{t("profile.avatarSupport")}</p>
-                            </div>
+        <div className="mx-auto max-w-3xl space-y-8 pb-16">
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Avatar Card */}
+                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
+                        {t("profile.avatarTitle")}
+                    </h2>
+
+                    <p className="mb-6 text-sm text-[#6F6B99]">
+                        Chọn bức ảnh đẹp nhất
+                    </p>
+
+                    <div className="flex items-center gap-6">
+                        <div className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-200">
+                            <Image
+                                src={avatarPreview}
+                                alt="User Avatar"
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarChange}
+                                className="hidden"
+                            />
+
+                            <Button
+                                type="button"
+                                className="w-[160px] rounded-lg bg-[#261E33] text-white hover:bg-[#1a1424]"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                Thay đổi ảnh
+                            </Button>
+
+                            <p className="text-xs text-[#9CA3AF]">
+                                Tệp hỗ trợ: JPG, PNG (tối đa 5MB)
+                            </p>
                         </div>
                     </div>
+                </div>
 
-                    <hr className="border-[#E5E5E5] border-t" />
+                {/* User Info Card */}
+                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
+                        {t("profile.userInfoTitle")}
+                    </h2>
 
-                    <div>
-                        <h2 className="mb-4 font-semibold text-[#261E33] text-lg">{t("profile.userInfoTitle")}</h2>
-                        <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.userInfoSubtitle")}</p>
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label htmlFor="firstName" className="mb-2 block font-semibold text-[#261E33] text-sm">
-                                    {t("profile.firstName")}
-                                </label>
-                                <Input
-                                    id="firstName"
-                                    type="text"
-                                    name="firstName"
-                                    value={formData.firstName}
-                                    onChange={handleInputChange}
-                                    className="rounded-lg border border-[#E5E5E5] bg-white py-2 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="lastName" className="mb-2 block font-semibold text-[#261E33] text-sm">
-                                    {t("profile.lastName")}
-                                </label>
-                                <Input
-                                    id="lastName"
-                                    type="text"
-                                    name="lastName"
-                                    value={formData.lastName}
-                                    onChange={handleInputChange}
-                                    className="rounded-lg border border-[#E5E5E5] bg-white py-2 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-6">
-                            <label htmlFor="email" className="mb-2 block font-semibold text-[#261E33] text-sm">
-                                {t("profile.email")}
-                            </label>
-                            <Input
-                                id="email"
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleInputChange}
-                                className="rounded-lg border border-[#E5E5E5] bg-white py-2 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
-                            />
-                        </div>
-                        <div className="mt-6">
-                            <label htmlFor="phoneNumber" className="mb-2 block font-semibold text-[#261E33] text-sm">
-                                {t("profile.phoneNumber")}
-                            </label>
-                            <Input
-                                id="phoneNumber"
-                                type="tel"
-                                name="phoneNumber"
-                                value={formData.phoneNumber}
-                                onChange={handleInputChange}
-                                className="rounded-lg border border-[#E5E5E5] bg-white py-2 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
-                            />
-                        </div>
-                        <div className="mt-6">
-                            <label htmlFor="bio" className="mb-2 block font-semibold text-[#261E33] text-sm">
-                                {t("profile.bio")}
-                            </label>
-                            <textarea
-                                id="bio"
-                                name="bio"
-                                value={formData.bio}
-                                onChange={handleInputChange}
-                                rows={4}
-                                className="w-full rounded-lg border border-[#E5E5E5] bg-white p-3 text-[#261E33] placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
-                                placeholder={t("profile.bioPlaceholder")}
-                            />
-                        </div>
-                    </div>
+                    <p className="mb-6 text-sm text-[#6F6B99]">
+                        {t("profile.userInfoSubtitle")}
+                    </p>
 
-                    <hr className="border-[#E5E5E5] border-t" />
-
-                    <div>
-                        <h2 className="mb-4 font-semibold text-[#261E33] text-lg">{t("profile.preferencesTitle")}</h2>
-                        <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.preferencesSubtitle")}</p>
+                    <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="language" className="mb-2 block font-semibold text-[#261E33] text-sm">
-                                {t("profile.language")}
+                            <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                                {t("profile.firstName")}
                             </label>
-                            <select
-                                id="language"
-                                name="language"
-                                value={formData.language}
+                            <Input
+                                name="firstName"
+                                value={formData.firstName}
                                 onChange={handleInputChange}
-                                className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2 text-[#261E33] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]">
-                                {languages.map((lang) => (
-                                    <option key={lang.value} value={lang.value}>
-                                        {lang.label}
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         </div>
-                    </div>
 
-                    <hr className="border-[#E5E5E5] border-t" />
-
-                    <div>
-                        <h2 className="mb-4 font-semibold text-[#261E33] text-lg">{t("profile.notificationsTitle")}</h2>
-                        <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.notificationsSubtitle")}</p>
-                        <div className="flex items-center justify-between rounded-lg border border-[#E5E5E5] p-4">
-                            <div>
-                                <p className="font-medium text-[#261E33]">{t("profile.studioNotifications")}</p>
-                                <p className="text-[#6F6B99] text-sm">{t("profile.studioNotificationsDesc")}</p>
-                            </div>
-                            <label className="relative inline-flex cursor-pointer items-center">
-                                <input
-                                    type="checkbox"
-                                    name="emailNotificationEnabled"
-                                    checked={formData.emailNotificationEnabled}
-                                    onChange={handleInputChange}
-                                    className="sr-only"
-                                />
-                                <div
-                                    className={`h-6 w-11 rounded-full transition-colors ${formData.emailNotificationEnabled ? "bg-[#2563EB]" : "bg-[#E5E5E5]"
-                                        }`}
-                                />
-                                <div
-                                    className={`absolute h-5 w-5 rounded-full bg-white transition-transform ${formData.emailNotificationEnabled ? "translate-x-5" : "translate-x-0.5"
-                                        }`}
-                                />
+                        <div>
+                            <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                                {t("profile.lastName")}
                             </label>
+                            <Input
+                                name="lastName"
+                                value={formData.lastName}
+                                onChange={handleInputChange}
+                            />
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-4 border-[#E5E5E5] border-t pt-8">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-lg border border-[#E5E5E5] bg-white px-6 py-2 text-[#261E33] hover:bg-[#F8F9FB]"
-                            onClick={() => {
-                                setFormData(initialData);
-                                setAvatarPreview(initialData.avatar || "/images/image-removebg-preview.png");
-                            }}>
-                            {t("profile.cancelButton")}
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="rounded-lg bg-[#FF5F3D] px-6 py-2 text-white hover:bg-[#ff4620] disabled:opacity-50">
-                            {isSubmitting ? t("profile.savingButton") : t("profile.saveButton")}
-                        </Button>
+                    <div className="mt-6">
+                        <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                            {t("profile.email")}
+                        </label>
+                        <Input value={formData.email} disabled />
                     </div>
-                </form>
-            </div>
+
+                    <div className="mt-6">
+                        <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                            {t("profile.phoneNumber")}
+                        </label>
+                        <Input
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    {/* Bio đúng placeholder như ảnh */}
+                    <div className="mt-6">
+                        <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                            {t("profile.bio")}
+                        </label>
+
+                        <textarea
+                            id="bio"
+                            name="bio"
+                            value={formData.bio}
+                            onChange={handleInputChange}
+                            rows={4}
+                            placeholder="Viết gì đó về bạn..."
+                            className="w-full resize-none rounded-lg border border-[#E5E5E5] bg-white p-3 text-sm
+                       text-[#261E33] placeholder:text-[#9CA3AF]
+                       focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
+                        />
+                    </div>
+                </div>
+
+                {/* Preferences Card */}
+                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
+                        {t("profile.preferencesTitle")}
+                    </h2>
+
+                    <p className="mb-6 text-sm text-[#6F6B99]">
+                        {t("profile.preferencesSubtitle")}
+                    </p>
+
+                    <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                        {t("profile.language")}
+                    </label>
+
+                    <select
+                        name="language"
+                        value={formData.language}
+                        onChange={handleInputChange}
+                        className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2 text-sm
+                     focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
+                    >
+                        {languages.map((lang) => (
+                            <option key={lang.value} value={lang.value}>
+                                {lang.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Notifications Card (Toggle Switch đúng chuẩn) */}
+                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
+                        {t("profile.notificationsTitle")}
+                    </h2>
+
+                    <p className="mb-6 text-sm text-[#6F6B99]">
+                        {t("profile.notificationsSubtitle")}
+                    </p>
+
+                    <div className="flex items-center justify-between rounded-lg border border-[#E5E5E5] p-4">
+                        <div>
+                            <p className="font-medium text-[#261E33]">
+                                {t("profile.studioNotifications")}
+                            </p>
+                            <p className="text-sm text-[#6F6B99]">
+                                {t("profile.studioNotificationsDesc")}
+                            </p>
+                        </div>
+
+                        <label className="relative inline-flex cursor-pointer items-center">
+                            <input
+                                type="checkbox"
+                                name="emailNotificationEnabled"
+                                checked={formData.emailNotificationEnabled}
+                                onChange={handleInputChange}
+                                className="sr-only"
+                            />
+
+                            <div
+                                className={`h-6 w-11 rounded-full transition-colors ${formData.emailNotificationEnabled
+                                    ? "bg-[#2563EB]"
+                                    : "bg-[#E5E5E5]"
+                                    }`}
+                            />
+
+                            <div
+                                className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${formData.emailNotificationEnabled
+                                    ? "translate-x-5"
+                                    : "translate-x-0"
+                                    }`}
+                            />
+                        </label>
+                    </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex justify-end gap-4 pt-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                            setFormData(initialData);
+                            setAvatarPreview(
+                                initialData.avatar || "/images/image-removebg-preview.png"
+                            );
+                        }}
+                    >
+                        {t("profile.cancelButton")}
+                    </Button>
+
+                    <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]"
+                    >
+                        {isSubmitting
+                            ? t("profile.savingButton")
+                            : t("profile.saveButton")}
+                    </Button>
+                </div>
+            </form>
         </div>
     );
+
 }
