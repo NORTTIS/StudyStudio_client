@@ -25,38 +25,53 @@ interface BillingItem {
 
 export default function BillingPage() {
   const t = useTranslations("BillingPage");
+
   const [emailNotifications, setEmailNotifications] = useState(true);
+
   const [invoiceEmail, setInvoiceEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+
   const [currentPlan, setCurrentPlan] = useState("free");
-  const [_mounted, setMounted] = useState(false);
+  const [isEditingInvoice, setIsEditingInvoice] = useState(false);
 
-  // Get current locale to determine currency
+  /* ======================= */
+  /* CURRENCY */
+  /* ======================= */
   const locale = t("plans.period").includes("tháng") ? "vi" : "en";
-  const EXCHANGE_RATE = 26000; // 1 USD = 26,000 VND
+  const EXCHANGE_RATE = 26000;
 
-  // Helper function to format price based on locale
   const formatPrice = (usdPrice: number) => {
     if (locale === "vi") {
-      const vndPrice = usdPrice * EXCHANGE_RATE;
-      return `${vndPrice.toLocaleString("vi-VN")}₫`;
+      return `${(usdPrice * EXCHANGE_RATE).toLocaleString("vi-VN")}₫`;
     }
     return `$${usdPrice}`;
   };
 
-  // Load from localStorage on mount
+  /* ======================= */
+  /* LOAD LOCAL STORAGE */
+  /* ======================= */
   useEffect(() => {
-    setMounted(true);
     if (typeof window !== "undefined") {
       const savedEmail = localStorage.getItem("billingEmail");
-      const savedNotifications = localStorage.getItem("billingEmailNotifications");
+      const savedPayment = localStorage.getItem("billingPaymentMethod");
+      const savedNotifications = localStorage.getItem(
+        "billingEmailNotifications"
+      );
       const savedPlan = localStorage.getItem("currentPlan");
 
       if (savedEmail) setInvoiceEmail(savedEmail);
-      if (savedNotifications) setEmailNotifications(savedNotifications === "true");
+      if (savedPayment) setPaymentMethod(savedPayment);
+
+      if (savedNotifications)
+        setEmailNotifications(savedNotifications === "true");
+
       if (savedPlan) setCurrentPlan(savedPlan);
     }
   }, []);
 
+  /* ======================= */
+  /* PLANS */
+  /* ======================= */
   const subscriptionPlans: Plan[] = [
     {
       id: "free",
@@ -67,163 +82,216 @@ export default function BillingPage() {
         t("plans.free.feature1"),
         t("plans.free.feature2"),
         t("plans.free.feature3"),
-        t("plans.free.feature4")
+        t("plans.free.feature4"),
+        t("plans.free.feature5"),
       ],
-      buttonText: t("plans.free.button")
+      buttonText: t("plans.free.button"),
     },
-    {
-      id: "pro",
-      name: t("plans.pro.name"),
-      price: 9.99,
-      period: t("plans.period"),
-      isFeatured: true,
-      features: [t("plans.pro.feature1"), t("plans.pro.feature2"), t("plans.pro.feature3"), t("plans.pro.feature4")],
-      buttonText: t("plans.pro.button")
-    },
+
     {
       id: "premium",
       name: t("plans.premium.name"),
       price: 29.99,
       period: t("plans.period"),
+      isFeatured: true,
       features: [
         t("plans.premium.feature1"),
         t("plans.premium.feature2"),
         t("plans.premium.feature3"),
-        t("plans.premium.feature4")
+        t("plans.premium.feature4"),
+        t("plans.premium.feature5"),
       ],
-      buttonText: t("plans.premium.button")
-    }
+      buttonText: t("plans.premium.button"),
+    },
   ];
 
+  const activePlan = subscriptionPlans.find((p) => p.id === currentPlan);
+
+  /* ======================= */
+  /* HISTORY */
+  /* ======================= */
   const billingHistory: BillingItem[] = [
-    { id: "1", invoice: "SKU-2024-0105", date: t("history.today"), description: t("history.annual"), amount: 89.99 },
+    {
+      id: "1",
+      invoice: "SKU-2024-0105",
+      date: t("history.today"),
+      description: t("history.annual"),
+      amount: 89.99,
+    },
     {
       id: "2",
       invoice: "SKU-2025-0903",
       date: t("history.lastMonth"),
       description: t("history.annual"),
-      amount: 89.99
+      amount: 89.99,
     },
     {
       id: "3",
       invoice: "SKU-2025-1235",
       date: t("history.twoMonthsAgo"),
       description: t("history.subscription"),
-      amount: 89.99
+      amount: 89.99,
     },
     {
       id: "4",
       invoice: "SKU-2025-1385",
       date: t("history.threeMonthsAgo"),
       description: t("history.subscription"),
-      amount: 89.99
-    }
+      amount: 89.99,
+    },
   ];
 
+  /* ======================= */
+  /* SAVE INVOICE INFO */
+  /* ======================= */
   const handleSaveInvoiceInfo = () => {
-    // Save to localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("billingEmail", invoiceEmail);
-      localStorage.setItem("billingEmailNotifications", emailNotifications.toString());
+      localStorage.setItem("billingPaymentMethod", paymentMethod);
+      localStorage.setItem(
+        "billingEmailNotifications",
+        emailNotifications.toString()
+      );
     }
+
     alert(t("invoiceInfo.saveSuccess"));
   };
 
+  /* ======================= */
+  /* CHANGE PLAN */
+  /* ======================= */
   const handlePlanChange = (planId: string) => {
     setCurrentPlan(planId);
+
     if (typeof window !== "undefined") {
       localStorage.setItem("currentPlan", planId);
-      const planHistory = JSON.parse(localStorage.getItem("planHistory") || "[]");
-      planHistory.push({
-        planId,
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem("planHistory", JSON.stringify(planHistory));
     }
-    alert(`Đã chuyển sang gói ${planId.toUpperCase()}`);
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
-      {/* Subscription Plans */}
-      <div>
-        <h2 className="mb-2 font-bold text-2xl text-[#261E33]">{t("plansTitle")}</h2>
-        <p className="mb-8 text-[#6F6B99] text-sm">{t("plansSubtitle")}</p>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div className="mx-auto max-w-5xl space-y-8 pb-16">
+      {/* ================= CURRENT PLAN ================= */}
+      {activePlan && (
+        <div className="rounded-2xl border border-[#FFDFD8] bg-[#FFF7F4] p-8">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="font-semibold text-[#261E33]">
+                {t("currentPlan.title")}
+              </h2>
+
+              <p className="mt-1 text-sm text-[#6F6B99]">
+                {t("currentPlan.subtitle")}{" "}
+                <span className="font-medium text-[#261E33]">
+                  {activePlan.name}
+                </span>
+                .
+              </p>
+
+              <div className="mt-4">
+                <p className="text-2xl font-bold text-[#261E33]">
+                  {formatPrice(activePlan.price)}
+                </p>
+                <p className="text-sm text-[#6F6B99]">{activePlan.period}</p>
+              </div>
+
+              <ul className="mt-4 space-y-2">
+                {activePlan.features.map((f, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-sm">
+                    <span className="text-[#FF5F3D] font-bold">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-5 flex gap-3">
+                <Button variant="outline">
+                  {t("currentPlan.changeButton")}
+                </Button>
+
+                {currentPlan !== "free" && (
+                  <Button variant="outline">
+                    {t("currentPlan.cancelButton")}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <span className="rounded-full bg-[#FF5F3D] px-3 py-1 text-xs font-semibold text-white">
+              {t("currentPlan.activeBadge")}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ================= PLANS LIST ================= */}
+      <div className="rounded-2xl border bg-white p-8">
+        <h2 className="mb-2 text-2xl font-bold">{t("plansTitle")}</h2>
+        <p className="mb-8 text-sm text-[#6F6B99]">{t("plansSubtitle")}</p>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {subscriptionPlans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative overflow-hidden rounded-2xl border-2 transition-all ${
-                plan.isFeatured ? "border-[#FF5F3D] bg-white shadow-lg" : "border-[#E5E5E5] bg-white"
-              }`}>
-              {plan.isFeatured && (
-                <div className="absolute top-0 right-0 rounded-bl-lg bg-[#FF5F3D] px-4 py-1 font-bold text-white text-xs">
-                  {t("recommended")}
-                </div>
-              )}
-              <div className="p-6">
-                <h3 className="mb-2 font-bold text-[#261E33] text-lg">{plan.name}</h3>
-                <p className="mb-6 text-[#6F6B99] text-sm">{t("plansDescription")}</p>
-                <div className="mb-6">
-                  <span className="font-bold text-3xl text-[#261E33]">{formatPrice(plan.price)}</span>
-                  <span className="text-[#6F6B99]">{plan.period}</span>
-                </div>
-                <Button
-                  onClick={() => handlePlanChange(plan.id)}
-                  disabled={currentPlan === plan.id}
-                  className={`mb-6 w-full rounded-lg py-2.5 font-semibold ${
-                    plan.isFeatured
-                      ? "bg-[#FF5F3D] text-white hover:bg-[#ff4620]"
-                      : "bg-[#261E33] text-white hover:bg-[#1a1424]"
-                  } disabled:cursor-not-allowed disabled:opacity-50`}>
-                  {currentPlan === plan.id ? t("plans.free.button") : plan.buttonText}
-                </Button>
-                <div className="space-y-3 border-[#E5E5E5] border-t pt-6">
-                  {plan.features.map((feature, featureIdx) => (
-                    <div key={`${plan.id}-feature-${featureIdx}`} className="flex items-start gap-3">
-                      <svg
-                        className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#FF5F3D]"
-                        fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-[#6F6B99] text-sm">{feature}</span>
-                    </div>
-                  ))}
-                </div>
+              className={`rounded-2xl border-2 p-6 transition ${currentPlan === plan.id
+                ? "border-[#FF5F3D] shadow-lg"
+                : "border-[#E5E5E5]"
+                }`}
+            >
+              <h3 className="text-lg font-bold">{plan.name}</h3>
+
+              <p className="mt-3 text-3xl font-bold">
+                {formatPrice(plan.price)}
+              </p>
+
+              <Button
+                onClick={() => handlePlanChange(plan.id)}
+                disabled={currentPlan === plan.id}
+                className="mt-5 w-full rounded-lg"
+              >
+                {currentPlan === plan.id
+                  ? t("plans.current")
+                  : plan.buttonText}
+              </Button>
+
+              <div className="mt-6 space-y-3 border-t pt-5">
+                {plan.features.map((feature, idx) => (
+                  <p key={idx} className="flex gap-2 text-sm text-[#6F6B99]">
+                    <span className="text-[#FF5F3D] font-bold">✓</span>
+                    {feature}
+                  </p>
+                ))}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <hr className="border-[#E5E5E5]" />
+      {/* ================= BILLING HISTORY ================= */}
+      <div className="rounded-2xl border bg-white p-8">
+        <h2 className="mb-4 text-2xl font-bold">{t("historyTitle")}</h2>
 
-      {/* Billing History */}
-      <div>
-        <h2 className="mb-2 font-bold text-2xl text-[#261E33]">{t("historyTitle")}</h2>
-        <p className="mb-6 text-[#6F6B99] text-sm">{t("historySubtitle")}</p>
-        <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+        <div className="overflow-hidden rounded-xl border">
           <table className="w-full">
             <thead>
-              <tr className="border-[#E5E5E5] border-b">
-                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.invoice")}</th>
-                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.date")}</th>
-                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.description")}</th>
-                <th className="px-6 py-4 text-right font-semibold text-[#261E33] text-sm">{t("table.amount")}</th>
+              <tr className="bg-[#FAFAFA] text-sm font-semibold">
+                <th className="px-6 py-4 text-left">{t("table.invoice")}</th>
+                <th className="px-6 py-4 text-left">{t("table.date")}</th>
+                <th className="px-6 py-4 text-left">
+                  {t("table.description")}
+                </th>
+                <th className="px-6 py-4 text-right">{t("table.amount")}</th>
               </tr>
             </thead>
+
             <tbody>
               {billingHistory.map((item) => (
-                <tr key={item.id} className="border-[#E5E5E5] border-b transition-colors hover:bg-[#F9F9F9]">
-                  <td className="px-6 py-4 font-medium text-[#261E33] text-sm">{item.invoice}</td>
-                  <td className="px-6 py-4 text-[#6F6B99] text-sm">{item.date}</td>
-                  <td className="px-6 py-4 text-[#6F6B99] text-sm">{item.description}</td>
-                  <td className="px-6 py-4 text-right font-semibold text-[#261E33] text-sm">
+                <tr key={item.id} className="border-t text-sm">
+                  <td className="px-6 py-4 font-medium">{item.invoice}</td>
+                  <td className="px-6 py-4 text-[#6F6B99]">{item.date}</td>
+                  <td className="px-6 py-4 text-[#6F6B99]">
+                    {item.description}
+                  </td>
+                  <td className="px-6 py-4 text-right font-semibold">
                     {formatPrice(item.amount)}
                   </td>
                 </tr>
@@ -233,59 +301,85 @@ export default function BillingPage() {
         </div>
       </div>
 
-      <hr className="border-[#E5E5E5]" />
+      {/* ================= INVOICE INFO ================= */}
+      <div className="rounded-2xl border bg-white p-8">
+        <h2 className="mb-1 text-lg font-semibold">{t("invoiceInfo.title")}</h2>
 
-      {/* Invoice Details */}
-      <div>
-        <h2 className="mb-2 font-bold text-2xl text-[#261E33]">{t("invoiceInfo.title")}</h2>
-        <p className="mb-6 text-[#6F6B99] text-sm">{t("invoiceInfo.subtitle")}</p>
-        <div className="space-y-6 rounded-2xl border border-[#E5E5E5] bg-white p-8">
-          <div className="grid grid-cols-2 gap-6">
+        <p className="mb-6 text-sm text-[#6F6B99]">
+          {t("invoiceInfo.subtitle")}
+        </p>
+
+        {!isEditingInvoice && (
+          <div className="space-y-5">
             <div>
-              <label className="mb-2 block font-semibold text-[#261E33] text-sm">{t("invoiceInfo.email")}</label>
-              <Input
-                type="email"
-                value={invoiceEmail}
-                onChange={(e) => setInvoiceEmail(e.target.value)}
-                placeholder="dat@studist.edu.vn"
-                className="rounded-lg border-[#E5E5E5] bg-white py-2.5 text-[#261E33] placeholder:text-[#9CA3AF]"
-              />
+              <p className="font-medium">{t("invoiceInfo.email")}</p>
+              <p className="text-sm text-[#6F6B99]">{invoiceEmail}</p>
             </div>
+
             <div>
-              <label className="mb-2 block font-semibold text-[#261E33] text-sm">
-                {t("invoiceInfo.paymentMethod")}
-              </label>
-              <Input
-                type="text"
-                placeholder="Visa ****1234"
-                readOnly
-                className="rounded-lg border-[#E5E5E5] bg-[#F5F5F5] py-2.5 text-[#261E33]"
-              />
+              <p className="font-medium">{t("invoiceInfo.paymentMethod")}</p>
+              <p className="text-sm text-[#6F6B99]">{paymentMethod}</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3 rounded-lg bg-[#F5F5F5] p-4">
-            <input
-              type="checkbox"
-              id="emailNotif"
-              checked={emailNotifications}
-              onChange={(e) => setEmailNotifications(e.target.checked)}
-              className="h-4 w-4 cursor-pointer"
-            />
-            <label htmlFor="emailNotif" className="cursor-pointer text-[#6F6B99] text-sm">
-              {t("invoiceInfo.emailNotification")}
-            </label>
-          </div>
-          <div className="flex justify-end gap-3 border-[#E5E5E5] border-t pt-4">
-            <Button className="rounded-lg border border-[#E5E5E5] bg-white px-6 py-2.5 font-semibold text-[#261E33] text-sm hover:bg-[#F5F5F5]">
-              {t("invoiceInfo.cancelButton")}
+
+            <div className="flex items-center gap-3 rounded-xl bg-[#F5F5F5] px-4 py-4">
+              <input type="checkbox" checked={emailNotifications} disabled />
+              <span className="text-sm text-[#6F6B99]">
+                {t("invoiceInfo.emailNotification")}
+              </span>
+            </div>
+
+            <Button variant="outline" onClick={() => setIsEditingInvoice(true)}>
+              {t("invoiceInfo.editButton")}
             </Button>
+          </div>
+        )}
+
+        {isEditingInvoice && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-semibold">
+                  {t("invoiceInfo.email")}
+                </label>
+                <Input
+                  value={invoiceEmail}
+                  onChange={(e) => setInvoiceEmail(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold">
+                  {t("invoiceInfo.paymentMethod")}
+                </label>
+                <Input
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-xl bg-[#F5F5F5] px-4 py-4">
+              <input
+                type="checkbox"
+                checked={emailNotifications}
+                onChange={(e) => setEmailNotifications(e.target.checked)}
+              />
+              <span className="text-sm text-[#6F6B99]">
+                {t("invoiceInfo.emailNotification")}
+              </span>
+            </div>
+
             <Button
-              onClick={handleSaveInvoiceInfo}
-              className="rounded-lg bg-[#FF5F3D] px-6 py-2.5 font-semibold text-sm text-white hover:bg-[#ff4620]">
-              {t("invoiceInfo.saveButton")}
+              className="bg-[#FF5F3D] text-white"
+              onClick={() => {
+                handleSaveInvoiceInfo();
+                setIsEditingInvoice(false);
+              }}
+            >
+              {t("invoiceInfo.updateButton")}
             </Button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

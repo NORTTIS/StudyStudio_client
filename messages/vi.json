@@ -645,5 +645,96 @@
       "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
       "feature5": "100 lượt yêu cầu AI mỗi ngày"
     }
+  },
+  "HelpPage": {
+  "form": {
+    "formTitle": "Gửi lời than phiền hoặc Liên hệ hỗ trợ",
+    "subtitle": "Hãy cho chúng tôi biết nếu bạn gặp sự cố hoặc có bất kỳ câu hỏi nào",
+
+    "feedbackType": "Loại phản hồi",
+    "feedbackOptions": {
+      "bug": "Báo cáo lỗi",
+      "feedback": "Góp ý cải thiện",
+      "support": "Yêu cầu hỗ trợ",
+      "other": "Khác"
+    },
+
+    "email": "Email",
+    "emailPlaceholder": "dat@studist.edu.vn",
+    "title": "Tiêu đề",
+    "titlePlaceholder": "Một vài từ mô tả vấn đề",
+    "content": "Nội dung",
+    "contentPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
+    "cancelButton": "Hủy",
+    "submitButton": "Gửi báo cáo",
+    "validationError": "Vui lòng điền tất cả các trường",
+    "submitSuccess": "Báo cáo của bạn đã được gửi thành công!"
   }
+},
+"BillingPage": {
+  "plansTitle": "Gói đăng ký",
+  "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
+
+  "currentPlan": {
+    "title": "Gói đăng ký hiện tại",
+    "subtitle": "Bạn hiện đang sử dụng gói",
+    "changeButton": "Thay đổi gói",
+    "cancelButton": "Hủy gói đăng ký",
+    "activeBadge": "Đang hoạt động"
+  },
+
+  "plans": {
+    "period": "/tháng",
+    "current": "Gói hiện tại",
+
+    "free": {
+      "name": "Miễn phí",
+      "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
+      "feature2": "Tối đa 5 Không gian nhóm",
+      "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+      "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+      "feature5": "20 lượt yêu cầu AI mỗi ngày",
+      "button": "Gói hiện tại"
+    },
+
+    "premium": {
+      "name": "Premium",
+      "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
+      "feature2": "Tối đa 10 Không gian nhóm",
+      "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
+      "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
+      "feature5": "100 lượt yêu cầu AI mỗi ngày",
+      "button": "Nâng cấp lên Premium"
+    }
+  },
+
+  "historyTitle": "Lịch sử thanh toán",
+
+  "history": {
+    "today": "Hôm nay",
+    "lastMonth": "Tháng trước",
+    "twoMonthsAgo": "2 tháng trước",
+    "threeMonthsAgo": "3 tháng trước",
+    "annual": "Gói năm",
+    "subscription": "Đăng ký hàng tháng"
+  },
+
+  "table": {
+    "invoice": "Số hóa đơn",
+    "date": "Ngày",
+    "description": "Mô tả",
+    "amount": "Số tiền"
+  },
+
+  "invoiceInfo": {
+    "title": "Thông tin hóa đơn",
+    "subtitle": "Cập nhật thông tin thanh toán và hóa đơn của bạn",
+    "email": "Email nhận hóa đơn",
+    "paymentMethod": "Phương thức thanh toán",
+    "emailNotification": "Nhận thông báo qua email khi có hóa đơn mới",
+    "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!",
+    "editButton": "Chỉnh sửa thông tin hóa đơn",
+    "updateButton": "Cập nhật thông tin hóa đơn"
+  }
+}
 }
