@@ -121,7 +121,7 @@
     "verifyEmailSubtitle": "Check your email to proceed with the next step",
     "checkYourEmail": "Check your email",
     "verificationLinkSentTo": "We've sent a verification link to:",
-    "linkExpiresIn5Minutes": "The link will expire in 5 minutes.",
+    "linkExpiresIn15Minutes": "The link will expire in 15 minutes.",
     "checkSpamFolder": "If you don't see the email, please check your spam folder.",
     "backToLogin": "Back to login",
     "meta": {
@@ -362,37 +362,36 @@
   "BillingPage": {
     "plansTitle": "Subscription Plans",
     "plansSubtitle": "Choose the plan that fits your needs",
-    "plansDescription": "All basic features included",
-    "recommended": "Recommended",
+    "currentPlan": {
+      "title": "Current Subscription Plan",
+      "subtitle": "You are currently using the",
+      "changeButton": "Change Plan",
+      "cancelButton": "Cancel Subscription",
+      "activeBadge": "Active"
+    },
     "plans": {
       "period": "/month",
+      "current": "Current Plan",
       "free": {
         "name": "Free",
-        "feature1": "3 workspaces",
-        "feature2": "5GB storage",
-        "feature3": "Basic support",
-        "feature4": "Up to 5 members",
+        "feature1": "Up to 3 separate Management Studios",
+        "feature2": "Up to 5 Group Studios",
+        "feature3": "Up to 10 members per Group Studio",
+        "feature4": "500 MB document storage per Group Studio",
+        "feature5": "20 AI requests per day",
         "button": "Current Plan"
-      },
-      "pro": {
-        "name": "Pro",
-        "feature1": "Unlimited workspaces",
-        "feature2": "100GB storage",
-        "feature3": "Priority support",
-        "feature4": "Unlimited members",
-        "button": "Upgrade to Pro"
       },
       "premium": {
         "name": "Premium",
-        "feature1": "All Pro features",
-        "feature2": "1TB storage",
-        "feature3": "24/7 support",
-        "feature4": "Advanced features",
+        "feature1": "Up to 10 separate Management Studios",
+        "feature2": "Up to 10 Group Studios",
+        "feature3": "Up to 50 members per Group Studio",
+        "feature4": "1 GB document storage per Group Studio",
+        "feature5": "100 AI requests per day",
         "button": "Upgrade to Premium"
       }
     },
     "historyTitle": "Billing History",
-    "historySubtitle": "View all your transactions and invoices",
     "history": {
       "today": "Today",
       "lastMonth": "Last month",
@@ -413,17 +412,22 @@
       "email": "Invoice Email",
       "paymentMethod": "Payment Method",
       "emailNotification": "Receive email notifications for new invoices",
-      "cancelButton": "Cancel",
-      "saveButton": "Save Changes",
-      "saveSuccess": "Invoice information saved successfully!"
+      "saveSuccess": "Invoice information saved successfully!",
+      "editButton": "Edit Invoice Information",
+      "updateButton": "Update Invoice Information"
     }
   },
   "HelpPage": {
     "form": {
       "formTitle": "Submit Complaint or Contact Support",
       "subtitle": "Let us know if you're experiencing any issues or have questions",
-      "localPhoneId": "Local phone ID",
-      "localPhoneIdPlaceholder": "Local code",
+      "feedbackType": "Feedback type",
+      "feedbackOptions": {
+        "bug": "Bug report",
+        "feedback": "Suggestion",
+        "support": "Support request",
+        "other": "Other"
+      },
       "email": "Email",
       "emailPlaceholder": "dat@studist.edu.vn",
       "title": "Title",
@@ -434,26 +438,6 @@
       "submitButton": "Submit Report",
       "validationError": "Please fill in all fields",
       "submitSuccess": "Your report has been submitted successfully!"
-    },
-    "faq": {
-      "title": "Frequently Asked Questions",
-      "subtitle": "Find answers to common questions",
-      "item1": {
-        "question": "How do I get started?",
-        "answer": "To start using Study Studio, simply create a free account and complete your personal profile. Then you can explore features and join classes or study groups."
-      },
-      "item2": {
-        "question": "Do I need a subscription?",
-        "answer": "No, you don't need a mandatory subscription. Study Studio offers a free plan with basic features. If you want access to premium features, you can upgrade to Pro or Premium plans."
-      },
-      "item3": {
-        "question": "How do I manage my account?",
-        "answer": "You can manage your account by going to Settings. There you can update personal information, change password, manage subscriptions, and adjust notification preferences."
-      },
-      "item4": {
-        "question": "Are there any limitations for free accounts?",
-        "answer": "Yes, free accounts have some limitations such as maximum 1GB storage, basic tools, and community support. If you need more resources and support, consider upgrading to our paid plans."
-      }
     }
   },
   "LandingGroupPage": {
@@ -662,108 +646,17 @@
       "feature5": "100 AI requests per day"
     }
   },
-  "HelpPage": {
-  "form": {
-    "formTitle": "Submit Complaint or Contact Support",
-    "subtitle": "Let us know if you're experiencing any issues or have questions",
-
-    "feedbackType": "Feedback type",
-    "feedbackOptions": {
-      "bug": "Bug report",
-      "feedback": "Suggestion",
-      "support": "Support request",
-      "other": "Other"
-    },
-
-    "email": "Email",
-    "emailPlaceholder": "dat@studist.edu.vn",
-    "title": "Title",
-    "titlePlaceholder": "A few words describing the issue",
-    "content": "Content",
-    "contentPlaceholder": "Describe your issue in detail...",
-    "cancelButton": "Cancel",
-    "submitButton": "Submit Report",
-    "validationError": "Please fill in all fields",
-    "submitSuccess": "Your report has been submitted successfully!"
-  }
-},
-"currentPlan": {
-  "title": "Current Plan",
-  "subtitle": "You are currently using",
-  "active": "Active",
-  "changePlan": "Change Plan",
-  "cancelPlan": "Cancel Subscription",
-  "currentButton": "Current Plan"
-},
-"invoiceInfo": {
-  "editButton": "Edit invoice information",
-  "updateButton": "Update invoice information",
-  "visaText": "Visa ****1234"
-},
-"BillingPage": {
-  "plansTitle": "Subscription Plans",
-  "plansSubtitle": "Choose the plan that fits your needs",
-
   "currentPlan": {
-    "title": "Current Subscription Plan",
-    "subtitle": "You are currently using the",
-    "changeButton": "Change Plan",
-    "cancelButton": "Cancel Subscription",
-    "activeBadge": "Active"
+    "title": "Current Plan",
+    "subtitle": "You are currently using",
+    "active": "Active",
+    "changePlan": "Change Plan",
+    "cancelPlan": "Cancel Subscription",
+    "currentButton": "Current Plan"
   },
-
-  "plans": {
-    "period": "/month",
-    "current": "Current Plan",
-
-    "free": {
-      "name": "Free",
-      "feature1": "Up to 3 separate Management Studios",
-      "feature2": "Up to 5 Group Studios",
-      "feature3": "Up to 10 members per Group Studio",
-      "feature4": "500 MB document storage per Group Studio",
-      "feature5": "20 AI requests per day",
-      "button": "Current Plan"
-    },
-
-    "premium": {
-      "name": "Premium",
-      "feature1": "Up to 10 separate Management Studios",
-      "feature2": "Up to 10 Group Studios",
-      "feature3": "Up to 50 members per Group Studio",
-      "feature4": "1 GB document storage per Group Studio",
-      "feature5": "100 AI requests per day",
-      "button": "Upgrade to Premium"
-    }
-  },
-
-  "historyTitle": "Billing History",
-
-  "history": {
-    "today": "Today",
-    "lastMonth": "Last month",
-    "twoMonthsAgo": "2 months ago",
-    "threeMonthsAgo": "3 months ago",
-    "annual": "Annual plan",
-    "subscription": "Monthly subscription"
-  },
-
-  "table": {
-    "invoice": "Invoice",
-    "date": "Date",
-    "description": "Description",
-    "amount": "Amount"
-  },
-
   "invoiceInfo": {
-    "title": "Invoice Information",
-    "subtitle": "Update your billing and invoice information",
-    "email": "Invoice Email",
-    "paymentMethod": "Payment Method",
-    "emailNotification": "Receive email notifications for new invoices",
-    "saveSuccess": "Invoice information saved successfully!",
-    "editButton": "Edit Invoice Information",
-    "updateButton": "Update Invoice Information"
+    "editButton": "Edit invoice information",
+    "updateButton": "Update invoice information",
+    "visaText": "Visa ****1234"
   }
-}
 }

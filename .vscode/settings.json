@@ -15,5 +15,6 @@
     "messages",
     "src/i18n"
 ],
-"typescript.autoClosingTags": false
+"typescript.autoClosingTags": false,
+"i18n-ally.keystyle": "nested"
 }

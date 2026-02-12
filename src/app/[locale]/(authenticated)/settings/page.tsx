@@ -12,6 +12,7 @@ export default async function SettingsPage() {
         console.error("[Settings Page] Failed to load user settings:", response);
         return <ErrorDisplay message={`Không thể tải thông tin cài đặt: ${response.message}`} />;
     }
+    console.log("SettingsPage fetched user profile:", response.data);
 
     return <SettingsClient initialData={response.data} />;
 }

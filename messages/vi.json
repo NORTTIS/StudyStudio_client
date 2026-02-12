@@ -132,7 +132,7 @@
     "verifyEmailSubtitle": "Hãy kiểm tra email của bạn để biết các bước tiếp theo",
     "checkYourEmail": "Kiểm tra email của bạn",
     "verificationLinkSentTo": "Chúng tôi đã gửi liên kết xác thực đến:",
-    "linkExpiresIn5Minutes": "Liên kết sẽ hết hạn sau 5 phút.",
+    "linkExpiresIn15Minutes": "Liên kết sẽ hết hạn sau 15 phút.",
     "checkSpamFolder": "Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.",
     "backToLogin": "Quay lại đăng nhập",
     "meta": {
@@ -373,37 +373,36 @@
   "BillingPage": {
     "plansTitle": "Gói đăng ký",
     "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
-    "plansDescription": "Tất cả các tính năng cơ bản",
-    "recommended": "Đề xuất",
+    "currentPlan": {
+      "title": "Gói đăng ký hiện tại",
+      "subtitle": "Bạn hiện đang sử dụng gói",
+      "changeButton": "Thay đổi gói",
+      "cancelButton": "Hủy gói đăng ký",
+      "activeBadge": "Đang hoạt động"
+    },
     "plans": {
       "period": "/tháng",
+      "current": "Gói hiện tại",
       "free": {
         "name": "Miễn phí",
-        "feature1": "3 không gian làm việc",
-        "feature2": "Lưu trữ 5GB",
-        "feature3": "Hỗ trợ cơ bản",
-        "feature4": "Tối đa 5 thành viên",
+        "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
+        "feature2": "Tối đa 5 Không gian nhóm",
+        "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+        "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+        "feature5": "20 lượt yêu cầu AI mỗi ngày",
         "button": "Gói hiện tại"
-      },
-      "pro": {
-        "name": "Pro",
-        "feature1": "Không gian không giới hạn",
-        "feature2": "Lưu trữ 100GB",
-        "feature3": "Hỗ trợ ưu tiên",
-        "feature4": "Không giới hạn thành viên",
-        "button": "Nâng cấp lên Pro"
       },
       "premium": {
         "name": "Premium",
-        "feature1": "Tất cả tính năng Pro",
-        "feature2": "Lưu trữ 1TB",
-        "feature3": "Hỗ trợ 24/7",
-        "feature4": "Tính năng nâng cao",
+        "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
+        "feature2": "Tối đa 10 Không gian nhóm",
+        "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
+        "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
+        "feature5": "100 lượt yêu cầu AI mỗi ngày",
         "button": "Nâng cấp lên Premium"
       }
     },
     "historyTitle": "Lịch sử thanh toán",
-    "historySubtitle": "Xem tất cả các giao dịch và hóa đơn của bạn",
     "history": {
       "today": "Hôm nay",
       "lastMonth": "Tháng trước",
@@ -424,17 +423,22 @@
       "email": "Email nhận hóa đơn",
       "paymentMethod": "Phương thức thanh toán",
       "emailNotification": "Nhận thông báo qua email khi có hóa đơn mới",
-      "cancelButton": "Hủy",
-      "saveButton": "Lưu thay đổi",
-      "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!"
+      "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!",
+      "editButton": "Chỉnh sửa thông tin hóa đơn",
+      "updateButton": "Cập nhật thông tin hóa đơn"
     }
   },
   "HelpPage": {
     "form": {
       "formTitle": "Gửi lời than phiền hoặc Liên hệ hỗ trợ",
       "subtitle": "Hãy cho chúng tôi biết nếu bạn gặp sự cố hoặc có bất kỳ câu hỏi nào",
-      "localPhoneId": "Local phone ID",
-      "localPhoneIdPlaceholder": "Mã cục bộ",
+      "feedbackType": "Loại phản hồi",
+      "feedbackOptions": {
+        "bug": "Báo cáo lỗi",
+        "feedback": "Góp ý cải thiện",
+        "support": "Yêu cầu hỗ trợ",
+        "other": "Khác"
+      },
       "email": "Email",
       "emailPlaceholder": "dat@studist.edu.vn",
       "title": "Tiêu đề",
@@ -445,26 +449,6 @@
       "submitButton": "Gửi báo cáo",
       "validationError": "Vui lòng điền tất cả các trường",
       "submitSuccess": "Báo cáo của bạn đã được gửi thành công!"
-    },
-    "faq": {
-      "title": "Các câu hỏi thường gặp",
-      "subtitle": "Tìm kiếm các câu trả lời cho những câu hỏi phổ biến",
-      "item1": {
-        "question": "Làm thế nào để bắt đầu?",
-        "answer": "Để bắt đầu sử dụng Study Studio, bạn chỉ cần tạo tài khoản miễn phí và hoàn tất hồ sơ cá nhân. Sau đó, bạn có thể khám phá các tính năng và tham gia các lớp học hoặc nhóm học."
-      },
-      "item2": {
-        "question": "Tôi có cần đăng ký không?",
-        "answer": "Không, bạn không cần đăng ký bắt buộc. Study Studio cung cấp gói miễn phí với các tính năng cơ bản. Nếu bạn muốn truy cập các tính năng cao cấp, bạn có thể nâng cấp lên gói Pro hoặc Premium."
-      },
-      "item3": {
-        "question": "Làm thế nào để quản lý tài khoản của tôi?",
-        "answer": "Bạn có thể quản lý tài khoản của mình bằng cách vào phần Cài đặt. Tại đây, bạn có thể cập nhật thông tin cá nhân, thay đổi mật khẩu, quản lý đăng ký, và điều chỉnh các tùy chọn thông báo."
-      },
-      "item4": {
-        "question": "Có giới hạn nào cho tài khoản miễn phí?",
-        "answer": "Có, tài khoản miễn phí có một số giới hạn như lưu trữ tối đa 1GB, công cụ cơ bản, và hỗ trợ cộng đồng. Nếu bạn cần tài nguyên và hỗ trợ nhiều hơn, hãy xem xét nâng cấp lên gói trả phí của chúng tôi."
-      }
     }
   },
   "LandingGroupPage": {
@@ -672,96 +656,5 @@
       "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
       "feature5": "100 lượt yêu cầu AI mỗi ngày"
     }
-  },
-  "HelpPage": {
-  "form": {
-    "formTitle": "Gửi lời than phiền hoặc Liên hệ hỗ trợ",
-    "subtitle": "Hãy cho chúng tôi biết nếu bạn gặp sự cố hoặc có bất kỳ câu hỏi nào",
-
-    "feedbackType": "Loại phản hồi",
-    "feedbackOptions": {
-      "bug": "Báo cáo lỗi",
-      "feedback": "Góp ý cải thiện",
-      "support": "Yêu cầu hỗ trợ",
-      "other": "Khác"
-    },
-
-    "email": "Email",
-    "emailPlaceholder": "dat@studist.edu.vn",
-    "title": "Tiêu đề",
-    "titlePlaceholder": "Một vài từ mô tả vấn đề",
-    "content": "Nội dung",
-    "contentPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
-    "cancelButton": "Hủy",
-    "submitButton": "Gửi báo cáo",
-    "validationError": "Vui lòng điền tất cả các trường",
-    "submitSuccess": "Báo cáo của bạn đã được gửi thành công!"
   }
-},
-"BillingPage": {
-  "plansTitle": "Gói đăng ký",
-  "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
-
-  "currentPlan": {
-    "title": "Gói đăng ký hiện tại",
-    "subtitle": "Bạn hiện đang sử dụng gói",
-    "changeButton": "Thay đổi gói",
-    "cancelButton": "Hủy gói đăng ký",
-    "activeBadge": "Đang hoạt động"
-  },
-
-  "plans": {
-    "period": "/tháng",
-    "current": "Gói hiện tại",
-
-    "free": {
-      "name": "Miễn phí",
-      "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
-      "feature2": "Tối đa 5 Không gian nhóm",
-      "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
-      "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
-      "feature5": "20 lượt yêu cầu AI mỗi ngày",
-      "button": "Gói hiện tại"
-    },
-
-    "premium": {
-      "name": "Premium",
-      "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
-      "feature2": "Tối đa 10 Không gian nhóm",
-      "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
-      "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
-      "feature5": "100 lượt yêu cầu AI mỗi ngày",
-      "button": "Nâng cấp lên Premium"
-    }
-  },
-
-  "historyTitle": "Lịch sử thanh toán",
-
-  "history": {
-    "today": "Hôm nay",
-    "lastMonth": "Tháng trước",
-    "twoMonthsAgo": "2 tháng trước",
-    "threeMonthsAgo": "3 tháng trước",
-    "annual": "Gói năm",
-    "subscription": "Đăng ký hàng tháng"
-  },
-
-  "table": {
-    "invoice": "Số hóa đơn",
-    "date": "Ngày",
-    "description": "Mô tả",
-    "amount": "Số tiền"
-  },
-
-  "invoiceInfo": {
-    "title": "Thông tin hóa đơn",
-    "subtitle": "Cập nhật thông tin thanh toán và hóa đơn của bạn",
-    "email": "Email nhận hóa đơn",
-    "paymentMethod": "Phương thức thanh toán",
-    "emailNotification": "Nhận thông báo qua email khi có hóa đơn mới",
-    "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!",
-    "editButton": "Chỉnh sửa thông tin hóa đơn",
-    "updateButton": "Cập nhật thông tin hóa đơn"
-  }
-}
 }

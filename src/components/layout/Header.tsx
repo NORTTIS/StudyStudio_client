@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/api/auth";
+import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
 
 const SearchIcon = () => (
@@ -73,28 +74,65 @@ const ChevronDownIcon = () => (
     </svg>
 );
 
-export function Header() {
+interface HeaderProps {
+    userProfile?: UserProfile | null;
+}
+
+export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const t = useTranslations("Header");
     const router = useRouter();
     const locale = useLocale();
-    const _pathname = usePathname();
+    const pathname = usePathname();
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(userProfileProp || null);
+    const [isLoadingProfile, setIsLoadingProfile] = useState(!userProfileProp);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
-    // Get user data from localStorage
-    const getUserData = () => {
-        if (typeof window !== "undefined") {
-            const settings = localStorage.getItem("userSettings");
-            const avatar = localStorage.getItem("userAvatar");
-            if (settings) {
-                const data = JSON.parse(settings);
-                return {
-                    name: `${data.firstName} ${data.lastName}`,
-                    email: data.email,
-                    avatar: avatar || "/images/image-removebg-preview.png"
-                };
+    // Fetch user profile on mount only if not provided via props
+    useEffect(() => {
+        if (userProfileProp) {
+            setUserProfile(userProfileProp);
+            setIsLoadingProfile(false);
+            return;
+        }
+
+        const fetchUserProfile = async () => {
+            try {
+                const result = await getUserProfile(locale);
+                if (result.status === "success" && result.data) {
+                    setUserProfile(result.data);
+
+                    // Update locale if user's preferred language is different
+                    if (result.data.language && result.data.language !== locale) {
+                        // Extract the path without locale prefix
+                        const pathWithoutLocale = pathname.replace(`/${locale}`, "");
+                        router.push(`/${result.data.language}${pathWithoutLocale}`);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch user profile:", error);
+            } finally {
+                setIsLoadingProfile(false);
             }
+        };
+
+        fetchUserProfile();
+    }, [locale, pathname, router, userProfileProp]);
+
+    // Get user display data
+    const getUserData = () => {
+        if (userProfile) {
+            // Replace localhost with 127.0.0.1 for Next.js Image optimization
+            const avatarUrl = userProfile.avatarUrl
+                ? userProfile.avatarUrl.replace("localhost", "127.0.0.1")
+                : "/images/image-removebg-preview.png";
+
+            return {
+                name: `${userProfile.firstName} ${userProfile.lastName}`,
+                email: userProfile.email,
+                avatar: avatarUrl
+            };
         }
         return {
             name: "John Doe",
@@ -142,6 +180,22 @@ export function Header() {
             setIsLoggingOut(false);
         }
     };
+
+    // Show loading state while fetching profile
+    if (isLoadingProfile) {
+        return (
+            <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
+                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                    <div className="h-8 w-32 animate-pulse rounded-lg bg-gray-200" />
+                    <div className="h-10 w-64 animate-pulse rounded-lg bg-gray-200" />
+                    <div className="flex items-center gap-2">
+                        <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
+                        <div className="h-10 w-32 animate-pulse rounded-lg bg-gray-200" />
+                    </div>
+                </div>
+            </header>
+        );
+    }
 
     return (
         <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
