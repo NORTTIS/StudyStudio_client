@@ -294,7 +294,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/auth/reset": {
+    "/api/auth/reset-password": {
         parameters: {
             query?: never;
             header?: never;

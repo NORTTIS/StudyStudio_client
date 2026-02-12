@@ -5,7 +5,7 @@
 
 import { getAccessToken, isTokenExpired, refreshAccessToken } from "@/api/auth";
 
-type ApiResponse<T = unknown> = {
+export type ApiResponse<T = unknown> = {
   status: "success" | "error";
   code: string;
   message: string;
