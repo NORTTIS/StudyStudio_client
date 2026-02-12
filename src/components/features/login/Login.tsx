@@ -15,18 +15,19 @@ import type { AuthTokens } from "@/api/auth";
 import { setAuthTokens } from "@/api/auth";
 import type { components } from "@/api/types";
 import { Button, Input, Logo } from "@/components/common";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Login() {
     const t = useTranslations("LoginPage");
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { toast } = useToast();
 
     // ✅ Get current locale (vi/en)
     const locale = useLocale();
 
     // ✅ Toggle show/hide password
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState("");
 
     // ✅ Schema validation
     const loginSchema = z.object({
@@ -46,7 +47,6 @@ export default function Login() {
 
     // ✅ Submit handler
     const onSubmit = async (data: LoginFormData) => {
-        setError("");
 
         try {
             const result = await apiPost<AuthTokens>(
@@ -57,13 +57,37 @@ export default function Login() {
             );
 
             if (result.status === "error") {
-                setError(result.message || t("loginFailed"));
+                // Check if error is due to unverified email (code === "AUTH005")
+                if (result.code === "AUTH005") {
+                    toast({
+                        title: t("emailNotVerified"),
+                        description: result.message,
+                        variant: "destructive"
+                    });
+                    // Redirect to resend email verification page
+                    const email = encodeURIComponent(data.email);
+                    router.push(`/${locale}/resend-email-verify?email=${email}`);
+                    return;
+                }
+
+                // Show error toast for other errors
+                toast({
+                    title: t("loginFailed"),
+                    description: result.message,
+                    variant: "destructive"
+                });
                 return;
             }
 
             if (result.data) {
                 // Store tokens in localStorage
                 setAuthTokens(result.data);
+
+                // Show success toast
+                toast({
+                    title: t("loginSuccess"),
+                    description: "Đăng nhập thành công"
+                });
 
                 // Redirect to intended destination or home page
                 const redirectUrl = searchParams.get("redirect");
@@ -74,17 +98,23 @@ export default function Login() {
                 }
             }
         } catch {
-            setError(t("connectionError"));
+            toast({
+                title: t("error"),
+                description: t("connectionError"),
+                variant: "destructive"
+            });
         }
     };
 
     type GoogleLoginRequest = components["schemas"]["GoogleLoginRequest"];
 
     const handleGoogleLogin = async (credential: string | undefined) => {
-        setError("");
-
         if (!credential) {
-            setError(t("loginFailed"));
+            toast({
+                title: t("loginFailed"),
+                description: t("credentialError"),
+                variant: "destructive"
+            });
             return;
         }
 
@@ -95,11 +125,32 @@ export default function Login() {
             const result = await apiPost<AuthTokens>(`${baseUrl}/auth/google`, payload, locale, true);
 
             if (result.status === "error" || !result.data) {
-                setError(result.message || t("loginFailed"));
+                // Check if error is due to unverified email (code === "AUTH005")
+                if (result.code === "AUTH005") {
+                    toast({
+                        title: t("emailNotVerified"),
+                        description: result.message,
+                        variant: "destructive"
+                    });
+                    // Redirect to resend email verification page without email (will be filled by user)
+                    router.push(`/${locale}/resend-email-verify`);
+                    return;
+                }
+
+                toast({
+                    title: t("loginFailed"),
+                    description: result.message,
+                    variant: "destructive"
+                });
                 return;
             }
 
             setAuthTokens(result.data);
+
+            toast({
+                title: t("loginSuccess"),
+                description: "Đăng nhập thành công"
+            });
 
             const redirectUrl = searchParams.get("redirect");
             if (redirectUrl) {
@@ -108,7 +159,11 @@ export default function Login() {
                 router.push(`/${locale}/home`);
             }
         } catch {
-            setError(t("connectionError"));
+            toast({
+                title: t("error"),
+                description: t("connectionError"),
+                variant: "destructive"
+            });
         }
     };
 
@@ -131,7 +186,11 @@ export default function Login() {
                         <div className="mb-6 flex justify-center">
                             <GoogleLogin
                                 onSuccess={(res) => handleGoogleLogin(res.credential)}
-                                onError={() => setError(t("loginFailed"))}
+                                onError={() => toast({
+                                    title: t("loginFailed"),
+                                    description: "Google authentication failed",
+                                    variant: "destructive"
+                                })}
                             />
                         </div>
                     </GoogleOAuthProvider>
@@ -187,11 +246,6 @@ export default function Login() {
                                 </button>
                             </div>
                         </div>
-
-                        {/* ERROR */}
-                        {error && (
-                            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-600 text-sm">{error}</div>
-                        )}
 
                         {/* SUBMIT */}
                         <Button

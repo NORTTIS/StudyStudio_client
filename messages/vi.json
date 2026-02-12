@@ -89,8 +89,12 @@
     "orContinueWith": "HOẶC TIẾP TỤC VỚI",
     "noAccount": "Chưa có tài khoản?",
     "signUpLink": "Đăng ký",
-    "loginFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+    "loginFailed": "Đăng nhập thất bại",
+    "loginSuccess": "Đăng nhập thành công",
+    "emailNotVerified": "Email chưa xác thực",
     "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+    "error": "Lỗi",
+    "credentialError": "Không thể lấy thông tin xác thực từ Google",
     "meta": {
       "title": "Đăng Nhập - StudyStudio",
       "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
@@ -195,6 +199,29 @@
     "meta": {
       "title": "Xác Thực Email - StudyStudio",
       "description": "Xác thực tài khoản StudyStudio của bạn"
+    }
+  },
+  "ResendEmailVerifyPage": {
+    "title": "Xác thực Email của bạn",
+    "subtitle": "Gửi lại liên kết xác thực",
+    "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn một liên kết xác thực mới.",
+    "email": "Địa chỉ Email",
+    "emailPlaceholder": "email@cua.ban",
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Vui lòng nhập một địa chỉ email hợp lệ",
+    "sendButton": "Gửi Liên kết Xác thực",
+    "sendFailed": "Không thể gửi liên kết xác thực",
+    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+    "successTitle": "Kiểm tra email của bạn",
+    "successMessage": "Chúng tôi đã gửi một liên kết xác thực đến địa chỉ email của bạn.",
+    "successDescription": "Vui lòng kiểm tra hộp thư đến của bạn và nhấp vào liên kết xác thực. Nếu bạn không thấy nó, hãy kiểm tra thư mục spam.",
+    "backToLogin": "Quay lại Đăng nhập",
+    "sendAnother": "Gửi Lại",
+    "alreadyHaveEmail": "Đã xác thực email của bạn?",
+    "backToLoginLink": "Đến Đăng nhập",
+    "meta": {
+      "title": "Gửi lại xác thực Email - StudyStudio",
+      "description": "Gửi lại liên kết xác thực email"
     }
   },
   "SettingsPage": {
