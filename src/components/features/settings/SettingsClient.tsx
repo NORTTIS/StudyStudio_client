@@ -14,6 +14,8 @@ const languages = [
     { value: "vi", label: "Tiếng Việt" }
 ];
 
+const phoneRegex = /^\d{10,11}$/;
+
 interface SettingsClientProps {
     initialData: UserProfile;
 }
@@ -22,14 +24,17 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     const t = useTranslations("SettingsPage");
     const router = useRouter();
     const pathname = usePathname();
+    const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+    const [isUpdatingNotification, setIsUpdatingNotification] = useState(false);
+    const [errors, setErrors] = useState<{ phoneNumber?: string; bio?: string }>({});
     const [avatarPreview, setAvatarPreview] = useState(initialData.avatar || "/images/image-removebg-preview.png");
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState<UserProfile>(initialData);
 
-    // Load data from localStorage on mount (for avatar and any local overrides)
     useEffect(() => {
         const savedAvatar = localStorage.getItem("userAvatar");
         const preferredLocale = localStorage.getItem("preferredLocale");
@@ -46,31 +51,27 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
         }
     }, [formData.language]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (!isEditing) return;
 
-        // Handle language change immediately
-        if (name === "language") {
-            const newLocale = value;
-            setFormData((prev) => ({
-                ...prev,
-                [name]: value
-            }));
-
-            const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
-            const newPath = `/${newLocale}${pathWithoutLocale || "/"}`;
-            localStorage.setItem("preferredLocale", newLocale);
-            router.push(newPath);
-            return;
-        }
+        const { name, value } = e.target;
 
         setFormData((prev) => ({
             ...prev,
-            [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
+            [name]: value
         }));
+
+        if (name === "phoneNumber" || name === "bio") {
+            setErrors((prev) => ({
+                ...prev,
+                [name]: ""
+            }));
+        }
     };
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!isEditing) return;
+
         const file = e.target.files?.[0];
         if (file) {
             setAvatarFile(file);
@@ -84,35 +85,64 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
         }
     };
 
+    const handleEdit = () => {
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setFormData(initialData);
+        setAvatarPreview(initialData.avatar || "/images/image-removebg-preview.png");
+        setAvatarFile(null);
+        setErrors({});
+    };
+
+    const validateProfileForm = () => {
+        const newErrors: { phoneNumber?: string; bio?: string } = {};
+        const trimmedPhoneNumber = formData.phoneNumber?.trim() || "";
+        const bioLength = formData.bio?.length || 0;
+
+        if (trimmedPhoneNumber && !phoneRegex.test(trimmedPhoneNumber)) {
+            newErrors.phoneNumber = t("profile.phoneNumberInvalid");
+        }
+
+        if (bioLength > 500) {
+            newErrors.bio = t("profile.bioMaxLength");
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!validateProfileForm()) {
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
-            // Get current locale from pathname
             const locale = pathname.split("/")[1] || "vi";
 
-            // Prepare update request
             const updateData: UpdateProfileRequest = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 phoneNumber: formData.phoneNumber,
-                bio: formData.bio,
-                language: formData.language,
-                emailNotificationEnabled: formData.emailNotificationEnabled,
+                bio: formData.bio
             };
 
-            // Add avatar if changed
             if (avatarFile) {
                 updateData.avatar = avatarFile;
             }
 
-            // Call API to update profile
             const response = await updateUserProfile(updateData, locale);
 
             if (response.status === "success") {
                 localStorage.setItem("userSettings", JSON.stringify(formData));
                 alert(t("profile.saveSuccess"));
+                setIsEditing(false);
             } else {
                 throw new Error(response.message);
             }
@@ -124,108 +154,169 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
         }
     };
 
+    const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const nextLanguage = e.target.value;
+        const previousLanguage = formData.language;
+
+        if (nextLanguage === previousLanguage || isUpdatingLanguage) {
+            return;
+        }
+
+        setFormData((prev) => ({
+            ...prev,
+            language: nextLanguage
+        }));
+        setIsUpdatingLanguage(true);
+
+        try {
+            const locale = pathname.split("/")[1] || "vi";
+            const response = await updateUserProfile({ language: nextLanguage }, locale);
+
+            if (response.status !== "success") {
+                throw new Error(response.message);
+            }
+
+            localStorage.setItem("preferredLocale", nextLanguage);
+            localStorage.setItem(
+                "userSettings",
+                JSON.stringify({
+                    ...formData,
+                    language: nextLanguage
+                })
+            );
+
+            const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
+            const newPath = `/${nextLanguage}${pathWithoutLocale || "/"}`;
+            router.push(newPath);
+        } catch {
+            setFormData((prev) => ({
+                ...prev,
+                language: previousLanguage
+            }));
+            alert(t("profile.saveError"));
+        } finally {
+            setIsUpdatingLanguage(false);
+        }
+    };
+
+    const handleNotificationChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const nextValue = e.target.checked;
+        const previousValue = formData.emailNotificationEnabled;
+
+        if (nextValue === previousValue || isUpdatingNotification) {
+            return;
+        }
+
+        setFormData((prev) => ({
+            ...prev,
+            emailNotificationEnabled: nextValue
+        }));
+        setIsUpdatingNotification(true);
+
+        try {
+            const locale = pathname.split("/")[1] || "vi";
+            const response = await updateUserProfile({ emailNotificationEnabled: nextValue }, locale);
+
+            if (response.status !== "success") {
+                throw new Error(response.message);
+            }
+
+            localStorage.setItem(
+                "userSettings",
+                JSON.stringify({
+                    ...formData,
+                    emailNotificationEnabled: nextValue
+                })
+            );
+        } catch {
+            setFormData((prev) => ({
+                ...prev,
+                emailNotificationEnabled: previousValue
+            }));
+            alert(t("profile.saveError"));
+        } finally {
+            setIsUpdatingNotification(false);
+        }
+    };
+
     return (
         <div className="mx-auto max-w-3xl space-y-8 pb-16">
             <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Avatar Card */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
-                        {t("profile.avatarTitle")}
-                    </h2>
-
-                    <p className="mb-6 text-sm text-[#6F6B99]">
-                        Chọn bức ảnh đẹp nhất
-                    </p>
-
-                    <div className="flex items-center gap-6">
-                        <div className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-200">
-                            <Image
-                                src={avatarPreview}
-                                alt="User Avatar"
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleAvatarChange}
-                                className="hidden"
-                            />
-
-                            <Button
-                                type="button"
-                                className="w-[160px] rounded-lg bg-[#261E33] text-white hover:bg-[#1a1424]"
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                Thay đổi ảnh
-                            </Button>
-
-                            <p className="text-xs text-[#9CA3AF]">
-                                Tệp hỗ trợ: JPG, PNG (tối đa 5MB)
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
                 {/* User Info Card */}
                 <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
-                        {t("profile.userInfoTitle")}
-                    </h2>
+                    <h2 className="mb-1 font-semibold text-[#261E33] text-lg">{t("profile.userInfoTitle")}</h2>
 
-                    <p className="mb-6 text-sm text-[#6F6B99]">
-                        {t("profile.userInfoSubtitle")}
-                    </p>
+                    <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.userInfoSubtitle")}</p>
+
+                    <div className="mb-6">
+                        <h3 className="mb-1 font-medium text-[#261E33] text-sm">{t("profile.avatarTitle")}</h3>
+                        <p className="mb-4 text-[#6F6B99] text-xs">{t("profile.avatarSupport")}</p>
+
+                        <div className="flex items-center gap-6">
+                            <div className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-200">
+                                <Image src={avatarPreview} alt="User Avatar" fill className="object-cover" />
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleAvatarChange}
+                                    className="hidden"
+                                    disabled={!isEditing}
+                                />
+
+                                <Button
+                                    type="button"
+                                    className="w-40 rounded-lg bg-[#261E33] text-white hover:bg-[#1a1424] disabled:opacity-50"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={!isEditing}>
+                                    {t("profile.changeAvatar")}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                            <label htmlFor="firstName" className="mb-2 block font-medium text-[#261E33] text-sm">
                                 {t("profile.firstName")}
                             </label>
-                            <Input
-                                name="firstName"
-                                value={formData.firstName}
-                                onChange={handleInputChange}
-                            />
+                            <Input id="firstName" name="firstName" value={formData.firstName} onChange={handleInputChange} disabled={!isEditing} />
                         </div>
 
                         <div>
-                            <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                            <label htmlFor="lastName" className="mb-2 block font-medium text-[#261E33] text-sm">
                                 {t("profile.lastName")}
                             </label>
-                            <Input
-                                name="lastName"
-                                value={formData.lastName}
-                                onChange={handleInputChange}
-                            />
+                            <Input id="lastName" name="lastName" value={formData.lastName} onChange={handleInputChange} disabled={!isEditing} />
                         </div>
                     </div>
 
                     <div className="mt-6">
-                        <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                        <label htmlFor="email" className="mb-2 block font-medium text-[#261E33] text-sm">
                             {t("profile.email")}
                         </label>
-                        <Input value={formData.email} disabled />
+                        <Input id="email" value={formData.email} disabled />
                     </div>
 
                     <div className="mt-6">
-                        <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                        <label htmlFor="phoneNumber" className="mb-2 block font-medium text-[#261E33] text-sm">
                             {t("profile.phoneNumber")}
                         </label>
                         <Input
+                            id="phoneNumber"
                             name="phoneNumber"
                             value={formData.phoneNumber}
                             onChange={handleInputChange}
+                            disabled={!isEditing}
                         />
+                        {errors.phoneNumber && <p className="mt-1 text-red-500 text-xs">{errors.phoneNumber}</p>}
                     </div>
 
-                    {/* Bio đúng placeholder như ảnh */}
                     <div className="mt-6">
-                        <label className="mb-2 block text-sm font-medium text-[#261E33]">
+                        <label htmlFor="bio" className="mb-2 block font-medium text-[#261E33] text-sm">
                             {t("profile.bio")}
                         </label>
 
@@ -236,115 +327,100 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                             onChange={handleInputChange}
                             rows={4}
                             placeholder="Viết gì đó về bạn..."
-                            className="w-full resize-none rounded-lg border border-[#E5E5E5] bg-white p-3 text-sm
-                       text-[#261E33] placeholder:text-[#9CA3AF]
-                       focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
+                            disabled={!isEditing}
+                            className="w-full resize-none rounded-lg border border-[#E5E5E5] bg-white p-3 text-[#261E33] text-sm placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] disabled:cursor-not-allowed disabled:opacity-60"
                         />
+                        {errors.bio && <p className="mt-1 text-red-500 text-xs">{errors.bio}</p>}
                     </div>
-                </div>
 
-                {/* Preferences Card */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
-                        {t("profile.preferencesTitle")}
-                    </h2>
+                    <div className="mt-6 flex justify-end gap-4">
+                        {isEditing ? (
+                            <>
+                                <Button type="button" variant="outline" onClick={handleCancel}>
+                                    {t("profile.cancelButton")}
+                                </Button>
 
-                    <p className="mb-6 text-sm text-[#6F6B99]">
-                        {t("profile.preferencesSubtitle")}
-                    </p>
-
-                    <label className="mb-2 block text-sm font-medium text-[#261E33]">
-                        {t("profile.language")}
-                    </label>
-
-                    <select
-                        name="language"
-                        value={formData.language}
-                        onChange={handleInputChange}
-                        className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2 text-sm
-                     focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
-                    >
-                        {languages.map((lang) => (
-                            <option key={lang.value} value={lang.value}>
-                                {lang.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Notifications Card (Toggle Switch đúng chuẩn) */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                    <h2 className="mb-1 text-lg font-semibold text-[#261E33]">
-                        {t("profile.notificationsTitle")}
-                    </h2>
-
-                    <p className="mb-6 text-sm text-[#6F6B99]">
-                        {t("profile.notificationsSubtitle")}
-                    </p>
-
-                    <div className="flex items-center justify-between rounded-lg border border-[#E5E5E5] p-4">
-                        <div>
-                            <p className="font-medium text-[#261E33]">
-                                {t("profile.studioNotifications")}
-                            </p>
-                            <p className="text-sm text-[#6F6B99]">
-                                {t("profile.studioNotificationsDesc")}
-                            </p>
-                        </div>
-
-                        <label className="relative inline-flex cursor-pointer items-center">
-                            <input
-                                type="checkbox"
-                                name="emailNotificationEnabled"
-                                checked={formData.emailNotificationEnabled}
-                                onChange={handleInputChange}
-                                className="sr-only"
-                            />
-
-                            <div
-                                className={`h-6 w-11 rounded-full transition-colors ${formData.emailNotificationEnabled
-                                    ? "bg-[#2563EB]"
-                                    : "bg-[#E5E5E5]"
-                                    }`}
-                            />
-
-                            <div
-                                className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${formData.emailNotificationEnabled
-                                    ? "translate-x-5"
-                                    : "translate-x-0"
-                                    }`}
-                            />
-                        </label>
+                                <Button type="submit" disabled={isSubmitting} className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]">
+                                    {isSubmitting ? t("profile.savingButton") : t("profile.saveButton")}
+                                </Button>
+                            </>
+                        ) : (
+                            <Button type="button" onClick={handleEdit} className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]">
+                                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                </svg>
+                                {t("profile.editButton")}
+                            </Button>
+                        )}
                     </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex justify-end gap-4 pt-4">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                            setFormData(initialData);
-                            setAvatarPreview(
-                                initialData.avatar || "/images/image-removebg-preview.png"
-                            );
-                        }}
-                    >
-                        {t("profile.cancelButton")}
-                    </Button>
-
-                    <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]"
-                    >
-                        {isSubmitting
-                            ? t("profile.savingButton")
-                            : t("profile.saveButton")}
-                    </Button>
                 </div>
             </form>
+
+            {/* Preferences Card */}
+            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+                <h2 className="mb-1 font-semibold text-[#261E33] text-lg">{t("profile.preferencesTitle")}</h2>
+
+                <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.preferencesSubtitle")}</p>
+
+                <label htmlFor="language" className="mb-2 block font-medium text-[#261E33] text-sm">
+                    {t("profile.language")}
+                </label>
+
+                <select
+                    id="language"
+                    name="language"
+                    value={formData.language}
+                    onChange={handleLanguageChange}
+                    disabled={isUpdatingLanguage}
+                    className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2 text-sm focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] disabled:cursor-not-allowed disabled:opacity-60">
+                    {languages.map((lang) => (
+                        <option key={lang.value} value={lang.value}>
+                            {lang.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Notifications Card */}
+            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+                <h2 className="mb-1 font-semibold text-[#261E33] text-lg">{t("profile.notificationsTitle")}</h2>
+
+                <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.notificationsSubtitle")}</p>
+
+                <div className="flex items-center justify-between rounded-lg border border-[#E5E5E5] p-4">
+                    <div>
+                        <p className="font-medium text-[#261E33]">{t("profile.studioNotifications")}</p>
+                        <p className="text-[#6F6B99] text-sm">{t("profile.studioNotificationsDesc")}</p>
+                    </div>
+
+                    <label
+                        className={`relative inline-flex items-center ${isUpdatingNotification ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
+                        <input
+                            type="checkbox"
+                            name="emailNotificationEnabled"
+                            checked={formData.emailNotificationEnabled}
+                            onChange={handleNotificationChange}
+                            disabled={isUpdatingNotification}
+                            className="sr-only"
+                        />
+
+                        <div
+                            className={`h-6 w-11 rounded-full transition-colors ${formData.emailNotificationEnabled ? "bg-[#2563EB]" : "bg-[#E5E5E5]"
+                                }`}
+                        />
+
+                        <div
+                            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${formData.emailNotificationEnabled ? "translate-x-5" : "translate-x-0"
+                                }`}
+                        />
+                    </label>
+                </div>
+            </div>
         </div>
     );
-
 }

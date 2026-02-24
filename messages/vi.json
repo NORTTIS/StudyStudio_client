@@ -116,7 +116,7 @@
     "emailInvalid": "Email không đúng định dạng (ví dụ: abc@gmail.com)",
     "emailNoSpaces": "Email không được chứa khoảng trắng",
     "passwordRequired": "Mật khẩu là bắt buộc",
-    "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, gồm 1 chữ in hoa và 1 số",
+    "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, gồm chữ thường, chữ in hoa và số; chỉ cho phép ký tự đặc biệt @$!%*?&",
     "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
     "confirmPasswordMismatch": "Mật khẩu nhập lại không khớp",
     "continueWithGoogle": "Tiếp tục với Google",
@@ -244,8 +244,10 @@
       "lastName": "Tên",
       "email": "Email",
       "phoneNumber": "Số điện thoại",
+      "phoneNumberInvalid": "Số điện thoại phải có 10 đến 11 chữ số",
       "bio": "Tiểu sử",
       "bioPlaceholder": "Viết gì đó về bạn...",
+      "bioMaxLength": "Tiểu sử không được vượt quá 500 ký tự",
       "preferencesTitle": "Tùy chọn",
       "preferencesSubtitle": "Tùy chỉnh trải nghiệm của bạn",
       "language": "Ngôn ngữ",
@@ -253,6 +255,7 @@
       "notificationsSubtitle": "Quản lý các thông báo qua email của bạn",
       "studioNotifications": "Thông báo từ Studio",
       "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
+      "editButton": "Chỉnh sửa",
       "cancelButton": "Hủy bỏ",
       "saveButton": "Lưu thay đổi",
       "savingButton": "Đang lưu...",
@@ -359,7 +362,7 @@
     "newPassword": "Mật khẩu mới",
     "newPasswordPlaceholder": "Nhập mật khẩu mới",
     "newPasswordRequired": "Mật khẩu mới không được để trống",
-    "passwordMinLength": "Mật khẩu mới phải có ít nhất 8 ký tự",
+    "passwordInvalid": "Mật khẩu mới phải từ 10–20 ký tự, gồm chữ thường, chữ in hoa và số; chỉ cho phép ký tự đặc biệt @$!%*?&",
     "confirmPassword": "Xác nhận mật khẩu",
     "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
     "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
@@ -368,7 +371,28 @@
     "updateButton": "Cập nhật mật khẩu",
     "updatingButton": "Đang cập nhật...",
     "changePasswordSuccess": "Cập nhật mật khẩu thành công!",
-    "changePasswordError": "Cập nhật mật khẩu thất bại. Vui lòng thử lại!"
+    "changePasswordError": "Cập nhật mật khẩu thất bại. Vui lòng thử lại!",
+    "deleteAccount": {
+      "title": "Vùng nguy hiểm",
+      "subtitle": "Xóa tài khoản của bạn vĩnh viễn",
+      "warning": "Cảnh báo: Hành động này không thể hoàn tác!",
+      "consequence1": "Tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn",
+      "consequence2": "Bạn sẽ mất quyền truy cập vào tất cả các không gian làm việc",
+      "consequence3": "Tất cả các dự án và tài liệu sẽ bị xóa",
+      "consequence4": "Bạn sẽ không thể khôi phục tài khoản này",
+      "button": "Xóa tài khoản vĩnh viễn",
+      "modalTitle": "Xác nhận xóa tài khoản",
+      "modalSubtitle": "Bạn có chắc chắn muốn xóa tài khoản của mình không?",
+      "modalWarning": "Hành động này sẽ:",
+      "confirmLabel": "Để xác nhận, vui lòng nhập DELETE",
+      "confirmHint": "Nhập chữ DELETE (viết hoa) để xác nhận",
+      "confirmTextError": "Vui lòng nhập chính xác chữ DELETE để xác nhận",
+      "cancelButton": "Hủy",
+      "confirmButton": "Xóa tài khoản",
+      "deleting": "Đang xóa...",
+      "success": "Tài khoản đã được xóa thành công",
+      "error": "Xóa tài khoản thất bại. Vui lòng thử lại!"
+    }
   },
   "BillingPage": {
     "plansTitle": "Gói đăng ký",
@@ -448,7 +472,77 @@
       "cancelButton": "Hủy",
       "submitButton": "Gửi báo cáo",
       "validationError": "Vui lòng điền tất cả các trường",
-      "submitSuccess": "Báo cáo của bạn đã được gửi thành công!"
+      "submitSuccess": "Báo cáo của bạn đã được gửi thành công!",
+      "submitError": "Gửi báo cáo thất bại"
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "subtitle": "Tìm câu trả lời nhanh cho các câu hỏi phổ biến",
+      "item1": {
+        "question": "Làm thế nào để đặt lại mật khẩu?",
+        "answer": "Bạn có thể đặt lại mật khẩu bằng cách vào trang Đăng nhập và nhấp vào 'Quên mật khẩu'. Làm theo hướng dẫn được gửi đến email của bạn."
+      },
+      "item2": {
+        "question": "Làm thế nào để thay đổi ngôn ngữ?",
+        "answer": "Vào Cài đặt > Hồ sơ và chọn ngôn ngữ ưa thích của bạn từ menu thả xuống."
+      },
+      "item3": {
+        "question": "Tôi có thể hủy đăng ký bất cứ lúc nào không?",
+        "answer": "Có, bạn có thể hủy đăng ký bất cứ lúc nào từ trang Thanh toán trong Cài đặt."
+      },
+      "item4": {
+        "question": "Làm thế nào để liên hệ hỗ trợ?",
+        "answer": "Bạn có thể liên hệ với chúng tôi bằng cách sử dụng biểu mẫu trên trang này hoặc gửi email trực tiếp đến support@studystudio.com."
+      }
+    }
+  },
+  "MasterPage": {
+    "title": "Master",
+    "subtitle": "Quản lý các studio và không gian làm việc của bạn",
+    "searchPlaceholder": "Tìm kiếm studio, công việc...",
+    "createButton": "Không gian mới",
+    "infoBanner": "Bạn đã sử dụng 3 không gian của bạn. Nâng cấp lên Pro để có thêm không gian.",
+    "studiosUsed": "studios đã sử dụng",
+    "personal": "Cá nhân",
+    "group": "Nhóm",
+    "members": "thành viên",
+    "videos": "videos",
+    "noStudios": "Chưa có studio nào. Tạo studio đầu tiên của bạn!",
+    "noSearchResults": "Không tìm thấy studio nào phù hợp",
+    "error": "Lỗi",
+    "loadError": "Không thể tải danh sách studio",
+    "modal": {
+      "createTitle": "Tạo Studio Mới",
+      "editTitle": "Chỉnh sửa Studio",
+      "name": "Tên Studio",
+      "namePlaceholder": "Nhập tên studio...",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Mô tả ngắn gọn về studio...",
+      "type": "Loại",
+      "cancel": "Hủy",
+      "create": "Tạo",
+      "save": "Lưu",
+      "createSuccess": "Tạo studio thành công!",
+      "editSuccess": "Cập nhật studio thành công!",
+      "createError": "Không thể tạo studio"
+    },
+    "detailModal": {
+      "description": "Mô tả",
+      "members": "Thành viên",
+      "videos": "Videos",
+      "created": "Ngày tạo",
+      "updated": "Cập nhật lần cuối",
+      "close": "Đóng",
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa"
+    },
+    "deleteModal": {
+      "title": "Xóa Studio",
+      "message": "Bạn có chắc chắn muốn xóa",
+      "warning": "Hành động này không thể hoàn tác.",
+      "cancel": "Hủy",
+      "confirm": "Xóa",
+      "success": "Xóa studio thành công!"
     }
   },
   "LandingGroupPage": {
