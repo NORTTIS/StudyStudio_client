@@ -1,8 +1,10 @@
+// src/app/[locale]/(user)/settings/layout.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { Logo } from "@/components/common";
 
 const UserIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -65,7 +67,15 @@ const CreditCardIcon = () => (
 
 const HelpIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
         <path
             d="M9.09 9C9.3251 8.33167 9.78915 7.76811 10.4 7.40913C11.0108 7.05016 11.7289 6.91894 12.4272 7.03871C13.1255 7.15849 13.7588 7.52152 14.2151 8.06353C14.6713 8.60553 14.9211 9.29152 14.92 10C14.92 12 11.92 13 11.92 13"
             stroke="currentColor"
@@ -93,57 +103,60 @@ const SettingsIcon = () => (
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations("SettingsPage");
     const pathname = usePathname();
-    const currentLocale = pathname.split("/")[1] || "vi";
+    const locale = useLocale();
 
     const menuItems = [
-        { id: "profile", label: t("menu.profile"), icon: <UserIcon />, href: `/${currentLocale}/settings` },
-        { id: "security", label: t("menu.security"), icon: <LockIcon />, href: `/${currentLocale}/settings/security` },
-        { id: "billing", label: t("menu.billing"), icon: <CreditCardIcon />, href: `/${currentLocale}/settings/billing` },
-        { id: "help", label: t("menu.help"), icon: <HelpIcon />, href: `/${currentLocale}/settings/help` }
+        { id: "profile", label: t("menu.profile"), icon: <UserIcon />, href: `/${locale}/settings` },
+        { id: "security", label: t("menu.security"), icon: <LockIcon />, href: `/${locale}/settings/security` },
+        { id: "billing", label: t("menu.billing"), icon: <CreditCardIcon />, href: `/${locale}/settings/billing` },
+        { id: "help", label: t("menu.help"), icon: <HelpIcon />, href: `/${locale}/settings/help` }
     ];
 
     const isActive = (href: string) => {
-        if (href === `/${currentLocale}/settings`) {
-            return pathname === href;
-        }
-        return pathname.startsWith(href);
+        const current = pathname || "";
+        if (href === `/${locale}/settings`) return current === href;
+        return current.startsWith(href);
     };
 
     return (
         <div className="flex min-h-screen bg-[#F5F5F5]">
             {/* Sidebar */}
-            <div className="w-56 bg-white shadow-sm">
-                <div className="border-[#E5E5E5] border-b px-6 py-6">
-                    <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF5F3D] font-bold text-sm text-white">
-                            SS
-                        </div>
-                        <span className="font-semibold text-[#261E33]">Study Studio</span>
+            <aside className="w-56 bg-white shadow-sm">
+                {/* Brand - match DashboardSidebar */}
+                <div className="flex h-16 items-center border-b border-[#E5E5E5] px-4">
+                    <Link href={`/${locale}/home`} className="flex items-center">
+                        <Logo className="m-0" />
                     </Link>
                 </div>
+
                 <nav className="space-y-2 p-4">
                     {menuItems.map((item) => (
                         <Link
                             key={item.id}
                             href={item.href}
                             className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left font-medium text-sm transition-all ${isActive(item.href)
-                                    ? "bg-[#2D2D2D] text-white"
-                                    : "text-[#6F6B99] hover:bg-[#F5F5F5] hover:text-[#261E33]"
-                                }`}>
+                                ? "bg-[#2D2D2D] text-white"
+                                : "text-[#6F6B99] hover:bg-[#F5F5F5] hover:text-[#261E33]"
+                                }`}
+                        >
                             <span className="flex-shrink-0">{item.icon}</span>
                             {item.label}
                         </Link>
                     ))}
                 </nav>
-            </div>
+            </aside>
 
             {/* Main Content */}
             <div className="flex-1">
                 {/* Header */}
-                <div className="border-[#E5E5E5] border-b bg-white px-8 py-6">
-                    <Link href="/home" className="mb-4 inline-flex items-center text-[#6F6B99] text-sm hover:text-[#261E33]">
+                <div className="border-b border-[#E5E5E5] bg-white px-8 py-6">
+                    <Link
+                        href={`/${locale}/home`}
+                        className="mb-4 inline-flex items-center text-[#6F6B99] text-sm hover:text-[#261E33]"
+                    >
                         ← {t("backToDashboard")}
                     </Link>
+
                     <div className="flex items-center gap-3">
                         <SettingsIcon />
                         <h1 className="font-bold text-3xl text-[#261E33]">{t("title")}</h1>
