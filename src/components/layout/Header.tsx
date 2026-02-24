@@ -18,7 +18,13 @@ const SearchIcon = () => (
             strokeLinecap="round"
             strokeLinejoin="round"
         />
-        <path d="M19 19L14.65 14.65" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+            d="M19 19L14.65 14.65"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
     </svg>
 );
 
@@ -83,13 +89,14 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const router = useRouter();
     const locale = useLocale();
     const pathname = usePathname();
+
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(userProfileProp || null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(!userProfileProp);
+
     const userMenuRef = useRef<HTMLDivElement>(null);
 
-    // Fetch user profile on mount only if not provided via props
     useEffect(() => {
         if (userProfileProp) {
             setUserProfile(userProfileProp);
@@ -103,11 +110,10 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                 if (result.status === "success" && result.data) {
                     setUserProfile(result.data);
 
-                    // Update locale if user's preferred language is different
                     if (result.data.language && result.data.language !== locale) {
-                        // Extract the path without locale prefix
-                        const pathWithoutLocale = pathname.replace(`/${locale}`, "");
+                        const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}(?=\/)/i, "");
                         router.push(`/${result.data.language}${pathWithoutLocale}`);
+                        return;
                     }
                 }
             } catch (error) {
@@ -120,10 +126,8 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         fetchUserProfile();
     }, [locale, pathname, router, userProfileProp]);
 
-    // Get user display data
     const getUserData = () => {
         if (userProfile) {
-            // Replace localhost with 127.0.0.1 for Next.js Image optimization
             const avatarUrl = userProfile.avatarUrl
                 ? userProfile.avatarUrl.replace("localhost", "127.0.0.1")
                 : "/images/image-removebg-preview.png";
@@ -131,19 +135,19 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
             return {
                 name: `${userProfile.firstName} ${userProfile.lastName}`,
                 email: userProfile.email,
-                avatar: avatarUrl
+                avatar: avatarUrl,
             };
         }
+
         return {
             name: "John Doe",
             email: "john@example.com",
-            avatar: "/images/image-removebg-preview.png"
+            avatar: "/images/image-removebg-preview.png",
         };
     };
 
     const userData = getUserData();
 
-    // Close user menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -161,31 +165,26 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         setIsLoggingOut(true);
 
         try {
-            // Call logout API
             await logout(locale);
 
-            // Clear user session data
             if (typeof window !== "undefined") {
                 localStorage.removeItem("userSettings");
                 localStorage.removeItem("userAvatar");
             }
 
-            // Redirect to login
             router.push(`/${locale}/login`);
         } catch (error) {
             console.error("Logout error:", error);
-            // Still redirect even if API fails since tokens are cleared
             router.push(`/${locale}/login`);
         } finally {
             setIsLoggingOut(false);
         }
     };
 
-    // Show loading state while fetching profile
     if (isLoadingProfile) {
         return (
-            <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
-                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <header className="sticky top-0 z-40 border-b border-[#E5E5E5] bg-white">
+                <div className="flex h-16 w-full items-center justify-between gap-4 px-6 lg:px-8">
                     <div className="h-8 w-32 animate-pulse rounded-lg bg-gray-200" />
                     <div className="h-10 w-64 animate-pulse rounded-lg bg-gray-200" />
                     <div className="flex items-center gap-2">
@@ -198,17 +197,8 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     }
 
     return (
-        <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
-            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-                {/* Logo */}
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF5F3D]">
-                        <span className="font-bold text-sm text-white">SS</span>
-                    </div>
-                    <span className="hidden font-bold text-[#261E33] sm:block">Study Studio</span>
-                </Link>
-
-                {/* Search Bar */}
+        <header className="sticky top-0 z-40 border-b border-[#E5E5E5] bg-white">
+            <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                 <div className="hidden max-w-md flex-1 md:block">
                     <div className="relative">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -222,17 +212,15 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                     </div>
                 </div>
 
-                {/* Right Side Actions */}
                 <div className="flex items-center gap-2">
-                    {/* Notifications */}
                     <NotificationDropdown />
 
-                    {/* User Menu */}
                     <div className="relative" ref={userMenuRef}>
                         <button
                             type="button"
                             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[#F4F5FA]">
+                            className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[#F4F5FA]"
+                        >
                             <div className="relative h-8 w-8 overflow-hidden rounded-full bg-linear-to-br from-[#FF5F3D] to-[#FF8A7A]">
                                 <Image src={userData.avatar} alt={userData.name} fill className="object-cover" />
                             </div>
@@ -243,38 +231,38 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                             <ChevronDownIcon />
                         </button>
 
-                        {/* Dropdown Menu */}
                         {isUserMenuOpen && (
                             <div className="absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border border-[#E5E5E5] bg-white shadow-xl">
-                                {/* User Info */}
-                                <div className="border-[#E5E5E5] border-b px-4 py-3">
+                                <div className="border-b border-[#E5E5E5] px-4 py-3">
                                     <p className="font-semibold text-[#261E33] text-sm">{userData.name}</p>
                                     <p className="text-[#9CA3AF] text-xs">{userData.email}</p>
                                 </div>
 
-                                {/* Menu Items */}
                                 <div className="py-2">
                                     <Link
-                                        href="/settings"
-                                        className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
+                                        href={`/${locale}/settings`}
+                                        className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]"
+                                    >
                                         <SettingsIcon />
                                         <span>{t("settings")}</span>
                                     </Link>
+
                                     <Link
-                                        href="/profile"
-                                        className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
+                                        href={`/${locale}/profile`}
+                                        className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]"
+                                    >
                                         <UserIcon />
                                         <span>{t("profile")}</span>
                                     </Link>
                                 </div>
 
-                                {/* Logout */}
-                                <div className="border-[#E5E5E5] border-t py-2">
+                                <div className="border-t border-[#E5E5E5] py-2">
                                     <button
                                         type="button"
                                         onClick={handleLogout}
                                         disabled={isLoggingOut}
-                                        className="flex w-full items-center gap-3 px-4 py-2 text-left text-red-600 text-sm transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50">
+                                        className="flex w-full items-center gap-3 px-4 py-2 text-left text-red-600 text-sm transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
                                         <LogoutIcon />
                                         <span>{isLoggingOut ? t("loggingOut") : t("logout")}</span>
                                     </button>
