@@ -1,19 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useLocale } from "next-intl";
+import { Settings, Trash2, UserPlus, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "@/components/ui/select";
-import { Trash2, UserPlus, Settings, Users } from "lucide-react";
 
 type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
 
@@ -153,7 +147,8 @@ export function GroupSettingView() {
             return false;
         }
 
-        const res = await fetch("http://localhost:8080/api/group", {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+        const res = await fetch(`${baseUrl}/group`, {
             headers: {
                 Accept: "application/json",
                 Authorization: `Bearer ${token}`
@@ -257,7 +252,8 @@ export function GroupSettingView() {
             const token = getTokenOrFail();
             if (!token) return;
 
-            const res = await fetch("http://localhost:8080/api/group", {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+            const res = await fetch(`${baseUrl}/group`, {
                 method: "PUT",
                 headers: {
                     Accept: "application/json",
@@ -301,7 +297,8 @@ export function GroupSettingView() {
         const token = getTokenOrFail();
         if (!token) return;
 
-        const res = await fetch(`http://localhost:8080/api/group/${groupId}`, {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+        const res = await fetch(`${baseUrl}/group/${groupId}`, {
             method: "DELETE",
             headers: {
                 Accept: "application/json",
@@ -323,7 +320,8 @@ export function GroupSettingView() {
         const token = getTokenOrFail();
         if (!token) return false;
 
-        const res = await fetch("http://localhost:8080/api/group/member/assign-role", {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+        const res = await fetch(`${baseUrl}/group/member/assign-role`, {
             method: "PUT",
             headers: {
                 Accept: "application/json",
@@ -358,7 +356,8 @@ export function GroupSettingView() {
         const token = getTokenOrFail();
         if (!token) return false;
 
-        const res = await fetch("http://localhost:8080/api/group/member/remove", {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+        const res = await fetch(`${baseUrl}/group/member/remove`, {
             method: "DELETE",
             headers: {
                 Accept: "application/json",
@@ -428,22 +427,18 @@ export function GroupSettingView() {
     };
 
     if (loading) {
-        return <div className="p-6 text-sm text-gray-500">Loading...</div>;
+        return <div className="p-6 text-gray-500 text-sm">Loading...</div>;
     }
 
     if (!groupId) {
-        return (
-            <div className="p-6 text-sm text-gray-500">
-                Missing group id. Open a group card to enter this page.
-            </div>
-        );
+        return <div className="p-6 text-gray-500 text-sm">Missing group id. Open a group card to enter this page.</div>;
     }
 
     if (notFound) {
         return (
-            <div className="p-6 text-sm text-gray-500">
+            <div className="p-6 text-gray-500 text-sm">
                 Group not found or you are not authorized.
-                {error ? <div className="mt-2 text-xs text-red-600">{error}</div> : null}
+                {error ? <div className="mt-2 text-red-600 text-xs">{error}</div> : null}
             </div>
         );
     }
@@ -453,9 +448,7 @@ export function GroupSettingView() {
             <div className="mx-auto w-full max-w-5xl px-6 py-6">
                 <div className="space-y-6">
                     {error ? (
-                        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {error}
-                        </div>
+                        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">{error}</div>
                     ) : null}
 
                     <section className="rounded-md border bg-white">
@@ -463,15 +456,14 @@ export function GroupSettingView() {
                             <div className="flex items-start gap-3">
                                 <Settings className="h-4 w-4 text-gray-700" />
                                 <div>
-                                    <h2 className="text-sm font-semibold text-gray-900">General Settings</h2>
-                                    <p className="text-xs text-gray-500">Manage basic information for this group studio</p>
+                                    <h2 className="font-semibold text-gray-900 text-sm">General Settings</h2>
+                                    <p className="text-gray-500 text-xs">Manage basic information for this group studio</p>
                                 </div>
                             </div>
 
                             <Button
                                 onClick={handleEditSave}
-                                className="h-9 rounded-sm bg-orange-600 px-4 text-xs font-semibold text-white hover:bg-orange-700"
-                            >
+                                className="h-9 rounded-sm bg-orange-600 px-4 font-semibold text-white text-xs hover:bg-orange-700">
                                 {isEditing ? "Save Changes" : "Edit"}
                             </Button>
                         </div>
@@ -479,7 +471,7 @@ export function GroupSettingView() {
                         <div className="px-5 py-5">
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700">
+                                    <label className="font-semibold text-gray-700 text-xs">
                                         Group Name <span className="text-red-500">*</span>
                                     </label>
                                     <Input
@@ -491,7 +483,7 @@ export function GroupSettingView() {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700">Description</label>
+                                    <label className="font-semibold text-gray-700 text-xs">Description</label>
                                     <Textarea
                                         disabled={!isEditing}
                                         value={description}
@@ -502,7 +494,7 @@ export function GroupSettingView() {
 
                                 {masterStudio ? (
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-700">Master Studio</label>
+                                        <label className="font-semibold text-gray-700 text-xs">Master Studio</label>
                                         <Input
                                             value={masterStudio}
                                             readOnly
@@ -510,7 +502,7 @@ export function GroupSettingView() {
                                             aria-readonly="true"
                                             onMouseDown={(e) => e.preventDefault()}
                                             onFocus={(e) => e.currentTarget.blur()}
-                                            className="mt-2 h-9 rounded-sm bg-white text-gray-900 cursor-default focus-visible:ring-0 focus-visible:border-gray-200"
+                                            className="mt-2 h-9 cursor-default rounded-sm bg-white text-gray-900 focus-visible:border-gray-200 focus-visible:ring-0"
                                         />
                                     </div>
                                 ) : null}
@@ -523,12 +515,12 @@ export function GroupSettingView() {
                             <div className="flex items-start gap-3">
                                 <Users className="h-4 w-4 text-gray-700" />
                                 <div>
-                                    <h2 className="text-sm font-semibold text-gray-900">Members</h2>
-                                    <p className="text-xs text-gray-500">Manage team members and their roles</p>
+                                    <h2 className="font-semibold text-gray-900 text-sm">Members</h2>
+                                    <p className="text-gray-500 text-xs">Manage team members and their roles</p>
                                 </div>
                             </div>
 
-                            <Button className="h-9 rounded-sm bg-orange-600 px-4 text-xs font-semibold text-white hover:bg-orange-700">
+                            <Button className="h-9 rounded-sm bg-orange-600 px-4 font-semibold text-white text-xs hover:bg-orange-700">
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Add Member
                             </Button>
@@ -544,18 +536,18 @@ export function GroupSettingView() {
                                     return (
                                         <div key={m.id} className="flex items-center justify-between gap-4 px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
+                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 font-semibold text-gray-700 text-xs">
                                                     {m.initials}
                                                 </div>
 
                                                 <div>
-                                                    <div className="text-sm font-semibold text-gray-900">{m.name}</div>
-                                                    {m.email ? <div className="text-xs text-gray-500">{m.email}</div> : null}
+                                                    <div className="font-semibold text-gray-900 text-sm">{m.name}</div>
+                                                    {m.email ? <div className="text-gray-500 text-xs">{m.email}</div> : null}
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className="inline-flex h-8 items-center rounded-sm border bg-white px-3 text-xs font-semibold text-gray-700">
+                                                <span className="inline-flex h-8 items-center rounded-sm border bg-white px-3 font-semibold text-gray-700 text-xs">
                                                     {m.role}
                                                 </span>
 
@@ -564,8 +556,7 @@ export function GroupSettingView() {
                                                         <Select
                                                             value={m.role}
                                                             disabled={disabledAll}
-                                                            onValueChange={(v) => onChangeRole(m.id, v as MemberRole)}
-                                                        >
+                                                            onValueChange={(v) => onChangeRole(m.id, v as MemberRole)}>
                                                             <SelectTrigger className="h-8 w-[140px] rounded-sm">
                                                                 <SelectValue />
                                                             </SelectTrigger>
@@ -583,8 +574,7 @@ export function GroupSettingView() {
                                                             size="icon"
                                                             disabled={disabledAll}
                                                             className="h-8 w-8 rounded-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:hover:bg-transparent"
-                                                            onClick={() => onRemoveMember(m.id)}
-                                                        >
+                                                            onClick={() => onRemoveMember(m.id)}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </>
@@ -595,31 +585,30 @@ export function GroupSettingView() {
                                 })}
 
                                 {members.length === 0 ? (
-                                    <div className="px-4 py-6 text-sm text-gray-500">No members preview.</div>
+                                    <div className="px-4 py-6 text-gray-500 text-sm">No members preview.</div>
                                 ) : null}
                             </div>
                         </div>
                     </section>
 
                     <section className="rounded-md border border-red-200 bg-white">
-                        <div className="border-b border-red-200 px-5 py-4">
-                            <h2 className="text-sm font-semibold text-red-600">Danger Zone</h2>
-                            <p className="text-xs text-red-500">Irreversible actions for this studio</p>
+                        <div className="border-red-200 border-b px-5 py-4">
+                            <h2 className="font-semibold text-red-600 text-sm">Danger Zone</h2>
+                            <p className="text-red-500 text-xs">Irreversible actions for this studio</p>
                         </div>
 
                         <div className="px-5 py-4">
                             <div className="rounded-md border border-red-200 bg-red-50 px-4 py-4">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <div className="text-sm font-semibold text-red-600">Delete Studio</div>
-                                        <div className="text-xs text-red-500">Permanently delete this studio and all its data</div>
+                                        <div className="font-semibold text-red-600 text-sm">Delete Studio</div>
+                                        <div className="text-red-500 text-xs">Permanently delete this studio and all its data</div>
                                     </div>
 
                                     <Button
                                         onClick={handleDelete}
                                         disabled={!canDelete}
-                                        className="h-8 rounded-sm bg-red-600 px-4 text-xs font-semibold text-white hover:bg-red-700"
-                                    >
+                                        className="h-8 rounded-sm bg-red-600 px-4 font-semibold text-white text-xs hover:bg-red-700">
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </Button>
@@ -627,7 +616,6 @@ export function GroupSettingView() {
                             </div>
                         </div>
                     </section>
-
                 </div>
             </div>
         </div>
