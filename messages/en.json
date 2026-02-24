@@ -105,7 +105,7 @@
     "emailInvalid": "Invalid email format (e.g., abc@gmail.com)",
     "emailNoSpaces": "Email must not contain spaces",
     "passwordRequired": "Password is required",
-    "passwordInvalid": "Password must be 10-20 characters, include 1 uppercase letter and 1 number",
+    "passwordInvalid": "Password must be 10-20 characters, include lowercase, uppercase and number; only special characters @$!%*?& are allowed",
     "confirmPasswordRequired": "Please confirm your password",
     "confirmPasswordMismatch": "Passwords do not match",
     "continueWithGoogle": "Continue with Google",
@@ -233,8 +233,10 @@
       "lastName": "Last Name",
       "email": "Email",
       "phoneNumber": "Phone Number",
+      "phoneNumberInvalid": "Phone number must be 10 to 11 digits",
       "bio": "Bio",
       "bioPlaceholder": "Write something about yourself...",
+      "bioMaxLength": "Bio must not exceed 500 characters",
       "preferencesTitle": "Preferences",
       "preferencesSubtitle": "Customize your experience",
       "language": "Language",
@@ -242,6 +244,26 @@
       "notificationsSubtitle": "Manage your email notification preferences",
       "studioNotifications": "Notifications from Studio",
       "studioNotificationsDesc": "Receive email notifications when work is completed",
+      "deleteAccount": {
+        "title": "Delete Account",
+        "subtitle": "Your account will be marked for deletion and can be restored later",
+        "warning": "Warning: You will not be able to sign in until the account is restored",
+        "consequence1": "Your account will be marked for deletion",
+        "consequence2": "You will lose access to all workspaces",
+        "consequence3": "Your data is retained and the account can be restored",
+        "button": "Delete Account",
+        "modalTitle": "Confirm account deletion",
+        "modalSubtitle": "Please confirm account deletion to continue.",
+        "confirmLabel": "Type DELETE to confirm",
+        "confirmHint": "You must type DELETE exactly (uppercase)",
+        "confirmTextError": "Please type DELETE exactly to confirm",
+        "cancelButton": "Cancel",
+        "confirmButton": "Delete Account",
+        "deleting": "Processing...",
+        "success": "Account has been marked for deletion",
+        "error": "Failed to deactivate account. Please try again!"
+      },
+      "editButton": "Edit",
       "cancelButton": "Cancel",
       "saveButton": "Save Changes",
       "savingButton": "Saving...",
@@ -348,7 +370,7 @@
     "newPassword": "New Password",
     "newPasswordPlaceholder": "Enter new password",
     "newPasswordRequired": "New password is required",
-    "passwordMinLength": "New password must be at least 8 characters",
+    "passwordInvalid": "New password must be 10-20 characters, include lowercase, uppercase and number; only special characters @$!%*?& are allowed",
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Re-enter new password",
     "confirmPasswordRequired": "Please confirm your password",
@@ -357,7 +379,28 @@
     "updateButton": "Update Password",
     "updatingButton": "Updating...",
     "changePasswordSuccess": "Password updated successfully!",
-    "changePasswordError": "Failed to update password. Please try again!"
+    "changePasswordError": "Failed to update password. Please try again!",
+    "deleteAccount": {
+      "title": "Danger Zone",
+      "subtitle": "Delete your account and restore it later if needed",
+      "warning": "Warning: You will not be able to sign in after deletion!",
+      "consequence1": "Your account will be marked for deletion (deleteFlag)",
+      "consequence2": "You will lose access to all workspaces",
+      "consequence3": "Project and document data will be retained",
+      "consequence4": "You can contact support to restore your account",
+      "button": "Delete Account",
+      "modalTitle": "Confirm Account Deletion",
+      "modalSubtitle": "Are you sure you want to delete your account?",
+      "modalWarning": "This action will:",
+      "confirmLabel": "To confirm, please type DELETE",
+      "confirmHint": "Type DELETE (uppercase) to confirm",
+      "confirmTextError": "Please type DELETE exactly to confirm",
+      "cancelButton": "Cancel",
+      "confirmButton": "Delete Account",
+      "deleting": "Processing...",
+      "success": "Account has been marked for deletion",
+      "error": "Failed to deactivate account. Please try again!"
+    }
   },
   "BillingPage": {
     "plansTitle": "Subscription Plans",
@@ -437,7 +480,77 @@
       "cancelButton": "Cancel",
       "submitButton": "Submit Report",
       "validationError": "Please fill in all fields",
-      "submitSuccess": "Your report has been submitted successfully!"
+      "submitSuccess": "Your report has been submitted successfully!",
+      "submitError": "Failed to submit report"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find quick answers to common questions",
+      "item1": {
+        "question": "How do I reset my password?",
+        "answer": "You can reset your password by going to the Login page and clicking 'Forgot Password'. Follow the instructions sent to your email."
+      },
+      "item2": {
+        "question": "How do I change my language?",
+        "answer": "Go to Settings > Profile and select your preferred language from the dropdown menu."
+      },
+      "item3": {
+        "question": "Can I cancel my subscription anytime?",
+        "answer": "Yes, you can cancel your subscription at any time from the Billing page in Settings."
+      },
+      "item4": {
+        "question": "How do I contact support?",
+        "answer": "You can contact us using the form on this page or email us directly at support@studystudio.com."
+      }
+    }
+  },
+  "MasterPage": {
+    "title": "Master",
+    "subtitle": "Manage your studios and workspaces",
+    "searchPlaceholder": "Search studio, work...",
+    "createButton": "New Space",
+    "infoBanner": "You have used 3 of your spaces. Upgrade to Pro for more spaces.",
+    "studiosUsed": "studios used",
+    "personal": "Personal",
+    "group": "Group",
+    "members": "members",
+    "videos": "videos",
+    "noStudios": "No studios yet. Create your first studio!",
+    "noSearchResults": "No studios found matching your search",
+    "error": "Error",
+    "loadError": "Failed to load studios list",
+    "modal": {
+      "createTitle": "Create New Studio",
+      "editTitle": "Edit Studio",
+      "name": "Studio Name",
+      "namePlaceholder": "Enter studio name...",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief description of the studio...",
+      "type": "Type",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "createSuccess": "Studio created successfully!",
+      "editSuccess": "Studio updated successfully!",
+      "createError": "Failed to create studio"
+    },
+    "detailModal": {
+      "description": "Description",
+      "members": "Members",
+      "videos": "Videos",
+      "created": "Created",
+      "updated": "Last Updated",
+      "close": "Close",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteModal": {
+      "title": "Delete Studio",
+      "message": "Are you sure you want to delete",
+      "warning": "This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "success": "Studio deleted successfully!"
     }
   },
   "LandingGroupPage": {

@@ -86,7 +86,7 @@ export async function updateUserProfile(data: UpdateProfileRequest, locale = "vi
 
     const result = await response.json();
     return result;
-  } catch (error) {
+  } catch {
     return {
       status: "error",
       code: "NETWORK_ERROR",
@@ -97,6 +97,17 @@ export async function updateUserProfile(data: UpdateProfileRequest, locale = "vi
       data: null
     };
   }
+}
+
+/**
+ * Delete current user account
+ */
+export async function deleteUserProfile(locale = "vi") {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  return apiFetch<null>(`${baseUrl}/user-profile`, {
+    method: "DELETE",
+    locale
+  });
 }
 
 /**

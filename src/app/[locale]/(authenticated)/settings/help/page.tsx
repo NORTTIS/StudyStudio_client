@@ -7,299 +7,280 @@ import { useEffect, useState } from "react";
 import { sendReport } from "@/app/[locale]/(authenticated)/settings/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 
 interface FAQItem {
-    id: string;
-    question: string;
-    answer: string;
+  id: string;
+  question: string;
+  answer: string;
 }
 
 export default function HelpPage() {
-    const t = useTranslations("HelpPage");
-    const pathname = usePathname();
+  const t = useTranslations("HelpPage");
+  const pathname = usePathname();
+  const { toast } = useToast();
 
-    const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [helpFormData, setHelpFormData] = useState({
-        feedbackType: "bug",
-        email: "",
-        title: "",
-        content: "",
-    });
+  const [helpFormData, setHelpFormData] = useState({
+    feedbackType: "bug",
+    email: "",
+    title: "",
+    content: ""
+  });
 
-    /* ======================= */
-    /* LOAD LOCAL STORAGE */
-    /* ======================= */
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const savedEmail = localStorage.getItem("helpEmail");
+  /* ======================= */
+  /* LOAD LOCAL STORAGE */
+  /* ======================= */
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedEmail = localStorage.getItem("helpEmail");
 
-            if (savedEmail) {
-                setHelpFormData((prev) => ({
-                    ...prev,
-                    email: savedEmail,
-                }));
-            }
-        }
-    }, []);
-
-    /* ======================= */
-    /* FAQ ITEMS */
-    /* ======================= */
-    const faqItems: FAQItem[] = [
-        {
-            id: "1",
-            question: t("faq.item1.question"),
-            answer: t("faq.item1.answer"),
-        },
-        {
-            id: "2",
-            question: t("faq.item2.question"),
-            answer: t("faq.item2.answer"),
-        },
-        {
-            id: "3",
-            question: t("faq.item3.question"),
-            answer: t("faq.item3.answer"),
-        },
-        {
-            id: "4",
-            question: t("faq.item4.question"),
-            answer: t("faq.item4.answer"),
-        },
-    ];
-
-    /* ======================= */
-    /* HANDLERS */
-    /* ======================= */
-    const handleHelpFormChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
-        const { name, value } = e.target;
+      if (savedEmail) {
         setHelpFormData((prev) => ({
-            ...prev,
-            [name]: value,
+          ...prev,
+          email: savedEmail
         }));
-    };
+      }
+    }
+  }, []);
 
-    const handleHelpFormSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+  /* ======================= */
+  /* FAQ ITEMS */
+  /* ======================= */
+  const faqItems: FAQItem[] = [
+    {
+      id: "1",
+      question: t("faq.item1.question"),
+      answer: t("faq.item1.answer")
+    },
+    {
+      id: "2",
+      question: t("faq.item2.question"),
+      answer: t("faq.item2.answer")
+    },
+    {
+      id: "3",
+      question: t("faq.item3.question"),
+      answer: t("faq.item3.answer")
+    },
+    {
+      id: "4",
+      question: t("faq.item4.question"),
+      answer: t("faq.item4.answer")
+    }
+  ];
 
-        if (!(helpFormData.email && helpFormData.title && helpFormData.content)) {
-            alert(t("form.validationError"));
-            return;
-        }
+  /* ======================= */
+  /* HANDLERS */
+  /* ======================= */
+  const handleHelpFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setHelpFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-        setIsSubmitting(true);
+  const handleHelpFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        try {
-            const locale = pathname.split("/")[1] || "vi";
+    if (!(helpFormData.email && helpFormData.title && helpFormData.content)) {
+      toast({
+        title: t("form.validationError"),
+        variant: "destructive"
+      });
+      return;
+    }
 
-            const response = await sendReport(
-                {
-                    email: helpFormData.email,
-                    title: helpFormData.title,
-                    content: helpFormData.content,
-                    type: helpFormData.feedbackType,
-                },
-                locale
-            );
+    setIsSubmitting(true);
 
-            if (response.status === "success") {
-                localStorage.setItem("helpEmail", helpFormData.email);
+    try {
+      const locale = pathname.split("/")[1] || "vi";
 
-                alert(t("form.submitSuccess"));
+      const response = await sendReport(
+        {
+          email: helpFormData.email,
+          title: helpFormData.title,
+          content: helpFormData.content,
+          type: helpFormData.feedbackType
+        },
+        locale
+      );
 
+      if (response.status === "success") {
+        localStorage.setItem("helpEmail", helpFormData.email);
+
+        toast({
+          title: t("form.submitSuccess"),
+          description: response.message || "Your report has been submitted successfully"
+        });
+
+        setHelpFormData({
+          feedbackType: helpFormData.feedbackType,
+          email: helpFormData.email,
+          title: "",
+          content: ""
+        });
+      } else {
+        toast({
+          title: t("form.submitError"),
+          description: response.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Submit help form failed:", error);
+      toast({
+        title: t("form.submitError"),
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleFAQ = (id: string) => {
+    setExpandedFAQ(expandedFAQ === id ? null : id);
+  };
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-8 pb-16">
+      {/* ================================================= */}
+      {/* SECTION 1: CONTACT SUPPORT */}
+      {/* ================================================= */}
+      <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+        <h2 className="mb-1 font-bold text-2xl text-[#261E33]">{t("form.formTitle")}</h2>
+
+        <p className="mb-8 text-[#6F6B99] text-sm">{t("form.subtitle")}</p>
+
+        <form onSubmit={handleHelpFormSubmit} className="space-y-6">
+          {/* Row 1 */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Feedback Type Dropdown */}
+            <div>
+              <label className="mb-2 block font-semibold text-[#261E33] text-sm">{t("form.feedbackType")}</label>
+
+              <select
+                name="feedbackType"
+                value={helpFormData.feedbackType}
+                onChange={(e) =>
+                  setHelpFormData((prev) => ({
+                    ...prev,
+                    feedbackType: e.target.value
+                  }))
+                }
+                className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2.5 text-[#261E33] text-sm focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]">
+                <option value="bug">{t("form.feedbackOptions.bug")}</option>
+                <option value="feedback">{t("form.feedbackOptions.feedback")}</option>
+                <option value="support">{t("form.feedbackOptions.support")}</option>
+                <option value="other">{t("form.feedbackOptions.other")}</option>
+              </select>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="mb-2 block font-semibold text-[#261E33] text-sm">{t("form.email")}</label>
+
+              <Input
+                type="email"
+                name="email"
+                value={helpFormData.email}
+                onChange={handleHelpFormChange}
+                placeholder={t("form.emailPlaceholder")}
+              />
+            </div>
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="mb-2 block font-semibold text-[#261E33] text-sm">{t("form.title")}</label>
+
+            <Input
+              type="text"
+              name="title"
+              value={helpFormData.title}
+              onChange={handleHelpFormChange}
+              placeholder={t("form.titlePlaceholder")}
+            />
+          </div>
+
+          {/* Content */}
+          <div>
+            <label className="mb-2 block font-semibold text-[#261E33] text-sm">{t("form.content")}</label>
+
+            <textarea
+              name="content"
+              value={helpFormData.content}
+              onChange={handleHelpFormChange}
+              placeholder={t("form.contentPlaceholder")}
+              rows={5}
+              className="w-full rounded-lg border border-[#E5E5E5] p-3"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 border-[#E5E5E5] border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
                 setHelpFormData({
-                    feedbackType: helpFormData.feedbackType,
-                    email: helpFormData.email,
-                    title: "",
-                    content: "",
-                });
-            } else {
-                throw new Error(response.message);
-            }
-        } catch (error) {
-            console.error("Submit help form failed:", error);
-            alert(t("form.submitError") || "Submit failed");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+                  feedbackType: helpFormData.feedbackType,
+                  email: helpFormData.email,
+                  title: "",
+                  content: ""
+                })
+              }>
+              {t("form.cancelButton")}
+            </Button>
 
-    const toggleFAQ = (id: string) => {
-        setExpandedFAQ(expandedFAQ === id ? null : id);
-    };
+            <Button type="submit" disabled={isSubmitting} className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]">
+              {isSubmitting ? "..." : t("form.submitButton")}
+            </Button>
+          </div>
+        </form>
+      </div>
 
-    return (
-        <div className="mx-auto max-w-5xl space-y-8 pb-16">
-            {/* ================================================= */}
-            {/* SECTION 1: CONTACT SUPPORT */}
-            {/* ================================================= */}
-            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                <h2 className="mb-1 text-2xl font-bold text-[#261E33]">
-                    {t("form.formTitle")}
-                </h2>
+      {/* ================================================= */}
+      {/* SECTION 2: FAQ */}
+      {/* ================================================= */}
+      <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
+        <h2 className="mb-1 font-bold text-2xl text-[#261E33]">{t("faq.title")}</h2>
 
-                <p className="mb-8 text-sm text-[#6F6B99]">{t("form.subtitle")}</p>
+        <p className="mb-8 text-[#6F6B99] text-sm">{t("faq.subtitle")}</p>
 
-                <form onSubmit={handleHelpFormSubmit} className="space-y-6">
-                    {/* Row 1 */}
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Feedback Type Dropdown */}
-                        <div>
-                            <label className="mb-2 block text-sm font-semibold text-[#261E33]">
-                                {t("form.feedbackType")}
-                            </label>
+        <div className="space-y-3">
+          {faqItems.map((item) => (
+            <div key={item.id} className="overflow-hidden rounded-xl border border-[#E5E5E5]">
+              <button
+                type="button"
+                onClick={() => toggleFAQ(item.id)}
+                className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-[#FAFAFA]">
+                <span className="font-semibold text-[#261E33]">{item.question}</span>
 
-                            <select
-                                name="feedbackType"
-                                value={helpFormData.feedbackType}
-                                onChange={(e) =>
-                                    setHelpFormData((prev) => ({
-                                        ...prev,
-                                        feedbackType: e.target.value,
-                                    }))
-                                }
-                                className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2.5 text-sm text-[#261E33] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]"
-                            >
-                                <option value="bug">{t("form.feedbackOptions.bug")}</option>
-                                <option value="feedback">
-                                    {t("form.feedbackOptions.feedback")}
-                                </option>
-                                <option value="support">
-                                    {t("form.feedbackOptions.support")}
-                                </option>
-                                <option value="other">{t("form.feedbackOptions.other")}</option>
-                            </select>
-                        </div>
+                <svg
+                  className={`h-5 w-5 text-[#6F6B99] transition-transform ${
+                    expandedFAQ === item.id ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-                        {/* Email */}
-                        <div>
-                            <label className="mb-2 block text-sm font-semibold text-[#261E33]">
-                                {t("form.email")}
-                            </label>
-
-                            <Input
-                                type="email"
-                                name="email"
-                                value={helpFormData.email}
-                                onChange={handleHelpFormChange}
-                                placeholder={t("form.emailPlaceholder")}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Title */}
-                    <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#261E33]">
-                            {t("form.title")}
-                        </label>
-
-                        <Input
-                            type="text"
-                            name="title"
-                            value={helpFormData.title}
-                            onChange={handleHelpFormChange}
-                            placeholder={t("form.titlePlaceholder")}
-                        />
-                    </div>
-
-                    {/* Content */}
-                    <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#261E33]">
-                            {t("form.content")}
-                        </label>
-
-                        <textarea
-                            name="content"
-                            value={helpFormData.content}
-                            onChange={handleHelpFormChange}
-                            placeholder={t("form.contentPlaceholder")}
-                            rows={5}
-                            className="w-full rounded-lg border border-[#E5E5E5] p-3"
-                        />
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex justify-end gap-3 border-t border-[#E5E5E5] pt-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() =>
-                                setHelpFormData({
-                                    feedbackType: helpFormData.feedbackType,
-                                    email: helpFormData.email,
-                                    title: "",
-                                    content: "",
-                                })
-                            }
-                        >
-                            {t("form.cancelButton")}
-                        </Button>
-
-                        <Button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]"
-                        >
-                            {isSubmitting ? "..." : t("form.submitButton")}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-
-            {/* ================================================= */}
-            {/* SECTION 2: FAQ */}
-            {/* ================================================= */}
-            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                <h2 className="mb-1 text-2xl font-bold text-[#261E33]">
-                    {t("faq.title")}
-                </h2>
-
-                <p className="mb-8 text-sm text-[#6F6B99]">{t("faq.subtitle")}</p>
-
-                <div className="space-y-3">
-                    {faqItems.map((item) => (
-                        <div
-                            key={item.id}
-                            className="overflow-hidden rounded-xl border border-[#E5E5E5]"
-                        >
-                            <button
-                                type="button"
-                                onClick={() => toggleFAQ(item.id)}
-                                className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-[#FAFAFA]"
-                            >
-                                <span className="font-semibold text-[#261E33]">
-                                    {item.question}
-                                </span>
-
-                                <svg
-                                    className={`h-5 w-5 text-[#6F6B99] transition-transform ${expandedFAQ === item.id ? "rotate-180" : ""
-                                        }`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 9l-7 7-7-7"
-                                    />
-                                </svg>
-                            </button>
-
-                            {expandedFAQ === item.id && (
-                                <div className="border-t border-[#E5E5E5] bg-[#FAFAFA] px-6 py-4">
-                                    <p className="text-sm text-[#6F6B99]">{item.answer}</p>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+              {expandedFAQ === item.id && (
+                <div className="border-[#E5E5E5] border-t bg-[#FAFAFA] px-6 py-4">
+                  <p className="text-[#6F6B99] text-sm">{item.answer}</p>
                 </div>
+              )}
             </div>
+          ))}
         </div>
-    );
+      </div>
+    </div>
+  );
 }

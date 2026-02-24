@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RegisterSuccess } from "./RegisterSuccess";
 
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{10,20}$/;
+
 export function RegisterForm() {
     const router = useRouter();
     const locale = useLocale();
@@ -51,7 +53,7 @@ export function RegisterForm() {
             password: z
                 .string()
                 .min(1, t("passwordRequired"))
-                .regex(/^(?=.*[A-Z])(?=.*\d).{10,20}$/, t("passwordInvalid")),
+                .regex(passwordRegex, t("passwordInvalid")),
             confirmPassword: z.string().min(1, t("confirmPasswordRequired"))
         })
         .refine((data) => data.password === data.confirmPassword, {
