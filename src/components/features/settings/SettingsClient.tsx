@@ -5,9 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { UpdateProfileRequest, UserProfile } from "@/app/[locale]/(authenticated)/settings/user";
-import { updateUserProfile } from "@/app/[locale]/(authenticated)/settings/user";
+import { deleteUserProfile, updateUserProfile } from "@/app/[locale]/(authenticated)/settings/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 
 const languages = [
     { value: "en", label: "English" },
@@ -24,10 +25,14 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     const t = useTranslations("SettingsPage");
     const router = useRouter();
     const pathname = usePathname();
+    const { toast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
     const [isUpdatingNotification, setIsUpdatingNotification] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [errors, setErrors] = useState<{ phoneNumber?: string; bio?: string }>({});
     const [avatarPreview, setAvatarPreview] = useState(initialData.avatar || "/images/image-removebg-preview.png");
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -37,19 +42,30 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
 
     useEffect(() => {
         const savedAvatar = localStorage.getItem("userAvatar");
-        const preferredLocale = localStorage.getItem("preferredLocale");
+        const currentLocale = pathname.split("/")[1] || "vi";
+        const profileLanguage = initialData.language || currentLocale;
 
         if (savedAvatar) {
             setAvatarPreview(savedAvatar);
         }
 
-        if (preferredLocale && preferredLocale !== formData.language) {
-            setFormData((prev) => ({
-                ...prev,
-                language: preferredLocale
-            }));
+        setFormData((prev) =>
+            prev.language === profileLanguage
+                ? prev
+                : {
+                    ...prev,
+                    language: profileLanguage
+                }
+        );
+
+        localStorage.setItem("preferredLocale", profileLanguage);
+
+        if (profileLanguage !== currentLocale) {
+            const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
+            const newPath = `/${profileLanguage}${pathWithoutLocale || "/"}`;
+            router.replace(newPath);
         }
-    }, [formData.language]);
+    }, [initialData.language, pathname, router]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (!isEditing) return;
@@ -141,14 +157,23 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
 
             if (response.status === "success") {
                 localStorage.setItem("userSettings", JSON.stringify(formData));
-                alert(t("profile.saveSuccess"));
+                toast({
+                    variant: "success",
+                    description: response.message || t("profile.saveSuccess")
+                });
                 setIsEditing(false);
             } else {
-                throw new Error(response.message);
+                toast({
+                    variant: "destructive",
+                    description: response.message || t("profile.saveError")
+                });
             }
         } catch (error) {
             console.error("Save failed:", error);
-            alert(t("profile.saveError"));
+            toast({
+                variant: "destructive",
+                description: t("profile.saveError")
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -173,7 +198,15 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             const response = await updateUserProfile({ language: nextLanguage }, locale);
 
             if (response.status !== "success") {
-                throw new Error(response.message);
+                setFormData((prev) => ({
+                    ...prev,
+                    language: previousLanguage
+                }));
+                toast({
+                    variant: "destructive",
+                    description: response.message || t("profile.saveError")
+                });
+                return;
             }
 
             localStorage.setItem("preferredLocale", nextLanguage);
@@ -187,13 +220,20 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
 
             const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
             const newPath = `/${nextLanguage}${pathWithoutLocale || "/"}`;
+            toast({
+                variant: "success",
+                description: response.message || t("profile.saveSuccess")
+            });
             router.push(newPath);
         } catch {
             setFormData((prev) => ({
                 ...prev,
                 language: previousLanguage
             }));
-            alert(t("profile.saveError"));
+            toast({
+                variant: "destructive",
+                description: t("profile.saveError")
+            });
         } finally {
             setIsUpdatingLanguage(false);
         }
@@ -218,7 +258,15 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             const response = await updateUserProfile({ emailNotificationEnabled: nextValue }, locale);
 
             if (response.status !== "success") {
-                throw new Error(response.message);
+                setFormData((prev) => ({
+                    ...prev,
+                    emailNotificationEnabled: previousValue
+                }));
+                toast({
+                    variant: "destructive",
+                    description: response.message || t("profile.saveError")
+                });
+                return;
             }
 
             localStorage.setItem(
@@ -228,14 +276,61 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                     emailNotificationEnabled: nextValue
                 })
             );
+            toast({
+                variant: "success",
+                description: response.message || t("profile.saveSuccess")
+            });
         } catch {
             setFormData((prev) => ({
                 ...prev,
                 emailNotificationEnabled: previousValue
             }));
-            alert(t("profile.saveError"));
+            toast({
+                variant: "destructive",
+                description: t("profile.saveError")
+            });
         } finally {
             setIsUpdatingNotification(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (deleteConfirmText !== "DELETE") {
+            toast({
+                variant: "destructive",
+                description: t("profile.deleteAccount.confirmTextError")
+            });
+            return;
+        }
+
+        setIsDeleting(true);
+
+        try {
+            const locale = pathname.split("/")[1] || "vi";
+            const response = await deleteUserProfile(locale);
+
+            if (response.status !== "success") {
+                toast({
+                    variant: "destructive",
+                    description: response.message || t("profile.deleteAccount.error")
+                });
+                return;
+            }
+
+            toast({
+                variant: "success",
+                description: response.message || t("profile.deleteAccount.success")
+            });
+
+            localStorage.clear();
+            window.location.href = `/${locale}/login`;
+        } catch {
+            toast({
+                variant: "destructive",
+                description: t("profile.deleteAccount.error")
+            });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -421,6 +516,68 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                     </label>
                 </div>
             </div>
+
+            <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-8">
+                <h2 className="mb-2 font-semibold text-lg text-red-600">{t("profile.deleteAccount.title")}</h2>
+                <p className="mb-6 text-red-600 text-sm">{t("profile.deleteAccount.subtitle")}</p>
+
+                <div className="rounded-lg bg-white p-6">
+                    <p className="font-medium text-[#261E33] text-sm">{t("profile.deleteAccount.warning")}</p>
+                    <ul className="mt-3 space-y-1 text-[#6F6B99] text-sm">
+                        <li>• {t("profile.deleteAccount.consequence1")}</li>
+                        <li>• {t("profile.deleteAccount.consequence2")}</li>
+                        <li>• {t("profile.deleteAccount.consequence3")}</li>
+                    </ul>
+
+                    <Button
+                        type="button"
+                        onClick={() => setShowDeleteModal(true)}
+                        className="mt-6 w-full rounded-lg border-2 border-red-500 bg-white px-6 py-2.5 font-semibold text-red-600 text-sm hover:bg-red-50">
+                        {t("profile.deleteAccount.button")}
+                    </Button>
+                </div>
+            </div>
+
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+                        <h3 className="mb-2 font-bold text-[#261E33] text-xl">{t("profile.deleteAccount.modalTitle")}</h3>
+                        <p className="mb-5 text-[#6F6B99] text-sm">{t("profile.deleteAccount.modalSubtitle")}</p>
+
+                        <label htmlFor="deleteConfirmText" className="mb-2 block font-semibold text-[#261E33] text-sm">
+                            {t("profile.deleteAccount.confirmLabel")}
+                        </label>
+                        <Input
+                            id="deleteConfirmText"
+                            value={deleteConfirmText}
+                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                            placeholder="DELETE"
+                            className="rounded-lg border-red-300 focus:border-red-500 focus:ring-red-500"
+                        />
+                        <p className="mt-1 text-[#6F6B99] text-xs">{t("profile.deleteAccount.confirmHint")}</p>
+
+                        <div className="mt-6 flex gap-3">
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setDeleteConfirmText("");
+                                }}
+                                disabled={isDeleting}
+                                className="flex-1 rounded-lg border border-[#E5E5E5] bg-white px-6 py-2.5 font-semibold text-[#261E33] text-sm hover:bg-[#F5F5F5]">
+                                {t("profile.deleteAccount.cancelButton")}
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleDeleteAccount}
+                                disabled={isDeleting || deleteConfirmText !== "DELETE"}
+                                className="flex-1 rounded-lg bg-red-600 px-6 py-2.5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
+                                {isDeleting ? t("profile.deleteAccount.deleting") : t("profile.deleteAccount.confirmButton")}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
