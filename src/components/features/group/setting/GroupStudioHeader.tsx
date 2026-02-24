@@ -1,20 +1,11 @@
 "use client";
 
-import * as React from "react";
+import { BarChart3, Calendar, FileText, LayoutGrid, List, MessageSquare, Settings, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
+import * as React from "react";
 import { twMerge } from "tailwind-merge";
-import {
-    Calendar,
-    FileText,
-    LayoutGrid,
-    List,
-    MessageSquare,
-    Settings,
-    Trash2,
-    BarChart3
-} from "lucide-react";
 
 type Tab = {
     label: string;
@@ -94,7 +85,8 @@ export function GroupStudioHeader() {
 
         (async () => {
             try {
-                const res = await fetch("http://localhost:8080/api/group", {
+                const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+                const res = await fetch(`${baseUrl}/group`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`
                     },
@@ -111,7 +103,7 @@ export function GroupStudioHeader() {
 
                 const g = allGroups.find((x) => x.id === groupId);
 
-                if (!alive || !g) return;
+                if (!(alive && g)) return;
 
                 applyGroup(g);
             } catch (e) {
@@ -160,16 +152,16 @@ export function GroupStudioHeader() {
                 <div className="flex items-start justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-lg font-semibold text-gray-900">{groupName}</h1>
+                            <h1 className="font-semibold text-gray-900 text-lg">{groupName}</h1>
 
                             {masterStudioName ? (
-                                <span className="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
+                                <span className="rounded bg-gray-100 px-2 py-0.5 font-semibold text-[11px] text-gray-600">
                                     {masterStudioName}
                                 </span>
                             ) : null}
                         </div>
 
-                        {groupDesc ? <p className="mt-1 text-xs text-gray-500">{groupDesc}</p> : null}
+                        {groupDesc ? <p className="mt-1 text-gray-500 text-xs">{groupDesc}</p> : null}
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -177,21 +169,20 @@ export function GroupStudioHeader() {
                             {shownMembers.map((m, idx) => (
                                 <div
                                     key={m.id ?? idx}
-                                    className="flex h-7 w-7 items-center justify-center rounded-full border bg-white text-[11px] font-semibold text-gray-600"
-                                    title={`${(m.firstName ?? "").trim()} ${(m.lastName ?? "").trim()}`.trim()}
-                                >
+                                    className="flex h-7 w-7 items-center justify-center rounded-full border bg-white font-semibold text-[11px] text-gray-600"
+                                    title={`${(m.firstName ?? "").trim()} ${(m.lastName ?? "").trim()}`.trim()}>
                                     {safeInitials(m.firstName, m.lastName)}
                                 </div>
                             ))}
 
                             {extra > 0 ? (
-                                <div className="flex h-7 w-7 items-center justify-center rounded-full border bg-white text-[11px] font-semibold text-gray-700">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full border bg-white font-semibold text-[11px] text-gray-700">
                                     +{extra}
                                 </div>
                             ) : null}
                         </div>
 
-                        <button className="inline-flex h-8 items-center gap-2 rounded-sm border bg-white px-3 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                        <button className="inline-flex h-8 items-center gap-2 rounded-sm border bg-white px-3 font-semibold text-gray-700 text-xs hover:bg-gray-50">
                             <span className="text-sm leading-none">＋</span>
                             Invite
                         </button>
@@ -207,10 +198,9 @@ export function GroupStudioHeader() {
                                 key={t.href}
                                 href={t.href}
                                 className={twMerge(
-                                    "relative inline-flex items-center gap-2 pb-3 text-xs font-semibold text-gray-500 hover:text-gray-900",
+                                    "relative inline-flex items-center gap-2 pb-3 font-semibold text-gray-500 text-xs hover:text-gray-900",
                                     active && "text-gray-900"
-                                )}
-                            >
+                                )}>
                                 <Icon className="h-4 w-4" />
                                 {t.label}
                                 {active && <span className="absolute -bottom-[1px] left-0 h-[2px] w-full bg-gray-900" />}
