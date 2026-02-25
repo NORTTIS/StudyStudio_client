@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Clock,
-  MessageSquare,
-  MoreHorizontal,
-  Paperclip,
-  Plus,
-} from "lucide-react";
+import { Clock, MessageSquare, MoreHorizontal, Paperclip, Plus } from "lucide-react";
 import { useState } from "react";
 import type { BoardSection, TaskPriority } from "@/components/features/home/types";
 
@@ -18,7 +12,7 @@ const priorityClasses: Record<TaskPriority, string> = {
   low: "bg-gray-100 text-gray-600",
   medium: "bg-orange-100 text-orange-600",
   high: "bg-red-100 text-red-600",
-  urgent: "bg-red-600 text-white",
+  urgent: "bg-red-600 text-white"
 };
 
 export function HomeBoard({ sections }: HomeBoardProps) {
@@ -28,37 +22,25 @@ export function HomeBoard({ sections }: HomeBoardProps) {
     <div className="mt-8 space-y-12">
       {sections.map((section) => (
         <section key={section.title}>
-          <h2 className="mb-4 text-sm font-semibold text-gray-400 uppercase tracking-wide">
-            {section.title}
-          </h2>
+          <h2 className="mb-4 text-sm font-semibold text-gray-400 uppercase tracking-wide">{section.title}</h2>
 
           <div className="flex items-start gap-6 overflow-x-auto pb-4">
             {section.columns.map((column) => (
               <div
                 key={column.name}
-                className="min-w-[300px] max-w-[300px] rounded-2xl border border-gray-200 bg-[#F7F7F7]"
-              >
+                className="min-w-[300px] max-w-[300px] rounded-2xl border border-gray-200 bg-[#F7F7F7]">
                 {/* Column Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-white rounded-t-2xl">
                   <div>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {column.name}
-                    </p>
-                    <span className="text-xs font-medium text-gray-400">
-                      {column.count}
-                    </span>
+                    <p className="text-sm font-semibold text-gray-800">{column.name}</p>
+                    <span className="text-xs font-medium text-gray-400">{column.count}</span>
                   </div>
 
                   {/* Plus Button */}
                   <button
                     type="button"
-                    onClick={() =>
-                      setOpenColumn(
-                        openColumn === column.name ? null : column.name
-                      )
-                    }
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition"
-                  >
+                    onClick={() => setOpenColumn(openColumn === column.name ? null : column.name)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition">
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
@@ -77,8 +59,7 @@ export function HomeBoard({ sections }: HomeBoardProps) {
                       <div className="mt-3 flex justify-end gap-2">
                         <button
                           onClick={() => setOpenColumn(null)}
-                          className="rounded-md px-3 py-1 text-xs text-gray-500 hover:bg-gray-100"
-                        >
+                          className="rounded-md px-3 py-1 text-xs text-gray-500 hover:bg-gray-100">
                           Hủy
                         </button>
                         <button className="rounded-md bg-orange-500 px-3 py-1 text-xs font-semibold text-white hover:bg-orange-600">
@@ -97,12 +78,9 @@ export function HomeBoard({ sections }: HomeBoardProps) {
                     column.tasks.map((task) => (
                       <article
                         key={task.title}
-                        className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition"
-                      >
+                        className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-sm font-semibold text-gray-900">
-                            {task.title}
-                          </h3>
+                          <h3 className="text-sm font-semibold text-gray-900">{task.title}</h3>
 
                           <button className="text-gray-400 hover:text-gray-600">
                             <MoreHorizontal className="h-4 w-4" />
@@ -111,8 +89,7 @@ export function HomeBoard({ sections }: HomeBoardProps) {
 
                         <div className="mt-2">
                           <span
-                            className={`inline-flex rounded-md px-2 py-[2px] text-[10px] font-semibold ${priorityClasses[task.priority]}`}
-                          >
+                            className={`inline-flex rounded-md px-2 py-[2px] text-[10px] font-semibold ${priorityClasses[task.priority]}`}>
                             {task.priority}
                           </span>
                         </div>

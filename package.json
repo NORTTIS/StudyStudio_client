@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "api:types": "openapi-typescript http://localhost:8080/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
+    "api:types": "openapi-typescript http://localhost:5006/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
     "build": "pnpm api:types && next build",
     "start": "next start",
     "lint": "biome check",
@@ -12,7 +12,14 @@
     "commit": "cz"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/react": "^6.1.20",
+    "@fullcalendar/timegrid": "^6.1.20",
     "@hookform/resolvers": "^5.2.2",
+    "@microsoft/signalr": "^10.0.0",
+    "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-toast": "^1.2.15",
     "@react-oauth/google": "^0.13.4",
     "@t3-oss/env-nextjs": "^0.13.10",
@@ -28,6 +35,7 @@
     "react-dom": "19.2.1",
     "react-hook-form": "^7.68.0",
     "react-icons": "^5.5.0",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.2.1",
     "zustand": "^5.0.9"

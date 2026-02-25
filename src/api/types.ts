@@ -825,6 +825,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/group-messages/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupMessageListResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupMessageListResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupMessageListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/group/{groupId}": {
         parameters: {
             query?: never;
@@ -859,6 +901,84 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/group/{groupId}/detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupDetailResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupDetailResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupDetailResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/group/{groupId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupMemberListResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupMemberListResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupMemberListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -945,6 +1065,49 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/group/studio-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CreateStudioGroupsRequest"];
+                    "application/json": components["schemas"]["CreateStudioGroupsRequest"];
+                    "text/json": components["schemas"]["CreateStudioGroupsRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateStudioGroupsResponseApiResponse"];
+                        "text/json": components["schemas"]["CreateStudioGroupsResponseApiResponse"];
+                        "text/plain": components["schemas"]["CreateStudioGroupsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1147,7 +1310,34 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateStudioRequest"];
+                    "application/json": components["schemas"]["UpdateStudioRequest"];
+                    "text/json": components["schemas"]["UpdateStudioRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UpdateStudioResponseApiResponse"];
+                        "text/json": components["schemas"]["UpdateStudioResponseApiResponse"];
+                        "text/plain": components["schemas"]["UpdateStudioResponseApiResponse"];
+                    };
+                };
+            };
+        };
         post: {
             parameters: {
                 query?: never;
@@ -1176,6 +1366,149 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/studioId": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    studioId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioGroupListResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioGroupListResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioGroupListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/task-comments/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskCommentListResponseApiResponse"];
+                        "text/json": components["schemas"]["TaskCommentListResponseApiResponse"];
+                        "text/plain": components["schemas"]["TaskCommentListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1635,6 +1968,25 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        CreateStudioGroupsRequest: {
+            description?: string | null;
+            /** Format: int32 */
+            groupCount: number;
+            groupPrefix: string;
+            /** Format: uuid */
+            studioId?: string | null;
+            /** Format: uuid */
+            templateId?: string | null;
+        };
+        CreateStudioGroupsResponse: {
+            createGroups?: components["schemas"]["CreateGroupResponse"][] | null;
+        };
+        CreateStudioGroupsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["CreateStudioGroupsResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         CreateStudioRequest: {
             /** Format: date-time */
             createdAt?: string;
@@ -1689,6 +2041,37 @@ export interface components {
             /** Format: int32 */
             taskCount?: number;
         };
+        GroupDetailResponse: {
+            /** Format: date-time */
+            createdAt?: string;
+            createdBy?: components["schemas"]["UserDto"];
+            description?: string | null;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            groupType?: string | null;
+            isFavorite?: boolean;
+            isTemplate?: boolean;
+            /** Format: int32 */
+            memberCount?: number;
+            /** Format: uuid */
+            studioId?: string | null;
+            studioName?: string | null;
+            /** Format: int32 */
+            taskCount?: number;
+            taskStatuses?: components["schemas"]["TaskStatusDto"][] | null;
+            /** Format: uuid */
+            templateId?: string | null;
+            /** Format: date-time */
+            updatedAt?: string;
+            userRole?: string | null;
+        };
+        GroupDetailResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupDetailResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         GroupListResponse: {
             sections?: components["schemas"]["GroupSections"];
             subscription?: components["schemas"]["SubscriptionInfo"];
@@ -1697,6 +2080,64 @@ export interface components {
         GroupListResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["GroupListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        GroupMemberDto: {
+            avatarUrl?: string | null;
+            email?: string | null;
+            firstName?: string | null;
+            /** Format: date-time */
+            joinedAt?: string;
+            lastName?: string | null;
+            role?: string | null;
+            /** Format: uuid */
+            userId?: string;
+        };
+        GroupMemberListResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            members?: components["schemas"]["GroupMemberDto"][] | null;
+            /** Format: int32 */
+            totalMembers?: number;
+        };
+        GroupMemberListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupMemberListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        GroupMessageDto: {
+            content?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            groupId?: string;
+            isDeleted?: boolean;
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: uuid */
+            parentMessageId?: string | null;
+            replies?: components["schemas"]["GroupMessageDto"][] | null;
+            /** Format: int32 */
+            replyCount?: number;
+            /** Format: date-time */
+            updatedAt?: string | null;
+            user?: components["schemas"]["UserDto"];
+            /** Format: uuid */
+            userId?: string;
+        };
+        GroupMessageListResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            messages?: components["schemas"]["GroupMessageDto"][] | null;
+            /** Format: int32 */
+            totalMessages?: number;
+        };
+        GroupMessageListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupMessageListResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -1816,6 +2257,17 @@ export interface components {
             id?: string;
             name?: string | null;
         };
+        StudioGroupListResponse: {
+            studioGroups?: components["schemas"]["GroupCardDto"][] | null;
+            /** Format: int32 */
+            totalGroup?: number;
+        };
+        StudioGroupListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioGroupListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         StudioResponse: {
             /** Format: date-time */
             createdAt?: string;
@@ -1849,6 +2301,46 @@ export interface components {
             groupLimit?: number;
             /** Format: int32 */
             memberLimit?: number;
+        };
+        TaskCommentDto: {
+            /** Format: uuid */
+            commentId?: string;
+            content?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            isDeleted?: boolean;
+            /** Format: uuid */
+            parentCommentId?: string | null;
+            replies?: components["schemas"]["TaskCommentDto"][] | null;
+            /** Format: int32 */
+            replyCount?: number;
+            /** Format: uuid */
+            taskId?: string;
+            /** Format: date-time */
+            updatedAt?: string | null;
+            user?: components["schemas"]["UserDto"];
+            /** Format: uuid */
+            userId?: string;
+        };
+        TaskCommentListResponse: {
+            comments?: components["schemas"]["TaskCommentDto"][] | null;
+            /** Format: uuid */
+            taskId?: string;
+            /** Format: int32 */
+            totalComments?: number;
+        };
+        TaskCommentListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TaskCommentListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        TaskStatusDto: {
+            /** Format: int32 */
+            position?: number;
+            /** Format: uuid */
+            statusId?: string;
+            statusName?: string | null;
         };
         TemplateResponse: {
             /** Format: date-time */
@@ -1901,6 +2393,24 @@ export interface components {
         UpdateGroupResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["UpdateGroupResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        UpdateStudioRequest: {
+            description?: string | null;
+            /** Format: uuid */
+            id?: string;
+            studioName?: string | null;
+        };
+        UpdateStudioResponse: {
+            description?: string | null;
+            studioName?: string | null;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        UpdateStudioResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UpdateStudioResponse"];
             message?: string | null;
             status?: string | null;
         };
