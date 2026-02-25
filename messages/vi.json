@@ -520,7 +520,7 @@
     "subtitle": "Quản lý các studio và không gian làm việc của bạn",
     "searchPlaceholder": "Tìm kiếm studio, công việc...",
     "createButton": "Không gian mới",
-    "infoBanner": "Bạn đã sử dụng 3 không gian của bạn. Nâng cấp lên Pro để có thêm không gian.",
+    "infoBanner": "Tạo và quản lý các studio để tổ chức công việc của bạn hiệu quả hơn.",
     "studiosUsed": "studios đã sử dụng",
     "personal": "Cá nhân",
     "group": "Nhóm",
@@ -530,6 +530,9 @@
     "noSearchResults": "Không tìm thấy studio nào phù hợp",
     "error": "Lỗi",
     "loadError": "Không thể tải danh sách studio",
+    "backToList": "Quay lại danh sách",
+    "groupsTitle": "Danh sách nhóm",
+    "noGroups": "Chưa có nhóm nào trong studio này",
     "modal": {
       "createTitle": "Tạo Studio Mới",
       "editTitle": "Chỉnh sửa Studio",
@@ -543,7 +546,8 @@
       "save": "Lưu",
       "createSuccess": "Tạo studio thành công!",
       "editSuccess": "Cập nhật studio thành công!",
-      "createError": "Không thể tạo studio"
+      "createError": "Không thể tạo studio",
+      "editError": "Không thể cập nhật studio"
     },
     "detailModal": {
       "description": "Mô tả",
@@ -558,10 +562,11 @@
     "deleteModal": {
       "title": "Xóa Studio",
       "message": "Bạn có chắc chắn muốn xóa",
-      "warning": "Hành động này không thể hoàn tác.",
+      "warning": "Cảnh báo: Tất cả các nhóm (groups) bên trong studio này cũng sẽ bị xóa. Hành động này không thể hoàn tác.",
       "cancel": "Hủy",
       "confirm": "Xóa",
-      "success": "Xóa studio thành công!"
+      "success": "Xóa studio thành công!",
+      "error": "Không thể xóa studio"
     }
   },
   "LandingGroupPage": {

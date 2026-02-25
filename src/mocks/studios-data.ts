@@ -1,6 +1,6 @@
-import type { Studio } from "@/api/studios";
+import type { StudioUI } from "@/api/studios";
 
-export const mockStudios: Studio[] = [
+export const mockStudios: StudioUI[] = [
   {
     id: "SEP490-G62",
     name: "SEP490-G62",

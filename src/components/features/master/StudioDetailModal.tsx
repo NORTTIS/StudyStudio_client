@@ -1,13 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { Studio } from "@/api/studios";
+import type { StudioUI } from "@/api/studios";
 import { Button } from "@/components/ui/button";
 
 interface StudioDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  studio: Studio | null;
+  studio: StudioUI | null;
   onEdit: () => void;
   onDelete: () => void;
 }
