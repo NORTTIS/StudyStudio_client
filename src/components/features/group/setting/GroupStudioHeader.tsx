@@ -1,31 +1,42 @@
 "use client";
 
-import { BarChart3, Calendar, FileText, LayoutGrid, List, MessageSquare, Settings, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
 import * as React from "react";
+import Link from "next/link";
+import { useLocale } from "next-intl";
+import { usePathname, useSearchParams } from "next/navigation";
 import { twMerge } from "tailwind-merge";
+import {
+    BarChart3,
+    Calendar,
+    FileText,
+    LayoutGrid,
+    List,
+    MessageSquare,
+    Settings,
+    Trash2,
+    Users
+} from "lucide-react";
 
 type Tab = {
+    key: string;
     label: string;
-    href: string;
     icon: React.ComponentType<{ className?: string }>;
+    href: (locale: string, groupId: string) => string;
 };
 
-type ApiMemberPreview = {
-    id?: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    avatarUrl?: string | null;
-};
-
-type GroupLite = {
-    id?: string;
-    name?: string | null;
+type GroupDetail = {
+    groupId?: string;
+    groupName?: string | null;
     description?: string | null;
-    studio?: { id?: string; name?: string | null } | null;
-    membersPreview?: ApiMemberPreview[] | null;
+    studioName?: string | null;
+    memberCount?: number | null;
+};
+
+type GroupDetailResponse = {
+    status?: string | null;
+    code?: string | null;
+    message?: string | null;
+    data?: GroupDetail | null;
 };
 
 type GroupUpdatedDetail = {
@@ -33,50 +44,60 @@ type GroupUpdatedDetail = {
     name?: string | null;
     description?: string | null;
     studioName?: string | null;
+    memberCount?: number | null;
 };
 
 const GROUP_UPDATED_EVENT = "group:updated";
 
-const safeInitials = (first?: string | null, last?: string | null) => {
-    const f = (first ?? "").trim();
-    const l = (last ?? "").trim();
-    const i1 = f ? f[0] : "";
-    const i2 = l ? l[0] : "";
-    const out = `${i1}${i2}`.toUpperCase();
-    return out || "U";
+const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
+
+const extractGroupIdFromPath = (pathname: string) => {
+    const p = stripLocale(pathname || "");
+    const m = p.match(/^\/group\/([^/]+)/i);
+    return m?.[1] || "";
 };
 
-export function GroupStudioHeader() {
-    const pathname = usePathname();
+const readText = async (res: Response) => {
+    try {
+        return await res.text();
+    } catch {
+        return "";
+    }
+};
+
+const getApiBase = () => {
+    const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+    const base = String(raw).replace(/\/+$/, "");
+    return base.endsWith("/api") ? base : `${base}/api`;
+};
+
+export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }) {
     const locale = useLocale();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
-    const groupId = searchParams.get("id") || "";
+
+    const groupId =
+        groupIdProp ||
+        searchParams.get("id") ||
+        extractGroupIdFromPath(pathname || "") ||
+        "";
 
     const [groupName, setGroupName] = React.useState<string>("Group");
     const [groupDesc, setGroupDesc] = React.useState<string>("");
-    const [masterStudioName, setMasterStudioName] = React.useState<string>("");
-    const [membersPreview, setMembersPreview] = React.useState<ApiMemberPreview[]>([]);
-
-    const base = `/${locale}/group`;
+    const [studioName, setStudioName] = React.useState<string>("");
+    const [memberCount, setMemberCount] = React.useState<number>(0);
+    const [error, setError] = React.useState<string>("");
 
     const tabs: Tab[] = [
-        { label: "Board", href: `${base}/board?id=${groupId}`, icon: LayoutGrid },
-        { label: "List", href: `${base}/list?id=${groupId}`, icon: List },
-        { label: "Calendar", href: `${base}/calendar?id=${groupId}`, icon: Calendar },
-        { label: "Documents", href: `${base}/documents?id=${groupId}`, icon: FileText },
-        { label: "Discuss", href: `${base}/discuss?id=${groupId}`, icon: MessageSquare },
-        { label: "Analytic", href: `${base}/analytic?id=${groupId}`, icon: BarChart3 },
-        { label: "Setting", href: `${base}/setting?id=${groupId}`, icon: Settings },
-        { label: "Trashed", href: `${base}/trashed?id=${groupId}`, icon: Trash2 }
+        { key: "board", label: "Board", icon: LayoutGrid, href: (l, id) => `/${l}/group/${id}` },
+        { key: "list", label: "List", icon: List, href: (l, id) => `/${l}/group/${id}/list` },
+        { key: "calendar", label: "Calendar", icon: Calendar, href: (l, id) => `/${l}/group/${id}/calendar` },
+        { key: "documents", label: "Documents", icon: FileText, href: (l, id) => `/${l}/group/${id}/documents` },
+        { key: "discuss", label: "Discuss", icon: MessageSquare, href: (l, id) => `/${l}/group/${id}/discuss` },
+        { key: "analytic", label: "Analytic", icon: BarChart3, href: (l, id) => `/${l}/group/${id}/analytic` },
+        { key: "setting", label: "Setting", icon: Settings, href: (l, id) => `/${l}/group/${id}/setting` },
+        { key: "trashed", label: "Trashed", icon: Trash2, href: (l, id) => `/${l}/group/${id}/trashed` }
     ];
-
-    const applyGroup = React.useCallback((g?: GroupLite | null) => {
-        if (!g) return;
-        setGroupName(g.name || "Group");
-        setGroupDesc(g.description || "");
-        setMasterStudioName(g.studio?.name || "");
-        setMembersPreview((g.membersPreview ?? []).filter(Boolean));
-    }, []);
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -85,36 +106,52 @@ export function GroupStudioHeader() {
 
         (async () => {
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
-                const res = await fetch(`${baseUrl}/group`, {
+                setError("");
+
+                const apiBase = getApiBase();
+                const token = localStorage.getItem("accessToken") || "";
+
+                const res = await fetch(`${apiBase}/group/${groupId}/detail`, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`
+                        Accept: "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {})
                     },
                     cache: "no-store"
                 });
 
-                const json = await res.json();
+                const text = await readText(res);
+                let json: any = null;
 
-                const allGroups: GroupLite[] = [
-                    ...(json?.data?.sections?.favorites || []),
-                    ...(json?.data?.sections?.studioGroups || []),
-                    ...(json?.data?.sections?.independentGroups || [])
-                ];
+                try {
+                    json = text ? JSON.parse(text) : null;
+                } catch { }
 
-                const g = allGroups.find((x) => x.id === groupId);
+                if (!res.ok) {
+                    const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
+                    throw new Error(msg);
+                }
 
-                if (!(alive && g)) return;
+                const parsed = (json as GroupDetailResponse) || {};
+                const data = parsed?.data ?? null;
 
-                applyGroup(g);
-            } catch (e) {
-                console.error(e);
+                if (!alive) return;
+
+                setGroupName(data?.groupName || "Group");
+                setGroupDesc(data?.description || "");
+                setStudioName(data?.studioName || "");
+
+                const c = Number(data?.memberCount ?? 0);
+                setMemberCount(Number.isFinite(c) ? c : 0);
+            } catch (e: any) {
+                if (!alive) return;
+                setError(e?.message || "Failed to fetch group detail");
             }
         })();
 
         return () => {
             alive = false;
         };
-    }, [groupId, applyGroup]);
+    }, [groupId]);
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -122,91 +159,74 @@ export function GroupStudioHeader() {
         const onUpdated = (ev: Event) => {
             const e = ev as CustomEvent<GroupUpdatedDetail>;
             const d = e?.detail;
-
             if (!d?.id || d.id !== groupId) return;
 
             if (typeof d.name !== "undefined") setGroupName(d.name || "Group");
             if (typeof d.description !== "undefined") setGroupDesc(d.description || "");
-            if (typeof d.studioName !== "undefined") setMasterStudioName(d.studioName || "");
+            if (typeof d.studioName !== "undefined") setStudioName(d.studioName || "");
+
+            if (typeof d.memberCount !== "undefined" && d.memberCount != null) {
+                const c = Number(d.memberCount);
+                setMemberCount(Number.isFinite(c) ? c : 0);
+            }
         };
 
         window.addEventListener(GROUP_UPDATED_EVENT, onUpdated);
         return () => window.removeEventListener(GROUP_UPDATED_EVENT, onUpdated);
     }, [groupId]);
 
-    const isActive = (href: string) => {
-        const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
-        const cur = stripLocale(pathname || "");
-        const h = stripLocale(href.split("?")[0] || href);
-        return cur === h || cur.startsWith(h + "/");
-    };
-
-    const maxBubbles = 5;
-    const total = membersPreview.length;
-    const shownMembers = membersPreview.slice(0, maxBubbles);
-    const extra = Math.max(0, total - maxBubbles);
+    const curPath = stripLocale(pathname || "");
 
     return (
-        <div className="w-full border-b bg-white">
-            <div className="mx-auto w-full max-w-5xl px-6 pt-6">
+        <div className="w-full bg-white">
+            <div className="mx-auto w-full max-w-6xl px-6 pt-8">
                 <div className="flex items-start justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="font-semibold text-gray-900 text-lg">{groupName}</h1>
+                    <div className="min-w-0">
+                        {studioName ? <p className="text-sm text-[#6F6B99]">{studioName}</p> : null}
 
-                            {masterStudioName ? (
-                                <span className="rounded bg-gray-100 px-2 py-0.5 font-semibold text-[11px] text-gray-600">
-                                    {masterStudioName}
-                                </span>
-                            ) : null}
-                        </div>
+                        <h1 className="mt-1 truncate text-3xl font-semibold text-[#261E33]">
+                            {groupName}
+                        </h1>
 
-                        {groupDesc ? <p className="mt-1 text-gray-500 text-xs">{groupDesc}</p> : null}
+                        {groupDesc ? <p className="mt-2 text-lg text-[#6F6B99]">{groupDesc}</p> : null}
+                        {error ? <p className="mt-2 text-sm text-red-500">{error}</p> : null}
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="flex -space-x-1">
-                            {shownMembers.map((m, idx) => (
-                                <div
-                                    key={m.id ?? idx}
-                                    className="flex h-7 w-7 items-center justify-center rounded-full border bg-white font-semibold text-[11px] text-gray-600"
-                                    title={`${(m.firstName ?? "").trim()} ${(m.lastName ?? "").trim()}`.trim()}>
-                                    {safeInitials(m.firstName, m.lastName)}
-                                </div>
-                            ))}
-
-                            {extra > 0 ? (
-                                <div className="flex h-7 w-7 items-center justify-center rounded-full border bg-white font-semibold text-[11px] text-gray-700">
-                                    +{extra}
-                                </div>
-                            ) : null}
-                        </div>
-
-                        <button className="inline-flex h-8 items-center gap-2 rounded-sm border bg-white px-3 font-semibold text-gray-700 text-xs hover:bg-gray-50">
-                            <span className="text-sm leading-none">＋</span>
-                            Invite
-                        </button>
+                    <div className="flex items-center gap-2 text-[#6F6B99]">
+                        <Users className="h-4 w-4" />
+                        <span className="text-sm">{memberCount} thành viên</span>
                     </div>
                 </div>
+            </div>
 
-                <div className="mt-5 flex flex-wrap items-center gap-6 border-t pt-3">
-                    {tabs.map((t) => {
-                        const Icon = t.icon;
-                        const active = isActive(t.href);
-                        return (
-                            <Link
-                                key={t.href}
-                                href={t.href}
-                                className={twMerge(
-                                    "relative inline-flex items-center gap-2 pb-3 font-semibold text-gray-500 text-xs hover:text-gray-900",
-                                    active && "text-gray-900"
-                                )}>
-                                <Icon className="h-4 w-4" />
-                                {t.label}
-                                {active && <span className="absolute -bottom-[1px] left-0 h-[2px] w-full bg-gray-900" />}
-                            </Link>
-                        );
-                    })}
+            <div className="mt-6 border-b border-[#EDEDED]">
+                <div className="mx-auto w-full max-w-6xl px-6">
+                    <div className="flex flex-wrap items-center justify-center gap-3 -mb-px">
+                        {tabs.map((t) => {
+                            const Icon = t.icon;
+                            const href = groupId ? t.href(locale, groupId) : "#";
+                            const target = stripLocale(href.split("?")[0] || href);
+
+                            const active =
+                                t.key === "board"
+                                    ? curPath === target
+                                    : curPath === target || curPath.startsWith(target + "/");
+
+                            return (
+                                <Link
+                                    key={t.key}
+                                    href={href}
+                                    className={twMerge(
+                                        "inline-flex items-center gap-2 rounded-t-xl border border-transparent px-4 py-2 text-sm font-medium text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]",
+                                        active && "border-[#E5E5E5] border-b-white bg-white text-[#261E33]"
+                                    )}
+                                >
+                                    <Icon className="h-4 w-4" />
+                                    {t.label}
+                                </Link>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </div>
