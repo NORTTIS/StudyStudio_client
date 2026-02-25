@@ -34,9 +34,13 @@ export function DeleteConfirmModal({ isOpen, onClose, onConfirm, studioName }: D
           </div>
         </div>
 
-        <p className="mb-6 text-[#6F6B99]">
+        <p className="mb-2 text-[#6F6B99]">
           {t("deleteModal.message")} <span className="font-semibold text-[#261E33]">{studioName}</span>?
         </p>
+
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-3">
+          <p className="text-red-700 text-sm">{t("deleteModal.warning")}</p>
+        </div>
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onClose}>

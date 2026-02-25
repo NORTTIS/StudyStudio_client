@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import type { Studio } from "@/api/studios";
+import type { StudioUI } from "@/api/studios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -10,7 +10,7 @@ interface StudioModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: { name: string; description: string; type: "personal" | "group" }) => void;
-  studio?: Studio | null;
+  studio?: StudioUI | null;
   mode: "create" | "edit";
 }
 

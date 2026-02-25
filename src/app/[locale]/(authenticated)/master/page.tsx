@@ -2,12 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { createStudio, getStudios, type Studio } from "@/api/studios";
+import { useCallback, useEffect, useState } from "react";
+import { createStudio, deleteStudio, getStudios, type StudioUI, updateStudio } from "@/api/studios";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { Container } from "@/components/common";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
-import { StudioDetailModal } from "@/components/features/master/StudioDetailModal";
 import { StudioModal } from "@/components/features/master/StudioModal";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
@@ -19,22 +18,21 @@ import { mockStudios } from "@/mocks/studios-data";
 export default function MasterPage() {
     const t = useTranslations("MasterPage");
     const locale = useLocale();
-    const _router = useRouter();
+    const router = useRouter();
     const { toast } = useToast();
 
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [studios, setStudios] = useState<Studio[]>([]);
-    const [filteredStudios, setFilteredStudios] = useState<Studio[]>([]);
+    const [studios, setStudios] = useState<StudioUI[]>([]);
+    const [filteredStudios, setFilteredStudios] = useState<StudioUI[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null);
+    const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
             const profileResult = await getUserProfile(locale);
@@ -44,8 +42,10 @@ export default function MasterPage() {
 
             const studiosResult = await getStudios(locale);
             if (studiosResult.status === "success" && studiosResult.data) {
-                setStudios(studiosResult.data.studios);
-                setFilteredStudios(studiosResult.data.studios);
+                // API trả về array trực tiếp
+                const studiosArray = Array.isArray(studiosResult.data) ? studiosResult.data : [];
+                setStudios(studiosArray);
+                setFilteredStudios(studiosArray);
             } else {
                 console.log("Using mock studios data");
                 setStudios(mockStudios);
@@ -58,12 +58,11 @@ export default function MasterPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [locale]);
 
     useEffect(() => {
         loadData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [locale]);
+    }, [loadData]);
 
     const handleCreateStudio = async (data: { name: string; description: string; type: string }) => {
         try {
@@ -78,7 +77,7 @@ export default function MasterPage() {
                 setIsCreateModalOpen(false);
                 loadData();
             } else {
-                const newStudio: Studio = {
+                const newStudio: StudioUI = {
                     id: `STUDIO-${Date.now()}`,
                     name: data.name,
                     description: data.description,
@@ -100,37 +99,75 @@ export default function MasterPage() {
 
     const handleEditStudio = async (data: { name: string; description: string; type: string }) => {
         if (!selectedStudio) return;
-        const updatedStudios = studios.map((s) =>
-            s.id === selectedStudio.id
-                ? {
-                    ...s,
+
+        try {
+            const result = await updateStudio(
+                selectedStudio.id,
+                {
                     name: data.name,
                     description: data.description,
-                    type: data.type as "personal" | "group",
-                    updatedAt: new Date().toISOString()
-                }
-                : s
-        );
-        setStudios(updatedStudios);
-        toast({ title: t("modal.editSuccess") });
-        setIsCreateModalOpen(false);
-        setIsDetailModalOpen(false);
-        setSelectedStudio(null);
+                    type: data.type as "personal" | "group"
+                },
+                locale
+            );
+
+            if (result.status === "success") {
+                toast({ title: t("modal.editSuccess") });
+                setIsCreateModalOpen(false);
+                setSelectedStudio(null);
+                loadData(); // Reload data from API
+            } else {
+                // Fallback to local update if API fails
+                const updatedStudios = studios.map((s) =>
+                    s.id === selectedStudio.id
+                        ? {
+                            ...s,
+                            name: data.name,
+                            description: data.description,
+                            type: data.type as "personal" | "group",
+                            updatedAt: new Date().toISOString()
+                        }
+                        : s
+                );
+                setStudios(updatedStudios);
+                toast({ title: t("modal.editSuccess") });
+                setIsCreateModalOpen(false);
+                setSelectedStudio(null);
+            }
+        } catch (error) {
+            console.error("Update studio failed:", error);
+            toast({ title: t("error"), description: t("modal.editError"), variant: "destructive" });
+        }
     };
 
     const handleDeleteStudio = async () => {
         if (!selectedStudio) return;
-        const updatedStudios = studios.filter((s) => s.id !== selectedStudio.id);
-        setStudios(updatedStudios);
-        toast({ title: t("deleteModal.success") });
-        setIsDeleteModalOpen(false);
-        setIsDetailModalOpen(false);
-        setSelectedStudio(null);
+
+        try {
+            const result = await deleteStudio(selectedStudio.id, locale);
+
+            if (result.status === "success") {
+                toast({ title: t("deleteModal.success") });
+                setIsDeleteModalOpen(false);
+                setSelectedStudio(null);
+                loadData(); // Reload data from API
+            } else {
+                // Fallback to local delete if API fails
+                const updatedStudios = studios.filter((s) => s.id !== selectedStudio.id);
+                setStudios(updatedStudios);
+                toast({ title: t("deleteModal.success") });
+                setIsDeleteModalOpen(false);
+                setSelectedStudio(null);
+            }
+        } catch (error) {
+            console.error("Delete studio failed:", error);
+            toast({ title: t("error"), description: t("deleteModal.error"), variant: "destructive" });
+        }
     };
 
-    const handleStudioClick = (studio: Studio) => {
-        setSelectedStudio(studio);
-        setIsDetailModalOpen(true);
+    const handleStudioClick = async (studio: StudioUI) => {
+        // Navigate to detail page instead of opening modal
+        router.push(`/${locale}/master/${studio.id}`);
     };
 
     const handleOpenCreateModal = () => {
@@ -139,24 +176,13 @@ export default function MasterPage() {
         setIsCreateModalOpen(true);
     };
 
-    const handleOpenEditModal = () => {
-        setModalMode("edit");
-        setIsDetailModalOpen(false);
-        setIsCreateModalOpen(true);
-    };
-
-    const handleOpenDeleteModal = () => {
-        setIsDetailModalOpen(false);
-        setIsDeleteModalOpen(true);
-    };
-
     const getStudioIcon = (type: string) => (type === "personal" ? "🔷" : "🔶");
 
     return (
         <div className="min-h-screen bg-[#F8F8F8] text-[#261E33]">
             <div className="flex min-h-screen">
                 <DashboardSidebar />
-                <main className="flex-1">
+                <main >
                     <Header userProfile={userProfile} />
                     <Container>
                         <div className="mb-8">
@@ -198,19 +224,6 @@ export default function MasterPage() {
                                 />
                             </svg>
                             <p className="text-blue-700 text-sm">{t("infoBanner")}</p>
-                        </div>
-                        <div className="mb-6">
-                            <div className="mb-2 flex items-center justify-between text-sm">
-                                <span className="font-medium text-[#261E33]">
-                                    {filteredStudios.length}/{studios.length} {t("studiosUsed")}
-                                </span>
-                            </div>
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                                <div
-                                    className="h-full bg-[#FF5F3D] transition-all"
-                                    style={{ width: studios.length > 0 ? `${(filteredStudios.length / studios.length) * 100}%` : "0%" }}
-                                />
-                            </div>
                         </div>
                         {isLoading ? (
                             <div className="flex items-center justify-center py-20">
@@ -286,13 +299,6 @@ export default function MasterPage() {
                 onSubmit={modalMode === "create" ? handleCreateStudio : handleEditStudio}
                 studio={selectedStudio}
                 mode={modalMode}
-            />
-            <StudioDetailModal
-                isOpen={isDetailModalOpen}
-                onClose={() => setIsDetailModalOpen(false)}
-                studio={selectedStudio}
-                onEdit={handleOpenEditModal}
-                onDelete={handleOpenDeleteModal}
             />
             <DeleteConfirmModal
                 isOpen={isDeleteModalOpen}

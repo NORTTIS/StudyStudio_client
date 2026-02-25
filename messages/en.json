@@ -509,7 +509,7 @@
     "subtitle": "Manage your studios and workspaces",
     "searchPlaceholder": "Search studio, work...",
     "createButton": "New Space",
-    "infoBanner": "You have used 3 of your spaces. Upgrade to Pro for more spaces.",
+    "infoBanner": "Create and manage studios to organize your work more effectively.",
     "studiosUsed": "studios used",
     "personal": "Personal",
     "group": "Group",
@@ -519,6 +519,9 @@
     "noSearchResults": "No studios found matching your search",
     "error": "Error",
     "loadError": "Failed to load studios list",
+    "backToList": "Back to list",
+    "groupsTitle": "Groups List",
+    "noGroups": "No groups in this studio yet",
     "modal": {
       "createTitle": "Create New Studio",
       "editTitle": "Edit Studio",
@@ -532,7 +535,8 @@
       "save": "Save",
       "createSuccess": "Studio created successfully!",
       "editSuccess": "Studio updated successfully!",
-      "createError": "Failed to create studio"
+      "createError": "Failed to create studio",
+      "editError": "Failed to update studio"
     },
     "detailModal": {
       "description": "Description",
@@ -547,10 +551,11 @@
     "deleteModal": {
       "title": "Delete Studio",
       "message": "Are you sure you want to delete",
-      "warning": "This action cannot be undone.",
+      "warning": "Warning: All groups inside this studio will also be deleted. This action cannot be undone.",
       "cancel": "Cancel",
       "confirm": "Delete",
-      "success": "Studio deleted successfully!"
+      "success": "Studio deleted successfully!",
+      "error": "Failed to delete studio"
     }
   },
   "LandingGroupPage": {
