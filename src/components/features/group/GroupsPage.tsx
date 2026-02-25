@@ -2,12 +2,13 @@
 
 import { ChevronDown, LayoutGrid, List, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Container } from "@/components/common";
+import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { Button } from "@/components/ui/button";
 import { GroupCard } from "./GroupCard";
-import { UsageBar } from "./UsageBar";
-import type { Group, GroupsPageData } from "./types";
 import { addFavourite, fetchGroupsPageData, removeFavourite } from "./group.api";
-import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
+import type { Group, GroupsPageData } from "./types";
+import { UsageBar } from "./UsageBar";
 
 const emptyData: GroupsPageData = {
     usage: { current: 0, max: 0 },
@@ -105,8 +106,7 @@ export function GroupsPage() {
     const { usage, favorites, managed, independent } = useMemo(() => data, [data]);
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
-    const currentGroupsCount =
-        usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
+    const currentGroupsCount = usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
 
     const limitReached = currentGroupsCount >= maxGroups;
 
@@ -149,36 +149,30 @@ export function GroupsPage() {
     };
 
     return (
-        <div className="mx-auto w-full max-w-6xl px-4 py-8">
+        <Container>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto] md:items-start">
                 <div className="min-w-0">
-                    <h1 className="text-2xl font-bold text-[#261E33]">Nhóm</h1>
-                    <p className="mt-1 text-sm text-[#6F6B99]">Quản lý các nhóm học tập của bạn</p>
+                    <h1 className="font-bold text-2xl text-[#261E33]">Nhóm</h1>
+                    <p className="mt-1 text-[#6F6B99] text-sm">Quản lý các nhóm học tập của bạn</p>
                 </div>
 
-                <div className="mt-2 flex items-center gap-2 justify-start md:justify-end">
+                <div className="mt-2 flex items-center justify-start gap-2 md:justify-end">
                     <div className="inline-flex overflow-hidden rounded-lg border border-[#E5E5E5] bg-white">
                         <button
                             type="button"
                             onClick={() => setView("grid")}
-                            className={`px-3 py-2 text-sm ${view === "grid"
-                                ? "bg-[#F4F5FA] text-[#261E33]"
-                                : "text-[#6F6B99] hover:bg-[#F4F5FA]"
+                            className={`px-3 py-2 text-sm ${view === "grid" ? "bg-[#F4F5FA] text-[#261E33]" : "text-[#6F6B99] hover:bg-[#F4F5FA]"
                                 }`}
-                            aria-label="Grid"
-                        >
+                            aria-label="Grid">
                             <LayoutGrid className="h-4 w-4" />
                         </button>
 
                         <button
                             type="button"
                             onClick={() => setView("list")}
-                            className={`px-3 py-2 text-sm ${view === "list"
-                                ? "bg-[#F4F5FA] text-[#261E33]"
-                                : "text-[#6F6B99] hover:bg-[#F4F5FA]"
+                            className={`px-3 py-2 text-sm ${view === "list" ? "bg-[#F4F5FA] text-[#261E33]" : "text-[#6F6B99] hover:bg-[#F4F5FA]"
                                 }`}
-                            aria-label="List"
-                        >
+                            aria-label="List">
                             <List className="h-4 w-4" />
                         </button>
                     </div>
@@ -186,8 +180,7 @@ export function GroupsPage() {
                     <Button
                         className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300"
                         disabled={limitReached}
-                        onClick={() => setOpenCreate(true)}
-                    >
+                        onClick={() => setOpenCreate(true)}>
                         <Plus className="mr-2 h-4 w-4" />
                         Nhóm mới
                     </Button>
@@ -195,8 +188,8 @@ export function GroupsPage() {
 
                 <div className="col-span-full">
                     <UsageBar current={usage.current} max={usage.max} />
-                    {loading ? <p className="mt-2 text-sm text-[#6F6B99]">Đang tải...</p> : null}
-                    {!loading && error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+                    {loading ? <p className="mt-2 text-[#6F6B99] text-sm">Đang tải...</p> : null}
+                    {!loading && error ? <p className="mt-2 text-red-600 text-sm">{error}</p> : null}
                 </div>
             </div>
 
@@ -238,7 +231,7 @@ export function GroupsPage() {
                     await reload();
                 }}
             />
-        </div>
+        </Container>
     );
 }
 
@@ -265,28 +258,21 @@ function GroupsSection({
     return (
         <section className={`mt-10 ${className}`}>
             <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-[#261E33]">{title}</h2>
+                <h2 className="font-semibold text-[#261E33] text-sm">{title}</h2>
 
                 {canToggle ? (
                     <button
                         type="button"
                         onClick={onToggle}
-                        className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-[#6F6B99] hover:bg-[#F4F5FA] hover:text-[#261E33]"
-                        aria-label={expanded ? "Thu gọn" : "Mở rộng"}
-                    >
+                        className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-sm hover:bg-[#F4F5FA] hover:text-[#261E33]"
+                        aria-label={expanded ? "Thu gọn" : "Mở rộng"}>
                         <span>{expanded ? "Thu gọn" : "Xem tất cả"}</span>
                         <ChevronDown className={`h-4 w-4 transition ${expanded ? "rotate-180" : ""}`} />
                     </button>
                 ) : null}
             </div>
 
-            <div
-                className={
-                    view === "grid"
-                        ? "mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
-                        : "mt-4 space-y-4"
-                }
-            >
+            <div className={view === "grid" ? "mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
                 {visibleItems.map((g) => (
                     <GroupCard key={getGroupId(g)} group={g} onToggleStar={() => onToggleStar(getGroupId(g))} />
                 ))}

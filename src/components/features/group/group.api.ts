@@ -13,12 +13,7 @@ type GroupCardDto = NonNullable<NonNullable<GroupSections["favorites"]>[number]>
 
 function getToken() {
   if (typeof window === "undefined") return "";
-  return (
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("jwt") ||
-    ""
-  );
+  return localStorage.getItem("accessToken") || localStorage.getItem("token") || localStorage.getItem("jwt") || "";
 }
 
 function toInitials(firstName?: string | null, lastName?: string | null) {
@@ -81,9 +76,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
 
   if (!res.ok) {
     throw new Error(
-      res.status === 401
-        ? "Unauthorized: thiếu token hoặc token hết hạn"
-        : `Request failed: ${res.status}`
+      res.status === 401 ? "Unauthorized: thiếu token hoặc token hết hạn" : `Request failed: ${res.status}`
     );
   }
 
@@ -122,9 +115,7 @@ async function apiFetch(path: string, method: "POST" | "DELETE", body: any) {
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(
-      res.status === 401
-        ? "Unauthorized: thiếu token hoặc token hết hạn"
-        : text || `Request failed: ${res.status}`
+      res.status === 401 ? "Unauthorized: thiếu token hoặc token hết hạn" : text || `Request failed: ${res.status}`
     );
   }
 

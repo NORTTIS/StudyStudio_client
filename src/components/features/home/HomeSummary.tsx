@@ -7,7 +7,7 @@ interface HomeSummaryProps {
 
 export function HomeSummary({ statusChips }: HomeSummaryProps) {
     return (
-        <section className="mt-6">
+        <section>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h1 className="font-semibold text-2xl">Dashboard</h1>
@@ -28,8 +28,6 @@ export function HomeSummary({ statusChips }: HomeSummaryProps) {
                     </button>
                 </div>
             </div>
-
-
 
             <div className="mt-5 flex flex-wrap gap-2">
                 <button

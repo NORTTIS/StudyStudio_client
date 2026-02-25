@@ -1,21 +1,12 @@
 "use client";
 
-import * as React from "react";
+import { BarChart3, Calendar, FileText, LayoutGrid, List, MessageSquare, Settings, Trash2, Users } from "lucide-react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
+import * as React from "react";
 import { twMerge } from "tailwind-merge";
-import {
-    BarChart3,
-    Calendar,
-    FileText,
-    LayoutGrid,
-    List,
-    MessageSquare,
-    Settings,
-    Trash2,
-    Users
-} from "lucide-react";
+import { Container } from "@/components/common";
 
 type Tab = {
     key: string;
@@ -76,11 +67,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const groupId =
-        groupIdProp ||
-        searchParams.get("id") ||
-        extractGroupIdFromPath(pathname || "") ||
-        "";
+    const groupId = groupIdProp || searchParams.get("id") || extractGroupIdFromPath(pathname || "") || "";
 
     const [groupName, setGroupName] = React.useState<string>("Group");
     const [groupDesc, setGroupDesc] = React.useState<string>("");
@@ -178,57 +165,54 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const curPath = stripLocale(pathname || "");
 
     return (
-        <div className="w-full bg-white">
-            <div className="mx-auto w-full max-w-6xl px-6 pt-8">
-                <div className="flex items-start justify-between gap-6">
-                    <div className="min-w-0">
-                        {studioName ? <p className="text-sm text-[#6F6B99]">{studioName}</p> : null}
+        <Container>
+            <div className="w-full bg-white">
+                <div>
+                    <div className="flex items-start justify-between gap-6">
+                        <div className="min-w-0">
+                            {studioName ? <p className="text-[#6F6B99] text-sm">{studioName}</p> : null}
 
-                        <h1 className="mt-1 truncate text-3xl font-semibold text-[#261E33]">
-                            {groupName}
-                        </h1>
+                            <h1 className="mt-1 truncate font-semibold text-3xl text-[#261E33]">{groupName}</h1>
 
-                        {groupDesc ? <p className="mt-2 text-lg text-[#6F6B99]">{groupDesc}</p> : null}
-                        {error ? <p className="mt-2 text-sm text-red-500">{error}</p> : null}
+                            {groupDesc ? <p className="mt-2 text-[#6F6B99] text-lg">{groupDesc}</p> : null}
+                            {error ? <p className="mt-2 text-red-500 text-sm">{error}</p> : null}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-[#6F6B99]">
+                            <Users className="h-4 w-4" />
+                            <span className="text-sm">{memberCount} thành viên</span>
+                        </div>
                     </div>
+                </div>
 
-                    <div className="flex items-center gap-2 text-[#6F6B99]">
-                        <Users className="h-4 w-4" />
-                        <span className="text-sm">{memberCount} thành viên</span>
+                <div className="mt-6 border-[#EDEDED] border-b">
+                    <div>
+                        <div className="-mb-px flex flex-wrap items-center gap-3">
+                            {tabs.map((t) => {
+                                const Icon = t.icon;
+                                const href = groupId ? t.href(locale, groupId) : "#";
+                                const target = stripLocale(href.split("?")[0] || href);
+
+                                const active =
+                                    t.key === "board" ? curPath === target : curPath === target || curPath.startsWith(target + "/");
+
+                                return (
+                                    <Link
+                                        key={t.key}
+                                        href={href}
+                                        className={twMerge(
+                                            "inline-flex items-center gap-2 rounded-t-xl border border-transparent px-4 py-2 font-medium text-[#6F6B99] text-sm transition hover:bg-[#FAFAFA] hover:text-[#261E33]",
+                                            active && "border-[#E5E5E5] border-b-white bg-white text-[#261E33]"
+                                        )}>
+                                        <Icon className="h-4 w-4" />
+                                        {t.label}
+                                    </Link>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div className="mt-6 border-b border-[#EDEDED]">
-                <div className="mx-auto w-full max-w-6xl px-6">
-                    <div className="flex flex-wrap items-center justify-center gap-3 -mb-px">
-                        {tabs.map((t) => {
-                            const Icon = t.icon;
-                            const href = groupId ? t.href(locale, groupId) : "#";
-                            const target = stripLocale(href.split("?")[0] || href);
-
-                            const active =
-                                t.key === "board"
-                                    ? curPath === target
-                                    : curPath === target || curPath.startsWith(target + "/");
-
-                            return (
-                                <Link
-                                    key={t.key}
-                                    href={href}
-                                    className={twMerge(
-                                        "inline-flex items-center gap-2 rounded-t-xl border border-transparent px-4 py-2 text-sm font-medium text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]",
-                                        active && "border-[#E5E5E5] border-b-white bg-white text-[#261E33]"
-                                    )}
-                                >
-                                    <Icon className="h-4 w-4" />
-                                    {t.label}
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </div>
+        </Container>
     );
 }

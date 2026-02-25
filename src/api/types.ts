@@ -825,6 +825,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/group-messages/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupMessageListResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupMessageListResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupMessageListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/group/{groupId}": {
         parameters: {
             query?: never;
@@ -1023,6 +1065,49 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/group/studio-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CreateStudioGroupsRequest"];
+                    "application/json": components["schemas"]["CreateStudioGroupsRequest"];
+                    "text/json": components["schemas"]["CreateStudioGroupsRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateStudioGroupsResponseApiResponse"];
+                        "text/json": components["schemas"]["CreateStudioGroupsResponseApiResponse"];
+                        "text/plain": components["schemas"]["CreateStudioGroupsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1344,6 +1429,87 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/studioId": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    studioId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioGroupListResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioGroupListResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioGroupListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/task-comments/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskCommentListResponseApiResponse"];
+                        "text/json": components["schemas"]["TaskCommentListResponseApiResponse"];
+                        "text/plain": components["schemas"]["TaskCommentListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1802,6 +1968,25 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        CreateStudioGroupsRequest: {
+            description?: string | null;
+            /** Format: int32 */
+            groupCount: number;
+            groupPrefix: string;
+            /** Format: uuid */
+            studioId?: string | null;
+            /** Format: uuid */
+            templateId?: string | null;
+        };
+        CreateStudioGroupsResponse: {
+            createGroups?: components["schemas"]["CreateGroupResponse"][] | null;
+        };
+        CreateStudioGroupsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["CreateStudioGroupsResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         CreateStudioRequest: {
             /** Format: date-time */
             createdAt?: string;
@@ -1923,6 +2108,39 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        GroupMessageDto: {
+            content?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            groupId?: string;
+            isDeleted?: boolean;
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: uuid */
+            parentMessageId?: string | null;
+            replies?: components["schemas"]["GroupMessageDto"][] | null;
+            /** Format: int32 */
+            replyCount?: number;
+            /** Format: date-time */
+            updatedAt?: string | null;
+            user?: components["schemas"]["UserDto"];
+            /** Format: uuid */
+            userId?: string;
+        };
+        GroupMessageListResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            messages?: components["schemas"]["GroupMessageDto"][] | null;
+            /** Format: int32 */
+            totalMessages?: number;
+        };
+        GroupMessageListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupMessageListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         GroupSections: {
             favorites?: components["schemas"]["GroupCardDto"][] | null;
             independentGroups?: components["schemas"]["GroupCardDto"][] | null;
@@ -2039,6 +2257,17 @@ export interface components {
             id?: string;
             name?: string | null;
         };
+        StudioGroupListResponse: {
+            studioGroups?: components["schemas"]["GroupCardDto"][] | null;
+            /** Format: int32 */
+            totalGroup?: number;
+        };
+        StudioGroupListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioGroupListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         StudioResponse: {
             /** Format: date-time */
             createdAt?: string;
@@ -2072,6 +2301,39 @@ export interface components {
             groupLimit?: number;
             /** Format: int32 */
             memberLimit?: number;
+        };
+        TaskCommentDto: {
+            /** Format: uuid */
+            commentId?: string;
+            content?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            isDeleted?: boolean;
+            /** Format: uuid */
+            parentCommentId?: string | null;
+            replies?: components["schemas"]["TaskCommentDto"][] | null;
+            /** Format: int32 */
+            replyCount?: number;
+            /** Format: uuid */
+            taskId?: string;
+            /** Format: date-time */
+            updatedAt?: string | null;
+            user?: components["schemas"]["UserDto"];
+            /** Format: uuid */
+            userId?: string;
+        };
+        TaskCommentListResponse: {
+            comments?: components["schemas"]["TaskCommentDto"][] | null;
+            /** Format: uuid */
+            taskId?: string;
+            /** Format: int32 */
+            totalComments?: number;
+        };
+        TaskCommentListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TaskCommentListResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         TaskStatusDto: {
             /** Format: int32 */

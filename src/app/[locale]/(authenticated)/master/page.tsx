@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { createStudio, getStudios, type Studio } from "@/api/studios";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
+import { Container } from "@/components/common";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
 import { StudioDetailModal } from "@/components/features/master/StudioDetailModal";
 import { StudioModal } from "@/components/features/master/StudioModal";
@@ -155,9 +156,9 @@ export default function MasterPage() {
         <div className="min-h-screen bg-[#F8F8F8] text-[#261E33]">
             <div className="flex min-h-screen">
                 <DashboardSidebar />
-                <main className="flex-1 px-6 py-6 lg:px-8">
+                <main className="flex-1">
                     <Header userProfile={userProfile} />
-                    <div className="mt-6">
+                    <Container>
                         <div className="mb-8">
                             <h1 className="mb-2 font-bold text-3xl text-[#261E33]">{t("title")}</h1>
                             <p className="text-[#6F6B99]">{t("subtitle")}</p>
@@ -276,7 +277,7 @@ export default function MasterPage() {
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </Container>
                 </main>
             </div>
             <StudioModal

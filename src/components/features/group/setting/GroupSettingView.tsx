@@ -1,19 +1,11 @@
 "use client";
 
 import { Settings, Trash2, UserPlus, Users } from "lucide-react";
-import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Container } from "@/components/common";
+import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -25,7 +17,10 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
-import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
 
@@ -43,7 +38,8 @@ type ApiGroupMembersResponse = {
     data?: {
         groupId?: string;
         groupName?: string | null;
-        members?: {
+        members?:
+        | {
             userId?: string;
             firstName?: string | null;
             lastName?: string | null;
@@ -51,7 +47,8 @@ type ApiGroupMembersResponse = {
             avatarUrl?: string | null;
             role?: string | null;
             joinedAt?: string;
-        }[] | null;
+        }[]
+        | null;
         totalMembers?: number;
     } | null;
 };
@@ -357,8 +354,7 @@ export function GroupSettingView() {
             });
             setMembers(mapped);
 
-            const me = mapped.find((x) => String(x.id).trim() === String(x
-                .id).trim());
+            const me = mapped.find((x) => String(x.id).trim() === String(x.id).trim());
             if (me?.role) setMyRoleInGroup(me.role);
         }
 
@@ -680,9 +676,7 @@ export function GroupSettingView() {
 
             const ok = await assignRoleApi(userId, role);
             if (!ok) {
-                setMembers((prev) =>
-                    prev.map((m) => (m.id === userId ? { ...m, role: current.role } : m))
-                );
+                setMembers((prev) => prev.map((m) => (m.id === userId ? { ...m, role: current.role } : m)));
                 return;
             }
 
@@ -754,18 +748,18 @@ export function GroupSettingView() {
     };
 
     if (loading) {
-        return <div className="p-6 text-sm text-gray-500">Đang tải...</div>;
+        return <div className="p-6 text-gray-500 text-sm">Đang tải...</div>;
     }
 
     if (!groupId) {
-        return <div className="p-6 text-sm text-gray-500">Thiếu id nhóm. Hãy mở một group để vào trang này.</div>;
+        return <div className="p-6 text-gray-500 text-sm">Thiếu id nhóm. Hãy mở một group để vào trang này.</div>;
     }
 
     if (notFound) {
         return (
-            <div className="p-6 text-sm text-gray-500">
+            <div className="p-6 text-gray-500 text-sm">
                 Không tìm thấy nhóm hoặc bạn không có quyền truy cập.
-                {error ? <div className="mt-2 text-xs text-red-600">{error}</div> : null}
+                {error ? <div className="mt-2 text-red-600 text-xs">{error}</div> : null}
             </div>
         );
     }
@@ -774,12 +768,10 @@ export function GroupSettingView() {
 
     return (
         <div className="w-full">
-            <div className="mx-auto w-full max-w-5xl px-6 py-6">
+            <Container>
                 <div className="space-y-6">
                     {error ? (
-                        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            {error}
-                        </div>
+                        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">{error}</div>
                     ) : null}
 
                     {/* GENERAL */}
@@ -788,15 +780,14 @@ export function GroupSettingView() {
                             <div className="flex items-start gap-3">
                                 <Settings className="h-4 w-4 text-gray-700" />
                                 <div>
-                                    <h2 className="text-sm font-semibold text-gray-900">Cài đặt chung</h2>
-                                    <p className="text-xs text-gray-500">Quản lý thông tin cơ bản của nhóm</p>
+                                    <h2 className="font-semibold text-gray-900 text-sm">Cài đặt chung</h2>
+                                    <p className="text-gray-500 text-xs">Quản lý thông tin cơ bản của nhóm</p>
                                 </div>
                             </div>
 
                             <Button
                                 onClick={handleEditSave}
-                                className="h-9 rounded-sm bg-orange-600 px-4 text-xs font-semibold text-white hover:bg-orange-700"
-                            >
+                                className="h-9 rounded-sm bg-orange-600 px-4 font-semibold text-white text-xs hover:bg-orange-700">
                                 {isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
                             </Button>
                         </div>
@@ -804,7 +795,7 @@ export function GroupSettingView() {
                         <div className="px-5 py-5">
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700">
+                                    <label className="font-semibold text-gray-700 text-xs">
                                         Tên nhóm <span className="text-red-500">*</span>
                                     </label>
                                     <Input
@@ -816,7 +807,7 @@ export function GroupSettingView() {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700">Mô tả</label>
+                                    <label className="font-semibold text-gray-700 text-xs">Mô tả</label>
                                     <Textarea
                                         disabled={!isEditing}
                                         value={description}
@@ -827,7 +818,7 @@ export function GroupSettingView() {
 
                                 {masterStudio ? (
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-700">Master Studio</label>
+                                        <label className="font-semibold text-gray-700 text-xs">Master Studio</label>
                                         <Input
                                             value={masterStudio}
                                             readOnly
@@ -849,16 +840,15 @@ export function GroupSettingView() {
                             <div className="flex items-start gap-3">
                                 <Users className="h-4 w-4 text-gray-700" />
                                 <div>
-                                    <h2 className="text-sm font-semibold text-gray-900">Thành viên</h2>
-                                    <p className="text-xs text-gray-500">Quản lý thành viên và vai trò</p>
+                                    <h2 className="font-semibold text-gray-900 text-sm">Thành viên</h2>
+                                    <p className="text-gray-500 text-xs">Quản lý thành viên và vai trò</p>
                                 </div>
                             </div>
 
                             <Button
                                 disabled={!canManageMembers}
                                 onClick={() => setInviteOpen(true)}
-                                className="h-9 rounded-sm bg-orange-600 px-4 text-xs font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
-                            >
+                                className="h-9 rounded-sm bg-orange-600 px-4 font-semibold text-white text-xs hover:bg-orange-700 disabled:opacity-50">
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Thêm thành viên
                             </Button>
@@ -874,23 +864,22 @@ export function GroupSettingView() {
                                     return (
                                         <div key={m.id} className="flex items-center justify-between gap-4 px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
+                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 font-semibold text-gray-700 text-xs">
                                                     {m.initials}
                                                 </div>
 
                                                 <div>
-                                                    <div className="text-sm font-semibold text-gray-900">{m.name}</div>
-                                                    {m.email ? <div className="text-xs text-gray-500">{m.email}</div> : null}
+                                                    <div className="font-semibold text-gray-900 text-sm">{m.name}</div>
+                                                    {m.email ? <div className="text-gray-500 text-xs">{m.email}</div> : null}
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center gap-2">
                                                 {isOwner(m.role) ? (
                                                     <div
-                                                        className="flex h-8 w-[140px] items-center justify-center rounded-sm border bg-gray-50 px-3 text-xs font-semibold text-gray-800"
+                                                        className="flex h-8 w-[140px] items-center justify-center rounded-sm border bg-gray-50 px-3 font-semibold text-gray-800 text-xs"
                                                         aria-label="Owner role (read only)"
-                                                        title="Owner"
-                                                    >
+                                                        title="Owner">
                                                         Owner
                                                     </div>
                                                 ) : (
@@ -899,11 +888,8 @@ export function GroupSettingView() {
                                                         <Select
                                                             value={m.role}
                                                             disabled={disabledAll}
-                                                            onValueChange={(v) =>
-                                                                onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)
-                                                            }
-                                                        >
-                                                            <SelectTrigger className="h-8 w-fit min-w-0 px-2 pr-1 gap-1">
+                                                            onValueChange={(v) => onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)}>
+                                                            <SelectTrigger className="h-8 w-fit min-w-0 gap-1 px-2 pr-1">
                                                                 <SelectValue className="text-left" />
                                                             </SelectTrigger>
 
@@ -921,8 +907,7 @@ export function GroupSettingView() {
                                                             size="icon"
                                                             disabled={disabledAll}
                                                             className="h-8 w-8 rounded-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:hover:bg-transparent"
-                                                            onClick={() => openRemoveConfirm(m.id)}
-                                                        >
+                                                            onClick={() => openRemoveConfirm(m.id)}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </>
@@ -933,7 +918,7 @@ export function GroupSettingView() {
                                 })}
 
                                 {members.length === 0 ? (
-                                    <div className="px-4 py-6 text-sm text-gray-500">Chưa có thành viên để hiển thị.</div>
+                                    <div className="px-4 py-6 text-gray-500 text-sm">Chưa có thành viên để hiển thị.</div>
                                 ) : null}
                             </div>
                         </div>
@@ -941,25 +926,24 @@ export function GroupSettingView() {
 
                     {/* DANGER */}
                     <section className="rounded-md border border-red-200 bg-white">
-                        <div className="border-b border-red-200 px-5 py-4">
-                            <h2 className="text-sm font-semibold text-red-600">Vùng nguy hiểm</h2>
-                            <p className="text-xs text-red-500">Các thao tác không thể hoàn tác</p>
+                        <div className="border-red-200 border-b px-5 py-4">
+                            <h2 className="font-semibold text-red-600 text-sm">Vùng nguy hiểm</h2>
+                            <p className="text-red-500 text-xs">Các thao tác không thể hoàn tác</p>
                         </div>
 
                         <div className="px-5 py-4">
                             <div className="rounded-md border border-red-200 bg-red-50 px-4 py-4">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <div className="text-sm font-semibold text-red-600">Xóa nhóm</div>
-                                        <div className="text-xs text-red-500">Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan</div>
+                                        <div className="font-semibold text-red-600 text-sm">Xóa nhóm</div>
+                                        <div className="text-red-500 text-xs">Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan</div>
                                     </div>
 
                                     <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                                         <AlertDialogTrigger asChild>
                                             <Button
                                                 disabled={!canDelete}
-                                                className="h-8 rounded-sm bg-red-600 px-4 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                                            >
+                                                className="h-8 rounded-sm bg-red-600 px-4 font-semibold text-white text-xs hover:bg-red-700 disabled:opacity-50">
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 Xóa
                                             </Button>
@@ -981,8 +965,7 @@ export function GroupSettingView() {
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         handleDelete();
-                                                    }}
-                                                >
+                                                    }}>
                                                     {deleteLoading ? "Đang xóa..." : "Xác nhận xóa"}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
@@ -993,7 +976,7 @@ export function GroupSettingView() {
                         </div>
                     </section>
                 </div>
-            </div>
+            </Container>
 
             <InviteMemberModal
                 open={inviteOpen}
@@ -1019,8 +1002,7 @@ export function GroupSettingView() {
                 onOpenChange={(v) => {
                     setRemoveConfirmOpen(v);
                     if (!v) setRemoveTarget(null);
-                }}
-            >
+                }}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xác nhận xóa thành viên</AlertDialogTitle>
@@ -1039,8 +1021,7 @@ export function GroupSettingView() {
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmRemoveMember();
-                            }}
-                        >
+                            }}>
                             {removeBusy ? "Đang xóa..." : "Xóa thành viên"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
