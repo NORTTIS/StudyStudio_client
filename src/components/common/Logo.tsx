@@ -25,11 +25,7 @@ export function Logo({ size = "md", showText = true, className = "" }: LogoProps
         <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
       </svg>
 
-      {showText && (
-        <span className={`font-bold ${text} text-orange-500`}>
-          Study Studio
-        </span>
-      )}
+      {showText && <span className={`font-bold ${text} text-orange-500`}>Study Studio</span>}
     </div>
   );
 }

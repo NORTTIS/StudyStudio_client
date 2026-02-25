@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-import { useMemo, useState } from "react";
 import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Container } from "@/components/common";
 
 type TaskStatus = "To Do" | "In progress" | "Done";
 type Priority = "Low" | "Medium" | "High";
@@ -73,47 +73,34 @@ function PriorityPill({ priority }: { priority: Priority }) {
 
 function Avatar({ initials }: { initials: string }) {
     return (
-        <span className="grid h-7 w-7 place-items-center rounded-full border bg-white text-xs font-semibold text-[#261E33]">
+        <span className="grid h-7 w-7 place-items-center rounded-full border bg-white font-semibold text-[#261E33] text-xs">
             {initials}
         </span>
     );
 }
 
-function Section({
-    title,
-    count,
-    children
-}: {
-    title: string;
-    count: number;
-    children: React.ReactNode;
-}) {
+function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
     const [open, setOpen] = useState(true);
 
     return (
         <div className="overflow-hidden rounded-xl border bg-white">
             <div
                 className="flex cursor-pointer items-center justify-between bg-[#FAFAFA] px-4 py-3"
-                onClick={() => setOpen((v) => !v)}
-            >
+                onClick={() => setOpen((v) => !v)}>
                 <div className="flex items-center gap-2">
-                    <ChevronDown
-                        className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"
-                            }`}
-                    />
-                    <p className="text-sm font-semibold text-[#261E33]">{title}</p>
-                    <span className="grid h-6 min-w-6 place-items-center rounded-md border bg-white px-2 text-xs text-[#6F6B99]">
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`} />
+                    <p className="font-semibold text-[#261E33] text-sm">{title}</p>
+                    <span className="grid h-6 min-w-6 place-items-center rounded-md border bg-white px-2 text-[#6F6B99] text-xs">
                         {count}
                     </span>
                 </div>
 
                 <button
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium text-[#261E33] hover:bg-[#FAFAFA]"
+                    className="inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 font-medium text-[#261E33] text-sm hover:bg-[#FAFAFA]"
                     onClick={(e) => {
                         e.stopPropagation();
-                    }}
-                >
+                    }}>
                     <Plus className="h-4 w-4" />
                     Thêm
                 </button>
@@ -121,14 +108,13 @@ function Section({
 
             <div
                 className={`transition-all duration-300 ease-in-out ${open ? "max-h-[2000px] opacity-100" : "max-h-0 overflow-hidden opacity-0"
-                    }`}
-            >
-                <div className="grid min-w-[900px] grid-cols-12 gap-3 border-b bg-white px-4 py-2 text-xs font-medium text-[#6F6B99]">
+                    }`}>
+                <div className="grid min-w-[900px] grid-cols-12 gap-3 border-b bg-white px-4 py-2 font-medium text-[#6F6B99] text-xs">
                     <div className="col-span-5">Công việc</div>
                     <div className="col-span-2">Trạng thái</div>
                     <div className="col-span-2">Độ ưu tiên</div>
                     <div className="col-span-2">Hạn hoàn thành</div>
-                    <div className="col-span-1 text-right"></div>
+                    <div className="col-span-1 text-right" />
                 </div>
 
                 <div className="divide-y">{children}</div>
@@ -142,15 +128,12 @@ function TaskRow({ t }: { t: Task }) {
         <div className="grid min-w-[900px] grid-cols-12 items-center gap-3 px-4 py-3 hover:bg-[#FAFAFA]">
             <div className="col-span-5 min-w-0">
                 <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-[#261E33]">{t.title}</p>
+                    <p className="truncate font-medium text-[#261E33] text-sm">{t.title}</p>
 
                     {(t.labels ?? []).length ? (
                         <div className="hidden flex-wrap gap-2 sm:flex">
                             {(t.labels ?? []).slice(0, 2).map((lb) => (
-                                <span
-                                    key={lb}
-                                    className="rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]"
-                                >
+                                <span key={lb} className="rounded-md border bg-white px-2 py-1 text-[#6F6B99] text-xs">
                                     {lb}
                                 </span>
                             ))}
@@ -159,12 +142,12 @@ function TaskRow({ t }: { t: Task }) {
                 </div>
 
                 {t.assignee ? (
-                    <div className="mt-1 flex items-center gap-2 text-xs text-[#6F6B99]">
+                    <div className="mt-1 flex items-center gap-2 text-[#6F6B99] text-xs">
                         <Avatar initials={t.assignee.initials} />
                         <span>{t.assignee.name}</span>
                     </div>
                 ) : (
-                    <div className="mt-1 text-xs text-[#A19FB8]">Chưa giao</div>
+                    <div className="mt-1 text-[#A19FB8] text-xs">Chưa giao</div>
                 )}
             </div>
 
@@ -178,11 +161,9 @@ function TaskRow({ t }: { t: Task }) {
 
             <div className="col-span-2">
                 {t.dueDate ? (
-                    <span className="rounded-md border bg-[#FAFAFA] px-2 py-1 text-xs text-[#6F6B99]">
-                        {t.dueDate}
-                    </span>
+                    <span className="rounded-md border bg-[#FAFAFA] px-2 py-1 text-[#6F6B99] text-xs">{t.dueDate}</span>
                 ) : (
-                    <span className="text-xs text-[#A19FB8]">—</span>
+                    <span className="text-[#A19FB8] text-xs">—</span>
                 )}
             </div>
 
@@ -191,9 +172,7 @@ function TaskRow({ t }: { t: Task }) {
                     type="button"
                     className="grid h-8 w-8 place-items-center rounded-md hover:bg-[#F6F5FF]"
                     aria-label="Thao tác"
-                    onClick={() => {
-                    }}
-                >
+                    onClick={() => { }}>
                     <MoreHorizontal className="h-4 w-4 text-[#6F6B99]" />
                 </button>
             </div>
@@ -248,14 +227,12 @@ export function GroupListScreen() {
 
     return (
         <div className="bg-[#FAFAFA]">
-            <div className="mx-auto max-w-[1280px] px-6 py-6">
+            <Container>
                 <div className="flex items-center justify-end">
                     <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm font-medium text-[#261E33] hover:bg-[#FAFAFA]"
-                        onClick={() => {
-                        }}
-                    >
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 font-medium text-[#261E33] text-sm hover:bg-[#FAFAFA]"
+                        onClick={() => { }}>
                         <Plus className="h-4 w-4" />
                         Tạo mới +
                     </button>
@@ -268,10 +245,8 @@ export function GroupListScreen() {
                                 todo.map((t) => <TaskRow key={t.id} t={t} />)
                             ) : (
                                 <div className="px-4 py-10 text-center">
-                                    <p className="text-sm font-medium text-[#261E33]">Chưa có công việc</p>
-                                    <p className="mt-1 text-sm text-[#6F6B99]">
-                                        Tạo công việc mới để bắt đầu.
-                                    </p>
+                                    <p className="font-medium text-[#261E33] text-sm">Chưa có công việc</p>
+                                    <p className="mt-1 text-[#6F6B99] text-sm">Tạo công việc mới để bắt đầu.</p>
                                 </div>
                             )}
                         </Section>
@@ -283,10 +258,8 @@ export function GroupListScreen() {
                                 inprogress.map((t) => <TaskRow key={t.id} t={t} />)
                             ) : (
                                 <div className="px-4 py-10 text-center">
-                                    <p className="text-sm font-medium text-[#261E33]">Chưa có công việc</p>
-                                    <p className="mt-1 text-sm text-[#6F6B99]">
-                                        Công việc đang thực hiện sẽ hiển thị ở đây.
-                                    </p>
+                                    <p className="font-medium text-[#261E33] text-sm">Chưa có công việc</p>
+                                    <p className="mt-1 text-[#6F6B99] text-sm">Công việc đang thực hiện sẽ hiển thị ở đây.</p>
                                 </div>
                             )}
                         </Section>
@@ -298,16 +271,14 @@ export function GroupListScreen() {
                                 done.map((t) => <TaskRow key={t.id} t={t} />)
                             ) : (
                                 <div className="px-4 py-10 text-center">
-                                    <p className="text-sm font-medium text-[#261E33]">Chưa có công việc hoàn thành</p>
-                                    <p className="mt-1 text-sm text-[#6F6B99]">
-                                        Các công việc đã hoàn thành sẽ hiển thị ở đây.
-                                    </p>
+                                    <p className="font-medium text-[#261E33] text-sm">Chưa có công việc hoàn thành</p>
+                                    <p className="mt-1 text-[#6F6B99] text-sm">Các công việc đã hoàn thành sẽ hiển thị ở đây.</p>
                                 </div>
                             )}
                         </Section>
                     </div>
                 </div>
-            </div>
+            </Container>
         </div>
     );
 }

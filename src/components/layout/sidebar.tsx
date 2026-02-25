@@ -12,7 +12,7 @@ const navigation = [
   { name: "Home", href: "/home", icon: LayoutDashboard },
   { name: "Groups", href: "/group", icon: Users },
   { name: "Master", href: "/master", icon: BarChart3 },
-  { name: "AI Q&A", href: "/ai-qna", icon: GraduationCap },
+  { name: "AI Q&A", href: "/ai-qna", icon: GraduationCap }
 ];
 
 export function DashboardSidebar() {
@@ -49,26 +49,18 @@ export function DashboardSidebar() {
                 href={fullHref}
                 className={twMerge(
                   "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                  active
-                    ? "bg-[#F1F1F1] text-[#261E33]"
-                    : "text-[#6F6B99] hover:bg-[#F4F5FA] hover:text-[#261E33]"
-                )}
-              >
+                  active ? "bg-[#F1F1F1] text-[#261E33]" : "text-[#6F6B99] hover:bg-[#F4F5FA] hover:text-[#261E33]"
+                )}>
                 <item.icon
                   className={twMerge(
                     "h-4 w-4 transition-colors",
-                    active
-                      ? "text-[#261E33]"
-                      : "text-[#6F6B99] group-hover:text-[#261E33]"
+                    active ? "text-[#261E33]" : "text-[#6F6B99] group-hover:text-[#261E33]"
                   )}
                 />
                 <span className="font-medium">{item.name}</span>
 
                 <span
-                  className={twMerge(
-                    "ml-auto h-1.5 w-1.5 rounded-full",
-                    active ? "bg-[#261E33]" : "bg-transparent"
-                  )}
+                  className={twMerge("ml-auto h-1.5 w-1.5 rounded-full", active ? "bg-[#261E33]" : "bg-transparent")}
                 />
               </Link>
             );

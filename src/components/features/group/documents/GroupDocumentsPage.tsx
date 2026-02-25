@@ -1,8 +1,10 @@
 "use client";
 
-import * as React from "react";
+import { Download, FileText, MoreHorizontal, Trash2, Upload } from "lucide-react";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 import { twMerge } from "tailwind-merge";
+import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -11,7 +13,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { FileText, MoreHorizontal, Upload, Download, Trash2 } from "lucide-react";
 
 type DocItem = {
     id: string;
@@ -65,8 +66,8 @@ function DocumentCard({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-semibold text-[#261E33]">{item.name}</p>
-                    <p className="mt-1 text-sm text-[#6F6B99]">{item.updatedText}</p>
+                    <p className="truncate font-semibold text-[#261E33] text-[15px]">{item.name}</p>
+                    <p className="mt-1 text-[#6F6B99] text-sm">{item.updatedText}</p>
                 </div>
 
                 <DropdownMenu>
@@ -76,8 +77,7 @@ function DocumentCard({
                                 "rounded-lg p-2 text-[#261E33] opacity-80 transition hover:bg-[#FAFAFA] hover:opacity-100",
                                 "focus:outline-none focus:ring-2 focus:ring-black/10"
                             )}
-                            aria-label="Thêm"
-                        >
+                            aria-label="Thêm">
                             <MoreHorizontal className="h-5 w-5" />
                         </button>
                     </DropdownMenuTrigger>
@@ -88,10 +88,7 @@ function DocumentCard({
                             Tải xuống
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => onDelete(item.id)}
-                        >
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => onDelete(item.id)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             Xóa
                         </DropdownMenuItem>
@@ -147,24 +144,15 @@ export default function GroupDocumentsPage() {
 
     return (
         <div className="w-full">
-            <div className="mx-auto w-full max-w-6xl px-6 py-8">
+            <Container className="px-6">
                 <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
-                        <p className="text-sm font-medium text-[#6F6B99]">Tài liệu dự án được chia sẻ</p>
+                        <p className="font-medium text-[#6F6B99] text-sm">Tài liệu dự án được chia sẻ</p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <input
-                            ref={fileRef}
-                            type="file"
-                            className="hidden"
-                            multiple
-                            onChange={onPickFiles}
-                        />
-                        <Button
-                            onClick={onUploadClick}
-                            className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]"
-                        >
+                        <input ref={fileRef} type="file" className="hidden" multiple onChange={onPickFiles} />
+                        <Button onClick={onUploadClick} className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
                             <Upload className="mr-2 h-4 w-4" />
                             Tải lên
                         </Button>
@@ -176,7 +164,7 @@ export default function GroupDocumentsPage() {
                         <DocumentCard key={d.id} item={d} onDelete={onDelete} onDownload={onDownload} />
                     ))}
                 </div>
-            </div>
+            </Container>
         </div>
     );
 }

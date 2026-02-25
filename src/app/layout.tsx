@@ -4,29 +4,29 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const interSans = Inter({
-    variable: "--font-sans"
+  variable: "--font-sans"
 });
 
 export const metadata: Metadata = {
-    title: "Study studio app",
-    description: "Collaborate and manage easily with study studio"
+  title: "Study studio app",
+  description: "Collaborate and manage easily with study studio"
 };
 
 export default async function RootLayout({
-    children,
-    params
+  children,
+  params
 }: Readonly<{
-    children: React.ReactNode;
-    params: Promise<{ locale?: string }>;
+  children: React.ReactNode;
+  params: Promise<{ locale?: string }>;
 }>) {
-    const { locale } = await params;
+  const { locale } = await params;
 
-    return (
-        <html lang={locale || "en"}>
-            <body className={`${interSans.variable} antialiased`}>
-                {children}
-                <Toaster />
-            </body>
-        </html>
-    );
+  return (
+    <html lang={locale || "en"}>
+      <body className={`${interSans.variable} antialiased`}>
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  );
 }
