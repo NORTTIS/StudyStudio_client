@@ -39,16 +39,16 @@ type ApiGroupMembersResponse = {
         groupId?: string;
         groupName?: string | null;
         members?:
-            | {
-                  userId?: string;
-                  firstName?: string | null;
-                  lastName?: string | null;
-                  email?: string | null;
-                  avatarUrl?: string | null;
-                  role?: string | null;
-                  joinedAt?: string;
-              }[]
-            | null;
+        | {
+            userId?: string;
+            firstName?: string | null;
+            lastName?: string | null;
+            email?: string | null;
+            avatarUrl?: string | null;
+            role?: string | null;
+            joinedAt?: string;
+        }[]
+        | null;
         totalMembers?: number;
     } | null;
 };
@@ -245,7 +245,7 @@ export function GroupSettingView() {
         let json: any = null;
         try {
             json = text ? JSON.parse(text) : null;
-        } catch {}
+        } catch { }
         return (json ?? {}) as ApiGroupMembersResponse;
     };
 
@@ -294,7 +294,7 @@ export function GroupSettingView() {
         let detailJson: any = null;
         try {
             detailJson = text ? JSON.parse(text) : null;
-        } catch {}
+        } catch { }
 
         if (!detailRes.ok) {
             const msg = detailJson?.message || text || `Tải nhóm thất bại (${detailRes.status})`;
@@ -418,7 +418,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
                 const msg = json?.message || text || `Lưu thất bại (${res.status})`;
@@ -467,7 +467,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
                 const msg = json?.message || text || `Xóa thất bại (${res.status})`;
@@ -509,7 +509,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -544,7 +544,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -569,7 +569,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -607,7 +607,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -644,7 +644,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String((json as CreateInviteLinkResponseApiResponse)?.data?.inviteUrl ?? "").trim();
@@ -770,11 +770,6 @@ export function GroupSettingView() {
         <div className="w-full">
             <Container>
                 <div className="space-y-6">
-                    {error ? (
-                        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
-                            {error}
-                        </div>
-                    ) : null}
 
                     {/* GENERAL */}
                     <section className="rounded-md border bg-white">

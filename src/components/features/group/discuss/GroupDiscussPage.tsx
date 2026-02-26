@@ -5,7 +5,6 @@ import {
     ChevronDown,
     ChevronUp,
     CornerDownRight,
-    Heart,
     MessageCircle,
     MoreHorizontal,
     SendHorizontal,
@@ -35,8 +34,11 @@ type UserLite = {
     initials: string;
 };
 
+type GroupRole = "owner" | "moderator" | "member" | "commenter" | "viewer";
+
 type GroupMessageDto = components["schemas"]["GroupMessageDto"];
 type GroupMessageListResponse = components["schemas"]["GroupMessageListResponse"];
+type GroupDetailResponse = components["schemas"]["GroupDetailResponseApiResponse"];
 type UserDto = components["schemas"]["UserDto"];
 
 type ReplyItem = {
@@ -299,15 +301,23 @@ function PostCard({
     post,
     onToggleLike,
     onDelete,
-    onAddReply
+    onAddReply,
+    currentUserId,
+    userRole
 }: {
     post: PostItem;
     onToggleLike: (id: string) => void;
     onDelete: (id: string) => void;
     onAddReply: (postId: string, text: string) => void;
+    currentUserId: string;
+    userRole: GroupRole;
 }) {
     const [replyOpen, setReplyOpen] = React.useState(false);
     const [repliesOpen, setRepliesOpen] = React.useState(true);
+
+    // Chỉ owner/moderator mới có thể xóa tin nhắn của người khác
+    // Người dùng thường chỉ có thể xóa tin nhắn của chính mình
+    const canDelete = userRole === "owner" || userRole === "moderator" || post.author.id === currentUserId;
 
     return (
         <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
@@ -338,13 +348,17 @@ function PostCard({
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem
-                                    className="text-red-600 focus:text-red-600"
-                                    onClick={() => onDelete(post.id)}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Xóa
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
+                                {canDelete ? (
+                                    <>
+                                        <DropdownMenuItem
+                                            className="text-red-600 focus:text-red-600"
+                                            onClick={() => onDelete(post.id)}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Xóa
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </>
+                                ) : null}
                                 <DropdownMenuItem onClick={() => setReplyOpen(true)}>
                                     <CornerDownRight className="mr-2 h-4 w-4" />
                                     Trả lời
@@ -354,13 +368,6 @@ function PostCard({
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <IconCount
-                            label="Thích"
-                            icon={Heart}
-                            active={post.likedByMe}
-                            count={post.likeCount}
-                            onClick={() => onToggleLike(post.id)}
-                        />
                         <IconCount
                             label="Trả lời"
                             icon={MessageCircle}
@@ -431,6 +438,7 @@ export default function GroupDiscussPage() {
     const isComposerDisabled = !isConnected || composerText.trim().length === 0;
 
     const [posts, setPosts] = React.useState<PostItem[]>([]);
+    const [userRole, setUserRole] = React.useState<GroupRole>("member");
 
     React.useEffect(() => {
         let isDisposed = false;
@@ -471,6 +479,36 @@ export default function GroupDiscussPage() {
             }
 
             setPosts(buildPostsFromMessages(response.data.messages));
+        };
+
+        const loadUserRole = async () => {
+            const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+            if (!rawBase) {
+                return;
+            }
+
+            try {
+                const response = await apiFetch<GroupDetailResponse>(`${rawBase}/group/${groupId}/detail`, {
+                    method: "GET"
+                });
+
+                if (response.status === "success" && response.data?.data?.userRole) {
+                    const role = String(response.data.data.userRole).toLowerCase();
+                    if (role.includes("owner")) {
+                        setUserRole("owner");
+                    } else if (role.includes("moderator")) {
+                        setUserRole("moderator");
+                    } else if (role.includes("commenter")) {
+                        setUserRole("commenter");
+                    } else if (role.includes("viewer")) {
+                        setUserRole("viewer");
+                    } else {
+                        setUserRole("member");
+                    }
+                }
+            } catch {
+                setUserRole("member");
+            }
         };
 
         connection.on("ReceiveMessage", (message: GroupMessageDto) => {
@@ -576,7 +614,7 @@ export default function GroupDiscussPage() {
                 }
 
                 setIsConnected(true);
-                await loadHistory();
+                await Promise.all([loadHistory(), loadUserRole()]);
             } catch {
                 if (isDisposed) {
                     return;
@@ -746,6 +784,8 @@ export default function GroupDiscussPage() {
                                 onToggleLike={onToggleLike}
                                 onDelete={onDelete}
                                 onAddReply={onAddReply}
+                                currentUserId={me.id}
+                                userRole={userRole}
                             />
                         ))
                     ) : (

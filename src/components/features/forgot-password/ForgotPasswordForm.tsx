@@ -23,8 +23,8 @@ export function ForgotPasswordForm() {
     const forgotPasswordSchema = z.object({
         email: z
             .string()
+            .trim()
             .min(1, t("emailRequired"))
-            .refine((val) => !val.includes(" "), t("emailNoSpaces"))
             .email(t("emailInvalid"))
     });
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type AnyObj = Record<string, any>;
@@ -47,7 +47,7 @@ function getAccessToken(): string {
     const keys = ["accessToken", "access_token", "token", "jwt", "ss_access_token"];
     for (const k of keys) {
         const v = window.localStorage.getItem(k) || window.sessionStorage.getItem(k);
-        if (v && v.trim()) return v.trim();
+        if (v?.trim()) return v.trim();
     }
     return "";
 }
@@ -113,7 +113,7 @@ export function InviteAcceptPage() {
 
     const buildLoginUrl = () => {
         const returnUrl = encodeURIComponent(pathname || `/${locale}/invite/${encodeURIComponent(token)}`);
-        return `/${locale}/login?returnUrl=${returnUrl}&fromLogin=1`;
+        return `/${locale}/login?redirect=${returnUrl}&fromLogin=1`;
     };
 
     const goLogin = () => router.push(loginUrl || buildLoginUrl());
@@ -153,12 +153,6 @@ export function InviteAcceptPage() {
             if (!token) {
                 setStatus("error");
                 setError("Missing invitation token.");
-                return;
-            }
-
-            if (!base) {
-                setStatus("error");
-                setError("Missing NEXT_PUBLIC_API_BASE_URL env.");
                 return;
             }
 
@@ -208,7 +202,11 @@ export function InviteAcceptPage() {
                         return;
                     }
 
-                    if (res.status === 400) continue;
+                    if (res.status === 400) {
+                        setStatus("error");
+                        setError(msg);
+                        return;
+                    }
 
                     setStatus("error");
                     setError(`${msg} (at ${url})`);
@@ -247,10 +245,10 @@ export function InviteAcceptPage() {
     if (!hydrated) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-                <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-xl text-center">
+                <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
                     <Logo />
-                    <h1 className="mb-2 text-2xl font-bold">Invitation</h1>
-                    <p className="mb-6 text-sm text-muted-foreground">Đang tải...</p>
+                    <h1 className="mb-2 font-bold text-2xl">Invitation</h1>
+                    <p className="mb-6 text-muted-foreground text-sm">Đang tải...</p>
                 </div>
             </div>
         );
@@ -261,18 +259,18 @@ export function InviteAcceptPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-            <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-xl text-center">
+            <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
                 <Logo />
 
                 {status === "accepted" ? (
                     <>
-                        <h1 className="mb-2 text-2xl font-bold">Bạn đã tham gia nhóm thành công</h1>
-                        <p className="mb-6 text-sm text-muted-foreground">Đang chuyển hướng...</p>
+                        <h1 className="mb-2 font-bold text-2xl">Bạn đã tham gia nhóm thành công</h1>
+                        <p className="mb-6 text-muted-foreground text-sm">Đang chuyển hướng...</p>
                     </>
                 ) : status === "already" ? (
                     <>
-                        <h1 className="mb-2 text-2xl font-bold">Thông báo</h1>
-                        <p className="mb-6 text-sm text-muted-foreground">Bạn đã là thành viên của nhóm này rồi.</p>
+                        <h1 className="mb-2 font-bold text-2xl">Thông báo</h1>
+                        <p className="mb-6 text-muted-foreground text-sm">Bạn đã là thành viên của nhóm này rồi.</p>
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={() => router.push(`/${locale}/group`)}>
@@ -285,13 +283,13 @@ export function InviteAcceptPage() {
                     </>
                 ) : status === "submitting" ? (
                     <>
-                        <h1 className="mb-2 text-2xl font-bold">Invitation</h1>
-                        <p className="mb-6 text-sm text-muted-foreground">Đang kiểm tra lời mời...</p>
+                        <h1 className="mb-2 font-bold text-2xl">Invitation</h1>
+                        <p className="mb-6 text-muted-foreground text-sm">Đang kiểm tra lời mời...</p>
                     </>
                 ) : needLogin ? (
                     <>
-                        <h1 className="mb-2 text-2xl font-bold">Bạn chưa đăng nhập</h1>
-                        <p className="mb-6 text-sm text-muted-foreground">
+                        <h1 className="mb-2 font-bold text-2xl">Bạn chưa đăng nhập</h1>
+                        <p className="mb-6 text-muted-foreground text-sm">
                             Vui lòng đăng nhập để chấp nhận lời mời vào nhóm.
                         </p>
 
@@ -306,12 +304,12 @@ export function InviteAcceptPage() {
                     </>
                 ) : (
                     <>
-                        <h1 className="mb-2 text-2xl font-bold">Invitation</h1>
-                        <p className="mb-6 text-sm text-muted-foreground">
+                        <h1 className="mb-2 font-bold text-2xl">Invitation</h1>
+                        <p className="mb-6 text-muted-foreground text-sm">
                             Nhấn “Chấp nhận gia nhập” để tham gia nhóm.
                         </p>
 
-                        {status === "error" && error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
+                        {status === "error" && error ? <p className="mb-4 text-red-600 text-sm">{error}</p> : null}
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={acceptInvite} disabled={!canAccept}>
