@@ -53,8 +53,6 @@ type PostItem = {
     author: UserLite;
     content: string;
     createdAtText: string;
-    likeCount: number;
-    likedByMe: boolean;
     replies: ReplyItem[];
 };
 
@@ -80,6 +78,13 @@ function initialsOf(name: string) {
     const a = parts[0]?.[0] || "U";
     const b = parts.length > 1 ? parts[parts.length - 1][0] : "";
     return (a + b).toUpperCase();
+}
+
+// ✅ tránh mismatch: server render luôn ra "B"
+function safeInitials(name?: string) {
+    const n = String(name || "").trim();
+    if (!n || n === "Bạn") return "B";
+    return initialsOf(n);
 }
 
 function timeAgoText(date: Date) {
@@ -113,17 +118,9 @@ function dtoToUserLite(userId?: string, user?: HubUserDto | null): UserLite {
 }
 
 function dtoToReplyItem(dto: GroupMessageDto): ReplyItem | null {
-    if (!dto.messageId) {
-        return null;
-    }
-
-    if (!dto.content) {
-        return null;
-    }
-
-    if (!dto.createdAt) {
-        return null;
-    }
+    if (!dto.messageId) return null;
+    if (!dto.content) return null;
+    if (!dto.createdAt) return null;
 
     return {
         id: dto.messageId,
@@ -134,34 +131,22 @@ function dtoToReplyItem(dto: GroupMessageDto): ReplyItem | null {
 }
 
 function dtoToPostItem(dto: GroupMessageDto): PostItem | null {
-    if (!dto.messageId) {
-        return null;
-    }
-
-    if (!dto.content) {
-        return null;
-    }
-
-    if (!dto.createdAt) {
-        return null;
-    }
+    if (!dto.messageId) return null;
+    if (!dto.content) return null;
+    if (!dto.createdAt) return null;
 
     return {
         id: dto.messageId,
         author: dtoToUserLite(dto.userId, dto.user),
         content: dto.content,
         createdAtText: timeAgoText(new Date(dto.createdAt)),
-        likeCount: 0,
-        likedByMe: false,
         replies: (dto.replies || []).map(dtoToReplyItem).filter((reply): reply is ReplyItem => reply !== null)
     };
 }
 
 function upsertPost(prev: PostItem[], next: PostItem) {
     const existed = prev.some((p) => p.id === next.id);
-    if (!existed) {
-        return [next, ...prev];
-    }
+    if (!existed) return [next, ...prev];
     return prev.map((p) => (p.id === next.id ? { ...p, ...next } : p));
 }
 
@@ -171,10 +156,7 @@ function mergeReply(post: PostItem, nextReply: ReplyItem) {
         ? post.replies.map((r) => (r.id === nextReply.id ? nextReply : r))
         : [...post.replies, nextReply];
 
-    return {
-        ...post,
-        replies: nextReplies
-    };
+    return { ...post, replies: nextReplies };
 }
 
 function buildPostsFromMessages(messages?: GroupMessageDto[] | null) {
@@ -182,32 +164,19 @@ function buildPostsFromMessages(messages?: GroupMessageDto[] | null) {
     const postMap = new Map<string, PostItem>();
 
     for (const message of source) {
-        if (message.parentMessageId) {
-            continue;
-        }
-
+        if (message.parentMessageId) continue;
         const post = dtoToPostItem(message);
-        if (!post) {
-            continue;
-        }
-
+        if (!post) continue;
         postMap.set(post.id, post);
     }
 
     for (const message of source) {
-        if (!message.parentMessageId) {
-            continue;
-        }
-
+        if (!message.parentMessageId) continue;
         const parent = postMap.get(message.parentMessageId);
-        if (!parent) {
-            continue;
-        }
+        if (!parent) continue;
 
         const reply = dtoToReplyItem(message);
-        if (!reply) {
-            continue;
-        }
+        if (!reply) continue;
 
         postMap.set(parent.id, mergeReply(parent, reply));
     }
@@ -299,14 +268,12 @@ function ReplyItemView({ r }: { r: ReplyItem }) {
 
 function PostCard({
     post,
-    onToggleLike,
     onDelete,
     onAddReply,
     currentUserId,
     userRole
 }: {
     post: PostItem;
-    onToggleLike: (id: string) => void;
     onDelete: (id: string) => void;
     onAddReply: (postId: string, text: string) => void;
     currentUserId: string;
@@ -315,8 +282,6 @@ function PostCard({
     const [replyOpen, setReplyOpen] = React.useState(false);
     const [repliesOpen, setRepliesOpen] = React.useState(true);
 
-    // Chỉ owner/moderator mới có thể xóa tin nhắn của người khác
-    // Người dùng thường chỉ có thể xóa tin nhắn của chính mình
     const canDelete = userRole === "owner" || userRole === "moderator" || post.author.id === currentUserId;
 
     return (
@@ -424,14 +389,21 @@ export default function GroupDiscussPage() {
     const connectionRef = React.useRef<signalR.HubConnection | null>(null);
     const [isConnected, setIsConnected] = React.useState(false);
 
-    const me: UserLite = React.useMemo(() => {
+    // ✅ FIX hydration: me được set sau khi mount
+    const [me, setMe] = React.useState<UserLite>({
+        id: "me",
+        name: "Bạn",
+        initials: "B"
+    });
+
+    React.useEffect(() => {
         const user = getUserData();
         const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || "Bạn";
-        return {
+        setMe({
             id: user?.id || "me",
             name: fullName,
-            initials: initialsOf(fullName)
-        };
+            initials: safeInitials(fullName)
+        });
     }, []);
 
     const [composerText, setComposerText] = React.useState("");
@@ -443,9 +415,7 @@ export default function GroupDiscussPage() {
     React.useEffect(() => {
         let isDisposed = false;
 
-        if (!groupId) {
-            return;
-        }
+        if (!groupId) return;
 
         if (!hubUrl) {
             toast({
@@ -456,9 +426,7 @@ export default function GroupDiscussPage() {
         }
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(hubUrl, {
-                accessTokenFactory: () => getAccessToken() || ""
-            })
+            .withUrl(hubUrl, { accessTokenFactory: () => getAccessToken() || "" })
             .withAutomaticReconnect([0, 2000, 10000, 30000])
             .build();
 
@@ -466,26 +434,20 @@ export default function GroupDiscussPage() {
 
         const loadHistory = async () => {
             const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
-            if (!rawBase) {
-                return;
-            }
+            if (!rawBase) return;
 
             const response = await apiFetch<GroupMessageListResponse>(`${rawBase}/group-messages/${groupId}`, {
                 method: "GET"
             });
 
-            if (response.status !== "success" || !response.data) {
-                return;
-            }
+            if (response.status !== "success" || !response.data) return;
 
             setPosts(buildPostsFromMessages(response.data.messages));
         };
 
         const loadUserRole = async () => {
             const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
-            if (!rawBase) {
-                return;
-            }
+            if (!rawBase) return;
 
             try {
                 const response = await apiFetch<GroupDetailResponse>(`${rawBase}/group/${groupId}/detail`, {
@@ -494,17 +456,11 @@ export default function GroupDiscussPage() {
 
                 if (response.status === "success" && response.data?.data?.userRole) {
                     const role = String(response.data.data.userRole).toLowerCase();
-                    if (role.includes("owner")) {
-                        setUserRole("owner");
-                    } else if (role.includes("moderator")) {
-                        setUserRole("moderator");
-                    } else if (role.includes("commenter")) {
-                        setUserRole("commenter");
-                    } else if (role.includes("viewer")) {
-                        setUserRole("viewer");
-                    } else {
-                        setUserRole("member");
-                    }
+                    if (role.includes("owner")) setUserRole("owner");
+                    else if (role.includes("moderator")) setUserRole("moderator");
+                    else if (role.includes("commenter")) setUserRole("commenter");
+                    else if (role.includes("viewer")) setUserRole("viewer");
+                    else setUserRole("member");
                 }
             } catch {
                 setUserRole("member");
@@ -512,36 +468,23 @@ export default function GroupDiscussPage() {
         };
 
         connection.on("ReceiveMessage", (message: GroupMessageDto) => {
-            if (message.parentMessageId) {
-                return;
-            }
-
+            if (message.parentMessageId) return;
             const nextPost = dtoToPostItem(message);
-            if (!nextPost) {
-                return;
-            }
-
+            if (!nextPost) return;
             setPosts((prev) => upsertPost(prev, nextPost));
         });
 
         connection.on("MessageReplied", (reply: GroupMessageDto) => {
-            if (!reply.parentMessageId) {
-                return;
-            }
+            if (!reply.parentMessageId) return;
 
             let parentExists = false;
 
             setPosts((prev) => {
                 const nextReply = dtoToReplyItem(reply);
-                if (!nextReply) {
-                    return prev;
-                }
+                if (!nextReply) return prev;
 
                 const nextPosts = prev.map((p) => {
-                    if (p.id !== reply.parentMessageId) {
-                        return p;
-                    }
-
+                    if (p.id !== reply.parentMessageId) return p;
                     parentExists = true;
                     return mergeReply(p, nextReply);
                 });
@@ -549,82 +492,52 @@ export default function GroupDiscussPage() {
                 return nextPosts;
             });
 
-            if (!parentExists) {
-                void loadHistory();
-            }
+            if (!parentExists) void loadHistory();
         });
 
         connection.on("MessageDeleted", (data: MessageDeletedPayload) => {
             setPosts((prev) =>
                 prev
                     .filter((p) => p.id !== data.messageId)
-                    .map((p) => ({
-                        ...p,
-                        replies: p.replies.filter((r) => r.id !== data.messageId)
-                    }))
+                    .map((p) => ({ ...p, replies: p.replies.filter((r) => r.id !== data.messageId) }))
             );
         });
 
         connection.on("Error", (errorMessage: string) => {
-            if (isDisposed) {
-                return;
-            }
-
-            toast({
-                variant: "destructive",
-                description: errorMessage
-            });
+            if (isDisposed) return;
+            toast({ variant: "destructive", description: errorMessage });
         });
 
-        connection.onreconnecting(() => {
-            setIsConnected(false);
-        });
+        connection.onreconnecting(() => setIsConnected(false));
 
         connection.onreconnected(async () => {
-            if (isDisposed) {
-                return;
-            }
+            if (isDisposed) return;
 
             setIsConnected(true);
             try {
                 await connection.invoke("JoinGroup", groupId);
                 await loadHistory();
             } catch {
-                if (isDisposed) {
-                    return;
-                }
-
-                toast({
-                    variant: "destructive",
-                    description: "Không thể tham gia lại phòng thảo luận"
-                });
+                if (isDisposed) return;
+                toast({ variant: "destructive", description: "Không thể tham gia lại phòng thảo luận" });
             }
         });
 
-        connection.onclose(() => {
-            setIsConnected(false);
-        });
+        connection.onclose(() => setIsConnected(false));
 
         const start = async () => {
             try {
                 await connection.start();
                 await connection.invoke("JoinGroup", groupId);
-                if (isDisposed) {
-                    return;
-                }
+                if (isDisposed) return;
 
                 setIsConnected(true);
                 await Promise.all([loadHistory(), loadUserRole()]);
             } catch {
-                if (isDisposed) {
-                    return;
-                }
+                if (isDisposed) return;
 
                 setIsConnected(false);
-                toast({
-                    variant: "destructive",
-                    description: "Vui lòng thử tải lại trang hoặc đăng nhập lại"
-                });
+                toast({ variant: "destructive", description: "Vui lòng thử tải lại trang hoặc đăng nhập lại" });
             }
         };
 
@@ -642,9 +555,7 @@ export default function GroupDiscussPage() {
                     void error;
                 } finally {
                     await connection.stop();
-                    if (connectionRef.current === connection) {
-                        connectionRef.current = null;
-                    }
+                    if (connectionRef.current === connection) connectionRef.current = null;
                     setIsConnected(false);
                 }
             };
@@ -656,37 +567,16 @@ export default function GroupDiscussPage() {
     const onPost = async () => {
         const v = composerText.trim();
         const connection = connectionRef.current;
-        if (!v) {
-            return;
-        }
+        if (!v) return;
 
-        if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-            return;
-        }
+        if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
 
         try {
-            await connection.invoke("SendMessage", {
-                groupId,
-                content: v
-            });
+            await connection.invoke("SendMessage", { groupId, content: v });
             setComposerText("");
         } catch {
-            toast({
-                variant: "destructive",
-                description: "Vui lòng thử lại sau"
-            });
+            toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
         }
-    };
-
-    const onToggleLike = (id: string) => {
-        setPosts((prev) =>
-            prev.map((p) => {
-                if (p.id !== id) return p;
-                const liked = !p.likedByMe;
-                const nextCount = Math.max(0, p.likeCount + (liked ? 1 : -1));
-                return { ...p, likedByMe: liked, likeCount: nextCount };
-            })
-        );
     };
 
     const onDelete = async (id: string) => {
@@ -695,41 +585,26 @@ export default function GroupDiscussPage() {
 
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-            toast({
-                variant: "destructive",
-                description: "Không thể xóa bài viết khi chưa kết nối"
-            });
+            toast({ variant: "destructive", description: "Không thể xóa bài viết khi chưa kết nối" });
             return;
         }
 
         try {
-            await connection.invoke("DeleteMessage", {
-                messageId: id
-            });
+            await connection.invoke("DeleteMessage", { messageId: id });
         } catch {
-            toast({
-                variant: "destructive",
-                description: "Vui lòng thử lại sau"
-            });
+            toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
         }
     };
 
     const onAddReply = async (postId: string, text: string) => {
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-            toast({
-                variant: "destructive",
-                description: "Không thể gửi phản hồi khi chưa kết nối"
-            });
+            toast({ variant: "destructive", description: "Không thể gửi phản hồi khi chưa kết nối" });
             return;
         }
 
         try {
-            const payload = {
-                groupId,
-                parentMessageId: postId,
-                content: text
-            };
+            const payload = { groupId, parentMessageId: postId, content: text };
 
             try {
                 await connection.invoke("ReplyToMessage", payload);
@@ -737,10 +612,7 @@ export default function GroupDiscussPage() {
                 await connection.invoke("SendMessage", payload);
             }
         } catch {
-            toast({
-                variant: "destructive",
-                description: "Vui lòng thử lại sau"
-            });
+            toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
         }
     };
 
@@ -781,7 +653,6 @@ export default function GroupDiscussPage() {
                             <PostCard
                                 key={p.id}
                                 post={p}
-                                onToggleLike={onToggleLike}
                                 onDelete={onDelete}
                                 onAddReply={onAddReply}
                                 currentUserId={me.id}
