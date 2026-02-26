@@ -473,6 +473,7 @@
         "studiosUsed": "studios đã sử dụng",
         "personal": "Cá nhân",
         "group": "Nhóm",
+        "groups": "Nhóm",
         "members": "thành viên",
         "videos": "videos",
         "noStudios": "Chưa có studio nào. Tạo studio đầu tiên của bạn!",
@@ -487,8 +488,12 @@
             "editTitle": "Chỉnh sửa Studio",
             "name": "Tên Studio",
             "namePlaceholder": "Nhập tên studio...",
+            "nameRequired": "Tên studio là bắt buộc",
+            "nameTooLong": "Tên studio không được vượt quá 100 ký tự",
             "description": "Mô tả",
             "descriptionPlaceholder": "Mô tả ngắn gọn về studio...",
+            "descriptionRequired": "Mô tả là bắt buộc",
+            "descriptionTooLong": "Mô tả không được vượt quá 500 ký tự",
             "type": "Loại",
             "cancel": "Hủy",
             "create": "Tạo",
@@ -496,7 +501,9 @@
             "createSuccess": "Tạo studio thành công!",
             "editSuccess": "Cập nhật studio thành công!",
             "createError": "Không thể tạo studio",
-            "editError": "Không thể cập nhật studio"
+            "editError": "Không thể cập nhật studio",
+            "limitReached": "Bạn đã đạt giới hạn 3 studio. Vui lòng xóa studio cũ để tạo mới.",
+            "duplicateName": "Tên studio đã tồn tại. Vui lòng chọn tên khác."
         },
         "detailModal": {
             "description": "Mô tả",
@@ -516,6 +523,15 @@
             "confirm": "Xóa",
             "success": "Xóa studio thành công!",
             "error": "Không thể xóa studio"
+        },
+        "detail": {
+            "activeBadge": "Đang hoạt động",
+            "addGroupButton": "Thêm nhóm",
+            "inviteMember": "Mời thành viên",
+            "groupsUsed": "không gian nhóm đang được sử dụng",
+            "completionProgress": "Tiến độ hoàn thiện công việc trung bình",
+            "tasks": "công việc",
+            "progress": "Tiến độ công việc"
         }
     },
     "LandingGroupPage": {
@@ -723,6 +739,28 @@
             "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
             "feature5": "100 lượt yêu cầu AI mỗi ngày"
         }
+    },
+    "InviteMemberModal": {
+        "title": "Mời thành viên vào",
+        "inviteByEmail": "Mời qua email",
+        "emailPlaceholder": "Nhập email",
+        "inviteAs": "Mời với vai trò",
+        "member": "Thành viên",
+        "memberDescription": "Có thể truy cập tất cả các mục công khai trong Nhóm của bạn.",
+        "sendInvite": "Gửi lời mời",
+        "sending": "Đang gửi...",
+        "orInviteViaLink": "Hoặc mời qua liên kết",
+        "linkPlaceholder": "http://localhost:3000/invite/9IKK3fXcoEY",
+        "getLink": "Lấy liên kết",
+        "copied": "Đã sao chép",
+        "emailRequired": "Vui lòng nhập email",
+        "emailInvalid": "Email không hợp lệ",
+        "emailSent": "Đã gửi lời mời qua email thành công!",
+        "emailError": "Không thể gửi email. Vui lòng thử lại.",
+        "linkGenerated": "Đã tạo liên kết mời thành công!",
+        "linkError": "Không thể tạo liên kết. Vui lòng thử lại.",
+        "linkCopied": "Đã sao chép liên kết!",
+        "copyError": "Không thể sao chép. Vui lòng thử lại."
     },
     "GroupInviteModal": {
         "title": "Mời người dùng vào {groupName}",

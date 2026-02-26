@@ -64,32 +64,49 @@ export default function MasterPage() {
         loadData();
     }, [loadData]);
 
+    // Filter studios based on search query
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setFilteredStudios(studios);
+        } else {
+            const query = searchQuery.toLowerCase();
+            const filtered = studios.filter(
+                (studio) =>
+                    studio.name.toLowerCase().includes(query) || studio.description.toLowerCase().includes(query)
+            );
+            setFilteredStudios(filtered);
+        }
+    }, [searchQuery, studios]);
+
     const handleCreateStudio = async (data: { name: string; description: string; type: string }) => {
+        // Check if reached limit
+        if (studios.length >= 3) {
+            toast({
+                description: t("modal.limitReached") || "Bạn đã đạt giới hạn 3 studio",
+                variant: "destructive"
+            });
+            return;
+        }
+
         try {
             const studioData = {
-                name: data.name,
-                description: data.description,
+                name: data.name.trim(),
+                description: data.description.trim(),
                 type: data.type as "personal" | "group"
             };
+
             const result = await createStudio(studioData, locale);
+
             if (result.status === "success") {
                 toast({ description: t("modal.createSuccess"), variant: "success" });
                 setIsCreateModalOpen(false);
                 loadData();
             } else {
-                const newStudio: StudioUI = {
-                    id: `STUDIO-${Date.now()}`,
-                    name: data.name,
-                    description: data.description,
-                    type: data.type as "personal" | "group",
-                    memberCount: 1,
-                    videoCount: 0,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-                setStudios([...studios, newStudio]);
-                toast({ description: t("modal.createSuccess"), variant: "success" });
-                setIsCreateModalOpen(false);
+                // Show error message from API
+                toast({
+                    description: result.message || t("modal.createError"),
+                    variant: "destructive"
+                });
             }
         } catch (error) {
             console.error("Create studio failed:", error);
@@ -176,13 +193,11 @@ export default function MasterPage() {
         setIsCreateModalOpen(true);
     };
 
-    const getStudioIcon = (type: string) => (type === "personal" ? "🔷" : "🔶");
-
     return (
         <div className="min-h-screen bg-[#F8F8F8] text-[#261E33]">
             <div className="flex min-h-screen">
                 <DashboardSidebar />
-                <main>
+                <main className="flex-1">
                     <Header userProfile={userProfile} />
                     <Container>
                         <div className="mb-8">
@@ -215,18 +230,33 @@ export default function MasterPage() {
                                 {t("createButton")}
                             </Button>
                         </div>
-                        <div className="mb-6 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                            <svg
-                                className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500"
-                                fill="currentColor"
-                                viewBox="0 0 20 20">
-                                <path
-                                    fillRule="evenodd"
-                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            <p className="text-blue-700 text-sm">{t("infoBanner")}</p>
+                        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
+                            <div className="mb-4 flex items-start gap-3">
+                                <svg
+                                    className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                                <p className="text-[#6F6B99] text-sm">{t("infoBanner")}</p>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-medium text-[#261E33]">
+                                        {studios.length}/3 {t("studiosUsed")}
+                                    </span>
+                                </div>
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                    <div
+                                        className="h-full bg-[#FF5F3D] transition-all duration-300"
+                                        style={{ width: `${(studios.length / 3) * 100}%` }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                         {isLoading ? (
                             <div className="flex items-center justify-center py-20">
@@ -242,28 +272,42 @@ export default function MasterPage() {
                                     <div
                                         key={studio.id}
                                         className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white transition-all hover:border-[#FF5F3D] hover:shadow-lg"
-                                        onClick={() => handleStudioClick(studio)}>
-                                        <div className="flex items-start gap-3 border-gray-100 border-b p-4">
-                                            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 text-2xl">
-                                                {getStudioIcon(studio.type)}
+                                        onClick={() => handleStudioClick(studio)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                handleStudioClick(studio);
+                                            }
+                                        }}
+                                        role="button"
+                                        tabIndex={0}>
+                                        <div className="p-5">
+                                            <div className="mb-3 flex items-start justify-between">
+                                                <h3 className="font-semibold text-[#261E33] text-lg group-hover:text-[#FF5F3D]">
+                                                    {studio.name}
+                                                </h3>
                                             </div>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="mb-1 flex items-center gap-2">
-                                                    <h3 className="truncate font-semibold text-[#261E33] group-hover:text-[#FF5F3D]">
-                                                        {studio.name}
-                                                    </h3>
-                                                    <span className="flex-shrink-0 rounded-full bg-[#FF5F3D] px-2 py-0.5 text-white text-xs">
-                                                        {studio.type === "personal" ? t("personal") : t("group")}
+                                            <p className="mb-4 line-clamp-2 text-[#6F6B99] text-sm">
+                                                {studio.description}
+                                            </p>
+                                            <div className="flex items-center gap-4 border-gray-100 border-t pt-4 text-[#6F6B99] text-sm">
+                                                <div className="flex items-center gap-1.5">
+                                                    <svg
+                                                        className="h-4 w-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                        />
+                                                    </svg>
+                                                    <span>
+                                                        {studio.groupCount} {t("groups")}
                                                     </span>
                                                 </div>
-                                                <p className="line-clamp-2 text-[#6F6B99] text-sm">
-                                                    {studio.description}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between p-4">
-                                            <div className="flex items-center gap-4 text-[#6F6B99] text-sm">
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1.5">
                                                     <svg
                                                         className="h-4 w-4"
                                                         fill="none"
@@ -278,23 +322,6 @@ export default function MasterPage() {
                                                     </svg>
                                                     <span>
                                                         {studio.memberCount} {t("members")}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <svg
-                                                        className="h-4 w-4"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                                        />
-                                                    </svg>
-                                                    <span>
-                                                        {studio.videoCount} {t("videos")}
                                                     </span>
                                                 </div>
                                             </div>
@@ -312,6 +339,7 @@ export default function MasterPage() {
                 onSubmit={modalMode === "create" ? handleCreateStudio : handleEditStudio}
                 studio={selectedStudio}
                 mode={modalMode}
+                existingStudios={studios}
             />
             <DeleteConfirmModal
                 isOpen={isDeleteModalOpen}

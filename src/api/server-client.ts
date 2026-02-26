@@ -62,7 +62,6 @@ class ServerApiClient {
         try {
             const headers = await this.buildHeaders(options?.headers);
             const url = `${this.baseURL}${endpoint}`;
-
             const response = await fetch(url, {
                 method: "GET",
                 headers,

@@ -1434,7 +1434,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/studio/studioId": {
+    "/api/studio/{studioId}/groups": {
         parameters: {
             query?: never;
             header?: never;
@@ -1443,11 +1443,11 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: {
-                    studioId?: string;
-                };
+                query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    studioId: string;
+                };
                 cookie?: never;
             };
             requestBody?: never;

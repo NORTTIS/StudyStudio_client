@@ -4,7 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const interSans = Inter({
-    variable: "--font-sans"
+    variable: "--font-sans",
+    subsets: ["latin"]
 });
 
 export const metadata: Metadata = {
