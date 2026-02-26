@@ -152,7 +152,9 @@ export default function GroupDocumentsPage() {
 
                     <div className="flex items-center gap-3">
                         <input ref={fileRef} type="file" className="hidden" multiple onChange={onPickFiles} />
-                        <Button onClick={onUploadClick} className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
+                        <Button
+                            onClick={onUploadClick}
+                            className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
                             <Upload className="mr-2 h-4 w-4" />
                             Tải lên
                         </Button>

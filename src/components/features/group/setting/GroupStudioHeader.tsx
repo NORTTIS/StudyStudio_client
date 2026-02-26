@@ -111,7 +111,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch { }
+                } catch {}
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
@@ -194,7 +194,9 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                 const target = stripLocale(href.split("?")[0] || href);
 
                                 const active =
-                                    t.key === "board" ? curPath === target : curPath === target || curPath.startsWith(target + "/");
+                                    t.key === "board"
+                                        ? curPath === target
+                                        : curPath === target || curPath.startsWith(target + "/");
 
                                 return (
                                     <Link

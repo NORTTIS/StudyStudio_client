@@ -39,16 +39,16 @@ type ApiGroupMembersResponse = {
         groupId?: string;
         groupName?: string | null;
         members?:
-        | {
-            userId?: string;
-            firstName?: string | null;
-            lastName?: string | null;
-            email?: string | null;
-            avatarUrl?: string | null;
-            role?: string | null;
-            joinedAt?: string;
-        }[]
-        | null;
+            | {
+                  userId?: string;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                  email?: string | null;
+                  avatarUrl?: string | null;
+                  role?: string | null;
+                  joinedAt?: string;
+              }[]
+            | null;
         totalMembers?: number;
     } | null;
 };
@@ -245,7 +245,7 @@ export function GroupSettingView() {
         let json: any = null;
         try {
             json = text ? JSON.parse(text) : null;
-        } catch { }
+        } catch {}
         return (json ?? {}) as ApiGroupMembersResponse;
     };
 
@@ -294,7 +294,7 @@ export function GroupSettingView() {
         let detailJson: any = null;
         try {
             detailJson = text ? JSON.parse(text) : null;
-        } catch { }
+        } catch {}
 
         if (!detailRes.ok) {
             const msg = detailJson?.message || text || `Tải nhóm thất bại (${detailRes.status})`;
@@ -418,7 +418,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
                 const msg = json?.message || text || `Lưu thất bại (${res.status})`;
@@ -467,7 +467,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
                 const msg = json?.message || text || `Xóa thất bại (${res.status})`;
@@ -509,7 +509,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -544,7 +544,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -569,7 +569,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -607,7 +607,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -644,7 +644,7 @@ export function GroupSettingView() {
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String((json as CreateInviteLinkResponseApiResponse)?.data?.inviteUrl ?? "").trim();
@@ -771,7 +771,9 @@ export function GroupSettingView() {
             <Container>
                 <div className="space-y-6">
                     {error ? (
-                        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">{error}</div>
+                        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
+                            {error}
+                        </div>
                     ) : null}
 
                     {/* GENERAL */}
@@ -870,7 +872,9 @@ export function GroupSettingView() {
 
                                                 <div>
                                                     <div className="font-semibold text-gray-900 text-sm">{m.name}</div>
-                                                    {m.email ? <div className="text-gray-500 text-xs">{m.email}</div> : null}
+                                                    {m.email ? (
+                                                        <div className="text-gray-500 text-xs">{m.email}</div>
+                                                    ) : null}
                                                 </div>
                                             </div>
 
@@ -888,7 +892,9 @@ export function GroupSettingView() {
                                                         <Select
                                                             value={m.role}
                                                             disabled={disabledAll}
-                                                            onValueChange={(v) => onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)}>
+                                                            onValueChange={(v) =>
+                                                                onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)
+                                                            }>
                                                             <SelectTrigger className="h-8 w-fit min-w-0 gap-1 px-2 pr-1">
                                                                 <SelectValue className="text-left" />
                                                             </SelectTrigger>
@@ -918,7 +924,9 @@ export function GroupSettingView() {
                                 })}
 
                                 {members.length === 0 ? (
-                                    <div className="px-4 py-6 text-gray-500 text-sm">Chưa có thành viên để hiển thị.</div>
+                                    <div className="px-4 py-6 text-gray-500 text-sm">
+                                        Chưa có thành viên để hiển thị.
+                                    </div>
                                 ) : null}
                             </div>
                         </div>
@@ -936,7 +944,9 @@ export function GroupSettingView() {
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
                                         <div className="font-semibold text-red-600 text-sm">Xóa nhóm</div>
-                                        <div className="text-red-500 text-xs">Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan</div>
+                                        <div className="text-red-500 text-xs">
+                                            Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan
+                                        </div>
                                     </div>
 
                                     <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -953,7 +963,8 @@ export function GroupSettingView() {
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Bạn chắc chắn muốn xóa nhóm này?</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Hành động này không thể hoàn tác. Nhóm và toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.
+                                                    Hành động này không thể hoàn tác. Nhóm và toàn bộ dữ liệu sẽ bị xóa
+                                                    vĩnh viễn.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
 
@@ -1008,8 +1019,10 @@ export function GroupSettingView() {
                         <AlertDialogTitle>Xác nhận xóa thành viên</AlertDialogTitle>
                         <AlertDialogDescription>
                             Bạn có chắc chắn muốn xóa{" "}
-                            <span className="font-semibold text-gray-900">{removeTarget?.name || "thành viên này"}</span> khỏi nhóm
-                            không? Hành động này không thể hoàn tác.
+                            <span className="font-semibold text-gray-900">
+                                {removeTarget?.name || "thành viên này"}
+                            </span>{" "}
+                            khỏi nhóm không? Hành động này không thể hoàn tác.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 

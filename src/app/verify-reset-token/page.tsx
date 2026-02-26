@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation";
 
 type Props = {
-  searchParams: {
-    token?: string;
-  };
+    searchParams: {
+        token?: string;
+    };
 };
 
 export default function VerifyResetTokenRedirectPage({ searchParams }: Props) {
-  const token = searchParams.token;
+    const token = searchParams.token;
 
-  if (token) {
-    redirect(`/vi/verify-reset-token?token=${encodeURIComponent(token)}`);
-  }
+    if (token) {
+        redirect(`/vi/verify-reset-token?token=${encodeURIComponent(token)}`);
+    }
 
-  redirect("/vi/verify-reset-token");
+    redirect("/vi/verify-reset-token");
 }

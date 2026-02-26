@@ -35,7 +35,9 @@ const extractGroupIdFromPath = (pathname: string) => {
 
 function Card({ className, children }: { className?: string; children: React.ReactNode }) {
     return (
-        <div className={twMerge("rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm", className)}>{children}</div>
+        <div className={twMerge("rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm", className)}>
+            {children}
+        </div>
     );
 }
 
@@ -182,7 +184,9 @@ export default function GroupAnalyticPage() {
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="font-semibold text-[#261E33] text-sm">Xu hướng tiến độ công việc</p>
-                            <p className="mt-1 text-[#6F6B99] text-sm">Công việc tạo mới vs đã hoàn thành theo thời gian</p>
+                            <p className="mt-1 text-[#6F6B99] text-sm">
+                                Công việc tạo mới vs đã hoàn thành theo thời gian
+                            </p>
                         </div>
                         <div className="inline-flex items-center gap-2 rounded-xl bg-[#F5F5F7] px-3 py-2 font-medium text-[#261E33] text-xs">
                             <CalendarDays className="h-4 w-4" />
@@ -198,8 +202,20 @@ export default function GroupAnalyticPage() {
                                 <YAxis />
                                 <Tooltip />
                                 <Legend />
-                                <Area type="monotone" dataKey="created" stroke="#FF5722" fill="#FF5722" fillOpacity={0.12} />
-                                <Area type="monotone" dataKey="completed" stroke="#22C55E" fill="#22C55E" fillOpacity={0.12} />
+                                <Area
+                                    type="monotone"
+                                    dataKey="created"
+                                    stroke="#FF5722"
+                                    fill="#FF5722"
+                                    fillOpacity={0.12}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="completed"
+                                    stroke="#22C55E"
+                                    fill="#22C55E"
+                                    fillOpacity={0.12}
+                                />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -293,7 +309,9 @@ export default function GroupAnalyticPage() {
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="font-semibold text-[#261E33] text-sm">Hoạt động gần đây</p>
-                            <p className="mt-1 text-[#6F6B99] text-sm">Tóm tắt nhanh các cập nhật mới nhất trong nhóm</p>
+                            <p className="mt-1 text-[#6F6B99] text-sm">
+                                Tóm tắt nhanh các cập nhật mới nhất trong nhóm
+                            </p>
                         </div>
 
                         <div className="inline-flex items-center gap-2 rounded-xl bg-[#FFF3ED] px-3 py-2 font-semibold text-[#FF5722] text-xs">

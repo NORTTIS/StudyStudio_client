@@ -9,39 +9,39 @@ import { LoadingPage } from "@/components/common/LoadingPage";
 const resetTokenStorageKey = "resetPasswordToken";
 
 export default function VerifyResetTokenPage() {
-  const locale = useLocale();
-  const router = useRouter();
-  const params = useSearchParams();
+    const locale = useLocale();
+    const router = useRouter();
+    const params = useSearchParams();
 
-  useEffect(() => {
-    const token = params.get("token");
+    useEffect(() => {
+        const token = params.get("token");
 
-    const redirectToReset = () => {
-      router.replace(`/${locale}/reset-password`);
-    };
+        const redirectToReset = () => {
+            router.replace(`/${locale}/reset-password`);
+        };
 
-    if (!token) {
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem(resetTokenStorageKey);
-      }
-      redirectToReset();
-      return;
-    }
+        if (!token) {
+            if (typeof window !== "undefined") {
+                sessionStorage.removeItem(resetTokenStorageKey);
+            }
+            redirectToReset();
+            return;
+        }
 
-    const verify = async () => {
-      const result = await verifyResetToken(token, locale);
+        const verify = async () => {
+            const result = await verifyResetToken(token, locale);
 
-      if (result.status === "success" && typeof window !== "undefined") {
-        sessionStorage.setItem(resetTokenStorageKey, token);
-      } else if (typeof window !== "undefined") {
-        sessionStorage.removeItem(resetTokenStorageKey);
-      }
+            if (result.status === "success" && typeof window !== "undefined") {
+                sessionStorage.setItem(resetTokenStorageKey, token);
+            } else if (typeof window !== "undefined") {
+                sessionStorage.removeItem(resetTokenStorageKey);
+            }
 
-      redirectToReset();
-    };
+            redirectToReset();
+        };
 
-    verify();
-  }, [locale, params, router]);
+        verify();
+    }, [locale, params, router]);
 
-  return <LoadingPage />;
+    return <LoadingPage />;
 }

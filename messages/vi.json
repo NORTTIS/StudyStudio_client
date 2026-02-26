@@ -1,778 +1,727 @@
 {
-  "Common": {
-    "loading": "Đang tải...",
-    "checkingAuth": "Đang kiểm tra xác thực..."
-  },
-  "GuestNavbar": {
-    "personal": "Không gian cá nhân",
-    "group": "Không gian nhóm",
-    "management": "Không gian quản lý",
-    "plan": "Gói đăng ký",
-    "login": "Đăng nhập",
-    "register": "Đăng ký",
-    "openMenu": "Mở menu",
-    "closeMenu": "Đóng menu"
-  },
-  "GuestFooter": {
-    "personal": "Không gian cá nhân",
-    "group": "Không gian nhóm",
-    "management": "Không gian quản lý",
-    "plan": "Gói đăng ký",
-    "language": "Tiếng Việt",
-    "contactUs": "Liên hệ với chúng tôi",
-    "products": "Sản phẩm"
-  },
-  "LandingPage": {
-    "hero": {
-      "title": "Không gian cộng tác",
-      "subtitle": "Quản lý công việc của bạn",
-      "description": "Study Studio giúp sinh viên và giảng viên đại học quản lý các dự án cá nhân và nhóm với việc theo dõi, đánh giá mức độ đóng góp một cách minh bạch, công bằng đi cùng với đó là sự hỗ trợ tới từ AI.",
-      "registerButton": "Đăng ký – hoàn toàn miễn phí"
+    "Common": {
+        "loading": "Đang tải...",
+        "checkingAuth": "Đang kiểm tra xác thực..."
     },
-    "architecture": {
-      "title": "Kiến trúc không gian làm việc 3 tầng",
-      "subtitle": "Chúng tôi cung cấp các không gian làm việc riêng biệt"
+    "GuestNavbar": {
+        "personal": "Không gian cá nhân",
+        "group": "Không gian nhóm",
+        "management": "Không gian quản lý",
+        "plan": "Gói đăng ký",
+        "login": "Đăng nhập",
+        "register": "Đăng ký",
+        "openMenu": "Mở menu",
+        "closeMenu": "Đóng menu"
     },
-    "management": {
-      "title": "Không gian quản lý",
-      "description": "Quản lý các không gian và nhóm của riêng bạn",
-      "createButton": "Tạo Không gian quản lý miễn phí",
-      "learnMore": "Tìm hiểu thêm"
+    "GuestFooter": {
+        "personal": "Không gian cá nhân",
+        "group": "Không gian nhóm",
+        "management": "Không gian quản lý",
+        "plan": "Gói đăng ký",
+        "language": "Tiếng Việt",
+        "contactUs": "Liên hệ với chúng tôi",
+        "products": "Sản phẩm"
     },
-    "group": {
-      "title": "Không gian nhóm",
-      "description": "Quản lý, giám sát việc cá nhân và việc nhóm",
-      "createButton": "Tạo Không gian nhóm miễn phí",
-      "learnMore": "Tìm hiểu thêm"
+    "LandingPage": {
+        "hero": {
+            "title": "Không gian cộng tác",
+            "subtitle": "Quản lý công việc của bạn",
+            "description": "Study Studio giúp sinh viên và giảng viên đại học quản lý các dự án cá nhân và nhóm với việc theo dõi, đánh giá mức độ đóng góp một cách minh bạch, công bằng đi cùng với đó là sự hỗ trợ tới từ AI.",
+            "registerButton": "Đăng ký – hoàn toàn miễn phí"
+        },
+        "architecture": {
+            "title": "Kiến trúc không gian làm việc 3 tầng",
+            "subtitle": "Chúng tôi cung cấp các không gian làm việc riêng biệt"
+        },
+        "management": {
+            "title": "Không gian quản lý",
+            "description": "Quản lý các không gian và nhóm của riêng bạn",
+            "createButton": "Tạo Không gian quản lý miễn phí",
+            "learnMore": "Tìm hiểu thêm"
+        },
+        "group": {
+            "title": "Không gian nhóm",
+            "description": "Quản lý, giám sát việc cá nhân và việc nhóm",
+            "createButton": "Tạo Không gian nhóm miễn phí",
+            "learnMore": "Tìm hiểu thêm"
+        },
+        "personal": {
+            "title": "Không gian cá nhân",
+            "description": "Quản lý các công việc của riêng bạn",
+            "createButton": "Tạo Không gian cá nhân miễn phí",
+            "learnMore": "Tìm hiểu thêm"
+        },
+        "ai": {
+            "title": "Quản lý công việc hiệu quả hơn",
+            "subtitle": "với sự giúp sức của AI",
+            "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
+            "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
+        }
     },
-    "personal": {
-      "title": "Không gian cá nhân",
-      "description": "Quản lý các công việc của riêng bạn",
-      "createButton": "Tạo Không gian cá nhân miễn phí",
-      "learnMore": "Tìm hiểu thêm"
+    "HomePage": {
+        "title": "Trang chủ",
+        "description": "Trang chủ của ứng dụng",
+        "meta": {
+            "title": "Trang chủ - StudyStudio",
+            "description": "Chào mừng đến StudyStudio"
+        },
+        "features": {
+            "title": "Tính năng",
+            "item1": "Tính năng 1",
+            "item2": "Tính năng 2",
+            "item3": "Tính năng 3"
+        },
+        "footer": "© 2024 StudyStudio. Bảo lưu mọi quyền."
     },
-    "ai": {
-      "title": "Quản lý công việc hiệu quả hơn",
-      "subtitle": "với sự giúp sức của AI",
-      "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
-      "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
-    }
-  },
-  "HomePage": {
-    "title": "Trang chủ",
-    "description": "Trang chủ của ứng dụng",
-    "meta": {
-      "title": "Trang chủ - StudyStudio",
-      "description": "Chào mừng đến StudyStudio"
+    "LoginPage": {
+        "title": "Chào mừng trở lại",
+        "subtitle": "Đăng nhập vào tài khoản Study Studio của bạn",
+        "email": "Email",
+        "emailPlaceholder": "Nhập email của bạn",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Email không hợp lệ",
+        "password": "Mật khẩu",
+        "passwordPlaceholder": "Nhập mật khẩu của bạn",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "forgotPassword": "Quên mật khẩu?",
+        "signInButton": "Đăng nhập",
+        "continueWithGoogle": "Tiếp tục với Google",
+        "orContinueWith": "HOẶC TIẾP TỤC VỚI",
+        "noAccount": "Chưa có tài khoản?",
+        "signUpLink": "Đăng ký",
+        "loginFailed": "Đăng nhập thất bại",
+        "loginSuccess": "Đăng nhập thành công",
+        "emailNotVerified": "Email chưa xác thực",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "error": "Lỗi",
+        "credentialError": "Không thể lấy thông tin xác thực từ Google",
+        "meta": {
+            "title": "Đăng Nhập - StudyStudio",
+            "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
+        }
     },
-    "features": {
-      "title": "Tính năng",
-      "item1": "Tính năng 1",
-      "item2": "Tính năng 2",
-      "item3": "Tính năng 3"
+    "RegisterPage": {
+        "title": "Tạo tài khoản",
+        "subtitle": "Bắt đầu sử dụng Study Studio miễn phí",
+        "firstName": "Tên",
+        "lastName": "Họ",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "confirmPassword": "Nhập lại mật khẩu",
+        "firstNameRequired": "Tên là bắt buộc",
+        "firstNameInvalid": "Tên không được vượt quá 20 ký tự",
+        "lastNameRequired": "Họ là bắt buộc",
+        "lastNameInvalid": "Họ không được vượt quá 20 ký tự",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Email không đúng định dạng (ví dụ: abc@gmail.com)",
+        "emailNoSpaces": "Email không được chứa khoảng trắng",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, chứa ít nhất một chữ hoa, một chữ thường và một chữ số",
+        "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+        "confirmPasswordMismatch": "Mật khẩu nhập lại không khớp",
+        "continueWithGoogle": "Tiếp tục với Google",
+        "orContinueWith": "Hoặc tiếp tục với",
+        "createAccountButton": "Tạo tài khoản",
+        "hasAccount": "Đã có tài khoản?",
+        "signInLink": "Đăng nhập",
+        "successMessage": "Đăng ký thành công!",
+        "verificationEmailSent": "Email xác thực đã được gửi. Đang chuyển sang trang đăng nhập...",
+        "registrationFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "verifyEmailTitle": "Xác thực Email",
+        "verifyEmailSubtitle": "Hãy kiểm tra email của bạn để biết các bước tiếp theo",
+        "checkYourEmail": "Kiểm tra email của bạn",
+        "verificationLinkSentTo": "Chúng tôi đã gửi liên kết xác thực đến:",
+        "linkExpiresIn15Minutes": "Liên kết sẽ hết hạn sau 15 phút.",
+        "checkSpamFolder": "Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.",
+        "backToLogin": "Quay lại đăng nhập",
+        "meta": {
+            "title": "Đăng Ký - StudyStudio",
+            "description": "Tạo tài khoản StudyStudio của bạn"
+        }
     },
-    "footer": "© 2024 StudyStudio. Bảo lưu mọi quyền."
-  },
-  "LoginPage": {
-    "title": "Chào mừng trở lại",
-    "subtitle": "Đăng nhập vào tài khoản Study Studio của bạn",
-    "email": "Email",
-    "emailPlaceholder": "Nhập email của bạn",
-    "emailRequired": "Email là bắt buộc",
-    "emailInvalid": "Email không hợp lệ",
-    "password": "Mật khẩu",
-    "passwordPlaceholder": "Nhập mật khẩu của bạn",
-    "passwordRequired": "Mật khẩu là bắt buộc",
-    "forgotPassword": "Quên mật khẩu?",
-    "signInButton": "Đăng nhập",
-    "continueWithGoogle": "Tiếp tục với Google",
-    "orContinueWith": "HOẶC TIẾP TỤC VỚI",
-    "noAccount": "Chưa có tài khoản?",
-    "signUpLink": "Đăng ký",
-    "loginFailed": "Đăng nhập thất bại",
-    "loginSuccess": "Đăng nhập thành công",
-    "emailNotVerified": "Email chưa xác thực",
-    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
-    "error": "Lỗi",
-    "credentialError": "Không thể lấy thông tin xác thực từ Google",
-    "meta": {
-      "title": "Đăng Nhập - StudyStudio",
-      "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
-    }
-  },
-  "RegisterPage": {
-    "title": "Tạo tài khoản",
-    "subtitle": "Bắt đầu sử dụng Study Studio miễn phí",
-    "firstName": "Tên",
-    "lastName": "Họ",
-    "email": "Email",
-    "password": "Mật khẩu",
-    "confirmPassword": "Nhập lại mật khẩu",
-    "firstNameRequired": "Tên là bắt buộc",
-    "firstNameInvalid": "Tên không được chứa số và tối đa 10 ký tự",
-    "lastNameRequired": "Họ là bắt buộc",
-    "lastNameInvalid": "Họ không được chứa số và tối đa 10 ký tự",
-    "emailRequired": "Email là bắt buộc",
-    "emailInvalid": "Email không đúng định dạng (ví dụ: abc@gmail.com)",
-    "emailNoSpaces": "Email không được chứa khoảng trắng",
-    "passwordRequired": "Mật khẩu là bắt buộc",
-    "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, gồm chữ thường, chữ in hoa và số; chỉ cho phép ký tự đặc biệt @$!%*?&",
-    "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
-    "confirmPasswordMismatch": "Mật khẩu nhập lại không khớp",
-    "continueWithGoogle": "Tiếp tục với Google",
-    "orContinueWith": "Hoặc tiếp tục với",
-    "createAccountButton": "Tạo tài khoản",
-    "hasAccount": "Đã có tài khoản?",
-    "signInLink": "Đăng nhập",
-    "successMessage": "Đăng ký thành công!",
-    "verificationEmailSent": "Email xác thực đã được gửi. Đang chuyển sang trang đăng nhập...",
-    "registrationFailed": "Đăng ký thất bại. Vui lòng thử lại.",
-    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
-    "verifyEmailTitle": "Xác thực Email",
-    "verifyEmailSubtitle": "Hãy kiểm tra email của bạn để biết các bước tiếp theo",
-    "checkYourEmail": "Kiểm tra email của bạn",
-    "verificationLinkSentTo": "Chúng tôi đã gửi liên kết xác thực đến:",
-    "linkExpiresIn15Minutes": "Liên kết sẽ hết hạn sau 15 phút.",
-    "checkSpamFolder": "Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.",
-    "backToLogin": "Quay lại đăng nhập",
-    "meta": {
-      "title": "Đăng Ký - StudyStudio",
-      "description": "Tạo tài khoản StudyStudio của bạn"
-    }
-  },
-  "ForgotPasswordPage": {
-    "title": "Quên mật khẩu?",
-    "subtitle": "Nhập email của bạn để nhận liên kết đặt lại mật khẩu",
-    "email": "Email",
-    "emailPlaceholder": "Nhập email của bạn",
-    "emailRequired": "Email là bắt buộc",
-    "emailInvalid": "Email không đúng định dạng",
-    "emailNoSpaces": "Email không được chứa khoảng trắng",
-    "emailNotRegistered": "Email chưa được đăng ký",
-    "sendResetLink": "Gửi liên kết đặt lại",
-    "backToLogin": "Quay lại đăng nhập",
-    "successTitle": "Đã gửi email!",
-    "successSubtitle": "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến",
-    "successInstructions": "Vui lòng kiểm tra hộp thư đến và nhấp vào liên kết để đặt lại mật khẩu.",
-    "notReceived": "Chưa nhận được email?",
-    "resendLink": "Gửi lại",
-    "meta": {
-      "title": "Quên Mật Khẩu - StudyStudio",
-      "description": "Đặt lại mật khẩu StudyStudio của bạn"
-    }
-  },
-  "ResetPasswordPage": {
-    "title": "Tạo mật khẩu mới",
-    "subtitle": "Nhập mật khẩu mới cho tài khoản của bạn",
-    "password": "Mật khẩu mới",
-    "confirmPassword": "Xác nhận mật khẩu mới",
-    "passwordRequired": "Mật khẩu là bắt buộc",
-    "passwordInvalid": "Mật khẩu phải từ 10 đến 20 ký tự, bao gồm ít nhất 1 chữ viết hoa và 1 chữ số",
-    "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
-    "confirmPasswordMismatch": "Mật khẩu xác nhận không khớp",
-    "resetPasswordButton": "Đặt lại mật khẩu",
-    "invalidTokenTitle": "Liên kết đặt lại mật khẩu không hợp lệ",
-    "invalidTokenMessage": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
-    "backToLogin": "Quay lại trang đăng nhập",
-    "successTitle": "Đặt lại mật khẩu thành công!",
-    "successMessage": "Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
-    "goToLogin": "Đi đến trang đăng nhập",
-    "meta": {
-      "title": "Đặt Lại Mật Khẩu - StudyStudio",
-      "description": "Đặt lại mật khẩu StudyStudio của bạn"
-    }
-  },
-  "VerifyEmailPage": {
-    "title": "Xác thực Email",
-    "subtitle": "Kích hoạt tài khoản Study Studio của bạn",
-    "loading": "Đang xác thực email, vui lòng chờ...",
-    "successTitle": "Xác thực thành công",
-    "successMessage": "Tài khoản của bạn đã được xác thực thành công.",
-    "successDescription": "Bạn có thể đăng nhập để bắt đầu sử dụng hệ thống.",
-    "alreadyVerifiedMessage": "Tài khoản của bạn đã được xác thực trước đó.",
-    "invalidTokenTitle": "Liên kết không hợp lệ",
-    "invalidTokenMessage": "Liên kết xác thực không hợp lệ hoặc đã hết hạn.",
-    "invalidTokenDescription": "Vui lòng đăng nhập để tiếp tục xác thực tài khoản.",
-    "errorTitle": "Có lỗi xảy ra",
-    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
-    "backToLogin": "Quay lại đăng nhập",
-    "meta": {
-      "title": "Xác Thực Email - StudyStudio",
-      "description": "Xác thực tài khoản StudyStudio của bạn"
-    }
-  },
-  "ResendEmailVerifyPage": {
-    "title": "Xác thực Email của bạn",
-    "subtitle": "Gửi lại liên kết xác thực",
-    "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn một liên kết xác thực mới.",
-    "email": "Địa chỉ Email",
-    "emailPlaceholder": "email@cua.ban",
-    "emailRequired": "Email là bắt buộc",
-    "emailInvalid": "Vui lòng nhập một địa chỉ email hợp lệ",
-    "sendButton": "Gửi Liên kết Xác thực",
-    "sendFailed": "Không thể gửi liên kết xác thực",
-    "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
-    "successTitle": "Kiểm tra email của bạn",
-    "successMessage": "Chúng tôi đã gửi một liên kết xác thực đến địa chỉ email của bạn.",
-    "successDescription": "Vui lòng kiểm tra hộp thư đến của bạn và nhấp vào liên kết xác thực. Nếu bạn không thấy nó, hãy kiểm tra thư mục spam.",
-    "backToLogin": "Quay lại Đăng nhập",
-    "sendAnother": "Gửi Lại",
-    "alreadyHaveEmail": "Đã xác thực email của bạn?",
-    "backToLoginLink": "Đến Đăng nhập",
-    "meta": {
-      "title": "Gửi lại xác thực Email - StudyStudio",
-      "description": "Gửi lại liên kết xác thực email"
-    }
-  },
-  "SettingsPage": {
-    "title": "Cài đặt",
-    "backToDashboard": "Quay lại Dashboard",
-    "menu": {
-      "profile": "Hồ sơ",
-      "security": "Bảo mật",
-      "billing": "Gói dùng kỳ & Thanh toán",
-      "notifications": "Tự động báo cáo",
-      "help": "Trợ giúp & Báo cáo"
+    "ForgotPasswordPage": {
+        "title": "Quên mật khẩu?",
+        "subtitle": "Nhập email của bạn để nhận liên kết đặt lại mật khẩu",
+        "email": "Email",
+        "emailPlaceholder": "Nhập email của bạn",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Email không đúng định dạng",
+        "emailNoSpaces": "Email không được chứa khoảng trắng",
+        "emailNotRegistered": "Email chưa được đăng ký",
+        "sendResetLink": "Gửi liên kết đặt lại",
+        "backToLogin": "Quay lại đăng nhập",
+        "successTitle": "Đã gửi email!",
+        "successSubtitle": "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến",
+        "successInstructions": "Vui lòng kiểm tra hộp thư đến và nhấp vào liên kết để đặt lại mật khẩu.",
+        "notReceived": "Chưa nhận được email?",
+        "resendLink": "Gửi lại",
+        "meta": {
+            "title": "Quên Mật Khẩu - StudyStudio",
+            "description": "Đặt lại mật khẩu StudyStudio của bạn"
+        }
     },
-    "profile": {
-      "avatarTitle": "Hình ảnh hiển thị",
-      "changeAvatar": "Thay đổi ảnh",
-      "avatarSupport": "Tệp hỗ trợ: JPG, PNG (tối đa 5MB)",
-      "userInfoTitle": "Thông tin người dùng",
-      "userInfoSubtitle": "Cập nhật thông tin cá nhân của bạn",
-      "firstName": "Họ",
-      "lastName": "Tên",
-      "email": "Email",
-      "phoneNumber": "Số điện thoại",
-      "phoneNumberInvalid": "Số điện thoại phải có 10 đến 11 chữ số",
-      "bio": "Tiểu sử",
-      "bioPlaceholder": "Viết gì đó về bạn...",
-      "bioMaxLength": "Tiểu sử không được vượt quá 500 ký tự",
-      "preferencesTitle": "Tùy chọn",
-      "preferencesSubtitle": "Tùy chỉnh trải nghiệm của bạn",
-      "language": "Ngôn ngữ",
-      "notificationsTitle": "Thông báo qua email",
-      "notificationsSubtitle": "Quản lý các thông báo qua email của bạn",
-      "studioNotifications": "Thông báo từ Studio",
-      "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
-      "deleteAccount": {
-        "title": "Xóa tài khoản",
-        "subtitle": "Tài khoản sẽ bị đánh dấu là xóa và có thể khôi phục",
-        "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập cho đến khi khôi phục tài khoản",
-        "consequence1": "Tài khoản sẽ bị đánh dấu là xóa",
-        "consequence2": "Bạn sẽ không thể truy cập các không gian làm việc",
-        "consequence3": "Dữ liệu vẫn được giữ lại và tài khoản có thể khôi phục",
-        "button": "Xóa tài khoản",
-        "modalTitle": "Xác nhận xóa tài khoản",
-        "modalSubtitle": "Để tiếp tục, vui lòng xác nhận thao tác xóa tài khoản.",
-        "confirmLabel": "Nhập DELETE để xác nhận",
-        "confirmHint": "Bạn phải nhập chính xác DELETE (in hoa)",
-        "confirmTextError": "Vui lòng nhập chính xác DELETE để xác nhận",
+    "ResetPasswordPage": {
+        "title": "Tạo mật khẩu mới",
+        "subtitle": "Nhập mật khẩu mới cho tài khoản của bạn",
+        "password": "Mật khẩu mới",
+        "confirmPassword": "Xác nhận mật khẩu mới",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordInvalid": "Mật khẩu phải từ 10 đến 20 ký tự, chứa ít nhất một chữ hoa, một chữ thường và một chữ số",
+        "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+        "confirmPasswordMismatch": "Mật khẩu xác nhận không khớp",
+        "resetPasswordButton": "Đặt lại mật khẩu",
+        "invalidTokenTitle": "Liên kết đặt lại mật khẩu không hợp lệ",
+        "invalidTokenMessage": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+        "backToLogin": "Quay lại trang đăng nhập",
+        "successTitle": "Đặt lại mật khẩu thành công!",
+        "successMessage": "Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
+        "goToLogin": "Đi đến trang đăng nhập",
+        "meta": {
+            "title": "Đặt Lại Mật Khẩu - StudyStudio",
+            "description": "Đặt lại mật khẩu StudyStudio của bạn"
+        }
+    },
+    "VerifyEmailPage": {
+        "title": "Xác thực Email",
+        "subtitle": "Kích hoạt tài khoản Study Studio của bạn",
+        "loading": "Đang xác thực email, vui lòng chờ...",
+        "successTitle": "Xác thực thành công",
+        "successMessage": "Tài khoản của bạn đã được xác thực thành công.",
+        "successDescription": "Bạn có thể đăng nhập để bắt đầu sử dụng hệ thống.",
+        "alreadyVerifiedMessage": "Tài khoản của bạn đã được xác thực trước đó.",
+        "invalidTokenTitle": "Liên kết không hợp lệ",
+        "invalidTokenMessage": "Liên kết xác thực không hợp lệ hoặc đã hết hạn.",
+        "invalidTokenDescription": "Vui lòng đăng nhập để tiếp tục xác thực tài khoản.",
+        "errorTitle": "Có lỗi xảy ra",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "backToLogin": "Quay lại đăng nhập",
+        "meta": {
+            "title": "Xác Thực Email - StudyStudio",
+            "description": "Xác thực tài khoản StudyStudio của bạn"
+        }
+    },
+    "ResendEmailVerifyPage": {
+        "title": "Xác thực Email của bạn",
+        "subtitle": "Gửi lại liên kết xác thực",
+        "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn một liên kết xác thực mới.",
+        "email": "Địa chỉ Email",
+        "emailPlaceholder": "email@cua.ban",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Vui lòng nhập một địa chỉ email hợp lệ",
+        "sendButton": "Gửi Liên kết Xác thực",
+        "sendFailed": "Không thể gửi liên kết xác thực",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "successTitle": "Kiểm tra email của bạn",
+        "successMessage": "Chúng tôi đã gửi một liên kết xác thực đến địa chỉ email của bạn.",
+        "successDescription": "Vui lòng kiểm tra hộp thư đến của bạn và nhấp vào liên kết xác thực. Nếu bạn không thấy nó, hãy kiểm tra thư mục spam.",
+        "backToLogin": "Quay lại Đăng nhập",
+        "sendAnother": "Gửi Lại",
+        "alreadyHaveEmail": "Đã xác thực email của bạn?",
+        "backToLoginLink": "Đến Đăng nhập",
+        "meta": {
+            "title": "Gửi lại xác thực Email - StudyStudio",
+            "description": "Gửi lại liên kết xác thực email"
+        }
+    },
+    "SettingsPage": {
+        "title": "Cài đặt",
+        "backToDashboard": "Quay lại Dashboard",
+        "menu": {
+            "profile": "Hồ sơ",
+            "security": "Bảo mật",
+            "billing": "Gói dùng kỳ & Thanh toán",
+            "notifications": "Tự động báo cáo",
+            "help": "Trợ giúp & Báo cáo"
+        },
+        "profile": {
+            "avatarTitle": "Hình ảnh hiển thị",
+            "changeAvatar": "Thay đổi ảnh",
+            "avatarSupport": "Tệp hỗ trợ: JPG, PNG (tối đa 5MB)",
+            "userInfoTitle": "Thông tin người dùng",
+            "userInfoSubtitle": "Cập nhật thông tin cá nhân của bạn",
+            "firstName": "Họ",
+            "lastName": "Tên",
+            "firstNameRequired": "Tên là bắt buộc",
+            "firstNameInvalid": "Tên không được vượt quá 20 ký tự",
+            "lastNameRequired": "Họ là bắt buộc",
+            "lastNameInvalid": "Họ không được vượt quá 20 ký tự",
+            "email": "Email",
+            "phoneNumber": "Số điện thoại",
+            "phoneNumberInvalid": "Số điện thoại phải có 10 đến 11 chữ số",
+            "bio": "Tiểu sử",
+            "bioPlaceholder": "Viết gì đó về bạn...",
+            "bioMaxLength": "Tiểu sử không được vượt quá 500 ký tự",
+            "preferencesTitle": "Tùy chọn",
+            "preferencesSubtitle": "Tùy chỉnh trải nghiệm của bạn",
+            "language": "Ngôn ngữ",
+            "notificationsTitle": "Thông báo qua email",
+            "notificationsSubtitle": "Quản lý các thông báo qua email của bạn",
+            "studioNotifications": "Thông báo từ Studio",
+            "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
+            "deleteAccount": {
+                "title": "Xóa tài khoản",
+                "subtitle": "Tài khoản sẽ bị đánh dấu là xóa và có thể khôi phục",
+                "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập cho đến khi khôi phục tài khoản",
+                "consequence1": "Tài khoản sẽ bị đánh dấu là xóa",
+                "consequence2": "Bạn sẽ không thể truy cập các không gian làm việc",
+                "consequence3": "Dữ liệu vẫn được giữ lại và tài khoản có thể khôi phục",
+                "button": "Xóa tài khoản",
+                "modalTitle": "Xác nhận xóa tài khoản",
+                "modalSubtitle": "Để tiếp tục, vui lòng xác nhận thao tác xóa tài khoản.",
+                "confirmLabel": "Nhập DELETE để xác nhận",
+                "confirmHint": "Bạn phải nhập chính xác DELETE (in hoa)",
+                "confirmTextError": "Vui lòng nhập chính xác DELETE để xác nhận",
+                "cancelButton": "Hủy",
+                "confirmButton": "Xóa tài khoản",
+                "deleting": "Đang xử lý...",
+                "success": "Tài khoản đã bị đánh dấu là xóa",
+                "error": "Vô hiệu hóa tài khoản thất bại. Vui lòng thử lại!"
+            },
+            "editButton": "Chỉnh sửa",
+            "cancelButton": "Hủy bỏ",
+            "saveButton": "Lưu thay đổi",
+            "savingButton": "Đang lưu...",
+            "saveSuccess": "Cài đặt đã được lưu thành công!",
+            "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!"
+        },
+        "security": {
+            "comingSoon": "Tính năng bảo mật sẽ sớm có"
+        },
+        "billing": {
+            "comingSoon": "Tính năng thanh toán sẽ sớm có"
+        },
+        "notifications": {
+            "comingSoon": "Tính năng thông báo sẽ sớm có"
+        }
+    },
+    "AnnouncementsPage": {
+        "title": "Thông báo",
+        "subtitle": "Theo dõi tất cả thông báo và cập nhật hệ thống",
+        "searchPlaceholder": "Tìm kiếm thông báo...",
+        "filters": {
+            "all": "Tất cả",
+            "unread": "Chưa đọc"
+        },
+        "upgradeNow": "Nâng cấp ngay",
+        "noAnnouncements": "Không có thông báo nào"
+    },
+    "Notifications": {
+        "title": "Thông báo",
+        "markAllRead": "Đánh dấu tất cả đã đọc",
+        "viewAll": "Xem tất cả thông báo",
+        "noNotifications": "Không có thông báo"
+    },
+    "Header": {
+        "searchPlaceholder": "Tìm kiếm dự án, công việc...",
+        "settings": "Cài đặt",
+        "profile": "Hồ sơ",
+        "logout": "Đăng xuất",
+        "loggingOut": "Đang đăng xuất..."
+    },
+    "SecurityPage": {
+        "title": "Bảo mật",
+        "backToSettings": "Quay lại Cài đặt",
+        "changePasswordTitle": "Đổi mật khẩu",
+        "changePasswordSubtitle": "Cập nhật mật khẩu thường xuyên để giữ cho tài khoản của bạn an toàn.",
+        "currentPassword": "Mật khẩu hiện tại",
+        "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+        "currentPasswordRequired": "Mật khẩu hiện tại không được để trống",
+        "newPassword": "Mật khẩu mới",
+        "newPasswordPlaceholder": "Nhập mật khẩu mới",
+        "newPasswordRequired": "Mật khẩu mới không được để trống",
+        "passwordInvalid": "Mật khẩu mới phải từ 10–20 ký tự, chứa ít nhất một chữ hoa, một chữ thường và một chữ số",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp",
         "cancelButton": "Hủy",
-        "confirmButton": "Xóa tài khoản",
-        "deleting": "Đang xử lý...",
-        "success": "Tài khoản đã bị đánh dấu là xóa",
-        "error": "Vô hiệu hóa tài khoản thất bại. Vui lòng thử lại!"
-      },
-      "editButton": "Chỉnh sửa",
-      "cancelButton": "Hủy bỏ",
-      "saveButton": "Lưu thay đổi",
-      "savingButton": "Đang lưu...",
-      "saveSuccess": "Cài đặt đã được lưu thành công!",
-      "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!"
+        "updateButton": "Cập nhật mật khẩu",
+        "updatingButton": "Đang cập nhật...",
+        "changePasswordSuccess": "Cập nhật mật khẩu thành công!",
+        "changePasswordError": "Cập nhật mật khẩu thất bại. Vui lòng thử lại!",
+        "deleteAccount": {
+            "title": "Vùng nguy hiểm",
+            "subtitle": "Xóa tài khoản (bị đánh dấu) và có thể khôi phục sau",
+            "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập sau khi xóa!",
+            "consequence1": "Tài khoản sẽ bị đánh dấu là xóa",
+            "consequence2": "Bạn sẽ không thể truy cập vào tất cả các không gian làm việc",
+            "consequence3": "Dữ liệu dự án và tài liệu vẫn được giữ lại",
+            "consequence4": "Bạn có thể liên hệ hỗ trợ để khôi phục tài khoản",
+            "button": "Xóa tài khoản",
+            "modalTitle": "Xác nhận xóa tài khoản",
+            "modalSubtitle": "Bạn có chắc chắn muốn xóa tài khoản của mình không?",
+            "modalWarning": "Hành động này sẽ:",
+            "confirmLabel": "Để xác nhận, vui lòng nhập DELETE",
+            "confirmHint": "Nhập chữ DELETE (viết hoa) để xác nhận",
+            "confirmTextError": "Vui lòng nhập chính xác chữ DELETE để xác nhận",
+            "cancelButton": "Hủy",
+            "confirmButton": "Xóa tài khoản",
+            "deleting": "Đang xử lý...",
+            "success": "Tài khoản đã bị đánh dấu là xóa",
+            "error": "Vô hiệu hóa tài khoản thất bại. Vui lòng thử lại!"
+        }
     },
-    "security": {
-      "comingSoon": "Tính năng bảo mật sẽ sớm có"
+    "BillingPage": {
+        "plansTitle": "Gói đăng ký",
+        "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
+        "currentPlan": {
+            "title": "Gói đăng ký hiện tại",
+            "subtitle": "Bạn hiện đang sử dụng gói",
+            "changeButton": "Thay đổi gói",
+            "cancelButton": "Hủy gói đăng ký",
+            "activeBadge": "Đang hoạt động"
+        },
+        "plans": {
+            "period": "/tháng",
+            "current": "Gói hiện tại",
+            "free": {
+                "name": "Miễn phí",
+                "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
+                "feature2": "Tối đa 5 Không gian nhóm",
+                "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+                "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+                "feature5": "20 lượt yêu cầu AI mỗi ngày",
+                "button": "Gói hiện tại"
+            },
+            "premium": {
+                "name": "Premium",
+                "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
+                "feature2": "Tối đa 10 Không gian nhóm",
+                "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
+                "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
+                "feature5": "100 lượt yêu cầu AI mỗi ngày",
+                "button": "Nâng cấp lên Premium"
+            }
+        },
+        "historyTitle": "Lịch sử thanh toán",
+        "history": {
+            "today": "Hôm nay",
+            "lastMonth": "Tháng trước",
+            "twoMonthsAgo": "2 tháng trước",
+            "threeMonthsAgo": "3 tháng trước",
+            "annual": "Gói năm",
+            "subscription": "Đăng ký hàng tháng"
+        },
+        "table": {
+            "invoice": "Số hóa đơn",
+            "date": "Ngày",
+            "description": "Mô tả",
+            "amount": "Số tiền"
+        },
+        "invoiceInfo": {
+            "title": "Thông tin hóa đơn",
+            "subtitle": "Cập nhật thông tin thanh toán và hóa đơn của bạn",
+            "email": "Email nhận hóa đơn",
+            "paymentMethod": "Phương thức thanh toán",
+            "emailNotification": "Nhận thông báo qua email khi có hóa đơn mới",
+            "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!",
+            "editButton": "Chỉnh sửa thông tin hóa đơn",
+            "updateButton": "Cập nhật thông tin hóa đơn"
+        }
     },
-    "billing": {
-      "comingSoon": "Tính năng thanh toán sẽ sớm có"
+    "HelpPage": {
+        "form": {
+            "formTitle": "Gửi lời than phiền hoặc Liên hệ hỗ trợ",
+            "subtitle": "Hãy cho chúng tôi biết nếu bạn gặp sự cố hoặc có bất kỳ câu hỏi nào",
+            "feedbackType": "Loại phản hồi",
+            "feedbackOptions": {
+                "bug": "Báo cáo lỗi",
+                "feedback": "Góp ý cải thiện",
+                "support": "Yêu cầu hỗ trợ",
+                "other": "Khác"
+            },
+            "email": "Email",
+            "emailPlaceholder": "dat@studist.edu.vn",
+            "title": "Tiêu đề",
+            "titlePlaceholder": "Một vài từ mô tả vấn đề",
+            "content": "Nội dung",
+            "contentPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
+            "cancelButton": "Hủy",
+            "submitButton": "Gửi báo cáo",
+            "validationError": "Vui lòng điền tất cả các trường",
+            "submitSuccess": "Báo cáo của bạn đã được gửi thành công!",
+            "submitError": "Gửi báo cáo thất bại"
+        },
+        "faq": {
+            "title": "Câu hỏi thường gặp",
+            "subtitle": "Tìm câu trả lời nhanh cho các câu hỏi phổ biến",
+            "item1": {
+                "question": "Làm thế nào để đặt lại mật khẩu?",
+                "answer": "Bạn có thể đặt lại mật khẩu bằng cách vào trang Đăng nhập và nhấp vào 'Quên mật khẩu'. Làm theo hướng dẫn được gửi đến email của bạn."
+            },
+            "item2": {
+                "question": "Làm thế nào để thay đổi ngôn ngữ?",
+                "answer": "Vào Cài đặt > Hồ sơ và chọn ngôn ngữ ưa thích của bạn từ menu thả xuống."
+            },
+            "item3": {
+                "question": "Tôi có thể hủy đăng ký bất cứ lúc nào không?",
+                "answer": "Có, bạn có thể hủy đăng ký bất cứ lúc nào từ trang Thanh toán trong Cài đặt."
+            },
+            "item4": {
+                "question": "Làm thế nào để liên hệ hỗ trợ?",
+                "answer": "Bạn có thể liên hệ với chúng tôi bằng cách sử dụng biểu mẫu trên trang này hoặc gửi email trực tiếp đến support@studystudio.com."
+            }
+        }
     },
-    "notifications": {
-      "comingSoon": "Tính năng thông báo sẽ sớm có"
+    "MasterPage": {
+        "title": "Master",
+        "subtitle": "Quản lý các studio và không gian làm việc của bạn",
+        "searchPlaceholder": "Tìm kiếm studio, công việc...",
+        "createButton": "Không gian mới",
+        "infoBanner": "Tạo và quản lý các studio để tổ chức công việc của bạn hiệu quả hơn.",
+        "studiosUsed": "studios đã sử dụng",
+        "personal": "Cá nhân",
+        "group": "Nhóm",
+        "members": "thành viên",
+        "videos": "videos",
+        "noStudios": "Chưa có studio nào. Tạo studio đầu tiên của bạn!",
+        "noSearchResults": "Không tìm thấy studio nào phù hợp",
+        "error": "Lỗi",
+        "loadError": "Không thể tải danh sách studio",
+        "backToList": "Quay lại danh sách",
+        "groupsTitle": "Danh sách nhóm",
+        "noGroups": "Chưa có nhóm nào trong studio này",
+        "modal": {
+            "createTitle": "Tạo Studio Mới",
+            "editTitle": "Chỉnh sửa Studio",
+            "name": "Tên Studio",
+            "namePlaceholder": "Nhập tên studio...",
+            "description": "Mô tả",
+            "descriptionPlaceholder": "Mô tả ngắn gọn về studio...",
+            "type": "Loại",
+            "cancel": "Hủy",
+            "create": "Tạo",
+            "save": "Lưu",
+            "createSuccess": "Tạo studio thành công!",
+            "editSuccess": "Cập nhật studio thành công!",
+            "createError": "Không thể tạo studio",
+            "editError": "Không thể cập nhật studio"
+        },
+        "detailModal": {
+            "description": "Mô tả",
+            "members": "Thành viên",
+            "videos": "Videos",
+            "created": "Ngày tạo",
+            "updated": "Cập nhật lần cuối",
+            "close": "Đóng",
+            "edit": "Chỉnh sửa",
+            "delete": "Xóa"
+        },
+        "deleteModal": {
+            "title": "Xóa Studio",
+            "message": "Bạn có chắc chắn muốn xóa",
+            "warning": "Cảnh báo: Tất cả các nhóm (groups) bên trong studio này cũng sẽ bị xóa. Hành động này không thể hoàn tác.",
+            "cancel": "Hủy",
+            "confirm": "Xóa",
+            "success": "Xóa studio thành công!",
+            "error": "Không thể xóa studio"
+        }
+    },
+    "LandingGroupPage": {
+        "hero": {
+            "title": "Không gian làm việc chung cho",
+            "titleHighlight": "học tập & dự án",
+            "createButton": "Tạo nhóm →",
+            "imageAlt": "Group collaboration"
+        },
+        "howToUse": {
+            "title": "Cách sử dụng",
+            "step1": "Tạo mới một nhóm với template có sẵn",
+            "step2": "Sau đó chia sẻ bảng với những người dùng khác",
+            "step3": "Tạo công việc, giao nhiệm vụ cho thành viên",
+            "step4": "Cộng tác để cùng nhau hoàn thành công việc."
+        },
+        "features": {
+            "title": "Nhóm có thể làm gì?",
+            "manageGroup": {
+                "title": "Quản lý nhóm",
+                "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
+            },
+            "trackWork": {
+                "title": "Theo dõi công việc",
+                "description": "Nắm rõ ai làm gì, tiến độ\nđến đâu"
+            },
+            "permissions": {
+                "title": "Phân quyền thông minh",
+                "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
+            },
+            "aiSupport": {
+                "title": "AI hỗ trợ học tập",
+                "description": "Hỏi đáp, phân tích yêu cầu,\ntạo báo cáo"
+            }
+        },
+        "users": {
+            "title": "Ai đang sử dụng Study Studio",
+            "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
+            "personal": {
+                "title": "Cá nhân & Nhóm",
+                "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ cùng\nnhau học tập và làm việc hiệu quả."
+            },
+            "education": {
+                "title": "Giáo dục",
+                "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho\nngười trưởng thành."
+            }
+        },
+        "ai": {
+            "title": "Quản lý công việc hiệu quả hơn",
+            "subtitle": "với sự giúp sức của AI",
+            "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
+            "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
+        }
+    },
+    "LandingPersonalPage": {
+        "hero": {
+            "title": "Không gian làm việc",
+            "titleHighlight": "dành riêng cho bạn",
+            "subtitle": "Tổ chức ghi chú, tài liệu và kế hoạch học tập.",
+            "subtitleExtra": "Tất cả trong một Không gian cá nhân trực quan, dễ sử dụng.",
+            "createButton": "Tạo không gian của bạn →",
+            "imageAlt": "Landing illustration"
+        },
+        "howToUse": {
+            "title": "Cách sử dụng",
+            "step1": {
+                "title": "Tạo Không gian cá nhân",
+                "description": "Bắt đầu với một không gian trống\nTự do sắp xếp theo cách của bạn"
+            },
+            "step2": {
+                "title": "Thêm ghi chú, tài liệu",
+                "description": "Thêm văn bản, hình ảnh, link và file\nTất cả gọn gàng trên một bảng"
+            },
+            "step3": {
+                "title": "Lập kế hoạch học tập",
+                "description": "Tạo danh sách công việc đặt mục tiêu\nvà theo dõi tiến độ mỗi ngày"
+            },
+            "step4": {
+                "title": "Học tập hiệu quả hơn",
+                "description": "AI giúp bạn tóm tắt, ôn tập và gợi ý\nphương pháp học tối ưu hơn"
+            }
+        },
+        "features": {
+            "title": "Bạn có thể làm gì?",
+            "smartNotes": {
+                "title": "Ghi chú thông minh",
+                "description": "Tạo và ghi chú với văn bản,\nhình ảnh, link"
+            },
+            "tasks": {
+                "title": "Công việc, mục tiêu",
+                "description": "Lập danh sách việc cần làm\nđặt deadline và theo dõi tiến độ\nmỗi ngày"
+            },
+            "documents": {
+                "title": "Tổ chức tài liệu",
+                "description": "Lưu trữ và sắp xếp tài liệu học\ntập theo chủ đề, môn học hoặc\ndự án"
+            },
+            "aiSupport": {
+                "title": "AI hỗ trợ học tập",
+                "description": "AI tóm tắt tài liệu, gợi ý ôn tập\nvà trả lời câu hỏi của bạn"
+            },
+            "schedule": {
+                "title": "Lịch học tập",
+                "description": "Lên lịch học và quản lý\nthời gian hiệu quả"
+            },
+            "progress": {
+                "title": "Theo dõi tiến độ",
+                "description": "Xem tổng quan tiến độ học tập\nvà thống kê"
+            }
+        },
+        "users": {
+            "title": "Ai đang sử dụng Study Studio",
+            "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
+            "students": {
+                "title": "Học sinh, sinh viên",
+                "description": "Sinh viên, người tự học, nhóm\nbạn, đội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc\nhiệu quả."
+            },
+            "selfLearners": {
+                "title": "Người tự học",
+                "description": "Tự tổ chức lộ trình học,\nlưu trữ tài liệu tham khảo\nvà đặt mục tiêu phát triển\ncủa bản thân"
+            }
+        }
+    },
+    "LandingManagementPage": {
+        "hero": {
+            "title": "Quản lý toàn bộ nhóm",
+            "titleHighlight": "từ một nơi",
+            "createButton": "Bắt đầu quản lý →",
+            "imageAlt": "Management Illustration"
+        },
+        "howToUse": {
+            "title": "Cách sử dụng",
+            "step1": {
+                "title": "Tạo Không gian quản lý",
+                "description": "Thiết lập không gian và cấu hình theo nhu cầu tổ chức của bạn"
+            },
+            "step2": {
+                "title": "Thêm nhóm & thành viên",
+                "description": "Mời thành viên, tạo nhóm học tập chỉ trong vài click"
+            },
+            "step3": {
+                "title": "Phân quyền, thiết lập",
+                "description": "Phân quyền quản lý, thành viên cho từng nhóm riêng biệt"
+            },
+            "step4": {
+                "title": "Theo dõi & báo cáo",
+                "description": "Xem tiến độ, báo cáo hoạt động và đánh giá hiệu quả"
+            }
+        },
+        "features": {
+            "title": "Quản lý có thể làm gì?",
+            "manageMembers": {
+                "title": "Quản lý thành viên",
+                "description": "Thêm, xóa quản lý thành viên trong tổ chức của bạn"
+            },
+            "trackProgress": {
+                "title": "Theo dõi tiến độ",
+                "description": "Xem tiến độ của từng nhóm, thành viên"
+            },
+            "permissions": {
+                "title": "Phân quyền thông minh",
+                "description": "Thiết lập quyền hạn cho từng vai trò: quản lý, thành viên, khách"
+            },
+            "overview": {
+                "title": "Tổng quan",
+                "description": "Dashboard tổng quan, số liệu"
+            }
+        },
+        "users": {
+            "title": "Ai đang sử dụng Study Studio",
+            "subtitle": "Hơn xx triệu người sử dụng bảng mỗi tháng.",
+            "personal": {
+                "title": "Cá nhân & Nhóm",
+                "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc hiệu quả."
+            },
+            "education": {
+                "title": "Tổ chức giáo dục",
+                "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho người trưởng thành."
+            }
+        }
+    },
+    "LandingPlanPage": {
+        "hero": {
+            "title": "Các gói đăng ký trả phí",
+            "titleHighlight": "của chúng tôi"
+        },
+        "freePlan": {
+            "title": "Gói miễn phí",
+            "price": "0 VND",
+            "description": "Phù hợp cho người dùng cá nhân và các\nnhóm nhỏ trải nghiệm",
+            "registerButton": "Đăng ký",
+            "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
+            "feature2": "Tối đa 5 Không gian nhóm",
+            "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+            "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+            "feature5": "20 lượt yêu cầu AI mỗi ngày"
+        },
+        "premiumPlan": {
+            "title": "Gói nâng cấp",
+            "price": "299.000 VND / Tháng",
+            "description": "Phù hợp cho các nhóm lớn cần sự linh\nhoạt hơn",
+            "registerButton": "Đăng ký",
+            "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
+            "feature2": "Tối đa 10 Không gian nhóm",
+            "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
+            "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
+            "feature5": "100 lượt yêu cầu AI mỗi ngày"
+        }
     }
-  },
-  "AnnouncementsPage": {
-    "title": "Thông báo",
-    "subtitle": "Theo dõi tất cả thông báo và cập nhật hệ thống",
-    "searchPlaceholder": "Tìm kiếm thông báo...",
-    "nav": {
-      "home": "Trang chủ",
-      "groups": "Nhóm",
-      "announcements": "Thông báo"
-    },
-    "filters": {
-      "all": "Tất cả",
-      "unread": "Chưa đọc",
-      "important": "Quan trọng"
-    },
-    "priority": {
-      "high": "Cao",
-      "medium": "Trung bình",
-      "low": "Thấp"
-    },
-    "announcements": {
-      "upgrade": {
-        "title": "Nâng cấp gói Miễn phí",
-        "description": "Bạn đã dùng hết 3 không gian của gói Miễn phí. Nâng cấp lên Pro để có thêm không gian và các tính năng nâng cao.",
-        "date": "2 giờ trước"
-      },
-      "maintenance": {
-        "title": "Bảo trì hệ thống",
-        "description": "Hệ thống sẽ được bảo trì vào ngày 15/02 từ 00:00 - 03:00. Vui lòng lưu lại công việc của bạn trước đó.",
-        "date": "5 giờ trước"
-      },
-      "feature": {
-        "title": "Cập nhật tính năng mới",
-        "description": "Chúng tôi vừa thêm tính năng chia sẻ project với quyền hạn. Bây giờ bạn có thể kiểm soát tốt hơn ai có quyền gì.",
-        "date": "1 ngày trước"
-      },
-      "member": {
-        "title": "Thông báo từ Thành viên",
-        "description": "Nguyễn Văn A đã thêm bạn vào project SEP490-Q62. Hãy kiểm tra và bắt đầu cộng tác.",
-        "date": "2 ngày trước"
-      },
-      "achievement": {
-        "title": "Hoàn thành mục tiêu",
-        "description": "Chúc mừng! Bạn đã hoàn thành tất cả các task trong sprint này.",
-        "date": "3 ngày trước"
-      }
-    },
-    "upgradeNow": "Nâng cấp ngay",
-    "noAnnouncements": "Không có thông báo nào"
-  },
-  "Notifications": {
-    "title": "Thông báo",
-    "markAllRead": "Đánh dấu tất cả đã đọc",
-    "viewAll": "Xem tất cả thông báo",
-    "noNotifications": "Không có thông báo",
-    "items": {
-      "upgrade": {
-        "title": "Nâng cấp gói Miễn phí",
-        "description": "Bạn đã dùng hết 3 không gian. Nâng cấp lên Pro.",
-        "date": "2 giờ trước"
-      },
-      "maintenance": {
-        "title": "Bảo trì hệ thống",
-        "description": "Bảo trì hệ thống ngày 15/02 từ 00:00 - 03:00.",
-        "date": "5 giờ trước"
-      },
-      "feature": {
-        "title": "Tính năng mới",
-        "description": "Chia sẻ project với quyền hạn đã có sẵn.",
-        "date": "1 ngày trước"
-      }
-    }
-  },
-  "Header": {
-    "searchPlaceholder": "Tìm kiếm dự án, công việc...",
-    "settings": "Cài đặt",
-    "profile": "Hồ sơ",
-    "logout": "Đăng xuất",
-    "loggingOut": "Đang đăng xuất..."
-  },
-  "SecurityPage": {
-    "title": "Bảo mật",
-    "backToSettings": "Quay lại Cài đặt",
-    "changePasswordTitle": "Đổi mật khẩu",
-    "changePasswordSubtitle": "Cập nhật mật khẩu thường xuyên để giữ cho tài khoản của bạn an toàn.",
-    "currentPassword": "Mật khẩu hiện tại",
-    "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
-    "currentPasswordRequired": "Mật khẩu hiện tại không được để trống",
-    "newPassword": "Mật khẩu mới",
-    "newPasswordPlaceholder": "Nhập mật khẩu mới",
-    "newPasswordRequired": "Mật khẩu mới không được để trống",
-    "passwordInvalid": "Mật khẩu mới phải từ 10–20 ký tự, gồm chữ thường, chữ in hoa và số; chỉ cho phép ký tự đặc biệt @$!%*?&",
-    "confirmPassword": "Xác nhận mật khẩu",
-    "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
-    "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
-    "passwordMismatch": "Mật khẩu không khớp",
-    "cancelButton": "Hủy",
-    "updateButton": "Cập nhật mật khẩu",
-    "updatingButton": "Đang cập nhật...",
-    "changePasswordSuccess": "Cập nhật mật khẩu thành công!",
-    "changePasswordError": "Cập nhật mật khẩu thất bại. Vui lòng thử lại!",
-    "deleteAccount": {
-      "title": "Vùng nguy hiểm",
-      "subtitle": "Xóa tài khoản (bị đánh dấu) và có thể khôi phục sau",
-      "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập sau khi xóa!",
-      "consequence1": "Tài khoản sẽ bị đánh dấu là xóa",
-      "consequence2": "Bạn sẽ không thể truy cập vào tất cả các không gian làm việc",
-      "consequence3": "Dữ liệu dự án và tài liệu vẫn được giữ lại",
-      "consequence4": "Bạn có thể liên hệ hỗ trợ để khôi phục tài khoản",
-      "button": "Xóa tài khoản",
-      "modalTitle": "Xác nhận xóa tài khoản",
-      "modalSubtitle": "Bạn có chắc chắn muốn xóa tài khoản của mình không?",
-      "modalWarning": "Hành động này sẽ:",
-      "confirmLabel": "Để xác nhận, vui lòng nhập DELETE",
-      "confirmHint": "Nhập chữ DELETE (viết hoa) để xác nhận",
-      "confirmTextError": "Vui lòng nhập chính xác chữ DELETE để xác nhận",
-      "cancelButton": "Hủy",
-      "confirmButton": "Xóa tài khoản",
-      "deleting": "Đang xử lý...",
-      "success": "Tài khoản đã bị đánh dấu là xóa",
-      "error": "Vô hiệu hóa tài khoản thất bại. Vui lòng thử lại!"
-    }
-  },
-  "BillingPage": {
-    "plansTitle": "Gói đăng ký",
-    "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
-    "currentPlan": {
-      "title": "Gói đăng ký hiện tại",
-      "subtitle": "Bạn hiện đang sử dụng gói",
-      "changeButton": "Thay đổi gói",
-      "cancelButton": "Hủy gói đăng ký",
-      "activeBadge": "Đang hoạt động"
-    },
-    "plans": {
-      "period": "/tháng",
-      "current": "Gói hiện tại",
-      "free": {
-        "name": "Miễn phí",
-        "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
-        "feature2": "Tối đa 5 Không gian nhóm",
-        "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
-        "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
-        "feature5": "20 lượt yêu cầu AI mỗi ngày",
-        "button": "Gói hiện tại"
-      },
-      "premium": {
-        "name": "Premium",
-        "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
-        "feature2": "Tối đa 10 Không gian nhóm",
-        "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
-        "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
-        "feature5": "100 lượt yêu cầu AI mỗi ngày",
-        "button": "Nâng cấp lên Premium"
-      }
-    },
-    "historyTitle": "Lịch sử thanh toán",
-    "history": {
-      "today": "Hôm nay",
-      "lastMonth": "Tháng trước",
-      "twoMonthsAgo": "2 tháng trước",
-      "threeMonthsAgo": "3 tháng trước",
-      "annual": "Gói năm",
-      "subscription": "Đăng ký hàng tháng"
-    },
-    "table": {
-      "invoice": "Số hóa đơn",
-      "date": "Ngày",
-      "description": "Mô tả",
-      "amount": "Số tiền"
-    },
-    "invoiceInfo": {
-      "title": "Thông tin hóa đơn",
-      "subtitle": "Cập nhật thông tin thanh toán và hóa đơn của bạn",
-      "email": "Email nhận hóa đơn",
-      "paymentMethod": "Phương thức thanh toán",
-      "emailNotification": "Nhận thông báo qua email khi có hóa đơn mới",
-      "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!",
-      "editButton": "Chỉnh sửa thông tin hóa đơn",
-      "updateButton": "Cập nhật thông tin hóa đơn"
-    }
-  },
-  "HelpPage": {
-    "form": {
-      "formTitle": "Gửi lời than phiền hoặc Liên hệ hỗ trợ",
-      "subtitle": "Hãy cho chúng tôi biết nếu bạn gặp sự cố hoặc có bất kỳ câu hỏi nào",
-      "feedbackType": "Loại phản hồi",
-      "feedbackOptions": {
-        "bug": "Báo cáo lỗi",
-        "feedback": "Góp ý cải thiện",
-        "support": "Yêu cầu hỗ trợ",
-        "other": "Khác"
-      },
-      "email": "Email",
-      "emailPlaceholder": "dat@studist.edu.vn",
-      "title": "Tiêu đề",
-      "titlePlaceholder": "Một vài từ mô tả vấn đề",
-      "content": "Nội dung",
-      "contentPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
-      "cancelButton": "Hủy",
-      "submitButton": "Gửi báo cáo",
-      "validationError": "Vui lòng điền tất cả các trường",
-      "submitSuccess": "Báo cáo của bạn đã được gửi thành công!",
-      "submitError": "Gửi báo cáo thất bại"
-    },
-    "faq": {
-      "title": "Câu hỏi thường gặp",
-      "subtitle": "Tìm câu trả lời nhanh cho các câu hỏi phổ biến",
-      "item1": {
-        "question": "Làm thế nào để đặt lại mật khẩu?",
-        "answer": "Bạn có thể đặt lại mật khẩu bằng cách vào trang Đăng nhập và nhấp vào 'Quên mật khẩu'. Làm theo hướng dẫn được gửi đến email của bạn."
-      },
-      "item2": {
-        "question": "Làm thế nào để thay đổi ngôn ngữ?",
-        "answer": "Vào Cài đặt > Hồ sơ và chọn ngôn ngữ ưa thích của bạn từ menu thả xuống."
-      },
-      "item3": {
-        "question": "Tôi có thể hủy đăng ký bất cứ lúc nào không?",
-        "answer": "Có, bạn có thể hủy đăng ký bất cứ lúc nào từ trang Thanh toán trong Cài đặt."
-      },
-      "item4": {
-        "question": "Làm thế nào để liên hệ hỗ trợ?",
-        "answer": "Bạn có thể liên hệ với chúng tôi bằng cách sử dụng biểu mẫu trên trang này hoặc gửi email trực tiếp đến support@studystudio.com."
-      }
-    }
-  },
-  "MasterPage": {
-    "title": "Master",
-    "subtitle": "Quản lý các studio và không gian làm việc của bạn",
-    "searchPlaceholder": "Tìm kiếm studio, công việc...",
-    "createButton": "Không gian mới",
-    "infoBanner": "Tạo và quản lý các studio để tổ chức công việc của bạn hiệu quả hơn.",
-    "studiosUsed": "studios đã sử dụng",
-    "personal": "Cá nhân",
-    "group": "Nhóm",
-    "members": "thành viên",
-    "videos": "videos",
-    "noStudios": "Chưa có studio nào. Tạo studio đầu tiên của bạn!",
-    "noSearchResults": "Không tìm thấy studio nào phù hợp",
-    "error": "Lỗi",
-    "loadError": "Không thể tải danh sách studio",
-    "backToList": "Quay lại danh sách",
-    "groupsTitle": "Danh sách nhóm",
-    "noGroups": "Chưa có nhóm nào trong studio này",
-    "modal": {
-      "createTitle": "Tạo Studio Mới",
-      "editTitle": "Chỉnh sửa Studio",
-      "name": "Tên Studio",
-      "namePlaceholder": "Nhập tên studio...",
-      "description": "Mô tả",
-      "descriptionPlaceholder": "Mô tả ngắn gọn về studio...",
-      "type": "Loại",
-      "cancel": "Hủy",
-      "create": "Tạo",
-      "save": "Lưu",
-      "createSuccess": "Tạo studio thành công!",
-      "editSuccess": "Cập nhật studio thành công!",
-      "createError": "Không thể tạo studio",
-      "editError": "Không thể cập nhật studio"
-    },
-    "detailModal": {
-      "description": "Mô tả",
-      "members": "Thành viên",
-      "videos": "Videos",
-      "created": "Ngày tạo",
-      "updated": "Cập nhật lần cuối",
-      "close": "Đóng",
-      "edit": "Chỉnh sửa",
-      "delete": "Xóa"
-    },
-    "deleteModal": {
-      "title": "Xóa Studio",
-      "message": "Bạn có chắc chắn muốn xóa",
-      "warning": "Cảnh báo: Tất cả các nhóm (groups) bên trong studio này cũng sẽ bị xóa. Hành động này không thể hoàn tác.",
-      "cancel": "Hủy",
-      "confirm": "Xóa",
-      "success": "Xóa studio thành công!",
-      "error": "Không thể xóa studio"
-    }
-  },
-  "LandingGroupPage": {
-    "hero": {
-      "title": "Không gian làm việc chung cho",
-      "titleHighlight": "học tập & dự án",
-      "createButton": "Tạo nhóm →",
-      "imageAlt": "Group collaboration"
-    },
-    "howToUse": {
-      "title": "Cách sử dụng",
-      "step1": "Tạo mới một nhóm với template có sẵn",
-      "step2": "Sau đó chia sẻ bảng với những người dùng khác",
-      "step3": "Tạo công việc, giao nhiệm vụ cho thành viên",
-      "step4": "Cộng tác để cùng nhau hoàn thành công việc."
-    },
-    "features": {
-      "title": "Nhóm có thể làm gì?",
-      "manageGroup": {
-        "title": "Quản lý nhóm",
-        "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
-      },
-      "trackWork": {
-        "title": "Theo dõi công việc",
-        "description": "Nắm rõ ai làm gì, tiến độ\nđến đâu"
-      },
-      "permissions": {
-        "title": "Phân quyền thông minh",
-        "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
-      },
-      "aiSupport": {
-        "title": "AI hỗ trợ học tập",
-        "description": "Hỏi đáp, phân tích yêu cầu,\ntạo báo cáo"
-      }
-    },
-    "users": {
-      "title": "Ai đang sử dụng Study Studio",
-      "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
-      "personal": {
-        "title": "Cá nhân & Nhóm",
-        "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ cùng\nnhau học tập và làm việc hiệu quả."
-      },
-      "education": {
-        "title": "Giáo dục",
-        "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho\nngười trưởng thành."
-      }
-    },
-    "ai": {
-      "title": "Quản lý công việc hiệu quả hơn",
-      "subtitle": "với sự giúp sức của AI",
-      "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
-      "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
-    }
-  },
-  "LandingPersonalPage": {
-    "hero": {
-      "title": "Không gian làm việc",
-      "titleHighlight": "dành riêng cho bạn",
-      "subtitle": "Tổ chức ghi chú, tài liệu và kế hoạch học tập.",
-      "subtitleExtra": "Tất cả trong một Không gian cá nhân trực quan, dễ sử dụng.",
-      "createButton": "Tạo không gian của bạn →",
-      "imageAlt": "Landing illustration"
-    },
-    "howToUse": {
-      "title": "Cách sử dụng",
-      "step1": {
-        "title": "Tạo Không gian cá nhân",
-        "description": "Bắt đầu với một không gian trống\nTự do sắp xếp theo cách của bạn"
-      },
-      "step2": {
-        "title": "Thêm ghi chú, tài liệu",
-        "description": "Thêm văn bản, hình ảnh, link và file\nTất cả gọn gàng trên một bảng"
-      },
-      "step3": {
-        "title": "Lập kế hoạch học tập",
-        "description": "Tạo danh sách công việc đặt mục tiêu\nvà theo dõi tiến độ mỗi ngày"
-      },
-      "step4": {
-        "title": "Học tập hiệu quả hơn",
-        "description": "AI giúp bạn tóm tắt, ôn tập và gợi ý\nphương pháp học tối ưu hơn"
-      }
-    },
-    "features": {
-      "title": "Bạn có thể làm gì?",
-      "smartNotes": {
-        "title": "Ghi chú thông minh",
-        "description": "Tạo và ghi chú với văn bản,\nhình ảnh, link"
-      },
-      "tasks": {
-        "title": "Công việc, mục tiêu",
-        "description": "Lập danh sách việc cần làm\nđặt deadline và theo dõi tiến độ\nmỗi ngày"
-      },
-      "documents": {
-        "title": "Tổ chức tài liệu",
-        "description": "Lưu trữ và sắp xếp tài liệu học\ntập theo chủ đề, môn học hoặc\ndự án"
-      },
-      "aiSupport": {
-        "title": "AI hỗ trợ học tập",
-        "description": "AI tóm tắt tài liệu, gợi ý ôn tập\nvà trả lời câu hỏi của bạn"
-      },
-      "schedule": {
-        "title": "Lịch học tập",
-        "description": "Lên lịch học và quản lý\nthời gian hiệu quả"
-      },
-      "progress": {
-        "title": "Theo dõi tiến độ",
-        "description": "Xem tổng quan tiến độ học tập\nvà thống kê"
-      }
-    },
-    "users": {
-      "title": "Ai đang sử dụng Study Studio",
-      "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
-      "students": {
-        "title": "Học sinh, sinh viên",
-        "description": "Sinh viên, người tự học, nhóm\nbạn, đội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc\nhiệu quả."
-      },
-      "selfLearners": {
-        "title": "Người tự học",
-        "description": "Tự tổ chức lộ trình học,\nlưu trữ tài liệu tham khảo\nvà đặt mục tiêu phát triển\ncủa bản thân"
-      }
-    }
-  },
-  "LandingManagementPage": {
-    "hero": {
-      "title": "Quản lý toàn bộ nhóm",
-      "titleHighlight": "từ một nơi",
-      "createButton": "Bắt đầu quản lý →",
-      "imageAlt": "Management Illustration"
-    },
-    "howToUse": {
-      "title": "Cách sử dụng",
-      "step1": {
-        "title": "Tạo Không gian quản lý",
-        "description": "Thiết lập không gian và cấu hình theo nhu cầu tổ chức của bạn"
-      },
-      "step2": {
-        "title": "Thêm nhóm & thành viên",
-        "description": "Mời thành viên, tạo nhóm học tập chỉ trong vài click"
-      },
-      "step3": {
-        "title": "Phân quyền, thiết lập",
-        "description": "Phân quyền quản lý, thành viên cho từng nhóm riêng biệt"
-      },
-      "step4": {
-        "title": "Theo dõi & báo cáo",
-        "description": "Xem tiến độ, báo cáo hoạt động và đánh giá hiệu quả"
-      }
-    },
-    "features": {
-      "title": "Quản lý có thể làm gì?",
-      "manageMembers": {
-        "title": "Quản lý thành viên",
-        "description": "Thêm, xóa quản lý thành viên trong tổ chức của bạn"
-      },
-      "trackProgress": {
-        "title": "Theo dõi tiến độ",
-        "description": "Xem tiến độ của từng nhóm, thành viên"
-      },
-      "permissions": {
-        "title": "Phân quyền thông minh",
-        "description": "Thiết lập quyền hạn cho từng vai trò: quản lý, thành viên, khách"
-      },
-      "overview": {
-        "title": "Tổng quan",
-        "description": "Dashboard tổng quan, số liệu"
-      }
-    },
-    "users": {
-      "title": "Ai đang sử dụng Study Studio",
-      "subtitle": "Hơn xx triệu người sử dụng bảng mỗi tháng.",
-      "personal": {
-        "title": "Cá nhân & Nhóm",
-        "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc hiệu quả."
-      },
-      "education": {
-        "title": "Tổ chức giáo dục",
-        "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho người trưởng thành."
-      }
-    }
-  },
-  "LandingPlanPage": {
-    "hero": {
-      "title": "Các gói đăng ký trả phí",
-      "titleHighlight": "của chúng tôi"
-    },
-    "freePlan": {
-      "title": "Gói miễn phí",
-      "price": "0 VND",
-      "description": "Phù hợp cho người dùng cá nhân và các\nnhóm nhỏ trải nghiệm",
-      "registerButton": "Đăng ký",
-      "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
-      "feature2": "Tối đa 5 Không gian nhóm",
-      "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
-      "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
-      "feature5": "20 lượt yêu cầu AI mỗi ngày"
-    },
-    "premiumPlan": {
-      "title": "Gói nâng cấp",
-      "price": "299.000 VND / Tháng",
-      "description": "Phù hợp cho các nhóm lớn cần sự linh\nhoạt hơn",
-      "registerButton": "Đăng ký",
-      "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
-      "feature2": "Tối đa 10 Không gian nhóm",
-      "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
-      "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
-      "feature5": "100 lượt yêu cầu AI mỗi ngày"
-    }
-  }
 }

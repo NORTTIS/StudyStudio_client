@@ -1,32 +1,23 @@
 "use client";
 
-import {
-  Toast,
-  ToastAction,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport
-} from "@/components/ui/toast";
+import { Toast, ToastClose, ToastDescription, ToastProvider, ToastViewport } from "@/components/ui/toast";
 import { useToast } from "@/components/ui/use-toast";
 
 export function Toaster() {
-  const { toasts } = useToast();
+    const { toasts } = useToast();
 
-  return (
-    <ToastProvider>
-      {toasts.map(({ id, title, description, action, open, onOpenChange, ...props }) => (
-        <Toast key={id} onOpenChange={onOpenChange} open={open} {...props}>
-          <div className="grid gap-1">
-            {title && <ToastTitle>{title}</ToastTitle>}
-            {description && <ToastDescription>{description}</ToastDescription>}
-          </div>
-          {action}
-          <ToastClose />
-        </Toast>
-      ))}
-      <ToastViewport />
-    </ToastProvider>
-  );
+    return (
+        <ToastProvider>
+            {toasts.map(({ id, description, action, open, onOpenChange, variant }) => (
+                <Toast key={id} variant={variant} onOpenChange={onOpenChange} open={open}>
+                    <div className="grid gap-1">
+                        {description && <ToastDescription>{description}</ToastDescription>}
+                    </div>
+                    {action}
+                    <ToastClose />
+                </Toast>
+            ))}
+            <ToastViewport />
+        </ToastProvider>
+    );
 }
