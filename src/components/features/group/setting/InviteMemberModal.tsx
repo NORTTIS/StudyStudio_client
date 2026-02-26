@@ -1,20 +1,17 @@
 "use client";
 
+import { Copy, Link2, Users, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Copy, Link2, Users, X } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 export type InviteRole = "Moderator" | "Member" | "Commenter" | "Viewer";
-
-const roleNote: Record<InviteRole, string> = {
-    Moderator: "Can manage members and content in your Groups.",
-    Member: "Can access all public items in your Groups.",
-    Commenter: "Can view and comment on items in your Groups.",
-    Viewer: "Can view items in your Groups."
-};
 
 const roleOptions: InviteRole[] = ["Moderator", "Member", "Commenter", "Viewer"];
 
@@ -33,15 +30,31 @@ export function InviteMemberModal({
     onCreateLink: (payload: { role: InviteRole }) => Promise<string>;
     onSendInvite: (payload: { email: string; role: InviteRole }) => Promise<void> | void;
 }) {
+    const t = useTranslations("GroupInviteModal");
     const [mounted, setMounted] = useState(false);
+    const { toast } = useToast();
 
     const [email, setEmail] = useState("");
+    const [emailError, setEmailError] = useState("");
     const [role, setRole] = useState<InviteRole>("Member");
     const [sending, setSending] = useState(false);
 
     const [inviteLink, setInviteLink] = useState<string>("");
     const [creatingLink, setCreatingLink] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    const roleNote: Record<InviteRole, string> = {
+        Moderator: t("roles.Moderator.note"),
+        Member: t("roles.Member.note"),
+        Commenter: t("roles.Commenter.note"),
+        Viewer: t("roles.Viewer.note")
+    };
+
+    const inviteEmailSchema = z
+        .string()
+        .trim()
+        .min(1, t("validation.emailRequired"))
+        .email(t("validation.emailInvalid"));
 
     useEffect(() => setMounted(true), []);
 
@@ -73,6 +86,7 @@ export function InviteMemberModal({
     useEffect(() => {
         if (!open) return;
         setEmail("");
+        setEmailError("");
         setRole("Member");
         setSending(false);
         setCreatingLink(false);
@@ -88,10 +102,33 @@ export function InviteMemberModal({
 
     const handleSend = async () => {
         if (!canSend) return;
+
+        const emailToValidate = email.trim();
+        const validation = inviteEmailSchema.safeParse(emailToValidate);
+        if (!validation.success) {
+            const message = validation.error.issues[0]?.message || t("validation.emailInvalid");
+            setEmailError(message);
+            toast({
+                description: t("toast.inviteFailedWithReason", { reason: message }),
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setEmailError("");
         setSending(true);
         try {
-            await onSendInvite({ email: email.trim(), role });
+            await onSendInvite({ email: emailToValidate, role });
             setEmail("");
+            toast({
+                description: t("toast.inviteSent", { email: emailToValidate }),
+                variant: "success"
+            });
+        } catch {
+            toast({
+                description: t("toast.inviteFailed"),
+                variant: "destructive"
+            });
         } finally {
             setSending(false);
         }
@@ -104,6 +141,10 @@ export function InviteMemberModal({
         try {
             await navigator.clipboard.writeText(url);
             setCopied(true);
+            toast({
+                description: t("toast.linkCopied"),
+                variant: "success"
+            });
         } catch {
             try {
                 const ta = document.createElement("textarea");
@@ -116,8 +157,15 @@ export function InviteMemberModal({
                 document.execCommand("copy");
                 document.body.removeChild(ta);
                 setCopied(true);
+                toast({
+                    description: t("toast.linkCopied"),
+                    variant: "success"
+                });
             } catch {
-                // ignore
+                toast({
+                    description: t("toast.copyFailed"),
+                    variant: "destructive"
+                });
             }
         }
     };
@@ -138,13 +186,23 @@ export function InviteMemberModal({
             if (url?.trim()) {
                 setInviteLink(url);
                 await copyLink();
+            } else {
+                toast({
+                    description: t("toast.createLinkFailedEmpty"),
+                    variant: "destructive"
+                });
             }
+        } catch {
+            toast({
+                description: t("toast.createLinkFailed"),
+                variant: "destructive"
+            });
         } finally {
             setCreatingLink(false);
         }
     };
 
-    if (!open || !mounted) return null;
+    if (!(open && mounted)) return null;
 
     return createPortal(
         <div className="fixed inset-0 z-[2147483647]">
@@ -155,30 +213,46 @@ export function InviteMemberModal({
                     className="w-full max-w-[720px] rounded-2xl bg-white shadow-2xl"
                     role="dialog"
                     aria-modal="true"
-                    onClick={(e) => e.stopPropagation()}>
+                    tabIndex={-1}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                            onClose();
+                        }
+                    }}>
                     <div className="flex items-start justify-between gap-4 px-8 pt-7">
-                        <h2 className="text-3xl font-semibold tracking-tight text-[#111827]">{`Invite user(s) to ${groupName}`}</h2>
+                        <h2 className="font-semibold text-3xl text-[#111827] tracking-tight">
+                            {t("title", { groupName })}
+                        </h2>
 
                         <button
                             type="button"
                             onClick={onClose}
                             className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white text-[#111827] hover:bg-gray-50"
-                            aria-label="Close">
+                            aria-label={t("closeAriaLabel")}>
                             <X className="h-5 w-5" />
                         </button>
                     </div>
 
-                    <div className="px-8 pb-8 pt-6">
+                    <div className="px-8 pt-6 pb-8">
                         <div>
-                            <div className="text-base font-medium text-[#111827]">Invite by email</div>
+                            <div className="font-medium text-[#111827] text-base">{t("inviteByEmail")}</div>
 
                             <div className="relative mt-3">
                                 <Input
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Enter email"
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (emailError) {
+                                            setEmailError("");
+                                        }
+                                    }}
+                                    placeholder={t("emailPlaceholder")}
                                     disabled={!canManage || sending}
-                                    className="h-12 rounded-xl border-[#E5E7EB] pr-12 text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:ring-0 focus-visible:border-[#D1D5DB]"
+                                    className={cn(
+                                        "h-12 rounded-xl border-[#E5E7EB] pr-12 text-[#111827] text-base placeholder:text-[#9CA3AF] focus-visible:border-[#D1D5DB] focus-visible:ring-0",
+                                        emailError && "border-red-400 focus-visible:border-red-500"
+                                    )}
                                 />
 
                                 {email.length > 0 ? (
@@ -186,16 +260,18 @@ export function InviteMemberModal({
                                         type="button"
                                         onClick={() => setEmail("")}
                                         disabled={!canManage || sending}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#6B7280] hover:bg-gray-100 disabled:opacity-50"
-                                        aria-label="Clear email">
+                                        className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-[#6B7280] hover:bg-gray-100 disabled:opacity-50"
+                                        aria-label={t("clearEmailAriaLabel")}>
                                         <X className="h-4 w-4" />
                                     </button>
                                 ) : null}
                             </div>
+
+                            {emailError ? <p className="mt-2 text-red-600 text-sm">{emailError}</p> : null}
                         </div>
 
                         <div className="mt-7">
-                            <div className="text-base font-medium text-[#111827]">Invite as</div>
+                            <div className="font-medium text-[#111827] text-base">{t("inviteAs")}</div>
 
                             <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                                 <div className="flex min-w-0 items-start gap-4">
@@ -213,14 +289,8 @@ export function InviteMemberModal({
                                                 setCopied(false);
                                             }}
                                             disabled={!canManage || sending || creatingLink}>
-                                            <SelectTrigger
-                                                className="
-                          h-auto w-fit border-0 bg-transparent p-0 shadow-none
-                          focus:ring-0 focus:outline-none
-                          inline-flex items-center gap-2
-                          [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-[#6B7280]
-                        ">
-                                                <span className="text-2xl font-semibold leading-none text-[#111827]">
+                                            <SelectTrigger className="inline-flex h-auto w-fit items-center gap-2 border-0 bg-transparent p-0 shadow-none focus:outline-none focus:ring-0 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-[#6B7280]">
+                                                <span className="font-semibold text-2xl text-[#111827] leading-none">
                                                     <SelectValue />
                                                 </span>
                                             </SelectTrigger>
@@ -233,17 +303,14 @@ export function InviteMemberModal({
                                                     <SelectItem
                                                         key={r}
                                                         value={r}
-                                                        className="
-                              rounded-xl px-3 py-2.5 text-[15px] text-[#111827]
-                              focus:bg-[#F3F4F6] data-[state=checked]:bg-[#F3F4F6]
-                            ">
-                                                        {r}
+                                                        className="rounded-xl px-3 py-2.5 text-[#111827] text-[15px] focus:bg-[#F3F4F6] data-[state=checked]:bg-[#F3F4F6]">
+                                                        {t(`roles.${r}.label`)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
 
-                                        <div className="mt-2 max-w-[420px] text-base leading-snug text-[#6B7280]">
+                                        <div className="mt-2 max-w-[420px] text-[#6B7280] text-base leading-snug">
                                             {roleNote[role]}
                                         </div>
                                     </div>
@@ -253,19 +320,14 @@ export function InviteMemberModal({
                                     type="button"
                                     onClick={handleSend}
                                     disabled={!canSend}
-                                    className="
-                    h-12 w-full rounded-xl px-8 text-base font-semibold text-white
-                    sm:w-auto sm:min-w-[200px]
-                    bg-orange-600 hover:bg-orange-700
-                    disabled:bg-orange-400 disabled:opacity-100 disabled:hover:bg-orange-400
-                  ">
-                                    {sending ? "Sending..." : "Send invite"}
+                                    className="h-12 w-full rounded-xl bg-orange-600 px-8 font-semibold text-base text-white hover:bg-orange-700 disabled:bg-orange-400 disabled:opacity-100 disabled:hover:bg-orange-400 sm:w-auto sm:min-w-[200px]">
+                                    {sending ? t("buttons.sending") : t("buttons.sendInvite")}
                                 </Button>
                             </div>
                         </div>
 
                         <div className="mt-8">
-                            <div className="text-base font-medium text-[#6B7280]">Or invite via link</div>
+                            <div className="font-medium text-[#6B7280] text-base">{t("inviteViaLink")}</div>
 
                             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <Input
@@ -275,8 +337,8 @@ export function InviteMemberModal({
                                     aria-readonly="true"
                                     onMouseDown={(e) => e.preventDefault()}
                                     onFocus={(e) => e.currentTarget.blur()}
-                                    placeholder="Invite link will appear here..."
-                                    className="h-12 flex-1 cursor-default rounded-xl border-[#E5E7EB] bg-white text-base text-[#111827] placeholder:text-[#9CA3AF] focus-visible:ring-0 focus-visible:border-[#D1D5DB]"
+                                    placeholder={t("linkPlaceholder")}
+                                    className="h-12 flex-1 cursor-default rounded-xl border-[#E5E7EB] bg-white text-[#111827] text-base placeholder:text-[#9CA3AF] focus-visible:border-[#D1D5DB] focus-visible:ring-0"
                                 />
 
                                 <Button
@@ -288,12 +350,12 @@ export function InviteMemberModal({
                                     {hasLink ? (
                                         <>
                                             <Copy className="mr-2 h-5 w-5" />
-                                            {copied ? "Copied!" : "Copy link"}
+                                            {copied ? t("buttons.copied") : t("buttons.copyLink")}
                                         </>
                                     ) : (
                                         <>
                                             <Link2 className="mr-2 h-5 w-5" />
-                                            {creatingLink ? "Creating..." : "Create link"}
+                                            {creatingLink ? t("buttons.creating") : t("buttons.createLink")}
                                         </>
                                     )}
                                 </Button>
@@ -301,8 +363,8 @@ export function InviteMemberModal({
                         </div>
 
                         {!canManage ? (
-                            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                                You don&apos;t have permission to invite members in this group.
+                            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm">
+                                {t("permissionDenied")}
                             </div>
                         ) : null}
                     </div>

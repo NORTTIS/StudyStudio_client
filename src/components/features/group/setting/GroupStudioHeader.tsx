@@ -2,11 +2,14 @@
 
 import { BarChart3, Calendar, FileText, LayoutGrid, List, MessageSquare, Settings, Trash2, Users } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
 import { Container } from "@/components/common";
+import { useToast } from "@/components/ui/use-toast";
+import { RolePill } from "../RolePill";
+import type { GroupRole } from "../types";
 
 type Tab = {
     key: string;
@@ -21,6 +24,7 @@ type GroupDetail = {
     description?: string | null;
     studioName?: string | null;
     memberCount?: number | null;
+    userRole?: string | null;
 };
 
 type GroupDetailResponse = {
@@ -66,6 +70,9 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const locale = useLocale();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const router = useRouter();
+    const { toast } = useToast();
+    const t = useTranslations("Common");
 
     const groupId = groupIdProp || searchParams.get("id") || extractGroupIdFromPath(pathname || "") || "";
 
@@ -73,6 +80,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const [groupDesc, setGroupDesc] = React.useState<string>("");
     const [studioName, setStudioName] = React.useState<string>("");
     const [memberCount, setMemberCount] = React.useState<number>(0);
+    const [userRole, setUserRole] = React.useState<GroupRole>("member");
     const [error, setError] = React.useState<string>("");
 
     const tabs: Tab[] = [
@@ -111,10 +119,19 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch {}
+                } catch { }
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
+                    // Show toast for all errors
+                    toast({
+                        description: msg,
+                        variant: "destructive"
+                    });
+                    // If 403, redirect to home
+                    if (res.status === 403) {
+                        router.replace(`/${locale}/home`);
+                    }
                     throw new Error(msg);
                 }
 
@@ -129,6 +146,20 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 const c = Number(data?.memberCount ?? 0);
                 setMemberCount(Number.isFinite(c) ? c : 0);
+
+                // Set user role
+                const role = String(data?.userRole || "").toLowerCase();
+                if (role.includes("owner")) {
+                    setUserRole("owner");
+                } else if (role.includes("moderator")) {
+                    setUserRole("moderator");
+                } else if (role.includes("commenter")) {
+                    setUserRole("commenter");
+                } else if (role.includes("viewer")) {
+                    setUserRole("viewer");
+                } else {
+                    setUserRole("member");
+                }
             } catch (e: any) {
                 if (!alive) return;
                 setError(e?.message || "Failed to fetch group detail");
@@ -138,7 +169,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         return () => {
             alive = false;
         };
-    }, [groupId]);
+    }, [groupId, locale, router, toast]);
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -170,12 +201,16 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 <div>
                     <div className="flex items-start justify-between gap-6">
                         <div className="min-w-0">
-                            {studioName ? <p className="text-[#6F6B99] text-sm">{studioName}</p> : null}
+                            {studioName ? (
+                                <p className="flex items-center gap-2 text-[#6F6B99] text-sm">{studioName}</p>
+                            ) : null}
 
-                            <h1 className="mt-1 truncate font-semibold text-3xl text-[#261E33]">{groupName}</h1>
+                            <div className="flex items-center gap-2">
+                                <h1 className="mt-1 truncate font-semibold text-3xl text-[#261E33]">{groupName}</h1>
+                                <RolePill role={userRole} />
+                            </div>
 
                             {groupDesc ? <p className="mt-2 text-[#6F6B99] text-lg">{groupDesc}</p> : null}
-                            {error ? <p className="mt-2 text-red-500 text-sm">{error}</p> : null}
                         </div>
 
                         <div className="flex items-center gap-2 text-[#6F6B99]">

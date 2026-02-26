@@ -23,13 +23,10 @@ export default function Login() {
     const searchParams = useSearchParams();
     const { toast } = useToast();
 
-    // ✅ Get current locale (vi/en)
     const locale = useLocale();
 
-    // ✅ Toggle show/hide password
     const [showPassword, setShowPassword] = useState(false);
 
-    // ✅ Schema validation
     const loginSchema = z.object({
         email: z.string().min(1, t("emailRequired")).email(t("emailInvalid")),
         password: z.string().min(1, t("passwordRequired"))

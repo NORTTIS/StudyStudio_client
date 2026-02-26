@@ -1,5 +1,5 @@
 import type { paths } from "@/api/types";
-import type { Group, GroupsPageData, GroupRole } from "./types";
+import type { Group, GroupRole, GroupsPageData } from "./types";
 
 type GetGroupsResponse =
     | paths["/api/group"]["get"]["responses"][200]["content"]["application/json"]
@@ -38,6 +38,8 @@ function mapRole(role?: string | null): GroupRole {
     if (r.includes("owner")) return "owner";
     if (r.includes("moderator")) return "moderator";
     if (r.includes("member")) return "member";
+    if (r.includes("commenter")) return "commenter";
+    if (r.includes("viewer")) return "viewer";
     if (r === "admin") return "owner";
     return "member";
 }
