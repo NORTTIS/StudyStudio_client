@@ -763,5 +763,56 @@
         "linkError": "Failed to generate link. Please try again.",
         "linkCopied": "Link copied!",
         "copyError": "Failed to copy. Please try again."
+    },
+    "GroupInviteModal": {
+        "title": "Invite user(s) to {groupName}",
+        "closeAriaLabel": "Close",
+        "inviteByEmail": "Invite by email",
+        "emailPlaceholder": "Enter email",
+        "clearEmailAriaLabel": "Clear email",
+        "inviteAs": "Invite as",
+        "inviteViaLink": "Or invite via link",
+        "linkPlaceholder": "Invite link will appear here...",
+        "permissionDenied": "You don't have permission to invite members in this group.",
+        "validation": {
+            "emailRequired": "Please enter an email address.",
+            "emailNoSpaces": "Email cannot contain spaces.",
+            "emailInvalid": "Please enter a valid email address."
+        },
+        "buttons": {
+            "sending": "Sending...",
+            "sendInvite": "Send invite",
+            "copied": "Copied!",
+            "copyLink": "Copy link",
+            "creating": "Creating...",
+            "createLink": "Create link"
+        },
+        "roles": {
+            "Moderator": {
+                "label": "Moderator",
+                "note": "Can manage members and content in your Groups."
+            },
+            "Member": {
+                "label": "Member",
+                "note": "Can access all public items in your Groups."
+            },
+            "Commenter": {
+                "label": "Commenter",
+                "note": "Can view and comment on items in your Groups."
+            },
+            "Viewer": {
+                "label": "Viewer",
+                "note": "Can view items in your Groups."
+            }
+        },
+        "toast": {
+            "inviteFailedWithReason": "Invite failed: {reason}",
+            "inviteSent": "Invite sent to {email}.",
+            "inviteFailed": "Invite failed: unable to send invitation. Please try again.",
+            "linkCopied": "Invite link copied to clipboard.",
+            "copyFailed": "Copy failed: unable to copy invite link. Please copy it manually.",
+            "createLinkFailedEmpty": "Create link failed: no invite link was returned. Please try again.",
+            "createLinkFailed": "Create link failed: unable to create invite link. Please try again."
+        }
     }
 }

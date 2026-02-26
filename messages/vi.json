@@ -761,5 +761,56 @@
         "linkError": "Không thể tạo liên kết. Vui lòng thử lại.",
         "linkCopied": "Đã sao chép liên kết!",
         "copyError": "Không thể sao chép. Vui lòng thử lại."
+    },
+    "GroupInviteModal": {
+        "title": "Mời người dùng vào {groupName}",
+        "closeAriaLabel": "Đóng",
+        "inviteByEmail": "Mời qua email",
+        "emailPlaceholder": "Nhập email",
+        "clearEmailAriaLabel": "Xóa email",
+        "inviteAs": "Mời với vai trò",
+        "inviteViaLink": "Hoặc mời bằng liên kết",
+        "linkPlaceholder": "Liên kết mời sẽ hiển thị ở đây...",
+        "permissionDenied": "Bạn không có quyền mời thành viên trong nhóm này.",
+        "validation": {
+            "emailRequired": "Vui lòng nhập email.",
+            "emailNoSpaces": "Email không được chứa khoảng trắng.",
+            "emailInvalid": "Vui lòng nhập đúng định dạng email."
+        },
+        "buttons": {
+            "sending": "Đang gửi...",
+            "sendInvite": "Gửi lời mời",
+            "copied": "Đã sao chép!",
+            "copyLink": "Sao chép liên kết",
+            "creating": "Đang tạo...",
+            "createLink": "Tạo liên kết"
+        },
+        "roles": {
+            "Moderator": {
+                "label": "Điều phối viên",
+                "note": "Có thể quản lý thành viên và nội dung trong nhóm."
+            },
+            "Member": {
+                "label": "Thành viên",
+                "note": "Có thể truy cập tất cả mục công khai trong nhóm."
+            },
+            "Commenter": {
+                "label": "Người bình luận",
+                "note": "Có thể xem và bình luận các mục trong nhóm."
+            },
+            "Viewer": {
+                "label": "Người xem",
+                "note": "Có thể xem các mục trong nhóm."
+            }
+        },
+        "toast": {
+            "inviteFailedWithReason": "Mời thất bại: {reason}",
+            "inviteSent": "Đã gửi lời mời tới {email}.",
+            "inviteFailed": "Mời thất bại: không thể gửi lời mời. Vui lòng thử lại.",
+            "linkCopied": "Đã sao chép liên kết mời vào bộ nhớ tạm.",
+            "copyFailed": "Sao chép thất bại: không thể sao chép liên kết mời. Vui lòng sao chép thủ công.",
+            "createLinkFailedEmpty": "Tạo liên kết thất bại: không nhận được liên kết mời. Vui lòng thử lại.",
+            "createLinkFailed": "Tạo liên kết thất bại: không thể tạo liên kết mời. Vui lòng thử lại."
+        }
     }
 }
