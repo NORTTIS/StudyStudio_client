@@ -73,7 +73,7 @@ export default function MasterPage() {
             };
             const result = await createStudio(studioData, locale);
             if (result.status === "success") {
-                toast({ title: t("modal.createSuccess") });
+                toast({ description: t("modal.createSuccess"), variant: "success" });
                 setIsCreateModalOpen(false);
                 loadData();
             } else {
@@ -88,12 +88,12 @@ export default function MasterPage() {
                     updatedAt: new Date().toISOString()
                 };
                 setStudios([...studios, newStudio]);
-                toast({ title: t("modal.createSuccess") });
+                toast({ description: t("modal.createSuccess"), variant: "success" });
                 setIsCreateModalOpen(false);
             }
         } catch (error) {
             console.error("Create studio failed:", error);
-            toast({ title: t("error"), description: t("modal.createError"), variant: "destructive" });
+            toast({ description: t("modal.createError"), variant: "destructive" });
         }
     };
 
@@ -112,7 +112,7 @@ export default function MasterPage() {
             );
 
             if (result.status === "success") {
-                toast({ title: t("modal.editSuccess") });
+                toast({ description: t("modal.editSuccess"), variant: "success" });
                 setIsCreateModalOpen(false);
                 setSelectedStudio(null);
                 loadData(); // Reload data from API
@@ -121,22 +121,22 @@ export default function MasterPage() {
                 const updatedStudios = studios.map((s) =>
                     s.id === selectedStudio.id
                         ? {
-                            ...s,
-                            name: data.name,
-                            description: data.description,
-                            type: data.type as "personal" | "group",
-                            updatedAt: new Date().toISOString()
-                        }
+                              ...s,
+                              name: data.name,
+                              description: data.description,
+                              type: data.type as "personal" | "group",
+                              updatedAt: new Date().toISOString()
+                          }
                         : s
                 );
                 setStudios(updatedStudios);
-                toast({ title: t("modal.editSuccess") });
+                toast({ description: t("modal.editSuccess"), variant: "success" });
                 setIsCreateModalOpen(false);
                 setSelectedStudio(null);
             }
         } catch (error) {
             console.error("Update studio failed:", error);
-            toast({ title: t("error"), description: t("modal.editError"), variant: "destructive" });
+            toast({ description: t("modal.editError"), variant: "destructive" });
         }
     };
 
@@ -147,7 +147,7 @@ export default function MasterPage() {
             const result = await deleteStudio(selectedStudio.id, locale);
 
             if (result.status === "success") {
-                toast({ title: t("deleteModal.success") });
+                toast({ description: t("deleteModal.success"), variant: "success" });
                 setIsDeleteModalOpen(false);
                 setSelectedStudio(null);
                 loadData(); // Reload data from API
@@ -155,13 +155,13 @@ export default function MasterPage() {
                 // Fallback to local delete if API fails
                 const updatedStudios = studios.filter((s) => s.id !== selectedStudio.id);
                 setStudios(updatedStudios);
-                toast({ title: t("deleteModal.success") });
+                toast({ description: t("deleteModal.success"), variant: "success" });
                 setIsDeleteModalOpen(false);
                 setSelectedStudio(null);
             }
         } catch (error) {
             console.error("Delete studio failed:", error);
-            toast({ title: t("error"), description: t("deleteModal.error"), variant: "destructive" });
+            toast({ description: t("deleteModal.error"), variant: "destructive" });
         }
     };
 
@@ -182,7 +182,7 @@ export default function MasterPage() {
         <div className="min-h-screen bg-[#F8F8F8] text-[#261E33]">
             <div className="flex min-h-screen">
                 <DashboardSidebar />
-                <main >
+                <main>
                     <Header userProfile={userProfile} />
                     <Container>
                         <div className="mb-8">
@@ -216,7 +216,10 @@ export default function MasterPage() {
                             </Button>
                         </div>
                         <div className="mb-6 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                            <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <svg
+                                className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500"
+                                fill="currentColor"
+                                viewBox="0 0 20 20">
                                 <path
                                     fillRule="evenodd"
                                     d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
@@ -253,13 +256,19 @@ export default function MasterPage() {
                                                         {studio.type === "personal" ? t("personal") : t("group")}
                                                     </span>
                                                 </div>
-                                                <p className="line-clamp-2 text-[#6F6B99] text-sm">{studio.description}</p>
+                                                <p className="line-clamp-2 text-[#6F6B99] text-sm">
+                                                    {studio.description}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between p-4">
                                             <div className="flex items-center gap-4 text-[#6F6B99] text-sm">
                                                 <div className="flex items-center gap-1">
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg
+                                                        className="h-4 w-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24">
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
@@ -272,7 +281,11 @@ export default function MasterPage() {
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg
+                                                        className="h-4 w-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24">
                                                         <path
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"

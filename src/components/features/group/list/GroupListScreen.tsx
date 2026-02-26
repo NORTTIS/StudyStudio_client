@@ -88,7 +88,9 @@ function Section({ title, count, children }: { title: string; count: number; chi
                 className="flex cursor-pointer items-center justify-between bg-[#FAFAFA] px-4 py-3"
                 onClick={() => setOpen((v) => !v)}>
                 <div className="flex items-center gap-2">
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`} />
+                    <ChevronDown
+                        className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
+                    />
                     <p className="font-semibold text-[#261E33] text-sm">{title}</p>
                     <span className="grid h-6 min-w-6 place-items-center rounded-md border bg-white px-2 text-[#6F6B99] text-xs">
                         {count}
@@ -107,8 +109,9 @@ function Section({ title, count, children }: { title: string; count: number; chi
             </div>
 
             <div
-                className={`transition-all duration-300 ease-in-out ${open ? "max-h-[2000px] opacity-100" : "max-h-0 overflow-hidden opacity-0"
-                    }`}>
+                className={`transition-all duration-300 ease-in-out ${
+                    open ? "max-h-[2000px] opacity-100" : "max-h-0 overflow-hidden opacity-0"
+                }`}>
                 <div className="grid min-w-[900px] grid-cols-12 gap-3 border-b bg-white px-4 py-2 font-medium text-[#6F6B99] text-xs">
                     <div className="col-span-5">Công việc</div>
                     <div className="col-span-2">Trạng thái</div>
@@ -172,7 +175,7 @@ function TaskRow({ t }: { t: Task }) {
                     type="button"
                     className="grid h-8 w-8 place-items-center rounded-md hover:bg-[#F6F5FF]"
                     aria-label="Thao tác"
-                    onClick={() => { }}>
+                    onClick={() => {}}>
                     <MoreHorizontal className="h-4 w-4 text-[#6F6B99]" />
                 </button>
             </div>
@@ -232,7 +235,7 @@ export function GroupListScreen() {
                     <button
                         type="button"
                         className="inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 font-medium text-[#261E33] text-sm hover:bg-[#FAFAFA]"
-                        onClick={() => { }}>
+                        onClick={() => {}}>
                         <Plus className="h-4 w-4" />
                         Tạo mới +
                     </button>
@@ -259,7 +262,9 @@ export function GroupListScreen() {
                             ) : (
                                 <div className="px-4 py-10 text-center">
                                     <p className="font-medium text-[#261E33] text-sm">Chưa có công việc</p>
-                                    <p className="mt-1 text-[#6F6B99] text-sm">Công việc đang thực hiện sẽ hiển thị ở đây.</p>
+                                    <p className="mt-1 text-[#6F6B99] text-sm">
+                                        Công việc đang thực hiện sẽ hiển thị ở đây.
+                                    </p>
                                 </div>
                             )}
                         </Section>
@@ -272,7 +277,9 @@ export function GroupListScreen() {
                             ) : (
                                 <div className="px-4 py-10 text-center">
                                     <p className="font-medium text-[#261E33] text-sm">Chưa có công việc hoàn thành</p>
-                                    <p className="mt-1 text-[#6F6B99] text-sm">Các công việc đã hoàn thành sẽ hiển thị ở đây.</p>
+                                    <p className="mt-1 text-[#6F6B99] text-sm">
+                                        Các công việc đã hoàn thành sẽ hiển thị ở đây.
+                                    </p>
                                 </div>
                             )}
                         </Section>

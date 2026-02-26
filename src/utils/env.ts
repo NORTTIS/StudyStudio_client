@@ -2,22 +2,22 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
 export const env = createEnv({
-  // Variable for Server (Node.js) only
-  server: {
-    API_SECRET: z.string().min(1),
-    NODE_ENV: z.enum(["development", "test", "production"])
-  },
+    // Variable for Server (Node.js) only
+    server: {
+        API_SECRET: z.string().min(1),
+        NODE_ENV: z.enum(["development", "test", "production"])
+    },
 
-  // Variable for Client (Browser) only
-  // MUST have prefix NEXT_PUBLIC_
-  client: {
-    NEXT_PUBLIC_API_URL: z.url()
-  },
+    // Variable for Client (Browser) only
+    // MUST have prefix NEXT_PUBLIC_
+    client: {
+        NEXT_PUBLIC_API_URL: z.url()
+    },
 
-  // Unpack variables from process.env (Must be declared here)
-  runtimeEnv: {
-    API_SECRET: process.env.API_SECRET,
-    NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL
-  }
+    // Unpack variables from process.env (Must be declared here)
+    runtimeEnv: {
+        API_SECRET: process.env.API_SECRET,
+        NODE_ENV: process.env.NODE_ENV,
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL
+    }
 });

@@ -25,7 +25,9 @@ function Column({ title, count }: { title: string; count?: number }) {
                     <div className="rounded-lg border bg-white p-3 shadow-sm">
                         <div className="flex items-start justify-between gap-2">
                             <p className="font-medium text-[#261E33] text-sm">Thiết lập hệ thống thiết kế</p>
-                            <button type="button" className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#F6F5FF]">
+                            <button
+                                type="button"
+                                className="grid h-7 w-7 place-items-center rounded-md hover:bg-[#F6F5FF]">
                                 <span className="text-[#6F6B99] text-lg leading-none">…</span>
                             </button>
                         </div>

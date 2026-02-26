@@ -5,15 +5,14 @@ import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { isAuthenticated } from "@/api/auth";
 import { LoadingPage } from "@/components/common";
-import Landing from "@/components/features/landing/Landing";
 
-export default function Page() {
+export default function GuestLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const locale = useLocale();
     const [isChecking, setIsChecking] = useState(true);
 
     useEffect(() => {
-        const checkAuthForRootPage = async () => {
+        const checkGuestAccess = async () => {
             if (isAuthenticated()) {
                 router.replace(`/${locale}/home`);
                 return;
@@ -33,12 +32,12 @@ export default function Page() {
             setIsChecking(false);
         };
 
-        checkAuthForRootPage();
+        checkGuestAccess();
     }, [router, locale]);
 
     if (isChecking) {
         return <LoadingPage />;
     }
 
-    return <Landing />;
+    return <>{children}</>;
 }

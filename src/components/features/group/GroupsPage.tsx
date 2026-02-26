@@ -106,7 +106,8 @@ export function GroupsPage() {
     const { usage, favorites, managed, independent } = useMemo(() => data, [data]);
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
-    const currentGroupsCount = usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
+    const currentGroupsCount =
+        usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
 
     const limitReached = currentGroupsCount >= maxGroups;
 
@@ -161,8 +162,9 @@ export function GroupsPage() {
                         <button
                             type="button"
                             onClick={() => setView("grid")}
-                            className={`px-3 py-2 text-sm ${view === "grid" ? "bg-[#F4F5FA] text-[#261E33]" : "text-[#6F6B99] hover:bg-[#F4F5FA]"
-                                }`}
+                            className={`px-3 py-2 text-sm ${
+                                view === "grid" ? "bg-[#F4F5FA] text-[#261E33]" : "text-[#6F6B99] hover:bg-[#F4F5FA]"
+                            }`}
                             aria-label="Grid">
                             <LayoutGrid className="h-4 w-4" />
                         </button>
@@ -170,8 +172,9 @@ export function GroupsPage() {
                         <button
                             type="button"
                             onClick={() => setView("list")}
-                            className={`px-3 py-2 text-sm ${view === "list" ? "bg-[#F4F5FA] text-[#261E33]" : "text-[#6F6B99] hover:bg-[#F4F5FA]"
-                                }`}
+                            className={`px-3 py-2 text-sm ${
+                                view === "list" ? "bg-[#F4F5FA] text-[#261E33]" : "text-[#6F6B99] hover:bg-[#F4F5FA]"
+                            }`}
                             aria-label="List">
                             <List className="h-4 w-4" />
                         </button>
@@ -272,7 +275,10 @@ function GroupsSection({
                 ) : null}
             </div>
 
-            <div className={view === "grid" ? "mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"}>
+            <div
+                className={
+                    view === "grid" ? "mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" : "mt-4 space-y-4"
+                }>
                 {visibleItems.map((g) => (
                     <GroupCard key={getGroupId(g)} group={g} onToggleStar={() => onToggleStar(getGroupId(g))} />
                 ))}

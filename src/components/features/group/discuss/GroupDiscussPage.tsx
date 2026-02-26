@@ -322,7 +322,9 @@ function PostCard({
                                 <span className="text-[#9CA3AF] text-xs">• {post.createdAtText}</span>
                             </div>
 
-                            <p className="mt-2 whitespace-pre-wrap text-[#261E33] text-[15px] leading-relaxed">{post.content}</p>
+                            <p className="mt-2 whitespace-pre-wrap text-[#261E33] text-[15px] leading-relaxed">
+                                {post.content}
+                            </p>
                         </div>
 
                         <DropdownMenu>
@@ -336,7 +338,9 @@ function PostCard({
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => onDelete(post.id)}>
+                                <DropdownMenuItem
+                                    className="text-red-600 focus:text-red-600"
+                                    onClick={() => onDelete(post.id)}>
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Xóa
                                 </DropdownMenuItem>
@@ -438,7 +442,6 @@ export default function GroupDiscussPage() {
         if (!hubUrl) {
             toast({
                 variant: "destructive",
-                title: "Thiếu cấu hình API",
                 description: "Không tìm thấy biến môi trường NEXT_PUBLIC_API_BASE_URL hoặc NEXT_PUBLIC_API_URL"
             });
             return;
@@ -531,7 +534,6 @@ export default function GroupDiscussPage() {
 
             toast({
                 variant: "destructive",
-                title: "Lỗi thảo luận",
                 description: errorMessage
             });
         });
@@ -556,7 +558,6 @@ export default function GroupDiscussPage() {
 
                 toast({
                     variant: "destructive",
-                    title: "Lỗi kết nối lại",
                     description: "Không thể tham gia lại phòng thảo luận"
                 });
             }
@@ -584,7 +585,6 @@ export default function GroupDiscussPage() {
                 setIsConnected(false);
                 toast({
                     variant: "destructive",
-                    title: "Không thể kết nối thảo luận",
                     description: "Vui lòng thử tải lại trang hoặc đăng nhập lại"
                 });
             }
@@ -635,7 +635,6 @@ export default function GroupDiscussPage() {
         } catch {
             toast({
                 variant: "destructive",
-                title: "Không thể gửi tin nhắn",
                 description: "Vui lòng thử lại sau"
             });
         }
@@ -660,7 +659,6 @@ export default function GroupDiscussPage() {
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
             toast({
                 variant: "destructive",
-                title: "Mất kết nối",
                 description: "Không thể xóa bài viết khi chưa kết nối"
             });
             return;
@@ -673,7 +671,6 @@ export default function GroupDiscussPage() {
         } catch {
             toast({
                 variant: "destructive",
-                title: "Không thể xóa bài viết",
                 description: "Vui lòng thử lại sau"
             });
         }
@@ -684,7 +681,6 @@ export default function GroupDiscussPage() {
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
             toast({
                 variant: "destructive",
-                title: "Mất kết nối",
                 description: "Không thể gửi phản hồi khi chưa kết nối"
             });
             return;
@@ -705,7 +701,6 @@ export default function GroupDiscussPage() {
         } catch {
             toast({
                 variant: "destructive",
-                title: "Không thể gửi phản hồi",
                 description: "Vui lòng thử lại sau"
             });
         }
@@ -745,7 +740,13 @@ export default function GroupDiscussPage() {
                 <div className="mt-6 space-y-4">
                     {posts.length > 0 ? (
                         posts.map((p) => (
-                            <PostCard key={p.id} post={p} onToggleLike={onToggleLike} onDelete={onDelete} onAddReply={onAddReply} />
+                            <PostCard
+                                key={p.id}
+                                post={p}
+                                onToggleLike={onToggleLike}
+                                onDelete={onDelete}
+                                onAddReply={onAddReply}
+                            />
                         ))
                     ) : (
                         <div className="rounded-2xl border border-[#EDEDED] bg-white p-10 text-center text-[#6F6B99] text-sm">
