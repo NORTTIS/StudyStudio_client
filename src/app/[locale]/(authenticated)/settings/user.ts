@@ -8,19 +8,24 @@ import type { components } from "../../../../api/types";
 
 // ===== Type Definitions =====
 
-export type UserProfile = {
-    id: string;
+export type UserProfileResponse = {
+    userId: string;
     email: string;
     firstName: string;
     lastName: string;
     phoneNumber?: string;
     bio?: string;
-    avatar?: string;
+    avatarUrl?: string;
+    status?: string;
+    isAdmin?: boolean;
     language: string;
     emailNotificationEnabled: boolean;
+    googleId?: string;
     createdAt: string;
     updatedAt: string;
 };
+
+export type UserProfile = UserProfileResponse;
 
 export type UpdateProfileRequest = {
     firstName?: string;
@@ -32,7 +37,11 @@ export type UpdateProfileRequest = {
     avatar?: File;
 };
 
-export type ChangePasswordRequest = components["schemas"]["ChangePasswordRequest"];
+export type ChangePasswordRequest = {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+};
 
 export type ReportRequest = components["schemas"]["ReportRequest"];
 
@@ -40,10 +49,11 @@ export type ReportRequest = components["schemas"]["ReportRequest"];
 
 /**
  * Get user profile
+ * GET /api/user-profile
  */
 export async function getUserProfile(locale = "vi") {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    return apiFetch<UserProfile>(`${baseUrl}/user-profile`, {
+    return apiFetch<UserProfileResponse>(`${baseUrl}/user-profile`, {
         method: "GET",
         locale
     });
@@ -51,24 +61,25 @@ export async function getUserProfile(locale = "vi") {
 
 /**
  * Update user profile
+ * PUT /api/user-profile
  * Handles multipart/form-data for avatar upload
  */
 export async function updateUserProfile(data: UpdateProfileRequest, locale = "vi") {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
     const formData = new FormData();
 
-    // Append form fields
-    if (data.firstName) formData.append("FirstName", data.firstName);
-    if (data.lastName) formData.append("LastName", data.lastName);
-    if (data.phoneNumber) formData.append("PhoneNumber", data.phoneNumber);
-    if (data.bio) formData.append("Bio", data.bio);
-    if (data.language) formData.append("Language", data.language);
+    // Append form fields - always send firstName and lastName even if empty
+    if (data.firstName !== undefined) formData.append("FirstName", data.firstName);
+    if (data.lastName !== undefined) formData.append("LastName", data.lastName);
+    if (data.phoneNumber !== undefined) formData.append("PhoneNumber", data.phoneNumber || "");
+    if (data.bio !== undefined) formData.append("Bio", data.bio || "");
+    if (data.language !== undefined) formData.append("Language", data.language);
     if (data.emailNotificationEnabled !== undefined) {
         formData.append("EmailNotificationEnabled", String(data.emailNotificationEnabled));
     }
     if (data.avatar) formData.append("Avatar", data.avatar);
 
-    // Use apiFetch with custom headers for multipart/form-data
+    // Use custom fetch for multipart/form-data
     const headers = new Headers();
     headers.set("Accept-Language", locale);
 
@@ -101,6 +112,7 @@ export async function updateUserProfile(data: UpdateProfileRequest, locale = "vi
 
 /**
  * Delete current user account
+ * DELETE /api/user-profile
  */
 export async function deleteUserProfile(locale = "vi") {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -112,6 +124,7 @@ export async function deleteUserProfile(locale = "vi") {
 
 /**
  * Change password
+ * POST /api/change-password
  */
 export async function changePassword(data: ChangePasswordRequest, locale = "vi") {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
