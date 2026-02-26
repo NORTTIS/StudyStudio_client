@@ -168,18 +168,37 @@ const okByJsonStatus = (obj: any) => {
 };
 
 const ROLE_FORMATS = (role: string) => {
-    const raw = String(role).trim(); // "Moderator"
-    const upper = raw.toUpperCase(); // "MODERATOR"
-    const roleUpper = `ROLE_${upper}`; // "ROLE_MODERATOR"
+    const raw = String(role).trim();
+    const upper = raw.toUpperCase();
+    const roleUpper = `ROLE_${upper}`;
     return [raw, upper, roleUpper];
 };
 
-/** normalize base URL to always end with exactly 1 "/api" */
 const getApiBase = () => {
     const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
     const base = String(raw).replace(/\/+$/, "");
     return base.endsWith("/api") ? base : `${base}/api`;
 };
+
+function Badge({
+    children,
+    tone = "gray"
+}: {
+    children: React.ReactNode;
+    tone?: "gray" | "orange" | "red" | "green";
+}) {
+    const map: Record<string, string> = {
+        gray: "bg-gray-100 text-gray-700 border-gray-200",
+        orange: "bg-orange-50 text-orange-700 border-orange-200",
+        red: "bg-red-50 text-red-700 border-red-200",
+        green: "bg-emerald-50 text-emerald-700 border-emerald-200"
+    };
+    return (
+        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${map[tone]}`}>
+            {children}
+        </span>
+    );
+}
 
 export function GroupSettingView() {
     const locale = useLocale();
@@ -219,6 +238,20 @@ export function GroupSettingView() {
     const canManageMembers = myRoleInGroup === "Owner" || myRoleInGroup === "Moderator";
     const canDelete = useMemo(() => myRoleInGroup === "Owner", [myRoleInGroup]);
 
+    const apiBase = getApiBase();
+
+    const currentModeratorId = useMemo(() => {
+        const mod = members.find((m) => m.role === "Moderator");
+        return mod?.id ? String(mod.id) : null;
+    }, [members]);
+
+    const getRoleOptionsForMember = (memberId: string): Exclude<MemberRole, "Owner">[] => {
+        if (currentModeratorId && String(memberId) !== String(currentModeratorId)) {
+            return roleOptions.filter((r) => r !== "Moderator");
+        }
+        return roleOptions;
+    };
+
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
@@ -228,14 +261,9 @@ export function GroupSettingView() {
         return token;
     };
 
-    const apiBase = getApiBase();
-
     const fetchGroupMembers = async (gid: string, token: string) => {
         const res = await fetch(`${apiBase}/group/${gid}/members`, {
-            headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${token}`
-            },
+            headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
             cache: "no-store"
         });
 
@@ -267,7 +295,6 @@ export function GroupSettingView() {
         });
     };
 
-    /** Load group from /group/{id}/detail */
     const loadGroup = async (id: string): Promise<boolean> => {
         setError("");
 
@@ -283,10 +310,7 @@ export function GroupSettingView() {
         }
 
         const detailRes = await fetch(`${apiBase}/group/${id}/detail`, {
-            headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${token}`
-            },
+            headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
             cache: "no-store"
         });
 
@@ -333,9 +357,7 @@ export function GroupSettingView() {
             const meId = getCurrentUserId();
             const me = mapped.find((x) => String(x.id).trim() === String(meId).trim());
             if (me?.role) setMyRoleInGroup(me.role);
-        } catch (e) {
-            console.error(e);
-
+        } catch {
             const currentUserId = getCurrentUserId();
             const preview = data.membersPreview ?? [];
             const mapped: Member[] = preview.map((m, idx) => {
@@ -354,7 +376,7 @@ export function GroupSettingView() {
             });
             setMembers(mapped);
 
-            const me = mapped.find((x) => String(x.id).trim() === String(x.id).trim());
+            const me = mapped.find((x) => String(x.id).trim() === String(currentUserId).trim());
             if (me?.role) setMyRoleInGroup(me.role);
         }
 
@@ -378,8 +400,7 @@ export function GroupSettingView() {
 
                 if (!alive) return;
                 setLoading(false);
-            } catch (e) {
-                console.error(e);
+            } catch {
                 if (!alive) return;
                 setNotFound(true);
                 setError("Có lỗi bất ngờ khi tải nhóm");
@@ -407,11 +428,7 @@ export function GroupSettingView() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    groupId,
-                    groupName,
-                    description
-                })
+                body: JSON.stringify({ groupId, groupName, description })
             });
 
             const text = await readText(res);
@@ -428,12 +445,7 @@ export function GroupSettingView() {
 
             window.dispatchEvent(
                 new CustomEvent(GROUP_UPDATED_EVENT, {
-                    detail: {
-                        id: groupId,
-                        name: groupName,
-                        description,
-                        studioName: masterStudio
-                    }
+                    detail: { id: groupId, name: groupName, description, studioName: masterStudio }
                 })
             );
 
@@ -457,10 +469,7 @@ export function GroupSettingView() {
         try {
             const res = await fetch(`${apiBase}/group/${groupId}`, {
                 method: "DELETE",
-                headers: {
-                    Accept: "application/json",
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Accept: "application/json", Authorization: `Bearer ${token}` }
             });
 
             const text = await readText(res);
@@ -498,11 +507,7 @@ export function GroupSettingView() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    groupId,
-                    userId,
-                    role: apiRole
-                })
+                body: JSON.stringify({ groupId, userId, role: apiRole })
             });
 
             const text = await readText(res);
@@ -528,7 +533,6 @@ export function GroupSettingView() {
 
         setError("");
 
-        // 1) DELETE body
         {
             const res = await fetch(`${apiBase}/group/member/remove`, {
                 method: "DELETE",
@@ -552,17 +556,13 @@ export function GroupSettingView() {
             setError(`[remove(body) ${res.status}] ${msg}`);
         }
 
-        // 2) DELETE query
         {
-            const url = `${apiBase}/group/member/remove?groupId=${encodeURIComponent(
-                groupId
-            )}&userId=${encodeURIComponent(userId)}`;
+            const url = `${apiBase}/group/member/remove?groupId=${encodeURIComponent(groupId)}&userId=${encodeURIComponent(
+                userId
+            )}`;
             const res = await fetch(url, {
                 method: "DELETE",
-                headers: {
-                    Accept: "application/json",
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Accept: "application/json", Authorization: `Bearer ${token}` }
             });
 
             const text = await readText(res);
@@ -596,11 +596,7 @@ export function GroupSettingView() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    groupId,
-                    email,
-                    role: apiRole
-                })
+                body: JSON.stringify({ groupId, email, role: apiRole })
             });
 
             const text = await readText(res);
@@ -634,10 +630,7 @@ export function GroupSettingView() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    groupId,
-                    role: apiRole
-                })
+                body: JSON.stringify({ groupId, role: apiRole })
             });
 
             const text = await readText(res);
@@ -663,6 +656,11 @@ export function GroupSettingView() {
     const onChangeRole = async (userId: string, role: Exclude<MemberRole, "Owner">) => {
         if (!canManageMembers) return;
 
+        if (role === "Moderator" && currentModeratorId && String(userId) !== String(currentModeratorId)) {
+            setError("Nhóm chỉ được có 1 Moderator. Hãy đổi Moderator hiện tại sang vai trò khác trước.");
+            return;
+        }
+
         const current = members.find((x) => x.id === userId);
         if (!current) return;
         if (isOwner(current.role)) return;
@@ -671,7 +669,6 @@ export function GroupSettingView() {
         setRoleLoadingByUserId((p) => ({ ...p, [userId]: true }));
 
         try {
-            // optimistic
             setMembers((prev) => prev.map((m) => (m.id === userId ? { ...m, role } : m)));
 
             const ok = await assignRoleApi(userId, role);
@@ -680,7 +677,6 @@ export function GroupSettingView() {
                 return;
             }
 
-            // reload members
             const token = localStorage.getItem("accessToken") || "";
             if (groupId && token) {
                 try {
@@ -691,8 +687,7 @@ export function GroupSettingView() {
                     const meId = getCurrentUserId();
                     const me = mapped.find((x) => String(x.id).trim() === String(meId).trim());
                     if (me?.role) setMyRoleInGroup(me.role);
-                } catch (e) {
-                    console.error(e);
+                } catch {
                     await loadGroup(groupId);
                 }
             }
@@ -712,7 +707,6 @@ export function GroupSettingView() {
 
     const confirmRemoveMember = async () => {
         if (!removeTarget) return;
-
         const userId = removeTarget.id;
 
         setError("");
@@ -734,8 +728,7 @@ export function GroupSettingView() {
                     const meId = getCurrentUserId();
                     const me = mapped.find((x) => String(x.id).trim() === String(meId).trim());
                     if (me?.role) setMyRoleInGroup(me.role);
-                } catch (e) {
-                    console.error(e);
+                } catch {
                     await loadGroup(groupId);
                 }
             }
@@ -766,56 +759,60 @@ export function GroupSettingView() {
 
     const removeBusy = removeTarget ? !!removeLoadingByUserId[removeTarget.id] : false;
 
+    const hasModerator = members.some((m) => m.role === "Moderator");
+
     return (
         <div className="w-full">
             <Container>
-                <div className="space-y-6">
-
+                <div className="space-y-6 pb-10">
                     {/* GENERAL */}
-                    <section className="rounded-md border bg-white">
-                        <div className="flex items-start justify-between border-b px-5 py-4">
+                    <section className="rounded-2xl border bg-white shadow-sm">
+                        <div className="flex items-start justify-between border-b px-6 py-5">
                             <div className="flex items-start gap-3">
-                                <Settings className="h-4 w-4 text-gray-700" />
+                                <div className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
+                                    <Settings className="h-4 w-4 text-gray-700" />
+                                </div>
                                 <div>
-                                    <h2 className="font-semibold text-gray-900 text-sm">Cài đặt chung</h2>
-                                    <p className="text-gray-500 text-xs">Quản lý thông tin cơ bản của nhóm</p>
+                                    <h2 className="text-sm font-bold text-gray-900">Cài đặt chung</h2>
+                                    <p className="mt-0.5 text-xs text-gray-500">Quản lý thông tin cơ bản của nhóm</p>
                                 </div>
                             </div>
 
                             <Button
                                 onClick={handleEditSave}
-                                className="h-9 rounded-sm bg-orange-600 px-4 font-semibold text-white text-xs hover:bg-orange-700">
+                                className="h-10 rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white hover:bg-orange-700"
+                            >
                                 {isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
                             </Button>
                         </div>
 
-                        <div className="px-5 py-5">
-                            <div className="grid grid-cols-1 gap-4">
+                        <div className="px-6 py-6">
+                            <div className="grid grid-cols-1 gap-5">
                                 <div>
-                                    <label className="font-semibold text-gray-700 text-xs">
+                                    <label className="text-xs font-semibold text-gray-700">
                                         Tên nhóm <span className="text-red-500">*</span>
                                     </label>
                                     <Input
                                         disabled={!isEditing}
                                         value={groupName}
                                         onChange={(e) => setGroupName(e.target.value)}
-                                        className="mt-2 h-9 rounded-sm focus-visible:border-orange-500 focus-visible:ring-orange-500"
+                                        className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="font-semibold text-gray-700 text-xs">Mô tả</label>
+                                    <label className="text-xs font-semibold text-gray-700">Mô tả</label>
                                     <Textarea
                                         disabled={!isEditing}
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        className="mt-2 min-h-[80px] rounded-sm focus-visible:border-orange-500 focus-visible:ring-orange-500"
+                                        className="mt-2 min-h-[100px] rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                     />
                                 </div>
 
                                 {masterStudio ? (
                                     <div>
-                                        <label className="font-semibold text-gray-700 text-xs">Master Studio</label>
+                                        <label className="text-xs font-semibold text-gray-700">Master Studio</label>
                                         <Input
                                             value={masterStudio}
                                             readOnly
@@ -823,95 +820,145 @@ export function GroupSettingView() {
                                             aria-readonly="true"
                                             onMouseDown={(e) => e.preventDefault()}
                                             onFocus={(e) => e.currentTarget.blur()}
-                                            className="mt-2 h-9 cursor-default rounded-sm bg-white text-gray-900 focus-visible:border-gray-200 focus-visible:ring-0"
+                                            className="mt-2 h-10 cursor-default rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
                                         />
                                     </div>
                                 ) : null}
                             </div>
+
+                            {error ? (
+                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                                    {error}
+                                </div>
+                            ) : null}
                         </div>
                     </section>
 
                     {/* MEMBERS */}
-                    <section className="rounded-md border bg-white">
-                        <div className="flex items-start justify-between border-b px-5 py-4">
+                    <section className="rounded-2xl border bg-white shadow-sm">
+                        <div className="flex items-start justify-between border-b px-6 py-5">
                             <div className="flex items-start gap-3">
-                                <Users className="h-4 w-4 text-gray-700" />
+                                <div className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
+                                    <Users className="h-4 w-4 text-gray-700" />
+                                </div>
                                 <div>
-                                    <h2 className="font-semibold text-gray-900 text-sm">Thành viên</h2>
-                                    <p className="text-gray-500 text-xs">Quản lý thành viên và vai trò</p>
+                                    <h2 className="text-sm font-bold text-gray-900">Thành viên</h2>
+                                    <p className="mt-0.5 text-xs text-gray-500">Quản lý thành viên và vai trò</p>
                                 </div>
                             </div>
 
                             <Button
                                 disabled={!canManageMembers}
                                 onClick={() => setInviteOpen(true)}
-                                className="h-9 rounded-sm bg-orange-600 px-4 font-semibold text-white text-xs hover:bg-orange-700 disabled:opacity-50">
+                                className="h-10 rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
+                            >
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Thêm thành viên
                             </Button>
                         </div>
 
-                        <div className="px-5 py-4">
-                            <div className="divide-y rounded-md border">
+                        <div className="px-6 py-6">
+                            <div className="hidden md:grid grid-cols-12 gap-3 rounded-xl border bg-gray-50 px-4 py-3 text-xs font-semibold text-gray-600">
+                                <div className="col-span-6">Thành viên</div>
+                                <div className="col-span-3 flex justify-center">Vai trò</div>
+                                <div className="col-span-3 flex justify-center">Thao tác</div>
+                            </div>
+
+                            <div className="mt-3 divide-y rounded-2xl border">
                                 {members.map((m) => {
                                     const roleBusy = !!roleLoadingByUserId[m.id];
                                     const removingThis = !!removeLoadingByUserId[m.id];
                                     const disabledAll = roleBusy || removingThis || !canManageMembers;
 
                                     return (
-                                        <div key={m.id} className="flex items-center justify-between gap-4 px-4 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 font-semibold text-gray-700 text-xs">
-                                                    {m.initials}
-                                                </div>
-
-                                                <div>
-                                                    <div className="font-semibold text-gray-900 text-sm">{m.name}</div>
-                                                    {m.email ? (
-                                                        <div className="text-gray-500 text-xs">{m.email}</div>
-                                                    ) : null}
+                                        <div
+                                            key={m.id}
+                                            className="grid grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-gray-50/80 md:grid-cols-12 md:items-center"
+                                        >
+                                            <div className="md:col-span-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-700">
+                                                        {m.initials}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="truncate text-sm font-semibold text-gray-900">{m.name}</div>
+                                                        {m.email ? <div className="truncate text-xs text-gray-500">{m.email}</div> : null}
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center justify-center gap-3 md:col-span-3">
                                                 {isOwner(m.role) ? (
-                                                    <div
-                                                        className="flex h-8 w-[140px] items-center justify-center rounded-sm border bg-gray-50 px-3 font-semibold text-gray-800 text-xs"
-                                                        aria-label="Owner role (read only)"
-                                                        title="Owner">
+                                                    <div className="inline-flex h-10 w-[170px] items-center justify-center rounded-xl border bg-gray-50 px-3 text-sm font-semibold text-gray-800">
                                                         Owner
                                                     </div>
                                                 ) : (
-                                                    <>
-                                                        {/* ✅ FIX: text gần icon ▼ hơn */}
-                                                        <Select
-                                                            value={m.role}
-                                                            disabled={disabledAll}
-                                                            onValueChange={(v) =>
-                                                                onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)
-                                                            }>
-                                                            <SelectTrigger className="h-8 w-fit min-w-0 gap-1 px-2 pr-1">
-                                                                <SelectValue className="text-left" />
-                                                            </SelectTrigger>
+                                                    <Select
+                                                        value={m.role}
+                                                        disabled={disabledAll}
+                                                        onValueChange={(v) => onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)}
+                                                    >
+                                                        <SelectTrigger
+                                                            className="
+                                h-10 w-[170px]
+                                justify-between
+                                rounded-xl border border-gray-200 bg-white
+                                px-3 text-sm font-semibold text-gray-900
+                                shadow-sm
+                                hover:bg-gray-50
+                                focus:outline-none focus:ring-2 focus:ring-orange-500
+                                data-[state=open]:ring-2 data-[state=open]:ring-orange-500
+                                disabled:opacity-50
+                              "
+                                                        >
+                                                            <SelectValue placeholder="Chọn role" className="text-left" />
+                                                        </SelectTrigger>
 
-                                                            <SelectContent>
-                                                                {roleOptions.map((r) => (
-                                                                    <SelectItem key={r} value={r}>
-                                                                        {r}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
+                                                        <SelectContent
+                                                            position="popper"
+                                                            side="bottom"
+                                                            align="center"
+                                                            sideOffset={8}
+                                                            avoidCollisions
+                                                            className="z-[999999] min-w-[220px] rounded-2xl border border-gray-200 bg-white p-1 shadow-xl"
+                                                        >
+                                                            {getRoleOptionsForMember(m.id).map((r) => (
+                                                                <SelectItem
+                                                                    key={r}
+                                                                    value={r}
+                                                                    className="
+                                    relative
+                                    rounded-xl px-3 py-2.5
+                                    text-sm text-gray-900
+                                    cursor-pointer
+                                    outline-none
+                                    hover:bg-gray-100
+                                    focus:bg-gray-100
+                                    data-[highlighted]:bg-gray-100
+                                    data-[state=checked]:font-bold
+                                  "
+                                                                >
+                                                                    {r}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            </div>
 
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            disabled={disabledAll}
-                                                            className="h-8 w-8 rounded-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:hover:bg-transparent"
-                                                            onClick={() => openRemoveConfirm(m.id)}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </>
+                                            <div className="flex items-center justify-center gap-2 md:col-span-3">
+                                                {!isOwner(m.role) ? (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        disabled={disabledAll}
+                                                        className="h-10 w-10 rounded-xl text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:hover:bg-transparent"
+                                                        onClick={() => openRemoveConfirm(m.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                ) : (
+                                                    <div className="h-10 w-10" />
                                                 )}
                                             </div>
                                         </div>
@@ -919,38 +966,41 @@ export function GroupSettingView() {
                                 })}
 
                                 {members.length === 0 ? (
-                                    <div className="px-4 py-6 text-gray-500 text-sm">
-                                        Chưa có thành viên để hiển thị.
-                                    </div>
+                                    <div className="px-4 py-10 text-center text-sm text-gray-500">Chưa có thành viên để hiển thị.</div>
                                 ) : null}
                             </div>
+
+                            {error ? (
+                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                                    {error}
+                                </div>
+                            ) : null}
                         </div>
                     </section>
 
                     {/* DANGER */}
-                    <section className="rounded-md border border-red-200 bg-white">
-                        <div className="border-red-200 border-b px-5 py-4">
-                            <h2 className="font-semibold text-red-600 text-sm">Vùng nguy hiểm</h2>
-                            <p className="text-red-500 text-xs">Các thao tác không thể hoàn tác</p>
+                    <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
+                        <div className="border-b border-red-200 px-6 py-5">
+                            <h2 className="text-sm font-bold text-red-700">Vùng nguy hiểm</h2>
+                            <p className="mt-0.5 text-xs text-red-600">Các thao tác không thể hoàn tác</p>
                         </div>
 
-                        <div className="px-5 py-4">
-                            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-4">
-                                <div className="flex items-center justify-between gap-4">
+                        <div className="px-6 py-6">
+                            <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                     <div>
-                                        <div className="font-semibold text-red-600 text-sm">Xóa nhóm</div>
-                                        <div className="text-red-500 text-xs">
-                                            Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan
-                                        </div>
+                                        <div className="text-sm font-bold text-red-700">Xóa nhóm</div>
+                                        <div className="mt-1 text-xs text-red-600">Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan.</div>
                                     </div>
 
                                     <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                                         <AlertDialogTrigger asChild>
                                             <Button
                                                 disabled={!canDelete}
-                                                className="h-8 rounded-sm bg-red-600 px-4 font-semibold text-white text-xs hover:bg-red-700 disabled:opacity-50">
+                                                className="h-10 rounded-xl bg-red-600 px-5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                                            >
                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                Xóa
+                                                Xóa nhóm
                                             </Button>
                                         </AlertDialogTrigger>
 
@@ -958,8 +1008,7 @@ export function GroupSettingView() {
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Bạn chắc chắn muốn xóa nhóm này?</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Hành động này không thể hoàn tác. Nhóm và toàn bộ dữ liệu sẽ bị xóa
-                                                    vĩnh viễn.
+                                                    Hành động này không thể hoàn tác. Nhóm và toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
 
@@ -971,14 +1020,27 @@ export function GroupSettingView() {
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         handleDelete();
-                                                    }}>
+                                                    }}
+                                                >
                                                     {deleteLoading ? "Đang xóa..." : "Xác nhận xóa"}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
                                 </div>
+
+                                {!canDelete ? (
+                                    <div className="mt-4 text-xs text-red-700">
+                                        Chỉ <b>Owner</b> mới có quyền xóa nhóm.
+                                    </div>
+                                ) : null}
                             </div>
+
+                            {error ? (
+                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                                    {error}
+                                </div>
+                            ) : null}
                         </div>
                     </section>
                 </div>
@@ -989,6 +1051,7 @@ export function GroupSettingView() {
                 onClose={() => setInviteOpen(false)}
                 groupName={groupName || "Group"}
                 canManage={canManageMembers}
+                hasModerator={hasModerator}
                 onCreateLink={async ({ role }) => {
                     setError("");
                     const url = await createInviteLinkApi(role);
@@ -1008,16 +1071,15 @@ export function GroupSettingView() {
                 onOpenChange={(v) => {
                     setRemoveConfirmOpen(v);
                     if (!v) setRemoveTarget(null);
-                }}>
+                }}
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xác nhận xóa thành viên</AlertDialogTitle>
                         <AlertDialogDescription>
                             Bạn có chắc chắn muốn xóa{" "}
-                            <span className="font-semibold text-gray-900">
-                                {removeTarget?.name || "thành viên này"}
-                            </span>{" "}
-                            khỏi nhóm không? Hành động này không thể hoàn tác.
+                            <span className="font-semibold text-gray-900">{removeTarget?.name || "thành viên này"}</span> khỏi nhóm
+                            không? Hành động này không thể hoàn tác.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -1029,7 +1091,8 @@ export function GroupSettingView() {
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmRemoveMember();
-                            }}>
+                            }}
+                        >
                             {removeBusy ? "Đang xóa..." : "Xóa thành viên"}
                         </AlertDialogAction>
                     </AlertDialogFooter>

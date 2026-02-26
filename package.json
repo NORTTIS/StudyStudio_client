@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "api:types": "openapi-typescript http://localhost:5006/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
+        "api:types": "openapi-typescript http://localhost:8080/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
         "build": "pnpm api:types && next build",
         "start": "next start",
         "lint": "biome check",
@@ -12,6 +12,9 @@
         "commit": "cz"
     },
     "dependencies": {
+        "@dnd-kit/core": "^6.3.1",
+        "@dnd-kit/sortable": "^10.0.0",
+        "@dnd-kit/utilities": "^3.2.2",
         "@fullcalendar/core": "^6.1.20",
         "@fullcalendar/daygrid": "^6.1.20",
         "@fullcalendar/interaction": "^6.1.20",

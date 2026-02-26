@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Link2, Users, X } from "lucide-react";
+import { AlertCircle, Copy, Link2, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -8,7 +8,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
 export type InviteRole = "Moderator" | "Member" | "Commenter" | "Viewer";
@@ -21,7 +20,8 @@ export function InviteMemberModal({
     groupName,
     canManage,
     onCreateLink,
-    onSendInvite
+    onSendInvite,
+    hasModerator = false
 }: {
     open: boolean;
     onClose: () => void;
@@ -29,10 +29,10 @@ export function InviteMemberModal({
     canManage: boolean;
     onCreateLink: (payload: { role: InviteRole }) => Promise<string>;
     onSendInvite: (payload: { email: string; role: InviteRole }) => Promise<void> | void;
+    hasModerator?: boolean;
 }) {
     const t = useTranslations("GroupInviteModal");
     const [mounted, setMounted] = useState(false);
-    const { toast } = useToast();
 
     const [email, setEmail] = useState("");
     const [emailError, setEmailError] = useState("");
@@ -58,12 +58,35 @@ export function InviteMemberModal({
 
     useEffect(() => setMounted(true), []);
 
-    const canSend = useMemo(() => {
-        const e = email.trim();
-        return canManage && e.length > 0 && !sending;
-    }, [canManage, email, sending]);
-
     const hasLink = useMemo(() => inviteLink.trim().length > 0, [inviteLink]);
+
+    const visibleRoleOptions = useMemo(() => {
+        return hasModerator ? roleOptions.filter((r) => r !== "Moderator") : roleOptions;
+    }, [hasModerator]);
+
+    const effectiveRole: InviteRole = useMemo(() => {
+        if (hasModerator && role === "Moderator") return "Member";
+        return role;
+    }, [hasModerator, role]);
+
+    useEffect(() => {
+        if (!open) return;
+        if (!hasModerator) return;
+        if (role !== "Moderator") return;
+        setRole("Member");
+        setInviteLink("");
+        setCopied(false);
+    }, [open, hasModerator, role]);
+
+    const isEmailValid = useMemo(() => {
+        const e = email.trim();
+        if (!e) return false;
+        return inviteEmailSchema.safeParse(e).success;
+    }, [email]);
+
+    const canSend = useMemo(() => {
+        return canManage && isEmailValid && !sending;
+    }, [canManage, isEmailValid, sending]);
 
     useEffect(() => {
         if (!open) return;
@@ -91,44 +114,46 @@ export function InviteMemberModal({
         setSending(false);
         setCreatingLink(false);
         setCopied(false);
+        setInviteLink("");
     }, [open]);
 
     useEffect(() => {
         if (!open) return;
         if (!copied) return;
-        const t = window.setTimeout(() => setCopied(false), 1200);
-        return () => window.clearTimeout(t);
+        const tid = window.setTimeout(() => setCopied(false), 1200);
+        return () => window.clearTimeout(tid);
     }, [copied, open]);
 
+    const validateEmail = (raw: string) => {
+        const trimmed = raw.trim();
+        if (!trimmed) {
+            setEmailError("");
+            return false;
+        }
+        const validation = inviteEmailSchema.safeParse(trimmed);
+        if (!validation.success) {
+            setEmailError(validation.error.issues[0]?.message || t("validation.emailInvalid"));
+            return false;
+        }
+        setEmailError("");
+        return true;
+    };
+
     const handleSend = async () => {
-        if (!canSend) return;
+        if (!canManage || sending) return;
 
         const emailToValidate = email.trim();
-        const validation = inviteEmailSchema.safeParse(emailToValidate);
-        if (!validation.success) {
-            const message = validation.error.issues[0]?.message || t("validation.emailInvalid");
-            setEmailError(message);
-            toast({
-                description: t("toast.inviteFailedWithReason", { reason: message }),
-                variant: "destructive"
-            });
-            return;
-        }
+        if (!validateEmail(emailToValidate)) return;
 
-        setEmailError("");
+        const safeRole: InviteRole = hasModerator && effectiveRole === "Moderator" ? "Member" : effectiveRole;
+
         setSending(true);
         try {
-            await onSendInvite({ email: emailToValidate, role });
+            await onSendInvite({ email: emailToValidate, role: safeRole });
             setEmail("");
-            toast({
-                description: t("toast.inviteSent", { email: emailToValidate }),
-                variant: "success"
-            });
+            setEmailError("");
         } catch {
-            toast({
-                description: t("toast.inviteFailed"),
-                variant: "destructive"
-            });
+            setEmailError(t("toast.inviteFailed"));
         } finally {
             setSending(false);
         }
@@ -141,10 +166,6 @@ export function InviteMemberModal({
         try {
             await navigator.clipboard.writeText(url);
             setCopied(true);
-            toast({
-                description: t("toast.linkCopied"),
-                variant: "success"
-            });
         } catch {
             try {
                 const ta = document.createElement("textarea");
@@ -157,16 +178,7 @@ export function InviteMemberModal({
                 document.execCommand("copy");
                 document.body.removeChild(ta);
                 setCopied(true);
-                toast({
-                    description: t("toast.linkCopied"),
-                    variant: "success"
-                });
-            } catch {
-                toast({
-                    description: t("toast.copyFailed"),
-                    variant: "destructive"
-                });
-            }
+            } catch { }
         }
     };
 
@@ -180,23 +192,16 @@ export function InviteMemberModal({
 
         if (creatingLink) return;
 
+        const safeRole: InviteRole = hasModerator && effectiveRole === "Moderator" ? "Member" : effectiveRole;
+
         setCreatingLink(true);
         try {
-            const url = await onCreateLink({ role });
+            const url = await onCreateLink({ role: safeRole });
             if (url?.trim()) {
                 setInviteLink(url);
                 await copyLink();
-            } else {
-                toast({
-                    description: t("toast.createLinkFailedEmpty"),
-                    variant: "destructive"
-                });
             }
         } catch {
-            toast({
-                description: t("toast.createLinkFailed"),
-                variant: "destructive"
-            });
         } finally {
             setCreatingLink(false);
         }
@@ -216,9 +221,7 @@ export function InviteMemberModal({
                     tabIndex={-1}
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                            onClose();
-                        }
+                        if (e.key === "Escape") onClose();
                     }}>
                     <div className="flex items-start justify-between gap-4 px-8 pt-7">
                         <h2 className="font-semibold text-3xl text-[#111827] tracking-tight">
@@ -238,36 +241,49 @@ export function InviteMemberModal({
                         <div>
                             <div className="font-medium text-[#111827] text-base">{t("inviteByEmail")}</div>
 
-                            <div className="relative mt-3">
-                                <Input
-                                    value={email}
-                                    onChange={(e) => {
-                                        setEmail(e.target.value);
-                                        if (emailError) {
-                                            setEmailError("");
-                                        }
-                                    }}
-                                    placeholder={t("emailPlaceholder")}
-                                    disabled={!canManage || sending}
-                                    className={cn(
-                                        "h-12 rounded-xl border-[#E5E7EB] pr-12 text-[#111827] text-base placeholder:text-[#9CA3AF] focus-visible:border-[#D1D5DB] focus-visible:ring-0",
-                                        emailError && "border-red-400 focus-visible:border-red-500"
-                                    )}
-                                />
-
-                                {email.length > 0 ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setEmail("")}
+                            <div className="mt-3">
+                                <div className="relative">
+                                    <Input
+                                        value={email}
+                                        onChange={(e) => {
+                                            const v = e.target.value;
+                                            setEmail(v);
+                                            if (emailError) setEmailError("");
+                                            if (v.trim().length > 0) validateEmail(v);
+                                        }}
+                                        onBlur={() => {
+                                            if (email.trim().length > 0) validateEmail(email);
+                                        }}
+                                        placeholder={t("emailPlaceholder")}
                                         disabled={!canManage || sending}
-                                        className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-[#6B7280] hover:bg-gray-100 disabled:opacity-50"
-                                        aria-label={t("clearEmailAriaLabel")}>
-                                        <X className="h-4 w-4" />
-                                    </button>
+                                        className={cn(
+                                            "h-12 rounded-xl border-[#E5E7EB] pr-10 text-[#111827] text-base placeholder:text-[#9CA3AF] focus-visible:border-[#D1D5DB] focus-visible:ring-0",
+                                            emailError && "border-red-400 focus-visible:border-red-500"
+                                        )}
+                                    />
+
+                                    {email.length > 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setEmail("");
+                                                setEmailError("");
+                                            }}
+                                            disabled={!canManage || sending}
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1 text-[#6B7280] hover:bg-gray-100 disabled:opacity-50"
+                                            aria-label={t("clearEmailAriaLabel")}>
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    ) : null}
+                                </div>
+
+                                {emailError ? (
+                                    <div className="mt-2 flex items-center gap-2 text-red-600 text-sm">
+                                        <AlertCircle className="h-4 w-4 shrink-0" />
+                                        <span>{emailError}</span>
+                                    </div>
                                 ) : null}
                             </div>
-
-                            {emailError ? <p className="mt-2 text-red-600 text-sm">{emailError}</p> : null}
                         </div>
 
                         <div className="mt-7">
@@ -281,7 +297,7 @@ export function InviteMemberModal({
 
                                     <div className="min-w-0">
                                         <Select
-                                            value={role}
+                                            value={effectiveRole}
                                             onValueChange={(v) => {
                                                 const next = v as InviteRole;
                                                 setRole(next);
@@ -299,7 +315,7 @@ export function InviteMemberModal({
                                                 position="popper"
                                                 sideOffset={8}
                                                 className="z-[2147483648] min-w-[280px] rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-xl">
-                                                {roleOptions.map((r) => (
+                                                {visibleRoleOptions.map((r) => (
                                                     <SelectItem
                                                         key={r}
                                                         value={r}
@@ -311,7 +327,7 @@ export function InviteMemberModal({
                                         </Select>
 
                                         <div className="mt-2 max-w-[420px] text-[#6B7280] text-base leading-snug">
-                                            {roleNote[role]}
+                                            {roleNote[effectiveRole]}
                                         </div>
                                     </div>
                                 </div>
