@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { deleteStudio, getStudioById, type StudioUI } from "@/api/studios";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
@@ -70,7 +70,7 @@ export default function StudioDetailPage() {
             group.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
             const profileResult = await getUserProfile(locale);
@@ -88,11 +88,10 @@ export default function StudioDetailPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [studioId, locale, toast, t]);
 
     useEffect(() => {
         loadData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loadData]);
 
     const handleEditStudio = async (_data: { name: string; description: string; type: string }) => {
