@@ -134,6 +134,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
 
     const handleEdit = () => {
         setIsEditing(true);
+        setErrors({}); // Clear errors when starting to edit
     };
 
     const handleCancel = () => {
@@ -142,7 +143,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
         setFormData(normalizeProfile(initialData, currentLocale));
         setAvatarPreview(initialData.avatarUrl || "/images/image-removebg-preview.png");
         setAvatarFile(null);
-        setErrors({});
+        setErrors({}); // Clear all errors
     };
 
     const validateProfileForm = () => {
@@ -196,10 +197,10 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             const locale = pathname.split("/")[1] || "vi";
 
             const updateData: UpdateProfileRequest = {
-                firstName: formData.firstName || undefined,
-                lastName: formData.lastName || undefined,
-                phoneNumber: formData.phoneNumber || undefined,
-                bio: formData.bio || undefined
+                firstName: formData.firstName?.trim() || "",
+                lastName: formData.lastName?.trim() || "",
+                phoneNumber: formData.phoneNumber?.trim() || "",
+                bio: formData.bio || ""
             };
 
             if (avatarFile) {
@@ -209,12 +210,8 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             const response = await updateUserProfile(updateData, locale);
 
             if (response.status === "success") {
-                localStorage.setItem("userSettings", JSON.stringify(formData));
-                toast({
-                    variant: "success",
-                    description: response.message || t("profile.saveSuccess")
-                });
-                setIsEditing(false);
+                // Reload page to get fresh data from server
+                window.location.reload();
             } else {
                 toast({
                     variant: "destructive",
@@ -477,7 +474,9 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                             maxLength={11}
                             disabled={!isEditing}
                         />
-                        {errors.phoneNumber && <p className="mt-1 text-red-500 text-xs">{errors.phoneNumber}</p>}
+                        {isEditing && errors.phoneNumber && (
+                            <p className="mt-1 text-red-500 text-xs">{errors.phoneNumber}</p>
+                        )}
                     </div>
 
                     <div className="mt-6">
@@ -502,7 +501,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                                 {(formData.bio ?? "").length}/{maxBioLength}
                             </span>
                         </div>
-                        {errors.bio && <p className="mt-1 text-red-500 text-xs">{errors.bio}</p>}
+                        {isEditing && errors.bio && <p className="mt-1 text-red-500 text-xs">{errors.bio}</p>}
                     </div>
 
                     <div className="mt-6 flex justify-end gap-4">
@@ -602,6 +601,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                 </div>
             </div>
 
+            {/* Delete Account Section */}
             <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-8">
                 <h2 className="mb-2 font-semibold text-lg text-red-600">{t("profile.deleteAccount.title")}</h2>
                 <p className="mb-6 text-red-600 text-sm">{t("profile.deleteAccount.subtitle")}</p>
@@ -623,6 +623,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                 </div>
             </div>
 
+            {/* Delete Confirmation Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">

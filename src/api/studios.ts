@@ -13,6 +13,7 @@ export type Studio = {
     createdAt: string;
     updatedAt: string;
     groupCount: number;
+    completionProgress?: number; // Tiến độ hoàn thiện trung bình (%)
 };
 
 // Map API response to UI format
@@ -22,7 +23,8 @@ export type StudioUI = {
     description: string;
     type: "personal" | "group";
     memberCount: number;
-    videoCount: number;
+    groupCount: number;
+    completionProgress: number; // Tiến độ hoàn thiện trung bình (%)
     createdAt: string;
     updatedAt: string;
 };
@@ -46,8 +48,9 @@ function mapStudioToUI(studio: Studio): StudioUI {
         name: studio.studioName,
         description: studio.description,
         type: "group", // API không có type, mặc định là group
-        memberCount: studio.groupCount,
-        videoCount: 0, // API không có videoCount
+        memberCount: 0, // Sẽ được tính từ tổng members trong các groups
+        groupCount: studio.groupCount,
+        completionProgress: studio.completionProgress || 0, // Tiến độ hoàn thiện từ API
         createdAt: studio.createdAt,
         updatedAt: studio.updatedAt
     };
