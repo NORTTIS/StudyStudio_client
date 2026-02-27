@@ -13,7 +13,6 @@ export default function UserLayout({ children }: { children: ReactNode }) {
                     <DashboardSidebar />
                 </div>
 
-                {/* Main */}
                 <div className="flex min-w-0 flex-1 flex-col">
                     {/* Header row (đường ngang nằm ở đây để khớp tuyệt đối) */}
                     <div className="sticky top-0 z-50 bg-white">

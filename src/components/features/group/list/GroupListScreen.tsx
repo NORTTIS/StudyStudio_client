@@ -1,181 +1,248 @@
 "use client";
 
+import * as React from "react";
 import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
-import React, { useMemo, useState } from "react";
 import { Container } from "@/components/common";
 
-type TaskStatus = "To Do" | "In progress" | "Done";
+import {
+    DndContext,
+    type DragEndEvent,
+    type DragStartEvent,
+    PointerSensor,
+    KeyboardSensor,
+    DragOverlay,
+    closestCorners,
+    closestCenter,
+    useSensor,
+    useSensors,
+    useDroppable,
+    type CollisionDetection,
+    type DroppableContainer
+} from "@dnd-kit/core";
+
+import {
+    SortableContext,
+    useSortable,
+    arrayMove,
+    verticalListSortingStrategy,
+    sortableKeyboardCoordinates
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
+
+/** ===== Types ===== */
+type ColumnId = "todo" | "doing" | "review" | "done";
 type Priority = "Low" | "Medium" | "High";
 
 type Task = {
     id: string;
     title: string;
-    status: TaskStatus;
+    columnId: ColumnId;
     priority: Priority;
     labels?: string[];
     dueDate?: string;
     assignee?: { name: string; initials: string };
 };
 
-const statusLabelVi: Record<TaskStatus, string> = {
-    "To Do": "Cần làm",
-    "In progress": "Đang thực hiện",
-    Done: "Hoàn thành"
-};
+type Column = { id: ColumnId; title: string };
 
-const priorityLabelVi: Record<Priority, string> = {
-    Low: "Thấp",
-    Medium: "Trung bình",
-    High: "Cao"
-};
+const INITIAL_COLUMNS: Column[] = [
+    { id: "todo", title: "Cần làm" },
+    { id: "doing", title: "Đang thực hiện" },
+    { id: "review", title: "Đang xem xét" },
+    { id: "done", title: "Hoàn thành" }
+];
 
-function StatusPill({ status }: { status: TaskStatus }) {
-    const cls = useMemo(() => {
-        switch (status) {
-            case "To Do":
-                return "bg-[#FAFAFA] text-[#261E33] border-[#E5E5E5]";
-            case "In progress":
-                return "bg-[#F6F5FF] text-[#3B2CC8] border-[#DDD9FF]";
-            case "Done":
-                return "bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]";
-            default:
-                return "bg-[#FAFAFA] text-[#261E33] border-[#E5E5E5]";
-        }
-    }, [status]);
+const DROP_PREFIX = "drop:";
+const EMPTY_TASKS: Task[] = [];
 
-    return (
-        <span className={`inline-flex items-center rounded-md border px-2 py-1 text-xs ${cls}`}>
-            {statusLabelVi[status]}
-        </span>
-    );
+const isDropId = (id: string) => id.startsWith(DROP_PREFIX);
+const toDropId = (colId: ColumnId) => `${DROP_PREFIX}${colId}`;
+const dropIdToColumnId = (dropId: string) => dropId.replace(DROP_PREFIX, "") as ColumnId;
+
+function cn(...classes: Array<string | false | null | undefined>) {
+    return classes.filter(Boolean).join(" ");
 }
 
-function PriorityPill({ priority }: { priority: Priority }) {
-    const cls = useMemo(() => {
-        switch (priority) {
-            case "Low":
-                return "bg-[#FAFAFA] text-[#6F6B99] border-[#E5E5E5]";
-            case "Medium":
-                return "bg-[#FFF7ED] text-[#C2410C] border-[#FED7AA]";
-            case "High":
-                return "bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]";
-            default:
-                return "bg-[#FAFAFA] text-[#6F6B99] border-[#E5E5E5]";
-        }
-    }, [priority]);
-
-    return (
-        <span className={`inline-flex items-center rounded-md border px-2 py-1 text-xs ${cls}`}>
-            {priorityLabelVi[priority]}
-        </span>
-    );
+function uid(prefix = "id") {
+    return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
 }
 
+function priorityVi(p: Priority) {
+    if (p === "Low") return "Thấp";
+    if (p === "Medium") return "Trung bình";
+    return "Cao";
+}
+
+function priorityPillCls(p: Priority) {
+    if (p === "Low") return "bg-[#FAFAFA] text-[#6F6B99] border-[#E5E5E5]";
+    if (p === "Medium") return "bg-[#FFF7ED] text-[#C2410C] border-[#FED7AA]";
+    return "bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]";
+}
+
+function statusPillCls(colId: ColumnId) {
+    if (colId === "todo") return "bg-[#FAFAFA] text-[#261E33] border-[#E5E5E5]";
+    if (colId === "doing") return "bg-[#F6F5FF] text-[#3B2CC8] border-[#DDD9FF]";
+    if (colId === "review") return "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]";
+    return "bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]";
+}
+
+function findColumnOfTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: string): ColumnId | null {
+    for (const col of columns) {
+        const list = board[col.id] ?? EMPTY_TASKS;
+        if (list.some((t) => t.id === taskId)) return col.id;
+    }
+    return null;
+}
+
+function findTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: string): Task | null {
+    for (const col of columns) {
+        const t = (board[col.id] ?? EMPTY_TASKS).find((x) => x.id === taskId);
+        if (t) return t;
+    }
+    return null;
+}
+
+function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<string>) {
+    return droppables.filter((d) => {
+        const t = d.data?.current?.type;
+        return typeof t === "string" && allow.includes(t);
+    });
+}
+
+/** ===== UI bits ===== */
 function Avatar({ initials }: { initials: string }) {
     return (
-        <span className="grid h-7 w-7 place-items-center rounded-full border bg-white font-semibold text-[#261E33] text-xs">
+        <span className="grid h-8 w-8 place-items-center rounded-full border bg-white text-xs font-semibold text-[#261E33]">
             {initials}
         </span>
     );
 }
 
-function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
-    const [open, setOpen] = useState(true);
-
+function GripIcon() {
     return (
-        <div className="overflow-hidden rounded-xl border bg-white">
-            <div
-                className="flex cursor-pointer items-center justify-between bg-[#FAFAFA] px-4 py-3"
-                onClick={() => setOpen((v) => !v)}>
-                <div className="flex items-center gap-2">
-                    <ChevronDown
-                        className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`}
-                    />
-                    <p className="font-semibold text-[#261E33] text-sm">{title}</p>
-                    <span className="grid h-6 min-w-6 place-items-center rounded-md border bg-white px-2 text-[#6F6B99] text-xs">
-                        {count}
-                    </span>
-                </div>
-
-                <button
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-lg border bg-white px-3 py-2 font-medium text-[#261E33] text-sm hover:bg-[#FAFAFA]"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                    }}>
-                    <Plus className="h-4 w-4" />
-                    Thêm
-                </button>
-            </div>
-
-            <div
-                className={`transition-all duration-300 ease-in-out ${
-                    open ? "max-h-[2000px] opacity-100" : "max-h-0 overflow-hidden opacity-0"
-                }`}>
-                <div className="grid min-w-[900px] grid-cols-12 gap-3 border-b bg-white px-4 py-2 font-medium text-[#6F6B99] text-xs">
-                    <div className="col-span-5">Công việc</div>
-                    <div className="col-span-2">Trạng thái</div>
-                    <div className="col-span-2">Độ ưu tiên</div>
-                    <div className="col-span-2">Hạn hoàn thành</div>
-                    <div className="col-span-1 text-right" />
-                </div>
-
-                <div className="divide-y">{children}</div>
+        <div className="grid h-10 w-10 place-items-center rounded-lg border bg-white text-[#6F6B99]">
+            <div className="grid grid-cols-2 gap-1">
+                <span className="h-1 w-1 rounded-full bg-[#6F6B99]" />
+                <span className="h-1 w-1 rounded-full bg-[#6F6B99]" />
+                <span className="h-1 w-1 rounded-full bg-[#6F6B99]" />
+                <span className="h-1 w-1 rounded-full bg-[#6F6B99]" />
+                <span className="h-1 w-1 rounded-full bg-[#6F6B99]" />
+                <span className="h-1 w-1 rounded-full bg-[#6F6B99]" />
             </div>
         </div>
     );
 }
 
-function TaskRow({ t }: { t: Task }) {
-    return (
-        <div className="grid min-w-[900px] grid-cols-12 items-center gap-3 px-4 py-3 hover:bg-[#FAFAFA]">
-            <div className="col-span-5 min-w-0">
-                <div className="flex items-center gap-2">
-                    <p className="truncate font-medium text-[#261E33] text-sm">{t.title}</p>
+/** ===== Drop zone inside section ===== */
+function ColumnDropZone({ colId, children }: { colId: ColumnId; children: React.ReactNode }) {
+    const dropId = toDropId(colId);
+    const { setNodeRef, isOver } = useDroppable({
+        id: dropId,
+        data: { type: "column-drop", columnId: colId }
+    });
 
-                    {(t.labels ?? []).length ? (
-                        <div className="hidden flex-wrap gap-2 sm:flex">
-                            {(t.labels ?? []).slice(0, 2).map((lb) => (
-                                <span key={lb} className="rounded-md border bg-white px-2 py-1 text-[#6F6B99] text-xs">
+    return (
+        <div ref={setNodeRef} className={cn("relative", isOver && "bg-[#F6F5FF]")}>
+            <div className={cn("pointer-events-none absolute inset-0", isOver ? "ring-2 ring-[#DDD9FF]" : "ring-0")} />
+            {children}
+        </div>
+    );
+}
+
+/** ===== Sortable row ===== */
+function SortableTaskRow({
+    task,
+    columnId,
+    columnTitle
+}: {
+    task: Task;
+    columnId: ColumnId;
+    columnTitle: string;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: task.id,
+        data: { type: "task", columnId }
+    });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.7 : 1
+    };
+
+    const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className={cn(
+                "grid grid-cols-12 items-center gap-3 px-4 py-4",
+                "cursor-grab select-none active:cursor-grabbing",
+                "hover:bg-[#FAFAFA] transition",
+                isDragging && "bg-[#F6F5FF]"
+            )}
+        >
+            <div className="col-span-5 min-w-0">
+                <div className="flex items-start gap-3">
+                    <GripIcon />
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-[#261E33]">{task.title}</p>
+                            {(task.labels ?? []).slice(0, 3).map((lb) => (
+                                <span key={lb} className="rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">
                                     {lb}
                                 </span>
                             ))}
                         </div>
-                    ) : null}
-                </div>
 
-                {t.assignee ? (
-                    <div className="mt-1 flex items-center gap-2 text-[#6F6B99] text-xs">
-                        <Avatar initials={t.assignee.initials} />
-                        <span>{t.assignee.name}</span>
+                        <div className="mt-2 flex items-center gap-2 text-xs text-[#6F6B99]">
+                            {task.assignee ? (
+                                <>
+                                    <Avatar initials={task.assignee.initials} />
+                                    <span className="font-medium">{task.assignee.name}</span>
+                                </>
+                            ) : (
+                                <span className="text-[#A19FB8]">Chưa giao</span>
+                            )}
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <div className="col-span-2">
+                <span className={cn("inline-flex items-center rounded-md border px-2 py-1 text-xs", statusPillCls(columnId))}>
+                    {columnTitle}
+                </span>
+            </div>
+
+            <div className="col-span-2">
+                <span className={cn("inline-flex items-center rounded-md border px-2 py-1 text-xs", priorityPillCls(task.priority))}>
+                    {priorityVi(task.priority)}
+                </span>
+            </div>
+
+            <div className="col-span-2">
+                {task.dueDate ? (
+                    <span className="inline-flex items-center rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">
+                        {task.dueDate}
+                    </span>
                 ) : (
-                    <div className="mt-1 text-[#A19FB8] text-xs">Chưa giao</div>
-                )}
-            </div>
-
-            <div className="col-span-2">
-                <StatusPill status={t.status} />
-            </div>
-
-            <div className="col-span-2">
-                <PriorityPill priority={t.priority} />
-            </div>
-
-            <div className="col-span-2">
-                {t.dueDate ? (
-                    <span className="rounded-md border bg-[#FAFAFA] px-2 py-1 text-[#6F6B99] text-xs">{t.dueDate}</span>
-                ) : (
-                    <span className="text-[#A19FB8] text-xs">—</span>
+                    <span className="text-xs text-[#A19FB8]">—</span>
                 )}
             </div>
 
             <div className="col-span-1 flex justify-end">
                 <button
                     type="button"
-                    className="grid h-8 w-8 place-items-center rounded-md hover:bg-[#F6F5FF]"
-                    aria-label="Thao tác"
-                    onClick={() => {}}>
+                    className="grid h-9 w-9 place-items-center rounded-md hover:bg-[#F6F5FF]"
+                    aria-label="Menu"
+                    onPointerDownCapture={stop}
+                    onClickCapture={stop}
+                >
                     <MoreHorizontal className="h-4 w-4 text-[#6F6B99]" />
                 </button>
             </div>
@@ -183,50 +250,465 @@ function TaskRow({ t }: { t: Task }) {
     );
 }
 
-export function GroupListScreen() {
-    //Demo data
-    const tasks: Task[] = [
-        {
-            id: "1",
-            title: "Thiết lập hệ thống thiết kế",
-            status: "To Do",
-            priority: "Medium",
-            labels: ["BL", "YR"],
-            dueDate: "2025-11-20",
-            assignee: { name: "Dũng", initials: "DL" }
-        },
-        {
-            id: "2",
-            title: "Chỉnh UI luồng mời thành viên",
-            status: "In progress",
-            priority: "High",
-            labels: ["UI"],
-            dueDate: "2025-11-22",
-            assignee: { name: "Minh", initials: "NM" }
-        },
-        {
-            id: "3",
-            title: "Sửa đồng bộ nhóm yêu thích (star)",
-            status: "In progress",
-            priority: "High",
-            labels: ["API", "BUG"],
-            dueDate: "2025-11-23",
-            assignee: { name: "Bắc", initials: "VB" }
-        },
-        {
-            id: "4",
-            title: "Checklist phát hành",
-            status: "Done",
-            priority: "Low",
-            labels: ["DOC"],
-            dueDate: "2025-11-18",
-            assignee: { name: "Đạt", initials: "DD" }
-        }
-    ];
+/** ===== Section UI ===== */
+type HeaderDragProps = Pick<ReturnType<typeof useSortable>, "attributes" | "listeners">;
 
-    const todo = tasks.filter((t) => t.status === "To Do");
-    const inprogress = tasks.filter((t) => t.status === "In progress");
-    const done = tasks.filter((t) => t.status === "Done");
+function ListSection({
+    title,
+    count,
+    onAdd,
+    headerDragProps,
+    children
+}: {
+    title: string;
+    count: number;
+    onAdd: () => void;
+    headerDragProps?: HeaderDragProps;
+    children: React.ReactNode;
+}) {
+    const [open, setOpen] = React.useState(true);
+
+    return (
+        <div className="overflow-hidden rounded-2xl border bg-white">
+            <div
+                className={cn(
+                    "flex items-center justify-between px-4 py-3",
+                    headerDragProps ? "cursor-grab select-none active:cursor-grabbing" : "cursor-pointer"
+                )}
+                onClick={() => setOpen((v) => !v)}
+                {...(headerDragProps?.attributes ?? {})}
+                {...(headerDragProps?.listeners ?? {})}
+            >
+                <div className="flex items-center gap-3">
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", open ? "rotate-0" : "-rotate-90")} />
+                    <p className="text-sm font-semibold text-[#261E33]">{title}</p>
+                    <span className="grid h-6 min-w-6 place-items-center rounded-md border bg-white px-2 text-xs font-medium text-[#6F6B99]">
+                        {count}
+                    </span>
+                </div>
+
+                <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium hover:bg-[#FAFAFA]"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onAdd();
+                    }}
+                >
+                    <Plus className="h-4 w-4" />
+                    Thêm
+                </button>
+            </div>
+
+            <div className={cn("transition-all duration-300", open ? "max-h-[2000px] opacity-100" : "max-h-0 overflow-hidden opacity-0")}>
+                <div className="grid grid-cols-12 gap-3 border-t border-b bg-white px-4 py-2 text-xs font-medium text-[#6F6B99]">
+                    <div className="col-span-5">Công việc</div>
+                    <div className="col-span-2">Trạng thái</div>
+                    <div className="col-span-2">Độ ưu tiên</div>
+                    <div className="col-span-2">Hạn hoàn thành</div>
+                    <div className="col-span-1 text-right" />
+                </div>
+
+                {children}
+            </div>
+        </div>
+    );
+}
+
+/** ===== Sortable wrapper for section ===== */
+function SortableListSection({
+    col,
+    tasks,
+    onAddTask,
+    children
+}: {
+    col: Column;
+    tasks: Task[];
+    onAddTask: (colId: ColumnId) => void;
+    children: React.ReactNode;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: col.id,
+        data: { type: "column" }
+    });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition: transition ?? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        opacity: isDragging ? 0.35 : 1
+    };
+
+    return (
+        <div ref={setNodeRef} style={style}>
+            <ListSection title={col.title} count={tasks.length} onAdd={() => onAddTask(col.id)} headerDragProps={{ attributes, listeners }}>
+                {children}
+            </ListSection>
+        </div>
+    );
+}
+
+/** ===== Overlays ===== */
+function TaskOverlay({ task }: { task: Task }) {
+    return (
+        <div className="w-[560px] rounded-2xl border border-[#DDD9FF] bg-white px-4 py-3 shadow-xl">
+            <p className="truncate text-sm font-semibold text-[#261E33]">{task.title}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+                {(task.labels ?? []).slice(0, 4).map((lb) => (
+                    <span key={lb} className="rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">
+                        {lb}
+                    </span>
+                ))}
+                <span className={cn("rounded-md border px-2 py-1 text-xs", priorityPillCls(task.priority))}>{priorityVi(task.priority)}</span>
+                {task.dueDate ? (
+                    <span className="rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">{task.dueDate}</span>
+                ) : null}
+            </div>
+        </div>
+    );
+}
+
+function ColumnOverlay({ title, count }: { title: string; count: number }) {
+    return (
+        <div className="w-[720px] rounded-2xl border bg-white shadow-xl">
+            <div className="px-4 py-3">
+                <p className="text-sm font-semibold text-[#261E33]">{title}</p>
+                <p className="mt-1 text-xs text-[#6F6B99]">Đang di chuyển bảng… ({count} công việc)</p>
+            </div>
+            <div className="border-t px-4 py-5">
+                <div className="rounded-xl border border-dashed bg-white px-4 py-6 text-sm text-[#A19FB8]">Thả để đổi vị trí bảng</div>
+            </div>
+        </div>
+    );
+}
+
+/** ===== MAIN ===== */
+export function GroupListScreen() {
+    // ✅ No SSR hydration mismatch: render dnd-kit only after mount
+    const [mounted, setMounted] = React.useState(false);
+    React.useEffect(() => setMounted(true), []);
+
+    const [columns, setColumns] = React.useState<Column[]>(INITIAL_COLUMNS);
+
+    const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({
+        todo: [
+            {
+                id: "t1",
+                title: "Thiết lập hệ thống thiết kế",
+                columnId: "todo",
+                priority: "Medium",
+                labels: ["BL", "YR"],
+                dueDate: "2025-11-20",
+                assignee: { name: "Dũng", initials: "DL" }
+            }
+        ],
+        doing: [
+            {
+                id: "t2",
+                title: "Chỉnh UI luồng mời thành viên",
+                columnId: "doing",
+                priority: "High",
+                labels: ["UI"],
+                dueDate: "2025-11-22",
+                assignee: { name: "Minh", initials: "NM" }
+            },
+            {
+                id: "t3",
+                title: "Sửa đồng bộ nhóm yêu thích (star)",
+                columnId: "doing",
+                priority: "High",
+                labels: ["API", "BUG"],
+                dueDate: "2025-11-23",
+                assignee: { name: "Bắc", initials: "VB" }
+            }
+        ],
+        review: [],
+        done: [
+            {
+                id: "t4",
+                title: "Checklist phát hành",
+                columnId: "done",
+                priority: "Low",
+                labels: ["DOC"],
+                dueDate: "2025-11-18",
+                assignee: { name: "Đạt", initials: "DD" }
+            }
+        ]
+    });
+
+    const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null);
+    const [activeColumnId, setActiveColumnId] = React.useState<ColumnId | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    const activeTask = React.useMemo(() => {
+        if (!activeTaskId) return null;
+        return findTask(board, columns, activeTaskId);
+    }, [activeTaskId, board, columns]);
+
+    const activeColumn = React.useMemo(() => {
+        if (!activeColumnId) return null;
+        const col = columns.find((c) => c.id === activeColumnId);
+        if (!col) return null;
+        return { title: col.title, count: (board[col.id] ?? EMPTY_TASKS).length };
+    }, [activeColumnId, columns, board]);
+
+    const collisionDetection: CollisionDetection = React.useCallback((args) => {
+        const activeType = args.active.data.current?.type;
+
+        if (activeType === "column") {
+            const onlyColumns = filterDroppablesByType(args.droppableContainers, ["column"]);
+            return closestCenter({ ...args, droppableContainers: onlyColumns });
+        }
+
+        const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop"]);
+        return closestCorners({ ...args, droppableContainers: allow });
+    }, []);
+
+    const onAddTask = (columnId: ColumnId) => {
+        const next: Task = {
+            id: uid("task"),
+            title: "Công việc mới",
+            columnId,
+            priority: "Medium",
+            labels: ["BL"],
+            dueDate: "",
+            assignee: undefined
+        };
+        setBoard((prev) => ({ ...prev, [columnId]: [next, ...(prev[columnId] ?? EMPTY_TASKS)] }));
+    };
+
+    const handleDragStart = (e: DragStartEvent) => {
+        const type = e.active.data.current?.type;
+        if (type === "task") setActiveTaskId(String(e.active.id));
+        if (type === "column") setActiveColumnId(String(e.active.id) as ColumnId);
+    };
+
+    /** ✅ CRITICAL FIX: NO setState in onDragOver. ONLY handle in onDragEnd. */
+    const handleDragEnd = (e: DragEndEvent) => {
+        const { active, over } = e;
+
+        const activeType = active.data.current?.type;
+        const overId = over?.id ? String(over.id) : null;
+
+        // reset overlays
+        setActiveTaskId(null);
+        setActiveColumnId(null);
+
+        if (!overId) return;
+
+        if (activeType === "task") {
+            const activeId = String(active.id);
+
+            const fromCol = findColumnOfTask(board, columns, activeId);
+            if (!fromCol) return;
+
+            // Determine target column
+            let toCol: ColumnId | null = null;
+
+            if (isDropId(overId)) {
+                toCol = dropIdToColumnId(overId);
+            } else if (columns.some((c) => c.id === overId)) {
+                toCol = overId as ColumnId;
+            } else {
+                toCol = findColumnOfTask(board, columns, overId) ?? null;
+            }
+
+            if (!toCol) return;
+
+            if (fromCol === toCol) {
+                // reorder inside same column (only if over a task)
+                setBoard((prev) => {
+                    const tasks = [...(prev[fromCol] ?? EMPTY_TASKS)];
+                    const oldIndex = tasks.findIndex((t) => t.id === activeId);
+                    const newIndex = tasks.findIndex((t) => t.id === overId);
+                    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return prev;
+                    return { ...prev, [fromCol]: arrayMove(tasks, oldIndex, newIndex) };
+                });
+            } else {
+                // move across columns (insert top; if over a task in target, insert before it)
+                setBoard((prev) => {
+                    const fromTasks = [...(prev[fromCol] ?? EMPTY_TASKS)];
+                    const toTasks = [...(prev[toCol!] ?? EMPTY_TASKS)];
+
+                    const oldIndex = fromTasks.findIndex((t) => t.id === activeId);
+                    if (oldIndex === -1) return prev;
+
+                    const [moving] = fromTasks.splice(oldIndex, 1);
+                    const moved = { ...moving, columnId: toCol! };
+
+                    const overIsTaskInTo = toTasks.some((t) => t.id === overId);
+                    if (overIsTaskInTo) {
+                        const idx = toTasks.findIndex((t) => t.id === overId);
+                        toTasks.splice(Math.max(0, idx), 0, moved);
+                    } else {
+                        toTasks.unshift(moved);
+                    }
+
+                    return { ...prev, [fromCol]: fromTasks, [toCol!]: toTasks };
+                });
+            }
+
+            return;
+        }
+
+        if (activeType === "column") {
+            const activeColId = String(active.id) as ColumnId;
+            let overColId = overId as ColumnId;
+
+            if (isDropId(overColId)) overColId = dropIdToColumnId(overColId);
+
+            // If dropped on a task, convert to that task's column
+            if (!columns.some((c) => c.id === overColId)) {
+                const maybe = findColumnOfTask(board, columns, overColId);
+                if (maybe) overColId = maybe;
+            }
+
+            if (!columns.some((c) => c.id === overColId)) return;
+            if (activeColId === overColId) return;
+
+            const oldIndex = columns.findIndex((c) => c.id === activeColId);
+            const newIndex = columns.findIndex((c) => c.id === overColId);
+            if (oldIndex === -1 || newIndex === -1) return;
+
+            setColumns((prev) => arrayMove(prev, oldIndex, newIndex));
+        }
+    };
+
+    const columnIds = React.useMemo(() => columns.map((c) => c.id), [columns]);
+
+    // ✅ stable task ids per column to avoid dnd-kit internal update loops
+    const taskIdsByCol = React.useMemo(() => {
+        const out: Record<ColumnId, string[]> = { todo: [], doing: [], review: [], done: [] };
+        for (const col of columns) {
+            out[col.id] = (board[col.id] ?? EMPTY_TASKS).map((t) => t.id);
+        }
+        return out;
+    }, [board, columns]);
+
+    /** ===== SSR-safe fallback (no dnd-kit hooks) ===== */
+    if (!mounted) {
+        return (
+            <div className="bg-[#FAFAFA]">
+                <Container>
+                    <div className="flex items-center justify-end">
+                        <button
+                            type="button"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium text-[#261E33] hover:bg-[#FAFAFA]"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Tạo mới +
+                        </button>
+                    </div>
+
+                    <div className="mt-5 grid gap-4">
+                        {columns.map((col) => {
+                            const tasks = board[col.id] ?? EMPTY_TASKS;
+
+                            return (
+                                <div key={col.id} className="overflow-hidden rounded-2xl border bg-white">
+                                    <div className="flex items-center justify-between px-4 py-3">
+                                        <div className="flex items-center gap-3">
+                                            <ChevronDown className="h-4 w-4" />
+                                            <p className="text-sm font-semibold text-[#261E33]">{col.title}</p>
+                                            <span className="grid h-6 min-w-6 place-items-center rounded-md border bg-white px-2 text-xs font-medium text-[#6F6B99]">
+                                                {tasks.length}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium hover:bg-[#FAFAFA]"
+                                            onClick={() => onAddTask(col.id)}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            Thêm
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-12 gap-3 border-t border-b bg-white px-4 py-2 text-xs font-medium text-[#6F6B99]">
+                                        <div className="col-span-5">Công việc</div>
+                                        <div className="col-span-2">Trạng thái</div>
+                                        <div className="col-span-2">Độ ưu tiên</div>
+                                        <div className="col-span-2">Hạn hoàn thành</div>
+                                        <div className="col-span-1 text-right" />
+                                    </div>
+
+                                    {tasks.length ? (
+                                        <div className="divide-y">
+                                            {tasks.map((t) => (
+                                                <div key={t.id} className="grid grid-cols-12 items-center gap-3 px-4 py-4">
+                                                    <div className="col-span-5 min-w-0">
+                                                        <div className="flex items-start gap-3">
+                                                            <GripIcon />
+                                                            <div className="min-w-0">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <p className="truncate text-sm font-semibold text-[#261E33]">{t.title}</p>
+                                                                    {(t.labels ?? []).slice(0, 3).map((lb) => (
+                                                                        <span key={lb} className="rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">
+                                                                            {lb}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                                <div className="mt-2 text-xs text-[#6F6B99]">
+                                                                    {t.assignee ? (
+                                                                        <span className="inline-flex items-center gap-2">
+                                                                            <Avatar initials={t.assignee.initials} />
+                                                                            <span className="font-medium">{t.assignee.name}</span>
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-[#A19FB8]">Chưa giao</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="col-span-2">
+                                                        <span className={cn("inline-flex items-center rounded-md border px-2 py-1 text-xs", statusPillCls(col.id))}>
+                                                            {col.title}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="col-span-2">
+                                                        <span className={cn("inline-flex items-center rounded-md border px-2 py-1 text-xs", priorityPillCls(t.priority))}>
+                                                            {priorityVi(t.priority)}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="col-span-2">
+                                                        {t.dueDate ? (
+                                                            <span className="inline-flex items-center rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">
+                                                                {t.dueDate}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-[#A19FB8]">—</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="col-span-1 flex justify-end">
+                                                        <button type="button" className="grid h-9 w-9 place-items-center rounded-md hover:bg-[#F6F5FF]" aria-label="Menu">
+                                                            <MoreHorizontal className="h-4 w-4 text-[#6F6B99]" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="px-4 py-10 text-center">
+                                            <p className="text-sm font-medium text-[#261E33]">Chưa có công việc</p>
+                                            <p className="mt-1 text-sm text-[#6F6B99]">Kéo thả công việc vào đây.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </Container>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-[#FAFAFA]">
@@ -234,57 +716,56 @@ export function GroupListScreen() {
                 <div className="flex items-center justify-end">
                     <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 font-medium text-[#261E33] text-sm hover:bg-[#FAFAFA]"
-                        onClick={() => {}}>
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium text-[#261E33] hover:bg-[#FAFAFA]"
+                    >
                         <Plus className="h-4 w-4" />
                         Tạo mới +
                     </button>
                 </div>
 
-                <div className="mt-5 grid gap-4">
-                    <div className="overflow-x-auto">
-                        <Section title="Cần làm" count={todo.length}>
-                            {todo.length ? (
-                                todo.map((t) => <TaskRow key={t.id} t={t} />)
-                            ) : (
-                                <div className="px-4 py-10 text-center">
-                                    <p className="font-medium text-[#261E33] text-sm">Chưa có công việc</p>
-                                    <p className="mt-1 text-[#6F6B99] text-sm">Tạo công việc mới để bắt đầu.</p>
-                                </div>
-                            )}
-                        </Section>
-                    </div>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={collisionDetection}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext items={columnIds} strategy={verticalListSortingStrategy}>
+                        <div className="mt-5 grid gap-4">
+                            {columns.map((col) => {
+                                const tasks = board[col.id] ?? EMPTY_TASKS;
 
-                    <div className="overflow-x-auto">
-                        <Section title="Đang thực hiện" count={inprogress.length}>
-                            {inprogress.length ? (
-                                inprogress.map((t) => <TaskRow key={t.id} t={t} />)
-                            ) : (
-                                <div className="px-4 py-10 text-center">
-                                    <p className="font-medium text-[#261E33] text-sm">Chưa có công việc</p>
-                                    <p className="mt-1 text-[#6F6B99] text-sm">
-                                        Công việc đang thực hiện sẽ hiển thị ở đây.
-                                    </p>
-                                </div>
-                            )}
-                        </Section>
-                    </div>
+                                return (
+                                    <SortableListSection key={col.id} col={col} tasks={tasks} onAddTask={onAddTask}>
+                                        <ColumnDropZone colId={col.id}>
+                                            {tasks.length ? (
+                                                <SortableContext items={taskIdsByCol[col.id]} strategy={verticalListSortingStrategy}>
+                                                    <div className="divide-y">
+                                                        {tasks.map((t) => (
+                                                            <SortableTaskRow key={t.id} task={t} columnId={col.id} columnTitle={col.title} />
+                                                        ))}
+                                                    </div>
+                                                </SortableContext>
+                                            ) : (
+                                                <div className="px-4 py-10 text-center">
+                                                    <p className="text-sm font-medium text-[#261E33]">Chưa có công việc</p>
+                                                    <p className="mt-1 text-sm text-[#6F6B99]">Kéo thả công việc vào đây.</p>
+                                                </div>
+                                            )}
+                                        </ColumnDropZone>
+                                    </SortableListSection>
+                                );
+                            })}
+                        </div>
+                    </SortableContext>
 
-                    <div className="overflow-x-auto">
-                        <Section title="Hoàn thành" count={done.length}>
-                            {done.length ? (
-                                done.map((t) => <TaskRow key={t.id} t={t} />)
-                            ) : (
-                                <div className="px-4 py-10 text-center">
-                                    <p className="font-medium text-[#261E33] text-sm">Chưa có công việc hoàn thành</p>
-                                    <p className="mt-1 text-[#6F6B99] text-sm">
-                                        Các công việc đã hoàn thành sẽ hiển thị ở đây.
-                                    </p>
-                                </div>
-                            )}
-                        </Section>
-                    </div>
-                </div>
+                    <DragOverlay>
+                        {activeTask ? (
+                            <TaskOverlay task={activeTask} />
+                        ) : activeColumn ? (
+                            <ColumnOverlay title={activeColumn.title} count={activeColumn.count} />
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
             </Container>
         </div>
     );
