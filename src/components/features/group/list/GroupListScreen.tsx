@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
 import { Container } from "@/components/common";
+import { useParams } from "next/navigation";
 
 import {
     DndContext,
@@ -29,9 +30,16 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
+import type { components } from "@/api/types";
+
+/** ===== API Types ===== */
+type GroupDetailResponse = components["schemas"]["GroupDetailResponse"];
+type TaskStatusDto = components["schemas"]["TaskStatusDto"];
+type GroupTaskStatusRequest = components["schemas"]["GroupTaskStatusRequest"];
+type GroupTaskStatusPositionRequest = components["schemas"]["GroupTaskStatusPositionRequest"];
 
 /** ===== Types ===== */
-type ColumnId = "todo" | "doing" | "review" | "done";
+type ColumnId = string;
 type Priority = "Low" | "Medium" | "High";
 
 type Task = {
@@ -44,14 +52,7 @@ type Task = {
     assignee?: { name: string; initials: string };
 };
 
-type Column = { id: ColumnId; title: string };
-
-const INITIAL_COLUMNS: Column[] = [
-    { id: "todo", title: "Cần làm" },
-    { id: "doing", title: "Đang thực hiện" },
-    { id: "review", title: "Đang xem xét" },
-    { id: "done", title: "Hoàn thành" }
-];
+type Column = { id: ColumnId; title: string; position: number };
 
 const DROP_PREFIX = "drop:";
 const EMPTY_TASKS: Task[] = [];
@@ -80,11 +81,8 @@ function priorityPillCls(p: Priority) {
     return "bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]";
 }
 
-function statusPillCls(colId: ColumnId) {
-    if (colId === "todo") return "bg-[#FAFAFA] text-[#261E33] border-[#E5E5E5]";
-    if (colId === "doing") return "bg-[#F6F5FF] text-[#3B2CC8] border-[#DDD9FF]";
-    if (colId === "review") return "bg-[#EEF2FF] text-[#3730A3] border-[#C7D2FE]";
-    return "bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]";
+function statusPillCls(_colId: ColumnId) {
+    return "bg-[#FAFAFA] text-[#261E33] border-[#E5E5E5]";
 }
 
 function findColumnOfTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: string): ColumnId | null {
@@ -381,59 +379,82 @@ function ColumnOverlay({ title, count }: { title: string; count: number }) {
     );
 }
 
+/** ===== API helpers (CALL NEXT PROXY: same-origin => no 401) ===== */
+async function apiGetGroupDetail(groupId: string): Promise<GroupDetailResponse | null> {
+    const url = `/api/group/${encodeURIComponent(groupId)}/detail`;
+
+    const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`GET group detail failed: ${res.status} | url=${url} | body=${text}`);
+    }
+
+    const json = (await res.json()) as components["schemas"]["GroupDetailResponseApiResponse"];
+    return json?.data ?? null;
+}
+
+async function apiCreateStatus(groupId: string, body: GroupTaskStatusRequest) {
+    const url = `/api/GroupTaskStatus/${encodeURIComponent(groupId)}`;
+
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`POST status failed: ${res.status} | url=${url} | body=${text}`);
+    }
+
+    return res.json();
+}
+
+async function apiReorderStatuses(groupId: string, body: GroupTaskStatusPositionRequest[]) {
+    const url = `/api/GroupTaskStatus/${encodeURIComponent(groupId)}`;
+
+    const res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`PUT reorder failed: ${res.status} | url=${url} | body=${text}`);
+    }
+
+    return res.json();
+}
+
+function mapStatusesToColumns(statuses: TaskStatusDto[] | null | undefined): Column[] {
+    return (statuses ?? [])
+        .filter((s) => !!s?.statusId)
+        .map((s) => ({
+            id: String(s.statusId),
+            title: s.statusName ?? "Untitled",
+            position: typeof s.position === "number" ? s.position : 0
+        }))
+        .sort((a, b) => a.position - b.position);
+}
+
 /** ===== MAIN ===== */
 export function GroupListScreen() {
-    // ✅ No SSR hydration mismatch: render dnd-kit only after mount
+    const params = useParams();
+    const groupId = String((params as any)?.groupId ?? "");
+
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
 
-    const [columns, setColumns] = React.useState<Column[]>(INITIAL_COLUMNS);
-
-    const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({
-        todo: [
-            {
-                id: "t1",
-                title: "Thiết lập hệ thống thiết kế",
-                columnId: "todo",
-                priority: "Medium",
-                labels: ["BL", "YR"],
-                dueDate: "2025-11-20",
-                assignee: { name: "Dũng", initials: "DL" }
-            }
-        ],
-        doing: [
-            {
-                id: "t2",
-                title: "Chỉnh UI luồng mời thành viên",
-                columnId: "doing",
-                priority: "High",
-                labels: ["UI"],
-                dueDate: "2025-11-22",
-                assignee: { name: "Minh", initials: "NM" }
-            },
-            {
-                id: "t3",
-                title: "Sửa đồng bộ nhóm yêu thích (star)",
-                columnId: "doing",
-                priority: "High",
-                labels: ["API", "BUG"],
-                dueDate: "2025-11-23",
-                assignee: { name: "Bắc", initials: "VB" }
-            }
-        ],
-        review: [],
-        done: [
-            {
-                id: "t4",
-                title: "Checklist phát hành",
-                columnId: "done",
-                priority: "Low",
-                labels: ["DOC"],
-                dueDate: "2025-11-18",
-                assignee: { name: "Đạt", initials: "DD" }
-            }
-        ]
-    });
+    const [columns, setColumns] = React.useState<Column[]>([]);
+    const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
 
     const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null);
     const [activeColumnId, setActiveColumnId] = React.useState<ColumnId | null>(null);
@@ -442,6 +463,37 @@ export function GroupListScreen() {
         useSensor(PointerSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
+
+    React.useEffect(() => {
+        if (!groupId) return;
+
+        let alive = true;
+
+        (async () => {
+            try {
+                const detail = await apiGetGroupDetail(groupId);
+                const cols = mapStatusesToColumns(detail?.taskStatuses);
+
+                if (!alive) return;
+
+                setColumns(cols);
+                setBoard((prev) => {
+                    const next = { ...prev };
+                    for (const c of cols) if (!next[c.id]) next[c.id] = [];
+                    for (const k of Object.keys(next)) if (!cols.some((c) => c.id === k)) delete next[k];
+                    return next;
+                });
+            } catch (err) {
+                console.error(err);
+                setColumns([]);
+                setBoard({});
+            }
+        })();
+
+        return () => {
+            alive = false;
+        };
+    }, [groupId]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -480,20 +532,64 @@ export function GroupListScreen() {
         setBoard((prev) => ({ ...prev, [columnId]: [next, ...(prev[columnId] ?? EMPTY_TASKS)] }));
     };
 
+    const onAddColumn = async () => {
+        if (!groupId) return;
+
+        const title = window.prompt("Tên bảng mới?", "Bảng mới");
+        if (!title) return;
+
+        try {
+            const body: GroupTaskStatusRequest = {
+                statusName: title,
+                position: columns.length
+            };
+
+            await apiCreateStatus(groupId, body);
+
+            const detail = await apiGetGroupDetail(groupId);
+            const cols = mapStatusesToColumns(detail?.taskStatuses);
+
+            setColumns(cols);
+            setBoard((prev) => {
+                const next = { ...prev };
+                for (const c of cols) if (!next[c.id]) next[c.id] = [];
+                for (const k of Object.keys(next)) if (!cols.some((c) => c.id === k)) delete next[k];
+                return next;
+            });
+        } catch (err) {
+            console.error(err);
+            alert("Tạo bảng thất bại. Check console/network.");
+        }
+    };
+
     const handleDragStart = (e: DragStartEvent) => {
         const type = e.active.data.current?.type;
         if (type === "task") setActiveTaskId(String(e.active.id));
         if (type === "column") setActiveColumnId(String(e.active.id) as ColumnId);
     };
 
-    /** ✅ CRITICAL FIX: NO setState in onDragOver. ONLY handle in onDragEnd. */
+    const persistColumnOrder = React.useCallback(
+        async (nextColumns: Column[]) => {
+            if (!groupId) return;
+            try {
+                const payload: GroupTaskStatusPositionRequest[] = nextColumns.map((c, idx) => ({
+                    statusId: c.id,
+                    position: idx
+                }));
+                await apiReorderStatuses(groupId, payload);
+            } catch (err) {
+                console.error(err);
+            }
+        },
+        [groupId]
+    );
+
     const handleDragEnd = (e: DragEndEvent) => {
         const { active, over } = e;
 
         const activeType = active.data.current?.type;
         const overId = over?.id ? String(over.id) : null;
 
-        // reset overlays
         setActiveTaskId(null);
         setActiveColumnId(null);
 
@@ -505,7 +601,6 @@ export function GroupListScreen() {
             const fromCol = findColumnOfTask(board, columns, activeId);
             if (!fromCol) return;
 
-            // Determine target column
             let toCol: ColumnId | null = null;
 
             if (isDropId(overId)) {
@@ -519,7 +614,6 @@ export function GroupListScreen() {
             if (!toCol) return;
 
             if (fromCol === toCol) {
-                // reorder inside same column (only if over a task)
                 setBoard((prev) => {
                     const tasks = [...(prev[fromCol] ?? EMPTY_TASKS)];
                     const oldIndex = tasks.findIndex((t) => t.id === activeId);
@@ -528,7 +622,6 @@ export function GroupListScreen() {
                     return { ...prev, [fromCol]: arrayMove(tasks, oldIndex, newIndex) };
                 });
             } else {
-                // move across columns (insert top; if over a task in target, insert before it)
                 setBoard((prev) => {
                     const fromTasks = [...(prev[fromCol] ?? EMPTY_TASKS)];
                     const toTasks = [...(prev[toCol!] ?? EMPTY_TASKS)];
@@ -560,7 +653,6 @@ export function GroupListScreen() {
 
             if (isDropId(overColId)) overColId = dropIdToColumnId(overColId);
 
-            // If dropped on a task, convert to that task's column
             if (!columns.some((c) => c.id === overColId)) {
                 const maybe = findColumnOfTask(board, columns, overColId);
                 if (maybe) overColId = maybe;
@@ -573,138 +665,27 @@ export function GroupListScreen() {
             const newIndex = columns.findIndex((c) => c.id === overColId);
             if (oldIndex === -1 || newIndex === -1) return;
 
-            setColumns((prev) => arrayMove(prev, oldIndex, newIndex));
+            const nextCols = arrayMove(columns, oldIndex, newIndex).map((c, idx) => ({ ...c, position: idx }));
+            setColumns(nextCols);
+            void persistColumnOrder(nextCols);
         }
     };
 
     const columnIds = React.useMemo(() => columns.map((c) => c.id), [columns]);
 
-    // ✅ stable task ids per column to avoid dnd-kit internal update loops
     const taskIdsByCol = React.useMemo(() => {
-        const out: Record<ColumnId, string[]> = { todo: [], doing: [], review: [], done: [] };
+        const out: Record<string, string[]> = {};
         for (const col of columns) {
             out[col.id] = (board[col.id] ?? EMPTY_TASKS).map((t) => t.id);
         }
         return out;
     }, [board, columns]);
 
-    /** ===== SSR-safe fallback (no dnd-kit hooks) ===== */
     if (!mounted) {
         return (
             <div className="bg-[#FAFAFA]">
                 <Container>
-                    <div className="flex items-center justify-end">
-                        <button
-                            type="button"
-                            className="inline-flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium text-[#261E33] hover:bg-[#FAFAFA]"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Tạo mới +
-                        </button>
-                    </div>
-
-                    <div className="mt-5 grid gap-4">
-                        {columns.map((col) => {
-                            const tasks = board[col.id] ?? EMPTY_TASKS;
-
-                            return (
-                                <div key={col.id} className="overflow-hidden rounded-2xl border bg-white">
-                                    <div className="flex items-center justify-between px-4 py-3">
-                                        <div className="flex items-center gap-3">
-                                            <ChevronDown className="h-4 w-4" />
-                                            <p className="text-sm font-semibold text-[#261E33]">{col.title}</p>
-                                            <span className="grid h-6 min-w-6 place-items-center rounded-md border bg-white px-2 text-xs font-medium text-[#6F6B99]">
-                                                {tasks.length}
-                                            </span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium hover:bg-[#FAFAFA]"
-                                            onClick={() => onAddTask(col.id)}
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            Thêm
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-12 gap-3 border-t border-b bg-white px-4 py-2 text-xs font-medium text-[#6F6B99]">
-                                        <div className="col-span-5">Công việc</div>
-                                        <div className="col-span-2">Trạng thái</div>
-                                        <div className="col-span-2">Độ ưu tiên</div>
-                                        <div className="col-span-2">Hạn hoàn thành</div>
-                                        <div className="col-span-1 text-right" />
-                                    </div>
-
-                                    {tasks.length ? (
-                                        <div className="divide-y">
-                                            {tasks.map((t) => (
-                                                <div key={t.id} className="grid grid-cols-12 items-center gap-3 px-4 py-4">
-                                                    <div className="col-span-5 min-w-0">
-                                                        <div className="flex items-start gap-3">
-                                                            <GripIcon />
-                                                            <div className="min-w-0">
-                                                                <div className="flex flex-wrap items-center gap-2">
-                                                                    <p className="truncate text-sm font-semibold text-[#261E33]">{t.title}</p>
-                                                                    {(t.labels ?? []).slice(0, 3).map((lb) => (
-                                                                        <span key={lb} className="rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">
-                                                                            {lb}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                                <div className="mt-2 text-xs text-[#6F6B99]">
-                                                                    {t.assignee ? (
-                                                                        <span className="inline-flex items-center gap-2">
-                                                                            <Avatar initials={t.assignee.initials} />
-                                                                            <span className="font-medium">{t.assignee.name}</span>
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-[#A19FB8]">Chưa giao</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="col-span-2">
-                                                        <span className={cn("inline-flex items-center rounded-md border px-2 py-1 text-xs", statusPillCls(col.id))}>
-                                                            {col.title}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="col-span-2">
-                                                        <span className={cn("inline-flex items-center rounded-md border px-2 py-1 text-xs", priorityPillCls(t.priority))}>
-                                                            {priorityVi(t.priority)}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="col-span-2">
-                                                        {t.dueDate ? (
-                                                            <span className="inline-flex items-center rounded-md border bg-white px-2 py-1 text-xs text-[#6F6B99]">
-                                                                {t.dueDate}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-xs text-[#A19FB8]">—</span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="col-span-1 flex justify-end">
-                                                        <button type="button" className="grid h-9 w-9 place-items-center rounded-md hover:bg-[#F6F5FF]" aria-label="Menu">
-                                                            <MoreHorizontal className="h-4 w-4 text-[#6F6B99]" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="px-4 py-10 text-center">
-                                            <p className="text-sm font-medium text-[#261E33]">Chưa có công việc</p>
-                                            <p className="mt-1 text-sm text-[#6F6B99]">Kéo thả công việc vào đây.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <div className="py-6" />
                 </Container>
             </div>
         );
@@ -716,6 +697,7 @@ export function GroupListScreen() {
                 <div className="flex items-center justify-end">
                     <button
                         type="button"
+                        onClick={onAddColumn}
                         className="inline-flex items-center justify-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium text-[#261E33] hover:bg-[#FAFAFA]"
                     >
                         <Plus className="h-4 w-4" />
@@ -723,12 +705,7 @@ export function GroupListScreen() {
                     </button>
                 </div>
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={collisionDetection}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                >
+                <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                     <SortableContext items={columnIds} strategy={verticalListSortingStrategy}>
                         <div className="mt-5 grid gap-4">
                             {columns.map((col) => {
@@ -738,7 +715,7 @@ export function GroupListScreen() {
                                     <SortableListSection key={col.id} col={col} tasks={tasks} onAddTask={onAddTask}>
                                         <ColumnDropZone colId={col.id}>
                                             {tasks.length ? (
-                                                <SortableContext items={taskIdsByCol[col.id]} strategy={verticalListSortingStrategy}>
+                                                <SortableContext items={taskIdsByCol[col.id] ?? []} strategy={verticalListSortingStrategy}>
                                                     <div className="divide-y">
                                                         {tasks.map((t) => (
                                                             <SortableTaskRow key={t.id} task={t} columnId={col.id} columnTitle={col.title} />
@@ -759,11 +736,7 @@ export function GroupListScreen() {
                     </SortableContext>
 
                     <DragOverlay>
-                        {activeTask ? (
-                            <TaskOverlay task={activeTask} />
-                        ) : activeColumn ? (
-                            <ColumnOverlay title={activeColumn.title} count={activeColumn.count} />
-                        ) : null}
+                        {activeTask ? <TaskOverlay task={activeTask} /> : activeColumn ? <ColumnOverlay title={activeColumn.title} count={activeColumn.count} /> : null}
                     </DragOverlay>
                 </DndContext>
             </Container>

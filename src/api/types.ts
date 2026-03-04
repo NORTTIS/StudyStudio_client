@@ -4,6 +4,159 @@
  */
 
 export interface paths {
+    "/api/admin/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnnouncementResponseListApiResponse"];
+                        "text/json": components["schemas"]["AnnouncementResponseListApiResponse"];
+                        "text/plain": components["schemas"]["AnnouncementResponseListApiResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateAnnouncementRequest"];
+                    "application/json": components["schemas"]["UpdateAnnouncementRequest"];
+                    "text/json": components["schemas"]["UpdateAnnouncementRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/plain": components["schemas"]["AnnouncementResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CreateAnnouncementRequest"];
+                    "application/json": components["schemas"]["CreateAnnouncementRequest"];
+                    "text/json": components["schemas"]["CreateAnnouncementRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/plain": components["schemas"]["AnnouncementResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/announcements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/plain": components["schemas"]["AnnouncementResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/templates": {
         parameters: {
             query?: never;
@@ -159,6 +312,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["AIQuestionRequest"];
+                    "application/json": components["schemas"]["AIQuestionRequest"];
+                    "text/json": components["schemas"]["AIQuestionRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AIAnswerResponseApiResponse"];
+                        "text/json": components["schemas"]["AIAnswerResponseApiResponse"];
+                        "text/plain": components["schemas"]["AIAnswerResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/announcements": {
         parameters: {
             query?: never;
@@ -219,11 +415,130 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/json": components["schemas"]["AnnouncementResponseApiResponse"];
+                        "text/plain": components["schemas"]["AnnouncementResponseApiResponse"];
+                    };
                 };
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/announcements/user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserAnnouncementResponseListApiResponse"];
+                        "text/json": components["schemas"]["UserAnnouncementResponseListApiResponse"];
+                        "text/plain": components["schemas"]["UserAnnouncementResponseListApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/announcements/user/{userAnnouncementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userAnnouncementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/announcements/user/{userAnnouncementId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userAnnouncementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -639,6 +954,205 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{attachmentId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{attachmentId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DocumentStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["DocumentStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["DocumentStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/group/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupDocumentsResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupDocumentsResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupDocumentsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/request-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RequestDocumentUploadRequest"];
+                    "application/json": components["schemas"]["RequestDocumentUploadRequest"];
+                    "text/json": components["schemas"]["RequestDocumentUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RequestDocumentUploadResponseApiResponse"];
+                        "text/json": components["schemas"]["RequestDocumentUploadResponseApiResponse"];
+                        "text/plain": components["schemas"]["RequestDocumentUploadResponseApiResponse"];
+                    };
                 };
             };
         };
@@ -1113,6 +1627,205 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/GroupTaskStatus/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["GroupTaskStatusPositionRequest"][];
+                    "application/json": components["schemas"]["GroupTaskStatusPositionRequest"][];
+                    "text/json": components["schemas"]["GroupTaskStatusPositionRequest"][];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["GroupTaskStatusRequest"];
+                    "application/json": components["schemas"]["GroupTaskStatusRequest"];
+                    "text/json": components["schemas"]["GroupTaskStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupTaskStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupTaskStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupTaskStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/GroupTaskStatus/{groupId}/{statusId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    statusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["GroupTaskStatusRequest"];
+                    "application/json": components["schemas"]["GroupTaskStatusRequest"];
+                    "text/json": components["schemas"]["GroupTaskStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/GroupTaskStatus/{statusId}/group/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    statusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/GroupTaskStatus/{taskStatusId}/detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskStatusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupTaskStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupTaskStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupTaskStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/invite/accept": {
         parameters: {
             query?: never;
@@ -1379,30 +2092,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    studioId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StudioResponseApiResponse"];
-                        "text/json": components["schemas"]["StudioResponseApiResponse"];
-                        "text/plain": components["schemas"]["StudioResponseApiResponse"];
-                    };
-                };
-            };
-        };
+        get?: never;
         put?: never;
         post?: never;
         delete: {
@@ -1467,6 +2157,49 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["TaskItemGroupRequest"];
+                    "application/json": components["schemas"]["TaskItemGroupRequest"];
+                    "text/json": components["schemas"]["TaskItemGroupRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/plain": components["schemas"]["TaskItemResponseApiResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1873,6 +2606,26 @@ export interface components {
             /** Format: uuid */
             groupId: string;
         };
+        AIAnswerResponse: {
+            answer?: string | null;
+            /** Format: date-time */
+            generatedAt?: string;
+            /** Format: int64 */
+            processingTimeMs?: number;
+            sourceDocuments?: components["schemas"]["SourceDocument"][] | null;
+            taskSummary?: components["schemas"]["TaskSummaryResponse"];
+        };
+        AIAnswerResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["AIAnswerResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        AIQuestionRequest: {
+            /** Format: uuid */
+            groupId: string;
+            question: string;
+        };
         AnnouncementResponse: {
             /** Format: uuid */
             announcementId?: string;
@@ -1885,12 +2638,23 @@ export interface components {
             title?: string | null;
             type?: string | null;
         };
+        AnnouncementResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["AnnouncementResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         AnnouncementResponseListApiResponse: {
             code?: string | null;
             data?: components["schemas"]["AnnouncementResponse"][] | null;
             message?: string | null;
             status?: string | null;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        AnnouncementType: 0 | 1 | 2;
         AssignRoleRequest: {
             /** Format: uuid */
             groupId: string;
@@ -1920,6 +2684,14 @@ export interface components {
             confirmPassword: string;
             currentPassword: string;
             newPassword: string;
+        };
+        CreateAnnouncementRequest: {
+            content: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            publishedAt?: string | null;
+            title: string;
+            type: components["schemas"]["AnnouncementType"];
         };
         CreateGroupRequest: {
             description?: string | null;
@@ -2002,6 +2774,42 @@ export interface components {
             groupName: string;
             groupTaskStatuses: components["schemas"]["GroupTaskStatusRequest"][];
         };
+        DocumentItem: {
+            /** Format: uuid */
+            attachmentId?: string;
+            /** Format: int32 */
+            chunkCount?: number | null;
+            contentType?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            fileName?: string | null;
+            /** Format: int64 */
+            fileSize?: number;
+            status?: string | null;
+            uploadedBy?: components["schemas"]["UserDto"];
+        };
+        DocumentStatusResponse: {
+            /** Format: uuid */
+            attachmentId?: string;
+            /** Format: int32 */
+            chunkCount?: number | null;
+            /** Format: date-time */
+            createdAt?: string;
+            errorMessage?: string | null;
+            fileName?: string | null;
+            message?: string | null;
+            /** Format: date-time */
+            processedAt?: string | null;
+            /** Format: int32 */
+            progress?: number | null;
+            status?: string | null;
+        };
+        DocumentStatusResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["DocumentStatusResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         FavouriteResponse: {
             /** Format: date-time */
             createdAt?: string;
@@ -2069,6 +2877,17 @@ export interface components {
         GroupDetailResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["GroupDetailResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        GroupDocumentsResponse: {
+            documents?: components["schemas"]["DocumentItem"][] | null;
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        GroupDocumentsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupDocumentsResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -2156,10 +2975,36 @@ export interface components {
             /** Format: int32 */
             totalGroups?: number;
         };
+        GroupTaskStatusDto: {
+            /** Format: uuid */
+            groupId?: string;
+            /** Format: int32 */
+            position?: number;
+            statusName?: string | null;
+        };
+        GroupTaskStatusPositionRequest: {
+            /** Format: int32 */
+            position: number;
+            /** Format: uuid */
+            statusId?: string;
+        };
         GroupTaskStatusRequest: {
             /** Format: int32 */
             position: number;
             statusName: string;
+        };
+        GroupTaskStatusResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            /** Format: int32 */
+            position?: number;
+            statusName?: string | null;
+        };
+        GroupTaskStatusResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupTaskStatusResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         LoginRequests: {
             /** Format: email */
@@ -2197,6 +3042,13 @@ export interface components {
             data?: unknown;
             message?: string | null;
             status?: string | null;
+        };
+        PersonalTaskStatusDto: {
+            /** Format: int32 */
+            position?: number;
+            statusName?: string | null;
+            /** Format: uuid */
+            userId?: string;
         };
         RegisterRequests: {
             /** Format: email */
@@ -2238,6 +3090,28 @@ export interface components {
             title: string;
             type: string;
         };
+        RequestDocumentUploadRequest: {
+            contentType: string;
+            fileName: string;
+            /** Format: int64 */
+            fileSize: number;
+            /** Format: uuid */
+            groupId: string;
+        };
+        RequestDocumentUploadResponse: {
+            /** Format: uuid */
+            attachmentId?: string;
+            /** Format: int32 */
+            expiresIn?: number;
+            fileKey?: string | null;
+            uploadUrl?: string | null;
+        };
+        RequestDocumentUploadResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RequestDocumentUploadResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         ResendVerifyEmailRequest: {
             email?: string | null;
         };
@@ -2251,6 +3125,14 @@ export interface components {
             /** Format: uuid */
             groupId: string;
             role: string;
+        };
+        SourceDocument: {
+            /** Format: int32 */
+            chunkIndex?: number;
+            documentId?: string | null;
+            preview?: string | null;
+            /** Format: float */
+            relevanceScore?: number;
         };
         StudioDto: {
             /** Format: uuid */
@@ -2335,12 +3217,73 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        TaskItemGroupRequest: {
+            assignee?: string[] | null;
+            /** Format: date-time */
+            dueDate?: string;
+            /** Format: uuid */
+            groupId?: string;
+            /** Format: uuid */
+            groupStatusId?: string | null;
+            /** Format: uuid */
+            personalStatusId?: string | null;
+            /** Format: date-time */
+            startDate?: string;
+            taskDescription?: string | null;
+            taskName?: string | null;
+            /** Format: int32 */
+            taskPriority?: number;
+            /** Format: int32 */
+            taskSeverity?: number;
+        };
+        TaskItemResponse: {
+            assignee?: components["schemas"]["UserDto"][] | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            createdById?: string;
+            /** Format: date-time */
+            dueDate?: string;
+            groupStatus?: components["schemas"]["GroupTaskStatusDto"];
+            personalStatus?: components["schemas"]["PersonalTaskStatusDto"];
+            /** Format: int32 */
+            position?: number;
+            /** Format: date-time */
+            startDate?: string;
+            taskDescription?: string | null;
+            /** Format: uuid */
+            taskId?: string;
+            /** Format: int32 */
+            taskPriority?: number;
+            /** Format: int32 */
+            taskSeverity?: number;
+            taskTitle?: string | null;
+        };
+        TaskItemResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TaskItemResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         TaskStatusDto: {
             /** Format: int32 */
             position?: number;
             /** Format: uuid */
             statusId?: string;
             statusName?: string | null;
+        };
+        TaskSummaryResponse: {
+            /** Format: int32 */
+            completedTasks?: number;
+            /** Format: int32 */
+            completionPercentage?: number;
+            /** Format: date-time */
+            nearestDeadline?: string | null;
+            /** Format: int32 */
+            overdueTasks?: number;
+            riskFlags?: string[] | null;
+            /** Format: int32 */
+            totalTasks?: number;
         };
         TemplateResponse: {
             /** Format: date-time */
@@ -2368,6 +3311,16 @@ export interface components {
             data?: components["schemas"]["TemplateResponse"][] | null;
             message?: string | null;
             status?: string | null;
+        };
+        UpdateAnnouncementRequest: {
+            /** Format: uuid */
+            announcementId: string;
+            content: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            publishedAt?: string | null;
+            title: string;
+            type: components["schemas"]["AnnouncementType"];
         };
         UpdateGroupRequest: {
             description?: string | null;
@@ -2418,6 +3371,26 @@ export interface components {
             /** Format: uuid */
             groupId: string;
             isSystemTemplate?: boolean;
+        };
+        UserAnnouncementResponse: {
+            /** Format: uuid */
+            announcementId?: string;
+            content?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            isRead?: boolean;
+            /** Format: date-time */
+            publishedAt?: string | null;
+            title?: string | null;
+            type?: string | null;
+            /** Format: uuid */
+            userAnnouncementId?: string;
+        };
+        UserAnnouncementResponseListApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserAnnouncementResponse"][] | null;
+            message?: string | null;
+            status?: string | null;
         };
         UserDto: {
             avatarUrl?: string | null;

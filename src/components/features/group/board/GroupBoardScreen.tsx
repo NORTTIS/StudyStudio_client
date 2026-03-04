@@ -1,13 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Plus, MoreHorizontal, GripVertical, CircleDot } from "lucide-react";
+import { Plus, MoreHorizontal, GripVertical, CircleDot, Pencil, Trash2, X } from "lucide-react";
+import { useParams } from "next/navigation";
 import { Container } from "@/components/common";
 
 import {
     DndContext,
     type DragEndEvent,
     type DragStartEvent,
+    type DragOverEvent,
+    type DragCancelEvent,
     PointerSensor,
     KeyboardSensor,
     DragOverlay,
@@ -30,6 +33,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
+import { createPortal } from "react-dom";
 
 type ColumnId = string;
 
@@ -45,16 +49,43 @@ type Task = {
 type Column = {
     id: ColumnId;
     title: string;
+    position: number;
 };
 
-const INITIAL_COLUMNS: Column[] = [
-    { id: "todo", title: "Cần làm" },
-    { id: "doing", title: "Đang thực hiện" },
-    { id: "review", title: "Đang xem xét" },
-    { id: "done", title: "Hoàn thành" }
-];
+type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
-const DROP_PREFIX = "drop:";
+type TaskStatusDto = {
+    position?: number;
+    statusId?: string;
+    statusName?: string | null;
+};
+
+type GroupDetailResponse = {
+    groupId?: string;
+    taskStatuses?: TaskStatusDto[] | null;
+};
+
+type GroupTaskStatusData = {
+    groupId?: string;
+    statusId?: string;
+    statusName?: string | null;
+    position?: number;
+};
+
+type TaskItemResponse = {
+    taskId?: string;
+    taskTitle?: string | null;
+    dueDate?: string;
+    startDate?: string;
+    position?: number;
+    taskPriority?: number;
+    taskSeverity?: number;
+};
+
+type GroupTaskStatusPositionRequest = {
+    position: number;
+    statusId?: string;
+};
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -67,20 +98,282 @@ function dotClass(statusDot?: Task["statusDot"]) {
     return "bg-emerald-500";
 }
 
-function uid(prefix = "id") {
-    return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
+function isUuidLike(v: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
+
+function detectPositionBase(cols: Column[]) {
+    if (!cols.length) return 0;
+    const positions = cols
+        .map((c) => (Number.isFinite(c.position) ? c.position : 0))
+        .filter((x) => Number.isFinite(x));
+
+    const min = positions.length ? Math.min(...positions) : 0;
+    return min >= 1 ? 1 : 0;
+}
+
+function assignPositions(cols: Column[], base: 0 | 1) {
+    return cols.map((c, idx) => ({ ...c, position: base === 1 ? idx + 1 : idx }));
+}
+
+function nextPositionForCreate(cols: Column[], base: 0 | 1) {
+    if (!cols.length) return base === 1 ? 1 : 0;
+    const max = cols.reduce((m, c) => {
+        const p = Number.isFinite(c.position) ? c.position : -1;
+        return Math.max(m, p);
+    }, -1);
+    const next = max + 1;
+    return base === 1 ? Math.max(1, next) : Math.max(0, next);
+}
+
+const readText = async (res: Response) => {
+    try {
+        return await res.text();
+    } catch {
+        return "";
+    }
+};
+
+function parseMaybeJson(raw: string) {
+    const text = (raw ?? "").toString().trim();
+    if (!text) return { json: null as any, text: "" };
+    try {
+        const cleaned = text.replace(/^\uFEFF/, "");
+        return { json: JSON.parse(cleaned), text };
+    } catch {
+        return { json: null as any, text };
+    }
+}
+
+const okByJsonStatus = (obj: any) => {
+    const s = String(obj?.status ?? "").toLowerCase();
+    return s === "" || s === "success" || s === "ok" || s === "true";
+};
+
+const extractApiMessage = (text: string, json: any) => {
+    const msg = (json?.message ?? "").toString().trim();
+    if (msg) return msg;
+    const t = (text ?? "").toString().trim();
+    return t || "Đã xảy ra lỗi";
+};
+
+function getApiBase() {
+    const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    return String(raw).replace(/\/+$/, "");
+}
+
+function getAccessTokenOrNull() {
+    if (typeof window === "undefined") return null;
+    const t = localStorage.getItem("accessToken");
+    return t ? String(t) : null;
+}
+
+async function apiGetGroupDetail(groupId: string) {
+    const apiBase = getApiBase();
+    const accessToken = getAccessTokenOrNull();
+    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+
+    const url = `${apiBase}/group/${encodeURIComponent(groupId)}/detail`;
+
+    const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            Accept: "text/plain, application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+
+    if (!res.ok || (json && !okByJsonStatus(json))) {
+        const msg = extractApiMessage(raw, json);
+        const code = json?.code ? ` (${json.code})` : "";
+        throw new Error(`${msg}${code}`);
+    }
+
+    return (json ?? null) as ApiResponse<GroupDetailResponse> | null;
+}
+
+async function apiCreateGroupTaskStatus(args: { groupId: string; statusName: string; position: number }) {
+    const apiBase = getApiBase();
+    const accessToken = getAccessTokenOrNull();
+    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
+
+    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}`;
+    const payload = {
+        statusName: String(args.statusName ?? "").trim(),
+        position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0
+    };
+
+    if (!payload.statusName) throw new Error("Vui lòng nhập tên bảng.");
+
+    const res = await fetch(url, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            Accept: "text/plain, application/json",
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+    const okJson = !json || okByJsonStatus(json);
+
+    if (!res.ok || !okJson) {
+        const msg = extractApiMessage(raw, json);
+        console.error(
+            `Create Column failed | HTTP ${res.status} | url=${url} | payload=${JSON.stringify(payload)} | raw=${raw}`
+        );
+        throw new Error(msg || `Create Column failed | HTTP ${res.status}`);
+    }
+
+    return (json ?? raw) as ApiResponse<GroupTaskStatusData> | string;
+}
+
+async function apiUpdateGroupTaskStatusPositions(args: { groupId: string; items: GroupTaskStatusPositionRequest[] }) {
+    const apiBase = getApiBase();
+    const accessToken = getAccessTokenOrNull();
+    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
+
+    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}`;
+
+    const res = await fetch(url, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+            Accept: "text/plain, application/json",
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify(args.items)
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+    const okJson = !json || okByJsonStatus(json);
+
+    if (!res.ok || !okJson) throw new Error(extractApiMessage(raw, json));
+    return true;
+}
+
+async function apiCreateTask(args: { groupId: string; groupStatusId: string; taskName: string }) {
+    const apiBase = getApiBase();
+    const accessToken = getAccessTokenOrNull();
+    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!args.groupStatusId || !isUuidLike(args.groupStatusId)) throw new Error("groupStatusId không hợp lệ (không phải UUID).");
+
+    const url = `${apiBase}/Task`;
+
+    const res = await fetch(url, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            Accept: "text/plain, application/json",
+            "Content-Type": "application/json",
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
+        body: JSON.stringify({
+            groupId: args.groupId,
+            groupStatusId: args.groupStatusId,
+            taskName: String(args.taskName ?? "").trim()
+        })
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+    const okJson = !json || okByJsonStatus(json);
+
+    if (!res.ok || !okJson) throw new Error(extractApiMessage(raw, json));
+    return (json ?? null) as ApiResponse<TaskItemResponse> | null;
+}
+
+async function apiRenameGroupTaskStatus(args: { groupId: string; statusId: string; statusName: string; position: number }) {
+    const apiBase = getApiBase();
+    const token = getAccessTokenOrNull();
+    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!args.statusId || !isUuidLike(args.statusId)) throw new Error("statusId không hợp lệ (không phải UUID).");
+
+    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.statusId)}`;
+
+    const res = await fetch(url, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+            Accept: "text/plain, application/json",
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+            position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0,
+            statusName: String(args.statusName ?? "").trim()
+        })
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+    const okJson = !json || okByJsonStatus(json);
+
+    if (!res.ok || !okJson) throw new Error(extractApiMessage(raw, json));
+    return true;
+}
+
+async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: string }) {
+    const apiBase = getApiBase();
+    const token = getAccessTokenOrNull();
+    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!args.statusId || !isUuidLike(args.statusId)) throw new Error("statusId không hợp lệ (không phải UUID).");
+
+    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`;
+
+    const res = await fetch(url, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+            Accept: "text/plain, application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+    const okJson = !json || okByJsonStatus(json);
+
+    if (!res.ok || !okJson) throw new Error(extractApiMessage(raw, json));
+    return true;
+}
+
+const DROP_PREFIX = "drop:";
+const END_PREFIX = "drop-end:";
 
 function isDropId(id: string) {
     return id.startsWith(DROP_PREFIX);
 }
-
 function toDropId(columnId: ColumnId) {
     return `${DROP_PREFIX}${columnId}`;
 }
-
 function dropIdToColumnId(dropId: string): ColumnId {
     return dropId.replace(DROP_PREFIX, "");
+}
+
+function isEndDropId(id: string) {
+    return id.startsWith(END_PREFIX);
+}
+function toEndDropId(columnId: ColumnId) {
+    return `${END_PREFIX}${columnId}`;
+}
+function endDropIdToColumnId(id: string): ColumnId {
+    return id.replace(END_PREFIX, "");
 }
 
 function findColumnOfTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: string): ColumnId | null {
@@ -115,30 +408,143 @@ function DuePill({ due }: { due: string }) {
     );
 }
 
-function StaticTaskCard({ task }: { task: Task }) {
-    return (
-        <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
-            <div className="flex items-start gap-2">
-                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
-                <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-semibold text-zinc-900">{task.title}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                        <Pill>{task.tagLeft ?? "BL"}</Pill>
-                        <Pill>{task.tagRight ?? "YR"}</Pill>
-                    </div>
-                    {task.due ? <DuePill due={task.due} /> : null}
-                    <div className="mt-2 text-[11px] text-zinc-500">Nhấn giữ để kéo thả</div>
-                </div>
-                <button type="button" className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100">
-                    <MoreHorizontal className="h-4 w-4" />
-                </button>
-            </div>
-        </div>
+function PortalDropdown({
+    open,
+    onClose,
+    anchorRef,
+    children
+}: {
+    open: boolean;
+    onClose: () => void;
+    anchorRef: React.RefObject<HTMLElement>;
+    children: React.ReactNode;
+}) {
+    const menuRef = React.useRef<HTMLDivElement | null>(null);
+    const [mounted, setMounted] = React.useState(false);
+    const [pos, setPos] = React.useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 208 });
+
+    React.useEffect(() => setMounted(true), []);
+
+    const syncPos = React.useCallback(() => {
+        const a = anchorRef.current;
+        if (!a) return;
+        const r = a.getBoundingClientRect();
+        const width = 208;
+        const top = r.bottom + 8;
+        const left = Math.max(8, r.right - width);
+        setPos({ top, left, width });
+    }, [anchorRef]);
+
+    React.useEffect(() => {
+        if (!open) return;
+        syncPos();
+        const onScroll = () => syncPos();
+        const onResize = () => syncPos();
+        window.addEventListener("scroll", onScroll, true);
+        window.addEventListener("resize", onResize);
+        return () => {
+            window.removeEventListener("scroll", onScroll, true);
+            window.removeEventListener("resize", onResize);
+        };
+    }, [open, syncPos]);
+
+    React.useEffect(() => {
+        if (!open) return;
+
+        const onPointerDown = (e: PointerEvent) => {
+            const a = anchorRef.current;
+            const m = menuRef.current;
+            const t = e.target as Node | null;
+            if (!t) return;
+            if (m && m.contains(t)) return;
+            if (a && a.contains(t)) return;
+            onClose();
+        };
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+
+        window.addEventListener("pointerdown", onPointerDown, true);
+        window.addEventListener("keydown", onKeyDown);
+        return () => {
+            window.removeEventListener("pointerdown", onPointerDown, true);
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [open, onClose, anchorRef]);
+
+    if (!open || !mounted) return null;
+
+    return createPortal(
+        <div
+            ref={menuRef}
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
+            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
+        >
+            {children}
+        </div>,
+        document.body
     );
 }
 
-function TaskCard({ task, columnId }: { task: Task; columnId: ColumnId }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+function MenuItem({
+    icon,
+    label,
+    danger,
+    onClick
+}: {
+    icon: React.ReactNode;
+    label: string;
+    danger?: boolean;
+    onClick: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
+                danger ? "text-rose-600 hover:bg-rose-50" : "text-zinc-700 hover:bg-zinc-100"
+            )}
+        >
+            <span className="grid h-5 w-5 place-items-center">{icon}</span>
+            <span className="font-medium">{label}</span>
+        </button>
+    );
+}
+
+function useAutosizeTextarea(ref: React.RefObject<HTMLTextAreaElement | null>, value: string) {
+    React.useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        el.style.height = "0px";
+        el.style.height = `${el.scrollHeight}px`;
+    }, [ref, value]);
+}
+
+function TaskCard({
+    task,
+    columnId,
+    isEditing,
+    draftTitle,
+    onDraftChange,
+    onStartEdit,
+    onCancelEdit,
+    onCommitEdit,
+    onDelete
+}: {
+    task: Task;
+    columnId: ColumnId;
+    isEditing: boolean;
+    draftTitle: string;
+    onDraftChange: (v: string) => void;
+    onStartEdit: () => void;
+    onCancelEdit: () => void;
+    onCommitEdit: () => void;
+    onDelete: () => void;
+}) {
+    const { attributes, listeners, setActivatorNodeRef, setNodeRef, transform, transition, isDragging } = useSortable({
         id: task.id,
         data: { type: "task", columnId }
     });
@@ -146,109 +552,625 @@ function TaskCard({ task, columnId }: { task: Task; columnId: ColumnId }) {
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.8 : 1
+        opacity: isDragging ? 0.25 : 1
     };
 
-    const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+    const [openMenu, setOpenMenu] = React.useState(false);
+    const btnRef = React.useRef<HTMLButtonElement | null>(null);
+
+    const taRef = React.useRef<HTMLTextAreaElement | null>(null);
+    useAutosizeTextarea(taRef, draftTitle);
+
+    const clickingActionRef = React.useRef(false);
+
+    React.useEffect(() => {
+        if (isEditing) {
+            setTimeout(() => {
+                taRef.current?.focus();
+                taRef.current?.setSelectionRange(draftTitle.length, draftTitle.length);
+            }, 0);
+        }
+    }, [isEditing, draftTitle.length]);
+
+    const safeCommit = React.useCallback(() => {
+        if (!draftTitle.trim()) {
+            onCancelEdit();
+            return;
+        }
+        onCommitEdit();
+    }, [draftTitle, onCommitEdit, onCancelEdit]);
 
     return (
         <div
             ref={setNodeRef}
             style={style}
-            {...attributes}
-            {...listeners}
             className={cn(
                 "group rounded-xl border bg-white p-3 shadow-sm",
-                "border-zinc-200 hover:shadow-md hover:-translate-y-[1px] transition",
-                "cursor-grab select-none active:cursor-grabbing"
+                "border-zinc-200 hover:shadow-md hover:-translate-y-[1px] transition"
             )}
         >
             <div className="flex items-start gap-2">
                 <div className="mt-0.5 flex items-center gap-2">
                     <div className={cn("h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
-                    <div className="grid h-7 w-7 place-items-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70 group-hover:opacity-100">
+                    <div
+                        ref={setActivatorNodeRef}
+                        {...attributes}
+                        {...listeners}
+                        className="grid h-7 w-7 place-items-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70 group-hover:opacity-100 cursor-grab active:cursor-grabbing select-none"
+                        title="Kéo để di chuyển"
+                    >
                         <GripVertical className="h-4 w-4" />
                     </div>
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-semibold text-zinc-900">{task.title}</p>
+                    {!isEditing ? (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onStartEdit();
+                            }}
+                            className="w-full text-left"
+                        >
+                            <p className="line-clamp-2 text-sm font-semibold text-zinc-900 hover:underline">{task.title}</p>
+                        </button>
+                    ) : (
+                        <div className="space-y-2" onPointerDownCapture={(e) => e.stopPropagation()}>
+                            <textarea
+                                ref={taRef}
+                                value={draftTitle}
+                                onChange={(e) => onDraftChange(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();
+                                        safeCommit();
+                                    }
+                                    if (e.key === "Escape") {
+                                        e.preventDefault();
+                                        onCancelEdit();
+                                    }
+                                }}
+                                onBlur={() => {
+                                    setTimeout(() => {
+                                        if (clickingActionRef.current) {
+                                            clickingActionRef.current = false;
+                                            return;
+                                        }
+                                        safeCommit();
+                                    }, 0);
+                                }}
+                                rows={1}
+                                className={cn(
+                                    "w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 outline-none",
+                                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                                    "select-text"
+                                )}
+                            />
+
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onPointerDown={() => (clickingActionRef.current = true)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        safeCommit();
+                                    }}
+                                    className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                                >
+                                    Lưu
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onPointerDown={() => (clickingActionRef.current = true)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onCancelEdit();
+                                    }}
+                                    className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
+                                    aria-label="Hủy"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+
+                                <span className="text-[11px] text-zinc-500">Enter để lưu • Shift+Enter xuống dòng • Esc để huỷ</span>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mt-2 flex flex-wrap gap-2">
-                        <Pill>{task.tagLeft ?? "BL"}</Pill>
-                        <Pill>{task.tagRight ?? "YR"}</Pill>
+                        <Pill>{task.tagLeft ?? "TASK"}</Pill>
+                        <Pill>{task.tagRight ?? "SS"}</Pill>
                     </div>
                     {task.due ? <DuePill due={task.due} /> : null}
-                    <div className="mt-2 text-[11px] text-zinc-500">Nhấn giữ để kéo thả</div>
                 </div>
+
+                <div className="relative">
+                    <button
+                        ref={btnRef}
+                        type="button"
+                        onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setOpenMenu((v) => !v);
+                        }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }}
+                        className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
+                        aria-label="Menu"
+                    >
+                        <MoreHorizontal className="h-4 w-4" />
+                    </button>
+
+                    <PortalDropdown open={openMenu} onClose={() => setOpenMenu(false)} anchorRef={btnRef as any}>
+                        <MenuItem
+                            icon={<Pencil className="h-4 w-4" />}
+                            label="Chỉnh sửa tên"
+                            onClick={() => {
+                                setOpenMenu(false);
+                                onStartEdit();
+                            }}
+                        />
+                        <MenuItem
+                            icon={<Trash2 className="h-4 w-4" />}
+                            label="Xóa"
+                            danger
+                            onClick={() => {
+                                setOpenMenu(false);
+                                onDelete();
+                            }}
+                        />
+                    </PortalDropdown>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function GhostTaskCard({ task }: { task: Task }) {
+    return (
+        <div className="rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/60 p-3 shadow-sm">
+            <div className="flex items-start gap-2">
+                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
+                <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-sm font-semibold text-zinc-800">{task.title}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        <Pill>{task.tagLeft ?? "TASK"}</Pill>
+                        <Pill>{task.tagRight ?? "SS"}</Pill>
+                    </div>
+                    {task.due ? <DuePill due={task.due} /> : null}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+type HeaderDragProps = Pick<ReturnType<typeof useSortable>, "attributes" | "listeners"> & {
+    setActivatorNodeRef?: (node: HTMLElement | null) => void;
+};
+
+function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<string>) {
+    return droppables.filter((d) => {
+        const t = d.data?.current?.type;
+        return typeof t === "string" && allow.includes(t);
+    });
+}
+
+function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; onSubmit: (title: string) => Promise<void> }) {
+    const [open, setOpen] = React.useState(false);
+    const [title, setTitle] = React.useState("");
+    const [error, setError] = React.useState<string | null>(null);
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+    React.useEffect(() => {
+        if (open) {
+            setError(null);
+            setTimeout(() => inputRef.current?.focus(), 0);
+        }
+    }, [open]);
+
+    const close = () => {
+        setOpen(false);
+        setTitle("");
+        setError(null);
+    };
+
+    const submit = async () => {
+        const trimmed = title.trim();
+        if (!trimmed) {
+            setError("Vui lòng nhập tên bảng.");
+            inputRef.current?.focus();
+            return;
+        }
+
+        try {
+            setError(null);
+            await onSubmit(trimmed);
+            close();
+        } catch (e: any) {
+            setError(e?.message ?? "Tạo bảng thất bại");
+            inputRef.current?.focus();
+        }
+    };
+
+    const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            void submit();
+        }
+        if (e.key === "Escape") {
+            e.preventDefault();
+            close();
+        }
+    };
+
+    if (!open) {
+        return (
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className={cn(
+                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100",
+                    "transition"
+                )}
+            >
+                + Tạo bảng
+            </button>
+        );
+    }
+
+    return (
+        <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm">
+            <input
+                ref={inputRef}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={onKeyDown}
+                disabled={isSubmitting}
+                placeholder="Nhập tên bảng..."
+                className={cn(
+                    "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none",
+                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                    "select-text"
+                )}
+            />
+
+            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
+
+            <div className="mt-3 flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => void submit()}
+                    disabled={isSubmitting}
+                    className={cn(
+                        "rounded-xl px-3 py-2 text-sm font-semibold text-white",
+                        "bg-indigo-600 hover:bg-indigo-700 transition",
+                        isSubmitting && "opacity-60 pointer-events-none"
+                    )}
+                >
+                    Thêm bảng
+                </button>
 
                 <button
                     type="button"
-                    onPointerDownCapture={stop}
-                    onClickCapture={stop}
-                    className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                    aria-label="Menu"
+                    onClick={close}
+                    disabled={isSubmitting}
+                    className={cn(
+                        "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
+                        "hover:bg-zinc-100 transition",
+                        isSubmitting && "opacity-60 pointer-events-none"
+                    )}
+                    aria-label="Hủy"
                 >
-                    <MoreHorizontal className="h-4 w-4" />
+                    ✕
                 </button>
             </div>
         </div>
     );
 }
 
-type HeaderDragProps = Pick<ReturnType<typeof useSortable>, "attributes" | "listeners">;
+function AddTaskInline({ disabled, onSubmit }: { disabled: boolean; onSubmit: (title: string) => Promise<void> }) {
+    const [open, setOpen] = React.useState(false);
+    const [title, setTitle] = React.useState("");
+    const [error, setError] = React.useState<string | null>(null);
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+    React.useEffect(() => {
+        if (open) {
+            setError(null);
+            setTimeout(() => inputRef.current?.focus(), 0);
+        }
+    }, [open]);
+
+    const close = () => {
+        setOpen(false);
+        setTitle("");
+        setError(null);
+    };
+
+    const submit = async () => {
+        const trimmed = title.trim();
+        if (!trimmed) {
+            setError("Vui lòng nhập tên công việc.");
+            inputRef.current?.focus();
+            return;
+        }
+
+        try {
+            setError(null);
+            await onSubmit(trimmed);
+            close();
+        } catch (e: any) {
+            setError(e?.message ?? "Tạo công việc thất bại");
+            inputRef.current?.focus();
+        }
+    };
+
+    const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            void submit();
+        }
+        if (e.key === "Escape") {
+            e.preventDefault();
+            close();
+        }
+    };
+
+    if (!open) {
+        return (
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                disabled={disabled}
+                className={cn(
+                    "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold",
+                    "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-100 transition",
+                    disabled && "opacity-60 pointer-events-none"
+                )}
+            >
+                <Plus className="h-4 w-4" />
+                Thêm công việc
+            </button>
+        );
+    }
+
+    return (
+        <div className="mt-3 rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm">
+            <input
+                ref={inputRef}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={onKeyDown}
+                disabled={disabled}
+                placeholder="Nhập tên công việc..."
+                className={cn(
+                    "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none",
+                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                    "select-text"
+                )}
+            />
+
+            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
+
+            <div className="mt-3 flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => void submit()}
+                    disabled={disabled}
+                    className={cn(
+                        "rounded-xl px-3 py-2 text-sm font-semibold text-white",
+                        "bg-indigo-600 hover:bg-indigo-700 transition",
+                        disabled && "opacity-60 pointer-events-none"
+                    )}
+                >
+                    Lưu
+                </button>
+
+                <button
+                    type="button"
+                    onClick={close}
+                    disabled={disabled}
+                    className={cn(
+                        "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
+                        "hover:bg-zinc-100 transition",
+                        disabled && "opacity-60 pointer-events-none"
+                    )}
+                    aria-label="Hủy"
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            </div>
+        </div>
+    );
+}
 
 function ColumnView({
     col,
     tasks,
     taskIds,
-    onAddTask,
+    onCreateTaskInline,
     dndEnabled,
-    headerDragProps
+    headerDragProps,
+    ghost,
+    draggingTask,
+    creatingTask,
+    onRenameColumnInline,
+    onDeleteColumn,
+    taskEditState,
+    onTaskStartEdit,
+    onTaskCancelEdit,
+    onTaskDraftChange,
+    onTaskCommitEdit,
+    onDeleteTask,
+    isColumnEditing,
+    columnDraft,
+    columnError,
+    onColumnDraftChange,
+    onColumnCommit,
+    onColumnCancel
 }: {
     col: Column;
     tasks: Task[];
     taskIds: string[];
-    onAddTask: (columnId: ColumnId) => void;
+    onCreateTaskInline: (columnId: ColumnId, title: string) => Promise<void>;
     dndEnabled: boolean;
     headerDragProps?: HeaderDragProps;
+    ghost?: { task: Task; toCol: ColumnId; index: number } | null;
+    draggingTask: boolean;
+    creatingTask: boolean;
+    onRenameColumnInline: (columnId: ColumnId) => void;
+    onDeleteColumn: (columnId: ColumnId) => void;
+    taskEditState: { taskId: string | null; columnId: string | null; draft: string };
+    onTaskStartEdit: (taskId: string, columnId: ColumnId, currentTitle: string) => void;
+    onTaskCancelEdit: () => void;
+    onTaskDraftChange: (v: string) => void;
+    onTaskCommitEdit: () => void;
+    onDeleteTask: (taskId: string, columnId: ColumnId) => void;
+    isColumnEditing: boolean;
+    columnDraft: string;
+    columnError: string | null;
+    onColumnDraftChange: (v: string) => void;
+    onColumnCommit: () => void;
+    onColumnCancel: () => void;
 }) {
-    const dropId = toDropId(col.id);
+    const dropId = `drop:${col.id}`;
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
         id: dropId,
         data: { type: "column-drop", columnId: col.id }
     });
 
-    const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+    const endDropId = `drop-end:${col.id}`;
+    const { setNodeRef: setEndRef, isOver: isOverEnd } = useDroppable({
+        id: endDropId,
+        data: { type: "column-end", columnId: col.id }
+    });
+
+    const shouldShowGhost = !!ghost && ghost.toCol === col.id;
+
+    type RenderItem = { kind: "task"; task: Task } | { kind: "ghost"; key: string };
+
+    const rendered = React.useMemo<RenderItem[]>(() => {
+        const base: RenderItem[] = tasks.map((t) => ({ kind: "task", task: t }));
+        if (!shouldShowGhost || !ghost) return base;
+        const idx = Math.max(0, Math.min(ghost.index, base.length));
+        const next = [...base];
+        next.splice(idx, 0, { kind: "ghost", key: `ghost_${ghost.task.id}` });
+        return next;
+    }, [tasks, shouldShowGhost, ghost]);
+
+    const [openColMenu, setOpenColMenu] = React.useState(false);
+    const colMenuBtnRef = React.useRef<HTMLButtonElement | null>(null);
+
+    const colInputRef = React.useRef<HTMLInputElement | null>(null);
+    React.useEffect(() => {
+        if (isColumnEditing) setTimeout(() => colInputRef.current?.focus(), 0);
+    }, [isColumnEditing]);
 
     return (
         <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-            <div
-                {...(headerDragProps?.attributes ?? {})}
-                {...(headerDragProps?.listeners ?? {})}
-                className={cn(
-                    "sticky top-0 z-10 rounded-t-2xl border-b border-zinc-200 bg-white/90 backdrop-blur px-4 py-3",
-                    headerDragProps ? "cursor-grab active:cursor-grabbing select-none" : ""
-                )}
-            >
-                <div className="flex items-center justify-between">
-                    <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
-                        <p className="text-[11px] text-zinc-500">Kéo bảng để đổi vị trí</p>
+            <div className="sticky top-0 z-10 rounded-t-2xl border-b border-zinc-200 bg-white/90 backdrop-blur px-4 py-3">
+                <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex flex-1 items-center gap-2">
+                        <div
+                            ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
+                            {...(headerDragProps?.attributes ?? {})}
+                            {...(headerDragProps?.listeners ?? {})}
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-500 opacity-80 hover:opacity-100 cursor-grab active:cursor-grabbing select-none"
+                        >
+                            <GripVertical className="h-4 w-4" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                            {!isColumnEditing ? (
+                                <button type="button" onClick={() => onRenameColumnInline(col.id)} className="w-full text-left">
+                                    <p className="truncate text-sm font-bold text-zinc-900 hover:underline">{col.title}</p>
+                                </button>
+                            ) : (
+                                <div className="space-y-1">
+                                    <input
+                                        ref={colInputRef}
+                                        value={columnDraft}
+                                        onChange={(e) => onColumnDraftChange(e.target.value)}
+                                        onPointerDownCapture={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                onColumnCommit();
+                                            }
+                                            if (e.key === "Escape") {
+                                                e.preventDefault();
+                                                onColumnCancel();
+                                            }
+                                        }}
+                                        onBlur={() => setTimeout(() => onColumnCommit(), 0)}
+                                        className={cn(
+                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 text-sm font-bold text-zinc-900 outline-none",
+                                            columnError
+                                                ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                                                : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                                            "select-text"
+                                        )}
+                                        style={{ maxWidth: 220 }}
+                                    />
+                                    {columnError ? <div className="text-[11px] font-medium text-rose-600">{columnError}</div> : null}
+                                </div>
+                            )}
+
+                            <p className="truncate text-[11px] text-zinc-500">Kéo bảng để đổi vị trí</p>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                         <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 px-2 text-xs font-semibold text-zinc-700">
                             {tasks.length}
                         </span>
-                        <button
-                            type="button"
-                            onPointerDownCapture={stop}
-                            onClickCapture={stop}
-                            className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
-                            aria-label="Menu"
-                        >
-                            <MoreHorizontal className="h-5 w-5" />
-                        </button>
+
+                        <div className="relative">
+                            <button
+                                ref={colMenuBtnRef}
+                                type="button"
+                                onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setOpenColMenu((v) => !v);
+                                }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
+                                aria-label="Column menu"
+                            >
+                                <MoreHorizontal className="h-5 w-5" />
+                            </button>
+
+                            <PortalDropdown open={openColMenu} onClose={() => setOpenColMenu(false)} anchorRef={colMenuBtnRef as any}>
+                                <MenuItem
+                                    icon={<Pencil className="h-4 w-4" />}
+                                    label="Chỉnh sửa tên bảng"
+                                    onClick={() => {
+                                        setOpenColMenu(false);
+                                        onRenameColumnInline(col.id);
+                                    }}
+                                />
+                                <MenuItem
+                                    icon={<Trash2 className="h-4 w-4" />}
+                                    label="Xóa bảng"
+                                    danger
+                                    onClick={() => {
+                                        setOpenColMenu(false);
+                                        onDeleteColumn(col.id);
+                                    }}
+                                />
+                            </PortalDropdown>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -264,22 +1186,62 @@ function ColumnView({
                 >
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className="max-h-[68vh] space-y-3 overflow-y-auto pr-1">
-                                {tasks.map((t) => (
-                                    <TaskCard key={t.id} task={t} columnId={col.id} />
-                                ))}
+                            <div className={cn("relative max-h-[68vh] space-y-3 overflow-y-auto pr-1")}>
+                                {rendered.map((item) => {
+                                    if (item.kind === "ghost") return <GhostTaskCard key={item.key} task={ghost!.task} />;
+
+                                    const isEditing = taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+
+                                    return (
+                                        <TaskCard
+                                            key={item.task.id}
+                                            task={item.task}
+                                            columnId={col.id}
+                                            isEditing={isEditing}
+                                            draftTitle={isEditing ? taskEditState.draft : item.task.title}
+                                            onDraftChange={onTaskDraftChange}
+                                            onStartEdit={() => onTaskStartEdit(item.task.id, col.id, item.task.title)}
+                                            onCancelEdit={onTaskCancelEdit}
+                                            onCommitEdit={onTaskCommitEdit}
+                                            onDelete={() => onDeleteTask(item.task.id, col.id)}
+                                        />
+                                    );
+                                })}
+
                                 {tasks.length === 0 ? (
                                     <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                         Thả thẻ vào đây
                                     </div>
                                 ) : null}
+
+                                <div
+                                    ref={setEndRef}
+                                    className={cn(
+                                        "absolute left-0 right-0 bottom-0 h-12 rounded-xl border border-dashed transition",
+                                        isOverEnd ? "border-indigo-300 bg-indigo-50/60" : "border-transparent"
+                                    )}
+                                />
                             </div>
                         </SortableContext>
                     ) : (
                         <div className="max-h-[68vh] space-y-3 overflow-y-auto pr-1">
-                            {tasks.map((t) => (
-                                <StaticTaskCard key={t.id} task={t} />
-                            ))}
+                            {tasks.map((t) => {
+                                const isEditing = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
+                                return (
+                                    <TaskCard
+                                        key={t.id}
+                                        task={t}
+                                        columnId={col.id}
+                                        isEditing={isEditing}
+                                        draftTitle={isEditing ? taskEditState.draft : t.title}
+                                        onDraftChange={onTaskDraftChange}
+                                        onStartEdit={() => onTaskStartEdit(t.id, col.id, t.title)}
+                                        onCancelEdit={onTaskCancelEdit}
+                                        onCommitEdit={onTaskCommitEdit}
+                                        onDelete={() => onDeleteTask(t.id, col.id)}
+                                    />
+                                );
+                            })}
                             {tasks.length === 0 ? (
                                 <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                     Thả thẻ vào đây
@@ -288,37 +1250,63 @@ function ColumnView({
                         </div>
                     )}
 
-                    <button
-                        type="button"
-                        onClick={() => onAddTask(col.id)}
-                        className={cn(
-                            "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold",
-                            "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-100 transition"
-                        )}
-                    >
-                        <Plus className="h-4 w-4" />
-                        Thêm công việc
-                    </button>
+                    <AddTaskInline disabled={creatingTask} onSubmit={(title) => onCreateTaskInline(col.id, title)} />
                 </div>
             </div>
         </div>
     );
 }
 
-function SortableColumn({
-    col,
-    tasks,
-    taskIds,
-    onAddTask,
-    dndEnabled
-}: {
+function SortableColumn(props: {
     col: Column;
     tasks: Task[];
     taskIds: string[];
-    onAddTask: (columnId: ColumnId) => void;
+    onCreateTaskInline: (columnId: ColumnId, title: string) => Promise<void>;
     dndEnabled: boolean;
+    ghost?: { task: Task; toCol: ColumnId; index: number } | null;
+    draggingTask: boolean;
+    creatingTask: boolean;
+    onRenameColumnInline: (columnId: ColumnId) => void;
+    onDeleteColumn: (columnId: ColumnId) => void;
+    taskEditState: { taskId: string | null; columnId: string | null; draft: string };
+    onTaskStartEdit: (taskId: string, columnId: ColumnId, currentTitle: string) => void;
+    onTaskCancelEdit: () => void;
+    onTaskDraftChange: (v: string) => void;
+    onTaskCommitEdit: () => void;
+    onDeleteTask: (taskId: string, columnId: ColumnId) => void;
+    isColumnEditing: boolean;
+    columnDraft: string;
+    columnError: string | null;
+    onColumnDraftChange: (v: string) => void;
+    onColumnCommit: () => void;
+    onColumnCancel: () => void;
 }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    const {
+        col,
+        tasks,
+        taskIds,
+        onCreateTaskInline,
+        dndEnabled,
+        ghost,
+        draggingTask,
+        creatingTask,
+        onRenameColumnInline,
+        onDeleteColumn,
+        taskEditState,
+        onTaskStartEdit,
+        onTaskCancelEdit,
+        onTaskDraftChange,
+        onTaskCommitEdit,
+        onDeleteTask,
+        isColumnEditing,
+        columnDraft,
+        columnError,
+        onColumnDraftChange,
+        onColumnCommit,
+        onColumnCancel
+    } = props;
+
+    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
         id: col.id,
         data: { type: "column" }
     });
@@ -337,9 +1325,26 @@ function SortableColumn({
                 col={col}
                 tasks={tasks}
                 taskIds={taskIds}
-                onAddTask={onAddTask}
+                onCreateTaskInline={onCreateTaskInline}
                 dndEnabled={dndEnabled}
-                headerDragProps={{ attributes, listeners }}
+                headerDragProps={{ attributes, listeners, setActivatorNodeRef }}
+                ghost={ghost}
+                draggingTask={draggingTask}
+                creatingTask={creatingTask}
+                onRenameColumnInline={onRenameColumnInline}
+                onDeleteColumn={onDeleteColumn}
+                taskEditState={taskEditState}
+                onTaskStartEdit={onTaskStartEdit}
+                onTaskCancelEdit={onTaskCancelEdit}
+                onTaskDraftChange={onTaskDraftChange}
+                onTaskCommitEdit={onTaskCommitEdit}
+                onDeleteTask={onDeleteTask}
+                isColumnEditing={isColumnEditing}
+                columnDraft={columnDraft}
+                columnError={columnError}
+                onColumnDraftChange={onColumnDraftChange}
+                onColumnCommit={onColumnCommit}
+                onColumnCancel={onColumnCancel}
             />
         </div>
     );
@@ -350,8 +1355,8 @@ function TaskOverlay({ task }: { task: Task }) {
         <div className="min-w-[320px] rounded-2xl border border-indigo-200 bg-white p-3 shadow-xl">
             <p className="text-sm font-semibold text-zinc-900">{task.title}</p>
             <div className="mt-2 flex flex-wrap gap-2">
-                <Pill>{task.tagLeft ?? "BL"}</Pill>
-                <Pill>{task.tagRight ?? "YR"}</Pill>
+                <Pill>{task.tagLeft ?? "TASK"}</Pill>
+                <Pill>{task.tagRight ?? "SS"}</Pill>
             </div>
             {task.due ? <DuePill due={task.due} /> : null}
         </div>
@@ -370,7 +1375,9 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
                     <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-3">
                         {tasks.slice(0, 3).map((t) => (
                             <div key={t.id} className="mb-3 last:mb-0">
-                                <StaticTaskCard task={t} />
+                                <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
+                                    <p className="text-sm font-semibold text-zinc-900">{t.title}</p>
+                                </div>
                             </div>
                         ))}
                         {tasks.length === 0 ? (
@@ -385,45 +1392,104 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     );
 }
 
-function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<string>) {
-    return droppables.filter((d) => {
-        const t = d.data?.current?.type;
-        return typeof t === "string" && allow.includes(t);
-    });
-}
-
 export function GroupBoardScreen() {
-    const [columns, setColumns] = React.useState<Column[]>(INITIAL_COLUMNS);
+    const params = useParams<{ groupId: string }>();
+    const groupId = params?.groupId ? String(params.groupId) : "";
 
-    const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({
-        todo: [
-            { id: "t1", title: "Thiết lập hệ thống thiết kế", statusDot: "green", tagLeft: "BL", tagRight: "YR", due: "20-11-2025" },
-            { id: "t2", title: "Tạo UI màn Group Settings", statusDot: "yellow", tagLeft: "UI", tagRight: "SS", due: "28-11-2025" }
-        ],
-        doing: [
-            { id: "t3", title: "Tích hợp API create group", statusDot: "green", tagLeft: "BE", tagRight: "API" },
-            { id: "t4", title: "Sửa lỗi key warning", statusDot: "red", tagLeft: "FE", tagRight: "Fix" }
-        ],
-        review: [
-            { id: "t5", title: "Review luồng invite member", statusDot: "yellow", tagLeft: "QA", tagRight: "Flow" },
-            { id: "t6", title: "Kiểm tra phân quyền Owner/Moderator", statusDot: "green", tagLeft: "RBAC", tagRight: "Auth" }
-        ],
-        done: [
-            { id: "t7", title: "Căn chỉnh tab bar", statusDot: "green", tagLeft: "UI", tagRight: "Done" },
-            { id: "t8", title: "Hoàn thiện layout group list", statusDot: "green", tagLeft: "FE", tagRight: "Done" }
-        ]
-    });
+    const [columns, setColumns] = React.useState<Column[]>([]);
+    const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
 
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
 
+    const [loading, setLoading] = React.useState(true);
+    const [loadError, setLoadError] = React.useState<string | null>(null);
+
+    const [creatingColumn, setCreatingColumn] = React.useState(false);
+    const [creatingTask, setCreatingTask] = React.useState(false);
+
     const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null);
     const [activeColumnId, setActiveColumnId] = React.useState<string | null>(null);
+    const [overId, setOverId] = React.useState<string | null>(null);
+
+    const [editingColumn, setEditingColumn] = React.useState<{ id: string | null; draft: string; error: string | null }>({
+        id: null,
+        draft: "",
+        error: null
+    });
+
+    const [editingTask, setEditingTask] = React.useState<{ taskId: string | null; columnId: string | null; draft: string }>({
+        taskId: null,
+        columnId: null,
+        draft: ""
+    });
+
+    const draggingTask = !!activeTaskId;
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
+        useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
+
+    const isDuplicateColumnName = React.useCallback(
+        (draft: string, editingId: string | null) => {
+            const next = draft.trim().toLowerCase();
+            if (!next) return false;
+            return columns.some((c) => c.id !== editingId && c.title.trim().toLowerCase() === next);
+        },
+        [columns]
+    );
+
+    const syncColumnsFromDetail = React.useCallback((detail: GroupDetailResponse | undefined) => {
+        const statuses = (detail?.taskStatuses ?? [])
+            .filter((s) => typeof s?.statusId === "string" && !!s.statusId && typeof s?.statusName === "string")
+            .map((s) => ({
+                id: String(s.statusId),
+                title: String(s.statusName ?? ""),
+                position: typeof s.position === "number" && Number.isFinite(s.position) ? s.position : 0
+            }))
+            .sort((a, b) => a.position - b.position);
+
+        setColumns(statuses);
+        setBoard((prev) => {
+            const next: Record<string, Task[]> = {};
+            for (const c of statuses) next[c.id] = prev[c.id] ?? [];
+            return next;
+        });
+    }, []);
+
+    const refresh = React.useCallback(async () => {
+        if (!groupId) {
+            setLoading(false);
+            setLoadError("Thiếu groupId trong route.");
+            return;
+        }
+        if (!isUuidLike(groupId)) {
+            setLoading(false);
+            setLoadError("groupId trong route không hợp lệ (không phải UUID).");
+            return;
+        }
+        if (!getApiBase()) {
+            setLoading(false);
+            setLoadError("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+            return;
+        }
+
+        setLoading(true);
+        setLoadError(null);
+        try {
+            const detail = await apiGetGroupDetail(groupId);
+            syncColumnsFromDetail(detail?.data);
+        } catch (e: any) {
+            setLoadError(e?.message ?? "Không tải được dữ liệu group.");
+        } finally {
+            setLoading(false);
+        }
+    }, [groupId, syncColumnsFromDetail]);
+
+    React.useEffect(() => {
+        void refresh();
+    }, [refresh]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -435,24 +1501,199 @@ export function GroupBoardScreen() {
         return columns.find((c) => c.id === activeColumnId) ?? null;
     }, [activeColumnId, columns]);
 
-    const onAddTask = (columnId: ColumnId) => {
-        const next: Task = {
-            id: uid("task"),
-            title: "Công việc mới",
-            statusDot: "green",
-            tagLeft: "BL",
-            tagRight: "YR",
-            due: ""
-        };
-        setBoard((prev) => ({ ...prev, [columnId]: [next, ...(prev[columnId] ?? [])] }));
+    const ghost = React.useMemo(() => {
+        if (!activeTaskId) return null;
+        if (!overId) return null;
+
+        const task = findTask(board, columns, activeTaskId);
+        if (!task) return null;
+
+        const overKey = overId.startsWith("drop:")
+            ? overId.replace("drop:", "")
+            : overId.startsWith("drop-end:")
+                ? overId.replace("drop-end:", "")
+                : overId;
+
+        let toCol: ColumnId | null = null;
+        if (columns.some((c) => c.id === overKey)) toCol = overKey;
+        else toCol = findColumnOfTask(board, columns, overKey) ?? null;
+
+        if (!toCol) return null;
+
+        const toTasks = board[toCol] ?? [];
+        if (overId.startsWith("drop-end:")) return { task, toCol, index: toTasks.length };
+
+        const idx = toTasks.findIndex((t) => t.id === overKey);
+        const index = idx !== -1 ? idx : 0;
+        return { task, toCol, index };
+    }, [activeTaskId, overId, board, columns]);
+
+    const persistColumnPositions = React.useCallback(
+        async (nextCols: Column[]) => {
+            if (!groupId) return;
+
+            const base = detectPositionBase(nextCols) as 0 | 1;
+            const items: GroupTaskStatusPositionRequest[] = nextCols.map((c, idx) => ({
+                position: base === 1 ? idx + 1 : idx,
+                statusId: c.id
+            }));
+
+            await apiUpdateGroupTaskStatusPositions({ groupId, items });
+        },
+        [groupId]
+    );
+
+    const submitAddColumn = async (title: string) => {
+        if (!groupId) throw new Error("Thiếu groupId.");
+        if (!isUuidLike(groupId)) throw new Error("groupId route không hợp lệ (không phải UUID).");
+
+        const existed = columns.some((c) => c.title.trim().toLowerCase() === title.trim().toLowerCase());
+        if (existed) throw new Error("Tên bảng đã tồn tại. Hãy nhập tên khác.");
+
+        const base = detectPositionBase(columns) as 0 | 1;
+        const positionToSend = nextPositionForCreate(columns, base);
+
+        setCreatingColumn(true);
+        try {
+            await apiCreateGroupTaskStatus({ groupId, statusName: title, position: positionToSend });
+            await refresh();
+        } finally {
+            setCreatingColumn(false);
+        }
     };
 
-    const onAddColumn = () => {
-        const title = window.prompt("Tên bảng mới?", "Bảng mới");
-        if (!title) return;
-        const id = uid("col");
-        setColumns((prev) => [...prev, { id, title }]);
-        setBoard((prev) => ({ ...prev, [id]: [] }));
+    const startEditColumn = (columnId: ColumnId) => {
+        const col = columns.find((c) => c.id === columnId);
+        if (!col) return;
+        setEditingColumn({ id: columnId, draft: col.title, error: null });
+    };
+
+    const cancelEditColumn = () => setEditingColumn({ id: null, draft: "", error: null });
+
+    const commitEditColumn = async () => {
+        if (!groupId) return;
+        const id = editingColumn.id;
+        if (!id) return;
+
+        const col = columns.find((c) => c.id === id);
+        if (!col) return;
+
+        const next = editingColumn.draft.trim();
+        if (!next) {
+            setEditingColumn((p) => ({ ...p, error: "Vui lòng nhập tên bảng." }));
+            return;
+        }
+
+        if (columns.some((c) => c.id !== id && c.title.trim().toLowerCase() === next.toLowerCase())) {
+            setEditingColumn((p) => ({ ...p, error: "Tên bảng đã tồn tại. Hãy nhập tên khác." }));
+            return;
+        }
+
+        const prevTitle = col.title;
+        setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: next } : c)));
+
+        try {
+            await apiRenameGroupTaskStatus({
+                groupId,
+                statusId: id,
+                statusName: next,
+                position: col.position
+            });
+            cancelEditColumn();
+            await refresh();
+        } catch (e: any) {
+            setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: prevTitle } : c)));
+            setEditingColumn((p) => ({ ...p, error: e?.message ?? "Đã xảy ra lỗi" }));
+        }
+    };
+
+    const onDeleteColumn = async (columnId: ColumnId) => {
+        if (!groupId) return;
+
+        const ok = window.confirm("Xóa bảng này?");
+        if (!ok) return;
+
+        const prevCols = columns;
+        const prevBoard = board;
+
+        const base = detectPositionBase(columns) as 0 | 1;
+        const nextCols = assignPositions(
+            columns.filter((c) => c.id !== columnId),
+            base
+        );
+
+        setColumns(nextCols);
+        setBoard((prev) => {
+            const next = { ...prev };
+            delete next[columnId];
+            return next;
+        });
+
+        try {
+            await apiDeleteGroupTaskStatus({ groupId, statusId: columnId });
+            await persistColumnPositions(nextCols);
+            await refresh();
+        } catch (e: any) {
+            setColumns(prevCols);
+            setBoard(prevBoard);
+            alert(e?.message ?? "Đã xảy ra lỗi");
+        }
+    };
+
+    const onCreateTaskInline = async (columnId: ColumnId, title: string) => {
+        if (!groupId) throw new Error("Thiếu groupId.");
+        if (!isUuidLike(groupId)) throw new Error("groupId route không hợp lệ (không phải UUID).");
+        if (!isUuidLike(columnId)) throw new Error("Sai columnId.");
+
+        setCreatingTask(true);
+        try {
+            const created = await apiCreateTask({ groupId, groupStatusId: columnId, taskName: title });
+            const id = created?.data?.taskId ? String(created.data.taskId) : `task_${Date.now().toString(16)}`;
+            const next: Task = {
+                id,
+                title: created?.data?.taskTitle ?? title,
+                statusDot: "green",
+                tagLeft: "TASK",
+                tagRight: "SS",
+                due: created?.data?.dueDate ? String(created.data.dueDate) : ""
+            };
+            setBoard((prev) => ({ ...prev, [columnId]: [next, ...(prev[columnId] ?? [])] }));
+        } finally {
+            setCreatingTask(false);
+        }
+    };
+
+    const onTaskStartEdit = (taskId: string, columnId: ColumnId, currentTitle: string) => {
+        setEditingTask({ taskId, columnId, draft: currentTitle });
+    };
+
+    const onTaskCancelEdit = () => setEditingTask({ taskId: null, columnId: null, draft: "" });
+
+    const onTaskCommitEdit = () => {
+        const { taskId, columnId, draft } = editingTask;
+        if (!taskId || !columnId) return;
+        const next = draft.trim();
+        if (!next) {
+            onTaskCancelEdit();
+            return;
+        }
+
+        setBoard((prev) => ({
+            ...prev,
+            [columnId]: (prev[columnId] ?? []).map((t) => (t.id === taskId ? { ...t, title: next } : t))
+        }));
+        onTaskCancelEdit();
+    };
+
+    const onDeleteTask = (taskId: string, columnId: ColumnId) => {
+        const ok = window.confirm("Xóa công việc này?");
+        if (!ok) return;
+
+        setBoard((prev) => ({
+            ...prev,
+            [columnId]: (prev[columnId] ?? []).filter((t) => t.id !== taskId)
+        }));
+        if (editingTask.taskId === taskId && editingTask.columnId === columnId) onTaskCancelEdit();
     };
 
     const collisionDetection: CollisionDetection = React.useCallback((args) => {
@@ -463,45 +1704,54 @@ export function GroupBoardScreen() {
             return closestCenter({ ...args, droppableContainers: onlyColumns });
         }
 
-        const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop"]);
+        const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
         return closestCorners({ ...args, droppableContainers: allow });
     }, []);
 
     const handleDragStart = (e: DragStartEvent) => {
+        setOverId(null);
         const type = e.active.data.current?.type;
         if (type === "task") setActiveTaskId(String(e.active.id));
         if (type === "column") setActiveColumnId(String(e.active.id));
     };
 
-    /**
-     * ✅ CRITICAL FIX:
-     * - KHÔNG setState trong onDragOver
-     * - Chỉ xử lý đổi cột / reorder trong onDragEnd
-     */
+    const handleDragOver = (e: DragOverEvent) => {
+        const next = e.over?.id ? String(e.over.id) : null;
+        setOverId(next);
+    };
+
+    const handleDragCancel = (_e: DragCancelEvent) => {
+        setActiveTaskId(null);
+        setActiveColumnId(null);
+        setOverId(null);
+    };
+
     const handleDragEnd = (e: DragEndEvent) => {
         const activeType = e.active.data.current?.type;
         const overRaw = e.over?.id ? String(e.over.id) : null;
 
-        // reset overlay ids
         setActiveTaskId(null);
         setActiveColumnId(null);
+        setOverId(null);
 
         if (!overRaw) return;
 
         if (activeType === "task") {
             const activeId = String(e.active.id);
-            const overId = isDropId(overRaw) ? dropIdToColumnId(overRaw) : overRaw;
+            const overIsEnd = overRaw.startsWith("drop-end:");
+            const overKey = overRaw.startsWith("drop:")
+                ? overRaw.replace("drop:", "")
+                : overRaw.startsWith("drop-end:")
+                    ? overRaw.replace("drop-end:", "")
+                    : overRaw;
 
             const fromCol = findColumnOfTask(board, columns, activeId);
             if (!fromCol) return;
 
-            // target column:
             let toCol: ColumnId | null = null;
-            if (columns.some((c) => c.id === overId)) {
-                toCol = overId;
-            } else {
-                toCol = findColumnOfTask(board, columns, overId) ?? null;
-            }
+            if (columns.some((c) => c.id === overKey)) toCol = overKey;
+            else toCol = findColumnOfTask(board, columns, overKey) ?? null;
+
             if (!toCol) return;
 
             setBoard((prev) => {
@@ -514,24 +1764,28 @@ export function GroupBoardScreen() {
                 const [moving] = fromTasks.splice(fromIndex, 1);
 
                 if (fromCol === toCol) {
-                    // reorder in same column: only if dropped over a task
-                    const toIndex = fromTasks.findIndex((t) => t.id === overId);
+                    if (overIsEnd) {
+                        fromTasks.push(moving);
+                        return { ...prev, [fromCol]: fromTasks };
+                    }
+
+                    const toIndex = fromTasks.findIndex((t) => t.id === overKey);
                     if (toIndex === -1) {
-                        // drop on column itself -> put to top
                         fromTasks.unshift(moving);
                         return { ...prev, [fromCol]: fromTasks };
                     }
-                    const reordered = arrayMove([moving, ...fromTasks], 0, toIndex); // safe reorder
+
+                    const oldIdx = fromTasks.findIndex((t) => t.id === moving.id);
+                    const reordered = arrayMove(fromTasks, oldIdx, toIndex);
                     return { ...prev, [fromCol]: reordered };
                 }
 
-                // move across columns
-                const overIsTaskInTarget = toTasks.some((t) => t.id === overId);
-                if (overIsTaskInTarget) {
-                    const idx = toTasks.findIndex((t) => t.id === overId);
-                    toTasks.splice(Math.max(0, idx), 0, moving);
+                if (overIsEnd) {
+                    toTasks.push(moving);
                 } else {
-                    toTasks.unshift(moving);
+                    const idx = toTasks.findIndex((t) => t.id === overKey);
+                    if (idx !== -1) toTasks.splice(Math.max(0, idx), 0, moving);
+                    else toTasks.unshift(moving);
                 }
 
                 return { ...prev, [fromCol]: fromTasks, [toCol!]: toTasks };
@@ -544,9 +1798,9 @@ export function GroupBoardScreen() {
             const activeColId = String(e.active.id);
             let overColId = String(overRaw);
 
-            if (isDropId(overColId)) overColId = dropIdToColumnId(overColId);
+            if (overColId.startsWith("drop:")) overColId = overColId.replace("drop:", "");
+            if (overColId.startsWith("drop-end:")) overColId = overColId.replace("drop-end:", "");
 
-            // dropped on a task -> convert to that task's column
             if (!columns.some((c) => c.id === overColId)) {
                 const maybeTaskCol = findColumnOfTask(board, columns, overColId);
                 if (maybeTaskCol) overColId = maybeTaskCol;
@@ -559,20 +1813,68 @@ export function GroupBoardScreen() {
             const newIndex = columns.findIndex((c) => c.id === overColId);
             if (oldIndex === -1 || newIndex === -1) return;
 
-            setColumns((prev) => arrayMove(prev, oldIndex, newIndex));
+            const prevCols = columns;
+            const base = detectPositionBase(columns) as 0 | 1;
+            const nextCols = assignPositions(arrayMove(columns, oldIndex, newIndex), base);
+
+            setColumns(nextCols);
+
+            void (async () => {
+                try {
+                    await persistColumnPositions(nextCols);
+                } catch (err: any) {
+                    setColumns(prevCols);
+                    alert(err?.message ?? "Lưu vị trí bảng thất bại");
+                }
+            })();
         }
     };
 
-    // ✅ stable ids for SortableContext (avoid creating new arrays in render)
     const columnIds = React.useMemo(() => columns.map((c) => c.id), [columns]);
 
     const taskIdsByCol = React.useMemo(() => {
         const out: Record<string, string[]> = {};
-        for (const col of columns) {
-            out[col.id] = (board[col.id] ?? []).map((t) => t.id);
-        }
+        for (const col of columns) out[col.id] = (board[col.id] ?? []).map((t) => t.id);
         return out;
     }, [board, columns]);
+
+    if (loading) {
+        return (
+            <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
+                <Container>
+                    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">Đang tải board…</div>
+                </Container>
+            </div>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
+                <Container>
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">{loadError}</div>
+                    <div className="mt-3">
+                        <button
+                            type="button"
+                            onClick={() => void refresh()}
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
+                        >
+                            Tải lại
+                        </button>
+                    </div>
+                </Container>
+            </div>
+        );
+    }
+
+    const onColumnDraftChange = (v: string) => {
+        setEditingColumn((p) => {
+            const trimmed = v.trim();
+            if (!trimmed) return { ...p, draft: v, error: "Vui lòng nhập tên bảng." };
+            const dup = columns.some((c) => c.id !== p.id && c.title.trim().toLowerCase() === trimmed.toLowerCase());
+            return { ...p, draft: v, error: dup ? "Tên bảng đã tồn tại. Hãy nhập tên khác." : null };
+        });
+    };
 
     return (
         <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
@@ -580,24 +1882,36 @@ export function GroupBoardScreen() {
                 {!mounted ? (
                     <div className="mt-5 flex items-start gap-5 overflow-x-auto pb-6">
                         {columns.map((col) => (
-                            <div key={col.id} className="min-w-[320px] max-w-[320px] self-start">
-                                <ColumnView
-                                    col={col}
-                                    tasks={board[col.id] ?? []}
-                                    taskIds={taskIdsByCol[col.id] ?? []}
-                                    onAddTask={onAddTask}
-                                    dndEnabled={false}
-                                />
-                            </div>
+                            <ColumnView
+                                key={col.id}
+                                col={col}
+                                tasks={board[col.id] ?? []}
+                                taskIds={taskIdsByCol[col.id] ?? []}
+                                onCreateTaskInline={onCreateTaskInline}
+                                dndEnabled={false}
+                                headerDragProps={undefined}
+                                ghost={null}
+                                draggingTask={false}
+                                creatingTask={creatingTask}
+                                onRenameColumnInline={startEditColumn}
+                                onDeleteColumn={onDeleteColumn}
+                                taskEditState={editingTask}
+                                onTaskStartEdit={onTaskStartEdit}
+                                onTaskCancelEdit={onTaskCancelEdit}
+                                onTaskDraftChange={(v) => setEditingTask((p) => ({ ...p, draft: v }))}
+                                onTaskCommitEdit={onTaskCommitEdit}
+                                onDeleteTask={onDeleteTask}
+                                isColumnEditing={editingColumn.id === col.id}
+                                columnDraft={editingColumn.id === col.id ? editingColumn.draft : ""}
+                                columnError={editingColumn.id === col.id ? editingColumn.error : null}
+                                onColumnDraftChange={onColumnDraftChange}
+                                onColumnCommit={() => void commitEditColumn()}
+                                onColumnCancel={cancelEditColumn}
+                            />
                         ))}
+
                         <div className="min-w-[320px] max-w-[320px] self-start">
-                            <button
-                                type="button"
-                                onClick={onAddColumn}
-                                className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100"
-                            >
-                                + Tạo bảng
-                            </button>
+                            <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
                         </div>
                     </div>
                 ) : (
@@ -605,6 +1919,8 @@ export function GroupBoardScreen() {
                         sensors={sensors}
                         collisionDetection={collisionDetection}
                         onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDragCancel={handleDragCancel}
                         onDragEnd={handleDragEnd}
                     >
                         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
@@ -615,19 +1931,30 @@ export function GroupBoardScreen() {
                                         col={col}
                                         tasks={board[col.id] ?? []}
                                         taskIds={taskIdsByCol[col.id] ?? []}
-                                        onAddTask={onAddTask}
+                                        onCreateTaskInline={onCreateTaskInline}
                                         dndEnabled
+                                        ghost={ghost}
+                                        draggingTask={draggingTask}
+                                        creatingTask={creatingTask}
+                                        onRenameColumnInline={startEditColumn}
+                                        onDeleteColumn={onDeleteColumn}
+                                        taskEditState={editingTask}
+                                        onTaskStartEdit={onTaskStartEdit}
+                                        onTaskCancelEdit={onTaskCancelEdit}
+                                        onTaskDraftChange={(v) => setEditingTask((p) => ({ ...p, draft: v }))}
+                                        onTaskCommitEdit={onTaskCommitEdit}
+                                        onDeleteTask={onDeleteTask}
+                                        isColumnEditing={editingColumn.id === col.id}
+                                        columnDraft={editingColumn.id === col.id ? editingColumn.draft : ""}
+                                        columnError={editingColumn.id === col.id ? editingColumn.error : null}
+                                        onColumnDraftChange={onColumnDraftChange}
+                                        onColumnCommit={() => void commitEditColumn()}
+                                        onColumnCancel={cancelEditColumn}
                                     />
                                 ))}
 
                                 <div className="min-w-[320px] max-w-[320px] self-start">
-                                    <button
-                                        type="button"
-                                        onClick={onAddColumn}
-                                        className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100"
-                                    >
-                                        + Tạo bảng
-                                    </button>
+                                    <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
                                 </div>
                             </div>
                         </SortableContext>

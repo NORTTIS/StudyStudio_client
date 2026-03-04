@@ -4,6 +4,7 @@ import { Settings, Trash2, UserPlus, Users } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import {
@@ -24,63 +25,15 @@ import { Textarea } from "@/components/ui/textarea";
 
 type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
 
-type ApiMemberPreview = {
-    id?: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    avatarUrl?: string | null;
-};
+/** ✅ OpenAPI types */
+type GroupDetailResponseApiResponse = components["schemas"]["GroupDetailResponseApiResponse"];
+type GroupMemberListResponseApiResponse = components["schemas"]["GroupMemberListResponseApiResponse"];
+type CreateInviteLinkResponseApiResponse = components["schemas"]["CreateInviteLinkResponseApiResponse"];
+type ObjectApiResponse = components["schemas"]["ObjectApiResponse"];
 
-type ApiGroupMembersResponse = {
-    status?: string | null;
-    code?: string | null;
-    message?: string | null;
-    data?: {
-        groupId?: string;
-        groupName?: string | null;
-        members?:
-        | {
-            userId?: string;
-            firstName?: string | null;
-            lastName?: string | null;
-            email?: string | null;
-            avatarUrl?: string | null;
-            role?: string | null;
-            joinedAt?: string;
-        }[]
-        | null;
-        totalMembers?: number;
-    } | null;
-};
-
-type GroupDetail = {
-    groupId?: string;
-    groupName?: string | null;
-    description?: string | null;
-    studioName?: string | null;
-    userRole?: string | null;
-    membersPreview?: ApiMemberPreview[] | null;
-};
-
-type GroupDetailResponse = {
-    status?: string | null;
-    code?: string | null;
-    message?: string | null;
-    data?: GroupDetail | null;
-};
-
-type CreateInviteLinkResponseApiResponse = {
-    status?: string | null;
-    code?: string | null;
-    message?: string | null;
-    data?: {
-        inviteUrl?: string | null;
-        token?: string | null;
-        role?: string | null;
-        createdAt?: string;
-        expiresAt?: string;
-    } | null;
-};
+type ApiMemberPreview = components["schemas"]["MemberPreviewDto"];
+type ApiGroupMemberDto = components["schemas"]["GroupMemberDto"];
+type ApiGroupDetail = components["schemas"]["GroupDetailResponse"];
 
 type Member = {
     id: string;
@@ -91,7 +44,6 @@ type Member = {
 };
 
 const roleOptions: Exclude<MemberRole, "Owner">[] = ["Moderator", "Member", "Commenter", "Viewer"];
-
 const GROUP_UPDATED_EVENT = "group:updated";
 const isOwner = (role: MemberRole) => role === "Owner";
 
@@ -180,26 +132,6 @@ const getApiBase = () => {
     return base.endsWith("/api") ? base : `${base}/api`;
 };
 
-function Badge({
-    children,
-    tone = "gray"
-}: {
-    children: React.ReactNode;
-    tone?: "gray" | "orange" | "red" | "green";
-}) {
-    const map: Record<string, string> = {
-        gray: "bg-gray-100 text-gray-700 border-gray-200",
-        orange: "bg-orange-50 text-orange-700 border-orange-200",
-        red: "bg-red-50 text-red-700 border-red-200",
-        green: "bg-emerald-50 text-emerald-700 border-emerald-200"
-    };
-    return (
-        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${map[tone]}`}>
-            {children}
-        </span>
-    );
-}
-
 export function GroupSettingView() {
     const locale = useLocale();
     const router = useRouter();
@@ -222,7 +154,10 @@ export function GroupSettingView() {
     const [myRoleInGroup, setMyRoleInGroup] = useState<MemberRole>("Member");
 
     const [notFound, setNotFound] = useState(false);
-    const [error, setError] = useState("");
+
+    const [generalError, setGeneralError] = useState("");
+    const [membersError, setMembersError] = useState("");
+    const [dangerError, setDangerError] = useState("");
 
     const [roleLoadingByUserId, setRoleLoadingByUserId] = useState<Record<string, boolean>>({});
     const [removeLoadingByUserId, setRemoveLoadingByUserId] = useState<Record<string, boolean>>({});
@@ -252,10 +187,17 @@ export function GroupSettingView() {
         return roleOptions;
     };
 
+    const extractApiMessage = (text: string, json: any) => {
+        const msg = (json?.message ?? "").toString().trim();
+        if (msg) return msg;
+        const t = (text ?? "").toString().trim();
+        return t || "Đã xảy ra lỗi";
+    };
+
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
-            setError("Thiếu access token");
+            setGeneralError("Thiếu access token");
             return null;
         }
         return token;
@@ -274,12 +216,12 @@ export function GroupSettingView() {
         try {
             json = text ? JSON.parse(text) : null;
         } catch { }
-        return (json ?? {}) as ApiGroupMembersResponse;
+        return (json ?? {}) as GroupMemberListResponseApiResponse;
     };
 
-    const mapMembersFromMembersApi = (json: ApiGroupMembersResponse): Member[] => {
+    const mapMembersFromMembersApi = (json: GroupMemberListResponseApiResponse): Member[] => {
         const apiMembers = json?.data?.members ?? [];
-        return apiMembers.map((m, idx) => {
+        return (apiMembers || []).map((m: ApiGroupMemberDto, idx: number) => {
             const first = (m.firstName ?? "").trim();
             const last = (m.lastName ?? "").trim();
             const uid = m.userId ?? `${idx}`;
@@ -296,7 +238,9 @@ export function GroupSettingView() {
     };
 
     const loadGroup = async (id: string): Promise<boolean> => {
-        setError("");
+        setGeneralError("");
+        setMembersError("");
+        setDangerError("");
 
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
@@ -321,9 +265,8 @@ export function GroupSettingView() {
         } catch { }
 
         if (!detailRes.ok) {
-            const msg = detailJson?.message || text || `Tải nhóm thất bại (${detailRes.status})`;
             setNotFound(true);
-            setError(msg);
+            setGeneralError(extractApiMessage(text, detailJson));
             setGroupName("");
             setDescription("");
             setMasterStudio("");
@@ -332,12 +275,12 @@ export function GroupSettingView() {
             return false;
         }
 
-        const parsed = (detailJson as GroupDetailResponse) || {};
-        const data = parsed?.data ?? null;
+        const parsed = (detailJson as GroupDetailResponseApiResponse) || {};
+        const data: ApiGroupDetail | undefined = parsed?.data ?? undefined;
 
         if (!data?.groupId) {
             setNotFound(true);
-            setError("Tải nhóm thất bại: thiếu dữ liệu group");
+            setGeneralError("Tải nhóm thất bại");
             return false;
         }
 
@@ -358,12 +301,13 @@ export function GroupSettingView() {
             const me = mapped.find((x) => String(x.id).trim() === String(meId).trim());
             if (me?.role) setMyRoleInGroup(me.role);
         } catch {
+            // fallback: dùng membersPreview (nếu backend không cho members)
             const currentUserId = getCurrentUserId();
-            const preview = data.membersPreview ?? [];
-            const mapped: Member[] = preview.map((m, idx) => {
+            const preview: ApiMemberPreview[] = (data as any)?.membersPreview ?? [];
+            const mapped: Member[] = (preview || []).map((m, idx) => {
                 const first = (m.firstName ?? "").trim();
                 const last = (m.lastName ?? "").trim();
-                const uid = m.id ?? `${id}-${idx}`;
+                const uid = (m as any)?.id ?? `${id}-${idx}`;
                 const isMe = String(uid).trim() === String(currentUserId).trim();
 
                 return {
@@ -403,7 +347,7 @@ export function GroupSettingView() {
             } catch {
                 if (!alive) return;
                 setNotFound(true);
-                setError("Có lỗi bất ngờ khi tải nhóm");
+                setGeneralError("Có lỗi bất ngờ khi tải nhóm");
                 setLoading(false);
             }
         })();
@@ -417,7 +361,7 @@ export function GroupSettingView() {
         if (!groupId) return;
 
         if (isEditing) {
-            setError("");
+            setGeneralError("");
             const token = getTokenOrFail();
             if (!token) return;
 
@@ -438,8 +382,7 @@ export function GroupSettingView() {
             } catch { }
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
-                const msg = json?.message || text || `Lưu thất bại (${res.status})`;
-                setError(msg);
+                setGeneralError(extractApiMessage(text, json));
                 return;
             }
 
@@ -460,7 +403,7 @@ export function GroupSettingView() {
         if (!groupId) return;
         if (!canDelete) return;
 
-        setError("");
+        setDangerError("");
         const token = getTokenOrFail();
         if (!token) return;
 
@@ -479,8 +422,7 @@ export function GroupSettingView() {
             } catch { }
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
-                const msg = json?.message || text || `Xóa thất bại (${res.status})`;
-                setError(msg);
+                setDangerError(extractApiMessage(text, json));
                 return;
             }
 
@@ -497,7 +439,7 @@ export function GroupSettingView() {
         const token = getTokenOrFail();
         if (!token) return false;
 
-        setError("");
+        setMembersError("");
 
         for (const apiRole of ROLE_FORMATS(role)) {
             const res = await fetch(`${apiBase}/group/member/assign-role`, {
@@ -518,8 +460,7 @@ export function GroupSettingView() {
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
-            const msg = json?.message || text || `Cập nhật vai trò thất bại (${res.status})`;
-            setError(`[assign-role ${res.status}] ${msg} (sent role="${apiRole}")`);
+            setMembersError(extractApiMessage(text, json));
         }
 
         return false;
@@ -531,8 +472,9 @@ export function GroupSettingView() {
         const token = getTokenOrFail();
         if (!token) return false;
 
-        setError("");
+        setMembersError("");
 
+        // 1) body
         {
             const res = await fetch(`${apiBase}/group/member/remove`, {
                 method: "DELETE",
@@ -551,11 +493,10 @@ export function GroupSettingView() {
             } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
-
-            const msg = json?.message || text || `Xóa thành viên thất bại (${res.status})`;
-            setError(`[remove(body) ${res.status}] ${msg}`);
+            setMembersError(extractApiMessage(text, json));
         }
 
+        // 2) query fallback
         {
             const url = `${apiBase}/group/member/remove?groupId=${encodeURIComponent(groupId)}&userId=${encodeURIComponent(
                 userId
@@ -572,9 +513,7 @@ export function GroupSettingView() {
             } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
-
-            const msg = json?.message || text || `Xóa thành viên thất bại (${res.status})`;
-            setError(`[remove(query) ${res.status}] ${msg}`);
+            setMembersError(extractApiMessage(text, json));
         }
 
         return false;
@@ -586,7 +525,7 @@ export function GroupSettingView() {
         const token = getTokenOrFail();
         if (!token) return false;
 
-        setError("");
+        setMembersError("");
 
         for (const apiRole of ROLE_FORMATS(role)) {
             const res = await fetch(`${apiBase}/invite/email`, {
@@ -607,8 +546,7 @@ export function GroupSettingView() {
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
-            const msg = json?.message || text || `Mời thành viên thất bại (${res.status})`;
-            setError(`[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`);
+            setMembersError(extractApiMessage(text, json));
         }
 
         return false;
@@ -620,7 +558,7 @@ export function GroupSettingView() {
         const token = getTokenOrFail();
         if (!token) return null;
 
-        setError("");
+        setMembersError("");
 
         for (const apiRole of ROLE_FORMATS(role)) {
             const res = await fetch(`${apiBase}/invite/create`, {
@@ -642,12 +580,11 @@ export function GroupSettingView() {
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String((json as CreateInviteLinkResponseApiResponse)?.data?.inviteUrl ?? "").trim();
                 if (url) return url;
-                setError(`[invite/create] thiếu inviteUrl (sent role="${apiRole}")`);
+                setMembersError("Thiếu inviteUrl");
                 return null;
             }
 
-            const msg = json?.message || text || `Tạo link thất bại (${res.status})`;
-            setError(`[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`);
+            setMembersError(extractApiMessage(text, json));
         }
 
         return null;
@@ -657,7 +594,7 @@ export function GroupSettingView() {
         if (!canManageMembers) return;
 
         if (role === "Moderator" && currentModeratorId && String(userId) !== String(currentModeratorId)) {
-            setError("Nhóm chỉ được có 1 Moderator. Hãy đổi Moderator hiện tại sang vai trò khác trước.");
+            setMembersError("Nhóm chỉ được có 1 Moderator. Hãy đổi Moderator hiện tại sang vai trò khác trước.");
             return;
         }
 
@@ -665,7 +602,7 @@ export function GroupSettingView() {
         if (!current) return;
         if (isOwner(current.role)) return;
 
-        setError("");
+        setMembersError("");
         setRoleLoadingByUserId((p) => ({ ...p, [userId]: true }));
 
         try {
@@ -709,7 +646,7 @@ export function GroupSettingView() {
         if (!removeTarget) return;
         const userId = removeTarget.id;
 
-        setError("");
+        setMembersError("");
         setRemoveLoadingByUserId((p) => ({ ...p, [userId]: true }));
 
         try {
@@ -752,20 +689,18 @@ export function GroupSettingView() {
         return (
             <div className="p-6 text-gray-500 text-sm">
                 Không tìm thấy nhóm hoặc bạn không có quyền truy cập.
-                {error ? <div className="mt-2 text-red-600 text-xs">{error}</div> : null}
+                {generalError ? <div className="mt-2 text-red-600 text-xs">{generalError}</div> : null}
             </div>
         );
     }
 
     const removeBusy = removeTarget ? !!removeLoadingByUserId[removeTarget.id] : false;
-
     const hasModerator = members.some((m) => m.role === "Moderator");
 
     return (
         <div className="w-full">
             <Container>
                 <div className="space-y-6 pb-10">
-                    {/* GENERAL */}
                     <section className="rounded-2xl border bg-white shadow-sm">
                         <div className="flex items-start justify-between border-b px-6 py-5">
                             <div className="flex items-start gap-3">
@@ -826,15 +761,14 @@ export function GroupSettingView() {
                                 ) : null}
                             </div>
 
-                            {error ? (
+                            {generalError ? (
                                 <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-                                    {error}
+                                    {generalError}
                                 </div>
                             ) : null}
                         </div>
                     </section>
 
-                    {/* MEMBERS */}
                     <section className="rounded-2xl border bg-white shadow-sm">
                         <div className="flex items-start justify-between border-b px-6 py-5">
                             <div className="flex items-start gap-3">
@@ -900,16 +834,16 @@ export function GroupSettingView() {
                                                     >
                                                         <SelectTrigger
                                                             className="
-                                h-10 w-[170px]
-                                justify-between
-                                rounded-xl border border-gray-200 bg-white
-                                px-3 text-sm font-semibold text-gray-900
-                                shadow-sm
-                                hover:bg-gray-50
-                                focus:outline-none focus:ring-2 focus:ring-orange-500
-                                data-[state=open]:ring-2 data-[state=open]:ring-orange-500
-                                disabled:opacity-50
-                              "
+                                                                h-10 w-[170px]
+                                                                justify-between
+                                                                rounded-xl border border-gray-200 bg-white
+                                                                px-3 text-sm font-semibold text-gray-900
+                                                                shadow-sm
+                                                                hover:bg-gray-50
+                                                                focus:outline-none focus:ring-2 focus:ring-orange-500
+                                                                data-[state=open]:ring-2 data-[state=open]:ring-orange-500
+                                                                disabled:opacity-50
+                                                            "
                                                         >
                                                             <SelectValue placeholder="Chọn role" className="text-left" />
                                                         </SelectTrigger>
@@ -927,16 +861,16 @@ export function GroupSettingView() {
                                                                     key={r}
                                                                     value={r}
                                                                     className="
-                                    relative
-                                    rounded-xl px-3 py-2.5
-                                    text-sm text-gray-900
-                                    cursor-pointer
-                                    outline-none
-                                    hover:bg-gray-100
-                                    focus:bg-gray-100
-                                    data-[highlighted]:bg-gray-100
-                                    data-[state=checked]:font-bold
-                                  "
+                                                                        relative
+                                                                        rounded-xl px-3 py-2.5
+                                                                        text-sm text-gray-900
+                                                                        cursor-pointer
+                                                                        outline-none
+                                                                        hover:bg-gray-100
+                                                                        focus:bg-gray-100
+                                                                        data-[highlighted]:bg-gray-100
+                                                                        data-[state=checked]:font-bold
+                                                                    "
                                                                 >
                                                                     {r}
                                                                 </SelectItem>
@@ -966,19 +900,20 @@ export function GroupSettingView() {
                                 })}
 
                                 {members.length === 0 ? (
-                                    <div className="px-4 py-10 text-center text-sm text-gray-500">Chưa có thành viên để hiển thị.</div>
+                                    <div className="px-4 py-10 text-center text-sm text-gray-500">
+                                        Chưa có thành viên để hiển thị.
+                                    </div>
                                 ) : null}
                             </div>
 
-                            {error ? (
+                            {membersError ? (
                                 <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-                                    {error}
+                                    {membersError}
                                 </div>
                             ) : null}
                         </div>
                     </section>
 
-                    {/* DANGER */}
                     <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
                         <div className="border-b border-red-200 px-6 py-5">
                             <h2 className="text-sm font-bold text-red-700">Vùng nguy hiểm</h2>
@@ -1019,7 +954,7 @@ export function GroupSettingView() {
                                                     className="bg-red-600 hover:bg-red-700"
                                                     onClick={(e) => {
                                                         e.preventDefault();
-                                                        handleDelete();
+                                                        void handleDelete();
                                                     }}
                                                 >
                                                     {deleteLoading ? "Đang xóa..." : "Xác nhận xóa"}
@@ -1036,9 +971,9 @@ export function GroupSettingView() {
                                 ) : null}
                             </div>
 
-                            {error ? (
+                            {dangerError ? (
                                 <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-                                    {error}
+                                    {dangerError}
                                 </div>
                             ) : null}
                         </div>
@@ -1053,13 +988,13 @@ export function GroupSettingView() {
                 canManage={canManageMembers}
                 hasModerator={hasModerator}
                 onCreateLink={async ({ role }) => {
-                    setError("");
+                    setMembersError("");
                     const url = await createInviteLinkApi(role);
                     if (!url) throw new Error("Create link failed");
                     return url;
                 }}
                 onSendInvite={async ({ email, role }) => {
-                    setError("");
+                    setMembersError("");
                     const ok = await inviteMemberApi(email, role);
                     if (!ok) return;
                     if (groupId) await loadGroup(groupId);
@@ -1090,7 +1025,7 @@ export function GroupSettingView() {
                             disabled={removeBusy}
                             onClick={(e) => {
                                 e.preventDefault();
-                                confirmRemoveMember();
+                                void confirmRemoveMember();
                             }}
                         >
                             {removeBusy ? "Đang xóa..." : "Xóa thành viên"}
