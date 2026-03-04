@@ -1,4 +1,4 @@
-import type { paths } from "@/api/types";
+import type { components, paths } from "@/api/types";
 import type { Group, GroupRole, GroupsPageData } from "./types";
 
 type GetGroupsResponse =
@@ -10,6 +10,24 @@ type GroupListResponse = NonNullable<GetGroupsResponse["data"]>;
 type GroupSections = NonNullable<GroupListResponse["sections"]>;
 type SubscriptionInfo = NonNullable<GroupListResponse["subscription"]>;
 type GroupCardDto = NonNullable<NonNullable<GroupSections["favorites"]>[number]>;
+
+type RequestDocumentUploadRequest = components["schemas"]["RequestDocumentUploadRequest"];
+type DocumentItem = components["schemas"]["DocumentItem"];
+
+type RequestDocumentUploadResponseApi =
+    | paths["/api/documents/request-upload"]["post"]["responses"][200]["content"]["application/json"]
+    | paths["/api/documents/request-upload"]["post"]["responses"][200]["content"]["text/json"]
+    | paths["/api/documents/request-upload"]["post"]["responses"][200]["content"]["text/plain"];
+
+type GroupDocumentsResponseApi =
+    | paths["/api/documents/group/{groupId}"]["get"]["responses"][200]["content"]["application/json"]
+    | paths["/api/documents/group/{groupId}"]["get"]["responses"][200]["content"]["text/json"]
+    | paths["/api/documents/group/{groupId}"]["get"]["responses"][200]["content"]["text/plain"];
+
+type DocumentDownloadUrlResponseApi =
+    | paths["/api/documents/{attachmentId}/download"]["get"]["responses"][200]["content"]["application/json"]
+    | paths["/api/documents/{attachmentId}/download"]["get"]["responses"][200]["content"]["text/json"]
+    | paths["/api/documents/{attachmentId}/download"]["get"]["responses"][200]["content"]["text/plain"];
 
 function getToken() {
     if (typeof window === "undefined") return "";
@@ -99,7 +117,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     };
 }
 
-async function apiFetch(path: string, method: "POST" | "DELETE", body: any) {
+async function apiFetch(path: string, method: "POST" | "DELETE", body: unknown) {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
     const token = getToken();
 
@@ -134,4 +152,120 @@ export async function addFavourite(groupId: string) {
 
 export async function removeFavourite(groupId: string) {
     return apiFetch("/favourite/remove", "DELETE", { groupId });
+}
+
+export async function requestDocumentUpload(payload: RequestDocumentUploadRequest) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/documents/request-upload`, {
+        method: "POST",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Request failed: ${res.status}`);
+    }
+
+    const json = (await res.json()) as RequestDocumentUploadResponseApi;
+    if (!(json.data?.attachmentId && json.data?.uploadUrl)) {
+        throw new Error(json.message || "Invalid upload response");
+    }
+
+    return json.data;
+}
+
+export async function completeDocumentUpload(attachmentId: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/documents/${attachmentId}/complete`, {
+        method: "POST",
+        headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Request failed: ${res.status}`);
+    }
+}
+
+export async function fetchGroupDocuments(groupId: string): Promise<DocumentItem[]> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/documents/group/${groupId}`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Request failed: ${res.status}`);
+    }
+
+    const json = (await res.json()) as GroupDocumentsResponseApi;
+    return (json.data?.documents || []).filter((item): item is DocumentItem => !!item);
+}
+
+export async function deleteGroupDocument(attachmentId: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/documents/${attachmentId}`, {
+        method: "DELETE",
+        headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Request failed: ${res.status}`);
+    }
+}
+
+export async function getDocumentDownloadUrl(attachmentId: string, expirationMinutes?: number) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const token = getToken();
+    const query =
+        typeof expirationMinutes === "number" ? `?expirationMinutes=${encodeURIComponent(expirationMinutes)}` : "";
+
+    const res = await fetch(`${baseUrl}/documents/${attachmentId}/download${query}`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Request failed: ${res.status}`);
+    }
+
+    const json = (await res.json()) as DocumentDownloadUrlResponseApi;
+    if (!json.data?.downloadUrl) {
+        throw new Error(json.message || "Missing download url");
+    }
+
+    return json.data.downloadUrl;
 }
