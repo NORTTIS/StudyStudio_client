@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Calendar, FileText, LayoutGrid, List, MessageSquare, Settings, Trash2, Users, UserPlus } from "lucide-react";
+import { BarChart3, Calendar, FileText, LayoutGrid, List, MessageSquare, Settings, Sparkles, Trash2, Users, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -135,6 +135,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         { key: "list", label: "List", icon: List, href: (l, id) => `/${l}/group/${id}/list` },
         { key: "calendar", label: "Calendar", icon: Calendar, href: (l, id) => `/${l}/group/${id}/calendar` },
         { key: "documents", label: "Documents", icon: FileText, href: (l, id) => `/${l}/group/${id}/documents` },
+        { key: "ai-qa", label: t("aiQATab"), icon: Sparkles, href: (l, id) => `/${l}/group/${id}/ai-qa` },
         { key: "discuss", label: "Discuss", icon: MessageSquare, href: (l, id) => `/${l}/group/${id}/discuss` },
         { key: "analytic", label: "Analytic", icon: BarChart3, href: (l, id) => `/${l}/group/${id}/analytic` },
         { key: "setting", label: "Setting", icon: Settings, href: (l, id) => `/${l}/group/${id}/setting` },

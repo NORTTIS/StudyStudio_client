@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { Download, FileText, MoreHorizontal, Trash2, Upload } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
 import { Container } from "@/components/common";
@@ -100,6 +101,8 @@ function DocumentCard({
     onDelete: (id: string) => void;
     onDownload: (id: string) => void;
 }) {
+    const t = useTranslations("GroupDocumentsPage");
+
     return (
         <div className="group relative rounded-xl border border-[#E5E5E5] bg-white px-5 py-4 shadow-sm transition hover:shadow-md">
             <div className="flex items-start gap-4">
@@ -110,7 +113,9 @@ function DocumentCard({
                 <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-[#261E33] text-[15px]">{item.name}</p>
                     <p className="mt-1 text-[#6F6B99] text-sm">{item.updatedText}</p>
-                    <p className="mt-1 text-[#6F6B99] text-xs">Status: {item.status}</p>
+                    <p className="mt-1 text-[#6F6B99] text-xs">
+                        {t("statusLabel")}: {item.status}
+                    </p>
                 </div>
 
                 <DropdownMenu>
@@ -121,7 +126,7 @@ function DocumentCard({
                                 "rounded-lg p-2 text-[#261E33] opacity-80 transition hover:bg-[#FAFAFA] hover:opacity-100",
                                 "focus:outline-none focus:ring-2 focus:ring-black/10"
                             )}
-                            aria-label="More">
+                            aria-label={t("more")}>
                             <MoreHorizontal className="h-5 w-5" />
                         </button>
                     </DropdownMenuTrigger>
@@ -129,12 +134,12 @@ function DocumentCard({
                     <DropdownMenuContent align="end" className="w-44">
                         <DropdownMenuItem onClick={() => onDownload(item.id)}>
                             <Download className="mr-2 h-4 w-4" />
-                            Download
+                            {t("download")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => onDelete(item.id)}>
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            {t("delete")}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -144,6 +149,7 @@ function DocumentCard({
 }
 
 export default function GroupDocumentsPage() {
+    const t = useTranslations("GroupDocumentsPage");
     const pathname = usePathname();
     const groupId = extractGroupIdFromPath(pathname || "");
     const { toast } = useToast();
@@ -162,7 +168,7 @@ export default function GroupDocumentsPage() {
         try {
             const items = await fetchGroupDocuments(groupId);
             const mapped: DocItem[] = items.map((item) => {
-                const fileName = item.fileName || "Untitled";
+                const fileName = item.fileName || t("untitled");
                 const ext = getExt(fileName);
                 return {
                     id: item.attachmentId || `${fileName}_${item.createdAt || Date.now()}`,
@@ -173,19 +179,19 @@ export default function GroupDocumentsPage() {
                         item.uploadedBy?.lastName
                     ),
                     fileType: niceType(ext),
-                    status: item.status || "unknown"
+                    status: item.status || t("unknownStatus")
                 };
             });
             setDocs(mapped);
         } catch (error) {
             toast({
                 variant: "destructive",
-                description: error instanceof Error ? error.message : "Cannot load documents"
+                description: error instanceof Error ? error.message : t("cannotLoadDocuments")
             });
         } finally {
             setIsLoading(false);
         }
-    }, [groupId, toast]);
+    }, [groupId, toast, t]);
 
     React.useEffect(() => {
         void loadDocuments();
@@ -223,7 +229,7 @@ export default function GroupDocumentsPage() {
         if (!files.length) return;
 
         if (!groupId) {
-            toast({ variant: "destructive", description: "Cannot detect groupId from URL" });
+            toast({ variant: "destructive", description: t("cannotDetectGroupId") });
             return;
         }
 
@@ -231,7 +237,7 @@ export default function GroupDocumentsPage() {
         if (invalid.length) {
             toast({
                 variant: "destructive",
-                description: `Invalid files: ${invalid.map((f) => f.name).join(", ")}`
+                description: t("invalidFiles", { names: invalid.map((f) => f.name).join(", ") })
             });
         }
 
@@ -254,14 +260,14 @@ export default function GroupDocumentsPage() {
         setIsUploading(false);
 
         if (successCount > 0) {
-            toast({ variant: "success", description: `Uploaded ${successCount} file(s)` });
+            toast({ variant: "success", description: t("uploadedFiles", { count: successCount }) });
             await loadDocuments();
         }
 
         if (failedNames.length) {
             toast({
                 variant: "destructive",
-                description: `Failed files: ${failedNames.join(", ")}`
+                description: t("failedFiles", { names: failedNames.join(", ") })
             });
         }
     };
@@ -269,7 +275,7 @@ export default function GroupDocumentsPage() {
     const onDelete = (id: string) => {
         const doc = docs.find((d) => d.id === id);
         if (!doc) {
-            toast({ variant: "destructive", description: "Document not found" });
+            toast({ variant: "destructive", description: t("documentNotFound") });
             return;
         }
         setDeleteTarget({ id: doc.id, name: doc.name });
@@ -284,11 +290,11 @@ export default function GroupDocumentsPage() {
             setDocs((prev) => prev.filter((d) => d.id !== deleteTarget.id));
             setDeleteConfirmOpen(false);
             setDeleteTarget(null);
-            toast({ variant: "success", description: "Document deleted" });
+            toast({ variant: "success", description: t("documentDeleted") });
         } catch (error) {
             toast({
                 variant: "destructive",
-                description: error instanceof Error ? error.message : "Delete failed"
+                description: error instanceof Error ? error.message : t("deleteFailed")
             });
         } finally {
             setIsDeleting(false);
@@ -298,7 +304,7 @@ export default function GroupDocumentsPage() {
     const onDownload = async (id: string) => {
         const doc = docs.find((d) => d.id === id);
         if (!doc) {
-            toast({ variant: "destructive", description: "Document not found" });
+            toast({ variant: "destructive", description: t("documentNotFound") });
             return;
         }
 
@@ -315,7 +321,7 @@ export default function GroupDocumentsPage() {
         } catch (error) {
             toast({
                 variant: "destructive",
-                description: error instanceof Error ? error.message : "Download failed"
+                description: error instanceof Error ? error.message : t("downloadFailed")
             });
         }
     };
@@ -325,7 +331,7 @@ export default function GroupDocumentsPage() {
             <Container className="px-6">
                 <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
-                        <p className="font-medium text-[#6F6B99] text-sm">Shared project documents</p>
+                        <p className="font-medium text-[#6F6B99] text-sm">{t("sharedProjectDocuments")}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -342,15 +348,15 @@ export default function GroupDocumentsPage() {
                             disabled={isUploading}
                             className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
                             <Upload className="mr-2 h-4 w-4" />
-                            {isUploading ? "Uploading..." : "Upload"}
+                            {isUploading ? t("uploading") : t("upload")}
                         </Button>
                     </div>
                 </div>
 
-                {isLoading ? <p className="mb-4 text-[#6F6B99] text-sm">Loading documents...</p> : null}
+                {isLoading ? <p className="mb-4 text-[#6F6B99] text-sm">{t("loadingDocuments")}</p> : null}
 
                 {!isLoading && docs.length === 0 ? (
-                    <p className="mb-4 text-[#6F6B99] text-sm">No documents uploaded yet.</p>
+                    <p className="mb-4 text-[#6F6B99] text-sm">{t("noDocuments")}</p>
                 ) : null}
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -368,16 +374,18 @@ export default function GroupDocumentsPage() {
                 }}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Xác nhận xóa tài liệu</AlertDialogTitle>
+                        <AlertDialogTitle>{t("confirmDeleteTitle")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xóa{" "}
-                            <span className="font-semibold text-gray-900">{deleteTarget?.name || "tài liệu này"}</span>{" "}
-                            không? Hành động này không thể hoàn tác.
+                            {t("confirmDeleteDescriptionPrefix")}{" "}
+                            <span className="font-semibold text-gray-900">
+                                {deleteTarget?.name || t("thisDocument")}
+                            </span>{" "}
+                            {t("confirmDeleteDescriptionSuffix")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isDeleting}>{t("cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             className="bg-red-600 hover:bg-red-700"
                             disabled={isDeleting}
@@ -385,7 +393,7 @@ export default function GroupDocumentsPage() {
                                 e.preventDefault();
                                 void confirmDelete();
                             }}>
-                            {isDeleting ? "Đang xóa..." : "Xóa tài liệu"}
+                            {isDeleting ? t("deleting") : t("deleteDocument")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -1,7 +1,8 @@
 {
     "Common": {
         "loading": "Đang tải...",
-        "checkingAuth": "Đang kiểm tra xác thực..."
+        "checkingAuth": "Đang kiểm tra xác thực...",
+        "aiQATab": "AI Q&A"
     },
     "GuestNavbar": {
         "personal": "Không gian cá nhân",
@@ -738,6 +739,63 @@
             "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
             "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
             "feature5": "100 lượt yêu cầu AI mỗi ngày"
+        }
+    },
+    "GroupDocumentsPage": {
+        "download": "Tải xuống",
+        "delete": "Xóa",
+        "statusLabel": "Trạng thái",
+        "more": "Thêm",
+        "untitled": "Không có tên",
+        "unknownStatus": "không rõ",
+        "cannotLoadDocuments": "Không thể tải danh sách tài liệu",
+        "cannotDetectGroupId": "Không xác định được groupId từ URL",
+        "invalidFiles": "Tệp không hợp lệ: {names}",
+        "uploadedFiles": "Đã tải lên {count} tệp",
+        "failedFiles": "Tệp tải lên thất bại: {names}",
+        "documentNotFound": "Không tìm thấy tài liệu",
+        "documentDeleted": "Đã xóa tài liệu",
+        "deleteFailed": "Xóa thất bại",
+        "downloadFailed": "Tải xuống thất bại",
+        "sharedProjectDocuments": "Tài liệu dự án được chia sẻ",
+        "uploading": "Đang tải lên...",
+        "upload": "Tải lên",
+        "loadingDocuments": "Đang tải tài liệu...",
+        "noDocuments": "Chưa có tài liệu nào được tải lên.",
+        "confirmDeleteTitle": "Xác nhận xóa tài liệu",
+        "confirmDeleteDescriptionPrefix": "Bạn có chắc chắn muốn xóa",
+        "confirmDeleteDescriptionSuffix": "không? Hành động này không thể hoàn tác.",
+        "thisDocument": "tài liệu này",
+        "cancel": "Hủy",
+        "deleting": "Đang xóa...",
+        "deleteDocument": "Xóa tài liệu"
+    },
+    "GroupAiQaPage": {
+        "remainingRequests": "Lượt hỏi còn lại",
+        "unknown": "Không rõ",
+        "startConversation": "Bắt đầu cuộc trò chuyện",
+        "description": "Hỏi tôi bất cứ điều gì về công việc, tài liệu và tiến độ của nhóm đã chọn.",
+        "inputPlaceholder": "Nhập câu hỏi cho AI...",
+        "cannotDetectGroupId": "Không xác định được groupId từ URL",
+        "emptyAiAnswer": "AI chưa trả về nội dung trả lời. Bạn thử lại với câu hỏi chi tiết hơn nhé.",
+        "aiResponseError": "Không thể nhận phản hồi từ AI",
+        "quickActions": {
+            "summary": {
+                "label": "Tóm tắt tiến độ dự án",
+                "prompt": "Hãy tóm tắt tiến độ hiện tại của nhóm theo trạng thái công việc và các tài liệu liên quan."
+            },
+            "risk": {
+                "label": "Phân tích rủi ro",
+                "prompt": "Phân tích các rủi ro chính của dự án hiện tại và đề xuất hành động giảm thiểu."
+            },
+            "report": {
+                "label": "Báo cáo tiến độ",
+                "prompt": "Tạo báo cáo tiến độ ngắn gọn cho nhóm gồm việc đã xong, đang làm và việc bị chậm."
+            },
+            "deadline": {
+                "label": "Review deadline sắp tới",
+                "prompt": "Liệt kê các deadline sắp tới và cảnh báo các việc có nguy cơ trễ hạn."
+            }
         }
     },
     "InviteMemberModal": {

@@ -13,6 +13,8 @@ type GroupCardDto = NonNullable<NonNullable<GroupSections["favorites"]>[number]>
 
 type RequestDocumentUploadRequest = components["schemas"]["RequestDocumentUploadRequest"];
 type DocumentItem = components["schemas"]["DocumentItem"];
+type AIQuestionRequest = components["schemas"]["AIQuestionRequest"];
+type AIAnswerResponse = components["schemas"]["AIAnswerResponse"];
 
 type RequestDocumentUploadResponseApi =
     | paths["/api/documents/request-upload"]["post"]["responses"][200]["content"]["application/json"]
@@ -28,6 +30,11 @@ type DocumentDownloadUrlResponseApi =
     | paths["/api/documents/{attachmentId}/download"]["get"]["responses"][200]["content"]["application/json"]
     | paths["/api/documents/{attachmentId}/download"]["get"]["responses"][200]["content"]["text/json"]
     | paths["/api/documents/{attachmentId}/download"]["get"]["responses"][200]["content"]["text/plain"];
+
+type AIAskResponseApi =
+    | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["application/json"]
+    | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/json"]
+    | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/plain"];
 
 function getToken() {
     if (typeof window === "undefined") return "";
@@ -268,4 +275,69 @@ export async function getDocumentDownloadUrl(attachmentId: string, expirationMin
     }
 
     return json.data.downloadUrl;
+}
+
+function toOptionalNumber(value: unknown): number | null {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    return null;
+}
+
+function extractRemainingRequests(json: AIAskResponseApi, headers: Headers): number | null {
+    const candidates: unknown[] = [
+        (json as { data?: { remainingRequests?: unknown } }).data?.remainingRequests,
+        (json as { data?: { requestRemaining?: unknown } }).data?.requestRemaining,
+        (json as { data?: { remainingRequestCount?: unknown } }).data?.remainingRequestCount,
+        (json as { remainingRequests?: unknown }).remainingRequests,
+        (json as { requestRemaining?: unknown }).requestRemaining,
+        headers.get("x-requests-remaining"),
+        headers.get("x-request-remaining"),
+        headers.get("x-ai-requests-remaining")
+    ];
+
+    for (const candidate of candidates) {
+        const n = toOptionalNumber(candidate);
+        if (n != null) return n;
+    }
+
+    return null;
+}
+
+export type AskGroupAiResult = {
+    answer: AIAnswerResponse;
+    remainingRequests: number | null;
+};
+
+export async function askGroupAi(payload: AIQuestionRequest): Promise<AskGroupAiResult> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/ai/ask`, {
+        method: "POST",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Request failed: ${res.status}`);
+    }
+
+    const json = (await res.json()) as AIAskResponseApi;
+    if (!json.data) {
+        throw new Error(json.message || "Empty AI response");
+    }
+
+    return {
+        answer: json.data,
+        remainingRequests: extractRemainingRequests(json, res.headers)
+    };
 }

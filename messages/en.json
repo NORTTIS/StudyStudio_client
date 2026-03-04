@@ -1,7 +1,8 @@
 {
     "Common": {
         "loading": "Loading...",
-        "checkingAuth": "Checking authentication..."
+        "checkingAuth": "Checking authentication...",
+        "aiQATab": "AI Q&A"
     },
     "GuestNavbar": {
         "personal": "Personal Studio",
@@ -741,6 +742,65 @@
         "editButton": "Edit invoice information",
         "updateButton": "Update invoice information",
         "visaText": "Visa ****1234"
+    },
+    "GroupDocumentsPage": {
+        "download": "Download",
+        "delete": "Delete",
+        "statusLabel": "Status",
+        "more": "More",
+        "untitled": "Untitled",
+        "unknownUploader": "Unknown",
+        "uploadedBy": "Uploaded by {name}",
+        "unknownStatus": "unknown",
+        "cannotLoadDocuments": "Cannot load documents",
+        "cannotDetectGroupId": "Cannot detect groupId from URL",
+        "invalidFiles": "Invalid files: {names}",
+        "uploadedFiles": "Uploaded {count} file(s)",
+        "failedFiles": "Failed files: {names}",
+        "documentNotFound": "Document not found",
+        "documentDeleted": "Document deleted",
+        "deleteFailed": "Delete failed",
+        "downloadFailed": "Download failed",
+        "sharedProjectDocuments": "Shared project documents",
+        "uploading": "Uploading...",
+        "upload": "Upload",
+        "loadingDocuments": "Loading documents...",
+        "noDocuments": "No documents uploaded yet.",
+        "confirmDeleteTitle": "Confirm document deletion",
+        "confirmDeleteDescriptionPrefix": "Are you sure you want to delete",
+        "confirmDeleteDescriptionSuffix": "? This action cannot be undone.",
+        "thisDocument": "this document",
+        "cancel": "Cancel",
+        "deleting": "Deleting...",
+        "deleteDocument": "Delete document"
+    },
+    "GroupAiQaPage": {
+        "remainingRequests": "Remaining requests",
+        "unknown": "Unknown",
+        "startConversation": "Start the conversation",
+        "description": "Ask anything about tasks, documents, and progress of this group.",
+        "inputPlaceholder": "Ask AI a question...",
+        "cannotDetectGroupId": "Cannot detect groupId from URL",
+        "emptyAiAnswer": "AI did not return an answer. Try asking a more specific question.",
+        "aiResponseError": "Cannot get AI response",
+        "quickActions": {
+            "summary": {
+                "label": "Project progress summary",
+                "prompt": "Please summarize the current progress of the group based on tasks and related documents."
+            },
+            "risk": {
+                "label": "Risk analysis",
+                "prompt": "Analyze key risks in the current project and suggest mitigation actions."
+            },
+            "report": {
+                "label": "Progress report",
+                "prompt": "Create a short progress report including done, in-progress, and delayed tasks."
+            },
+            "deadline": {
+                "label": "Review upcoming deadlines",
+                "prompt": "List upcoming deadlines and warn about tasks at risk of delay."
+            }
+        }
     },
     "InviteMemberModal": {
         "title": "Invite user(s) to",
