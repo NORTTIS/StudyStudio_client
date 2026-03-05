@@ -9,8 +9,8 @@ import {
     MessageSquare,
     Settings,
     Trash2,
-    Users,
-    UserPlus
+    UserPlus,
+    Users
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -18,10 +18,10 @@ import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
 import { Container } from "@/components/common";
+import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { useToast } from "@/components/ui/use-toast";
 import { RolePill } from "../RolePill";
 import type { GroupRole } from "../types";
-import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 
 type Tab = {
     key: string;
@@ -146,6 +146,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         { key: "list", label: "List", icon: List, href: (l, id) => `/${l}/group/${id}/list` },
         { key: "calendar", label: "Calendar", icon: Calendar, href: (l, id) => `/${l}/group/${id}/calendar` },
         { key: "documents", label: "Documents", icon: FileText, href: (l, id) => `/${l}/group/${id}/documents` },
+        { key: "ai-qa", label: t("aiQATab"), icon: Sparkles, href: (l, id) => `/${l}/group/${id}/ai-qa` },
         { key: "discuss", label: "Discuss", icon: MessageSquare, href: (l, id) => `/${l}/group/${id}/discuss` },
         { key: "analytic", label: "Analytic", icon: BarChart3, href: (l, id) => `/${l}/group/${id}/analytic` },
         { key: "setting", label: "Setting", icon: Settings, href: (l, id) => `/${l}/group/${id}/setting` },
@@ -312,12 +313,18 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
                 if (url) return url;
-                toast({ description: `[invite/create] thiếu inviteUrl (sent role="${apiRole}")`, variant: "destructive" });
+                toast({
+                    description: `[invite/create] thiếu inviteUrl (sent role="${apiRole}")`,
+                    variant: "destructive"
+                });
                 return null;
             }
 
             const msg = json?.message || text || `Tạo link thất bại (${res.status})`;
-            toast({ description: `[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`, variant: "destructive" });
+            toast({
+                description: `[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`,
+                variant: "destructive"
+            });
         }
 
         return null;
@@ -349,7 +356,10 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
             const msg = json?.message || text || `Mời thành viên thất bại (${res.status})`;
-            toast({ description: `[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`, variant: "destructive" });
+            toast({
+                description: `[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`,
+                variant: "destructive"
+            });
         }
 
         return false;
@@ -363,21 +373,21 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     <div className="flex items-start justify-between gap-6">
                         <div className="min-w-0">
                             {studioName ? (
-                                <p className="flex items-center gap-2 text-sm text-[#6F6B99]">
+                                <p className="flex items-center gap-2 text-[#6F6B99] text-sm">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                     {studioName}
                                 </p>
                             ) : null}
 
                             <div className="flex items-center gap-2">
-                                <h1 className="mt-1 truncate text-3xl font-semibold text-[#261E33]">{groupName}</h1>
+                                <h1 className="mt-1 truncate font-semibold text-3xl text-[#261E33]">{groupName}</h1>
                                 <RolePill role={userRole} />
                             </div>
 
-                            {groupDesc ? <p className="mt-2 text-lg text-[#6F6B99]">{groupDesc}</p> : null}
+                            {groupDesc ? <p className="mt-2 text-[#6F6B99] text-lg">{groupDesc}</p> : null}
 
                             {error ? (
-                                <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
                                     {error}
                                 </p>
                             ) : null}
@@ -396,8 +406,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                 <button
                                     type="button"
                                     onClick={() => setInviteOpen(true)}
-                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700 active:scale-[0.98]"
-                                >
+                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 font-semibold text-sm text-white shadow-sm transition hover:bg-orange-700 active:scale-[0.98]">
                                     <UserPlus className="h-4 w-4" />
                                     Thêm thành viên
                                 </button>
@@ -425,13 +434,18 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         key={tab.key}
                                         href={href}
                                         className={twMerge(
-                                            "group inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition",
+                                            "group inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 font-medium text-sm transition",
                                             "text-[#6F6B99] hover:bg-zinc-50 hover:text-[#261E33]",
                                             "focus:outline-none focus:ring-2 focus:ring-orange-500/25",
-                                            active && "bg-orange-600 text-white shadow-sm hover:bg-orange-600 hover:text-white"
-                                        )}
-                                    >
-                                        <Icon className={twMerge("h-4 w-4", active ? "text-white" : "text-[#6F6B99] group-hover:text-[#261E33]")} />
+                                            active &&
+                                            "bg-orange-600 text-white shadow-sm hover:bg-orange-600 hover:text-white"
+                                        )}>
+                                        <Icon
+                                            className={twMerge(
+                                                "h-4 w-4",
+                                                active ? "text-white" : "text-[#6F6B99] group-hover:text-[#261E33]"
+                                            )}
+                                        />
                                         {tab.label}
                                     </Link>
                                 );

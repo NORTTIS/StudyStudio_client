@@ -355,6 +355,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/ask/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["AIQuestionRequest"];
+                    "application/json": components["schemas"]["AIQuestionRequest"];
+                    "text/json": components["schemas"]["AIQuestionRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/announcements": {
         parameters: {
             query?: never;
@@ -2784,10 +2823,14 @@ export interface components {
         };
         AIAnswerResponse: {
             answer?: string | null;
+            /** Format: int32 */
+            dailyLimit?: number;
             /** Format: date-time */
             generatedAt?: string;
             /** Format: int64 */
             processingTimeMs?: number;
+            /** Format: int32 */
+            remainingRequests?: number;
             sourceDocuments?: components["schemas"]["SourceDocument"][] | null;
             taskSummary?: components["schemas"]["TaskSummaryResponse"];
         };
@@ -3411,6 +3454,8 @@ export interface components {
             deletedBy?: string;
             /** Format: date-time */
             deletedOn?: string;
+            /** Format: uuid */
+            deleteTaskId?: string;
             taskName?: string | null;
         };
         TaskDeleteResponseListApiResponse: {
@@ -3420,7 +3465,8 @@ export interface components {
             status?: string | null;
         };
         TaskItemGroupRequest: {
-            assignees?: string[] | null;
+            /** Format: uuid */
+            assignees?: string | null;
             /** Format: date-time */
             dueDate?: string;
             /** Format: uuid */
@@ -3439,7 +3485,7 @@ export interface components {
             taskSeverity?: number;
         };
         TaskItemResponse: {
-            assignee?: components["schemas"]["UserDto"][] | null;
+            assignee?: components["schemas"]["UserDto"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: uuid */
@@ -3608,6 +3654,12 @@ export interface components {
             lastName?: string | null;
         };
         UserProfileResponse: {
+            /** Format: int32 */
+            aiDailyLimit?: number;
+            /** Format: int32 */
+            aiRequestsRemaining?: number;
+            /** Format: int32 */
+            aiRequestsUsedToday?: number;
             avatarUrl?: string | null;
             bio?: string | null;
             /** Format: date-time */

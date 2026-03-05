@@ -7,6 +7,9 @@ import { type ApiResponse, apiFetch } from "@/api/api-client";
 
 export interface UserProfile {
     userId: string;
+    aiDailyLimit?: number;
+    aiRequestsRemaining?: number;
+    aiRequestsUsedToday?: number;
     email: string;
     firstName: string;
     lastName: string;
