@@ -10,6 +10,12 @@ import { Input } from "@/components/ui/input";
 const STUDIO_NAME_MAX_LENGTH = 30;
 const STUDIO_DESCRIPTION_MAX_LENGTH = 200;
 
+type StudioFormData = {
+    name: string;
+    description: string;
+    type: "personal" | "group";
+};
+
 const studioSchema = z.object({
     name: z
         .string()
@@ -21,11 +27,11 @@ const studioSchema = z.object({
         .max(STUDIO_DESCRIPTION_MAX_LENGTH, `Mô tả không được vượt quá ${STUDIO_DESCRIPTION_MAX_LENGTH} ký tự`)
 });
 
-const applyFieldData = (
-    data: { name: string; description: string },
+const applyFieldData = <T extends { name: string; description: string }>(
+    data: T,
     field: "name" | "description",
     value: string
-) => ({ ...data, [field]: value });
+) => ({ ...data, [field]: value }) as T;
 
 interface StudioModalProps {
     isOpen: boolean;
@@ -38,10 +44,10 @@ interface StudioModalProps {
 
 export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingStudios = [] }: StudioModalProps) {
     const t = useTranslations("MasterPage");
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<StudioFormData>({
         name: "",
         description: "",
-        type: "group" as "personal" | "group"
+        type: "group"
     });
     const [errors, setErrors] = useState({
         name: "",
@@ -99,11 +105,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         }
     }, [isOpen, studio, mode]);
 
-    const validateField = (
-        field: "name" | "description",
-        value: string,
-        data: { name: string; description: string }
-    ) => {
+    const validateField = (field: "name" | "description", value: string, data: StudioFormData) => {
         const schemaErrors = getSchemaErrors(applyFieldData(data, field, value));
         if (field === "name") {
             return schemaErrors.name || getDuplicateNameError(value);
