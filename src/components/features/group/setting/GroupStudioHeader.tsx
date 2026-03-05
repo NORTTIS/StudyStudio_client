@@ -61,10 +61,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-        | {
-            role?: string | null;
-        }[]
-        | null;
+            | {
+                  role?: string | null;
+              }[]
+            | null;
     } | null;
 };
 
@@ -179,7 +179,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch { }
+                } catch {}
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
@@ -218,7 +218,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch { }
+                    } catch {}
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -309,7 +309,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
@@ -352,7 +352,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -439,7 +439,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                             "text-[#6F6B99] hover:bg-zinc-50 hover:text-[#261E33]",
                                             "focus:outline-none focus:ring-2 focus:ring-orange-500/25",
                                             active &&
-                                            "bg-orange-600 text-white shadow-sm hover:bg-orange-600 hover:text-white"
+                                                "bg-orange-600 text-white shadow-sm hover:bg-orange-600 hover:text-white"
                                         )}>
                                         <Icon
                                             className={twMerge(

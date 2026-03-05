@@ -37,8 +37,7 @@ type Props = {
 };
 
 function PriorityDot({ p }: { p: TaskPriority }) {
-    const klass =
-        p === "low" ? "bg-emerald-500" : p === "medium" ? "bg-amber-500" : "bg-rose-500";
+    const klass = p === "low" ? "bg-emerald-500" : p === "medium" ? "bg-amber-500" : "bg-rose-500";
     return <span className={cn("inline-block h-2.5 w-2.5 rounded-full", klass)} />;
 }
 
@@ -76,7 +75,7 @@ export default function TaskFormModal({
         setTitle("");
         setDescription("");
         setAssigneeId(defaultAssigneeId);
-        setStatusId(defaultStatusId ?? (statuses[0]?.value ?? null));
+        setStatusId(defaultStatusId ?? statuses[0]?.value ?? null);
         setPriority(defaultPriority);
         setStartDate("");
         setDueDate("");
@@ -128,12 +127,10 @@ export default function TaskFormModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="w-[92vw] max-w-[720px] max-h-[90vh] rounded-2xl bg-white shadow-2xl flex flex-col"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
+                onPointerDown={(e) => e.stopPropagation()}>
                 {/* Header (smaller padding) */}
                 <div className="flex items-center justify-between px-6 py-4">
                     <h2 className="text-xl md:text-2xl font-bold text-zinc-900">Add new task</h2>
@@ -142,8 +139,7 @@ export default function TaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100"
-                        aria-label="Close"
-                    >
+                        aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
@@ -151,9 +147,7 @@ export default function TaskFormModal({
                 {/* Body (scrollable) */}
                 <div className="px-4 md:px-6 pb-6 overflow-y-auto">
                     {/* Task name */}
-                    <label className="block text-base md:text-lg font-semibold text-zinc-800">
-                        Task name
-                    </label>
+                    <label className="block text-base md:text-lg font-semibold text-zinc-800">Task name</label>
                     <input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -183,9 +177,7 @@ export default function TaskFormModal({
                     <div className="mt-6 md:mt-8 grid grid-cols-1 gap-5 md:gap-6 md:grid-cols-3">
                         {/* Assignee */}
                         <div>
-                            <label className="block text-base md:text-lg font-semibold text-zinc-800">
-                                Assignee
-                            </label>
+                            <label className="block text-base md:text-lg font-semibold text-zinc-800">Assignee</label>
                             <div className="mt-3">
                                 <select
                                     value={assigneeId ?? ""}
@@ -193,8 +185,7 @@ export default function TaskFormModal({
                                     className={cn(
                                         "h-12 md:h-14 w-full rounded-2xl border border-zinc-200 bg-white px-5 text-base text-zinc-800 outline-none",
                                         "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
-                                    )}
-                                >
+                                    )}>
                                     <option value="">Select member</option>
                                     {members.map((m) => (
                                         <option key={m.value} value={m.value}>
@@ -207,9 +198,7 @@ export default function TaskFormModal({
 
                         {/* Status */}
                         <div>
-                            <label className="block text-base md:text-lg font-semibold text-zinc-800">
-                                Status
-                            </label>
+                            <label className="block text-base md:text-lg font-semibold text-zinc-800">Status</label>
                             <div className="mt-3">
                                 <select
                                     value={statusId ?? ""}
@@ -217,8 +206,7 @@ export default function TaskFormModal({
                                     className={cn(
                                         "h-12 md:h-14 w-full rounded-2xl border border-zinc-200 bg-white px-5 text-base text-zinc-800 outline-none",
                                         "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
-                                    )}
-                                >
+                                    )}>
                                     {statuses.length === 0 ? (
                                         <option value="">(No status)</option>
                                     ) : (
@@ -234,9 +222,7 @@ export default function TaskFormModal({
 
                         {/* Priority */}
                         <div>
-                            <label className="block text-base md:text-lg font-semibold text-zinc-800">
-                                Priority
-                            </label>
+                            <label className="block text-base md:text-lg font-semibold text-zinc-800">Priority</label>
                             <div className="mt-3 relative">
                                 <select
                                     value={priority}
@@ -244,8 +230,7 @@ export default function TaskFormModal({
                                     className={cn(
                                         "h-12 md:h-14 w-full appearance-none rounded-2xl border border-zinc-200 bg-white pl-12 pr-5 text-base text-zinc-800 outline-none",
                                         "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
-                                    )}
-                                >
+                                    )}>
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
                                     <option value="high">High</option>
@@ -261,9 +246,7 @@ export default function TaskFormModal({
                     {/* Row: Start date / Due date */}
                     <div className="mt-6 md:mt-8 grid grid-cols-1 gap-5 md:gap-6 md:grid-cols-2">
                         <div>
-                            <label className="block text-base md:text-lg font-semibold text-zinc-800">
-                                Start date
-                            </label>
+                            <label className="block text-base md:text-lg font-semibold text-zinc-800">Start date</label>
                             <div className="mt-3 relative">
                                 <input
                                     type="date"
@@ -281,9 +264,7 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <label className="block text-base md:text-lg font-semibold text-zinc-800">
-                                Due date
-                            </label>
+                            <label className="block text-base md:text-lg font-semibold text-zinc-800">Due date</label>
                             <div className="mt-3 relative">
                                 <input
                                     type="date"
@@ -313,8 +294,7 @@ export default function TaskFormModal({
                         className={cn(
                             "text-base font-semibold text-zinc-700 hover:text-zinc-900",
                             submitting && "opacity-60 pointer-events-none"
-                        )}
-                    >
+                        )}>
                         Cancel
                     </button>
 
@@ -325,8 +305,7 @@ export default function TaskFormModal({
                         className={cn(
                             "h-11 md:h-12 rounded-2xl px-7 md:px-8 text-base font-semibold text-white transition",
                             canSubmit ? "bg-zinc-900 hover:bg-zinc-800" : "bg-zinc-400"
-                        )}
-                    >
+                        )}>
                         Add task
                     </button>
                 </div>

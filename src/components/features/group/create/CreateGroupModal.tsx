@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/api/api-client";
+import { Button } from "@/components/ui/button";
 
 type GroupType = "independent" | "managed";
 type CreateMode = "single" | "batch";
@@ -103,7 +103,7 @@ export function CreateGroupModal({
         if (createMode === "single") {
             if (!groupName.trim()) return false;
         } else {
-            if (!studioId) return false;
+            if (needStudio && !studioId) return false;
             if (!groupPrefix.trim()) return false;
             if (!groupCount || groupCount < 1) return false;
             if (groupCount > remaining) return false;
@@ -113,17 +113,7 @@ export function CreateGroupModal({
         if (needStudio && !studioId) return false;
 
         return true;
-    }, [
-        limitReached,
-        createMode,
-        groupName,
-        groupPrefix,
-        groupCount,
-        studioId,
-        needStudio,
-        hasOwnerStudio,
-        remaining
-    ]);
+    }, [limitReached, createMode, groupName, groupPrefix, groupCount, studioId, needStudio, hasOwnerStudio, remaining]);
 
     useEffect(() => {
         if (!open) return;
@@ -286,11 +276,11 @@ export function CreateGroupModal({
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
             <div className="relative mx-auto flex min-h-[100vh] items-center justify-center px-4 py-6">
-                <div className="w-full max-w-5xl rounded-[28px] bg-white shadow-[0_20px_80px_rgba(0,0,0,0.35)] flex flex-col max-h-[90vh] overflow-hidden">
+                <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
                     <div className="flex items-start justify-between gap-6 px-8 py-7 sm:px-10">
                         <div className="min-w-0">
-                            <h2 className="text-3xl font-bold tracking-tight text-[#2A2438]">Tạo nhóm mới</h2>
-                            <p className="mt-2 text-sm text-[#6F6B99]">
+                            <h2 className="font-bold text-3xl text-[#2A2438] tracking-tight">Tạo nhóm mới</h2>
+                            <p className="mt-2 text-[#6F6B99] text-sm">
                                 Tạo nhóm học tập mới. Bạn có thể chọn mẫu để bắt đầu nhanh.
                             </p>
                         </div>
@@ -300,46 +290,44 @@ export function CreateGroupModal({
                             onClick={onClose}
                             className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-orange-200 text-[#2A2438] hover:bg-orange-50"
                             aria-label="Close"
-                            disabled={creating}
-                        >
+                            disabled={creating}>
                             <X size={18} />
                         </button>
                     </div>
 
-                    <div className="px-8 sm:px-10 pb-6 overflow-hidden flex-1 flex flex-col min-h-0">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-8 pb-6 sm:px-10">
                         {(optionsError || createError || limitReached) && (
-                            <div className="mb-6 space-y-3 shrink-0">
+                            <div className="mb-6 shrink-0 space-y-3">
                                 {optionsError ? (
-                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600 text-sm">
                                         {optionsError}
                                     </div>
                                 ) : null}
 
                                 {createError ? (
-                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-600 text-sm">
                                         {createError}
                                     </div>
                                 ) : null}
 
                                 {limitReached ? (
-                                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700 text-sm">
                                         Bạn chỉ được tạo tối đa {maxGroups} nhóm.
                                     </div>
                                 ) : null}
                             </div>
                         )}
 
-                        <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr] flex-1 min-h-0">
-                            <div className="space-y-7 overflow-y-auto pr-2 min-h-0">
+                        <div className="grid min-h-0 flex-1 gap-8 md:grid-cols-[1.1fr_0.9fr]">
+                            <div className="min-h-0 space-y-7 overflow-y-auto pr-2">
                                 <div className="grid gap-6 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <div className="text-base font-semibold text-[#2A2438]">Chế độ tạo</div>
-                                        <div className="mt-3 relative">
+                                        <div className="font-semibold text-[#2A2438] text-base">Chế độ tạo</div>
+                                        <div className="relative mt-3">
                                             <select
                                                 value={createMode}
                                                 onChange={(e) => setCreateMode(e.target.value as CreateMode)}
-                                                className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-sm text-[#2A2438] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                                            >
+                                                className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
                                                 <option value="single">Tạo một nhóm</option>
                                                 <option value="batch">Tạo nhiều nhóm cùng lúc</option>
                                             </select>
@@ -359,13 +347,12 @@ export function CreateGroupModal({
                                     </div>
 
                                     <div className="sm:col-span-2">
-                                        <div className="text-base font-semibold text-[#2A2438]">Loại nhóm</div>
-                                        <div className="mt-3 relative">
+                                        <div className="font-semibold text-[#2A2438] text-base">Loại nhóm</div>
+                                        <div className="relative mt-3">
                                             <select
                                                 value={type}
                                                 onChange={(e) => setType(e.target.value as GroupType)}
-                                                className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-sm text-[#2A2438] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                                            >
+                                                className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
                                                 <option value="independent">Nhóm độc lập</option>
                                                 <option value="managed">Nhóm thuộc không gian quản lý</option>
                                             </select>
@@ -386,17 +373,16 @@ export function CreateGroupModal({
 
                                     {type === "managed" ? (
                                         <div className="sm:col-span-2">
-                                            <div className="flex items-center gap-2 text-base font-semibold text-[#2A2438]">
+                                            <div className="flex items-center gap-2 font-semibold text-[#2A2438] text-base">
                                                 Studio bạn làm chủ
                                             </div>
 
-                                            <div className="mt-3 relative">
+                                            <div className="relative mt-3">
                                                 <select
                                                     value={studioId}
                                                     onChange={(e) => setStudioId(e.target.value)}
                                                     disabled={loadingOptions || creating || !hasOwnerStudio}
-                                                    className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-sm text-[#2A2438] outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-100"
-                                                >
+                                                    className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-100">
                                                     {hasOwnerStudio ? null : (
                                                         <option value="">Bạn chưa có studio nào mà bạn làm chủ</option>
                                                     )}
@@ -428,7 +414,7 @@ export function CreateGroupModal({
                                         <input
                                             value={groupName}
                                             onChange={(e) => setGroupName(e.target.value)}
-                                            className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-sm text-[#2A2438] outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                            className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                                             placeholder="Nhập tên nhóm"
                                             disabled={loadingOptions || creating}
                                         />
@@ -439,12 +425,13 @@ export function CreateGroupModal({
                                             <input
                                                 value={groupPrefix}
                                                 onChange={(e) => setGroupPrefix(e.target.value)}
-                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-sm text-[#2A2438] outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                                                 placeholder="Ví dụ: Nhóm, Team, Class"
                                                 disabled={loadingOptions || creating}
                                             />
-                                            <p className="mt-2 text-xs text-[#6F6B99]">
-                                                Các nhóm sẽ được đặt tên: {groupPrefix || "[Tiền tố]"} 1, {groupPrefix || "[Tiền tố]"} 2, ...
+                                            <p className="mt-2 text-[#6F6B99] text-xs">
+                                                Các nhóm sẽ được đặt tên: {groupPrefix || "[Tiền tố]"} 1,{" "}
+                                                {groupPrefix || "[Tiền tố]"} 2, ...
                                             </p>
                                         </Field>
 
@@ -455,11 +442,13 @@ export function CreateGroupModal({
                                                 max={remaining}
                                                 value={groupCount}
                                                 onChange={(e) => handleGroupCountChange(e.target.value)}
-                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-sm text-[#2A2438] outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                                                 placeholder="Nhập số lượng"
                                                 disabled={loadingOptions || creating || remaining === 0}
                                             />
-                                            <p className="mt-2 text-xs text-[#6F6B99]">Tối đa: {remaining} nhóm (còn trống)</p>
+                                            <p className="mt-2 text-[#6F6B99] text-xs">
+                                                Tối đa: {remaining} nhóm (còn trống)
+                                            </p>
                                         </Field>
                                     </>
                                 )}
@@ -468,34 +457,38 @@ export function CreateGroupModal({
                                     <textarea
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        className="min-h-[140px] w-full resize-none rounded-2xl border border-[#E6E6E6] px-5 py-4 text-sm text-[#2A2438] outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                        className="min-h-[140px] w-full resize-none rounded-2xl border border-[#E6E6E6] px-5 py-4 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                                         placeholder="Nhập mô tả nhóm (optional)"
                                         disabled={loadingOptions || creating}
                                     />
                                 </Field>
                             </div>
 
-                            <div className="min-w-0 overflow-y-auto pr-2 min-h-0">
+                            <div className="min-h-0 min-w-0 overflow-y-auto pr-2">
                                 <div className="mb-3">
-                                    <div className="text-base font-semibold text-[#2A2438]">Mẫu tạo sẵn</div>
-                                    <div className="mt-1 text-sm text-[#6F6B99]">(Tùy chọn) Chọn 1 mẫu để tạo cấu trúc nhóm nhanh</div>
+                                    <div className="font-semibold text-[#2A2438] text-base">Mẫu tạo sẵn</div>
+                                    <div className="mt-1 text-[#6F6B99] text-sm">
+                                        (Tùy chọn) Chọn 1 mẫu để tạo cấu trúc nhóm nhanh
+                                    </div>
                                 </div>
 
                                 {loadingOptions ? (
-                                    <div className="rounded-2xl border border-dashed border-[#E6E6E6] bg-[#FAFAFF] p-6 text-sm text-[#6F6B99]">
+                                    <div className="rounded-2xl border border-[#E6E6E6] border-dashed bg-[#FAFAFF] p-6 text-[#6F6B99] text-sm">
                                         Đang tải template...
                                     </div>
                                 ) : null}
 
                                 {!loadingOptions && templates.length === 0 ? (
-                                    <div className="rounded-2xl border border-dashed border-[#E6E6E6] bg-[#FAFAFF] p-6">
+                                    <div className="rounded-2xl border border-[#E6E6E6] border-dashed bg-[#FAFAFF] p-6">
                                         <div className="flex items-start gap-3">
                                             <div className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#6F6B99] shadow-sm">
                                                 <ImageIcon className="h-5 w-5" />
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="text-sm font-semibold text-[#2A2438]">Chưa có template</div>
-                                                <div className="mt-1 text-sm text-[#6F6B99]">
+                                                <div className="font-semibold text-[#2A2438] text-sm">
+                                                    Chưa có template
+                                                </div>
+                                                <div className="mt-1 text-[#6F6B99] text-sm">
                                                     Bạn vẫn có thể tạo nhóm mà không cần chọn template.
                                                 </div>
                                             </div>
@@ -512,12 +505,12 @@ export function CreateGroupModal({
                                                 type="button"
                                                 onClick={() => setTemplateId((prev) => (prev === t.id ? "" : t.id))}
                                                 disabled={creating}
-                                                className={`overflow-hidden rounded-2xl border text-left transition ${selected
-                                                    ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
-                                                    : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
-                                                    }`}
-                                                title={`${t.name}\n\n${t.desc || ""}`}
-                                            >
+                                                className={`overflow-hidden rounded-2xl border text-left transition ${
+                                                    selected
+                                                        ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
+                                                        : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
+                                                }`}
+                                                title={`${t.name}\n\n${t.desc || ""}`}>
                                                 <div className="flex items-center justify-center bg-white py-8">
                                                     <div className="grid h-14 w-14 place-items-center rounded-xl border border-[#E6E6E6] bg-white text-[#6F6B99]">
                                                         <ImageIcon className="h-6 w-6" />
@@ -527,8 +520,10 @@ export function CreateGroupModal({
                                                 <div className="h-px bg-[#E6E6E6]" />
 
                                                 <div className={`px-5 py-4 ${selected ? "bg-[#F8EEDB]" : "bg-white"}`}>
-                                                    <div className="text-sm font-semibold text-[#2A2438] line-clamp-2">{t.name}</div>
-                                                    <div className="mt-2 text-sm leading-6 text-[#6F6B99] line-clamp-3">
+                                                    <div className="line-clamp-2 font-semibold text-[#2A2438] text-sm">
+                                                        {t.name}
+                                                    </div>
+                                                    <div className="mt-2 line-clamp-3 text-[#6F6B99] text-sm leading-6">
                                                         {t.desc || "Không có mô tả."}
                                                     </div>
                                                 </div>
@@ -540,22 +535,20 @@ export function CreateGroupModal({
                         </div>
                     </div>
 
-                    <div className="px-8 sm:px-10 py-5 border-t bg-white sticky bottom-0">
+                    <div className="sticky bottom-0 border-t bg-white px-8 py-5 sm:px-10">
                         <div className="flex items-center justify-end gap-5">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="text-sm font-medium text-[#6F6B99] hover:text-[#2A2438]"
-                                disabled={creating}
-                            >
+                                className="font-medium text-[#6F6B99] text-sm hover:text-[#2A2438]"
+                                disabled={creating}>
                                 Cancel
                             </button>
 
                             <Button
                                 onClick={handleCreate}
                                 disabled={!canCreate || loadingOptions || creating}
-                                className="h-12 rounded-xl bg-orange-500 px-10 text-sm font-semibold hover:bg-orange-600 disabled:bg-gray-300"
-                            >
+                                className="h-12 rounded-xl bg-orange-500 px-10 font-semibold text-sm hover:bg-orange-600 disabled:bg-gray-300">
                                 {creating ? "Đang tạo..." : "Create"}
                             </Button>
                         </div>
@@ -569,7 +562,7 @@ export function CreateGroupModal({
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
     return (
         <div>
-            <div className="text-base font-semibold text-[#2A2438]">
+            <div className="font-semibold text-[#2A2438] text-base">
                 {label} {required ? <span className="text-red-500">*</span> : null}
             </div>
             <div className="mt-3">{children}</div>

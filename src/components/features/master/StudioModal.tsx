@@ -2,9 +2,36 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import type { StudioUI } from "@/api/studios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const STUDIO_NAME_MAX_LENGTH = 30;
+const STUDIO_DESCRIPTION_MAX_LENGTH = 200;
+
+type StudioFormData = {
+    name: string;
+    description: string;
+    type: "personal" | "group";
+};
+
+const studioSchema = z.object({
+    name: z
+        .string()
+        .trim()
+        .min(1, "Tên studio là bắt buộc")
+        .max(STUDIO_NAME_MAX_LENGTH, `Tên studio tối đa ${STUDIO_NAME_MAX_LENGTH} ký tự`),
+    description: z
+        .string()
+        .max(STUDIO_DESCRIPTION_MAX_LENGTH, `Mô tả không được vượt quá ${STUDIO_DESCRIPTION_MAX_LENGTH} ký tự`)
+});
+
+const applyFieldData = <T extends { name: string; description: string }>(
+    data: T,
+    field: "name" | "description",
+    value: string
+) => ({ ...data, [field]: value }) as T;
 
 interface StudioModalProps {
     isOpen: boolean;
@@ -17,10 +44,10 @@ interface StudioModalProps {
 
 export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingStudios = [] }: StudioModalProps) {
     const t = useTranslations("MasterPage");
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<StudioFormData>({
         name: "",
         description: "",
-        type: "group" as "personal" | "group"
+        type: "group"
     });
     const [errors, setErrors] = useState({
         name: "",
@@ -31,7 +58,33 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         description: false
     });
 
-    // Reset form when modal opens/closes or mode changes
+    const getSchemaErrors = (data: { name: string; description: string }) => {
+        const result = studioSchema.safeParse(data);
+        const out = { name: "", description: "" };
+        if (result.success) {
+            return out;
+        }
+        for (const issue of result.error.issues) {
+            const path = issue.path[0];
+            if (path === "name" && !out.name) {
+                out.name = issue.message;
+            }
+            if (path === "description" && !out.description) {
+                out.description = issue.message;
+            }
+        }
+        return out;
+    };
+
+    const getDuplicateNameError = (value: string) => {
+        const normalized = value.toLowerCase().trim();
+        const conflict = existingStudios.some(
+            (s) =>
+                s.name.toLowerCase().trim() === normalized && (mode === "create" || s.id !== studio?.id)
+        );
+        return conflict ? t("modal.duplicateName") || "Tên studio đã tồn tại. Vui lòng chọn tên khác." : "";
+    };
+
     useEffect(() => {
         if (isOpen) {
             if (studio && mode === "edit") {
@@ -52,55 +105,39 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         }
     }, [isOpen, studio, mode]);
 
-    const validateField = (name: string, value: string) => {
-        if (name === "name") {
-            if (!value.trim()) {
-                return t("modal.nameRequired") || "Tên studio là bắt buộc";
-            }
-            if (value.trim().length > 100) {
-                return t("modal.nameTooLong") || "Tên studio không được vượt quá 100 ký tự";
-            }
-            // Check duplicate name (case-insensitive)
-            const isDuplicate = existingStudios.some(
-                (s) =>
-                    s.name.toLowerCase().trim() === value.toLowerCase().trim() &&
-                    (mode === "create" || s.id !== studio?.id)
-            );
-            if (isDuplicate) {
-                return t("modal.duplicateName") || "Tên studio đã tồn tại. Vui lòng chọn tên khác.";
-            }
+    const validateField = (field: "name" | "description", value: string, data: StudioFormData) => {
+        const schemaErrors = getSchemaErrors(applyFieldData(data, field, value));
+        if (field === "name") {
+            return schemaErrors.name || getDuplicateNameError(value);
         }
-        if (name === "description") {
-            if (!value.trim()) {
-                return t("modal.descriptionRequired") || "Mô tả là bắt buộc";
-            }
-            if (value.trim().length > 500) {
-                return t("modal.descriptionTooLong") || "Mô tả không được vượt quá 500 ký tự";
-            }
-        }
-        return "";
+        return schemaErrors.description;
     };
 
     const handleBlur = (field: "name" | "description") => {
-        setTouched({ ...touched, [field]: true });
-        const error = validateField(field, formData[field]);
-        setErrors({ ...errors, [field]: error });
+        setTouched((prev) => ({ ...prev, [field]: true }));
+        const nextData = applyFieldData(formData, field, formData[field]);
+        const error = validateField(field, formData[field], nextData);
+        setErrors((prev) => ({ ...prev, [field]: error }));
     };
 
     const handleChange = (field: "name" | "description", value: string) => {
-        setFormData({ ...formData, [field]: value });
+        const maxLength = field === "name" ? STUDIO_NAME_MAX_LENGTH : STUDIO_DESCRIPTION_MAX_LENGTH;
+        const boundedValue = value.slice(0, maxLength);
+        const nextData = applyFieldData(formData, field, boundedValue);
+        setFormData(nextData);
         if (touched[field]) {
-            const error = validateField(field, value);
-            setErrors({ ...errors, [field]: error });
+            const error = validateField(field, boundedValue, nextData);
+            setErrors((prev) => ({ ...prev, [field]: error }));
         }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate all fields
-        const nameError = validateField("name", formData.name);
-        const descriptionError = validateField("description", formData.description);
+        const currentData = { ...formData };
+        const schemaErrors = getSchemaErrors(currentData);
+        const nameError = schemaErrors.name || getDuplicateNameError(formData.name);
+        const descriptionError = schemaErrors.description;
 
         setErrors({
             name: nameError,
@@ -112,7 +149,6 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
             description: true
         });
 
-        // If no errors, submit
         if (!(nameError || descriptionError)) {
             onSubmit(formData);
         }
@@ -146,8 +182,19 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                             onBlur={() => handleBlur("name")}
                             placeholder={t("modal.namePlaceholder")}
                             className={errors.name && touched.name ? "border-red-500" : ""}
+                            maxLength={STUDIO_NAME_MAX_LENGTH}
                         />
-                        {errors.name && touched.name && <p className="mt-1 text-red-500 text-xs">{errors.name}</p>}
+                        <div className="mt-1 flex items-center justify-between text-xs">
+                            <p
+                                className={`max-w-[70%] overflow-hidden text-ellipsis text-xs ${errors.name && touched.name ? "text-red-500" : "text-transparent"
+                                    }`}
+                                aria-live="assertive">
+                                {errors.name && touched.name ? errors.name : "\u00A0"}
+                            </p>
+                            <p className="text-right text-gray-500 text-xs">
+                                {formData.name.length}/{STUDIO_NAME_MAX_LENGTH}
+                            </p>
+                        </div>
                     </div>
 
                     <div>
@@ -160,15 +207,15 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                             onBlur={() => handleBlur("description")}
                             placeholder={t("modal.descriptionPlaceholder")}
                             rows={3}
-                            className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${
-                                errors.description && touched.description
-                                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                                    : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
-                            }`}
+                            className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${errors.description && touched.description
+                                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                                : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
+                                }`}
+                            maxLength={STUDIO_DESCRIPTION_MAX_LENGTH}
                         />
-                        {errors.description && touched.description && (
-                            <p className="mt-1 text-red-500 text-xs">{errors.description}</p>
-                        )}
+                        <p className="mt-1 text-right text-gray-500 text-xs">
+                            {formData.description.length}/{STUDIO_DESCRIPTION_MAX_LENGTH}
+                        </p>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">

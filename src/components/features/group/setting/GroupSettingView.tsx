@@ -4,7 +4,9 @@ import { Settings, Trash2, UserPlus, Users } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import type { components } from "@/api/types";
+
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import {
@@ -29,11 +31,12 @@ type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
 type GroupDetailResponseApiResponse = components["schemas"]["GroupDetailResponseApiResponse"];
 type GroupMemberListResponseApiResponse = components["schemas"]["GroupMemberListResponseApiResponse"];
 type CreateInviteLinkResponseApiResponse = components["schemas"]["CreateInviteLinkResponseApiResponse"];
-type ObjectApiResponse = components["schemas"]["ObjectApiResponse"];
 
 type ApiMemberPreview = components["schemas"]["MemberPreviewDto"];
 type ApiGroupMemberDto = components["schemas"]["GroupMemberDto"];
 type ApiGroupDetail = components["schemas"]["GroupDetailResponse"];
+type ApiGroupDetailWithPreview = ApiGroupDetail & { membersPreview?: ApiMemberPreview[] };
+type TokenPayload = Record<string, unknown>;
 
 type Member = {
     id: string;
@@ -45,6 +48,14 @@ type Member = {
 
 const roleOptions: Exclude<MemberRole, "Owner">[] = ["Moderator", "Member", "Commenter", "Viewer"];
 const GROUP_UPDATED_EVENT = "group:updated";
+const GROUP_NAME_MAX_LENGTH = 30;
+const GROUP_DESCRIPTION_MAX_LENGTH = 200;
+
+const groupSettingSchema = z.object({
+    groupName: z.string().trim().min(1, "Tên nhóm là bắt buộc").max(GROUP_NAME_MAX_LENGTH, "Tên nhóm tối đa 30 ký tự"),
+    description: z.string().max(GROUP_DESCRIPTION_MAX_LENGTH, "Mô tả nhóm tối đa 200 ký tự")
+});
+
 const isOwner = (role: MemberRole) => role === "Owner";
 
 const toMemberRole = (r?: string | null): MemberRole => {
@@ -98,7 +109,7 @@ const getCurrentUserId = () => {
                 .join("")
         );
 
-        const payload = JSON.parse(json) as Record<string, any>;
+        const payload = JSON.parse(json) as TokenPayload;
         const idFromToken = payload.userId || payload.accountId || payload.id || payload.uid || payload.sub;
         return idFromToken ? String(idFromToken).trim() : "";
     } catch {
@@ -114,8 +125,18 @@ const readText = async (res: Response) => {
     }
 };
 
-const okByJsonStatus = (obj: any) => {
-    const s = String(obj?.status ?? "").toLowerCase();
+const parseJsonSafe = (text: string): unknown | null => {
+    if (!text) return null;
+    try {
+        return JSON.parse(text) as unknown;
+    } catch {
+        return null;
+    }
+};
+
+const okByJsonStatus = (obj: unknown) => {
+    if (!obj || typeof obj !== "object") return true;
+    const s = String((obj as { status?: unknown }).status ?? "").toLowerCase();
     return s === "" || s === "success" || s === "ok" || s === "true";
 };
 
@@ -149,6 +170,7 @@ export function GroupSettingView() {
     const [groupName, setGroupName] = useState("");
     const [description, setDescription] = useState("");
     const [masterStudio, setMasterStudio] = useState("");
+    const [initialSettings, setInitialSettings] = useState({ groupName: "", description: "" });
 
     const [members, setMembers] = useState<Member[]>([]);
     const [myRoleInGroup, setMyRoleInGroup] = useState<MemberRole>("Member");
@@ -187,8 +209,11 @@ export function GroupSettingView() {
         return roleOptions;
     };
 
-    const extractApiMessage = (text: string, json: any) => {
-        const msg = (json?.message ?? "").toString().trim();
+    const extractApiMessage = (text: string, json: unknown) => {
+        const msg =
+            json && typeof json === "object"
+                ? String((json as { message?: unknown }).message ?? "").trim()
+                : "";
         if (msg) return msg;
         const t = (text ?? "").toString().trim();
         return t || "Đã xảy ra lỗi";
@@ -212,10 +237,7 @@ export function GroupSettingView() {
         const text = await readText(res);
         if (!res.ok) throw new Error(text || `Tải members thất bại (${res.status})`);
 
-        let json: any = null;
-        try {
-            json = text ? JSON.parse(text) : null;
-        } catch { }
+        const json = parseJsonSafe(text);
         return (json ?? {}) as GroupMemberListResponseApiResponse;
     };
 
@@ -248,6 +270,7 @@ export function GroupSettingView() {
             setGroupName("");
             setDescription("");
             setMasterStudio("");
+            setInitialSettings({ groupName: "", description: "" });
             setMembers([]);
             setMyRoleInGroup("Member");
             return false;
@@ -259,10 +282,7 @@ export function GroupSettingView() {
         });
 
         const text = await readText(detailRes);
-        let detailJson: any = null;
-        try {
-            detailJson = text ? JSON.parse(text) : null;
-        } catch { }
+        const detailJson = parseJsonSafe(text);
 
         if (!detailRes.ok) {
             setNotFound(true);
@@ -270,6 +290,7 @@ export function GroupSettingView() {
             setGroupName("");
             setDescription("");
             setMasterStudio("");
+            setInitialSettings({ groupName: "", description: "" });
             setMembers([]);
             setMyRoleInGroup("Member");
             return false;
@@ -287,6 +308,7 @@ export function GroupSettingView() {
         setNotFound(false);
         setGroupName(data.groupName ?? "");
         setDescription(data.description ?? "");
+        setInitialSettings({ groupName: data.groupName ?? "", description: data.description ?? "" });
         setMasterStudio(data.studioName ?? "");
 
         const roleFromDetail = toMemberRole(data.userRole);
@@ -303,11 +325,12 @@ export function GroupSettingView() {
         } catch {
             // fallback: dùng membersPreview (nếu backend không cho members)
             const currentUserId = getCurrentUserId();
-            const preview: ApiMemberPreview[] = (data as any)?.membersPreview ?? [];
+            const preview: ApiMemberPreview[] = (data as ApiGroupDetailWithPreview | undefined)?.membersPreview ?? [];
             const mapped: Member[] = (preview || []).map((m, idx) => {
                 const first = (m.firstName ?? "").trim();
                 const last = (m.lastName ?? "").trim();
-                const uid = (m as any)?.id ?? `${id}-${idx}`;
+                const previewMember = m as ApiMemberPreview & { id?: string | number; userId?: string | number };
+                const uid = previewMember.id ?? previewMember.userId ?? `${id}-${idx}`;
                 const isMe = String(uid).trim() === String(currentUserId).trim();
 
                 return {
@@ -327,6 +350,7 @@ export function GroupSettingView() {
         return true;
     };
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: loadGroup is intentionally omitted to prevent refetch loop.
     useEffect(() => {
         let alive = true;
 
@@ -362,6 +386,12 @@ export function GroupSettingView() {
 
         if (isEditing) {
             setGeneralError("");
+            const validation = groupSettingSchema.safeParse({ groupName, description });
+            if (!validation.success) {
+                setGeneralError(validation.error.issues[0]?.message || "Dữ liệu không hợp lệ");
+                return;
+            }
+
             const token = getTokenOrFail();
             if (!token) return;
 
@@ -372,14 +402,15 @@ export function GroupSettingView() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify({ groupId, groupName, description })
+                body: JSON.stringify({
+                    groupId,
+                    groupName: validation.data.groupName,
+                    description: validation.data.description
+                })
             });
 
             const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+            const json = parseJsonSafe(text);
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
                 setGeneralError(extractApiMessage(text, json));
@@ -388,15 +419,29 @@ export function GroupSettingView() {
 
             window.dispatchEvent(
                 new CustomEvent(GROUP_UPDATED_EVENT, {
-                    detail: { id: groupId, name: groupName, description, studioName: masterStudio }
+                    detail: {
+                        id: groupId,
+                        name: validation.data.groupName,
+                        description: validation.data.description,
+                        studioName: masterStudio
+                    }
                 })
             );
+
+            setInitialSettings({ groupName: validation.data.groupName, description: validation.data.description });
 
             setIsEditing(false);
             return;
         }
 
         setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setGroupName(initialSettings.groupName);
+        setDescription(initialSettings.description);
+        setGeneralError("");
+        setIsEditing(false);
     };
 
     const handleDelete = async () => {
@@ -416,10 +461,7 @@ export function GroupSettingView() {
             });
 
             const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+            const json = parseJsonSafe(text);
 
             if (!res.ok || (json && !okByJsonStatus(json))) {
                 setDangerError(extractApiMessage(text, json));
@@ -453,10 +495,7 @@ export function GroupSettingView() {
             });
 
             const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+            const json = parseJsonSafe(text);
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -487,10 +526,7 @@ export function GroupSettingView() {
             });
 
             const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+            const json = parseJsonSafe(text);
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
             setMembersError(extractApiMessage(text, json));
@@ -507,10 +543,7 @@ export function GroupSettingView() {
             });
 
             const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+            const json = parseJsonSafe(text);
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
             setMembersError(extractApiMessage(text, json));
@@ -539,10 +572,7 @@ export function GroupSettingView() {
             });
 
             const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+            const json = parseJsonSafe(text);
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -572,13 +602,11 @@ export function GroupSettingView() {
             });
 
             const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+            const json = parseJsonSafe(text);
 
             if (res.ok && json && okByJsonStatus(json)) {
-                const url = String((json as CreateInviteLinkResponseApiResponse)?.data?.inviteUrl ?? "").trim();
+                const inviteResponse = json as CreateInviteLinkResponseApiResponse;
+                const url = String(inviteResponse?.data?.inviteUrl ?? "").trim();
                 if (url) return url;
                 setMembersError("Thiếu inviteUrl");
                 return null;
@@ -708,47 +736,79 @@ export function GroupSettingView() {
                                     <Settings className="h-4 w-4 text-gray-700" />
                                 </div>
                                 <div>
-                                    <h2 className="text-sm font-bold text-gray-900">Cài đặt chung</h2>
-                                    <p className="mt-0.5 text-xs text-gray-500">Quản lý thông tin cơ bản của nhóm</p>
+                                    <h2 className="font-bold text-gray-900 text-sm">Cài đặt chung</h2>
+                                    <p className="mt-0.5 text-gray-500 text-xs">Quản lý thông tin cơ bản của nhóm</p>
                                 </div>
                             </div>
 
-                            <Button
-                                onClick={handleEditSave}
-                                className="h-10 rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white hover:bg-orange-700"
-                            >
-                                {isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                                {isEditing ? (
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleCancelEdit}
+                                        className="h-10 rounded-xl border-gray-300 px-4 font-semibold text-gray-700 text-sm hover:bg-gray-100">
+                                        Hủy
+                                    </Button>
+                                ) : null}
+                                <Button
+                                    onClick={handleEditSave}
+                                    className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700">
+                                    {isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
+                                </Button>
+                            </div>
                         </div>
 
                         <div className="px-6 py-6">
                             <div className="grid grid-cols-1 gap-5">
                                 <div>
-                                    <label className="text-xs font-semibold text-gray-700">
+                                    <label htmlFor="group-name-input" className="font-semibold text-gray-700 text-xs">
                                         Tên nhóm <span className="text-red-500">*</span>
                                     </label>
                                     <Input
+                                        id="group-name-input"
                                         disabled={!isEditing}
                                         value={groupName}
-                                        onChange={(e) => setGroupName(e.target.value)}
+                                        maxLength={GROUP_NAME_MAX_LENGTH}
+                                        onChange={(e) => {
+                                            setGroupName(e.target.value);
+                                            if (generalError) setGeneralError("");
+                                        }}
                                         className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                     />
+                                    <div className="mt-1 text-right text-gray-500 text-xs">
+                                        {groupName.length}/{GROUP_NAME_MAX_LENGTH}
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-700">Mô tả</label>
+                                <div className="relative">
+                                    <label
+                                        htmlFor="group-description-input"
+                                        className="font-semibold text-gray-700 text-xs">
+                                        Mô tả
+                                    </label>
                                     <Textarea
+                                        id="group-description-input"
                                         disabled={!isEditing}
                                         value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        className="mt-2 min-h-[100px] rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                        maxLength={GROUP_DESCRIPTION_MAX_LENGTH}
+                                        onChange={(e) => {
+                                            setDescription(e.target.value);
+                                            if (generalError) setGeneralError("");
+                                        }}
+                                        className="mt-2 min-h-25 rounded-xl border-gray-200 pb-7 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                     />
+                                    <span className="pointer-events-none absolute right-3 bottom-3 text-gray-500 text-xs">
+                                        {description.length}/{GROUP_DESCRIPTION_MAX_LENGTH}
+                                    </span>
                                 </div>
 
                                 {masterStudio ? (
                                     <div>
-                                        <label className="text-xs font-semibold text-gray-700">Master Studio</label>
+                                        <label htmlFor="master-studio-input" className="font-semibold text-gray-700 text-xs">
+                                            Master Studio
+                                        </label>
                                         <Input
+                                            id="master-studio-input"
                                             value={masterStudio}
                                             readOnly
                                             tabIndex={-1}
@@ -762,7 +822,7 @@ export function GroupSettingView() {
                             </div>
 
                             {generalError ? (
-                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
                                     {generalError}
                                 </div>
                             ) : null}
@@ -776,23 +836,22 @@ export function GroupSettingView() {
                                     <Users className="h-4 w-4 text-gray-700" />
                                 </div>
                                 <div>
-                                    <h2 className="text-sm font-bold text-gray-900">Thành viên</h2>
-                                    <p className="mt-0.5 text-xs text-gray-500">Quản lý thành viên và vai trò</p>
+                                    <h2 className="font-bold text-gray-900 text-sm">Thành viên</h2>
+                                    <p className="mt-0.5 text-gray-500 text-xs">Quản lý thành viên và vai trò</p>
                                 </div>
                             </div>
 
                             <Button
                                 disabled={!canManageMembers}
                                 onClick={() => setInviteOpen(true)}
-                                className="h-10 rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
-                            >
+                                className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700 disabled:opacity-50">
                                 <UserPlus className="mr-2 h-4 w-4" />
                                 Thêm thành viên
                             </Button>
                         </div>
 
                         <div className="px-6 py-6">
-                            <div className="hidden md:grid grid-cols-12 gap-3 rounded-xl border bg-gray-50 px-4 py-3 text-xs font-semibold text-gray-600">
+                            <div className="hidden grid-cols-12 gap-3 rounded-xl border bg-gray-50 px-4 py-3 font-semibold text-gray-600 text-xs md:grid">
                                 <div className="col-span-6">Thành viên</div>
                                 <div className="col-span-3 flex justify-center">Vai trò</div>
                                 <div className="col-span-3 flex justify-center">Thao tác</div>
@@ -807,45 +866,42 @@ export function GroupSettingView() {
                                     return (
                                         <div
                                             key={m.id}
-                                            className="grid grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-gray-50/80 md:grid-cols-12 md:items-center"
-                                        >
+                                            className="grid grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-gray-50/80 md:grid-cols-12 md:items-center">
                                             <div className="md:col-span-6">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-700">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 font-bold text-gray-700 text-sm">
                                                         {m.initials}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <div className="truncate text-sm font-semibold text-gray-900">{m.name}</div>
-                                                        {m.email ? <div className="truncate text-xs text-gray-500">{m.email}</div> : null}
+                                                        <div className="truncate font-semibold text-gray-900 text-sm">
+                                                            {m.name}
+                                                        </div>
+                                                        {m.email ? (
+                                                            <div className="truncate text-gray-500 text-xs">
+                                                                {m.email}
+                                                            </div>
+                                                        ) : null}
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center justify-center gap-3 md:col-span-3">
                                                 {isOwner(m.role) ? (
-                                                    <div className="inline-flex h-10 w-[170px] items-center justify-center rounded-xl border bg-gray-50 px-3 text-sm font-semibold text-gray-800">
+                                                    <div className="inline-flex h-10 w-42.5 items-center justify-center rounded-xl border bg-gray-50 px-3 font-semibold text-gray-800 text-sm">
                                                         Owner
                                                     </div>
                                                 ) : (
                                                     <Select
                                                         value={m.role}
                                                         disabled={disabledAll}
-                                                        onValueChange={(v) => onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)}
-                                                    >
-                                                        <SelectTrigger
-                                                            className="
-                                                                h-10 w-[170px]
-                                                                justify-between
-                                                                rounded-xl border border-gray-200 bg-white
-                                                                px-3 text-sm font-semibold text-gray-900
-                                                                shadow-sm
-                                                                hover:bg-gray-50
-                                                                focus:outline-none focus:ring-2 focus:ring-orange-500
-                                                                data-[state=open]:ring-2 data-[state=open]:ring-orange-500
-                                                                disabled:opacity-50
-                                                            "
-                                                        >
-                                                            <SelectValue placeholder="Chọn role" className="text-left" />
+                                                        onValueChange={(v) =>
+                                                            onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)
+                                                        }>
+                                                        <SelectTrigger className="h-10 w-42.5 justify-between rounded-xl border border-gray-200 bg-white px-3 font-semibold text-gray-900 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 data-[state=open]:ring-2 data-[state=open]:ring-orange-500">
+                                                            <SelectValue
+                                                                placeholder="Chọn role"
+                                                                className="text-left"
+                                                            />
                                                         </SelectTrigger>
 
                                                         <SelectContent
@@ -854,24 +910,12 @@ export function GroupSettingView() {
                                                             align="center"
                                                             sideOffset={8}
                                                             avoidCollisions
-                                                            className="z-[999999] min-w-[220px] rounded-2xl border border-gray-200 bg-white p-1 shadow-xl"
-                                                        >
+                                                            className="z-999999 min-w-55 rounded-2xl border border-gray-200 bg-white p-1 shadow-xl">
                                                             {getRoleOptionsForMember(m.id).map((r) => (
                                                                 <SelectItem
                                                                     key={r}
                                                                     value={r}
-                                                                    className="
-                                                                        relative
-                                                                        rounded-xl px-3 py-2.5
-                                                                        text-sm text-gray-900
-                                                                        cursor-pointer
-                                                                        outline-none
-                                                                        hover:bg-gray-100
-                                                                        focus:bg-gray-100
-                                                                        data-[highlighted]:bg-gray-100
-                                                                        data-[state=checked]:font-bold
-                                                                    "
-                                                                >
+                                                                    className="relative cursor-pointer rounded-xl px-3 py-2.5 text-gray-900 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 data-highlighted:bg-gray-100 data-[state=checked]:font-bold">
                                                                     {r}
                                                                 </SelectItem>
                                                             ))}
@@ -887,8 +931,7 @@ export function GroupSettingView() {
                                                         size="icon"
                                                         disabled={disabledAll}
                                                         className="h-10 w-10 rounded-xl text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:hover:bg-transparent"
-                                                        onClick={() => openRemoveConfirm(m.id)}
-                                                    >
+                                                        onClick={() => openRemoveConfirm(m.id)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 ) : (
@@ -900,14 +943,14 @@ export function GroupSettingView() {
                                 })}
 
                                 {members.length === 0 ? (
-                                    <div className="px-4 py-10 text-center text-sm text-gray-500">
+                                    <div className="px-4 py-10 text-center text-gray-500 text-sm">
                                         Chưa có thành viên để hiển thị.
                                     </div>
                                 ) : null}
                             </div>
 
                             {membersError ? (
-                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
                                     {membersError}
                                 </div>
                             ) : null}
@@ -915,25 +958,26 @@ export function GroupSettingView() {
                     </section>
 
                     <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
-                        <div className="border-b border-red-200 px-6 py-5">
-                            <h2 className="text-sm font-bold text-red-700">Vùng nguy hiểm</h2>
-                            <p className="mt-0.5 text-xs text-red-600">Các thao tác không thể hoàn tác</p>
+                        <div className="border-red-200 border-b px-6 py-5">
+                            <h2 className="font-bold text-red-700 text-sm">Vùng nguy hiểm</h2>
+                            <p className="mt-0.5 text-red-600 text-xs">Các thao tác không thể hoàn tác</p>
                         </div>
 
                         <div className="px-6 py-6">
                             <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                     <div>
-                                        <div className="text-sm font-bold text-red-700">Xóa nhóm</div>
-                                        <div className="mt-1 text-xs text-red-600">Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan.</div>
+                                        <div className="font-bold text-red-700 text-sm">Xóa nhóm</div>
+                                        <div className="mt-1 text-red-600 text-xs">
+                                            Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan.
+                                        </div>
                                     </div>
 
                                     <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                                         <AlertDialogTrigger asChild>
                                             <Button
                                                 disabled={!canDelete}
-                                                className="h-10 rounded-xl bg-red-600 px-5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                                            >
+                                                className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 Xóa nhóm
                                             </Button>
@@ -943,7 +987,8 @@ export function GroupSettingView() {
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Bạn chắc chắn muốn xóa nhóm này?</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Hành động này không thể hoàn tác. Nhóm và toàn bộ dữ liệu sẽ bị xóa vĩnh viễn.
+                                                    Hành động này không thể hoàn tác. Nhóm và toàn bộ dữ liệu sẽ bị xóa
+                                                    vĩnh viễn.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
 
@@ -955,8 +1000,7 @@ export function GroupSettingView() {
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         void handleDelete();
-                                                    }}
-                                                >
+                                                    }}>
                                                     {deleteLoading ? "Đang xóa..." : "Xác nhận xóa"}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
@@ -965,14 +1009,14 @@ export function GroupSettingView() {
                                 </div>
 
                                 {!canDelete ? (
-                                    <div className="mt-4 text-xs text-red-700">
+                                    <div className="mt-4 text-red-700 text-xs">
                                         Chỉ <b>Owner</b> mới có quyền xóa nhóm.
                                     </div>
                                 ) : null}
                             </div>
 
                             {dangerError ? (
-                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
                                     {dangerError}
                                 </div>
                             ) : null}
@@ -1006,15 +1050,16 @@ export function GroupSettingView() {
                 onOpenChange={(v) => {
                     setRemoveConfirmOpen(v);
                     if (!v) setRemoveTarget(null);
-                }}
-            >
+                }}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Xác nhận xóa thành viên</AlertDialogTitle>
                         <AlertDialogDescription>
                             Bạn có chắc chắn muốn xóa{" "}
-                            <span className="font-semibold text-gray-900">{removeTarget?.name || "thành viên này"}</span> khỏi nhóm
-                            không? Hành động này không thể hoàn tác.
+                            <span className="font-semibold text-gray-900">
+                                {removeTarget?.name || "thành viên này"}
+                            </span>{" "}
+                            khỏi nhóm không? Hành động này không thể hoàn tác.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -1026,8 +1071,7 @@ export function GroupSettingView() {
                             onClick={(e) => {
                                 e.preventDefault();
                                 void confirmRemoveMember();
-                            }}
-                        >
+                            }}>
                             {removeBusy ? "Đang xóa..." : "Xóa thành viên"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
