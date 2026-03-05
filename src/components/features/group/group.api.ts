@@ -35,6 +35,9 @@ type AIAskResponseApi =
     | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["application/json"]
     | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/json"]
     | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/plain"];
+type AIAskStreamRequest = NonNullable<
+    paths["/api/ai/ask/stream"]["post"]["requestBody"]
+>["content"]["application/json"];
 
 function getToken() {
     if (typeof window === "undefined") return "";
@@ -306,6 +309,104 @@ function extractRemainingRequests(json: AIAskResponseApi, headers: Headers): num
     return null;
 }
 
+function extractRemainingRequestsFromHeaders(headers: Headers): number | null {
+    const candidates: unknown[] = [
+        headers.get("x-requests-remaining"),
+        headers.get("x-request-remaining"),
+        headers.get("x-ai-requests-remaining")
+    ];
+
+    for (const candidate of candidates) {
+        const n = toOptionalNumber(candidate);
+        if (n != null) return n;
+    }
+
+    return null;
+}
+
+async function extractApiErrorMessage(res: Response): Promise<string> {
+    const text = await res.text().catch(() => "");
+    if (!text) return `Request failed: ${res.status}`;
+
+    try {
+        const parsed = JSON.parse(text) as { message?: unknown };
+        if (typeof parsed.message === "string" && parsed.message.trim()) {
+            return parsed.message;
+        }
+    } catch {
+        // Keep original text when body is not JSON.
+    }
+
+    return text;
+}
+
+function parseSseChunk(data: string): string {
+    const trimmed = data.trim();
+    if (!trimmed || trimmed === "[DONE]") return "";
+
+    try {
+        const parsed = JSON.parse(trimmed) as {
+            type?: string;
+            content?: unknown;
+            message?: unknown;
+        };
+
+        switch (parsed.type) {
+            case "chunk":
+                return typeof parsed.content === "string" ? parsed.content : "";
+
+            case "metadata":
+                // metadata không phải text trả về
+                return "";
+
+            case "done":
+                return "";
+
+            case "error":
+                throw new Error(typeof parsed.message === "string" ? parsed.message : "AI error");
+
+            default:
+                return "";
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        return data;
+    }
+}
+
+type ParsedSseBlock = {
+    chunk: string;
+    done: boolean;
+};
+
+function parseSseBlock(block: string): ParsedSseBlock {
+    if (!block.trim()) return { chunk: "", done: false };
+
+    const dataLines = block
+        .split(/\r?\n/)
+        .filter((line) => line.startsWith("data:"))
+        .map((line) => line.slice(5).trimStart());
+
+    const raw = dataLines.length === 0 ? block : dataLines.join("\n");
+    const trimmed = raw.trim();
+    if (!trimmed) return { chunk: "", done: false };
+    if (trimmed === "[DONE]") return { chunk: "", done: true };
+
+    try {
+        const parsed = JSON.parse(trimmed) as { type?: unknown; message?: unknown; content?: unknown };
+        if (parsed.type === "done") return { chunk: "", done: true };
+        if (parsed.type === "error") {
+            throw new Error(typeof parsed.message === "string" ? parsed.message : "AI error");
+        }
+    } catch (error) {
+        if (error instanceof Error) throw error;
+    }
+
+    return { chunk: parseSseChunk(raw), done: false };
+}
+
 export type AskGroupAiResult = {
     answer: AIAnswerResponse;
     remainingRequests: number | null;
@@ -327,8 +428,7 @@ export async function askGroupAi(payload: AIQuestionRequest): Promise<AskGroupAi
     });
 
     if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `Request failed: ${res.status}`);
+        throw new Error(await extractApiErrorMessage(res));
     }
 
     const json = (await res.json()) as AIAskResponseApi;
@@ -339,5 +439,87 @@ export async function askGroupAi(payload: AIQuestionRequest): Promise<AskGroupAi
     return {
         answer: json.data,
         remainingRequests: extractRemainingRequests(json, res.headers)
+    };
+}
+
+export async function askGroupAiStream(
+    payload: AIAskStreamRequest,
+    options?: {
+        onChunk?: (fullText: string, delta: string) => void;
+    }
+): Promise<AskGroupAiResult> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/ai/ask/stream`, {
+        method: "POST",
+        headers: {
+            Accept: "text/event-stream, application/json",
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        throw new Error(await extractApiErrorMessage(res));
+    }
+
+    const body = res.body;
+    if (!body) {
+        throw new Error("Empty AI response");
+    }
+
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let answer = "";
+    let doneByEvent = false;
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const blocks = buffer.split(/\r?\n\r?\n/);
+        buffer = blocks.pop() || "";
+
+        for (const block of blocks) {
+            const parsed = parseSseBlock(block);
+            if (parsed.chunk) {
+                answer += parsed.chunk;
+                options?.onChunk?.(answer, parsed.chunk);
+            }
+            if (parsed.done) {
+                doneByEvent = true;
+                break;
+            }
+        }
+
+        if (doneByEvent) {
+            break;
+        }
+    }
+
+    buffer += decoder.decode();
+    if (buffer.trim()) {
+        const parsed = parseSseBlock(buffer);
+        if (parsed.chunk) {
+            answer += parsed.chunk;
+            options?.onChunk?.(answer, parsed.chunk);
+        }
+    }
+
+    const finalAnswer = answer.trim();
+    if (!finalAnswer) {
+        throw new Error("Empty AI response");
+    }
+
+    return {
+        answer: {
+            answer: finalAnswer
+        },
+        remainingRequests: extractRemainingRequestsFromHeaders(res.headers)
     };
 }
