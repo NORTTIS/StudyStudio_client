@@ -7,6 +7,7 @@ import {
     LayoutGrid,
     List,
     MessageSquare,
+    Sparkles,
     Settings,
     Trash2,
     UserPlus,
