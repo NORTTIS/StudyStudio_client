@@ -771,30 +771,33 @@
         "deleteDocument": "Xóa tài liệu"
     },
     "GroupAiQaPage": {
+        "usedToday": "Lượt hỏi đã dùng hôm nay",
         "remainingRequests": "Lượt hỏi còn lại",
+        "dailyLimit": "Giới hạn mỗi ngày",
         "unknown": "Không rõ",
         "startConversation": "Bắt đầu cuộc trò chuyện",
         "description": "Hỏi tôi bất cứ điều gì về công việc, tài liệu và tiến độ của nhóm đã chọn.",
         "inputPlaceholder": "Nhập câu hỏi cho AI...",
         "cannotDetectGroupId": "Không xác định được groupId từ URL",
+        "aiThinking": "AI đang trả lời...",
         "emptyAiAnswer": "AI chưa trả về nội dung trả lời. Bạn thử lại với câu hỏi chi tiết hơn nhé.",
         "aiResponseError": "Không thể nhận phản hồi từ AI",
         "quickActions": {
             "summary": {
                 "label": "Tóm tắt tiến độ dự án",
-                "prompt": "Hãy tóm tắt tiến độ hiện tại của nhóm theo trạng thái công việc và các tài liệu liên quan."
+                "prompt": "Hãy tóm tắt tiến độ hiện tại của dự án dựa trên các task, hoạt động và tài liệu trong nhóm.\n\nPhân tích:\n- tổng số task\n- số task đã hoàn thành\n- task đang thực hiện\n- task chưa bắt đầu\n\nSau đó cung cấp:\n1. Tổng quan tiến độ dự án\n2. Các milestone đã đạt được\n3. Công việc đang thực hiện\n4. Công việc còn lại\n5. Insight của AI về tình trạng dự án"
             },
             "risk": {
                 "label": "Phân tích rủi ro",
-                "prompt": "Phân tích các rủi ro chính của dự án hiện tại và đề xuất hành động giảm thiểu."
+                "prompt": "Hãy phân tích các rủi ro tiềm ẩn của dự án dựa trên task, deadline và tiến độ hiện tại.\n\nXác định:\n- task có nguy cơ trễ deadline\n- task chưa có tiến triển\n- thành viên bị quá tải\n- các vấn đề có thể ảnh hưởng tiến độ\n\nTrả về kết quả gồm:\n1. Tổng quan mức độ rủi ro dự án\n2. Các rủi ro nghiêm trọng\n3. Các rủi ro cần theo dõi\n4. Các task có nguy cơ trễ deadline\n5. Đề xuất giải pháp giảm rủi ro"
             },
             "report": {
                 "label": "Báo cáo tiến độ",
-                "prompt": "Tạo báo cáo tiến độ ngắn gọn cho nhóm gồm việc đã xong, đang làm và việc bị chậm."
+                "prompt": "Tạo báo cáo tiến độ dự án dựa trên dữ liệu task và hoạt động của nhóm.\n\nBáo cáo cần gồm:\n\n1. Executive summary\n2. Trạng thái hiện tại của dự án\n3. Các milestone đã hoàn thành\n4. Công việc đang thực hiện\n5. Đóng góp của các thành viên\n6. Các công việc tiếp theo\n7. Nhận xét tổng quan của AI"
             },
             "deadline": {
                 "label": "Review deadline sắp tới",
-                "prompt": "Liệt kê các deadline sắp tới và cảnh báo các việc có nguy cơ trễ hạn."
+                "prompt": "Hãy review các deadline sắp tới của dự án.\n\nPhân tích:\n- task có deadline trong thời gian gần\n- task chưa hoàn thành nhưng gần deadline\n- task có nguy cơ trễ\n\nTrả về:\n1. Danh sách deadline sắp tới\n2. Các task cần ưu tiên\n3. Các task có nguy cơ trễ deadline\n4. Đề xuất hành động cho nhóm"
             }
         }
     },
