@@ -877,5 +877,135 @@
             "createLinkFailedEmpty": "Create link failed: no invite link was returned. Please try again.",
             "createLinkFailed": "Create link failed: unable to create invite link. Please try again."
         }
+    },
+    "AdminSubscriptions": {
+        "title": "Subscription Plans Management",
+        "subtitle": "Manage subscription tiers and their limits",
+        "totalSubscribers": "Total Subscribers",
+        "freeUsers": "Free Users",
+        "premiumUsers": "Premium Users",
+        "conversionRate": "Conversion Rate",
+        "tabs": {
+            "plans": "Subscription Plans",
+            "billing": "Billing History",
+            "revenue": "Revenue Stats",
+            "payments": "Payment Methods"
+        }
+    },
+    "AdminNews": {
+        "title": "News & Announcements Management",
+        "subtitle": "Create and manage news and system announcements",
+        "createButton": "Create News",
+        "searchPlaceholder": "Search news...",
+        "totalNews": "Total News",
+        "published": "Published",
+        "draft": "Draft",
+        "archived": "Archived",
+        "filters": {
+            "allTypes": "All Types",
+            "system": "System",
+            "update": "Update",
+            "maintenance": "Maintenance",
+            "announcement": "Announcement",
+            "allStatus": "All Status",
+            "published": "Published",
+            "draft": "Draft",
+            "archived": "Archived"
+        },
+        "table": {
+            "title": "Title",
+            "type": "Type",
+            "priority": "Priority",
+            "status": "Status",
+            "author": "Author",
+            "date": "Created",
+            "actions": "Actions",
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "noNews": "No news found",
+        "createModal": {
+            "title": "Create New News",
+            "subtitle": "Add new news or announcement to the system",
+            "titleLabel": "Title",
+            "titlePlaceholder": "Enter news title...",
+            "contentLabel": "Content",
+            "contentPlaceholder": "Enter detailed content...",
+            "typeLabel": "News Type",
+            "priorityLabel": "Priority Level",
+            "statusLabel": "Status",
+            "cancel": "Cancel",
+            "create": "Create News",
+            "creating": "Creating..."
+        },
+        "editModal": {
+            "title": "Edit News",
+            "subtitle": "Update news information",
+            "titleLabel": "Title",
+            "titlePlaceholder": "Enter news title...",
+            "contentLabel": "Content",
+            "contentPlaceholder": "Enter detailed content...",
+            "typeLabel": "News Type",
+            "priorityLabel": "Priority Level",
+            "statusLabel": "Status",
+            "cancel": "Cancel",
+            "update": "Update",
+            "updating": "Updating..."
+        },
+        "deleteModal": {
+            "title": "Delete News",
+            "message": "Are you sure you want to delete the news",
+            "warning": "Warning: This action cannot be undone. The news will be permanently deleted from the system.",
+            "cancel": "Cancel",
+            "delete": "Delete News",
+            "deleting": "Deleting..."
+        }
+    },
+    "AdminReports": {
+        "title": "Reports Management",
+        "subtitle": "View and manage user reports and feedback",
+        "searchPlaceholder": "Search reports...",
+        "totalReports": "Total Reports",
+        "open": "Open",
+        "inProgress": "In Progress",
+        "resolved": "Resolved",
+        "filters": {
+            "allTypes": "All Types",
+            "bug": "Bug",
+            "feedback": "Feedback",
+            "support": "Support",
+            "other": "Other",
+            "allStatus": "All Status",
+            "open": "Open",
+            "inProgress": "In Progress",
+            "resolved": "Resolved",
+            "closed": "Closed"
+        },
+        "table": {
+            "title": "Title",
+            "type": "Type",
+            "user": "User",
+            "priority": "Priority",
+            "status": "Status",
+            "date": "Date",
+            "actions": "Actions",
+            "viewDetails": "View Details"
+        },
+        "noReports": "No reports found",
+        "modal": {
+            "userInfo": "User Information",
+            "name": "Name",
+            "email": "Email",
+            "created": "Created",
+            "lastUpdated": "Last Updated",
+            "description": "Description",
+            "updateStatus": "Update Status",
+            "updatePriority": "Update Priority",
+            "addNote": "Add Note / Comment",
+            "notePlaceholder": "Add internal notes or comments about this report...",
+            "cancel": "Cancel",
+            "update": "Update Report",
+            "updating": "Updating..."
+        }
     }
 }
