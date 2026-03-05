@@ -1,41 +1,38 @@
 "use client";
 
-import * as React from "react";
-import { Plus, MoreHorizontal, Pencil, Trash2, X, Clock3, GripVertical } from "lucide-react";
-import { useParams } from "next/navigation";
-import { Container } from "@/components/common";
-import TaskFormModal, { type TaskFormValues, type TaskFormOption } from "@/components/features/group/task/TaskForm";
-import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
-
 import {
-    DndContext,
-    type DragEndEvent,
-    type DragStartEvent,
-    type DragOverEvent,
-    type DragCancelEvent,
-    PointerSensor,
-    KeyboardSensor,
-    DragOverlay,
-    closestCorners,
-    closestCenter,
-    useSensor,
-    useSensors,
-    useDroppable,
     type CollisionDetection,
+    closestCenter,
+    closestCorners,
+    DndContext,
+    type DragCancelEvent,
+    type DragEndEvent,
+    type DragOverEvent,
+    DragOverlay,
+    type DragStartEvent,
     type DroppableContainer,
+    KeyboardSensor,
+    PointerSensor,
+    useDroppable,
+    useSensor,
+    useSensors
 } from "@dnd-kit/core";
-
 import {
-    SortableContext,
-    useSortable,
     arrayMove,
-    verticalListSortingStrategy,
     horizontalListSortingStrategy,
+    SortableContext,
     sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy
 } from "@dnd-kit/sortable";
-
 import { CSS } from "@dnd-kit/utilities";
+import { Clock3, GripVertical, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
+import { useParams } from "next/navigation";
+import * as React from "react";
 import { createPortal } from "react-dom";
+import { Container } from "@/components/common";
+import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
+import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
 
 type ColumnId = string;
 
@@ -123,9 +120,7 @@ function isUuidLike(v: string) {
 
 function detectPositionBase(cols: Column[]) {
     if (!cols.length) return 0;
-    const positions = cols
-        .map((c) => (Number.isFinite(c.position) ? c.position : 0))
-        .filter((x) => Number.isFinite(x));
+    const positions = cols.map((c) => (Number.isFinite(c.position) ? c.position : 0)).filter((x) => Number.isFinite(x));
     const min = positions.length ? Math.min(...positions) : 0;
     return min >= 1 ? 1 : 0;
 }
@@ -230,9 +225,9 @@ async function apiGetGroupDetail(groupId: string) {
         credentials: "include",
         headers: {
             Accept: "text/plain, application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
-        cache: "no-store",
+        cache: "no-store"
     });
 }
 
@@ -247,18 +242,23 @@ async function apiGetGroupMembers(groupId: string) {
         credentials: "include",
         headers: {
             Accept: "text/plain, application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
-        cache: "no-store",
+        cache: "no-store"
     });
 }
 
-async function apiReorderGroupTaskStatus(args: { groupId: string; statusId: string; prevStatusId: string | null; nextStatusId: string | null }) {
+async function apiReorderGroupTaskStatus(args: {
+    groupId: string;
+    statusId: string;
+    prevStatusId: string | null;
+    nextStatusId: string | null;
+}) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
 
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
 
     const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}/reorder`;
 
@@ -268,26 +268,33 @@ async function apiReorderGroupTaskStatus(args: { groupId: string; statusId: stri
         headers: {
             Accept: "text/plain, application/json",
             "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify({
             statusId: args.statusId,
             prevStatusId: args.prevStatusId,
-            nextStatusId: args.nextStatusId,
-        }),
+            nextStatusId: args.nextStatusId
+        })
     });
 
     return true;
 }
 
-async function apiReorderTask(args: { groupId: string; taskId: string; targetStatusId: string; prevTaskId: string | null; nextTaskId: string | null }) {
+async function apiReorderTask(args: {
+    groupId: string;
+    taskId: string;
+    targetStatusId: string;
+    prevTaskId: string | null;
+    nextTaskId: string | null;
+}) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
 
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (UUID).");
-    if (!args.taskId || !isUuidLike(args.taskId)) throw new Error("taskId không hợp lệ (UUID).");
-    if (!args.targetStatusId || !isUuidLike(args.targetStatusId)) throw new Error("targetStatusId không hợp lệ (UUID).");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (UUID).");
+    if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("taskId không hợp lệ (UUID).");
+    if (!(args.targetStatusId && isUuidLike(args.targetStatusId)))
+        throw new Error("targetStatusId không hợp lệ (UUID).");
 
     const url = `${apiBase}/Task/${encodeURIComponent(args.groupId)}/reorder`;
 
@@ -297,21 +304,21 @@ async function apiReorderTask(args: { groupId: string; taskId: string; targetSta
         headers: {
             Accept: "text/plain, application/json",
             "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify({
             taskId: args.taskId,
             targetStatusId: args.targetStatusId,
             prevTaskId: args.prevTaskId,
-            nextTaskId: args.nextTaskId,
-        }),
+            nextTaskId: args.nextTaskId
+        })
     });
 
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
     const okJson = !json || okByJsonStatus(json);
 
-    if (!res.ok || !okJson) throw new Error(extractApiMessage(raw, json));
+    if (!(res.ok && okJson)) throw new Error(extractApiMessage(raw, json));
     return true;
 }
 
@@ -319,12 +326,12 @@ async function apiCreateGroupTaskStatus(args: { groupId: string; statusName: str
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
 
     const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}`;
     const payload = {
         statusName: String(args.statusName ?? "").trim(),
-        position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0,
+        position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0
     };
 
     if (!payload.statusName) throw new Error("Vui lòng nhập tên trạng thái.");
@@ -335,9 +342,9 @@ async function apiCreateGroupTaskStatus(args: { groupId: string; statusName: str
         headers: {
             Accept: "text/plain, application/json",
             "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
     });
 
     return (res ?? null) as ApiResponse<GroupTaskStatusData> | null;
@@ -379,15 +386,16 @@ async function apiCreateTask(args: {
     const accessToken = getAccessTokenOrNull();
 
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
-    if (!args.groupStatusId || !isUuidLike(args.groupStatusId)) throw new Error("groupStatusId không hợp lệ (không phải UUID).");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!(args.groupStatusId && isUuidLike(args.groupStatusId)))
+        throw new Error("groupStatusId không hợp lệ (không phải UUID).");
 
     const url = `${apiBase}/Task`;
 
     const payload: any = {
         groupId: args.groupId,
         groupStatusId: args.groupStatusId,
-        taskName: String(args.taskName ?? "").trim(),
+        taskName: String(args.taskName ?? "").trim()
     };
 
     if (args.assigneeId && isUuidLike(args.assigneeId)) payload.assignees = args.assigneeId;
@@ -404,9 +412,9 @@ async function apiCreateTask(args: {
         headers: {
             Accept: "text/plain, application/json",
             "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
     });
 }
 
@@ -415,7 +423,7 @@ async function apiDeleteTask(args: { taskId: string }) {
     const token = getAccessTokenOrNull();
 
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!args.taskId || !isUuidLike(args.taskId)) throw new Error("taskId không hợp lệ (không phải UUID).");
+    if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("taskId không hợp lệ (không phải UUID).");
 
     const url = `${apiBase}/Task/delete/${encodeURIComponent(args.taskId)}?taskId=${encodeURIComponent(args.taskId)}&id=${encodeURIComponent(
         args.taskId
@@ -427,20 +435,25 @@ async function apiDeleteTask(args: { taskId: string }) {
         headers: {
             Accept: "text/plain, application/json",
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        body: JSON.stringify({ taskId: args.taskId, id: args.taskId }),
+        body: JSON.stringify({ taskId: args.taskId, id: args.taskId })
     });
 
     return true;
 }
 
-async function apiRenameGroupTaskStatus(args: { groupId: string; statusId: string; statusName: string; position: number }) {
+async function apiRenameGroupTaskStatus(args: {
+    groupId: string;
+    statusId: string;
+    statusName: string;
+    position: number;
+}) {
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
-    if (!args.statusId || !isUuidLike(args.statusId)) throw new Error("statusId không hợp lệ (không phải UUID).");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!(args.statusId && isUuidLike(args.statusId))) throw new Error("statusId không hợp lệ (không phải UUID).");
 
     const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.statusId)}`;
 
@@ -450,12 +463,12 @@ async function apiRenameGroupTaskStatus(args: { groupId: string; statusId: strin
         headers: {
             Accept: "text/plain, application/json",
             "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
             position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0,
-            statusName: String(args.statusName ?? "").trim(),
-        }),
+            statusName: String(args.statusName ?? "").trim()
+        })
     });
 
     return true;
@@ -465,8 +478,8 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
-    if (!args.statusId || !isUuidLike(args.statusId)) throw new Error("statusId không hợp lệ (không phải UUID).");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
+    if (!(args.statusId && isUuidLike(args.statusId))) throw new Error("statusId không hợp lệ (không phải UUID).");
 
     const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`;
 
@@ -475,8 +488,8 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
         credentials: "include",
         headers: {
             Accept: "text/plain, application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
     });
 
     return true;
@@ -500,7 +513,12 @@ function findTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: st
     return null;
 }
 
-function applyTaskDrop(args: { board: Record<ColumnId, Task[]>; columns: Column[]; activeTaskId: string; overRaw: string }) {
+function applyTaskDrop(args: {
+    board: Record<ColumnId, Task[]>;
+    columns: Column[];
+    activeTaskId: string;
+    overRaw: string;
+}) {
     const { board, columns, activeTaskId, overRaw } = args;
 
     const overIsEnd = overRaw.startsWith(END_PREFIX);
@@ -563,9 +581,8 @@ function Pill({ children }: { children: React.ReactNode }) {
             className={cn(
                 "inline-flex items-center rounded-full px-2 py-0.5",
                 "border border-zinc-200 bg-white",
-                "text-[10.5px] font-semibold text-zinc-700"
-            )}
-        >
+                "font-semibold text-[10.5px] text-zinc-700"
+            )}>
             {children}
         </span>
     );
@@ -575,15 +592,16 @@ function DuePill({ due, overdue }: { due: string; overdue: boolean }) {
     return (
         <div
             className={cn(
-                "mr-auto inline-flex flex-col items-start gap-1 px-3 py-2 rounded-xl border",
+                "mr-auto inline-flex flex-col items-start gap-1 rounded-xl border px-3 py-2",
                 overdue ? "border-rose-200 bg-rose-50 text-rose-700" : "border-zinc-200 bg-zinc-50 text-zinc-700"
-            )}
-        >
+            )}>
             <div className="flex items-center gap-2">
                 <Clock3 className="h-4 w-4 shrink-0" />
-                <span className="text-xs font-semibold">{due}</span>
+                <span className="font-semibold text-xs">{due}</span>
             </div>
-            {overdue && <span className="rounded-md bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">Quá hạn</span>}
+            {overdue && (
+                <span className="rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">Quá hạn</span>
+            )}
         </div>
     );
 }
@@ -598,7 +616,15 @@ type ConfirmModalProps = {
     onCancel: () => void;
 };
 
-function ConfirmModal({ open, title, description, confirmLabel = "Xác nhận", cancelLabel = "Hủy", onConfirm, onCancel }: ConfirmModalProps) {
+function ConfirmModal({
+    open,
+    title,
+    description,
+    confirmLabel = "Xác nhận",
+    cancelLabel = "Hủy",
+    onConfirm,
+    onCancel
+}: ConfirmModalProps) {
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
 
@@ -611,7 +637,7 @@ function ConfirmModal({ open, title, description, confirmLabel = "Xác nhận", 
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [open, onCancel]);
 
-    if (!open || !mounted) return null;
+    if (!(open && mounted)) return null;
 
     return createPortal(
         <div
@@ -619,24 +645,23 @@ function ConfirmModal({ open, title, description, confirmLabel = "Xác nhận", 
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
-            }}
-        >
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onPointerDown={(e) => e.stopPropagation()}>
-                <h2 className="text-base font-bold text-zinc-900">{title}</h2>
+            }}>
+            <div
+                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+                onPointerDown={(e) => e.stopPropagation()}>
+                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition"
-                    >
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-100">
                         {cancelLabel}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700 transition"
-                    >
+                        className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-orange-700">
                         {confirmLabel}
                     </button>
                 </div>
@@ -650,7 +675,7 @@ function PortalDropdown({
     open,
     onClose,
     anchorRef,
-    children,
+    children
 }: {
     open: boolean;
     onClose: () => void;
@@ -711,22 +736,31 @@ function PortalDropdown({
         };
     }, [open, onClose, anchorRef]);
 
-    if (!open || !mounted) return null;
+    if (!(open && mounted)) return null;
 
     return createPortal(
         <div
             ref={menuRef}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
-        >
+            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
             {children}
         </div>,
         document.body
     );
 }
 
-function MenuItem({ icon, label, danger, onClick }: { icon: React.ReactNode; label: string; danger?: boolean; onClick: () => void }) {
+function MenuItem({
+    icon,
+    label,
+    danger,
+    onClick
+}: {
+    icon: React.ReactNode;
+    label: string;
+    danger?: boolean;
+    onClick: () => void;
+}) {
     return (
         <button
             type="button"
@@ -734,8 +768,7 @@ function MenuItem({ icon, label, danger, onClick }: { icon: React.ReactNode; lab
             className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
                 danger ? "text-orange-700 hover:bg-orange-50" : "text-zinc-700 hover:bg-zinc-100"
-            )}
-        >
+            )}>
             <span className="grid h-5 w-5 place-items-center">{icon}</span>
             <span className="font-medium">{label}</span>
         </button>
@@ -774,18 +807,18 @@ function TaskCard({
     onStartEdit,
     onCancelEdit,
     onCommitEdit,
-    onDelete,
+    onDelete
 }: TaskCardProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: task.id,
-        data: { type: "task", columnId },
+        data: { type: "task", columnId }
     });
 
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.35 : 1,
-        touchAction: "none",
+        touchAction: "none"
     };
 
     const [openMenu, setOpenMenu] = React.useState(false);
@@ -841,11 +874,10 @@ function TaskCard({
             className={cn(
                 "group relative w-full border bg-white p-3",
                 "rounded-xl border-zinc-200",
-                "hover:bg-zinc-50 hover:border-zinc-300 transition-colors",
+                "transition-colors hover:border-zinc-300 hover:bg-zinc-50",
                 "focus-within:ring-2 focus-within:ring-indigo-200/60",
-                "cursor-grab active:cursor-grabbing select-none"
-            )}
-        >
+                "cursor-grab select-none active:cursor-grabbing"
+            )}>
             <div className="flex items-start gap-2">
                 <div className="pt-1">
                     <div className={cn("h-2 w-2 rounded-full", dotClass(task.statusDot))} />
@@ -853,9 +885,12 @@ function TaskCard({
 
                 <div className="min-w-0 flex-1 overflow-hidden">
                     {!isEditing ? (
-                        <p className="line-clamp-3 text-sm font-semibold text-zinc-900">{task.title}</p>
+                        <p className="line-clamp-3 font-semibold text-sm text-zinc-900">{task.title}</p>
                     ) : (
-                        <div className="space-y-2" onPointerDownCapture={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                        <div
+                            className="space-y-2"
+                            onPointerDownCapture={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}>
                             <textarea
                                 ref={taRef}
                                 value={draftTitle}
@@ -883,7 +918,7 @@ function TaskCard({
                                 className={cn(
                                     "w-full resize-none border bg-white px-3 py-2",
                                     "rounded-lg border-zinc-200",
-                                    "text-sm font-semibold text-zinc-900 outline-none",
+                                    "font-semibold text-sm text-zinc-900 outline-none",
                                     "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
                                     "select-text"
                                 )}
@@ -898,8 +933,7 @@ function TaskCard({
                                         e.stopPropagation();
                                         safeCommit();
                                     }}
-                                    className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                                >
+                                    className="rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-sm text-white hover:bg-indigo-700">
                                     Lưu
                                 </button>
 
@@ -912,12 +946,13 @@ function TaskCard({
                                         onCancelEdit();
                                     }}
                                     className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label="Hủy"
-                                >
+                                    aria-label="Hủy">
                                     <X className="h-4 w-4" />
                                 </button>
 
-                                <span className="text-[11px] text-zinc-500">Enter để lưu • Shift+Enter xuống dòng • Esc để huỷ</span>
+                                <span className="text-[11px] text-zinc-500">
+                                    Enter để lưu • Shift+Enter xuống dòng • Esc để huỷ
+                                </span>
                             </div>
                         </div>
                     )}
@@ -929,7 +964,10 @@ function TaskCard({
                     ) : null}
                 </div>
 
-                <div className="relative" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+                <div
+                    className="relative"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}>
                     <button
                         ref={btnRef}
                         type="button"
@@ -942,9 +980,8 @@ function TaskCard({
                             e.preventDefault();
                             e.stopPropagation();
                         }}
-                        className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 cursor-pointer"
-                        aria-label="Menu"
-                    >
+                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
+                        aria-label="Menu">
                         <MoreHorizontal className="h-4 w-4" />
                     </button>
 
@@ -975,11 +1012,11 @@ function TaskCard({
 
 function GhostTaskCard({ task }: { task: Task }) {
     return (
-        <div className={cn("rounded-xl border border-dashed border-indigo-300 bg-indigo-50/60 p-3")}>
+        <div className={cn("rounded-xl border border-indigo-300 border-dashed bg-indigo-50/60 p-3")}>
             <div className="flex items-start gap-2">
                 <div className={cn("mt-1 h-2 w-2 rounded-full", dotClass(task.statusDot))} />
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-3 text-sm font-semibold text-zinc-800">{task.title}</p>
+                    <p className="line-clamp-3 font-semibold text-sm text-zinc-800">{task.title}</p>
                     <div className="mt-2 flex flex-wrap gap-2" />
                     {task.due ? <DuePill due={task.due} overdue={false} /> : null}
                 </div>
@@ -999,7 +1036,13 @@ function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<s
     });
 }
 
-function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; onSubmit: (title: string) => Promise<void> }) {
+function AddColumnInline({
+    isSubmitting,
+    onSubmit
+}: {
+    isSubmitting: boolean;
+    onSubmit: (title: string) => Promise<void>;
+}) {
     const [open, setOpen] = React.useState(false);
     const [title, setTitle] = React.useState("");
     const [error, setError] = React.useState<string | null>(null);
@@ -1053,10 +1096,9 @@ function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; on
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100",
+                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left font-semibold text-sm text-zinc-900 shadow-sm hover:bg-zinc-100",
                     "transition"
-                )}
-            >
+                )}>
                 + Tạo trạng thái
             </button>
         );
@@ -1078,7 +1120,7 @@ function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; on
                 )}
             />
 
-            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
+            {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
 
             <div className="mt-3 flex items-center gap-2">
                 <button
@@ -1086,11 +1128,10 @@ function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; on
                     onClick={() => void submit()}
                     disabled={isSubmitting}
                     className={cn(
-                        "rounded-xl px-3 py-2 text-sm font-semibold text-white",
-                        "bg-indigo-600 hover:bg-indigo-700 transition",
-                        isSubmitting && "opacity-60 pointer-events-none"
-                    )}
-                >
+                        "rounded-xl px-3 py-2 font-semibold text-sm text-white",
+                        "bg-indigo-600 transition hover:bg-indigo-700",
+                        isSubmitting && "pointer-events-none opacity-60"
+                    )}>
                     Thêm trạng thái
                 </button>
 
@@ -1100,11 +1141,10 @@ function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; on
                     disabled={isSubmitting}
                     className={cn(
                         "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
-                        "hover:bg-zinc-100 transition",
-                        isSubmitting && "opacity-60 pointer-events-none"
+                        "transition hover:bg-zinc-100",
+                        isSubmitting && "pointer-events-none opacity-60"
                     )}
-                    aria-label="Hủy"
-                >
+                    aria-label="Hủy">
                     ✕
                 </button>
             </div>
@@ -1119,12 +1159,11 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold",
+                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 font-semibold text-sm",
                 "border-zinc-200/70 bg-white text-zinc-900",
-                "hover:bg-zinc-50 hover:shadow-sm transition",
-                disabled && "opacity-60 pointer-events-none"
-            )}
-        >
+                "transition hover:bg-zinc-50 hover:shadow-sm",
+                disabled && "pointer-events-none opacity-60"
+            )}>
             <Plus className="h-4 w-4" />
             Thêm công việc
         </button>
@@ -1154,7 +1193,7 @@ function ColumnView({
     columnError,
     onColumnDraftChange,
     onColumnCommit,
-    onColumnCancel,
+    onColumnCancel
 }: {
     col: Column;
     tasks: Task[];
@@ -1183,13 +1222,13 @@ function ColumnView({
     const dropId = `${DROP_PREFIX}${col.id}`;
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
         id: dropId,
-        data: { type: "column-drop", columnId: col.id },
+        data: { type: "column-drop", columnId: col.id }
     });
 
     const endDropId = `${END_PREFIX}${col.id}`;
     const { setNodeRef: setEndRef, isOver: isOverEnd } = useDroppable({
         id: endDropId,
-        data: { type: "column-end", columnId: col.id },
+        data: { type: "column-end", columnId: col.id }
     });
 
     const shouldShowGhost = !!ghost && ghost.toCol === col.id;
@@ -1198,7 +1237,7 @@ function ColumnView({
 
     const rendered = React.useMemo<RenderItem[]>(() => {
         const base: RenderItem[] = tasks.map((t) => ({ kind: "task", task: t }));
-        if (!shouldShowGhost || !ghost) return base;
+        if (!(shouldShowGhost && ghost)) return base;
         const idx = Math.max(0, Math.min(ghost.index, base.length));
         const next = [...base];
         next.splice(idx, 0, { kind: "ghost", key: `ghost_${ghost.task.id}` });
@@ -1214,17 +1253,20 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div className={cn("rounded-2xl border border-zinc-200/80 bg-white shadow-sm", "hover:shadow-md transition-shadow")}>
+        <div
+            className={cn(
+                "rounded-2xl border border-zinc-200/80 bg-white shadow-sm",
+                "transition-shadow hover:shadow-md"
+            )}>
             <div
                 className={cn(
                     "sticky top-0 z-10 rounded-t-2xl",
-                    "border-b border-zinc-200/70",
+                    "border-zinc-200/70 border-b",
                     "bg-white/80 backdrop-blur-xl",
                     "px-4 py-3"
-                )}
-            >
+                )}>
                 <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex flex-1 items-center gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
                         <div
                             ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
                             {...(headerDragProps?.attributes ?? {})}
@@ -1235,17 +1277,21 @@ function ColumnView({
                                 "border border-zinc-200/70 bg-white",
                                 "text-zinc-500",
                                 "shadow-[0_1px_0_rgba(0,0,0,0.02)]",
-                                "hover:bg-zinc-50 hover:shadow-sm transition",
-                                "cursor-grab active:cursor-grabbing select-none"
-                            )}
-                        >
+                                "transition hover:bg-zinc-50 hover:shadow-sm",
+                                "cursor-grab select-none active:cursor-grabbing"
+                            )}>
                             <GripVertical className="h-4 w-4" />
                         </div>
 
                         <div className="min-w-0 flex-1">
                             {!isColumnEditing ? (
-                                <button type="button" onClick={() => onRenameColumnInline(col.id)} className="w-full text-left">
-                                    <p className="truncate text-sm font-bold text-zinc-900 hover:underline">{col.title}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => onRenameColumnInline(col.id)}
+                                    className="w-full text-left">
+                                    <p className="truncate font-bold text-sm text-zinc-900 hover:underline">
+                                        {col.title}
+                                    </p>
                                 </button>
                             ) : (
                                 <div className="space-y-1">
@@ -1266,7 +1312,7 @@ function ColumnView({
                                         }}
                                         onBlur={() => setTimeout(() => onColumnCommit(), 0)}
                                         className={cn(
-                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 text-sm font-bold text-zinc-900 outline-none",
+                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
                                             columnError
                                                 ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
                                                 : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
@@ -1274,7 +1320,9 @@ function ColumnView({
                                         )}
                                         style={{ maxWidth: 220 }}
                                     />
-                                    {columnError ? <div className="text-[11px] font-medium text-rose-600">{columnError}</div> : null}
+                                    {columnError ? (
+                                        <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
+                                    ) : null}
                                 </div>
                             )}
                         </div>
@@ -1285,10 +1333,9 @@ function ColumnView({
                             className={cn(
                                 "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2",
                                 "border border-zinc-200/70 bg-white",
-                                "text-xs font-semibold text-zinc-700",
+                                "font-semibold text-xs text-zinc-700",
                                 "shadow-[0_1px_0_rgba(0,0,0,0.03)]"
-                            )}
-                        >
+                            )}>
                             {tasks.length}
                         </span>
 
@@ -1306,12 +1353,14 @@ function ColumnView({
                                     e.stopPropagation();
                                 }}
                                 className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
-                                aria-label="Column menu"
-                            >
+                                aria-label="Column menu">
                                 <MoreHorizontal className="h-5 w-5" />
                             </button>
 
-                            <PortalDropdown open={openColMenu} onClose={() => setOpenColMenu(false)} anchorRef={colMenuBtnRef as any}>
+                            <PortalDropdown
+                                open={openColMenu}
+                                onClose={() => setOpenColMenu(false)}
+                                anchorRef={colMenuBtnRef as any}>
                                 <MenuItem
                                     icon={<Pencil className="h-4 w-4" />}
                                     label="Chỉnh sửa tên trạng thái"
@@ -1342,15 +1391,16 @@ function ColumnView({
                         "rounded-2xl border p-3 transition",
                         "border-zinc-200/70 bg-gradient-to-b from-zinc-50 to-white",
                         isOver && "border-indigo-300 bg-indigo-50/60"
-                    )}
-                >
+                    )}>
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                             <div className={cn("relative max-h-[68vh] space-y-3 overflow-y-auto pr-1")}>
                                 {rendered.map((item) => {
-                                    if (item.kind === "ghost") return <GhostTaskCard key={item.key} task={ghost!.task} />;
+                                    if (item.kind === "ghost")
+                                        return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
-                                    const isEditingThis = taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+                                    const isEditingThis =
+                                        taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
 
                                     return (
                                         <TaskCard
@@ -1370,16 +1420,22 @@ function ColumnView({
                                 })}
 
                                 {tasks.length === 0 ? (
-                                    <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
-                                        <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
-                                        <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
+                                    <div
+                                        className={cn(
+                                            "rounded-xl border border-zinc-200/70 bg-white",
+                                            "px-3 py-10 text-center"
+                                        )}>
+                                        <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
+                                        <div className="mt-1 text-xs text-zinc-500">
+                                            Bấm “Thêm công việc” để tạo mới
+                                        </div>
                                     </div>
                                 ) : null}
 
                                 <div
                                     ref={setEndRef}
                                     className={cn(
-                                        "absolute left-0 right-0 bottom-0 h-12 rounded-xl border border-dashed transition",
+                                        "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
                                         isOverEnd ? "border-indigo-300 bg-indigo-50/60" : "border-transparent"
                                     )}
                                 />
@@ -1388,7 +1444,8 @@ function ColumnView({
                     ) : (
                         <div className="max-h-[68vh] space-y-3 overflow-y-auto pr-1">
                             {tasks.map((t) => {
-                                const isEditingThis = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
+                                const isEditingThis =
+                                    taskEditState.taskId === t.id && taskEditState.columnId === col.id;
                                 return (
                                     <TaskCard
                                         key={t.id}
@@ -1406,8 +1463,12 @@ function ColumnView({
                                 );
                             })}
                             {tasks.length === 0 ? (
-                                <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
-                                    <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
+                                <div
+                                    className={cn(
+                                        "rounded-xl border border-zinc-200/70 bg-white",
+                                        "px-3 py-10 text-center"
+                                    )}>
+                                    <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
                                     <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                 </div>
                             ) : null}
@@ -1467,12 +1528,12 @@ function SortableColumn(props: {
         columnError,
         onColumnDraftChange,
         onColumnCommit,
-        onColumnCancel,
+        onColumnCancel
     } = props;
 
     const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
         id: col.id,
-        data: { type: "column" },
+        data: { type: "column" }
     });
 
     const style: React.CSSProperties = {
@@ -1480,7 +1541,7 @@ function SortableColumn(props: {
         transition: transition ?? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
         willChange: "transform",
         touchAction: "none",
-        opacity: isDragging ? 0.25 : 1,
+        opacity: isDragging ? 0.25 : 1
     };
 
     return (
@@ -1519,7 +1580,7 @@ function TaskOverlay({ task }: { task: Task }) {
 
     return (
         <div className={cn("min-w-[320px] rounded-xl border border-zinc-200 bg-white p-3 shadow-xl")}>
-            <p className="text-sm font-semibold text-zinc-900">{task.title}</p>
+            <p className="font-semibold text-sm text-zinc-900">{task.title}</p>
             <div className="mt-2 flex flex-wrap gap-2">
                 <Pill>{task.tagLeft ?? "TASK"}</Pill>
                 <Pill>{task.tagRight ?? "SS"}</Pill>
@@ -1533,21 +1594,23 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     return (
         <div className="min-w-[320px] max-w-[320px]">
             <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl">
-                <div className="rounded-t-2xl border-b border-zinc-200 bg-white px-4 py-3">
-                    <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
+                <div className="rounded-t-2xl border-zinc-200 border-b bg-white px-4 py-3">
+                    <p className="truncate font-bold text-sm text-zinc-900">{col.title}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
                 <div className="px-4 py-4">
-                    <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-3">
+                    <div className="rounded-2xl border border-zinc-200 border-dashed bg-zinc-50 p-3">
                         {tasks.slice(0, 3).map((t) => (
                             <div key={t.id} className="mb-3 last:mb-0">
                                 <div className={cn("rounded-xl border border-zinc-200 bg-white p-3 shadow-sm")}>
-                                    <p className="text-sm font-semibold text-zinc-900">{t.title}</p>
+                                    <p className="font-semibold text-sm text-zinc-900">{t.title}</p>
                                 </div>
                             </div>
                         ))}
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">(Trạng thái trống)</div>
+                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                                (Trạng thái trống)
+                            </div>
                         ) : null}
                     </div>
                 </div>
@@ -1576,29 +1639,46 @@ export function GroupBoardScreen() {
     const [activeColumnId, setActiveColumnId] = React.useState<string | null>(null);
     const [overId, setOverId] = React.useState<string | null>(null);
 
-    const [editingColumn, setEditingColumn] = React.useState<{ id: string | null; draft: string; error: string | null }>({
+    const [editingColumn, setEditingColumn] = React.useState<{
+        id: string | null;
+        draft: string;
+        error: string | null;
+    }>({
         id: null,
         draft: "",
-        error: null,
+        error: null
     });
 
-    const [editingTask, setEditingTask] = React.useState<{ taskId: string | null; columnId: string | null; draft: string }>({
+    const [editingTask, setEditingTask] = React.useState<{
+        taskId: string | null;
+        columnId: string | null;
+        draft: string;
+    }>({
         taskId: null,
         columnId: null,
-        draft: "",
+        draft: ""
     });
 
-    const [confirmModal, setConfirmModal] = React.useState<{ open: boolean; columnId: ColumnId | null; columnTitle: string }>({
+    const [confirmModal, setConfirmModal] = React.useState<{
+        open: boolean;
+        columnId: ColumnId | null;
+        columnTitle: string;
+    }>({
         open: false,
         columnId: null,
-        columnTitle: "",
+        columnTitle: ""
     });
 
-    const [confirmDeleteTask, setConfirmDeleteTask] = React.useState<{ open: boolean; taskId: string | null; columnId: string | null; taskTitle: string }>({
+    const [confirmDeleteTask, setConfirmDeleteTask] = React.useState<{
+        open: boolean;
+        taskId: string | null;
+        columnId: string | null;
+        taskTitle: string;
+    }>({
         open: false,
         taskId: null,
         columnId: null,
-        taskTitle: "",
+        taskTitle: ""
     });
 
     const [taskFormOpen, setTaskFormOpen] = React.useState(false);
@@ -1632,7 +1712,7 @@ export function GroupBoardScreen() {
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
-            activationConstraint: { delay: 200, tolerance: 5 },
+            activationConstraint: { delay: 200, tolerance: 5 }
         }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
@@ -1644,7 +1724,7 @@ export function GroupBoardScreen() {
                 id: String(s.statusId),
                 title: String(s.statusName ?? ""),
                 position: typeof s.position === "number" && Number.isFinite(s.position) ? s.position : 0,
-                taskList: s.taskList ?? [],
+                taskList: s.taskList ?? []
             }))
             .sort((a, b) => a.position - b.position);
 
@@ -1663,7 +1743,7 @@ export function GroupBoardScreen() {
                 const base: Task = {
                     id: String(t.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
                     title: String(t.taskTitle ?? ""),
-                    statusDot: "green",
+                    statusDot: "green"
                 };
 
                 if (startFmt) base.start = startFmt;
@@ -1739,7 +1819,11 @@ export function GroupBoardScreen() {
         const task = findTask(board, columns, activeTaskId);
         if (!task) return null;
 
-        const overKey = overId.startsWith(DROP_PREFIX) ? overId.replace(DROP_PREFIX, "") : overId.startsWith(END_PREFIX) ? overId.replace(END_PREFIX, "") : overId;
+        const overKey = overId.startsWith(DROP_PREFIX)
+            ? overId.replace(DROP_PREFIX, "")
+            : overId.startsWith(END_PREFIX)
+                ? overId.replace(END_PREFIX, "")
+                : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -1823,13 +1907,16 @@ export function GroupBoardScreen() {
     const handleConfirmDeleteColumn = async () => {
         const columnId = confirmModal.columnId;
         setConfirmModal({ open: false, columnId: null, columnTitle: "" });
-        if (!columnId || !groupId) return;
+        if (!(columnId && groupId)) return;
 
         const prevCols = columns;
         const prevBoard = board;
 
         const base = detectPositionBase(columns) as 0 | 1;
-        const nextCols = assignPositions(columns.filter((c) => c.id !== columnId), base);
+        const nextCols = assignPositions(
+            columns.filter((c) => c.id !== columnId),
+            base
+        );
 
         setColumns(nextCols);
         setBoard((prev) => {
@@ -1858,7 +1945,7 @@ export function GroupBoardScreen() {
 
     const onTaskCommitEdit = () => {
         const { taskId, columnId, draft } = editingTask;
-        if (!taskId || !columnId) return;
+        if (!(taskId && columnId)) return;
         const next = draft.trim();
         if (!next) {
             onTaskCancelEdit();
@@ -1867,7 +1954,7 @@ export function GroupBoardScreen() {
 
         setBoard((prev) => ({
             ...prev,
-            [columnId]: (prev[columnId] ?? []).map((t) => (t.id === taskId ? { ...t, title: next } : t)),
+            [columnId]: (prev[columnId] ?? []).map((t) => (t.id === taskId ? { ...t, title: next } : t))
         }));
         onTaskCancelEdit();
     };
@@ -1878,11 +1965,12 @@ export function GroupBoardScreen() {
             open: true,
             taskId,
             columnId,
-            taskTitle: t?.title ?? "",
+            taskTitle: t?.title ?? ""
         });
     };
 
-    const handleCancelDeleteTask = () => setConfirmDeleteTask({ open: false, taskId: null, columnId: null, taskTitle: "" });
+    const handleCancelDeleteTask = () =>
+        setConfirmDeleteTask({ open: false, taskId: null, columnId: null, taskTitle: "" });
 
     const handleConfirmDeleteTask = async () => {
         const taskId = confirmDeleteTask.taskId;
@@ -1890,13 +1978,13 @@ export function GroupBoardScreen() {
 
         setConfirmDeleteTask({ open: false, taskId: null, columnId: null, taskTitle: "" });
 
-        if (!taskId || !columnId) return;
+        if (!(taskId && columnId)) return;
 
         const prevBoard = board;
 
         setBoard((prev) => ({
             ...prev,
-            [columnId]: (prev[columnId] ?? []).filter((t) => t.id !== taskId),
+            [columnId]: (prev[columnId] ?? []).filter((t) => t.id !== taskId)
         }));
 
         if (editingTask.taskId === taskId && editingTask.columnId === columnId) onTaskCancelEdit();
@@ -1946,7 +2034,7 @@ export function GroupBoardScreen() {
                 dueDate: rawDue,
                 startDate: rawStart,
                 dueDateSelected: dueSelected,
-                startDateSelected: startSelected,
+                startDateSelected: startSelected
             });
 
             await refresh();
@@ -1997,7 +2085,7 @@ export function GroupBoardScreen() {
         if (!overRaw) return;
 
         if (activeType === "task") {
-            if (!groupId || !isUuidLike(groupId)) return;
+            if (!(groupId && isUuidLike(groupId))) return;
 
             const activeId = String(e.active.id);
             const prevBoard = board;
@@ -2014,7 +2102,7 @@ export function GroupBoardScreen() {
                         taskId: activeId,
                         targetStatusId: dropped.toCol,
                         prevTaskId: dropped.prevTaskId,
-                        nextTaskId: dropped.nextTaskId,
+                        nextTaskId: dropped.nextTaskId
                     });
                 } catch {
                     setBoard(prevBoard);
@@ -2071,13 +2159,18 @@ export function GroupBoardScreen() {
         return out;
     }, [board, columns]);
 
-    const statusesOptions = React.useMemo<TaskFormOption[]>(() => columns.map((c) => ({ value: c.id, label: c.title })), [columns]);
+    const statusesOptions = React.useMemo<TaskFormOption[]>(
+        () => columns.map((c) => ({ value: c.id, label: c.title })),
+        [columns]
+    );
 
     if (loading) {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">Đang tải board…</div>
+                    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
+                        Đang tải board…
+                    </div>
                 </Container>
             </div>
         );
@@ -2087,13 +2180,14 @@ export function GroupBoardScreen() {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">{loadError}</div>
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
+                        {loadError}
+                    </div>
                     <div className="mt-3">
                         <button
                             type="button"
                             onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
-                        >
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                             Tải lại
                         </button>
                     </div>
@@ -2113,8 +2207,20 @@ export function GroupBoardScreen() {
 
     return (
         <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
-            <TaskFormModal open={taskFormOpen} onClose={closeCreateTask} onSubmit={handleSubmitCreateTask} members={membersOptions} statuses={statusesOptions} defaultStatusId={taskFormColumnId} />
-            <TaskDetailModal open={detailOpen} onClose={closeTaskDetail} taskId={detailTaskId} onDelete={handleDeleteFromDetail} />
+            <TaskFormModal
+                open={taskFormOpen}
+                onClose={closeCreateTask}
+                onSubmit={handleSubmitCreateTask}
+                members={membersOptions}
+                statuses={statusesOptions}
+                defaultStatusId={taskFormColumnId}
+            />
+            <TaskDetailModal
+                open={detailOpen}
+                onClose={closeTaskDetail}
+                taskId={detailTaskId}
+                onDelete={handleDeleteFromDetail}
+            />
 
             <ConfirmModal
                 open={confirmModal.open}
@@ -2179,8 +2285,7 @@ export function GroupBoardScreen() {
                         onDragStart={handleDragStart}
                         onDragOver={handleDragOver}
                         onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}
-                    >
+                        onDragEnd={handleDragEnd}>
                         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                             <div className="mt-5 flex items-start gap-5 overflow-x-auto pb-6">
                                 {columns.map((col) => (
@@ -2217,7 +2322,13 @@ export function GroupBoardScreen() {
                             </div>
                         </SortableContext>
 
-                        <DragOverlay>{activeTask ? <TaskOverlay task={activeTask} /> : activeColumn ? <ColumnOverlay col={activeColumn} tasks={board[activeColumn.id] ?? []} /> : null}</DragOverlay>
+                        <DragOverlay>
+                            {activeTask ? (
+                                <TaskOverlay task={activeTask} />
+                            ) : activeColumn ? (
+                                <ColumnOverlay col={activeColumn} tasks={board[activeColumn.id] ?? []} />
+                            ) : null}
+                        </DragOverlay>
                     </DndContext>
                 )}
             </Container>

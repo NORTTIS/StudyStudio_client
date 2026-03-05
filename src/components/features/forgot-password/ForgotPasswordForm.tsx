@@ -21,11 +21,7 @@ export function ForgotPasswordForm() {
 
     /* ================= VALIDATION SCHEMA ================= */
     const forgotPasswordSchema = z.object({
-        email: z
-            .string()
-            .trim()
-            .min(1, t("emailRequired"))
-            .email(t("emailInvalid"))
+        email: z.string().trim().min(1, t("emailRequired")).email(t("emailInvalid"))
     });
 
     type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;

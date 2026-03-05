@@ -19,7 +19,7 @@ export function Logo({ size = "md", showText = true, className = "" }: LogoProps
     const { icon, text } = sizes[size];
 
     return (
-        <div className={`flex items-center gap-2 whitespace-nowrap ${className}`}>
+        <div className={`flex items-center justify-center gap-2 whitespace-nowrap ${className}`}>
             <svg width={icon} height={icon} viewBox="0 0 64 64" aria-label="StudyStudio Logo">
                 <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
                 <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />

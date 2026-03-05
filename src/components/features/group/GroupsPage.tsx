@@ -1,15 +1,6 @@
 "use client";
 
-import {
-    ChevronDown,
-    FolderKanban,
-    LayoutGrid,
-    Layers,
-    List,
-    Plus,
-    Star,
-    Users,
-} from "lucide-react";
+import { ChevronDown, FolderKanban, LayoutGrid, Layers, List, Plus, Star, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Container } from "@/components/common";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
@@ -27,7 +18,7 @@ const emptyData: GroupsPageData = {
     usage: { current: 0, max: 0 },
     favorites: [],
     managed: [],
-    independent: [],
+    independent: []
 };
 
 const PREVIEW_COUNT = 3;
@@ -53,7 +44,7 @@ function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
         ...raw,
         favorites: uniqKeepOrder(raw.favorites ?? []),
         managed: uniqKeepOrder(raw.managed ?? []),
-        independent: uniqKeepOrder(raw.independent ?? []),
+        independent: uniqKeepOrder(raw.independent ?? [])
     };
 }
 
@@ -74,22 +65,18 @@ function uniqueByIdKeepFirst(list: Group[]) {
 function IconBadge({
     variant,
     children,
-    className = "",
+    className = ""
 }: {
     variant: "orange" | "yellow" | "blue" | "purple" | "slate";
     children: React.ReactNode;
     className?: string;
 }) {
     const styles: Record<typeof variant, string> = {
-        orange:
-            "bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_8px_20px_-10px_rgba(234,88,12,0.7)]",
-        yellow:
-            "bg-gradient-to-br from-amber-300 to-yellow-500 shadow-[0_8px_20px_-10px_rgba(245,158,11,0.7)]",
+        orange: "bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_8px_20px_-10px_rgba(234,88,12,0.7)]",
+        yellow: "bg-gradient-to-br from-amber-300 to-yellow-500 shadow-[0_8px_20px_-10px_rgba(245,158,11,0.7)]",
         blue: "bg-gradient-to-br from-sky-400 to-blue-600 shadow-[0_8px_20px_-10px_rgba(37,99,235,0.7)]",
-        purple:
-            "bg-gradient-to-br from-violet-400 to-purple-600 shadow-[0_8px_20px_-10px_rgba(147,51,234,0.7)]",
-        slate:
-            "bg-gradient-to-br from-slate-200 to-slate-300 shadow-[0_8px_20px_-12px_rgba(15,23,42,0.35)]",
+        purple: "bg-gradient-to-br from-violet-400 to-purple-600 shadow-[0_8px_20px_-10px_rgba(147,51,234,0.7)]",
+        slate: "bg-gradient-to-br from-slate-200 to-slate-300 shadow-[0_8px_20px_-12px_rgba(15,23,42,0.35)]"
     };
 
     return (
@@ -98,8 +85,7 @@ function IconBadge({
                 "relative flex items-center justify-center rounded-xl ring-1 ring-black/5",
                 styles[variant],
                 className
-            )}
-        >
+            )}>
             {/* subtle highlight */}
             <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.55),transparent_55%)]" />
             <div className="relative">{children}</div>
@@ -188,7 +174,7 @@ export function GroupsPage() {
                     ...prev,
                     favorites: inFav ? prev.favorites : [updated, ...prev.favorites],
                     managed: prev.managed.map((g) => (getGroupId(g) === groupId ? updated : g)),
-                    independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g)),
+                    independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g))
                 };
             }
 
@@ -196,7 +182,7 @@ export function GroupsPage() {
                 ...prev,
                 favorites: prev.favorites.filter((g) => getGroupId(g) !== groupId),
                 managed: prev.managed.map((g) => (getGroupId(g) === groupId ? updated : g)),
-                independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g)),
+                independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g))
             };
         });
 
@@ -238,20 +224,17 @@ export function GroupsPage() {
                                 value={view}
                                 onValueChange={(v) => (v === "grid" || v === "list" ? setView(v) : null)}
                                 className="rounded-xl border bg-background p-1 shadow-sm"
-                                aria-label="View"
-                            >
+                                aria-label="View">
                                 <ToggleGroupItem
                                     value="grid"
                                     aria-label="Grid"
-                                    className="h-9 w-9 rounded-lg data-[state=on]:bg-muted data-[state=on]:text-foreground"
-                                >
+                                    className="h-9 w-9 rounded-lg data-[state=on]:bg-muted data-[state=on]:text-foreground">
                                     <LayoutGrid className="h-4 w-4" />
                                 </ToggleGroupItem>
                                 <ToggleGroupItem
                                     value="list"
                                     aria-label="List"
-                                    className="h-9 w-9 rounded-lg data-[state=on]:bg-muted data-[state=on]:text-foreground"
-                                >
+                                    className="h-9 w-9 rounded-lg data-[state=on]:bg-muted data-[state=on]:text-foreground">
                                     <List className="h-4 w-4" />
                                 </ToggleGroupItem>
                             </ToggleGroup>
@@ -259,8 +242,7 @@ export function GroupsPage() {
                             <Button
                                 className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 shadow-sm"
                                 disabled={limitReached}
-                                onClick={() => setOpenCreate(true)}
-                            >
+                                onClick={() => setOpenCreate(true)}>
                                 <Plus className="mr-2 h-4 w-4" />
                                 Nhóm mới
                             </Button>
@@ -346,7 +328,7 @@ function GroupsSection({
     className = "",
     expanded,
     onToggle,
-    onToggleStar,
+    onToggleStar
 }: {
     title: string;
     icon: React.ElementType;
@@ -368,8 +350,7 @@ function GroupsSection({
                     <div className="flex items-center gap-3">
                         <IconBadge
                             variant={iconVariant}
-                            className="h-9 w-9 transition-transform duration-200 group-hover:scale-105"
-                        >
+                            className="h-9 w-9 transition-transform duration-200 group-hover:scale-105">
                             <Icon className="h-[18px] w-[18px] text-white" />
                         </IconBadge>
 
@@ -382,8 +363,7 @@ function GroupsSection({
                             variant="ghost"
                             onClick={onToggle}
                             className="h-9 gap-2 rounded-lg px-2 text-sm font-medium text-[#6F6B99] hover:bg-muted hover:text-[#261E33]"
-                            aria-label={expanded ? "Thu gọn" : "Mở rộng"}
-                        >
+                            aria-label={expanded ? "Thu gọn" : "Mở rộng"}>
                             <span>{expanded ? "Thu gọn" : "Xem tất cả"}</span>
                             <ChevronDown className={cn("h-4 w-4 transition", expanded && "rotate-180")} />
                         </Button>
@@ -394,18 +374,11 @@ function GroupsSection({
             </CardHeader>
 
             <CardContent className="pt-0">
-                <div
-                    className={
-                        view === "grid"
-                            ? "grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
-                            : "space-y-4"
-                    }
-                >
+                <div className={view === "grid" ? "grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" : "space-y-4"}>
                     {visibleItems.map((g) => (
                         <div
                             key={getGroupId(g)}
-                            className="transition-transform duration-200 hover:-translate-y-0.5 hover:drop-shadow-sm"
-                        >
+                            className="transition-transform duration-200 hover:-translate-y-0.5 hover:drop-shadow-sm">
                             <GroupCard group={g} onToggleStar={() => onToggleStar(getGroupId(g))} />
                         </div>
                     ))}

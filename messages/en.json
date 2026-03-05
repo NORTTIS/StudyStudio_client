@@ -1,7 +1,8 @@
 {
     "Common": {
         "loading": "Loading...",
-        "checkingAuth": "Checking authentication..."
+        "checkingAuth": "Checking authentication...",
+        "aiQATab": "AI Q&A"
     },
     "GuestNavbar": {
         "personal": "Personal Studio",
@@ -741,6 +742,68 @@
         "editButton": "Edit invoice information",
         "updateButton": "Update invoice information",
         "visaText": "Visa ****1234"
+    },
+    "GroupDocumentsPage": {
+        "download": "Download",
+        "delete": "Delete",
+        "statusLabel": "Status",
+        "more": "More",
+        "untitled": "Untitled",
+        "unknownUploader": "Unknown",
+        "uploadedBy": "Uploaded by {name}",
+        "unknownStatus": "unknown",
+        "cannotLoadDocuments": "Cannot load documents",
+        "cannotDetectGroupId": "Cannot detect groupId from URL",
+        "invalidFiles": "Invalid files: {names}",
+        "uploadedFiles": "Uploaded {count} file(s)",
+        "failedFiles": "Failed files: {names}",
+        "documentNotFound": "Document not found",
+        "documentDeleted": "Document deleted",
+        "deleteFailed": "Delete failed",
+        "downloadFailed": "Download failed",
+        "sharedProjectDocuments": "Shared project documents",
+        "uploading": "Uploading...",
+        "upload": "Upload",
+        "loadingDocuments": "Loading documents...",
+        "noDocuments": "No documents uploaded yet.",
+        "confirmDeleteTitle": "Confirm document deletion",
+        "confirmDeleteDescriptionPrefix": "Are you sure you want to delete",
+        "confirmDeleteDescriptionSuffix": "? This action cannot be undone.",
+        "thisDocument": "this document",
+        "cancel": "Cancel",
+        "deleting": "Deleting...",
+        "deleteDocument": "Delete document"
+    },
+    "GroupAiQaPage": {
+        "usedToday": "Used today",
+        "remainingRequests": "Remaining requests",
+        "dailyLimit": "Daily limit",
+        "unknown": "Unknown",
+        "startConversation": "Start the conversation",
+        "description": "Ask anything about tasks, documents, and progress of this group.",
+        "inputPlaceholder": "Ask AI a question...",
+        "cannotDetectGroupId": "Cannot detect groupId from URL",
+        "aiThinking": "AI is thinking...",
+        "emptyAiAnswer": "AI did not return an answer. Try asking a more specific question.",
+        "aiResponseError": "Cannot get AI response",
+        "quickActions": {
+            "summary": {
+                "label": "Project progress summary",
+                "prompt": "Please summarize the current project progress based on tasks, activities, and documents in the group.\n\nAnalyze:\n- total number of tasks\n- completed tasks\n- tasks in progress\n- tasks not started\n\nThen provide:\n1. Overall project progress\n2. Achieved milestones\n3. Ongoing work\n4. Remaining work\n5. AI insights about the project status"
+            },
+            "risk": {
+                "label": "Risk analysis",
+                "prompt": "Please analyze potential project risks based on tasks, deadlines, and current progress.\n\nIdentify:\n- tasks at risk of missing deadlines\n- tasks with no progress\n- overloaded members\n- issues that may impact progress\n\nReturn:\n1. Overall project risk level\n2. Critical risks\n3. Risks to monitor\n4. Tasks likely to miss deadlines\n5. Suggested mitigation actions"
+            },
+            "report": {
+                "label": "Progress report",
+                "prompt": "Generate a project progress report based on task data and team activity.\n\nThe report should include:\n\n1. Executive summary\n2. Current project status\n3. Completed milestones\n4. Ongoing work\n5. Team member contributions\n6. Next tasks\n7. AI overall assessment"
+            },
+            "deadline": {
+                "label": "Review upcoming deadlines",
+                "prompt": "Please review upcoming project deadlines.\n\nAnalyze:\n- tasks with near-term deadlines\n- unfinished tasks near deadline\n- tasks at risk of delay\n\nReturn:\n1. List of upcoming deadlines\n2. Priority tasks\n3. Tasks at risk of missing deadlines\n4. Recommended actions for the team"
+            }
+        }
     },
     "InviteMemberModal": {
         "title": "Invite user(s) to",
