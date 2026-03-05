@@ -1,16 +1,27 @@
 "use client";
 
-import { BarChart3, Calendar, FileText, LayoutGrid, List, MessageSquare, Settings, Sparkles, Trash2, Users, UserPlus } from "lucide-react";
+import {
+    BarChart3,
+    Calendar,
+    FileText,
+    LayoutGrid,
+    List,
+    MessageSquare,
+    Settings,
+    Trash2,
+    UserPlus,
+    Users
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
 import { Container } from "@/components/common";
+import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { useToast } from "@/components/ui/use-toast";
 import { RolePill } from "../RolePill";
 import type { GroupRole } from "../types";
-import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 
 type Tab = {
     key: string;
@@ -302,12 +313,18 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
                 if (url) return url;
-                toast({ description: `[invite/create] thiếu inviteUrl (sent role="${apiRole}")`, variant: "destructive" });
+                toast({
+                    description: `[invite/create] thiếu inviteUrl (sent role="${apiRole}")`,
+                    variant: "destructive"
+                });
                 return null;
             }
 
             const msg = json?.message || text || `Tạo link thất bại (${res.status})`;
-            toast({ description: `[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`, variant: "destructive" });
+            toast({
+                description: `[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`,
+                variant: "destructive"
+            });
         }
 
         return null;
@@ -339,7 +356,10 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
             const msg = json?.message || text || `Mời thành viên thất bại (${res.status})`;
-            toast({ description: `[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`, variant: "destructive" });
+            toast({
+                description: `[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`,
+                variant: "destructive"
+            });
         }
 
         return false;
@@ -349,10 +369,14 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         <Container>
             <div className="w-full bg-white">
                 <div>
+                    {/* ====== HEADER GIỮ NGUYÊN STYLE NHƯ ẢNH (bạn muốn giữ) ====== */}
                     <div className="flex items-start justify-between gap-6">
                         <div className="min-w-0">
                             {studioName ? (
-                                <p className="flex items-center gap-2 text-[#6F6B99] text-sm">{studioName}</p>
+                                <p className="flex items-center gap-2 text-[#6F6B99] text-sm">
+                                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                    {studioName}
+                                </p>
                             ) : null}
 
                             <div className="flex items-center gap-2">
@@ -361,20 +385,28 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                             </div>
 
                             {groupDesc ? <p className="mt-2 text-[#6F6B99] text-lg">{groupDesc}</p> : null}
+
+                            {error ? (
+                                <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
+                                    {error}
+                                </p>
+                            ) : null}
                         </div>
 
                         <div className="flex items-center gap-3 text-[#6F6B99]">
-                            <div className="flex items-center gap-2">
+                            {/* badge thành viên giống ảnh (bọc pill) */}
+                            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 shadow-sm">
                                 <Users className="h-4 w-4" />
-                                <span className="text-sm">{memberCount} thành viên</span>
+                                <span className="text-sm">
+                                    <span className="font-semibold text-[#261E33]">{memberCount}</span> thành viên
+                                </span>
                             </div>
 
                             {canInvite ? (
                                 <button
                                     type="button"
                                     onClick={() => setInviteOpen(true)}
-                                    className="inline-flex h-9 items-center gap-2 rounded-xl bg-orange-600 px-4 text-sm font-semibold text-white transition hover:bg-orange-700 active:scale-[0.98]"
-                                >
+                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 font-semibold text-sm text-white shadow-sm transition hover:bg-orange-700 active:scale-[0.98]">
                                     <UserPlus className="h-4 w-4" />
                                     Thêm thành viên
                                 </button>
@@ -383,29 +415,38 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     </div>
                 </div>
 
-                <div className="mt-6 border-[#EDEDED] border-b">
-                    <div>
-                        <div className="-mb-px flex flex-wrap items-center gap-3">
-                            {visibleTabs.map((t) => {
-                                const Icon = t.icon;
-                                const href = groupId ? t.href(locale, groupId) : "#";
+                {/* ====== TABS: bọc thẻ + pill đẹp hơn (phần bạn chê xấu) ====== */}
+                <div className="mt-6">
+                    <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto p-2">
+                            {visibleTabs.map((tab) => {
+                                const Icon = tab.icon;
+                                const href = groupId ? tab.href(locale, groupId) : "#";
                                 const target = stripLocale(href.split("?")[0] || href);
 
                                 const active =
-                                    t.key === "board"
+                                    tab.key === "board"
                                         ? curPath === target
                                         : curPath === target || curPath.startsWith(target + "/");
 
                                 return (
                                     <Link
-                                        key={t.key}
+                                        key={tab.key}
                                         href={href}
                                         className={twMerge(
-                                            "inline-flex items-center gap-2 rounded-t-xl border border-transparent px-4 py-2 font-medium text-[#6F6B99] text-sm transition hover:bg-[#FAFAFA] hover:text-[#261E33]",
-                                            active && "border-[#E5E5E5] border-b-white bg-white text-[#261E33]"
+                                            "group inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 font-medium text-sm transition",
+                                            "text-[#6F6B99] hover:bg-zinc-50 hover:text-[#261E33]",
+                                            "focus:outline-none focus:ring-2 focus:ring-orange-500/25",
+                                            active &&
+                                            "bg-orange-600 text-white shadow-sm hover:bg-orange-600 hover:text-white"
                                         )}>
-                                        <Icon className="h-4 w-4" />
-                                        {t.label}
+                                        <Icon
+                                            className={twMerge(
+                                                "h-4 w-4",
+                                                active ? "text-white" : "text-[#6F6B99] group-hover:text-[#261E33]"
+                                            )}
+                                        />
+                                        {tab.label}
                                     </Link>
                                 );
                             })}

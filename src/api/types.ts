@@ -2424,6 +2424,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Task/{groupId}/deleted-task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskDeleteResponseListApiResponse"];
+                        "text/json": components["schemas"]["TaskDeleteResponseListApiResponse"];
+                        "text/plain": components["schemas"]["TaskDeleteResponseListApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/templates": {
         parameters: {
             query?: never;
@@ -3410,8 +3449,24 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        TaskDeleteResponse: {
+            /** Format: uuid */
+            deletedBy?: string;
+            /** Format: date-time */
+            deletedOn?: string;
+            /** Format: uuid */
+            deleteTaskId?: string;
+            taskName?: string | null;
+        };
+        TaskDeleteResponseListApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TaskDeleteResponse"][] | null;
+            message?: string | null;
+            status?: string | null;
+        };
         TaskItemGroupRequest: {
-            assignee?: string[] | null;
+            /** Format: uuid */
+            assignees?: string | null;
             /** Format: date-time */
             dueDate?: string;
             /** Format: uuid */
@@ -3430,7 +3485,7 @@ export interface components {
             taskSeverity?: number;
         };
         TaskItemResponse: {
-            assignee?: components["schemas"]["UserDto"][] | null;
+            assignee?: components["schemas"]["UserDto"];
             /** Format: date-time */
             createdAt?: string;
             /** Format: uuid */
@@ -3464,6 +3519,7 @@ export interface components {
             /** Format: uuid */
             statusId?: string;
             statusName?: string | null;
+            taskList?: components["schemas"]["TaskItemResponse"][] | null;
         };
         TaskSummaryResponse: {
             /** Format: int32 */

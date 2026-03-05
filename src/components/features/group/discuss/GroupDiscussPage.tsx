@@ -1,15 +1,7 @@
 "use client";
 
 import * as signalR from "@microsoft/signalr";
-import {
-    ChevronDown,
-    ChevronUp,
-    CornerDownRight,
-    MessageCircle,
-    MoreHorizontal,
-    SendHorizontal,
-    Trash2
-} from "lucide-react";
+import { ChevronDown, ChevronUp, MessageCircle, MoreHorizontal, SendHorizontal, Trash2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
@@ -18,15 +10,19 @@ import { getAccessToken, getUserData } from "@/api/auth";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 type UserLite = {
     id: string;
@@ -66,6 +62,10 @@ type MessageDeletedPayload = {
     timestamp: string;
 };
 
+type MentionUser = { id: string; name: string };
+
+const MAX_CHARS = 500;
+
 const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
 const extractGroupIdFromPath = (pathname: string) => {
     const p = stripLocale(pathname || "");
@@ -80,7 +80,6 @@ function initialsOf(name: string) {
     return (a + b).toUpperCase();
 }
 
-// ✅ tránh mismatch: server render luôn ra "B"
 function safeInitials(name?: string) {
     const n = String(name || "").trim();
     if (!n || n === "Bạn") return "B";
@@ -192,45 +191,436 @@ function Avatar({ initials }: { initials: string }) {
     );
 }
 
-function IconCount({
-    active,
-    icon: Icon,
-    count,
-    label,
-    onClick
+/** ✅ Counter: đếm từ + ký tự */
+function countWords(text: string) {
+    const t = String(text || "").trim();
+    if (!t) return 0;
+    return t.split(/\s+/).filter(Boolean).length;
+}
+
+function TextCounter({
+    text,
+    maxChars = MAX_CHARS
 }: {
-    active?: boolean;
-    icon: React.ComponentType<{ className?: string }>;
-    count?: number;
-    label: string;
-    onClick?: () => void;
+    text: string;
+    maxChars?: number;
 }) {
+    const chars = (text || "").length;
+    const words = countWords(text || "");
+    const over = chars > maxChars;
+
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={twMerge(
-                "inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]",
-                active && "text-[#FF3B30]"
-            )}
-            aria-label={label}>
-            <Icon className={twMerge("h-4 w-4", active && "fill-[#FF3B30]")} />
-            {typeof count === "number" ? <span>{count}</span> : null}
-        </button>
+        <div className="mt-2 flex items-center justify-end gap-2 text-xs">
+            <span className="text-[#6F6B99]">{words} từ</span>
+            <span className={twMerge("font-medium", over ? "text-red-600" : "text-[#6F6B99]")}>
+                {chars}/{maxChars} ký tự
+            </span>
+        </div>
     );
 }
 
-function ReplyComposer({ onCancel, onSubmit }: { onCancel: () => void; onSubmit: (text: string) => void }) {
+function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId: string) {
+    const re = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
+
+    const matches = [...text.matchAll(re)];
+    if (matches.length === 0) return text;
+
+    const mentionedIds = new Set<string>();
+    let firstIdx = Number.POSITIVE_INFINITY;
+    let lastEnd = -1;
+
+    for (const m of matches) {
+        const idx = m.index ?? 0;
+        const whole = m[0];
+        const id = (m[1] || "").trim();
+        if (!id) continue;
+
+        mentionedIds.add(id);
+        firstIdx = Math.min(firstIdx, idx);
+        lastEnd = Math.max(lastEnd, idx + whole.length);
+    }
+
+    const allExceptAuthor = Object.keys(membersById).filter((id) => id && id !== authorId);
+    if (allExceptAuthor.length === 0) return text;
+
+    if (mentionedIds.size !== allExceptAuthor.length) return text;
+
+    const allSet = new Set(allExceptAuthor);
+    for (const id of mentionedIds) {
+        if (!allSet.has(id)) return text;
+    }
+
+    if (!Number.isFinite(firstIdx) || lastEnd < 0) return text;
+
+    const before = text.slice(0, firstIdx);
+    const after = text.slice(lastEnd);
+
+    const needsSpaceBefore = before.length > 0 && !/\s$/.test(before);
+    const needsSpaceAfter = after.length > 0 && !/^\s/.test(after);
+
+    return before + (needsSpaceBefore ? " " : "") + "@__all__" + (needsSpaceAfter ? " " : "") + after;
+}
+
+function RichTextWithMentions({
+    text,
+    membersById,
+    authorId
+}: {
+    text: string;
+    membersById: Record<string, string>;
+    authorId: string;
+}) {
+    const displayText = React.useMemo(
+        () => compressAllMentionsForDisplay(text, membersById, authorId),
+        [text, membersById, authorId]
+    );
+
+    const re = /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
+    const parts: React.ReactNode[] = [];
+    let last = 0;
+
+    for (const m of displayText.matchAll(re)) {
+        const idx = m.index ?? 0;
+        const whole = m[0];
+        const id = (m[1] || "").trim();
+
+        if (idx > last) parts.push(displayText.slice(last, idx));
+
+        const display = id === "__all__" ? "all" : membersById[id];
+        if (display) {
+            parts.push(
+                <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
+                    @{display}
+                </span>
+            );
+        } else {
+            parts.push(whole);
+        }
+
+        last = idx + whole.length;
+    }
+
+    if (last < displayText.length) parts.push(displayText.slice(last));
+    return <>{parts}</>;
+}
+
+type MentionTextareaHandle = {
+    getPayloadText: () => string;
+};
+
+function isWordChar(ch: string) {
+    return /[\p{L}\p{N}._-]/u.test(ch);
+}
+
+function renderAllMentions(segment: string) {
+    const re = /@all\b/g;
+    const nodes: React.ReactNode[] = [];
+    let last = 0;
+
+    for (const m of segment.matchAll(re)) {
+        const idx = m.index ?? 0;
+        const whole = m[0];
+
+        if (idx > last) nodes.push(segment.slice(last, idx));
+
+        nodes.push(
+            <span key={`all-${idx}`} className="font-semibold text-blue-600">
+                {whole}
+            </span>
+        );
+
+        last = idx + whole.length;
+    }
+
+    if (last < segment.length) nodes.push(segment.slice(last));
+    return nodes.length ? nodes : segment;
+}
+
+function expandMentionAll(payloadText: string, membersById: Record<string, string>, meId: string) {
+    if (!payloadText.includes("@__all__")) return payloadText;
+
+    const ids = Object.keys(membersById).filter((id) => id && id !== meId);
+    if (ids.length === 0) return payloadText.replace(/@__all__\b/g, "");
+
+    const mentions = ids.map((id) => `@${id}`).join(" ");
+    return payloadText.replace(/@__all__\b/g, mentions);
+}
+
+const MentionTextarea = React.forwardRef<
+    MentionTextareaHandle,
+    {
+        value: string;
+        onChange: (next: string) => void;
+        members: MentionUser[];
+        meId: string;
+        placeholder?: string;
+        className?: string;
+        maxChars?: number;
+    }
+>(function MentionTextareaInner({ value, onChange, members, meId, placeholder, className, maxChars = MAX_CHARS }, ref) {
+    const taRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+    const [open, setOpen] = React.useState(false);
+    const [activeIndex, setActiveIndex] = React.useState(0);
+    const [query, setQuery] = React.useState("");
+    const [anchor, setAnchor] = React.useState<{ start: number; end: number } | null>(null);
+
+    const mentionsRef = React.useRef<{ id: string; name: string; start: number; end: number }[]>([]);
+
+    const filtered = React.useMemo(() => {
+        const q = query.trim().toLowerCase();
+
+        const allOption: MentionUser = { id: "__all__", name: "all" };
+        const baseUsers = members.filter((u) => u.id !== meId);
+        const full = [allOption, ...baseUsers];
+
+        if (!q) return full.slice(0, 8);
+        return full.filter((u) => u.name.toLowerCase().includes(q)).slice(0, 8);
+    }, [members, meId, query]);
+
+    const detectFromText = React.useCallback((text: string, caret: number) => {
+        let i = caret - 1;
+
+        if (i >= 0 && /\s/.test(text[i])) {
+            setOpen(false);
+            setAnchor(null);
+            setQuery("");
+            return;
+        }
+
+        while (i >= 0 && isWordChar(text[i])) i--;
+
+        if (i >= 0 && text[i] === "@") {
+            const q = text.slice(i + 1, caret);
+            setQuery(q);
+            setAnchor({ start: i, end: caret });
+            setOpen(true);
+            setActiveIndex(0);
+            return;
+        }
+
+        setOpen(false);
+        setAnchor(null);
+        setQuery("");
+    }, []);
+
+    const insertMention = (user: MentionUser) => {
+        const el = taRef.current;
+        if (!el || !anchor) return;
+
+        const before = value.slice(0, anchor.start);
+        const after = value.slice(anchor.end);
+
+        const tokenVisible = `@${user.name}`;
+        const tokenInsert = `${tokenVisible} `;
+
+        const next = before + tokenInsert + after;
+        onChange(next);
+
+        const start = before.length;
+        const end = start + tokenVisible.length;
+
+        mentionsRef.current = mentionsRef.current.filter((m) => !(m.start < end && m.end > start));
+
+        if (user.id !== "__all__") {
+            mentionsRef.current.push({ id: user.id, name: user.name, start, end });
+        }
+
+        setOpen(false);
+        setAnchor(null);
+        setQuery("");
+
+        requestAnimationFrame(() => {
+            const pos = start + tokenInsert.length;
+            el.focus();
+            el.setSelectionRange(pos, pos);
+        });
+    };
+
+    const onTextChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
+        const next = e.target.value;
+        const caret = e.target.selectionStart ?? next.length;
+
+        // ✅ enforce max chars
+        if (next.length > maxChars) {
+            onChange(next.slice(0, maxChars));
+            return;
+        }
+
+        onChange(next);
+
+        mentionsRef.current = mentionsRef.current.filter((m) => next.slice(m.start, m.end) === `@${m.name}`);
+        detectFromText(next, caret);
+    };
+
+    const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+        if (!open) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActiveIndex((v) => Math.min(v + 1, filtered.length - 1));
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActiveIndex((v) => Math.max(v - 1, 0));
+        } else if (e.key === "Enter") {
+            if (filtered[activeIndex]) {
+                e.preventDefault();
+                insertMention(filtered[activeIndex]);
+            }
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            setOpen(false);
+        }
+    };
+
+    const getPayloadText = React.useCallback(() => {
+        let text = value;
+
+        const ms = [...mentionsRef.current]
+            .filter((m) => text.slice(m.start, m.end) === `@${m.name}`)
+            .sort((a, b) => b.start - a.start);
+
+        for (const m of ms) {
+            text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
+        }
+
+        text = text.replace(/@all\b/g, "@__all__");
+
+        return text;
+    }, [value]);
+
+    React.useImperativeHandle(ref, () => ({ getPayloadText }), [getPayloadText]);
+
+    const previewNodes = React.useMemo(() => {
+        const text = value ?? "";
+        if (!text) return null;
+
+        const ms = [...mentionsRef.current]
+            .filter((m) => text.slice(m.start, m.end) === `@${m.name}`)
+            .sort((a, b) => a.start - b.start);
+
+        const nodes: React.ReactNode[] = [];
+        let last = 0;
+
+        for (const m of ms) {
+            if (m.start > last) {
+                const seg = text.slice(last, m.start);
+                const segNodes = renderAllMentions(seg);
+                if (Array.isArray(segNodes)) nodes.push(...segNodes);
+                else nodes.push(segNodes);
+            }
+
+            nodes.push(
+                <span key={`${m.id}-${m.start}`} className="font-semibold text-blue-600">
+                    {text.slice(m.start, m.end)}
+                </span>
+            );
+
+            last = m.end;
+        }
+
+        if (last < text.length) {
+            const tail = renderAllMentions(text.slice(last));
+            if (Array.isArray(tail)) nodes.push(...tail);
+            else nodes.push(tail);
+        }
+
+        return nodes.length ? nodes : text;
+    }, [value]);
+
+    return (
+        <div className="relative">
+            <div
+                aria-hidden
+                className={twMerge(
+                    "pointer-events-none absolute inset-0 z-0 whitespace-pre-wrap break-words rounded-md px-3 py-2 text-sm leading-6",
+                    "text-[#261E33]"
+                )}>
+                {value ? <>{previewNodes}</> : <span className="text-[#9CA3AF]">{placeholder}</span>}
+            </div>
+
+            <Textarea
+                ref={taRef as any}
+                value={value}
+                onChange={onTextChange}
+                onKeyDown={onKeyDown}
+                placeholder={""}
+                className={twMerge(
+                    className,
+                    "relative z-10 bg-transparent text-transparent caret-[#261E33]",
+                    "selection:bg-blue-200"
+                )}
+            />
+
+            {open ? (
+                filtered.length > 0 ? (
+                    <div className="absolute left-0 top-full z-[999] mt-2 w-full overflow-hidden rounded-xl border border-[#EDEDED] bg-white shadow-xl">
+                        <div className="max-h-56 overflow-auto p-1">
+                            {filtered.map((u, idx) => (
+                                <button
+                                    key={u.id}
+                                    type="button"
+                                    onMouseDown={(ev) => {
+                                        ev.preventDefault();
+                                        insertMention(u);
+                                    }}
+                                    className={twMerge(
+                                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-[#FAFAFA]",
+                                        idx === activeIndex && "bg-[#FAFAFA]"
+                                    )}>
+                                    <div className="grid h-8 w-8 place-items-center rounded-full bg-[#F3F4F6] text-xs font-semibold text-[#261E33]">
+                                        {u.id === "__all__" ? "ALL" : safeInitials(u.name)}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="truncate font-semibold text-[#261E33]">
+                                            {u.id === "__all__" ? "@all" : u.name}
+                                        </div>
+                                        <div className="text-xs text-[#6F6B99]">Enter để chọn</div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="absolute left-0 top-full z-[999] mt-2 w-full rounded-xl border border-[#EDEDED] bg-white p-3 text-sm text-[#6F6B99] shadow-xl">
+                        Không có thành viên để mention.
+                    </div>
+                )
+            ) : null}
+        </div>
+    );
+});
+
+function ReplyComposer({
+    onCancel,
+    onSubmit,
+    members,
+    meId
+}: {
+    onCancel: () => void;
+    onSubmit: (payloadText: string) => void;
+    members: MentionUser[];
+    meId: string;
+}) {
     const [text, setText] = React.useState("");
+    const mentionRef = React.useRef<MentionTextareaHandle | null>(null);
 
     return (
         <div className="mt-3 rounded-xl border border-[#EDEDED] bg-[#FCFCFD] p-3">
-            <Textarea
+            <MentionTextarea
+                ref={mentionRef}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Viết phản hồi..."
+                onChange={setText}
+                members={members}
+                meId={meId}
+                placeholder="Viết phản hồi... (gõ @ để mention)"
                 className="min-h-20 resize-none border-[#EDEDED] bg-white"
+                maxChars={MAX_CHARS}
             />
+
+            {/* ✅ Counter */}
+            <TextCounter text={text} maxChars={MAX_CHARS} />
+
             <div className="mt-3 flex items-center justify-end gap-2">
                 <Button variant="outline" onClick={onCancel} className="rounded-xl">
                     Hủy
@@ -239,7 +629,9 @@ function ReplyComposer({ onCancel, onSubmit }: { onCancel: () => void; onSubmit:
                     onClick={() => {
                         const v = text.trim();
                         if (!v) return;
-                        onSubmit(v);
+
+                        const payload = mentionRef.current?.getPayloadText() ?? v;
+                        onSubmit(payload);
                         setText("");
                     }}
                     className="rounded-xl bg-[#FF5722] text-white hover:bg-[#e24d1e]">
@@ -251,16 +643,63 @@ function ReplyComposer({ onCancel, onSubmit }: { onCancel: () => void; onSubmit:
     );
 }
 
-function ReplyItemView({ r }: { r: ReplyItem }) {
+function ReplyItemView({
+    r,
+    membersById,
+    canDelete,
+    onDelete
+}: {
+    r: ReplyItem;
+    membersById: Record<string, string>;
+    canDelete: boolean;
+    onDelete: (id: string) => void;
+}) {
     return (
         <div className="flex gap-3">
             <Avatar initials={r.author.initials} />
             <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <p className="font-semibold text-[#261E33] text-sm">{r.author.name}</p>
-                    <span className="text-[#9CA3AF] text-xs">• {r.createdAtText}</span>
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <p className="font-semibold text-[#261E33] text-sm">{r.author.name}</p>
+                            <span className="text-[#9CA3AF] text-xs">• {r.createdAtText}</span>
+                        </div>
+
+                        <p className="mt-1 whitespace-pre-wrap text-[#261E33] text-sm">
+                            <RichTextWithMentions text={r.content} membersById={membersById} authorId={r.author.id} />
+                        </p>
+                    </div>
+
+                    {canDelete ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="rounded-lg p-2 text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
+                                    aria-label="Thêm">
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </button>
+                            </DropdownMenuTrigger>
+
+                            {/* ✅ FIX: menu không trong suốt + z cao */}
+                            <DropdownMenuContent
+                                align="end"
+                                sideOffset={6}
+                                className={twMerge(
+                                    "z-[9999] w-40",
+                                    "bg-white opacity-100 backdrop-blur-none",
+                                    "border border-[#EDEDED] shadow-xl"
+                                )}>
+                                <DropdownMenuItem
+                                    className="text-red-600 focus:text-red-600"
+                                    onClick={() => onDelete(r.id)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Xóa
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : null}
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-[#261E33] text-sm">{r.content}</p>
             </div>
         </div>
     );
@@ -271,18 +710,32 @@ function PostCard({
     onDelete,
     onAddReply,
     currentUserId,
-    userRole
+    userRole,
+    membersById,
+    mentionUsers,
+    meId,
+    isOwnerId
 }: {
     post: PostItem;
     onDelete: (id: string) => void;
-    onAddReply: (postId: string, text: string) => void;
+    onAddReply: (postId: string, payloadText: string) => void;
     currentUserId: string;
     userRole: GroupRole;
+    membersById: Record<string, string>;
+    mentionUsers: MentionUser[];
+    meId: string;
+    isOwnerId: (userId: string) => boolean;
 }) {
     const [replyOpen, setReplyOpen] = React.useState(false);
     const [repliesOpen, setRepliesOpen] = React.useState(true);
 
-    const canDelete = userRole === "owner" || userRole === "moderator" || post.author.id === currentUserId;
+    const isMeOwner = userRole === "owner";
+    const isMeModerator = userRole === "moderator";
+
+    const canDeletePost =
+        post.author.id === currentUserId ||
+        isMeOwner ||
+        (isMeModerator && !isOwnerId(post.author.id));
 
     return (
         <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
@@ -298,7 +751,11 @@ function PostCard({
                             </div>
 
                             <p className="mt-2 whitespace-pre-wrap text-[#261E33] text-[15px] leading-relaxed">
-                                {post.content}
+                                <RichTextWithMentions
+                                    text={post.content}
+                                    membersById={membersById}
+                                    authorId={post.author.id}
+                                />
                             </p>
                         </div>
 
@@ -312,33 +769,40 @@ function PostCard({
                                 </button>
                             </DropdownMenuTrigger>
 
-                            <DropdownMenuContent align="end" className="w-40">
-                                {canDelete ? (
-                                    <>
-                                        <DropdownMenuItem
-                                            className="text-red-600 focus:text-red-600"
-                                            onClick={() => onDelete(post.id)}>
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Xóa
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                    </>
-                                ) : null}
-                                <DropdownMenuItem onClick={() => setReplyOpen(true)}>
-                                    <CornerDownRight className="mr-2 h-4 w-4" />
-                                    Trả lời
-                                </DropdownMenuItem>
+                            {/* ✅ FIX: menu không trong suốt + z cao */}
+                            <DropdownMenuContent
+                                align="end"
+                                sideOffset={6}
+                                className={twMerge(
+                                    "z-[9999] w-40",
+                                    "bg-white opacity-100 backdrop-blur-none",
+                                    "border border-[#EDEDED] shadow-xl"
+                                )}>
+                                {canDeletePost ? (
+                                    <DropdownMenuItem
+                                        className="text-red-600 focus:text-red-600"
+                                        onClick={() => onDelete(post.id)}>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Xóa
+                                    </DropdownMenuItem>
+                                ) : (
+                                    <DropdownMenuItem disabled className="text-[#9CA3AF]">
+                                        Không có hành động
+                                    </DropdownMenuItem>
+                                )}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <IconCount
-                            label="Trả lời"
-                            icon={MessageCircle}
-                            count={post.replies.length}
+                        <button
+                            type="button"
                             onClick={() => setReplyOpen((v) => !v)}
-                        />
+                            className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
+                            aria-label="Trả lời">
+                            <MessageCircle className="h-4 w-4" />
+                            <span>{post.replies.length}</span>
+                        </button>
 
                         {post.replies.length > 0 ? (
                             <button
@@ -360,17 +824,32 @@ function PostCard({
 
                     {post.replies.length > 0 && repliesOpen ? (
                         <div className="mt-4 space-y-4 border-[#F1F1F1] border-l-2 pl-4">
-                            {post.replies.map((r) => (
-                                <ReplyItemView key={r.id} r={r} />
-                            ))}
+                            {post.replies.map((r) => {
+                                const canDeleteReply =
+                                    r.author.id === currentUserId ||
+                                    isMeOwner ||
+                                    (isMeModerator && !isOwnerId(r.author.id));
+
+                                return (
+                                    <ReplyItemView
+                                        key={r.id}
+                                        r={r}
+                                        membersById={membersById}
+                                        canDelete={canDeleteReply}
+                                        onDelete={onDelete}
+                                    />
+                                );
+                            })}
                         </div>
                     ) : null}
 
                     {replyOpen ? (
                         <ReplyComposer
+                            members={mentionUsers}
+                            meId={meId}
                             onCancel={() => setReplyOpen(false)}
-                            onSubmit={(text) => {
-                                onAddReply(post.id, text);
+                            onSubmit={(payloadText) => {
+                                onAddReply(post.id, payloadText);
                                 setReplyOpen(false);
                                 setRepliesOpen(true);
                             }}
@@ -389,7 +868,6 @@ export default function GroupDiscussPage() {
     const connectionRef = React.useRef<signalR.HubConnection | null>(null);
     const [isConnected, setIsConnected] = React.useState(false);
 
-    // ✅ FIX hydration: me được set sau khi mount
     const [me, setMe] = React.useState<UserLite>({
         id: "me",
         name: "Bạn",
@@ -412,6 +890,65 @@ export default function GroupDiscussPage() {
     const [posts, setPosts] = React.useState<PostItem[]>([]);
     const [userRole, setUserRole] = React.useState<GroupRole>("member");
 
+    const [membersById, setMembersById] = React.useState<Record<string, string>>({});
+    const [rolesById, setRolesById] = React.useState<Record<string, GroupRole>>({});
+
+    const mentionUsers = React.useMemo<MentionUser[]>(
+        () => Object.entries(membersById).map(([id, name]) => ({ id, name })),
+        [membersById]
+    );
+
+    const isOwnerId = React.useCallback(
+        (userId: string) => {
+            const r = rolesById[String(userId || "").trim()];
+            return r === "owner";
+        },
+        [rolesById]
+    );
+
+    const composerMentionRef = React.useRef<MentionTextareaHandle | null>(null);
+
+    // ✅ Confirm delete modal state
+    const [deleteOpen, setDeleteOpen] = React.useState(false);
+    const [deleteTargetId, setDeleteTargetId] = React.useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = React.useState(false);
+
+    const openDeleteConfirm = (messageId: string) => {
+        setDeleteTargetId(messageId);
+        setDeleteOpen(true);
+    };
+
+    const closeDeleteConfirm = () => {
+        if (isDeleting) return;
+        setDeleteOpen(false);
+        setDeleteTargetId(null);
+    };
+
+    const confirmDelete = async () => {
+        const id = deleteTargetId;
+        if (!id) return;
+
+        const connection = connectionRef.current;
+        if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+            toast({ variant: "destructive", description: "Không thể xóa khi chưa kết nối" });
+            closeDeleteConfirm();
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            await connection.invoke("DeleteMessage", { messageId: id, groupId });
+            closeDeleteConfirm();
+        } catch (err: any) {
+            toast({
+                variant: "destructive",
+                description: String(err?.message || err || "Vui lòng thử lại sau")
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     React.useEffect(() => {
         let isDisposed = false;
 
@@ -432,8 +969,9 @@ export default function GroupDiscussPage() {
 
         connectionRef.current = connection;
 
+        const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+
         const loadHistory = async () => {
-            const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
             if (!rawBase) return;
 
             const response = await apiFetch<GroupMessageListResponse>(`${rawBase}/group-messages/${groupId}`, {
@@ -446,7 +984,6 @@ export default function GroupDiscussPage() {
         };
 
         const loadUserRole = async () => {
-            const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
             if (!rawBase) return;
 
             try {
@@ -454,16 +991,74 @@ export default function GroupDiscussPage() {
                     method: "GET"
                 });
 
-                if (response.status === "success" && response.data?.data?.userRole) {
-                    const role = String(response.data.data.userRole).toLowerCase();
-                    if (role.includes("owner")) setUserRole("owner");
-                    else if (role.includes("moderator")) setUserRole("moderator");
-                    else if (role.includes("commenter")) setUserRole("commenter");
-                    else if (role.includes("viewer")) setUserRole("viewer");
-                    else setUserRole("member");
-                }
+                const roleRaw =
+                    (response as any)?.data?.data?.userRole ??
+                    (response as any)?.data?.userRole ??
+                    (response as any)?.data?.data?.userRole;
+
+                const role = String(roleRaw || "").toLowerCase().trim();
+
+                if (role.includes("owner")) setUserRole("owner");
+                else if (role.includes("moderator")) setUserRole("moderator");
+                else if (role.includes("commenter")) setUserRole("commenter");
+                else if (role.includes("viewer")) setUserRole("viewer");
+                else setUserRole("member");
             } catch {
                 setUserRole("member");
+            }
+        };
+
+        const toRole = (raw: any): GroupRole => {
+            const s = String(raw || "").toLowerCase().trim();
+            if (s.includes("owner")) return "owner";
+            if (s.includes("moderator")) return "moderator";
+            if (s.includes("commenter")) return "commenter";
+            if (s.includes("viewer")) return "viewer";
+            return "member";
+        };
+
+        const loadMembers = async () => {
+            if (!rawBase) return;
+
+            try {
+                const res = await apiFetch<any>(`${rawBase}/group/${groupId}/members`, { method: "GET" });
+
+                const list: any[] = res?.data?.data?.members || res?.data?.members || res?.data || [];
+                const map: Record<string, string> = {};
+                const roleMap: Record<string, GroupRole> = {};
+
+                for (const m of list) {
+                    const id = String(m?.id || m?.userId || "").trim();
+                    if (!id) continue;
+
+                    const username =
+                        String(m?.userName || m?.username || "").trim() ||
+                        ([m?.firstName, m?.lastName].filter(Boolean).join(" ").trim()) ||
+                        (m?.email ? String(m.email).split("@")[0] : "") ||
+                        "user";
+
+                    map[id] = username;
+
+                    const rawRole =
+                        m?.role ??
+                        m?.groupRole ??
+                        m?.userRole ??
+                        m?.memberRole ??
+                        m?.groupMemberRole ??
+                        m?.roles?.[0];
+
+                    roleMap[id] = toRole(rawRole);
+                }
+
+                if (!isDisposed) {
+                    setMembersById(map);
+                    setRolesById(roleMap);
+                }
+            } catch {
+                if (!isDisposed) {
+                    setMembersById({});
+                    setRolesById({});
+                }
             }
         };
 
@@ -532,7 +1127,7 @@ export default function GroupDiscussPage() {
                 if (isDisposed) return;
 
                 setIsConnected(true);
-                await Promise.all([loadHistory(), loadUserRole()]);
+                await Promise.all([loadHistory(), loadUserRole(), loadMembers()]);
             } catch {
                 if (isDisposed) return;
 
@@ -551,8 +1146,7 @@ export default function GroupDiscussPage() {
                     if (connection.state === signalR.HubConnectionState.Connected) {
                         await connection.invoke("LeaveGroup", groupId);
                     }
-                } catch (error) {
-                    void error;
+                } catch {
                 } finally {
                     await connection.stop();
                     if (connectionRef.current === connection) connectionRef.current = null;
@@ -565,38 +1159,28 @@ export default function GroupDiscussPage() {
     }, [groupId, hubUrl]);
 
     const onPost = async () => {
-        const v = composerText.trim();
         const connection = connectionRef.current;
-        if (!v) return;
-
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
 
+        const v = composerText.trim();
+        if (!v) return;
+
+        const rawPayload = composerMentionRef.current?.getPayloadText() ?? v;
+        const payloadText = expandMentionAll(rawPayload, membersById, me.id);
+
         try {
-            await connection.invoke("SendMessage", { groupId, content: v });
+            await connection.invoke("SendMessage", { groupId, content: payloadText });
             setComposerText("");
         } catch {
             toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
         }
     };
 
-    const onDelete = async (id: string) => {
-        const ok = window.confirm("Bạn có muốn xóa bài viết này không?");
-        if (!ok) return;
-
-        const connection = connectionRef.current;
-        if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-            toast({ variant: "destructive", description: "Không thể xóa bài viết khi chưa kết nối" });
-            return;
-        }
-
-        try {
-            await connection.invoke("DeleteMessage", { messageId: id });
-        } catch {
-            toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
-        }
+    const onDelete = (id: string) => {
+        openDeleteConfirm(id);
     };
 
-    const onAddReply = async (postId: string, text: string) => {
+    const onAddReply = async (postId: string, payloadText: string) => {
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
             toast({ variant: "destructive", description: "Không thể gửi phản hồi khi chưa kết nối" });
@@ -604,7 +1188,8 @@ export default function GroupDiscussPage() {
         }
 
         try {
-            const payload = { groupId, parentMessageId: postId, content: text };
+            const content = expandMentionAll(payloadText, membersById, me.id);
+            const payload = { groupId, parentMessageId: postId, content };
 
             try {
                 await connection.invoke("ReplyToMessage", payload);
@@ -628,12 +1213,20 @@ export default function GroupDiscussPage() {
                     <div className="flex gap-3">
                         <Avatar initials={me.initials} />
                         <div className="min-w-0 flex-1">
-                            <Textarea
+                            <MentionTextarea
+                                ref={composerMentionRef}
                                 value={composerText}
-                                onChange={(e) => setComposerText(e.target.value)}
-                                placeholder="Viết gì đó để chia sẻ với mọi người..."
+                                onChange={setComposerText}
+                                members={mentionUsers}
+                                meId={me.id}
+                                placeholder="Viết gì đó để chia sẻ với mọi người... (gõ @ để mention)"
                                 className="min-h-27.5 resize-none border-[#EDEDED] bg-white"
+                                maxChars={MAX_CHARS}
                             />
+
+                            {/* ✅ Counter */}
+                            <TextCounter text={composerText} maxChars={MAX_CHARS} />
+
                             <div className="mt-3 flex items-center justify-end">
                                 <Button
                                     onClick={onPost}
@@ -657,6 +1250,10 @@ export default function GroupDiscussPage() {
                                 onAddReply={onAddReply}
                                 currentUserId={me.id}
                                 userRole={userRole}
+                                membersById={membersById}
+                                mentionUsers={mentionUsers}
+                                meId={me.id}
+                                isOwnerId={isOwnerId}
                             />
                         ))
                     ) : (
@@ -667,6 +1264,40 @@ export default function GroupDiscussPage() {
                 </div>
 
                 <div className="h-10" />
+
+                <AlertDialog open={deleteOpen} onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
+                    <AlertDialogContent className="sm:max-w-2xl rounded-2xl">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-xl">Xác nhận xóa</AlertDialogTitle>
+                            <AlertDialogDescription className="text-base leading-6 text-[#111827]">
+                                Bạn có chắc chắn muốn xóa tin nhắn này không? Hành động này không thể hoàn tác.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+
+                        <AlertDialogFooter className="gap-3 sm:gap-3">
+                            <AlertDialogCancel
+                                disabled={isDeleting}
+                                className={twMerge(
+                                    "rounded-xl bg-[#F3F4F6] text-[#111827]",
+                                    "border-0 shadow-none",
+                                    "hover:bg-[#E5E7EB]",
+                                    "focus-visible:ring-0"
+                                )}>
+                                Hủy
+                            </AlertDialogCancel>
+
+                            <AlertDialogAction
+                                disabled={isDeleting}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    void confirmDelete();
+                                }}
+                                className="rounded-xl bg-red-600 px-8 text-white hover:bg-red-700 focus-visible:ring-0">
+                                {isDeleting ? "Đang xóa..." : "Xóa"}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </Container>
         </div>
     );
