@@ -15,7 +15,7 @@ export function FeatureComparisonTable() {
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <h2 className="mb-2 font-bold text-xl text-[#261E33]">Feature Comparison</h2>
+            <h2 className="mb-2 font-bold text-[#261E33] text-xl">Feature Comparison</h2>
             <p className="mb-6 text-[#6F6B99] text-sm">Overview of features included in each plan</p>
 
             <div className="overflow-x-auto">
@@ -33,25 +33,61 @@ export function FeatureComparisonTable() {
                                 <td className="px-4 py-3 text-[#261E33] text-sm">{feature.name}</td>
                                 <td className="px-4 py-3 text-center">
                                     {feature.free === true ? (
-                                        <svg className="mx-auto h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        <svg
+                                            className="mx-auto h-5 w-5 text-green-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M5 13l4 4L19 7"
+                                            />
                                         </svg>
                                     ) : feature.free === "Limited" ? (
                                         <span className="text-[#6F6B99] text-xs">Limited</span>
                                     ) : (
-                                        <svg className="mx-auto h-5 w-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        <svg
+                                            className="mx-auto h-5 w-5 text-gray-300"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M6 18L18 6M6 6l12 12"
+                                            />
                                         </svg>
                                     )}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                     {feature.premium === true ? (
-                                        <svg className="mx-auto h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        <svg
+                                            className="mx-auto h-5 w-5 text-green-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M5 13l4 4L19 7"
+                                            />
                                         </svg>
                                     ) : (
-                                        <svg className="mx-auto h-5 w-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        <svg
+                                            className="mx-auto h-5 w-5 text-gray-300"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M6 18L18 6M6 6l12 12"
+                                            />
                                         </svg>
                                     )}
                                 </td>

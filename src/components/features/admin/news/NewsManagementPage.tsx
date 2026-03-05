@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { CreateNewsModal } from "./CreateNewsModal";
-import { EditNewsModal } from "./EditNewsModal";
 import { DeleteNewsModal } from "./DeleteNewsModal";
+import { EditNewsModal } from "./EditNewsModal";
 
 type News = {
     id: string;
@@ -35,7 +35,8 @@ export function NewsManagementPage() {
         {
             id: "1",
             title: "System Maintenance Scheduled",
-            content: "We will be performing scheduled maintenance on March 10, 2024 from 2:00 AM to 4:00 AM UTC. During this time, the system may be temporarily unavailable.",
+            content:
+                "We will be performing scheduled maintenance on March 10, 2024 from 2:00 AM to 4:00 AM UTC. During this time, the system may be temporarily unavailable.",
             type: "Maintenance",
             status: "Published",
             priority: "High",
@@ -47,7 +48,8 @@ export function NewsManagementPage() {
         {
             id: "2",
             title: "New Features Released",
-            content: "We're excited to announce new features including dark mode, advanced search, and improved performance. Check out the changelog for more details.",
+            content:
+                "We're excited to announce new features including dark mode, advanced search, and improved performance. Check out the changelog for more details.",
             type: "Update",
             status: "Published",
             priority: "Normal",
@@ -59,7 +61,8 @@ export function NewsManagementPage() {
         {
             id: "3",
             title: "Security Update Available",
-            content: "A critical security update is now available. Please update your application to the latest version to ensure your data remains secure.",
+            content:
+                "A critical security update is now available. Please update your application to the latest version to ensure your data remains secure.",
             type: "System",
             status: "Published",
             priority: "Urgent",
@@ -71,7 +74,8 @@ export function NewsManagementPage() {
         {
             id: "4",
             title: "Welcome to Study Studio",
-            content: "Welcome to our platform! This is a draft announcement that will be published soon with tips for getting started.",
+            content:
+                "Welcome to our platform! This is a draft announcement that will be published soon with tips for getting started.",
             type: "Announcement",
             status: "Draft",
             priority: "Low",
@@ -83,7 +87,8 @@ export function NewsManagementPage() {
         {
             id: "5",
             title: "Holiday Schedule",
-            content: "Our support team will have limited availability during the holiday season. Emergency support will still be available 24/7.",
+            content:
+                "Our support team will have limited availability during the holiday season. Emergency support will still be available 24/7.",
             type: "Announcement",
             status: "Archived",
             priority: "Normal",
@@ -100,11 +105,9 @@ export function NewsManagementPage() {
             news.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
             news.author.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesStatus =
-            filterStatus === "all" || news.status.toLowerCase() === filterStatus;
+        const matchesStatus = filterStatus === "all" || news.status.toLowerCase() === filterStatus;
 
-        const matchesType =
-            filterType === "all" || news.type.toLowerCase() === filterType;
+        const matchesType = filterType === "all" || news.type.toLowerCase() === filterType;
 
         return matchesSearch && matchesStatus && matchesType;
     });
@@ -139,9 +142,9 @@ export function NewsManagementPage() {
 
     const stats = {
         total: newsList.length,
-        published: newsList.filter(n => n.status === "Published").length,
-        draft: newsList.filter(n => n.status === "Draft").length,
-        archived: newsList.filter(n => n.status === "Archived").length
+        published: newsList.filter((n) => n.status === "Published").length,
+        draft: newsList.filter((n) => n.status === "Draft").length,
+        archived: newsList.filter((n) => n.status === "Archived").length
     };
 
     return (
@@ -161,9 +164,14 @@ export function NewsManagementPage() {
                             <button
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(true)}
-                                className="flex items-center gap-2 rounded-lg bg-[#FF5F3D] px-4 py-2 text-white hover:bg-[#ff4620] transition-colors">
+                                className="flex items-center gap-2 rounded-lg bg-[#FF5F3D] px-4 py-2 text-white transition-colors hover:bg-[#ff4620]">
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 4v16m8-8H4"
+                                    />
                                 </svg>
                                 <span className="font-medium">{t("createButton")}</span>
                             </button>
@@ -194,7 +202,7 @@ export function NewsManagementPage() {
 
                         {/* Filters */}
                         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div className="relative flex-1 max-w-md">
+                            <div className="relative max-w-md flex-1">
                                 <input
                                     type="text"
                                     placeholder={t("searchPlaceholder")}
@@ -207,7 +215,12 @@ export function NewsManagementPage() {
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                    />
                                 </svg>
                             </div>
 
@@ -236,26 +249,42 @@ export function NewsManagementPage() {
                         </div>
 
                         {/* News Table */}
-                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead className="bg-[#F8F8F8]">
                                         <tr>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.title")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.type")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.priority")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.status")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.author")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.date")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.actions")}</th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.title")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.type")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.priority")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.status")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.author")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.date")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.actions")}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredNews.map((news) => (
-                                            <tr key={news.id} className="border-t border-gray-100 hover:bg-gray-50">
+                                            <tr key={news.id} className="border-gray-100 border-t hover:bg-gray-50">
                                                 <td className="px-6 py-4">
                                                     <p className="font-medium text-[#261E33] text-sm">{news.title}</p>
-                                                    <p className="text-[#6F6B99] text-xs line-clamp-1">{news.content}</p>
+                                                    <p className="line-clamp-1 text-[#6F6B99] text-xs">
+                                                        {news.content}
+                                                    </p>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="rounded-full bg-gray-100 px-3 py-1 text-[#261E33] text-xs">
@@ -263,12 +292,14 @@ export function NewsManagementPage() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${getPriorityColor(news.priority)}`}>
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${getPriorityColor(news.priority)}`}>
                                                         {news.priority}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(news.status)}`}>
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${getStatusColor(news.status)}`}>
                                                         {news.status}
                                                     </span>
                                                 </td>
@@ -279,14 +310,14 @@ export function NewsManagementPage() {
                                                         <button
                                                             type="button"
                                                             onClick={() => setEditingNews(news)}
-                                                            className="cursor-pointer text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                                            className="cursor-pointer font-medium text-blue-600 text-sm hover:text-blue-700">
                                                             {t("table.edit")}
                                                         </button>
                                                         <span className="text-gray-300">|</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => setDeletingNews(news)}
-                                                            className="cursor-pointer text-red-600 hover:text-red-700 text-sm font-medium">
+                                                            className="cursor-pointer font-medium text-red-600 text-sm hover:text-red-700">
                                                             {t("table.delete")}
                                                         </button>
                                                     </div>
@@ -308,15 +339,9 @@ export function NewsManagementPage() {
             </div>
 
             {/* Modals */}
-            {isCreateModalOpen && (
-                <CreateNewsModal onClose={() => setIsCreateModalOpen(false)} />
-            )}
-            {editingNews && (
-                <EditNewsModal news={editingNews} onClose={() => setEditingNews(null)} />
-            )}
-            {deletingNews && (
-                <DeleteNewsModal news={deletingNews} onClose={() => setDeletingNews(null)} />
-            )}
+            {isCreateModalOpen && <CreateNewsModal onClose={() => setIsCreateModalOpen(false)} />}
+            {editingNews && <EditNewsModal news={editingNews} onClose={() => setEditingNews(null)} />}
+            {deletingNews && <DeleteNewsModal news={deletingNews} onClose={() => setDeletingNews(null)} />}
         </div>
     );
 }

@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
+import { BillingHistoryTab } from "./BillingHistoryTab";
+import { FeatureComparisonTable } from "./FeatureComparisonTable";
+import { PaymentMethodsTab } from "./PaymentMethodsTab";
 import { PlanCard } from "./PlanCard";
 import { PlanLimitsModal } from "./PlanLimitsModal";
-import { FeatureComparisonTable } from "./FeatureComparisonTable";
-import { BillingHistoryTab } from "./BillingHistoryTab";
 import { RevenueStatsTab } from "./RevenueStatsTab";
-import { PaymentMethodsTab } from "./PaymentMethodsTab";
 
 type TabType = "plans" | "billing" | "revenue" | "payments";
 
@@ -61,7 +60,6 @@ export function SubscriptionPlansPage() {
         }
     ];
 
-
     const handleEditLimits = (planId: "free" | "premium") => {
         setSelectedPlan(planId);
         setIsLimitsModalOpen(true);
@@ -86,7 +84,7 @@ export function SubscriptionPlansPage() {
                         </div>
 
                         {/* Tabs */}
-                        <div className="mb-6 flex gap-2 border-b border-gray-200">
+                        <div className="mb-6 flex gap-2 border-gray-200 border-b">
                             {[
                                 { id: "plans" as const, label: t("tabs.plans") },
                                 { id: "billing" as const, label: t("tabs.billing") },
@@ -97,10 +95,11 @@ export function SubscriptionPlansPage() {
                                     key={tab.id}
                                     type="button"
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${activeTab === tab.id
-                                        ? "border-[#FF5F3D] text-[#FF5F3D]"
-                                        : "border-transparent text-[#6F6B99] hover:text-[#261E33]"
-                                        }`}>
+                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${
+                                        activeTab === tab.id
+                                            ? "border-[#FF5F3D] text-[#FF5F3D]"
+                                            : "border-transparent text-[#6F6B99] hover:text-[#261E33]"
+                                    }`}>
                                     {tab.label}
                                 </button>
                             ))}
@@ -114,38 +113,80 @@ export function SubscriptionPlansPage() {
                                     <div className="rounded-xl border border-gray-200 bg-white p-5">
                                         <div className="mb-2 flex items-center justify-between">
                                             <p className="text-[#6F6B99] text-sm">Total Subscribers</p>
-                                            <svg className="h-5 w-5 text-[#6F6B99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            <svg
+                                                className="h-5 w-5 text-[#6F6B99]"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                                />
                                             </svg>
                                         </div>
-                                        <p className="font-bold text-2xl text-[#261E33]">{stats.totalSubscribers.toLocaleString()}</p>
+                                        <p className="font-bold text-2xl text-[#261E33]">
+                                            {stats.totalSubscribers.toLocaleString()}
+                                        </p>
                                     </div>
 
                                     <div className="rounded-xl border border-gray-200 bg-white p-5">
                                         <div className="mb-2 flex items-center justify-between">
                                             <p className="text-[#6F6B99] text-sm">Free Users</p>
-                                            <svg className="h-5 w-5 text-[#6F6B99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            <svg
+                                                className="h-5 w-5 text-[#6F6B99]"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                                />
                                             </svg>
                                         </div>
-                                        <p className="font-bold text-2xl text-[#261E33]">{stats.freeUsers.toLocaleString()}</p>
+                                        <p className="font-bold text-2xl text-[#261E33]">
+                                            {stats.freeUsers.toLocaleString()}
+                                        </p>
                                     </div>
 
                                     <div className="rounded-xl border border-gray-200 bg-white p-5">
                                         <div className="mb-2 flex items-center justify-between">
                                             <p className="text-[#6F6B99] text-sm">Premium Users</p>
-                                            <svg className="h-5 w-5 text-[#FF5F3D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                            <svg
+                                                className="h-5 w-5 text-[#FF5F3D]"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                                                />
                                             </svg>
                                         </div>
-                                        <p className="font-bold text-2xl text-[#261E33]">{stats.premiumUsers.toLocaleString()}</p>
+                                        <p className="font-bold text-2xl text-[#261E33]">
+                                            {stats.premiumUsers.toLocaleString()}
+                                        </p>
                                     </div>
 
                                     <div className="rounded-xl border border-gray-200 bg-white p-5">
                                         <div className="mb-2 flex items-center justify-between">
                                             <p className="text-[#6F6B99] text-sm">Conversion Rate</p>
-                                            <svg className="h-5 w-5 text-[#6F6B99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            <svg
+                                                className="h-5 w-5 text-[#6F6B99]"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                                />
                                             </svg>
                                         </div>
                                         <p className="font-bold text-2xl text-[#261E33]">{stats.conversionRate}%</p>
@@ -184,7 +225,7 @@ export function SubscriptionPlansPage() {
                         setIsLimitsModalOpen(false);
                         setSelectedPlan(null);
                     }}
-                    plan={plans.find(p => p.id === selectedPlan)!}
+                    plan={plans.find((p) => p.id === selectedPlan)!}
                 />
             )}
         </div>

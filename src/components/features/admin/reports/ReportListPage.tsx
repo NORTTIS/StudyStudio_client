@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { ReportDetailModal } from "./ReportDetailModal";
@@ -42,7 +42,8 @@ export function ReportListPage() {
             },
             createdAt: "2024-03-05",
             updatedAt: "2024-03-05",
-            description: "When trying to upload files larger than 10MB, the system shows an error message and the upload fails. This happens consistently across different file types."
+            description:
+                "When trying to upload files larger than 10MB, the system shows an error message and the upload fails. This happens consistently across different file types."
         },
         {
             id: "2",
@@ -56,7 +57,8 @@ export function ReportListPage() {
             },
             createdAt: "2024-03-04",
             updatedAt: "2024-03-05",
-            description: "It would be great to have a dark mode option for the application. Many users work late at night and a dark theme would be easier on the eyes."
+            description:
+                "It would be great to have a dark mode option for the application. Many users work late at night and a dark theme would be easier on the eyes."
         },
         {
             id: "3",
@@ -84,7 +86,8 @@ export function ReportListPage() {
             },
             createdAt: "2024-03-05",
             updatedAt: "2024-03-05",
-            description: "I tried to upgrade to Premium plan. The payment failed with an error, but the money was deducted from my account. My account still shows as Free plan."
+            description:
+                "I tried to upgrade to Premium plan. The payment failed with an error, but the money was deducted from my account. My account still shows as Free plan."
         },
         {
             id: "5",
@@ -102,18 +105,15 @@ export function ReportListPage() {
         }
     ];
 
-
     const filteredReports = reports.filter((report) => {
         const matchesSearch =
             report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             report.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             report.user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesStatus =
-            filterStatus === "all" || report.status.toLowerCase().replace(" ", "-") === filterStatus;
+        const matchesStatus = filterStatus === "all" || report.status.toLowerCase().replace(" ", "-") === filterStatus;
 
-        const matchesType =
-            filterType === "all" || report.type.toLowerCase() === filterType;
+        const matchesType = filterType === "all" || report.type.toLowerCase() === filterType;
 
         return matchesSearch && matchesStatus && matchesType;
     });
@@ -150,9 +150,9 @@ export function ReportListPage() {
 
     const stats = {
         total: reports.length,
-        open: reports.filter(r => r.status === "Open").length,
-        inProgress: reports.filter(r => r.status === "In Progress").length,
-        resolved: reports.filter(r => r.status === "Resolved").length
+        open: reports.filter((r) => r.status === "Open").length,
+        inProgress: reports.filter((r) => r.status === "In Progress").length,
+        resolved: reports.filter((r) => r.status === "Resolved").length
     };
 
     return (
@@ -194,7 +194,7 @@ export function ReportListPage() {
 
                         {/* Filters */}
                         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div className="relative flex-1 max-w-md">
+                            <div className="relative max-w-md flex-1">
                                 <input
                                     type="text"
                                     placeholder={t("searchPlaceholder")}
@@ -207,7 +207,12 @@ export function ReportListPage() {
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                    />
                                 </svg>
                             </div>
 
@@ -237,23 +242,37 @@ export function ReportListPage() {
                         </div>
 
                         {/* Reports Table */}
-                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead className="bg-[#F8F8F8]">
                                         <tr>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.title")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.type")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.user")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.priority")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.status")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.date")}</th>
-                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">{t("table.actions")}</th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.title")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.type")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.user")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.priority")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.status")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.date")}
+                                            </th>
+                                            <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                                {t("table.actions")}
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredReports.map((report) => (
-                                            <tr key={report.id} className="border-t border-gray-100 hover:bg-gray-50">
+                                            <tr key={report.id} className="border-gray-100 border-t hover:bg-gray-50">
                                                 <td className="px-6 py-4">
                                                     <p className="font-medium text-[#261E33] text-sm">{report.title}</p>
                                                 </td>
@@ -264,17 +283,21 @@ export function ReportListPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div>
-                                                        <p className="font-medium text-[#261E33] text-sm">{report.user.name}</p>
+                                                        <p className="font-medium text-[#261E33] text-sm">
+                                                            {report.user.name}
+                                                        </p>
                                                         <p className="text-[#6F6B99] text-xs">{report.user.email}</p>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${getPriorityColor(report.priority)}`}>
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${getPriorityColor(report.priority)}`}>
                                                         {report.priority}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(report.status)}`}>
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${getStatusColor(report.status)}`}>
                                                         {report.status}
                                                     </span>
                                                 </td>
@@ -283,7 +306,7 @@ export function ReportListPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setSelectedReport(report)}
-                                                        className="cursor-pointer text-[#FF5F3D] hover:text-[#ff4620] text-sm font-medium">
+                                                        className="cursor-pointer font-medium text-[#FF5F3D] text-sm hover:text-[#ff4620]">
                                                         {t("table.viewDetails")}
                                                     </button>
                                                 </td>
@@ -304,12 +327,7 @@ export function ReportListPage() {
             </div>
 
             {/* Detail Modal */}
-            {selectedReport && (
-                <ReportDetailModal
-                    report={selectedReport}
-                    onClose={() => setSelectedReport(null)}
-                />
-            )}
+            {selectedReport && <ReportDetailModal report={selectedReport} onClose={() => setSelectedReport(null)} />}
         </div>
     );
 }

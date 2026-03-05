@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type News = {
@@ -29,7 +29,7 @@ export function DeleteNewsModal({ news, onClose }: DeleteNewsModalProps) {
     const handleDelete = async () => {
         setIsDeleting(true);
         // TODO: Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         setIsDeleting(false);
         onClose();
     };
@@ -42,19 +42,26 @@ export function DeleteNewsModal({ news, onClose }: DeleteNewsModalProps) {
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
                             <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
                             </svg>
                         </div>
                         <div>
-                            <h2 className="font-bold text-lg text-[#261E33]">{t("deleteModal.title")}</h2>
+                            <h2 className="font-bold text-[#261E33] text-lg">{t("deleteModal.title")}</h2>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600">
+                    <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
                         </svg>
                     </button>
                 </div>
@@ -65,9 +72,7 @@ export function DeleteNewsModal({ news, onClose }: DeleteNewsModalProps) {
                         {t("deleteModal.message")} <span className="font-semibold text-[#261E33]">"{news.title}"</span>?
                     </p>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                        <p className="text-red-700 text-xs">
-                            {t("deleteModal.warning")}
-                        </p>
+                        <p className="text-red-700 text-xs">{t("deleteModal.warning")}</p>
                     </div>
                 </div>
 

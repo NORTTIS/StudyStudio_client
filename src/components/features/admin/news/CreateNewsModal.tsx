@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type CreateNewsModalProps = {
@@ -18,32 +18,34 @@ export function CreateNewsModal({ onClose }: CreateNewsModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async () => {
-        if (!title.trim() || !content.trim()) {
+        if (!(title.trim() && content.trim())) {
             return;
         }
 
         setIsSubmitting(true);
         // TODO: Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         setIsSubmitting(false);
         onClose();
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
+            <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
                 {/* Header */}
                 <div className="mb-6 flex items-start justify-between">
                     <div>
                         <h2 className="mb-2 font-bold text-2xl text-[#261E33]">{t("createModal.title")}</h2>
                         <p className="text-[#6F6B99] text-sm">{t("createModal.subtitle")}</p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600">
+                    <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
                         </svg>
                     </button>
                 </div>

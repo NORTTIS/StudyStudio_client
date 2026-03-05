@@ -43,15 +43,18 @@ export function PlanLimitsModal({ isOpen, onClose, plan }: PlanLimitsModalProps)
             <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
-                    <h2 className="font-bold text-xl text-[#261E33]">
-                        Edit Limits - {plan.name} Plan
-                    </h2>
+                    <h2 className="font-bold text-[#261E33] text-xl">Edit Limits - {plan.name} Plan</h2>
                     <button
                         type="button"
                         onClick={onClose}
                         className="text-[#6F6B99] transition-colors hover:text-[#261E33]">
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
                         </svg>
                     </button>
                 </div>

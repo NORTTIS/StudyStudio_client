@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type Report = {
@@ -34,7 +34,7 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
     const handleUpdateStatus = async () => {
         setIsUpdating(true);
         // TODO: Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         setIsUpdating(false);
         onClose();
     };
@@ -71,16 +71,18 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
+            <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
                 {/* Header */}
                 <div className="mb-6 flex items-start justify-between">
                     <div className="flex-1">
                         <h2 className="mb-2 font-bold text-2xl text-[#261E33]">{report.title}</h2>
                         <div className="flex items-center gap-3">
-                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(report.status)}`}>
+                            <span
+                                className={`rounded-full px-3 py-1 font-medium text-xs ${getStatusColor(report.status)}`}>
                                 {report.status}
                             </span>
-                            <span className={`rounded-full px-3 py-1 text-xs font-medium ${getPriorityColor(report.priority)}`}>
+                            <span
+                                className={`rounded-full px-3 py-1 font-medium text-xs ${getPriorityColor(report.priority)}`}>
                                 {report.priority}
                             </span>
                             <span className="rounded-full bg-gray-100 px-3 py-1 text-[#261E33] text-xs">
@@ -88,12 +90,14 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
                             </span>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600">
+                    <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
                         </svg>
                     </button>
                 </div>
@@ -163,9 +167,7 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
 
                 {/* Add Note */}
                 <div className="mb-6">
-                    <label className="mb-2 block font-medium text-[#261E33] text-sm">
-                        {t("modal.addNote")}
-                    </label>
+                    <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.addNote")}</label>
                     <textarea
                         value={note}
                         onChange={(e) => setNote(e.target.value)}

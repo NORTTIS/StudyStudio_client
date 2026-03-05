@@ -68,8 +68,7 @@ export function BillingHistoryTab() {
             record.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             record.invoice.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesStatus =
-            filterStatus === "all" || record.status.toLowerCase() === filterStatus;
+        const matchesStatus = filterStatus === "all" || record.status.toLowerCase() === filterStatus;
 
         return matchesSearch && matchesStatus;
     });
@@ -96,7 +95,7 @@ export function BillingHistoryTab() {
         <div className="space-y-6">
             {/* Header with Search and Filters */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="relative flex-1 max-w-md">
+                <div className="relative max-w-md flex-1">
                     <input
                         type="text"
                         placeholder="Search by user, email, or invoice..."
@@ -109,7 +108,12 @@ export function BillingHistoryTab() {
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
                     </svg>
                 </div>
 
@@ -126,7 +130,12 @@ export function BillingHistoryTab() {
 
                     <Button onClick={handleExport} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
                         <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                         </svg>
                         Export
                     </Button>
@@ -134,7 +143,7 @@ export function BillingHistoryTab() {
             </div>
 
             {/* Billing Table */}
-            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-[#F8F8F8]">
@@ -150,7 +159,7 @@ export function BillingHistoryTab() {
                         </thead>
                         <tbody>
                             {filteredRecords.map((record) => (
-                                <tr key={record.id} className="border-t border-gray-100 hover:bg-gray-50">
+                                <tr key={record.id} className="border-gray-100 border-t hover:bg-gray-50">
                                     <td className="px-6 py-4 font-medium text-[#261E33] text-sm">{record.invoice}</td>
                                     <td className="px-6 py-4">
                                         <div>
@@ -163,7 +172,8 @@ export function BillingHistoryTab() {
                                         {record.amount.toLocaleString()} VND
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(record.status)}`}>
+                                        <span
+                                            className={`rounded-full px-3 py-1 font-medium text-xs ${getStatusColor(record.status)}`}>
                                             {record.status}
                                         </span>
                                     </td>
@@ -171,7 +181,7 @@ export function BillingHistoryTab() {
                                     <td className="px-6 py-4">
                                         <button
                                             type="button"
-                                            className="text-[#FF5F3D] hover:text-[#ff4620] text-sm font-medium">
+                                            className="font-medium text-[#FF5F3D] text-sm hover:text-[#ff4620]">
                                             View Details
                                         </button>
                                     </td>

@@ -1,22 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Eye, Flag, MessageSquare, Shield, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
-import {
-    AlertTriangle,
-    ArrowLeft,
-    CheckCircle2,
-    Clock,
-    Eye,
-    Flag,
-    MessageSquare,
-    Shield,
-    UserX,
-} from "lucide-react";
 import type { Report, ReportStatus } from "./ReportListPage";
 
 // Re-export mock data so detail page can look up by ID
@@ -32,7 +22,7 @@ const MOCK_REPORTS: Report[] = [
         reportType: "Lạm dụng nội dung",
         status: "reviewing",
         reportDate: "20 tháng 1, 2024",
-        targetContent: "Bình luận #1234 trong nhóm học tập",
+        targetContent: "Bình luận #1234 trong nhóm học tập"
     },
     {
         id: "RPT-002",
@@ -45,7 +35,7 @@ const MOCK_REPORTS: Report[] = [
         reportType: "Spam",
         status: "pending",
         reportDate: "18 tháng 1, 2024",
-        targetContent: "Nhóm Toán cao cấp - K22",
+        targetContent: "Nhóm Toán cao cấp - K22"
     },
     {
         id: "RPT-003",
@@ -58,7 +48,7 @@ const MOCK_REPORTS: Report[] = [
         reportType: "Ngôn ngữ thù địch",
         status: "resolved",
         reportDate: "15 tháng 1, 2024",
-        targetContent: "Bài đăng trong Studio #567",
+        targetContent: "Bài đăng trong Studio #567"
     },
     {
         id: "RPT-004",
@@ -71,7 +61,7 @@ const MOCK_REPORTS: Report[] = [
         reportType: "Vi phạm bản quyền",
         status: "pending",
         reportDate: "12 tháng 1, 2024",
-        targetContent: "Tài liệu PDF trong Studio Vật lý",
+        targetContent: "Tài liệu PDF trong Studio Vật lý"
     },
     {
         id: "RPT-005",
@@ -84,35 +74,35 @@ const MOCK_REPORTS: Report[] = [
         reportType: "Thông tin sai lệch",
         status: "reviewing",
         reportDate: "10 tháng 1, 2024",
-        targetContent: "Bình luận trong nhóm Hóa học",
-    },
+        targetContent: "Bình luận trong nhóm Hóa học"
+    }
 ];
 
 const STATUS_STEPS: { key: ReportStatus; label: string; icon: React.ReactNode }[] = [
     { key: "pending", label: "Chờ xử lý", icon: <Clock className="h-4 w-4" /> },
     { key: "reviewing", label: "Đang xem xét", icon: <Eye className="h-4 w-4" /> },
-    { key: "resolved", label: "Đã giải quyết", icon: <CheckCircle2 className="h-4 w-4" /> },
+    { key: "resolved", label: "Đã giải quyết", icon: <CheckCircle2 className="h-4 w-4" /> }
 ];
 
 const STATUS_ORDER: Record<ReportStatus, number> = {
     pending: 0,
     reviewing: 1,
-    resolved: 2,
+    resolved: 2
 };
 
 const STATUS_LABEL: Record<ReportStatus, string> = {
     pending: "Đang chờ xử lý",
     reviewing: "Đang Chờ Xử Lý",
-    resolved: "Đã giải quyết",
+    resolved: "Đã giải quyết"
 };
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
     "Lạm dụng nội dung": <AlertTriangle className="h-5 w-5 text-[#FF5F3D]" />,
-    "Spam": <MessageSquare className="h-5 w-5 text-amber-500" />,
+    Spam: <MessageSquare className="h-5 w-5 text-amber-500" />,
     "Ngôn ngữ thù địch": <UserX className="h-5 w-5 text-red-500" />,
     "Vi phạm bản quyền": <Flag className="h-5 w-5 text-purple-500" />,
     "Thông tin sai lệch": <AlertTriangle className="h-5 w-5 text-blue-500" />,
-    "Hành vi quấy rối": <UserX className="h-5 w-5 text-pink-500" />,
+    "Hành vi quấy rối": <UserX className="h-5 w-5 text-pink-500" />
 };
 
 type ActionLog = {
@@ -135,8 +125,8 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
         {
             action: "pending",
             timestamp: "20 tháng 1, 2024 - 09:00",
-            note: "Báo cáo được tạo và đang chờ xử lý.",
-        },
+            note: "Báo cáo được tạo và đang chờ xử lý."
+        }
     ]);
 
     if (!report) {
@@ -165,8 +155,8 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                 {
                     action: status,
                     timestamp: formatted,
-                    note: adminNote || "Không có ghi chú.",
-                },
+                    note: adminNote || "Không có ghi chú."
+                }
             ]);
             setAdminNote("");
             setIsSaving(false);
@@ -189,8 +179,7 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                         <button
                             type="button"
                             onClick={() => router.push(`/${locale}/admin/reports`)}
-                            className="mb-6 inline-flex items-center gap-1.5 text-[#6F6B99] hover:text-[#261E33] text-sm transition-colors cursor-pointer"
-                        >
+                            className="mb-6 inline-flex cursor-pointer items-center gap-1.5 text-[#6F6B99] text-sm transition-colors hover:text-[#261E33]">
                             <ArrowLeft className="h-4 w-4" />
                             Quay lại danh sách báo cáo
                         </button>
@@ -198,30 +187,32 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                         {/* Main card */}
                         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
                             {/* Card Header */}
-                            <div className="flex flex-col gap-4 border-b border-gray-100 px-8 py-6 md:flex-row md:items-start md:justify-between">
+                            <div className="flex flex-col gap-4 border-gray-100 border-b px-8 py-6 md:flex-row md:items-start md:justify-between">
                                 <div>
                                     <div className="mb-1 flex items-center gap-2">
                                         {TYPE_ICON[report.reportType]}
-                                        <h1 className="font-bold text-2xl text-[#261E33]">
-                                            {report.title}
-                                        </h1>
+                                        <h1 className="font-bold text-2xl text-[#261E33]">{report.title}</h1>
                                     </div>
                                     <p className="text-[#6F6B99] text-sm">{report.subtitle}</p>
                                 </div>
 
                                 {/* Status badge */}
                                 <div
-                                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium ${status === "pending"
-                                        ? "border-amber-200 bg-amber-50 text-amber-600"
-                                        : status === "reviewing"
-                                            ? "border-orange-200 bg-orange-50 text-[#FF5F3D]"
-                                            : "border-green-200 bg-green-50 text-green-600"
-                                        }`}
-                                >
+                                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 font-medium text-sm ${
+                                        status === "pending"
+                                            ? "border-amber-200 bg-amber-50 text-amber-600"
+                                            : status === "reviewing"
+                                              ? "border-orange-200 bg-orange-50 text-[#FF5F3D]"
+                                              : "border-green-200 bg-green-50 text-green-600"
+                                    }`}>
                                     {status === "pending" && <Clock className="h-4 w-4" />}
                                     {status === "reviewing" && <Eye className="h-4 w-4" />}
                                     {status === "resolved" && <Shield className="h-4 w-4" />}
-                                    {status === "reviewing" ? "Đang Chờ Xử Lý" : status === "pending" ? "Chờ xử lý" : "Đã giải quyết"}
+                                    {status === "reviewing"
+                                        ? "Đang Chờ Xử Lý"
+                                        : status === "pending"
+                                          ? "Chờ xử lý"
+                                          : "Đã giải quyết"}
                                 </div>
                             </div>
 
@@ -236,13 +227,13 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                                 <div key={step.key} className="flex flex-1 items-center">
                                                     <div className="flex flex-col items-center">
                                                         <div
-                                                            className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${isComplete
-                                                                ? "border-green-500 bg-green-500 text-white"
-                                                                : isActive
-                                                                    ? "border-[#FF5F3D] bg-[#FF5F3D] text-white"
-                                                                    : "border-gray-300 bg-white text-gray-400"
-                                                                }`}
-                                                        >
+                                                            className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
+                                                                isComplete
+                                                                    ? "border-green-500 bg-green-500 text-white"
+                                                                    : isActive
+                                                                      ? "border-[#FF5F3D] bg-[#FF5F3D] text-white"
+                                                                      : "border-gray-300 bg-white text-gray-400"
+                                                            }`}>
                                                             {isComplete ? (
                                                                 <CheckCircle2 className="h-4 w-4" />
                                                             ) : (
@@ -250,8 +241,7 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                                             )}
                                                         </div>
                                                         <p
-                                                            className={`mt-2 text-xs font-medium ${isActive ? "text-[#FF5F3D]" : isComplete ? "text-green-600" : "text-gray-400"}`}
-                                                        >
+                                                            className={`mt-2 font-medium text-xs ${isActive ? "text-[#FF5F3D]" : isComplete ? "text-green-600" : "text-gray-400"}`}>
                                                             {step.label}
                                                         </p>
                                                     </div>
@@ -270,92 +260,75 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                 <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
                                     {/* Reporter */}
                                     <div className="rounded-xl border border-gray-100 bg-[#F8F8F8] p-5">
-                                        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6F6B99]">
+                                        <p className="mb-3 font-semibold text-[#6F6B99] text-xs uppercase tracking-wider">
                                             Người báo cáo
                                         </p>
-                                        <p className="font-semibold text-[#261E33]">
-                                            {report.reporterName}
-                                        </p>
-                                        <p className="text-sm text-[#6F6B99]">{report.reporterEmail}</p>
+                                        <p className="font-semibold text-[#261E33]">{report.reporterName}</p>
+                                        <p className="text-[#6F6B99] text-sm">{report.reporterEmail}</p>
                                     </div>
 
                                     {/* Report Type */}
                                     <div className="rounded-xl border border-gray-100 bg-[#F8F8F8] p-5">
-                                        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6F6B99]">
+                                        <p className="mb-3 font-semibold text-[#6F6B99] text-xs uppercase tracking-wider">
                                             Loại báo cáo
                                         </p>
                                         <div className="flex items-center gap-2">
                                             {TYPE_ICON[report.reportType]}
-                                            <p className="font-semibold text-[#261E33]">
-                                                {report.reportType}
-                                            </p>
+                                            <p className="font-semibold text-[#261E33]">{report.reportType}</p>
                                         </div>
                                     </div>
 
                                     {/* Report Date */}
                                     <div className="rounded-xl border border-gray-100 bg-[#F8F8F8] p-5">
-                                        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6F6B99]">
+                                        <p className="mb-3 font-semibold text-[#6F6B99] text-xs uppercase tracking-wider">
                                             Ngày báo cáo
                                         </p>
                                         <div className="flex items-center gap-2">
                                             <Clock className="h-4 w-4 text-[#6F6B99]" />
-                                            <p className="font-semibold text-[#261E33]">
-                                                {report.reportDate}
-                                            </p>
+                                            <p className="font-semibold text-[#261E33]">{report.reportDate}</p>
                                         </div>
                                     </div>
 
                                     {/* Target Content */}
                                     {report.targetContent && (
                                         <div className="rounded-xl border border-gray-100 bg-[#F8F8F8] p-5">
-                                            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#6F6B99]">
+                                            <p className="mb-3 font-semibold text-[#6F6B99] text-xs uppercase tracking-wider">
                                                 Nội dung bị báo cáo
                                             </p>
-                                            <p className="font-semibold text-[#261E33]">
-                                                {report.targetContent}
-                                            </p>
+                                            <p className="font-semibold text-[#261E33]">{report.targetContent}</p>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Description */}
                                 <div className="mb-6 rounded-xl border border-gray-200 p-6">
-                                    <h2 className="mb-3 font-semibold text-[#261E33]">
-                                        {report.title}
-                                    </h2>
-                                    <p className="text-sm leading-relaxed text-[#6F6B99]">
-                                        {report.description}
-                                    </p>
+                                    <h2 className="mb-3 font-semibold text-[#261E33]">{report.title}</h2>
+                                    <p className="text-[#6F6B99] text-sm leading-relaxed">{report.description}</p>
                                 </div>
 
                                 {/* Action Logs */}
                                 {actionLogs.length > 0 && (
                                     <div className="mb-6">
-                                        <h3 className="mb-3 font-semibold text-[#261E33]">
-                                            Lịch sử xử lý
-                                        </h3>
+                                        <h3 className="mb-3 font-semibold text-[#261E33]">Lịch sử xử lý</h3>
                                         <div className="space-y-2">
                                             {actionLogs.map((log, i) => (
                                                 <div
                                                     key={i}
-                                                    className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#F8F8F8] px-4 py-3"
-                                                >
+                                                    className="flex items-start gap-3 rounded-lg border border-gray-100 bg-[#F8F8F8] px-4 py-3">
                                                     <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FF5F3D]/10">
                                                         <Shield className="h-3.5 w-3.5 text-[#FF5F3D]" />
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="flex items-center justify-between">
-                                                            <p className="text-sm font-medium text-[#261E33]">
+                                                            <p className="font-medium text-[#261E33] text-sm">
                                                                 Trạng thái:{" "}
                                                                 <span className="text-[#FF5F3D]">
                                                                     {STATUS_LABEL[log.action as ReportStatus]}
                                                                 </span>
                                                             </p>
-                                                            <p className="text-xs text-[#6F6B99]">
-                                                                {log.timestamp}
-                                                            </p>
+                                                            <p className="text-[#6F6B99] text-xs">{log.timestamp}</p>
                                                         </div>
-                                                        <p className="text-xs text-[#6F6B99] mt-0.5">{log.note}</p>
+                                                        <p className="mt-0.5 text-[#6F6B99] text-xs">{log.note}</p>
                                                     </div>
                                                 </div>
                                             ))}
@@ -364,13 +337,11 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                 )}
 
                                 {/* Update Section */}
-                                <div className="rounded-xl border border-dashed border-gray-300 p-6">
-                                    <h3 className="mb-4 font-semibold text-[#261E33]">
-                                        Cập nhật xử lý
-                                    </h3>
+                                <div className="rounded-xl border border-gray-300 border-dashed p-6">
+                                    <h3 className="mb-4 font-semibold text-[#261E33]">Cập nhật xử lý</h3>
 
                                     <div className="mb-4">
-                                        <label className="mb-2 block text-sm font-medium text-[#6F6B99]">
+                                        <label className="mb-2 block font-medium text-[#6F6B99] text-sm">
                                             Ghi chú xử lý (tuỳ chọn)
                                         </label>
                                         <textarea
@@ -378,20 +349,17 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                             onChange={(e) => setAdminNote(e.target.value)}
                                             placeholder="Nhập ghi chú về hành động xử lý..."
                                             rows={3}
-                                            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20 resize-none"
+                                            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20"
                                         />
                                     </div>
 
                                     <div className="flex items-center justify-end gap-3">
                                         <div className="flex items-center gap-2">
-                                            <label className="text-sm font-medium text-[#261E33]">
-                                                Trạng thái:
-                                            </label>
+                                            <label className="font-medium text-[#261E33] text-sm">Trạng thái:</label>
                                             <select
                                                 value={status}
                                                 onChange={(e) => setStatus(e.target.value as ReportStatus)}
-                                                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20 cursor-pointer"
-                                            >
+                                                className="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
                                                 <option value="pending">Đang chờ xử lý</option>
                                                 <option value="reviewing">Đang xem xét</option>
                                                 <option value="resolved">Đã giải quyết</option>
@@ -401,18 +369,17 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                         <Button
                                             onClick={handleSave}
                                             disabled={isSaving}
-                                            className={`min-w-[90px] transition-all ${saved
-                                                ? "bg-green-500 hover:bg-green-600"
-                                                : "bg-[#FF5F3D] hover:bg-[#ff4620]"
-                                                }`}
-                                        >
+                                            className={`min-w-[90px] transition-all ${
+                                                saved
+                                                    ? "bg-green-500 hover:bg-green-600"
+                                                    : "bg-[#FF5F3D] hover:bg-[#ff4620]"
+                                            }`}>
                                             {isSaving ? (
                                                 <span className="flex items-center gap-2">
                                                     <svg
                                                         className="h-4 w-4 animate-spin"
                                                         viewBox="0 0 24 24"
-                                                        fill="none"
-                                                    >
+                                                        fill="none">
                                                         <circle
                                                             className="opacity-25"
                                                             cx="12"
