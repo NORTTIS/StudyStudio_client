@@ -15,12 +15,13 @@ export default async function StudioDetail({ params }: PageProps) {
     // Fetch studio details
     const studioResponse = await serverFetchApi.GET<StudioResponse>(`/studio/${studioId}`);
     const studioData = studioResponse.status === "success" ? studioResponse.data : null;
-
+    console.log("Fetched studio details:", studioData);
     // Fetch studio groups
     const groupsResponse = await serverFetchApi.GET<StudioGroupListResponse>(`/studio/${studioId}/groups`);
-    const groupsData = groupsResponse.status === "success" && groupsResponse.data?.studioGroups
-        ? groupsResponse.data.studioGroups
-        : [];
-
+    const groupsData =
+        groupsResponse.status === "success" && groupsResponse.data?.studioGroups
+            ? groupsResponse.data.studioGroups
+            : [];
+    console.log("Fetched studio groups:", groupsData);
     return <StudioDetailPage initialStudio={studioData} initialGroups={groupsData} />;
 }

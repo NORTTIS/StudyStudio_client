@@ -103,9 +103,7 @@ function isUuidLike(v: string) {
 
 function detectPositionBase(cols: Column[]) {
     if (!cols.length) return 0;
-    const positions = cols
-        .map((c) => (Number.isFinite(c.position) ? c.position : 0))
-        .filter((x) => Number.isFinite(x));
+    const positions = cols.map((c) => (Number.isFinite(c.position) ? c.position : 0)).filter((x) => Number.isFinite(x));
 
     const min = positions.length ? Math.min(...positions) : 0;
     return min >= 1 ? 1 : 0;
@@ -196,7 +194,12 @@ async function apiGetGroupDetail(groupId: string) {
     return (json ?? null) as ApiResponse<GroupDetailResponse> | null;
 }
 
-async function apiReorderGroupTaskStatus(args: { groupId: string; statusId: string; prevStatusId: string | null; nextStatusId: string | null }) {
+async function apiReorderGroupTaskStatus(args: {
+    groupId: string;
+    statusId: string;
+    prevStatusId: string | null;
+    nextStatusId: string | null;
+}) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
 
@@ -266,7 +269,8 @@ async function apiCreateTask(args: { groupId: string; groupStatusId: string; tas
     const accessToken = getAccessTokenOrNull();
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
     if (!args.groupId || !isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ (không phải UUID).");
-    if (!args.groupStatusId || !isUuidLike(args.groupStatusId)) throw new Error("groupStatusId không hợp lệ (không phải UUID).");
+    if (!args.groupStatusId || !isUuidLike(args.groupStatusId))
+        throw new Error("groupStatusId không hợp lệ (không phải UUID).");
 
     const url = `${apiBase}/Task`;
 
@@ -293,7 +297,12 @@ async function apiCreateTask(args: { groupId: string; groupStatusId: string; tas
     return (json ?? null) as ApiResponse<TaskItemResponse> | null;
 }
 
-async function apiRenameGroupTaskStatus(args: { groupId: string; statusId: string; statusName: string; position: number }) {
+async function apiRenameGroupTaskStatus(args: {
+    groupId: string;
+    statusId: string;
+    statusName: string;
+    position: number;
+}) {
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
@@ -395,7 +404,15 @@ type ConfirmModalProps = {
     onCancel: () => void;
 };
 
-function ConfirmModal({ open, title, description, confirmLabel = "Xác nhận", cancelLabel = "Hủy", onConfirm, onCancel }: ConfirmModalProps) {
+function ConfirmModal({
+    open,
+    title,
+    description,
+    confirmLabel = "Xác nhận",
+    cancelLabel = "Hủy",
+    onConfirm,
+    onCancel
+}: ConfirmModalProps) {
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
 
@@ -416,9 +433,10 @@ function ConfirmModal({ open, title, description, confirmLabel = "Xác nhận", 
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
-            }}
-        >
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onPointerDown={(e) => e.stopPropagation()}>
+            }}>
+            <div
+                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+                onPointerDown={(e) => e.stopPropagation()}>
                 <h2 className="text-base font-bold text-zinc-900">{title}</h2>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
 
@@ -426,15 +444,13 @@ function ConfirmModal({ open, title, description, confirmLabel = "Xác nhận", 
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition"
-                    >
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition">
                         {cancelLabel}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 transition"
-                    >
+                        className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 transition">
                         {confirmLabel}
                     </button>
                 </div>
@@ -516,15 +532,24 @@ function PortalDropdown({
             ref={menuRef}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
-        >
+            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
             {children}
         </div>,
         document.body
     );
 }
 
-function MenuItem({ icon, label, danger, onClick }: { icon: React.ReactNode; label: string; danger?: boolean; onClick: () => void }) {
+function MenuItem({
+    icon,
+    label,
+    danger,
+    onClick
+}: {
+    icon: React.ReactNode;
+    label: string;
+    danger?: boolean;
+    onClick: () => void;
+}) {
     return (
         <button
             type="button"
@@ -532,8 +557,7 @@ function MenuItem({ icon, label, danger, onClick }: { icon: React.ReactNode; lab
             className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
                 danger ? "text-rose-600 hover:bg-rose-50" : "text-zinc-700 hover:bg-zinc-100"
-            )}
-        >
+            )}>
             <span className="grid h-5 w-5 place-items-center">{icon}</span>
             <span className="font-medium">{label}</span>
         </button>
@@ -615,8 +639,7 @@ function TaskCard({
                 "border-zinc-200/80 shadow-sm",
                 "hover:shadow-md hover:-translate-y-[1px] transition",
                 "focus-within:ring-2 focus-within:ring-indigo-200/60"
-            )}
-        >
+            )}>
             <div className="flex items-start gap-2">
                 <div className="mt-0.5 flex items-center gap-2">
                     <div className={cn("h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
@@ -631,8 +654,7 @@ function TaskCard({
                             "hover:bg-zinc-50 transition",
                             "cursor-grab active:cursor-grabbing select-none"
                         )}
-                        title="Kéo để di chuyển"
-                    >
+                        title="Kéo để di chuyển">
                         <GripVertical className="h-4 w-4" />
                     </div>
                 </div>
@@ -646,9 +668,10 @@ function TaskCard({
                                 e.stopPropagation();
                                 onStartEdit();
                             }}
-                            className="w-full text-left"
-                        >
-                            <p className="line-clamp-2 text-sm font-semibold text-zinc-900 hover:underline">{task.title}</p>
+                            className="w-full text-left">
+                            <p className="line-clamp-2 text-sm font-semibold text-zinc-900 hover:underline">
+                                {task.title}
+                            </p>
                         </button>
                     ) : (
                         <div className="space-y-2" onPointerDownCapture={(e) => e.stopPropagation()}>
@@ -692,8 +715,7 @@ function TaskCard({
                                         e.stopPropagation();
                                         safeCommit();
                                     }}
-                                    className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                                >
+                                    className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
                                     Lưu
                                 </button>
 
@@ -706,12 +728,13 @@ function TaskCard({
                                         onCancelEdit();
                                     }}
                                     className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label="Hủy"
-                                >
+                                    aria-label="Hủy">
                                     <X className="h-4 w-4" />
                                 </button>
 
-                                <span className="text-[11px] text-zinc-500">Enter để lưu • Shift+Enter xuống dòng • Esc để huỷ</span>
+                                <span className="text-[11px] text-zinc-500">
+                                    Enter để lưu • Shift+Enter xuống dòng • Esc để huỷ
+                                </span>
                             </div>
                         </div>
                     )}
@@ -737,8 +760,7 @@ function TaskCard({
                             e.stopPropagation();
                         }}
                         className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                        aria-label="Menu"
-                    >
+                        aria-label="Menu">
                         <MoreHorizontal className="h-4 w-4" />
                     </button>
 
@@ -796,7 +818,13 @@ function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<s
     });
 }
 
-function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; onSubmit: (title: string) => Promise<void> }) {
+function AddColumnInline({
+    isSubmitting,
+    onSubmit
+}: {
+    isSubmitting: boolean;
+    onSubmit: (title: string) => Promise<void>;
+}) {
     const [open, setOpen] = React.useState(false);
     const [title, setTitle] = React.useState("");
     const [error, setError] = React.useState<string | null>(null);
@@ -852,8 +880,7 @@ function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; on
                 className={cn(
                     "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100",
                     "transition"
-                )}
-            >
+                )}>
                 + Tạo trạng thái
             </button>
         );
@@ -886,8 +913,7 @@ function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; on
                         "rounded-xl px-3 py-2 text-sm font-semibold text-white",
                         "bg-indigo-600 hover:bg-indigo-700 transition",
                         isSubmitting && "opacity-60 pointer-events-none"
-                    )}
-                >
+                    )}>
                     Thêm trạng thái
                 </button>
 
@@ -900,8 +926,7 @@ function AddColumnInline({ isSubmitting, onSubmit }: { isSubmitting: boolean; on
                         "hover:bg-zinc-100 transition",
                         isSubmitting && "opacity-60 pointer-events-none"
                     )}
-                    aria-label="Hủy"
-                >
+                    aria-label="Hủy">
                     ✕
                 </button>
             </div>
@@ -920,8 +945,7 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
                 "border-zinc-200/70 bg-white text-zinc-900",
                 "hover:bg-zinc-50 hover:shadow-sm transition",
                 disabled && "opacity-60 pointer-events-none"
-            )}
-        >
+            )}>
             <Plus className="h-4 w-4" />
             Thêm công việc
         </button>
@@ -1009,15 +1033,18 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div className={cn("rounded-2xl border border-zinc-200/80 bg-white shadow-sm", "hover:shadow-md transition-shadow")}>
+        <div
+            className={cn(
+                "rounded-2xl border border-zinc-200/80 bg-white shadow-sm",
+                "hover:shadow-md transition-shadow"
+            )}>
             <div
                 className={cn(
                     "sticky top-0 z-10 rounded-t-2xl",
                     "border-b border-zinc-200/70",
                     "bg-white/80 backdrop-blur-xl",
                     "px-4 py-3"
-                )}
-            >
+                )}>
                 <div className="flex items-center gap-3">
                     <div className="min-w-0 flex flex-1 items-center gap-2">
                         <div
@@ -1031,15 +1058,19 @@ function ColumnView({
                                 "shadow-[0_1px_0_rgba(0,0,0,0.02)]",
                                 "hover:bg-zinc-50 hover:shadow-sm transition",
                                 "cursor-grab active:cursor-grabbing select-none"
-                            )}
-                        >
+                            )}>
                             <GripVertical className="h-4 w-4" />
                         </div>
 
                         <div className="min-w-0 flex-1">
                             {!isColumnEditing ? (
-                                <button type="button" onClick={() => onRenameColumnInline(col.id)} className="w-full text-left">
-                                    <p className="truncate text-sm font-bold text-zinc-900 hover:underline">{col.title}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => onRenameColumnInline(col.id)}
+                                    className="w-full text-left">
+                                    <p className="truncate text-sm font-bold text-zinc-900 hover:underline">
+                                        {col.title}
+                                    </p>
                                 </button>
                             ) : (
                                 <div className="space-y-1">
@@ -1068,7 +1099,9 @@ function ColumnView({
                                         )}
                                         style={{ maxWidth: 220 }}
                                     />
-                                    {columnError ? <div className="text-[11px] font-medium text-rose-600">{columnError}</div> : null}
+                                    {columnError ? (
+                                        <div className="text-[11px] font-medium text-rose-600">{columnError}</div>
+                                    ) : null}
                                 </div>
                             )}
                         </div>
@@ -1081,8 +1114,7 @@ function ColumnView({
                                 "border border-zinc-200/70 bg-white",
                                 "text-xs font-semibold text-zinc-700",
                                 "shadow-[0_1px_0_rgba(0,0,0,0.03)]"
-                            )}
-                        >
+                            )}>
                             {tasks.length}
                         </span>
 
@@ -1100,12 +1132,14 @@ function ColumnView({
                                     e.stopPropagation();
                                 }}
                                 className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
-                                aria-label="Column menu"
-                            >
+                                aria-label="Column menu">
                                 <MoreHorizontal className="h-5 w-5" />
                             </button>
 
-                            <PortalDropdown open={openColMenu} onClose={() => setOpenColMenu(false)} anchorRef={colMenuBtnRef as any}>
+                            <PortalDropdown
+                                open={openColMenu}
+                                onClose={() => setOpenColMenu(false)}
+                                anchorRef={colMenuBtnRef as any}>
                                 <MenuItem
                                     icon={<Pencil className="h-4 w-4" />}
                                     label="Chỉnh sửa tên trạng thái"
@@ -1136,15 +1170,16 @@ function ColumnView({
                         "rounded-2xl border p-3 transition",
                         "border-zinc-200/70 bg-gradient-to-b from-zinc-50 to-white",
                         isOver && "border-indigo-300 bg-indigo-50/60"
-                    )}
-                >
+                    )}>
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                             <div className={cn("relative max-h-[68vh] space-y-3 overflow-y-auto pr-1")}>
                                 {rendered.map((item) => {
-                                    if (item.kind === "ghost") return <GhostTaskCard key={item.key} task={ghost!.task} />;
+                                    if (item.kind === "ghost")
+                                        return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
-                                    const isEditing = taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+                                    const isEditing =
+                                        taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
 
                                     return (
                                         <TaskCard
@@ -1163,9 +1198,15 @@ function ColumnView({
                                 })}
 
                                 {tasks.length === 0 ? (
-                                    <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
+                                    <div
+                                        className={cn(
+                                            "rounded-xl border border-zinc-200/70 bg-white",
+                                            "px-3 py-10 text-center"
+                                        )}>
                                         <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
-                                        <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
+                                        <div className="mt-1 text-xs text-zinc-500">
+                                            Bấm “Thêm công việc” để tạo mới
+                                        </div>
                                     </div>
                                 ) : null}
 
@@ -1198,7 +1239,11 @@ function ColumnView({
                                 );
                             })}
                             {tasks.length === 0 ? (
-                                <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
+                                <div
+                                    className={cn(
+                                        "rounded-xl border border-zinc-200/70 bg-white",
+                                        "px-3 py-10 text-center"
+                                    )}>
                                     <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
                                     <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                 </div>
@@ -1334,7 +1379,9 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
                             </div>
                         ))}
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">(Trạng thái trống)</div>
+                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                                (Trạng thái trống)
+                            </div>
                         ) : null}
                     </div>
                 </div>
@@ -1363,19 +1410,31 @@ export function GroupBoardScreen() {
     const [activeColumnId, setActiveColumnId] = React.useState<string | null>(null);
     const [overId, setOverId] = React.useState<string | null>(null);
 
-    const [editingColumn, setEditingColumn] = React.useState<{ id: string | null; draft: string; error: string | null }>({
+    const [editingColumn, setEditingColumn] = React.useState<{
+        id: string | null;
+        draft: string;
+        error: string | null;
+    }>({
         id: null,
         draft: "",
         error: null
     });
 
-    const [editingTask, setEditingTask] = React.useState<{ taskId: string | null; columnId: string | null; draft: string }>({
+    const [editingTask, setEditingTask] = React.useState<{
+        taskId: string | null;
+        columnId: string | null;
+        draft: string;
+    }>({
         taskId: null,
         columnId: null,
         draft: ""
     });
 
-    const [confirmModal, setConfirmModal] = React.useState<{ open: boolean; columnId: ColumnId | null; columnTitle: string }>({
+    const [confirmModal, setConfirmModal] = React.useState<{
+        open: boolean;
+        columnId: ColumnId | null;
+        columnTitle: string;
+    }>({
         open: false,
         columnId: null,
         columnTitle: ""
@@ -1471,8 +1530,8 @@ export function GroupBoardScreen() {
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-                ? overId.replace(END_PREFIX, "")
-                : overId;
+              ? overId.replace(END_PREFIX, "")
+              : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -1562,7 +1621,10 @@ export function GroupBoardScreen() {
         const prevBoard = board;
 
         const base = detectPositionBase(columns) as 0 | 1;
-        const nextCols = assignPositions(columns.filter((c) => c.id !== columnId), base);
+        const nextCols = assignPositions(
+            columns.filter((c) => c.id !== columnId),
+            base
+        );
 
         setColumns(nextCols);
         setBoard((prev) => {
@@ -1689,8 +1751,8 @@ export function GroupBoardScreen() {
             const overKey = overRaw.startsWith(DROP_PREFIX)
                 ? overRaw.replace(DROP_PREFIX, "")
                 : overRaw.startsWith(END_PREFIX)
-                    ? overRaw.replace(END_PREFIX, "")
-                    : overRaw;
+                  ? overRaw.replace(END_PREFIX, "")
+                  : overRaw;
 
             const fromCol = findColumnOfTask(board, columns, activeId);
             if (!fromCol) return;
@@ -1788,14 +1850,19 @@ export function GroupBoardScreen() {
         return out;
     }, [board, columns]);
 
-    const statusesOptions = React.useMemo<TaskFormOption[]>(() => columns.map((c) => ({ value: c.id, label: c.title })), [columns]);
+    const statusesOptions = React.useMemo<TaskFormOption[]>(
+        () => columns.map((c) => ({ value: c.id, label: c.title })),
+        [columns]
+    );
     const membersOptions = React.useMemo<TaskFormOption[]>(() => [], []);
 
     if (loading) {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">Đang tải board…</div>
+                    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
+                        Đang tải board…
+                    </div>
                 </Container>
             </div>
         );
@@ -1805,13 +1872,14 @@ export function GroupBoardScreen() {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">{loadError}</div>
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
+                        {loadError}
+                    </div>
                     <div className="mt-3">
                         <button
                             type="button"
                             onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
-                        >
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100">
                             Tải lại
                         </button>
                     </div>
@@ -1892,8 +1960,7 @@ export function GroupBoardScreen() {
                         onDragStart={handleDragStart}
                         onDragOver={handleDragOver}
                         onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}
-                    >
+                        onDragEnd={handleDragEnd}>
                         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                             <div className="mt-5 flex items-start gap-5 overflow-x-auto pb-6">
                                 {columns.map((col) => (
@@ -1930,7 +1997,11 @@ export function GroupBoardScreen() {
                         </SortableContext>
 
                         <DragOverlay>
-                            {activeTask ? <TaskOverlay task={activeTask} /> : activeColumn ? <ColumnOverlay col={activeColumn} tasks={board[activeColumn.id] ?? []} /> : null}
+                            {activeTask ? (
+                                <TaskOverlay task={activeTask} />
+                            ) : activeColumn ? (
+                                <ColumnOverlay col={activeColumn} tasks={board[activeColumn.id] ?? []} />
+                            ) : null}
                         </DragOverlay>
                     </DndContext>
                 )}

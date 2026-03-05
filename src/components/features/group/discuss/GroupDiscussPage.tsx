@@ -10,7 +10,12 @@ import { getAccessToken, getUserData } from "@/api/auth";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -198,13 +203,7 @@ function countWords(text: string) {
     return t.split(/\s+/).filter(Boolean).length;
 }
 
-function TextCounter({
-    text,
-    maxChars = MAX_CHARS
-}: {
-    text: string;
-    maxChars?: number;
-}) {
+function TextCounter({ text, maxChars = MAX_CHARS }: { text: string; maxChars?: number }) {
     const chars = (text || "").length;
     const words = countWords(text || "");
     const over = chars > maxChars;
@@ -733,9 +732,7 @@ function PostCard({
     const isMeModerator = userRole === "moderator";
 
     const canDeletePost =
-        post.author.id === currentUserId ||
-        isMeOwner ||
-        (isMeModerator && !isOwnerId(post.author.id));
+        post.author.id === currentUserId || isMeOwner || (isMeModerator && !isOwnerId(post.author.id));
 
     return (
         <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
@@ -996,7 +993,9 @@ export default function GroupDiscussPage() {
                     (response as any)?.data?.userRole ??
                     (response as any)?.data?.data?.userRole;
 
-                const role = String(roleRaw || "").toLowerCase().trim();
+                const role = String(roleRaw || "")
+                    .toLowerCase()
+                    .trim();
 
                 if (role.includes("owner")) setUserRole("owner");
                 else if (role.includes("moderator")) setUserRole("moderator");
@@ -1009,7 +1008,9 @@ export default function GroupDiscussPage() {
         };
 
         const toRole = (raw: any): GroupRole => {
-            const s = String(raw || "").toLowerCase().trim();
+            const s = String(raw || "")
+                .toLowerCase()
+                .trim();
             if (s.includes("owner")) return "owner";
             if (s.includes("moderator")) return "moderator";
             if (s.includes("commenter")) return "commenter";
@@ -1033,19 +1034,14 @@ export default function GroupDiscussPage() {
 
                     const username =
                         String(m?.userName || m?.username || "").trim() ||
-                        ([m?.firstName, m?.lastName].filter(Boolean).join(" ").trim()) ||
+                        [m?.firstName, m?.lastName].filter(Boolean).join(" ").trim() ||
                         (m?.email ? String(m.email).split("@")[0] : "") ||
                         "user";
 
                     map[id] = username;
 
                     const rawRole =
-                        m?.role ??
-                        m?.groupRole ??
-                        m?.userRole ??
-                        m?.memberRole ??
-                        m?.groupMemberRole ??
-                        m?.roles?.[0];
+                        m?.role ?? m?.groupRole ?? m?.userRole ?? m?.memberRole ?? m?.groupMemberRole ?? m?.roles?.[0];
 
                     roleMap[id] = toRole(rawRole);
                 }

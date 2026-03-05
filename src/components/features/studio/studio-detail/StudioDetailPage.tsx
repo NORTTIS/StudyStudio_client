@@ -1,20 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import { deleteStudio, type StudioUI, updateStudio } from "@/api/studios";
 import type { components } from "@/api/types";
-import { deleteStudio, updateStudio, type StudioUI } from "@/api/studios";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
+import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
 import { InviteMemberModal } from "@/components/features/master/InviteMemberModal";
 import { StudioModal } from "@/components/features/master/StudioModal";
-import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import Link from "next/link";
 
 type StudioResponse = components["schemas"]["StudioResponse"];
 type GroupCardDto = components["schemas"]["GroupCardDto"];
@@ -43,17 +43,19 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [searchQuery, setSearchQuery] = useState("");
 
     // Convert server data to UI format
-    const studio: StudioUI | null = initialStudio ? {
-        id: initialStudio.studioId || "",
-        name: initialStudio.studioName || "",
-        description: initialStudio.description || "",
-        type: "group", // Default type
-        memberCount: 0, // Not provided by API
-        groupCount: initialStudio.groupCount || 0,
-        completionProgress: 0, // Calculate later if needed
-        createdAt: initialStudio.createdAt || "",
-        updatedAt: initialStudio.updatedAt || ""
-    } : null;
+    const studio: StudioUI | null = initialStudio
+        ? {
+            id: initialStudio.studioId || "",
+            name: initialStudio.studioName || "",
+            description: initialStudio.description || "",
+            type: "group", // Default type
+            memberCount: 0, // Not provided by API
+            groupCount: initialStudio.groupCount || 0,
+            completionProgress: 0, // Calculate later if needed
+            createdAt: initialStudio.createdAt || "",
+            updatedAt: initialStudio.updatedAt || ""
+        }
+        : null;
 
     // Transform groups to the format expected by UI
     const groups = initialGroups.map((group) => ({
@@ -97,11 +99,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         if (!studio) return;
 
         try {
-            const result = await updateStudio(studio.id, {
-                name: data.name,
-                description: data.description,
-                type: data.type as "personal" | "group"
-            }, locale);
+            const result = await updateStudio(
+                studio.id,
+                {
+                    name: data.name,
+                    description: data.description,
+                    type: data.type as "personal" | "group"
+                },
+                locale
+            );
 
             if (result.status === "success") {
                 toast({ description: t("modal.editSuccess"), variant: "success" });
@@ -175,7 +181,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                     <Header userProfile={userProfile} />
                     <div className="px-6 py-6">
                         {/* Back button + Studio name + Badge */}
-                        <div className="mb-6 flex items-center justify-between">
+                        <div className="mb-6 flex flex-col justify-between">
                             <div className="flex items-center gap-4">
                                 <button
                                     type="button"
@@ -204,7 +210,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         />
                                     </svg>
                                     <h1 className="font-semibold text-[#261E33] text-lg">{studio.name}</h1>
-
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <button
@@ -241,7 +246,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </button>
                                 </div>
                             </div>
-
+                            <p className="ml-10 text-gray-500">{studio.description}</p>
 
                         </div>
                         {/* Search and Add Group */}
@@ -249,7 +254,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             <div className="relative max-w-md flex-1">
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm studio, nhóm, vấn đề..."
+                                    placeholder="Tìm kiếm nhóm ..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20"
@@ -269,8 +274,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             </div>
                             <Button
                                 className="bg-[#FF5F3D] hover:bg-[#ff4620]"
-                                onClick={() => setIsCreateGroupModalOpen(true)}
-                            >
+                                onClick={() => setIsCreateGroupModalOpen(true)}>
                                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path
                                         strokeLinecap="round"
@@ -292,7 +296,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             <p className="text-[#6F6B99] text-sm">
                                 Tiến độ hoàn thiện công việc trung bình:{" "}
                                 <span className="font-semibold text-[#261E33]">
-                                    {(studio.completionProgress).toFixed(2)}%
+                                    {studio.completionProgress.toFixed(2)}%
                                 </span>
                             </p>
                         </div>
@@ -305,7 +309,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         href={`/${locale}/group/${group.id}`}
                                         key={group.id}
                                         className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-[#FF5F3D] hover:shadow-md">
-
                                         {/* Group name */}
                                         <div className="mb-2 flex items-center gap-2">
                                             <svg
@@ -320,9 +323,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
                                                 />
                                             </svg>
-                                            <h3 className="font-semibold text-[#261E33] text-sm">
-                                                {group.name}
-                                            </h3>
+                                            <h3 className="font-semibold text-[#261E33] text-sm">{group.name}</h3>
                                         </div>
 
                                         {/* Description */}
