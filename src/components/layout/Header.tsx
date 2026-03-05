@@ -146,8 +146,8 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         }
 
         return {
-            name: "John Doe",
-            email: "john@example.com",
+            name: "username",
+            email: "email@gmail.com",
             avatar: "/images/image-removebg-preview.png"
         };
     };

@@ -933,7 +933,7 @@ function TaskCard({
                                         e.stopPropagation();
                                         safeCommit();
                                     }}
-                                    className="rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-sm text-white hover:bg-indigo-700">
+                                    className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
                                     Lưu
                                 </button>
 
@@ -950,9 +950,6 @@ function TaskCard({
                                     <X className="h-4 w-4" />
                                 </button>
 
-                                <span className="text-[11px] text-zinc-500">
-                                    Enter để lưu • Shift+Enter xuống dòng • Esc để huỷ
-                                </span>
                             </div>
                         </div>
                     )}
@@ -1688,6 +1685,80 @@ export function GroupBoardScreen() {
     const [detailTaskId, setDetailTaskId] = React.useState<string | null>(null);
 
     const [membersOptions, setMembersOptions] = React.useState<TaskFormOption[]>([]);
+    const topScrollRef = React.useRef<HTMLDivElement | null>(null);
+    const boardScrollRef = React.useRef<HTMLDivElement | null>(null);
+    const syncSourceRef = React.useRef<"top" | "board" | null>(null);
+    const [topScrollbarWidth, setTopScrollbarWidth] = React.useState(0);
+    const [showTopScrollbar, setShowTopScrollbar] = React.useState(false);
+
+    const syncTopScrollbarWidth = React.useCallback(() => {
+        const boardEl = boardScrollRef.current;
+        const topEl = topScrollRef.current;
+
+        if (!boardEl) {
+            setTopScrollbarWidth(0);
+            setShowTopScrollbar(false);
+            return;
+        }
+
+        const scrollWidth = boardEl.scrollWidth;
+        const clientWidth = boardEl.clientWidth;
+
+        setTopScrollbarWidth(scrollWidth);
+        setShowTopScrollbar(scrollWidth > clientWidth + 1);
+
+        if (topEl && Math.abs(topEl.scrollLeft - boardEl.scrollLeft) > 1) {
+            topEl.scrollLeft = boardEl.scrollLeft;
+        }
+    }, []);
+
+    React.useEffect(() => {
+        if (!mounted || loading) return;
+
+        const boardEl = boardScrollRef.current;
+        const frame = window.requestAnimationFrame(() => syncTopScrollbarWidth());
+        const onResize = () => syncTopScrollbarWidth();
+
+        window.addEventListener("resize", onResize);
+
+        let observer: ResizeObserver | null = null;
+        if (boardEl && typeof ResizeObserver !== "undefined") {
+            observer = new ResizeObserver(() => syncTopScrollbarWidth());
+            observer.observe(boardEl);
+        }
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+            window.removeEventListener("resize", onResize);
+            observer?.disconnect();
+        };
+    }, [mounted, loading, syncTopScrollbarWidth]);
+
+    const handleTopScroll: React.UIEventHandler<HTMLDivElement> = (e) => {
+        const boardEl = boardScrollRef.current;
+        if (!boardEl) return;
+
+        if (syncSourceRef.current === "board") {
+            syncSourceRef.current = null;
+            return;
+        }
+
+        syncSourceRef.current = "top";
+        boardEl.scrollLeft = e.currentTarget.scrollLeft;
+    };
+
+    const handleBoardScroll: React.UIEventHandler<HTMLDivElement> = (e) => {
+        const topEl = topScrollRef.current;
+        if (!topEl) return;
+
+        if (syncSourceRef.current === "top") {
+            syncSourceRef.current = null;
+            return;
+        }
+
+        syncSourceRef.current = "board";
+        topEl.scrollLeft = e.currentTarget.scrollLeft;
+    };
 
     const openTaskDetail = (taskId: string) => {
         setDetailTaskId(taskId);
@@ -2243,8 +2314,22 @@ export function GroupBoardScreen() {
             />
 
             <Container>
+                {showTopScrollbar ? (
+                    <div
+                        ref={topScrollRef}
+                        onScroll={handleTopScroll}
+                        className="board-top-scrollbar mt-5 mb-2 overflow-x-auto overflow-y-hidden">
+                        <div style={{ width: topScrollbarWidth, height: 1 }} />
+                    </div>
+                ) : (
+                    <div className="mt-5" />
+                )}
+
                 {!mounted ? (
-                    <div className="mt-5 flex items-start gap-5 overflow-x-auto pb-6">
+                    <div
+                        ref={boardScrollRef}
+                        onScroll={handleBoardScroll}
+                        className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6">
                         {columns.map((col) => (
                             <ColumnView
                                 key={col.id}
@@ -2287,7 +2372,10 @@ export function GroupBoardScreen() {
                         onDragCancel={handleDragCancel}
                         onDragEnd={handleDragEnd}>
                         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                            <div className="mt-5 flex items-start gap-5 overflow-x-auto pb-6">
+                            <div
+                                ref={boardScrollRef}
+                                onScroll={handleBoardScroll}
+                                className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6">
                                 {columns.map((col) => (
                                     <SortableColumn
                                         key={col.id}

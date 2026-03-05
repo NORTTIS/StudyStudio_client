@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
-import { Container } from "@/components/common";
+import { Container, Modal } from "@/components/common";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -41,14 +41,21 @@ type DocItem = {
     status: string;
 };
 
-const ACCEPTED_EXTENSIONS = [".pdf", ".txt", ".docx", ".md"] as const;
-const ACCEPTED_CONTENT_TYPES = new Set(["application/pdf", "text/plain", "text/markdown", "application/msword"]);
+const ACCEPTED_EXTENSIONS = new Set(["pdf", "txt", "docx", "md"]);
+const ACCEPTED_CONTENT_TYPES = new Set([
+    "application/pdf",
+    "text/plain",
+    "text/markdown",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+]);
 const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
     pdf: "application/pdf",
     txt: "text/plain",
     md: "text/markdown",
-    docx: "application/msword"
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 };
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
 const extractGroupIdFromPath = (pathname: string) => {
@@ -72,16 +79,16 @@ function niceType(ext: string): DocItem["fileType"] {
 
 function resolveContentType(file: File) {
     const ext = getExt(file.name);
-    return CONTENT_TYPE_BY_EXTENSION[ext] || file.type || "";
+    return file.type || CONTENT_TYPE_BY_EXTENSION[ext] || "";
 }
 
 function isAllowedFile(file: File) {
     const ext = getExt(file.name);
     const contentType = resolveContentType(file);
-    return (
-        ACCEPTED_EXTENSIONS.includes(`.${ext}` as (typeof ACCEPTED_EXTENSIONS)[number]) &&
-        ACCEPTED_CONTENT_TYPES.has(contentType)
-    );
+    if (!ACCEPTED_EXTENSIONS.has(ext)) return false;
+    if (!contentType) return true;
+    if (contentType === "application/octet-stream") return true;
+    return ACCEPTED_CONTENT_TYPES.has(contentType);
 }
 
 function formatUpdatedText(createdAt?: string, firstName?: string | null, lastName?: string | null) {
@@ -89,7 +96,7 @@ function formatUpdatedText(createdAt?: string, firstName?: string | null, lastNa
     if (!createdAt) return `Uploaded by ${uploaderName}`;
     const date = new Date(createdAt);
     const formatted = Number.isNaN(date.getTime()) ? createdAt : date.toLocaleString("vi-VN");
-    return `${formatted} • ${uploaderName}`;
+    return `${uploaderName} • ${formatted}`;
 }
 
 function DocumentCard({
@@ -113,9 +120,6 @@ function DocumentCard({
                 <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-[#261E33] text-[15px]">{item.name}</p>
                     <p className="mt-1 text-[#6F6B99] text-sm">{item.updatedText}</p>
-                    <p className="mt-1 text-[#6F6B99] text-xs">
-                        {t("statusLabel")}: {item.status}
-                    </p>
                 </div>
 
                 <DropdownMenu>
@@ -131,7 +135,7 @@ function DocumentCard({
                         </button>
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuContent align="end" className="w-44 border bg-white shadow-md">
                         <DropdownMenuItem onClick={() => onDownload(item.id)}>
                             <Download className="mr-2 h-4 w-4" />
                             {t("download")}
@@ -160,6 +164,8 @@ export default function GroupDocumentsPage() {
     const [isDeleting, setIsDeleting] = React.useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
     const [deleteTarget, setDeleteTarget] = React.useState<Pick<DocItem, "id" | "name"> | null>(null);
+    const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
+    const [isDragActive, setIsDragActive] = React.useState(false);
     const fileRef = React.useRef<HTMLInputElement | null>(null);
 
     const loadDocuments = React.useCallback(async () => {
@@ -197,7 +203,7 @@ export default function GroupDocumentsPage() {
         void loadDocuments();
     }, [loadDocuments]);
 
-    const onUploadClick = () => fileRef.current?.click();
+    const onUploadClick = () => setIsUploadModalOpen(true);
 
     const uploadSingleFile = async (file: File) => {
         const contentType = resolveContentType(file);
@@ -223,53 +229,49 @@ export default function GroupDocumentsPage() {
         await completeDocumentUpload(requested.attachmentId as string);
     };
 
-    const onPickFiles: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
-        const files = Array.from(e.target.files || []);
-        e.target.value = "";
-        if (!files.length) return;
-
+    const handleUploadFile = async (file: File) => {
         if (!groupId) {
             toast({ variant: "destructive", description: t("cannotDetectGroupId") });
             return;
         }
 
-        const invalid = files.filter((file) => !isAllowedFile(file));
-        if (invalid.length) {
-            toast({
-                variant: "destructive",
-                description: t("invalidFiles", { names: invalid.map((f) => f.name).join(", ") })
-            });
+        if (!isAllowedFile(file)) {
+            toast({ variant: "destructive", description: t("invalidFileType", { name: file.name }) });
+            return;
         }
 
-        const validFiles = files.filter((file) => isAllowedFile(file));
-        if (!validFiles.length) return;
+        if (file.size > MAX_FILE_SIZE) {
+            toast({ variant: "destructive", description: t("fileTooLarge", { name: file.name }) });
+            return;
+        }
 
         setIsUploading(true);
-        const failedNames: string[] = [];
-        let successCount = 0;
-
-        for (const file of validFiles) {
-            try {
-                await uploadSingleFile(file);
-                successCount += 1;
-            } catch {
-                failedNames.push(file.name);
-            }
-        }
-
-        setIsUploading(false);
-
-        if (successCount > 0) {
-            toast({ variant: "success", description: t("uploadedFiles", { count: successCount }) });
+        try {
+            await uploadSingleFile(file);
+            toast({ variant: "success", description: t("uploadedFiles", { count: 1 }) });
+            setIsUploadModalOpen(false);
             await loadDocuments();
-        }
-
-        if (failedNames.length) {
+        } catch (error) {
             toast({
                 variant: "destructive",
-                description: t("failedFiles", { names: failedNames.join(", ") })
+                description: error instanceof Error ? error.message : t("uploadFailed")
             });
+        } finally {
+            setIsUploading(false);
         }
+    };
+
+    const onPickFiles: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = "";
+        if (!files.length) return;
+
+        if (files.length > 1) {
+            toast({ variant: "destructive", description: t("tooManyFiles") });
+            return;
+        }
+
+        await handleUploadFile(files[0]);
     };
 
     const onDelete = (id: string) => {
@@ -326,6 +328,20 @@ export default function GroupDocumentsPage() {
         }
     };
 
+    const onDrop: React.DragEventHandler<HTMLDivElement> = async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragActive(false);
+        if (isUploading) return;
+        const files = Array.from(event.dataTransfer?.files || []);
+        if (!files.length) return;
+        if (files.length > 1) {
+            toast({ variant: "destructive", description: t("tooManyFiles") });
+            return;
+        }
+        await handleUploadFile(files[0]);
+    };
+
     return (
         <div className="w-full">
             <Container className="px-6">
@@ -339,7 +355,6 @@ export default function GroupDocumentsPage() {
                             ref={fileRef}
                             type="file"
                             className="hidden"
-                            multiple
                             accept=".pdf,.txt,.docx,.md"
                             onChange={onPickFiles}
                         />
@@ -365,6 +380,65 @@ export default function GroupDocumentsPage() {
                     ))}
                 </div>
             </Container>
+
+            <Modal
+                isOpen={isUploadModalOpen}
+                onClose={() => {
+                    if (!isUploading) setIsUploadModalOpen(false);
+                    setIsDragActive(false);
+                }}
+                title={t("uploadModalTitle")}
+                size="md">
+                <div className="space-y-4">
+                    {/** biome-ignore lint/a11y/useSemanticElements: <explanation> */}
+                    <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => fileRef.current?.click()}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                fileRef.current?.click();
+                            }
+                        }}
+                        onDragEnter={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setIsDragActive(true);
+                        }}
+                        onDragOver={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setIsDragActive(true);
+                        }}
+                        onDragLeave={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setIsDragActive(false);
+                        }}
+                        onDrop={onDrop}
+                        className={twMerge(
+                            "flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition",
+                            isDragActive ? "border-[#FF5722] bg-[#FFF3EE]" : "border-[#E5E5E5] bg-[#FAFAFA]"
+                        )}
+                    >
+                        <Upload className="mb-2 h-8 w-8 text-[#FF5722]" />
+                        <p className="font-semibold text-[#261E33] text-base">{t("dragDropTitle")}</p>
+                        <p className="mt-1 text-[#6F6B99] text-sm">{t("dragDropSubtitle")}</p>
+                        <Button
+                            type="button"
+                            disabled={isUploading}
+                            className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
+                            {t("browseFile")}
+                        </Button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-[#6F6B99] text-sm">{t("uploadHint")}</p>
+
+                    </div>
+                </div>
+            </Modal>
 
             <AlertDialog
                 open={deleteConfirmOpen}

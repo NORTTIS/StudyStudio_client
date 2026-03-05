@@ -2375,7 +2375,37 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateTaskRequest"];
+                    "application/json": components["schemas"]["UpdateTaskRequest"];
+                    "text/json": components["schemas"]["UpdateTaskRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/plain": components["schemas"]["TaskItemResponseApiResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete: {
             parameters: {
@@ -3557,10 +3587,8 @@ export interface components {
             startDate?: string | null;
             taskDescription?: string | null;
             taskName?: string | null;
-            /** Format: int32 */
-            taskPriority?: number;
-            /** Format: int32 */
-            taskSeverity?: number;
+            taskPriority?: components["schemas"]["TaskPriority"];
+            taskSeverity?: components["schemas"]["TaskSeverity"];
         };
         TaskItemResponse: {
             assignee?: components["schemas"]["UserDto"];
@@ -3579,10 +3607,8 @@ export interface components {
             taskDescription?: string | null;
             /** Format: uuid */
             taskId?: string;
-            /** Format: int32 */
-            taskPriority?: number;
-            /** Format: int32 */
-            taskSeverity?: number;
+            taskPriority?: components["schemas"]["TaskPriority"];
+            taskSeverity?: components["schemas"]["TaskSeverity"];
             taskTitle?: string | null;
         };
         TaskItemResponseApiResponse: {
@@ -3591,6 +3617,16 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        TaskPriority: 0 | 1 | 2;
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        TaskSeverity: 0 | 1 | 2 | 3;
         TaskStatusDto: {
             /** Format: int32 */
             position?: number;
@@ -3698,6 +3734,20 @@ export interface components {
             data?: components["schemas"]["UpdateStudioResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        UpdateTaskRequest: {
+            /** Format: uuid */
+            assigneeId?: string | null;
+            /** Format: date-time */
+            dueDate?: string | null;
+            /** Format: uuid */
+            groupStatusId?: string | null;
+            /** Format: date-time */
+            startDate?: string | null;
+            taskDescription?: string | null;
+            taskName?: string | null;
+            taskPriority?: components["schemas"]["TaskPriority"];
+            taskSeverity?: components["schemas"]["TaskSeverity"];
         };
         UpdateTemplateRequest: {
             /** Format: uuid */
