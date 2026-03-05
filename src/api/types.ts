@@ -1041,6 +1041,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents/{attachmentId}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    expirationMinutes?: number;
+                };
+                header?: never;
+                path: {
+                    attachmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DocumentDownloadUrlResponseApiResponse"];
+                        "text/json": components["schemas"]["DocumentDownloadUrlResponseApiResponse"];
+                        "text/plain": components["schemas"]["DocumentDownloadUrlResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/documents/{attachmentId}/status": {
         parameters: {
             query?: never;
@@ -1635,36 +1676,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/*+json": components["schemas"]["GroupTaskStatusPositionRequest"][];
-                    "application/json": components["schemas"]["GroupTaskStatusPositionRequest"][];
-                    "text/json": components["schemas"]["GroupTaskStatusPositionRequest"][];
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ObjectApiResponse"];
-                        "text/json": components["schemas"]["ObjectApiResponse"];
-                        "text/plain": components["schemas"]["ObjectApiResponse"];
-                    };
-                };
-            };
-        };
+        put?: never;
         post: {
             parameters: {
                 query?: never;
@@ -1724,6 +1736,51 @@ export interface paths {
                     "application/*+json": components["schemas"]["GroupTaskStatusRequest"];
                     "application/json": components["schemas"]["GroupTaskStatusRequest"];
                     "text/json": components["schemas"]["GroupTaskStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/GroupTaskStatus/{groupId}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ReorderGroupTaskStatusRequest"];
+                    "application/json": components["schemas"]["ReorderGroupTaskStatusRequest"];
+                    "text/json": components["schemas"]["ReorderGroupTaskStatusRequest"];
                 };
             };
             responses: {
@@ -2236,6 +2293,125 @@ export interface paths {
                         "application/json": components["schemas"]["TaskCommentListResponseApiResponse"];
                         "text/json": components["schemas"]["TaskCommentListResponseApiResponse"];
                         "text/plain": components["schemas"]["TaskCommentListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task/{groupId}/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task/{groupId}/{taskId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task/{groupId}/deleted-task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskDeleteResponseListApiResponse"];
+                        "text/json": components["schemas"]["TaskDeleteResponseListApiResponse"];
+                        "text/plain": components["schemas"]["TaskDeleteResponseListApiResponse"];
                     };
                 };
             };
@@ -2772,7 +2948,20 @@ export interface components {
         CreateTemplateRequest: {
             description?: string | null;
             groupName: string;
-            groupTaskStatuses: components["schemas"]["GroupTaskStatusRequest"][];
+            groupTaskStatuses: components["schemas"]["TemplateTaskStatusRequest"][];
+        };
+        DocumentDownloadUrlResponse: {
+            /** Format: uuid */
+            attachmentId?: string;
+            downloadUrl?: string | null;
+            /** Format: int32 */
+            expiresIn?: number;
+        };
+        DocumentDownloadUrlResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["DocumentDownloadUrlResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         DocumentItem: {
             /** Format: uuid */
@@ -2982,15 +3171,7 @@ export interface components {
             position?: number;
             statusName?: string | null;
         };
-        GroupTaskStatusPositionRequest: {
-            /** Format: int32 */
-            position: number;
-            /** Format: uuid */
-            statusId?: string;
-        };
         GroupTaskStatusRequest: {
-            /** Format: int32 */
-            position: number;
             statusName: string;
         };
         GroupTaskStatusResponse: {
@@ -3082,6 +3263,14 @@ export interface components {
             data?: components["schemas"]["RemoveMemberResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        ReorderGroupTaskStatusRequest: {
+            /** Format: uuid */
+            nextStatusId?: string | null;
+            /** Format: uuid */
+            prevStatusId?: string | null;
+            /** Format: uuid */
+            statusId: string;
         };
         ReportRequest: {
             content: string;
@@ -3217,8 +3406,21 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        TaskDeleteResponse: {
+            /** Format: uuid */
+            deletedBy?: string;
+            /** Format: date-time */
+            deletedOn?: string;
+            taskName?: string | null;
+        };
+        TaskDeleteResponseListApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TaskDeleteResponse"][] | null;
+            message?: string | null;
+            status?: string | null;
+        };
         TaskItemGroupRequest: {
-            assignee?: string[] | null;
+            assignees?: string[] | null;
             /** Format: date-time */
             dueDate?: string;
             /** Format: uuid */
@@ -3271,6 +3473,7 @@ export interface components {
             /** Format: uuid */
             statusId?: string;
             statusName?: string | null;
+            taskList?: components["schemas"]["TaskItemResponse"][] | null;
         };
         TaskSummaryResponse: {
             /** Format: int32 */
@@ -3311,6 +3514,11 @@ export interface components {
             data?: components["schemas"]["TemplateResponse"][] | null;
             message?: string | null;
             status?: string | null;
+        };
+        TemplateTaskStatusRequest: {
+            /** Format: int32 */
+            position: number;
+            statusName: string;
         };
         UpdateAnnouncementRequest: {
             /** Format: uuid */
