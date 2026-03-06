@@ -1,36 +1,34 @@
 "use client";
 
-import * as React from "react";
-import { ChevronDown, MoreHorizontal, Plus, GripVertical, Pencil, Trash2, X, CircleDot } from "lucide-react";
-import { useParams } from "next/navigation";
-import { Container } from "@/components/common";
-import { createPortal } from "react-dom";
-
 import {
+    type CollisionDetection,
+    closestCenter,
+    closestCorners,
     DndContext,
     type DragEndEvent,
-    type DragStartEvent,
-    PointerSensor,
-    KeyboardSensor,
     DragOverlay,
-    closestCorners,
-    closestCenter,
-    useSensor,
-    useSensors,
+    type DragStartEvent,
+    type DroppableContainer,
+    KeyboardSensor,
+    PointerSensor,
     useDroppable,
-    type CollisionDetection,
-    type DroppableContainer
+    useSensor,
+    useSensors
 } from "@dnd-kit/core";
-
 import {
-    SortableContext,
-    useSortable,
     arrayMove,
-    verticalListSortingStrategy,
-    sortableKeyboardCoordinates
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy
 } from "@dnd-kit/sortable";
-
 import { CSS } from "@dnd-kit/utilities";
+import { ChevronDown, CircleDot, GripVertical, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import * as React from "react";
+import { createPortal } from "react-dom";
+import { Container } from "@/components/common";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -40,8 +38,8 @@ type Task = {
     id: string;
     title: string;
     statusDot?: "green" | "yellow" | "red";
-    tagLeft?: string;
-    tagRight?: string;
+    assigneeName?: string | null;
+    assigneeAvatarUrl?: string | null;
     due?: string;
 };
 
@@ -57,6 +55,7 @@ type TaskStatusDto = {
     position?: number;
     statusId?: string;
     statusName?: string | null;
+    taskList?: TaskItemResponse[] | null;
 };
 
 type GroupDetailResponse = {
@@ -76,6 +75,12 @@ type TaskItemResponse = {
     taskTitle?: string | null;
     dueDate?: string;
     startDate?: string;
+    assignee?: {
+        firstName?: string | null;
+        lastName?: string | null;
+        email?: string | null;
+        avatarUrl?: string | null;
+    } | null;
     position?: number;
     taskPriority?: number;
     taskSeverity?: number;
@@ -96,6 +101,48 @@ function dotClass(statusDot?: Task["statusDot"]) {
     if (statusDot === "yellow") return "bg-amber-500";
     if (statusDot === "red") return "bg-rose-500";
     return "bg-emerald-500";
+}
+
+function formatDueDate(input?: string) {
+    const raw = String(input ?? "").trim();
+    if (!raw) return "";
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return raw;
+
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = String(d.getFullYear());
+    return `${dd}/${mm}/${yyyy}`;
+}
+
+function statusDotByPriority(priority?: number): Task["statusDot"] {
+    if (priority === 2) return "red";
+    if (priority === 1) return "yellow";
+    return "green";
+}
+
+function safeAvatarUrl(input?: string | null) {
+    const raw = String(input ?? "").trim();
+    if (!raw) return "";
+    return raw.replace("localhost", "127.0.0.1");
+}
+
+function assigneeNameOf(input?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null) {
+    const first = String(input?.firstName ?? "").trim();
+    const last = String(input?.lastName ?? "").trim();
+    const full = `${first} ${last}`.trim();
+    if (full) return full;
+    const email = String(input?.email ?? "").trim();
+    return email || null;
+}
+
+function initialsFromName(input?: string | null) {
+    const name = String(input ?? "").trim();
+    if (!name) return "U";
+    const parts = name.split(/\s+/).filter(Boolean);
+    const a = parts[0]?.[0] ?? "";
+    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+    return `${a}${b}`.toUpperCase() || "U";
 }
 
 function detectPositionBase(cols: Column[]) {
@@ -219,7 +266,7 @@ async function apiReorderGroupTaskStatus(args: {
     });
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
-    if (!res.ok || !(json ? okByJsonStatus(json) : true)) throw new Error(extractApiMessage(raw, json));
+    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
     return true;
 }
 
@@ -245,7 +292,7 @@ async function apiCreateGroupTaskStatus(args: { groupId: string; statusName: str
     });
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
-    if (!res.ok || !(json ? okByJsonStatus(json) : true)) throw new Error(extractApiMessage(raw, json));
+    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
     return (json ?? raw) as ApiResponse<GroupTaskStatusData> | string;
 }
 
@@ -271,7 +318,7 @@ async function apiCreateTask(args: { groupId: string; groupStatusId: string; tas
     });
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
-    if (!res.ok || !(json ? okByJsonStatus(json) : true)) throw new Error(extractApiMessage(raw, json));
+    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
     return (json ?? null) as ApiResponse<TaskItemResponse> | null;
 }
 
@@ -304,7 +351,7 @@ async function apiRenameGroupTaskStatus(args: {
     );
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
-    if (!res.ok || !(json ? okByJsonStatus(json) : true)) throw new Error(extractApiMessage(raw, json));
+    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
     return true;
 }
 
@@ -324,7 +371,7 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
     );
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
-    if (!res.ok || !(json ? okByJsonStatus(json) : true)) throw new Error(extractApiMessage(raw, json));
+    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
     return true;
 }
 
@@ -358,7 +405,7 @@ function ConfirmModal({
         return () => window.removeEventListener("keydown", fn);
     }, [open, onCancel]);
 
-    if (!open || !mounted) return null;
+    if (!(open && mounted)) return null;
     return createPortal(
         <div
             className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
@@ -369,19 +416,19 @@ function ConfirmModal({
             <div
                 className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
-                <h2 className="text-base font-bold text-zinc-900">{title}</h2>
+                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition">
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-100">
                         {cancelLabel}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 transition">
+                        className="rounded-xl bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700">
                         {confirmLabel}
                     </button>
                 </div>
@@ -450,7 +497,7 @@ function PortalDropdown({
         };
     }, [open, onClose, anchorRef]);
 
-    if (!open || !mounted) return null;
+    if (!(open && mounted)) return null;
     return createPortal(
         <div
             ref={menuRef}
@@ -532,15 +579,15 @@ function AddTaskInline({ disabled, onSubmit }: { disabled: boolean; onSubmit: (t
                 onClick={() => setOpen(true)}
                 disabled={disabled}
                 className={cn(
-                    "flex w-full items-center gap-2 px-4 py-3 text-sm font-medium text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 transition border-t border-zinc-100",
-                    disabled && "opacity-60 pointer-events-none"
+                    "flex w-full items-center gap-2 border-zinc-100 border-t px-4 py-3 font-medium text-sm text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-700",
+                    disabled && "pointer-events-none opacity-60"
                 )}>
                 <Plus className="h-4 w-4" /> Thêm công việc
             </button>
         );
 
     return (
-        <div className="border-t border-zinc-100 px-4 py-3">
+        <div className="border-zinc-100 border-t px-4 py-3">
             <div className="flex items-center gap-2">
                 <input
                     ref={inputRef}
@@ -565,8 +612,8 @@ function AddTaskInline({ disabled, onSubmit }: { disabled: boolean; onSubmit: (t
                     onClick={() => void submit()}
                     disabled={disabled}
                     className={cn(
-                        "rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition",
-                        disabled && "opacity-60 pointer-events-none"
+                        "rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-sm text-white transition hover:bg-indigo-700",
+                        disabled && "pointer-events-none opacity-60"
                     )}>
                     Lưu
                 </button>
@@ -577,7 +624,7 @@ function AddTaskInline({ disabled, onSubmit }: { disabled: boolean; onSubmit: (t
                     <X className="h-4 w-4" />
                 </button>
             </div>
-            {error ? <div className="mt-1 text-xs font-medium text-rose-600">{error}</div> : null}
+            {error ? <div className="mt-1 font-medium text-rose-600 text-xs">{error}</div> : null}
         </div>
     );
 }
@@ -630,7 +677,7 @@ function AddColumnInline({
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="flex w-full items-center gap-2 rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-3 text-sm font-semibold text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition">
+                className="flex w-full items-center gap-2 rounded-2xl border border-zinc-300 border-dashed bg-white px-4 py-3 font-semibold text-sm text-zinc-500 transition hover:border-zinc-400 hover:text-zinc-700">
                 <Plus className="h-4 w-4" /> Tạo mới trạng thái
             </button>
         );
@@ -655,15 +702,15 @@ function AddColumnInline({
                 placeholder="Nhập tên trạng thái..."
                 className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
             />
-            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
+            {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
             <div className="mt-3 flex items-center gap-2">
                 <button
                     type="button"
                     onClick={() => void submit()}
                     disabled={isSubmitting}
                     className={cn(
-                        "rounded-xl px-3 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition",
-                        isSubmitting && "opacity-60 pointer-events-none"
+                        "rounded-xl bg-indigo-600 px-3 py-2 font-semibold text-sm text-white transition hover:bg-indigo-700",
+                        isSubmitting && "pointer-events-none opacity-60"
                     )}>
                     Thêm trạng thái
                 </button>
@@ -672,8 +719,8 @@ function AddColumnInline({
                     onClick={close}
                     disabled={isSubmitting}
                     className={cn(
-                        "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 transition",
-                        isSubmitting && "opacity-60 pointer-events-none"
+                        "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700 transition hover:bg-zinc-100",
+                        isSubmitting && "pointer-events-none opacity-60"
                     )}>
                     <X className="h-4 w-4" />
                 </button>
@@ -713,32 +760,43 @@ function SortableTaskRow({
         <div
             ref={setNodeRef}
             style={style}
-            className="group grid grid-cols-12 items-center gap-3 border-t border-zinc-100 px-4 py-3 hover:bg-zinc-50 transition">
+            className="group grid grid-cols-12 items-center gap-3 border-zinc-100 border-t px-4 py-3 transition hover:bg-zinc-50">
             {/* Drag + dot + title */}
-            <div className="col-span-6 flex items-center gap-3 min-w-0">
+            <div className="col-span-6 flex min-w-0 items-center gap-3">
                 <div className={cn("h-2 w-2 shrink-0 rounded-full", dotClass(task.statusDot))} />
                 <div
                     ref={setActivatorNodeRef}
                     {...attributes}
                     {...listeners}
-                    className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-400 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing select-none transition">
+                    className="grid h-7 w-7 shrink-0 cursor-grab select-none place-items-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-400 opacity-0 transition active:cursor-grabbing group-hover:opacity-100">
                     <GripVertical className="h-4 w-4" />
                 </div>
-                <span className="truncate text-sm font-medium text-zinc-900">{task.title}</span>
+                <span className="truncate font-medium text-sm text-zinc-900">{task.title}</span>
             </div>
 
-            {/* Tags */}
-            <div className="col-span-3 flex flex-wrap gap-1">
-                {task.tagLeft ? (
-                    <span className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-600">
-                        {task.tagLeft}
-                    </span>
-                ) : null}
-                {task.tagRight ? (
-                    <span className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-600">
-                        {task.tagRight}
-                    </span>
-                ) : null}
+            {/* Assignee */}
+            <div className="col-span-3 min-w-0">
+                {task.assigneeName ? (
+                    <div className="flex min-w-0 items-center gap-2">
+                        {task.assigneeAvatarUrl ? (
+                            <Image
+                                src={task.assigneeAvatarUrl}
+                                alt={task.assigneeName}
+                                width={24}
+                                height={24}
+                                unoptimized
+                                className="h-6 w-6 shrink-0 rounded-full border border-zinc-200 object-cover"
+                            />
+                        ) : (
+                            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-zinc-200 font-semibold text-[10px] text-zinc-700">
+                                {initialsFromName(task.assigneeName)}
+                            </span>
+                        )}
+                        <span className="truncate text-xs text-zinc-700">{task.assigneeName}</span>
+                    </div>
+                ) : (
+                    <span className="text-xs text-zinc-400">Chưa gán</span>
+                )}
             </div>
 
             {/* Due */}
@@ -766,7 +824,7 @@ function SortableTaskRow({
                         e.preventDefault();
                         e.stopPropagation();
                     }}
-                    className="grid h-8 w-8 place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 opacity-0 group-hover:opacity-100 transition"
+                    className="grid h-8 w-8 place-items-center rounded-lg text-zinc-400 opacity-0 transition hover:bg-zinc-100 group-hover:opacity-100"
                     aria-label="Menu">
                     <MoreHorizontal className="h-4 w-4" />
                 </button>
@@ -815,8 +873,8 @@ function EditTaskRow({
     }, []);
 
     return (
-        <div className="grid grid-cols-12 items-center gap-3 border-t border-zinc-100 bg-indigo-50/40 px-4 py-3">
-            <div className="col-span-6 flex items-center gap-3 min-w-0">
+        <div className="grid grid-cols-12 items-center gap-3 border-zinc-100 border-t bg-indigo-50/40 px-4 py-3">
+            <div className="col-span-6 flex min-w-0 items-center gap-3">
                 <div className={cn("h-2 w-2 shrink-0 rounded-full", dotClass(task.statusDot))} />
                 <div className="w-7 shrink-0" />
                 <input
@@ -833,14 +891,14 @@ function EditTaskRow({
                             onCancel();
                         }
                     }}
-                    className="flex-1 min-w-0 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-sm font-medium text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="min-w-0 flex-1 rounded-lg border border-indigo-300 bg-white px-2 py-1 font-medium text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-200"
                 />
             </div>
             <div className="col-span-6 flex items-center justify-end gap-2">
                 <button
                     type="button"
                     onClick={onCommit}
-                    className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700">
+                    className="rounded-lg bg-indigo-600 px-3 py-1.5 font-semibold text-white text-xs hover:bg-indigo-700">
                     Lưu
                 </button>
                 <button
@@ -960,11 +1018,11 @@ function SortableSection({
             className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
             {/* Header */}
             <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex flex-1 items-center gap-3 min-w-0">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                     <button
                         type="button"
                         onClick={() => setOpen((v) => !v)}
-                        className="shrink-0 text-zinc-400 hover:text-zinc-600 transition">
+                        className="shrink-0 text-zinc-400 transition hover:text-zinc-600">
                         <ChevronDown className={cn("h-4 w-4 transition-transform", open ? "rotate-0" : "-rotate-90")} />
                     </button>
 
@@ -972,14 +1030,14 @@ function SortableSection({
                         ref={setActivatorNodeRef}
                         {...attributes}
                         {...listeners}
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70 hover:opacity-100 cursor-grab active:cursor-grabbing select-none">
+                        className="grid h-8 w-8 shrink-0 cursor-grab select-none place-items-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70 hover:opacity-100 active:cursor-grabbing">
                         <GripVertical className="h-4 w-4" />
                     </div>
 
                     <div className="min-w-0 flex-1">
                         {!isColumnEditing ? (
                             <button type="button" onClick={() => onRename(col.id)} className="w-full text-left">
-                                <p className="truncate text-sm font-bold text-zinc-900 hover:underline">{col.title}</p>
+                                <p className="truncate font-bold text-sm text-zinc-900 hover:underline">{col.title}</p>
                             </button>
                         ) : (
                             <div className="space-y-0.5">
@@ -1000,7 +1058,7 @@ function SortableSection({
                                     }}
                                     onBlur={() => setTimeout(() => onColumnCommit(), 0)}
                                     className={cn(
-                                        "h-8 w-full rounded-lg border bg-white px-2 text-sm font-bold text-zinc-900 outline-none",
+                                        "h-8 w-full rounded-lg border bg-white px-2 font-bold text-sm text-zinc-900 outline-none",
                                         columnError
                                             ? "border-rose-300 focus:ring-2 focus:ring-rose-100"
                                             : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
@@ -1015,7 +1073,7 @@ function SortableSection({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
-                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 px-2 text-xs font-semibold text-zinc-600">
+                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 px-2 font-semibold text-xs text-zinc-600">
                         {tasks.length}
                     </span>
                     <button
@@ -1063,9 +1121,9 @@ function SortableSection({
             {open && (
                 <>
                     {/* Column header row */}
-                    <div className="grid grid-cols-12 gap-3 border-t border-zinc-100 bg-zinc-50 px-4 py-2 text-xs font-medium text-zinc-500">
+                    <div className="grid grid-cols-12 gap-3 border-zinc-100 border-t bg-zinc-50 px-4 py-2 font-medium text-xs text-zinc-500">
                         <div className="col-span-6">Công việc</div>
-                        <div className="col-span-3">Nhãn</div>
+                        <div className="col-span-3">Người thực hiện</div>
                         <div className="col-span-2">Hạn hoàn thành</div>
                         <div className="col-span-1" />
                     </div>
@@ -1097,7 +1155,7 @@ function SortableSection({
                                 );
                             })}
                             {tasks.length === 0 && (
-                                <div className="px-4 py-8 text-center text-sm text-zinc-400 border-t border-zinc-100">
+                                <div className="border-zinc-100 border-t px-4 py-8 text-center text-sm text-zinc-400">
                                     Chưa có công việc. Thêm mới bên dưới.
                                 </div>
                             )}
@@ -1157,15 +1215,36 @@ export function GroupListScreen() {
             .map((s) => ({
                 id: String(s.statusId),
                 title: String(s.statusName ?? ""),
-                position: Number.isFinite(s.position) ? (s.position as number) : 0
+                position: Number.isFinite(s.position) ? (s.position as number) : 0,
+                taskList: s.taskList ?? []
             }))
             .sort((a, b) => a.position - b.position);
-        setColumns(statuses);
-        setBoard((prev) => {
-            const next: Record<string, Task[]> = {};
-            for (const c of statuses) next[c.id] = prev[c.id] ?? [];
-            return next;
-        });
+        setColumns(statuses.map(({ id, title, position }) => ({ id, title, position })));
+
+        const nextBoard: Record<string, Task[]> = {};
+        for (const status of statuses) {
+            const orderedTasks = (status.taskList ?? []).slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
+            nextBoard[status.id] = orderedTasks.map((item, index) => {
+                const taskId = String(item.taskId ?? "").trim();
+                const taskTitle = String(item.taskTitle ?? "").trim();
+                const dueRaw = String(item.dueDate ?? "").trim();
+                const stableFallbackId = `task_${status.id}_${item.position ?? index}`;
+                const assigneeName = assigneeNameOf(item.assignee);
+                const assigneeAvatarUrl = safeAvatarUrl(item.assignee?.avatarUrl ?? null);
+
+                return {
+                    id: taskId || stableFallbackId,
+                    title: taskTitle || "Untitled task",
+                    statusDot: statusDotByPriority(item.taskPriority),
+                    assigneeName,
+                    assigneeAvatarUrl: assigneeAvatarUrl || null,
+                    due: dueRaw ? formatDueDate(dueRaw) : ""
+                };
+            });
+        }
+
+        setBoard(nextBoard);
     }, []);
 
     const refresh = React.useCallback(async () => {
@@ -1211,7 +1290,7 @@ export function GroupListScreen() {
 
     // ── Column CRUD ──────────────────────────────────────────────────────────
     const submitAddColumn = async (title: string) => {
-        if (!groupId || !isUuidLike(groupId)) throw new Error("groupId không hợp lệ.");
+        if (!(groupId && isUuidLike(groupId))) throw new Error("groupId không hợp lệ.");
         if (columns.some((c) => c.title.trim().toLowerCase() === title.trim().toLowerCase()))
             throw new Error("Tên trạng thái đã tồn tại.");
         const base = detectPositionBase(columns) as 0 | 1;
@@ -1271,7 +1350,7 @@ export function GroupListScreen() {
     const handleConfirmDeleteColumn = async () => {
         const columnId = confirmModal.columnId;
         setConfirmModal({ open: false, columnId: null, columnTitle: "" });
-        if (!columnId || !groupId) return;
+        if (!(columnId && groupId)) return;
         const prevCols = columns;
         const prevBoard = board;
         const base = detectPositionBase(columns) as 0 | 1;
@@ -1298,7 +1377,7 @@ export function GroupListScreen() {
 
     // ── Task CRUD ────────────────────────────────────────────────────────────
     const onCreateTask = async (columnId: ColumnId, title: string) => {
-        if (!groupId || !isUuidLike(groupId)) throw new Error("groupId không hợp lệ.");
+        if (!(groupId && isUuidLike(groupId))) throw new Error("groupId không hợp lệ.");
         if (!isUuidLike(columnId)) throw new Error("columnId không hợp lệ.");
         setCreatingTask(true);
         try {
@@ -1308,8 +1387,8 @@ export function GroupListScreen() {
                 id,
                 title: created?.data?.taskTitle ?? title,
                 statusDot: "green",
-                tagLeft: "TASK",
-                tagRight: "SS",
+                assigneeName: null,
+                assigneeAvatarUrl: null,
                 due: created?.data?.dueDate ?? ""
             };
             setBoard((prev) => ({ ...prev, [columnId]: [next, ...(prev[columnId] ?? [])] }));
@@ -1323,7 +1402,7 @@ export function GroupListScreen() {
     const onTaskCancelEdit = () => setEditingTask({ taskId: null, columnId: null, draft: "" });
     const onTaskCommitEdit = () => {
         const { taskId, columnId, draft } = editingTask;
-        if (!taskId || !columnId) return;
+        if (!(taskId && columnId)) return;
         const next = draft.trim();
         if (!next) {
             onTaskCancelEdit();
@@ -1372,7 +1451,7 @@ export function GroupListScreen() {
             const overKey = overRaw.startsWith("drop:") ? overRaw.replace("drop:", "") : overRaw;
             const fromCol = findColumnOfTask(board, columns, activeId);
             if (!fromCol) return;
-            let toCol: ColumnId | null = columns.some((c) => c.id === overKey)
+            const toCol: ColumnId | null = columns.some((c) => c.id === overKey)
                 ? overKey
                 : findColumnOfTask(board, columns, overKey);
             if (!toCol) return;
@@ -1461,14 +1540,14 @@ export function GroupListScreen() {
         return (
             <div className="min-h-screen bg-zinc-50">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
                         {loadError}
                     </div>
                     <div className="mt-3">
                         <button
                             type="button"
                             onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100">
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                             Tải lại
                         </button>
                     </div>
@@ -1537,12 +1616,12 @@ export function GroupListScreen() {
 
                         <DragOverlay>
                             {activeTask ? (
-                                <div className="rounded-xl border border-indigo-200 bg-white px-4 py-3 shadow-xl text-sm font-medium text-zinc-900">
+                                <div className="rounded-xl border border-indigo-200 bg-white px-4 py-3 font-medium text-sm text-zinc-900 shadow-xl">
                                     {activeTask.title}
                                 </div>
                             ) : activeColumn ? (
-                                <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-xl opacity-90">
-                                    <p className="text-sm font-bold text-zinc-900">{activeColumn.title}</p>
+                                <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 opacity-90 shadow-xl">
+                                    <p className="font-bold text-sm text-zinc-900">{activeColumn.title}</p>
                                     <p className="text-xs text-zinc-500">Đang di chuyển trạng thái…</p>
                                 </div>
                             ) : null}

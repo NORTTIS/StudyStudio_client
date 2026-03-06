@@ -49,7 +49,7 @@ export default function LandingPage() {
                     <div className="mx-auto mt-8 flex h-[340px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-transparent" />
 
                     <div className="mt-8 flex justify-center gap-4">
-                        <Link href={`/${locale}/register`} className="cursor-pointer">
+                        <Link href={`/${locale}/login`} className="cursor-pointer">
                             <Button className="rounded-full bg-orange-500 px-7 py-5 font-semibold hover:bg-orange-600">
                                 {t("management.createButton")}
                             </Button>
@@ -69,7 +69,7 @@ export default function LandingPage() {
                 <div className="mx-auto mt-8 flex h-[340px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-[#FFF7ED]" />
 
                 <div className="mt-8 flex justify-center gap-4">
-                    <Link href={`/${locale}/register`} className="cursor-pointer">
+                    <Link href={`/${locale}/login`} className="cursor-pointer">
                         <Button className="rounded-full bg-orange-500 px-7 py-5 font-semibold hover:bg-orange-600">
                             {t("group.createButton")}
                         </Button>
@@ -88,7 +88,7 @@ export default function LandingPage() {
                 <div className="mx-auto mt-8 flex h-[340px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-transparent" />
 
                 <div className="mt-8 flex justify-center gap-4">
-                    <Link href={`/${locale}/register`} className="cursor-pointer">
+                    <Link href={`/${locale}/login`} className="cursor-pointer">
                         <Button className="rounded-full bg-orange-500 px-7 py-5 font-semibold hover:bg-orange-600">
                             {t("personal.createButton")}
                         </Button>

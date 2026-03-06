@@ -1,890 +1,890 @@
 {
-    "Common": {
-        "loading": "Loading...",
-        "checkingAuth": "Checking authentication...",
-        "aiQATab": "AI Q&A"
+  "Common": {
+    "loading": "Loading...",
+    "checkingAuth": "Checking authentication...",
+    "aiQATab": "AI Q&A"
+  },
+  "GuestNavbar": {
+    "personal": "Personal Studio",
+    "group": "Group Studio",
+    "management": "Master Studio",
+    "plan": "Subscription Plans",
+    "login": "Sign in",
+    "register": "Sign up",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "GuestFooter": {
+    "personal": "Personal Studio",
+    "group": "Group Studio",
+    "management": "Master Studio",
+    "plan": "Subscription Plans",
+    "language": "English",
+    "contactUs": "Contact us",
+    "products": "Products"
+  },
+  "LandingPage": {
+    "hero": {
+      "title": "Collaborative workspace",
+      "subtitle": "Manage your work",
+      "description": "Study Studio helps university students and lecturers manage personal and group projects with transparent and fair contribution tracking, supported by AI.",
+      "registerButton": "Sign up now"
     },
-    "GuestNavbar": {
-        "personal": "Personal Studio",
-        "group": "Group Studio",
-        "management": "Master Studio",
-        "plan": "Subscription Plans",
-        "login": "Sign in",
-        "register": "Sign up",
-        "openMenu": "Open menu",
-        "closeMenu": "Close menu"
+    "architecture": {
+      "title": "3-Tier Workspace Architecture",
+      "subtitle": "We provide separate workspaces"
     },
-    "GuestFooter": {
-        "personal": "Personal Studio",
-        "group": "Group Studio",
-        "management": "Master Studio",
-        "plan": "Subscription Plans",
-        "language": "English",
-        "contactUs": "Contact us",
-        "products": "Products"
+    "management": {
+      "title": "Master Studio",
+      "description": "Manage your spaces and groups",
+      "createButton": "Create Master Studio for free",
+      "learnMore": "Learn more"
     },
-    "LandingPage": {
-        "hero": {
-            "title": "Collaborative workspace",
-            "subtitle": "Manage your work",
-            "description": "Study Studio helps university students and lecturers manage personal and group projects with transparent and fair contribution tracking, supported by AI.",
-            "registerButton": "Sign up – completely free"
-        },
-        "architecture": {
-            "title": "3-Tier Workspace Architecture",
-            "subtitle": "We provide separate workspaces"
-        },
-        "management": {
-            "title": "Master Studio",
-            "description": "Manage your spaces and groups",
-            "createButton": "Create Master Studio for free",
-            "learnMore": "Learn more"
-        },
-        "group": {
-            "title": "Group Studio",
-            "description": "Manage and monitor personal and group tasks",
-            "createButton": "Create Group Studio for free",
-            "learnMore": "Learn more"
-        },
-        "personal": {
-            "title": "Personal Studio",
-            "description": "Manage your own tasks",
-            "createButton": "Create Personal Studio for free",
-            "learnMore": "Learn more"
-        },
-        "ai": {
-            "title": "Manage work more efficiently",
-            "subtitle": "with AI support",
-            "feature1": "Provide reports on group work status",
-            "feature2": "Answer questions about information provided in groups"
-        }
+    "group": {
+      "title": "Group Studio",
+      "description": "Manage and monitor personal and group tasks",
+      "createButton": "Create Group Studio for free",
+      "learnMore": "Learn more"
     },
-    "HomePage": {
-        "title": "Home",
-        "description": "Home page of the application"
+    "personal": {
+      "title": "Personal Studio",
+      "description": "Manage your own tasks",
+      "createButton": "Create Personal Studio for free",
+      "learnMore": "Learn more"
     },
-    "LoginPage": {
-        "title": "Welcome back",
-        "subtitle": "Sign in to your Study Studio account",
-        "email": "Email",
-        "emailPlaceholder": "Enter your email",
-        "emailRequired": "Email is required",
-        "emailInvalid": "Invalid email",
-        "password": "Password",
-        "passwordPlaceholder": "Enter your password",
-        "passwordRequired": "Password is required",
-        "forgotPassword": "Forgot password?",
-        "signInButton": "Sign in",
-        "continueWithGoogle": "Continue with Google",
-        "orContinueWith": "OR CONTINUE WITH",
-        "noAccount": "Don't have an account?",
-        "signUpLink": "Sign up",
-        "loginFailed": "Login failed",
-        "loginSuccess": "Login successful",
-        "emailNotVerified": "Email not verified",
-        "connectionError": "Cannot connect to server. Please try again.",
-        "error": "Error",
-        "credentialError": "Failed to get credential from Google",
-        "meta": {
-            "title": "Sign In - StudyStudio",
-            "description": "Sign in to your StudyStudio account"
-        }
+    "ai": {
+      "title": "Manage work more efficiently",
+      "subtitle": "with AI support",
+      "feature1": "Provide reports on group work status",
+      "feature2": "Answer questions about information provided in groups"
+    }
+  },
+  "HomePage": {
+    "title": "Home",
+    "description": "Home page of the application"
+  },
+  "LoginPage": {
+    "title": "Welcome back",
+    "subtitle": "Sign in to your Study Studio account",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordRequired": "Password is required",
+    "forgotPassword": "Forgot password?",
+    "signInButton": "Sign in",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWith": "OR CONTINUE WITH",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign up",
+    "loginFailed": "Login failed",
+    "loginSuccess": "Login successful",
+    "emailNotVerified": "Email not verified",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "error": "Error",
+    "credentialError": "Failed to get credential from Google",
+    "meta": {
+      "title": "Sign In - StudyStudio",
+      "description": "Sign in to your StudyStudio account"
+    }
+  },
+  "RegisterPage": {
+    "title": "Create account",
+    "subtitle": "Start using Study Studio for free",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstNameRequired": "First name is required",
+    "firstNameInvalid": "First name must be max 20 characters",
+    "lastNameRequired": "Last name is required",
+    "lastNameInvalid": "Last name must be max 20 characters",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format (e.g., abc@gmail.com)",
+    "emailNoSpaces": "Email must not contain spaces",
+    "passwordRequired": "Password is required",
+    "passwordInvalid": "Password must be 10-20 characters, contain at least one uppercase letter, one lowercase letter, and one digit",
+    "confirmPasswordRequired": "Please confirm your password",
+    "confirmPasswordMismatch": "Passwords do not match",
+    "continueWithGoogle": "Continue with Google",
+    "orContinueWith": "Or continue with",
+    "createAccountButton": "Create account",
+    "hasAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "successMessage": "Registration successful!",
+    "verificationEmailSent": "Verification email has been sent. Redirecting to login page...",
+    "registrationFailed": "Registration failed. Please try again.",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "verifyEmailTitle": "Verify Email",
+    "verifyEmailSubtitle": "Check your email to proceed with the next step",
+    "checkYourEmail": "Check your email",
+    "verificationLinkSentTo": "We've sent a verification link to:",
+    "linkExpiresIn15Minutes": "The link will expire in 15 minutes.",
+    "checkSpamFolder": "If you don't see the email, please check your spam folder.",
+    "backToLogin": "Back to login",
+    "meta": {
+      "title": "Sign Up - StudyStudio",
+      "description": "Create your StudyStudio account"
+    }
+  },
+  "ForgotPasswordPage": {
+    "title": "Forgot password?",
+    "subtitle": "Enter your email to receive a password reset link",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
+    "emailNoSpaces": "Email must not contain spaces",
+    "emailNotRegistered": "Email has not been registered",
+    "sendResetLink": "Send reset link",
+    "backToLogin": "Back to login",
+    "successTitle": "Email sent!",
+    "successSubtitle": "We've sent a password reset link to",
+    "successInstructions": "Please check your inbox and click the link to reset your password.",
+    "notReceived": "Didn't receive the email?",
+    "resendLink": "Resend",
+    "meta": {
+      "title": "Forgot Password - StudyStudio",
+      "description": "Reset your StudyStudio password"
+    }
+  },
+  "ResetPasswordPage": {
+    "title": "Create new password",
+    "subtitle": "Enter a new password for your account",
+    "password": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordRequired": "Password is required",
+    "passwordInvalid": "Password must be 10-20 characters, contain at least one uppercase letter, one lowercase letter, and one digit",
+    "confirmPasswordRequired": "Please confirm your password",
+    "confirmPasswordMismatch": "Passwords do not match",
+    "resetPasswordButton": "Reset password",
+    "invalidTokenTitle": "Invalid reset link",
+    "invalidTokenMessage": "The password reset link is invalid or has expired.",
+    "backToLogin": "Back to login",
+    "successTitle": "Password reset successful!",
+    "successMessage": "Your password has been successfully reset. You can now sign in with your new password.",
+    "goToLogin": "Go to login",
+    "meta": {
+      "title": "Reset Password - StudyStudio",
+      "description": "Reset your StudyStudio password"
+    }
+  },
+  "VerifyEmailPage": {
+    "title": "Verify Email",
+    "subtitle": "Activate your Study Studio account",
+    "loading": "Verifying email, please wait...",
+    "successTitle": "Verification successful",
+    "successMessage": "Your account has been successfully verified.",
+    "successDescription": "You can now log in to start using the system.",
+    "alreadyVerifiedMessage": "Your account has been verified previously.",
+    "invalidTokenTitle": "Invalid link",
+    "invalidTokenMessage": "The verification link is invalid or has expired.",
+    "invalidTokenDescription": "Please log in to continue verifying your account",
+    "errorTitle": "An error occurred",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "backToLogin": "Back to login",
+    "meta": {
+      "title": "Verify Email - StudyStudio",
+      "description": "Verify your StudyStudio account"
+    }
+  },
+  "ResendEmailVerifyPage": {
+    "title": "Verify Your Email",
+    "subtitle": "Resend verification link",
+    "description": "Enter your email address and we'll send you a new verification link.",
+    "email": "Email Address",
+    "emailPlaceholder": "your@email.com",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "sendButton": "Send Verification Link",
+    "sendFailed": "Failed to send verification link",
+    "connectionError": "Cannot connect to server. Please try again.",
+    "successTitle": "Check your email",
+    "successMessage": "We've sent a verification link to your email address.",
+    "successDescription": "Please check your email inbox and click the verification link. If you don't see it, check your spam folder.",
+    "backToLogin": "Back to Login",
+    "sendAnother": "Send Another",
+    "alreadyHaveEmail": "Already verified your email?",
+    "backToLoginLink": "Go to Login",
+    "meta": {
+      "title": "Resend Email Verification - StudyStudio",
+      "description": "Resend email verification link"
+    }
+  },
+  "SettingsPage": {
+    "title": "Settings",
+    "backToDashboard": "Back to Dashboard",
+    "menu": {
+      "profile": "Profile",
+      "security": "Security",
+      "billing": "Billing & Subscription",
+      "notifications": "Notifications",
+      "help": "Help & Support"
     },
-    "RegisterPage": {
-        "title": "Create account",
-        "subtitle": "Start using Study Studio for free",
-        "firstName": "First Name",
-        "lastName": "Last Name",
-        "email": "Email",
-        "password": "Password",
-        "confirmPassword": "Confirm Password",
-        "firstNameRequired": "First name is required",
-        "firstNameInvalid": "First name must be max 20 characters",
-        "lastNameRequired": "Last name is required",
-        "lastNameInvalid": "Last name must be max 20 characters",
-        "emailRequired": "Email is required",
-        "emailInvalid": "Invalid email format (e.g., abc@gmail.com)",
-        "emailNoSpaces": "Email must not contain spaces",
-        "passwordRequired": "Password is required",
-        "passwordInvalid": "Password must be 10-20 characters, contain at least one uppercase letter, one lowercase letter, and one digit",
-        "confirmPasswordRequired": "Please confirm your password",
-        "confirmPasswordMismatch": "Passwords do not match",
-        "continueWithGoogle": "Continue with Google",
-        "orContinueWith": "Or continue with",
-        "createAccountButton": "Create account",
-        "hasAccount": "Already have an account?",
-        "signInLink": "Sign in",
-        "successMessage": "Registration successful!",
-        "verificationEmailSent": "Verification email has been sent. Redirecting to login page...",
-        "registrationFailed": "Registration failed. Please try again.",
-        "connectionError": "Cannot connect to server. Please try again.",
-        "verifyEmailTitle": "Verify Email",
-        "verifyEmailSubtitle": "Check your email to proceed with the next step",
-        "checkYourEmail": "Check your email",
-        "verificationLinkSentTo": "We've sent a verification link to:",
-        "linkExpiresIn15Minutes": "The link will expire in 15 minutes.",
-        "checkSpamFolder": "If you don't see the email, please check your spam folder.",
-        "backToLogin": "Back to login",
-        "meta": {
-            "title": "Sign Up - StudyStudio",
-            "description": "Create your StudyStudio account"
-        }
-    },
-    "ForgotPasswordPage": {
-        "title": "Forgot password?",
-        "subtitle": "Enter your email to receive a password reset link",
-        "email": "Email",
-        "emailPlaceholder": "Enter your email",
-        "emailRequired": "Email is required",
-        "emailInvalid": "Invalid email format",
-        "emailNoSpaces": "Email must not contain spaces",
-        "emailNotRegistered": "Email has not been registered",
-        "sendResetLink": "Send reset link",
-        "backToLogin": "Back to login",
-        "successTitle": "Email sent!",
-        "successSubtitle": "We've sent a password reset link to",
-        "successInstructions": "Please check your inbox and click the link to reset your password.",
-        "notReceived": "Didn't receive the email?",
-        "resendLink": "Resend",
-        "meta": {
-            "title": "Forgot Password - StudyStudio",
-            "description": "Reset your StudyStudio password"
-        }
-    },
-    "ResetPasswordPage": {
-        "title": "Create new password",
-        "subtitle": "Enter a new password for your account",
-        "password": "New password",
-        "confirmPassword": "Confirm new password",
-        "passwordRequired": "Password is required",
-        "passwordInvalid": "Password must be 10-20 characters, contain at least one uppercase letter, one lowercase letter, and one digit",
-        "confirmPasswordRequired": "Please confirm your password",
-        "confirmPasswordMismatch": "Passwords do not match",
-        "resetPasswordButton": "Reset password",
-        "invalidTokenTitle": "Invalid reset link",
-        "invalidTokenMessage": "The password reset link is invalid or has expired.",
-        "backToLogin": "Back to login",
-        "successTitle": "Password reset successful!",
-        "successMessage": "Your password has been successfully reset. You can now sign in with your new password.",
-        "goToLogin": "Go to login",
-        "meta": {
-            "title": "Reset Password - StudyStudio",
-            "description": "Reset your StudyStudio password"
-        }
-    },
-    "VerifyEmailPage": {
-        "title": "Verify Email",
-        "subtitle": "Activate your Study Studio account",
-        "loading": "Verifying email, please wait...",
-        "successTitle": "Verification successful",
-        "successMessage": "Your account has been successfully verified.",
-        "successDescription": "You can now log in to start using the system.",
-        "alreadyVerifiedMessage": "Your account has been verified previously.",
-        "invalidTokenTitle": "Invalid link",
-        "invalidTokenMessage": "The verification link is invalid or has expired.",
-        "invalidTokenDescription": "Please log in to continue verifying your account",
-        "errorTitle": "An error occurred",
-        "connectionError": "Cannot connect to server. Please try again.",
-        "backToLogin": "Back to login",
-        "meta": {
-            "title": "Verify Email - StudyStudio",
-            "description": "Verify your StudyStudio account"
-        }
-    },
-    "ResendEmailVerifyPage": {
-        "title": "Verify Your Email",
-        "subtitle": "Resend verification link",
-        "description": "Enter your email address and we'll send you a new verification link.",
-        "email": "Email Address",
-        "emailPlaceholder": "your@email.com",
-        "emailRequired": "Email is required",
-        "emailInvalid": "Please enter a valid email address",
-        "sendButton": "Send Verification Link",
-        "sendFailed": "Failed to send verification link",
-        "connectionError": "Cannot connect to server. Please try again.",
-        "successTitle": "Check your email",
-        "successMessage": "We've sent a verification link to your email address.",
-        "successDescription": "Please check your email inbox and click the verification link. If you don't see it, check your spam folder.",
-        "backToLogin": "Back to Login",
-        "sendAnother": "Send Another",
-        "alreadyHaveEmail": "Already verified your email?",
-        "backToLoginLink": "Go to Login",
-        "meta": {
-            "title": "Resend Email Verification - StudyStudio",
-            "description": "Resend email verification link"
-        }
-    },
-    "SettingsPage": {
-        "title": "Settings",
-        "backToDashboard": "Back to Dashboard",
-        "menu": {
-            "profile": "Profile",
-            "security": "Security",
-            "billing": "Billing & Subscription",
-            "notifications": "Notifications",
-            "help": "Help & Support"
-        },
-        "profile": {
-            "avatarTitle": "Profile Picture",
-            "changeAvatar": "Change Photo",
-            "avatarSupport": "Supported files: JPG, PNG (max 5MB)",
-            "userInfoTitle": "User Information",
-            "userInfoSubtitle": "Update your personal information",
-            "firstName": "First Name",
-            "lastName": "Last Name",
-            "firstNameRequired": "First name is required",
-            "firstNameInvalid": "First name must be max 20 characters",
-            "lastNameRequired": "Last name is required",
-            "lastNameInvalid": "Last name must be max 20 characters",
-            "email": "Email",
-            "phoneNumber": "Phone Number",
-            "phoneNumberInvalid": "Phone number must be 10 to 11 digits",
-            "bio": "Bio",
-            "bioPlaceholder": "Write something about yourself...",
-            "bioMaxLength": "Bio must not exceed 500 characters",
-            "preferencesTitle": "Preferences",
-            "preferencesSubtitle": "Customize your experience",
-            "language": "Language",
-            "notificationsTitle": "Email Notifications",
-            "notificationsSubtitle": "Manage your email notification preferences",
-            "studioNotifications": "Notifications from Studio",
-            "studioNotificationsDesc": "Receive email notifications when work is completed",
-            "deleteAccount": {
-                "title": "Delete Account",
-                "subtitle": "Your account will be marked for deletion and can be restored later",
-                "warning": "Warning: You will not be able to sign in until the account is restored",
-                "consequence1": "Your account will be marked for deletion",
-                "consequence2": "You will lose access to all workspaces",
-                "consequence3": "Your data is retained and the account can be restored",
-                "button": "Delete Account",
-                "modalTitle": "Confirm account deletion",
-                "modalSubtitle": "Please confirm account deletion to continue.",
-                "confirmLabel": "Type DELETE to confirm",
-                "confirmHint": "You must type DELETE exactly (uppercase)",
-                "confirmTextError": "Please type DELETE exactly to confirm",
-                "cancelButton": "Cancel",
-                "confirmButton": "Delete Account",
-                "deleting": "Processing...",
-                "success": "Account has been marked for deletion",
-                "error": "Failed to deactivate account. Please try again!"
-            },
-            "editButton": "Edit",
-            "cancelButton": "Cancel",
-            "saveButton": "Save Changes",
-            "savingButton": "Saving...",
-            "saveSuccess": "Settings saved successfully!",
-            "saveError": "Failed to save settings. Please try again!"
-        },
-        "security": {
-            "comingSoon": "Security features coming soon"
-        },
-        "billing": {
-            "comingSoon": "Billing features coming soon"
-        },
-        "notifications": {
-            "comingSoon": "Notification features coming soon"
-        }
-    },
-    "AnnouncementsPage": {
-        "title": "Announcements",
-        "subtitle": "Track all notifications and system updates",
-        "searchPlaceholder": "Search announcements...",
-        "filters": {
-            "all": "All",
-            "unread": "Unread"
-        },
-        "upgradeNow": "Upgrade Now",
-        "noAnnouncements": "No announcements"
-    },
-    "Notifications": {
-        "title": "Notifications",
-        "markAllRead": "Mark all as read",
-        "viewAll": "View all notifications",
-        "noNotifications": "No notifications"
-    },
-    "Header": {
-        "searchPlaceholder": "Search projects, tasks...",
-        "settings": "Settings",
-        "profile": "Profile",
-        "logout": "Logout",
-        "loggingOut": "Logging out..."
-    },
-    "SecurityPage": {
-        "title": "Security",
-        "backToSettings": "Back to Settings",
-        "changePasswordTitle": "Change Password",
-        "changePasswordSubtitle": "Update your password regularly to keep your account secure.",
-        "currentPassword": "Current Password",
-        "currentPasswordPlaceholder": "Enter current password",
-        "currentPasswordRequired": "Current password is required",
-        "newPassword": "New Password",
-        "newPasswordPlaceholder": "Enter new password",
-        "newPasswordRequired": "New password is required",
-        "passwordInvalid": "New password must be 10-20 characters, contain at least one uppercase letter, one lowercase letter, and one digit",
-        "confirmPassword": "Confirm Password",
-        "confirmPasswordPlaceholder": "Re-enter new password",
-        "confirmPasswordRequired": "Please confirm your password",
-        "passwordMismatch": "Passwords do not match",
+    "profile": {
+      "avatarTitle": "Profile Picture",
+      "changeAvatar": "Change Photo",
+      "avatarSupport": "Supported files: JPG, PNG (max 5MB)",
+      "userInfoTitle": "User Information",
+      "userInfoSubtitle": "Update your personal information",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "firstNameRequired": "First name is required",
+      "firstNameInvalid": "First name must be max 20 characters",
+      "lastNameRequired": "Last name is required",
+      "lastNameInvalid": "Last name must be max 20 characters",
+      "email": "Email",
+      "phoneNumber": "Phone Number",
+      "phoneNumberInvalid": "Phone number must be 10 to 11 digits",
+      "bio": "Bio",
+      "bioPlaceholder": "Write something about yourself...",
+      "bioMaxLength": "Bio must not exceed 500 characters",
+      "preferencesTitle": "Preferences",
+      "preferencesSubtitle": "Customize your experience",
+      "language": "Language",
+      "notificationsTitle": "Email Notifications",
+      "notificationsSubtitle": "Manage your email notification preferences",
+      "studioNotifications": "Notifications from Studio",
+      "studioNotificationsDesc": "Receive email notifications when work is completed",
+      "deleteAccount": {
+        "title": "Delete Account",
+        "subtitle": "Your account will be marked for deletion and can be restored later",
+        "warning": "Warning: You will not be able to sign in until the account is restored",
+        "consequence1": "Your account will be marked for deletion",
+        "consequence2": "You will lose access to all workspaces",
+        "consequence3": "Your data is retained and the account can be restored",
+        "button": "Delete Account",
+        "modalTitle": "Confirm account deletion",
+        "modalSubtitle": "Please confirm account deletion to continue.",
+        "confirmLabel": "Type DELETE to confirm",
+        "confirmHint": "You must type DELETE exactly (uppercase)",
+        "confirmTextError": "Please type DELETE exactly to confirm",
         "cancelButton": "Cancel",
-        "updateButton": "Update Password",
-        "updatingButton": "Updating...",
-        "changePasswordSuccess": "Password updated successfully!",
-        "changePasswordError": "Failed to update password. Please try again!",
-        "deleteAccount": {
-            "title": "Danger Zone",
-            "subtitle": "Delete your account and restore it later if needed",
-            "warning": "Warning: You will not be able to sign in after deletion!",
-            "consequence1": "Your account will be marked for deletion (deleteFlag)",
-            "consequence2": "You will lose access to all workspaces",
-            "consequence3": "Project and document data will be retained",
-            "consequence4": "You can contact support to restore your account",
-            "button": "Delete Account",
-            "modalTitle": "Confirm Account Deletion",
-            "modalSubtitle": "Are you sure you want to delete your account?",
-            "modalWarning": "This action will:",
-            "confirmLabel": "To confirm, please type DELETE",
-            "confirmHint": "Type DELETE (uppercase) to confirm",
-            "confirmTextError": "Please type DELETE exactly to confirm",
-            "cancelButton": "Cancel",
-            "confirmButton": "Delete Account",
-            "deleting": "Processing...",
-            "success": "Account has been marked for deletion",
-            "error": "Failed to deactivate account. Please try again!"
-        }
+        "confirmButton": "Delete Account",
+        "deleting": "Processing...",
+        "success": "Account has been marked for deletion",
+        "error": "Failed to deactivate account. Please try again!"
+      },
+      "editButton": "Edit",
+      "cancelButton": "Cancel",
+      "saveButton": "Save Changes",
+      "savingButton": "Saving...",
+      "saveSuccess": "Settings saved successfully!",
+      "saveError": "Failed to save settings. Please try again!"
     },
-    "BillingPage": {
-        "plansTitle": "Subscription Plans",
-        "plansSubtitle": "Choose the plan that fits your needs",
-        "currentPlan": {
-            "title": "Current Subscription Plan",
-            "subtitle": "You are currently using the",
-            "changeButton": "Change Plan",
-            "cancelButton": "Cancel Subscription",
-            "activeBadge": "Active"
-        },
-        "plans": {
-            "period": "/month",
-            "current": "Current Plan",
-            "free": {
-                "name": "Free",
-                "feature1": "Up to 3 separate Management Studios",
-                "feature2": "Up to 5 Group Studios",
-                "feature3": "Up to 10 members per Group Studio",
-                "feature4": "500 MB document storage per Group Studio",
-                "feature5": "20 AI requests per day",
-                "button": "Current Plan"
-            },
-            "premium": {
-                "name": "Premium",
-                "feature1": "Up to 10 separate Management Studios",
-                "feature2": "Up to 10 Group Studios",
-                "feature3": "Up to 50 members per Group Studio",
-                "feature4": "1 GB document storage per Group Studio",
-                "feature5": "100 AI requests per day",
-                "button": "Upgrade to Premium"
-            }
-        },
-        "historyTitle": "Billing History",
-        "history": {
-            "today": "Today",
-            "lastMonth": "Last month",
-            "twoMonthsAgo": "2 months ago",
-            "threeMonthsAgo": "3 months ago",
-            "annual": "Annual plan",
-            "subscription": "Monthly subscription"
-        },
-        "table": {
-            "invoice": "Invoice",
-            "date": "Date",
-            "description": "Description",
-            "amount": "Amount"
-        },
-        "invoiceInfo": {
-            "title": "Invoice Information",
-            "subtitle": "Update your billing and invoice information",
-            "email": "Invoice Email",
-            "paymentMethod": "Payment Method",
-            "emailNotification": "Receive email notifications for new invoices",
-            "saveSuccess": "Invoice information saved successfully!",
-            "editButton": "Edit Invoice Information",
-            "updateButton": "Update Invoice Information"
-        }
+    "security": {
+      "comingSoon": "Security features coming soon"
     },
-    "HelpPage": {
-        "form": {
-            "formTitle": "Submit Complaint or Contact Support",
-            "subtitle": "Let us know if you're experiencing any issues or have questions",
-            "feedbackType": "Feedback type",
-            "feedbackOptions": {
-                "bug": "Bug report",
-                "feedback": "Suggestion",
-                "support": "Support request",
-                "other": "Other"
-            },
-            "email": "Email",
-            "emailPlaceholder": "dat@studist.edu.vn",
-            "title": "Title",
-            "titlePlaceholder": "A few words describing the issue",
-            "content": "Content",
-            "contentPlaceholder": "Describe your issue in detail...",
-            "cancelButton": "Cancel",
-            "submitButton": "Submit Report",
-            "validationError": "Please fill in all fields",
-            "submitSuccess": "Your report has been submitted successfully!",
-            "submitError": "Failed to submit report"
-        },
-        "faq": {
-            "title": "Frequently Asked Questions",
-            "subtitle": "Find quick answers to common questions",
-            "item1": {
-                "question": "How do I reset my password?",
-                "answer": "You can reset your password by going to the Login page and clicking 'Forgot Password'. Follow the instructions sent to your email."
-            },
-            "item2": {
-                "question": "How do I change my language?",
-                "answer": "Go to Settings > Profile and select your preferred language from the dropdown menu."
-            },
-            "item3": {
-                "question": "Can I cancel my subscription anytime?",
-                "answer": "Yes, you can cancel your subscription at any time from the Billing page in Settings."
-            },
-            "item4": {
-                "question": "How do I contact support?",
-                "answer": "You can contact us using the form on this page or email us directly at support@studystudio.com."
-            }
-        }
+    "billing": {
+      "comingSoon": "Billing features coming soon"
     },
-    "MasterPage": {
-        "title": "Master",
-        "subtitle": "Manage your studios and workspaces",
-        "searchPlaceholder": "Search studio, work...",
-        "createButton": "New Space",
-        "infoBanner": "Create and manage studios to organize your work more effectively.",
-        "studiosUsed": "studios used",
-        "personal": "Personal",
-        "group": "Group",
-        "groups": "groups",
-        "members": "members",
-        "videos": "videos",
-        "noStudios": "No studios yet. Create your first studio!",
-        "noSearchResults": "No studios found matching your search",
-        "error": "Error",
-        "loadError": "Failed to load studios list",
-        "backToList": "Back to list",
-        "groupsTitle": "Groups List",
-        "noGroups": "No groups in this studio yet",
-        "modal": {
-            "createTitle": "Create New Studio",
-            "editTitle": "Edit Studio",
-            "name": "Studio Name",
-            "namePlaceholder": "Enter studio name...",
-            "nameRequired": "Studio name is required",
-            "nameTooLong": "Studio name cannot exceed 100 characters",
-            "description": "Description",
-            "descriptionPlaceholder": "Brief description of the studio...",
-            "descriptionRequired": "Description is required",
-            "descriptionTooLong": "Description cannot exceed 500 characters",
-            "type": "Type",
-            "cancel": "Cancel",
-            "create": "Create",
-            "save": "Save",
-            "createSuccess": "Studio created successfully!",
-            "editSuccess": "Studio updated successfully!",
-            "createError": "Failed to create studio",
-            "editError": "Failed to update studio",
-            "limitReached": "You have reached the limit of 3 studios. Please delete an old studio to create a new one.",
-            "duplicateName": "Studio name already exists. Please choose a different name."
-        },
-        "detailModal": {
-            "description": "Description",
-            "members": "Members",
-            "videos": "Videos",
-            "created": "Created",
-            "updated": "Last Updated",
-            "close": "Close",
-            "edit": "Edit",
-            "delete": "Delete"
-        },
-        "deleteModal": {
-            "title": "Delete Studio",
-            "message": "Are you sure you want to delete",
-            "warning": "Warning: All groups inside this studio will also be deleted. This action cannot be undone.",
-            "cancel": "Cancel",
-            "confirm": "Delete",
-            "success": "Studio deleted successfully!",
-            "error": "Failed to delete studio"
-        },
-        "detail": {
-            "activeBadge": "Active",
-            "addGroupButton": "Add Group",
-            "inviteMember": "Invite Member",
-            "groupsUsed": "group spaces being used",
-            "completionProgress": "Average work completion progress",
-            "tasks": "tasks",
-            "progress": "Work Progress"
-        }
+    "notifications": {
+      "comingSoon": "Notification features coming soon"
+    }
+  },
+  "AnnouncementsPage": {
+    "title": "Announcements",
+    "subtitle": "Track all notifications and system updates",
+    "searchPlaceholder": "Search announcements...",
+    "filters": {
+      "all": "All",
+      "unread": "Unread"
     },
-    "LandingGroupPage": {
-        "hero": {
-            "title": "Shared workspace for",
-            "titleHighlight": "learning & projects",
-            "createButton": "Create a group →",
-            "imageAlt": "Group collaboration"
-        },
-        "howToUse": {
-            "title": "How to use",
-            "step1": "Create a new group with available templates",
-            "step2": "Then share the board with other users",
-            "step3": "Create tasks, assign members",
-            "step4": "Collaborate to complete work together."
-        },
-        "features": {
-            "title": "What can groups do?",
-            "manageGroup": {
-                "title": "Manage groups",
-                "description": "Create and organize study groups\nor projects in seconds"
-            },
-            "trackWork": {
-                "title": "Track work",
-                "description": "Know who does what, and\ntrack progress"
-            },
-            "permissions": {
-                "title": "Smart permissions",
-                "description": "Create and organize study groups\nor projects in seconds"
-            },
-            "aiSupport": {
-                "title": "AI learning support",
-                "description": "Q&A, requirements analysis,\ngenerate reports"
-            }
-        },
-        "users": {
-            "title": "Who's using Study Studio",
-            "subtitle": "Over xxx people use boards each month.",
-            "personal": {
-                "title": "Individuals & Groups",
-                "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
-            },
-            "education": {
-                "title": "Education",
-                "description": "Classrooms, universities, and adult\neducation programs."
-            }
-        },
-        "ai": {
-            "title": "Manage work more efficiently",
-            "subtitle": "with AI support",
-            "feature1": "Provide reports on group work status",
-            "feature2": "Answer questions about information provided in groups"
-        }
-    },
-    "LandingPersonalPage": {
-        "hero": {
-            "title": "Workspace",
-            "titleHighlight": "just for you",
-            "subtitle": "Organize notes, documents, and study plans.",
-            "subtitleExtra": "All in one intuitive, easy-to-use personal space.",
-            "createButton": "Create your space →",
-            "imageAlt": "Landing illustration"
-        },
-        "howToUse": {
-            "title": "How to use",
-            "step1": {
-                "title": "Create personal space",
-                "description": "Start with a blank space\nArrange it your way"
-            },
-            "step2": {
-                "title": "Add notes, documents",
-                "description": "Add text, images, links, and files\nAll organized on one board"
-            },
-            "step3": {
-                "title": "Plan your studies",
-                "description": "Create to-do lists, set goals\nand track daily progress"
-            },
-            "step4": {
-                "title": "Study more effectively",
-                "description": "AI helps you summarize, review, and suggests\noptimal learning methods"
-            }
-        },
-        "features": {
-            "title": "What can you do?",
-            "smartNotes": {
-                "title": "Smart notes",
-                "description": "Create notes with text,\nimages, and links"
-            },
-            "tasks": {
-                "title": "Tasks & goals",
-                "description": "Make to-do lists,\nset deadlines and track progress\ndaily"
-            },
-            "documents": {
-                "title": "Organize documents",
-                "description": "Store and organize learning materials\nby topic, subject, or\nproject"
-            },
-            "aiSupport": {
-                "title": "AI learning support",
-                "description": "AI summarizes documents, suggests reviews\nand answers your questions"
-            },
-            "schedule": {
-                "title": "Study schedule",
-                "description": "Schedule study time and manage\ntime effectively"
-            },
-            "progress": {
-                "title": "Track progress",
-                "description": "View study progress overview\nand statistics"
-            }
-        },
-        "users": {
-            "title": "Who's using Study Studio",
-            "subtitle": "Over xxx people use boards each month.",
-            "students": {
-                "title": "Students",
-                "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working\ntogether effectively."
-            },
-            "selfLearners": {
-                "title": "Self-learners",
-                "description": "Organize learning paths,\nstore reference materials\nand set personal\ndevelopment goals"
-            }
-        }
-    },
-    "LandingManagementPage": {
-        "hero": {
-            "title": "Manage all groups",
-            "titleHighlight": "from one place",
-            "createButton": "Start managing →",
-            "imageAlt": "Management Illustration"
-        },
-        "howToUse": {
-            "title": "How to use",
-            "step1": {
-                "title": "Create management space",
-                "description": "Set up space and configure according to your organization's needs"
-            },
-            "step2": {
-                "title": "Add groups & members",
-                "description": "Invite members, create study groups in just a few clicks"
-            },
-            "step3": {
-                "title": "Assign permissions, setup",
-                "description": "Assign management and member permissions for each separate group"
-            },
-            "step4": {
-                "title": "Track & report",
-                "description": "View progress, activity reports, and evaluate effectiveness"
-            }
-        },
-        "features": {
-            "title": "What can managers do?",
-            "manageMembers": {
-                "title": "Manage members",
-                "description": "Add, remove, and manage members in your organization"
-            },
-            "trackProgress": {
-                "title": "Track progress",
-                "description": "View progress of each group and member"
-            },
-            "permissions": {
-                "title": "Smart permissions",
-                "description": "Set permissions for each role: manager, member, guest"
-            },
-            "overview": {
-                "title": "Overview",
-                "description": "Overview dashboard, metrics"
-            }
-        },
-        "users": {
-            "title": "Who's using Study Studio",
-            "subtitle": "Over xx million people use boards each month.",
-            "personal": {
-                "title": "Individuals & Groups",
-                "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
-            },
-            "education": {
-                "title": "Educational organizations",
-                "description": "Classrooms, universities, and adult\neducation programs."
-            }
-        }
-    },
-    "LandingPlanPage": {
-        "hero": {
-            "title": "Our subscription",
-            "titleHighlight": "plans"
-        },
-        "freePlan": {
-            "title": "Free plan",
-            "price": "0 VND",
-            "description": "Suitable for individuals and\nsmall groups to try out",
-            "registerButton": "Sign up",
-            "feature1": "Up to 3 separate management spaces",
-            "feature2": "Up to 5 group spaces",
-            "feature3": "Up to 10 members per group space",
-            "feature4": "500 MB document storage per group space",
-            "feature5": "20 AI requests per day"
-        },
-        "premiumPlan": {
-            "title": "Premium plan",
-            "price": "299,000 VND / Month",
-            "description": "Suitable for large groups needing\nmore flexibility",
-            "registerButton": "Sign up",
-            "feature1": "Up to 10 separate management spaces",
-            "feature2": "Up to 10 group spaces",
-            "feature3": "Up to 50 members per group space",
-            "feature4": "1 GB document storage per group space",
-            "feature5": "100 AI requests per day"
-        }
-    },
+    "upgradeNow": "Upgrade Now",
+    "noAnnouncements": "No announcements"
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View all notifications",
+    "noNotifications": "No notifications"
+  },
+  "Header": {
+    "searchPlaceholder": "Search projects, tasks...",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "loggingOut": "Logging out..."
+  },
+  "SecurityPage": {
+    "title": "Security",
+    "backToSettings": "Back to Settings",
+    "changePasswordTitle": "Change Password",
+    "changePasswordSubtitle": "Update your password regularly to keep your account secure.",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Enter current password",
+    "currentPasswordRequired": "Current password is required",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter new password",
+    "newPasswordRequired": "New password is required",
+    "passwordInvalid": "New password must be 10-20 characters, contain at least one uppercase letter, one lowercase letter, and one digit",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Re-enter new password",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordMismatch": "Passwords do not match",
+    "cancelButton": "Cancel",
+    "updateButton": "Update Password",
+    "updatingButton": "Updating...",
+    "changePasswordSuccess": "Password updated successfully!",
+    "changePasswordError": "Failed to update password. Please try again!",
+    "deleteAccount": {
+      "title": "Danger Zone",
+      "subtitle": "Delete your account and restore it later if needed",
+      "warning": "Warning: You will not be able to sign in after deletion!",
+      "consequence1": "Your account will be marked for deletion (deleteFlag)",
+      "consequence2": "You will lose access to all workspaces",
+      "consequence3": "Project and document data will be retained",
+      "consequence4": "You can contact support to restore your account",
+      "button": "Delete Account",
+      "modalTitle": "Confirm Account Deletion",
+      "modalSubtitle": "Are you sure you want to delete your account?",
+      "modalWarning": "This action will:",
+      "confirmLabel": "To confirm, please type DELETE",
+      "confirmHint": "Type DELETE (uppercase) to confirm",
+      "confirmTextError": "Please type DELETE exactly to confirm",
+      "cancelButton": "Cancel",
+      "confirmButton": "Delete Account",
+      "deleting": "Processing...",
+      "success": "Account has been marked for deletion",
+      "error": "Failed to deactivate account. Please try again!"
+    }
+  },
+  "BillingPage": {
+    "plansTitle": "Subscription Plans",
+    "plansSubtitle": "Choose the plan that fits your needs",
     "currentPlan": {
-        "title": "Current Plan",
-        "subtitle": "You are currently using",
-        "active": "Active",
-        "changePlan": "Change Plan",
-        "cancelPlan": "Cancel Subscription",
-        "currentButton": "Current Plan"
+      "title": "Current Subscription Plan",
+      "subtitle": "You are currently using the",
+      "changeButton": "Change Plan",
+      "cancelButton": "Cancel Subscription",
+      "activeBadge": "Active"
+    },
+    "plans": {
+      "period": "/month",
+      "current": "Current Plan",
+      "free": {
+        "name": "Free",
+        "feature1": "Up to 3 separate Management Studios",
+        "feature2": "Up to 5 Group Studios",
+        "feature3": "Up to 10 members per Group Studio",
+        "feature4": "500 MB document storage per Group Studio",
+        "feature5": "20 AI requests per day",
+        "button": "Current Plan"
+      },
+      "premium": {
+        "name": "Premium",
+        "feature1": "Up to 10 separate Management Studios",
+        "feature2": "Up to 10 Group Studios",
+        "feature3": "Up to 50 members per Group Studio",
+        "feature4": "1 GB document storage per Group Studio",
+        "feature5": "100 AI requests per day",
+        "button": "Upgrade to Premium"
+      }
+    },
+    "historyTitle": "Billing History",
+    "history": {
+      "today": "Today",
+      "lastMonth": "Last month",
+      "twoMonthsAgo": "2 months ago",
+      "threeMonthsAgo": "3 months ago",
+      "annual": "Annual plan",
+      "subscription": "Monthly subscription"
+    },
+    "table": {
+      "invoice": "Invoice",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount"
     },
     "invoiceInfo": {
-        "editButton": "Edit invoice information",
-        "updateButton": "Update invoice information",
-        "visaText": "Visa ****1234"
-    },
-    "GroupDocumentsPage": {
-        "download": "Download",
-        "delete": "Delete",
-        "statusLabel": "Status",
-        "more": "More",
-        "untitled": "Untitled",
-        "unknownUploader": "Unknown",
-        "uploadedBy": "Uploaded by {name}",
-        "unknownStatus": "unknown",
-        "cannotLoadDocuments": "Cannot load documents",
-        "cannotDetectGroupId": "Cannot detect groupId from URL",
-        "invalidFiles": "Invalid files: {names}",
-        "uploadedFiles": "Uploaded {count} file(s)",
-        "failedFiles": "Failed files: {names}",
-        "documentNotFound": "Document not found",
-        "documentDeleted": "Document deleted",
-        "deleteFailed": "Delete failed",
-        "downloadFailed": "Download failed",
-        "sharedProjectDocuments": "Shared project documents",
-        "uploading": "Uploading...",
-        "upload": "Upload",
-        "uploadModalTitle": "Upload document",
-        "dragDropTitle": "Drag & drop your file here",
-        "dragDropSubtitle": "or click to browse",
-        "uploadHint": "Supported: PDF, DOCX, TXT, MD • Max 5MB • 1 file",
-        "browseFile": "Browse file",
-        "loadingDocuments": "Loading documents...",
-        "noDocuments": "No documents uploaded yet.",
-        "tooManyFiles": "Please upload only one file.",
-        "invalidFileType": "Invalid file type: {name}",
-        "fileTooLarge": "File is larger than 5MB: {name}",
-        "uploadFailed": "Upload failed",
-        "confirmDeleteTitle": "Confirm document deletion",
-        "confirmDeleteDescriptionPrefix": "Are you sure you want to delete",
-        "confirmDeleteDescriptionSuffix": "? This action cannot be undone.",
-        "thisDocument": "this document",
-        "cancel": "Cancel",
-        "deleting": "Deleting...",
-        "deleteDocument": "Delete document"
-    },
-    "GroupAiQaPage": {
-        "usedToday": "Used today",
-        "remainingRequests": "Remaining requests",
-        "dailyLimit": "Daily limit",
-        "unknown": "Unknown",
-        "startConversation": "Start the conversation",
-        "description": "Ask anything about tasks, documents, and progress of this group.",
-        "inputPlaceholder": "Ask AI a question...",
-        "cannotDetectGroupId": "Cannot detect groupId from URL",
-        "aiThinking": "AI is thinking...",
-        "emptyAiAnswer": "AI did not return an answer. Try asking a more specific question.",
-        "aiResponseError": "Cannot get AI response",
-        "quickActions": {
-            "summary": {
-                "label": "Project progress summary",
-                "prompt": "Please summarize the current project progress based on tasks, activities, and documents in the group.\n\nAnalyze:\n- total number of tasks\n- completed tasks\n- tasks in progress\n- tasks not started\n\nThen provide:\n1. Overall project progress\n2. Achieved milestones\n3. Ongoing work\n4. Remaining work\n5. AI insights about the project status"
-            },
-            "risk": {
-                "label": "Risk analysis",
-                "prompt": "Please analyze potential project risks based on tasks, deadlines, and current progress.\n\nIdentify:\n- tasks at risk of missing deadlines\n- tasks with no progress\n- overloaded members\n- issues that may impact progress\n\nReturn:\n1. Overall project risk level\n2. Critical risks\n3. Risks to monitor\n4. Tasks likely to miss deadlines\n5. Suggested mitigation actions"
-            },
-            "report": {
-                "label": "Progress report",
-                "prompt": "Generate a project progress report based on task data and team activity.\n\nThe report should include:\n\n1. Executive summary\n2. Current project status\n3. Completed milestones\n4. Ongoing work\n5. Team member contributions\n6. Next tasks\n7. AI overall assessment"
-            },
-            "deadline": {
-                "label": "Review upcoming deadlines",
-                "prompt": "Please review upcoming project deadlines.\n\nAnalyze:\n- tasks with near-term deadlines\n- unfinished tasks near deadline\n- tasks at risk of delay\n\nReturn:\n1. List of upcoming deadlines\n2. Priority tasks\n3. Tasks at risk of missing deadlines\n4. Recommended actions for the team"
-            }
-        }
-    },
-    "InviteMemberModal": {
-        "title": "Invite user(s) to",
-        "inviteByEmail": "Invite by email",
-        "emailPlaceholder": "Enter email",
-        "inviteAs": "Invite as",
-        "member": "Member",
-        "memberDescription": "Can access all public items in your Groups.",
-        "sendInvite": "Send invite",
-        "sending": "Sending...",
-        "orInviteViaLink": "Or invite via link",
-        "linkPlaceholder": "http://localhost:3000/invite/9IKK3fXcoEY",
-        "getLink": "Get link",
-        "copied": "Copied",
-        "emailRequired": "Please enter email",
-        "emailInvalid": "Invalid email",
-        "emailSent": "Invitation email sent successfully!",
-        "emailError": "Failed to send email. Please try again.",
-        "linkGenerated": "Invite link generated successfully!",
-        "linkError": "Failed to generate link. Please try again.",
-        "linkCopied": "Link copied!",
-        "copyError": "Failed to copy. Please try again."
-    },
-    "GroupInviteModal": {
-        "title": "Invite user(s) to {groupName}",
-        "closeAriaLabel": "Close",
-        "inviteByEmail": "Invite by email",
-        "emailPlaceholder": "Enter email",
-        "clearEmailAriaLabel": "Clear email",
-        "inviteAs": "Invite as",
-        "inviteViaLink": "Or invite via link",
-        "linkPlaceholder": "Invite link will appear here...",
-        "permissionDenied": "You don't have permission to invite members in this group.",
-        "validation": {
-            "emailRequired": "Please enter an email address.",
-            "emailNoSpaces": "Email cannot contain spaces.",
-            "emailInvalid": "Please enter a valid email address."
-        },
-        "buttons": {
-            "sending": "Sending...",
-            "sendInvite": "Send invite",
-            "copied": "Copied!",
-            "copyLink": "Copy link",
-            "creating": "Creating...",
-            "createLink": "Create link"
-        },
-        "roles": {
-            "Moderator": {
-                "label": "Moderator",
-                "note": "Can manage members and content in your Groups."
-            },
-            "Member": {
-                "label": "Member",
-                "note": "Can access all public items in your Groups."
-            },
-            "Commenter": {
-                "label": "Commenter",
-                "note": "Can view and comment on items in your Groups."
-            },
-            "Viewer": {
-                "label": "Viewer",
-                "note": "Can view items in your Groups."
-            }
-        },
-        "toast": {
-            "inviteFailedWithReason": "Invite failed: {reason}",
-            "inviteSent": "Invite sent to {email}.",
-            "inviteFailed": "Invite failed: unable to send invitation. Please try again.",
-            "linkCopied": "Invite link copied to clipboard.",
-            "copyFailed": "Copy failed: unable to copy invite link. Please copy it manually.",
-            "createLinkFailedEmpty": "Create link failed: no invite link was returned. Please try again.",
-            "createLinkFailed": "Create link failed: unable to create invite link. Please try again."
-        }
+      "title": "Invoice Information",
+      "subtitle": "Update your billing and invoice information",
+      "email": "Invoice Email",
+      "paymentMethod": "Payment Method",
+      "emailNotification": "Receive email notifications for new invoices",
+      "saveSuccess": "Invoice information saved successfully!",
+      "editButton": "Edit Invoice Information",
+      "updateButton": "Update Invoice Information"
     }
+  },
+  "HelpPage": {
+    "form": {
+      "formTitle": "Submit Complaint or Contact Support",
+      "subtitle": "Let us know if you're experiencing any issues or have questions",
+      "feedbackType": "Feedback type",
+      "feedbackOptions": {
+        "bug": "Bug report",
+        "feedback": "Suggestion",
+        "support": "Support request",
+        "other": "Other"
+      },
+      "email": "Email",
+      "emailPlaceholder": "dat@studist.edu.vn",
+      "title": "Title",
+      "titlePlaceholder": "A few words describing the issue",
+      "content": "Content",
+      "contentPlaceholder": "Describe your issue in detail...",
+      "cancelButton": "Cancel",
+      "submitButton": "Submit Report",
+      "validationError": "Please fill in all fields",
+      "submitSuccess": "Your report has been submitted successfully!",
+      "submitError": "Failed to submit report"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find quick answers to common questions",
+      "item1": {
+        "question": "How do I reset my password?",
+        "answer": "You can reset your password by going to the Login page and clicking 'Forgot Password'. Follow the instructions sent to your email."
+      },
+      "item2": {
+        "question": "How do I change my language?",
+        "answer": "Go to Settings > Profile and select your preferred language from the dropdown menu."
+      },
+      "item3": {
+        "question": "Can I cancel my subscription anytime?",
+        "answer": "Yes, you can cancel your subscription at any time from the Billing page in Settings."
+      },
+      "item4": {
+        "question": "How do I contact support?",
+        "answer": "You can contact us using the form on this page or email us directly at support@studystudio.com."
+      }
+    }
+  },
+  "MasterPage": {
+    "title": "Master",
+    "subtitle": "Manage your studios and workspaces",
+    "searchPlaceholder": "Search studio, work...",
+    "createButton": "New Space",
+    "infoBanner": "Create and manage studios to organize your work more effectively.",
+    "studiosUsed": "studios used",
+    "personal": "Personal",
+    "group": "Group",
+    "groups": "groups",
+    "members": "members",
+    "videos": "videos",
+    "noStudios": "No studios yet. Create your first studio!",
+    "noSearchResults": "No studios found matching your search",
+    "error": "Error",
+    "loadError": "Failed to load studios list",
+    "backToList": "Back to list",
+    "groupsTitle": "Groups List",
+    "noGroups": "No groups in this studio yet",
+    "modal": {
+      "createTitle": "Create New Studio",
+      "editTitle": "Edit Studio",
+      "name": "Studio Name",
+      "namePlaceholder": "Enter studio name...",
+      "nameRequired": "Studio name is required",
+      "nameTooLong": "Studio name cannot exceed 100 characters",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief description of the studio...",
+      "descriptionRequired": "Description is required",
+      "descriptionTooLong": "Description cannot exceed 500 characters",
+      "type": "Type",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "createSuccess": "Studio created successfully!",
+      "editSuccess": "Studio updated successfully!",
+      "createError": "Failed to create studio",
+      "editError": "Failed to update studio",
+      "limitReached": "You have reached the limit of 3 studios. Please delete an old studio to create a new one.",
+      "duplicateName": "Studio name already exists. Please choose a different name."
+    },
+    "detailModal": {
+      "description": "Description",
+      "members": "Members",
+      "videos": "Videos",
+      "created": "Created",
+      "updated": "Last Updated",
+      "close": "Close",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteModal": {
+      "title": "Delete Studio",
+      "message": "Are you sure you want to delete",
+      "warning": "Warning: All groups inside this studio will also be deleted. This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "success": "Studio deleted successfully!",
+      "error": "Failed to delete studio"
+    },
+    "detail": {
+      "activeBadge": "Active",
+      "addGroupButton": "Add Group",
+      "inviteMember": "Invite Member",
+      "groupsUsed": "group spaces being used",
+      "completionProgress": "Average work completion progress",
+      "tasks": "tasks",
+      "progress": "Work Progress"
+    }
+  },
+  "LandingGroupPage": {
+    "hero": {
+      "title": "Shared workspace for",
+      "titleHighlight": "learning & projects",
+      "createButton": "Create a group →",
+      "imageAlt": "Group collaboration"
+    },
+    "howToUse": {
+      "title": "How to use",
+      "step1": "Create a new group with available templates",
+      "step2": "Then share the board with other users",
+      "step3": "Create tasks, assign members",
+      "step4": "Collaborate to complete work together."
+    },
+    "features": {
+      "title": "What can groups do?",
+      "manageGroup": {
+        "title": "Manage groups",
+        "description": "Create and organize study groups\nor projects in seconds"
+      },
+      "trackWork": {
+        "title": "Track work",
+        "description": "Know who does what, and\ntrack progress"
+      },
+      "permissions": {
+        "title": "Smart permissions",
+        "description": "Create and organize study groups\nor projects in seconds"
+      },
+      "aiSupport": {
+        "title": "AI learning support",
+        "description": "Q&A, requirements analysis,\ngenerate reports"
+      }
+    },
+    "users": {
+      "title": "Who's using Study Studio",
+      "subtitle": "Over xxx people use boards each month.",
+      "personal": {
+        "title": "Individuals & Groups",
+        "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
+      },
+      "education": {
+        "title": "Education",
+        "description": "Classrooms, universities, and adult\neducation programs."
+      }
+    },
+    "ai": {
+      "title": "Manage work more efficiently",
+      "subtitle": "with AI support",
+      "feature1": "Provide reports on group work status",
+      "feature2": "Answer questions about information provided in groups"
+    }
+  },
+  "LandingPersonalPage": {
+    "hero": {
+      "title": "Workspace",
+      "titleHighlight": "just for you",
+      "subtitle": "Organize notes, documents, and study plans.",
+      "subtitleExtra": "All in one intuitive, easy-to-use personal space.",
+      "createButton": "Create your space →",
+      "imageAlt": "Landing illustration"
+    },
+    "howToUse": {
+      "title": "How to use",
+      "step1": {
+        "title": "Create personal space",
+        "description": "Start with a blank space\nArrange it your way"
+      },
+      "step2": {
+        "title": "Add notes, documents",
+        "description": "Add text, images, links, and files\nAll organized on one board"
+      },
+      "step3": {
+        "title": "Plan your studies",
+        "description": "Create to-do lists, set goals\nand track daily progress"
+      },
+      "step4": {
+        "title": "Study more effectively",
+        "description": "AI helps you summarize, review, and suggests\noptimal learning methods"
+      }
+    },
+    "features": {
+      "title": "What can you do?",
+      "smartNotes": {
+        "title": "Smart notes",
+        "description": "Create notes with text,\nimages, and links"
+      },
+      "tasks": {
+        "title": "Tasks & goals",
+        "description": "Make to-do lists,\nset deadlines and track progress\ndaily"
+      },
+      "documents": {
+        "title": "Organize documents",
+        "description": "Store and organize learning materials\nby topic, subject, or\nproject"
+      },
+      "aiSupport": {
+        "title": "AI learning support",
+        "description": "AI summarizes documents, suggests reviews\nand answers your questions"
+      },
+      "schedule": {
+        "title": "Study schedule",
+        "description": "Schedule study time and manage\ntime effectively"
+      },
+      "progress": {
+        "title": "Track progress",
+        "description": "View study progress overview\nand statistics"
+      }
+    },
+    "users": {
+      "title": "Who's using Study Studio",
+      "subtitle": "Over xxx people use boards each month.",
+      "students": {
+        "title": "Students",
+        "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working\ntogether effectively."
+      },
+      "selfLearners": {
+        "title": "Self-learners",
+        "description": "Organize learning paths,\nstore reference materials\nand set personal\ndevelopment goals"
+      }
+    }
+  },
+  "LandingManagementPage": {
+    "hero": {
+      "title": "Manage all groups",
+      "titleHighlight": "from one place",
+      "createButton": "Start managing →",
+      "imageAlt": "Management Illustration"
+    },
+    "howToUse": {
+      "title": "How to use",
+      "step1": {
+        "title": "Create management space",
+        "description": "Set up space and configure according to your organization's needs"
+      },
+      "step2": {
+        "title": "Add groups & members",
+        "description": "Invite members, create study groups in just a few clicks"
+      },
+      "step3": {
+        "title": "Assign permissions, setup",
+        "description": "Assign management and member permissions for each separate group"
+      },
+      "step4": {
+        "title": "Track & report",
+        "description": "View progress, activity reports, and evaluate effectiveness"
+      }
+    },
+    "features": {
+      "title": "What can managers do?",
+      "manageMembers": {
+        "title": "Manage members",
+        "description": "Add, remove, and manage members in your organization"
+      },
+      "trackProgress": {
+        "title": "Track progress",
+        "description": "View progress of each group and member"
+      },
+      "permissions": {
+        "title": "Smart permissions",
+        "description": "Set permissions for each role: manager, member, guest"
+      },
+      "overview": {
+        "title": "Overview",
+        "description": "Overview dashboard, metrics"
+      }
+    },
+    "users": {
+      "title": "Who's using Study Studio",
+      "subtitle": "Over xx million people use boards each month.",
+      "personal": {
+        "title": "Individuals & Groups",
+        "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
+      },
+      "education": {
+        "title": "Educational organizations",
+        "description": "Classrooms, universities, and adult\neducation programs."
+      }
+    }
+  },
+  "LandingPlanPage": {
+    "hero": {
+      "title": "Our subscription",
+      "titleHighlight": "plans"
+    },
+    "freePlan": {
+      "title": "Free plan",
+      "price": "0 VND",
+      "description": "Suitable for individuals and\nsmall groups to try out",
+      "registerButton": "Sign up",
+      "feature1": "Up to 3 separate management spaces",
+      "feature2": "Up to 5 group spaces",
+      "feature3": "Up to 10 members per group space",
+      "feature4": "500 MB document storage per group space",
+      "feature5": "20 AI requests per day"
+    },
+    "premiumPlan": {
+      "title": "Premium plan",
+      "price": "299,000 VND / Month",
+      "description": "Suitable for large groups needing\nmore flexibility",
+      "registerButton": "Sign up",
+      "feature1": "Up to 10 separate management spaces",
+      "feature2": "Up to 10 group spaces",
+      "feature3": "Up to 50 members per group space",
+      "feature4": "1 GB document storage per group space",
+      "feature5": "100 AI requests per day"
+    }
+  },
+  "currentPlan": {
+    "title": "Current Plan",
+    "subtitle": "You are currently using",
+    "active": "Active",
+    "changePlan": "Change Plan",
+    "cancelPlan": "Cancel Subscription",
+    "currentButton": "Current Plan"
+  },
+  "invoiceInfo": {
+    "editButton": "Edit invoice information",
+    "updateButton": "Update invoice information",
+    "visaText": "Visa ****1234"
+  },
+  "GroupDocumentsPage": {
+    "download": "Download",
+    "delete": "Delete",
+    "statusLabel": "Status",
+    "more": "More",
+    "untitled": "Untitled",
+    "unknownUploader": "Unknown",
+    "uploadedBy": "Uploaded by {name}",
+    "unknownStatus": "unknown",
+    "cannotLoadDocuments": "Cannot load documents",
+    "cannotDetectGroupId": "Cannot detect groupId from URL",
+    "invalidFiles": "Invalid files: {names}",
+    "uploadedFiles": "Uploaded {count} file(s)",
+    "failedFiles": "Failed files: {names}",
+    "documentNotFound": "Document not found",
+    "documentDeleted": "Document deleted",
+    "deleteFailed": "Delete failed",
+    "downloadFailed": "Download failed",
+    "sharedProjectDocuments": "Shared project documents",
+    "uploading": "Uploading...",
+    "upload": "Upload",
+    "uploadModalTitle": "Upload document",
+    "dragDropTitle": "Drag & drop your file here",
+    "dragDropSubtitle": "or click to browse",
+    "uploadHint": "Supported: PDF, DOCX, TXT, MD • Max 5MB • 1 file",
+    "browseFile": "Browse file",
+    "loadingDocuments": "Loading documents...",
+    "noDocuments": "No documents uploaded yet.",
+    "tooManyFiles": "Please upload only one file.",
+    "invalidFileType": "Invalid file type: {name}",
+    "fileTooLarge": "File is larger than 5MB: {name}",
+    "uploadFailed": "Upload failed",
+    "confirmDeleteTitle": "Confirm document deletion",
+    "confirmDeleteDescriptionPrefix": "Are you sure you want to delete",
+    "confirmDeleteDescriptionSuffix": "? This action cannot be undone.",
+    "thisDocument": "this document",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "deleteDocument": "Delete document"
+  },
+  "GroupAiQaPage": {
+    "usedToday": "Used today",
+    "remainingRequests": "Remaining requests",
+    "dailyLimit": "Daily limit",
+    "unknown": "Unknown",
+    "startConversation": "Start the conversation",
+    "description": "Ask anything about tasks, documents, and progress of this group.",
+    "inputPlaceholder": "Ask AI a question...",
+    "cannotDetectGroupId": "Cannot detect groupId from URL",
+    "aiThinking": "AI is thinking...",
+    "emptyAiAnswer": "AI did not return an answer. Try asking a more specific question.",
+    "aiResponseError": "Cannot get AI response",
+    "quickActions": {
+      "summary": {
+        "label": "Project progress summary",
+        "prompt": "Please summarize the current project progress based on tasks, activities, and documents in the group.\n\nAnalyze:\n- total number of tasks\n- completed tasks\n- tasks in progress\n- tasks not started\n\nThen provide:\n1. Overall project progress\n2. Achieved milestones\n3. Ongoing work\n4. Remaining work\n5. AI insights about the project status"
+      },
+      "risk": {
+        "label": "Risk analysis",
+        "prompt": "Please analyze potential project risks based on tasks, deadlines, and current progress.\n\nIdentify:\n- tasks at risk of missing deadlines\n- tasks with no progress\n- overloaded members\n- issues that may impact progress\n\nReturn:\n1. Overall project risk level\n2. Critical risks\n3. Risks to monitor\n4. Tasks likely to miss deadlines\n5. Suggested mitigation actions"
+      },
+      "report": {
+        "label": "Progress report",
+        "prompt": "Generate a project progress report based on task data and team activity.\n\nThe report should include:\n\n1. Executive summary\n2. Current project status\n3. Completed milestones\n4. Ongoing work\n5. Team member contributions\n6. Next tasks\n7. AI overall assessment"
+      },
+      "deadline": {
+        "label": "Review upcoming deadlines",
+        "prompt": "Please review upcoming project deadlines.\n\nAnalyze:\n- tasks with near-term deadlines\n- unfinished tasks near deadline\n- tasks at risk of delay\n\nReturn:\n1. List of upcoming deadlines\n2. Priority tasks\n3. Tasks at risk of missing deadlines\n4. Recommended actions for the team"
+      }
+    }
+  },
+  "InviteMemberModal": {
+    "title": "Invite user(s) to",
+    "inviteByEmail": "Invite by email",
+    "emailPlaceholder": "Enter email",
+    "inviteAs": "Invite as",
+    "member": "Member",
+    "memberDescription": "Can access all public items in your Groups.",
+    "sendInvite": "Send invite",
+    "sending": "Sending...",
+    "orInviteViaLink": "Or invite via link",
+    "linkPlaceholder": "http://localhost:3000/invite/9IKK3fXcoEY",
+    "getLink": "Get link",
+    "copied": "Copied",
+    "emailRequired": "Please enter email",
+    "emailInvalid": "Invalid email",
+    "emailSent": "Invitation email sent successfully!",
+    "emailError": "Failed to send email. Please try again.",
+    "linkGenerated": "Invite link generated successfully!",
+    "linkError": "Failed to generate link. Please try again.",
+    "linkCopied": "Link copied!",
+    "copyError": "Failed to copy. Please try again."
+  },
+  "GroupInviteModal": {
+    "title": "Invite user(s) to {groupName}",
+    "closeAriaLabel": "Close",
+    "inviteByEmail": "Invite by email",
+    "emailPlaceholder": "Enter email",
+    "clearEmailAriaLabel": "Clear email",
+    "inviteAs": "Invite as",
+    "inviteViaLink": "Or invite via link",
+    "linkPlaceholder": "Invite link will appear here...",
+    "permissionDenied": "You don't have permission to invite members in this group.",
+    "validation": {
+      "emailRequired": "Please enter an email address.",
+      "emailNoSpaces": "Email cannot contain spaces.",
+      "emailInvalid": "Please enter a valid email address."
+    },
+    "buttons": {
+      "sending": "Sending...",
+      "sendInvite": "Send invite",
+      "copied": "Copied!",
+      "copyLink": "Copy link",
+      "creating": "Creating...",
+      "createLink": "Create link"
+    },
+    "roles": {
+      "Moderator": {
+        "label": "Moderator",
+        "note": "Can manage members and content in your Groups."
+      },
+      "Member": {
+        "label": "Member",
+        "note": "Can access all public items in your Groups."
+      },
+      "Commenter": {
+        "label": "Commenter",
+        "note": "Can view and comment on items in your Groups."
+      },
+      "Viewer": {
+        "label": "Viewer",
+        "note": "Can view items in your Groups."
+      }
+    },
+    "toast": {
+      "inviteFailedWithReason": "Invite failed: {reason}",
+      "inviteSent": "Invite sent to {email}.",
+      "inviteFailed": "Invite failed: unable to send invitation. Please try again.",
+      "linkCopied": "Invite link copied to clipboard.",
+      "copyFailed": "Copy failed: unable to copy invite link. Please copy it manually.",
+      "createLinkFailedEmpty": "Create link failed: no invite link was returned. Please try again.",
+      "createLinkFailed": "Create link failed: unable to create invite link. Please try again."
+    }
+  }
 }

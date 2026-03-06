@@ -65,6 +65,11 @@ type TaskItemResponse = {
     taskTitle?: string | null;
     dueDate?: string;
     startDate?: string;
+    assignee?: {
+        firstName?: string | null;
+        lastName?: string | null;
+        email?: string | null;
+    } | null;
     position?: number;
     taskPriority?: number;
     taskSeverity?: number;
@@ -202,9 +207,16 @@ function formatDueCompact(input: string) {
     const dd = String(d.getDate()).padStart(2, "0");
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yyyy = String(d.getFullYear());
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mi = String(d.getMinutes()).padStart(2, "0");
-    return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+    return `${dd}/${mm}/${yyyy}`;
+}
+
+function formatAssigneeName(input?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null) {
+    const first = String(input?.firstName ?? "").trim();
+    const last = String(input?.lastName ?? "").trim();
+    const fullName = `${first} ${last}`.trim();
+    if (fullName) return fullName;
+    const email = String(input?.email ?? "").trim();
+    return email || null;
 }
 
 function isOverdue(raw?: string) {
@@ -885,7 +897,12 @@ function TaskCard({
 
                 <div className="min-w-0 flex-1 overflow-hidden">
                     {!isEditing ? (
-                        <p className="line-clamp-3 font-semibold text-sm text-zinc-900">{task.title}</p>
+                        <>
+                            <p className="line-clamp-3 font-semibold text-sm text-zinc-900">{task.title}</p>
+                            <p className="mt-1 truncate text-xs text-zinc-500">
+                                Người thực hiện: {task.assigneeName || "Chưa gán"}
+                            </p>
+                        </>
                     ) : (
                         <div
                             className="space-y-2"
@@ -1578,9 +1595,8 @@ function TaskOverlay({ task }: { task: Task }) {
     return (
         <div className={cn("min-w-[320px] rounded-xl border border-zinc-200 bg-white p-3 shadow-xl")}>
             <p className="font-semibold text-sm text-zinc-900">{task.title}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-                <Pill>{task.tagLeft ?? "TASK"}</Pill>
-                <Pill>{task.tagRight ?? "SS"}</Pill>
+            <div className="mt-2">
+                <Pill>Người thực hiện: {task.assigneeName || "Chưa gán"}</Pill>
             </div>
             {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
         </div>
@@ -1807,6 +1823,7 @@ export function GroupBoardScreen() {
             nextBoard[s.id] = apiTasks.map((t) => {
                 const dueRaw = t.dueDate ? String(t.dueDate) : "";
                 const startRaw = t.startDate ? String(t.startDate) : "";
+                const assigneeName = formatAssigneeName(t.assignee);
 
                 const dueFmt = dueRaw ? formatDueCompact(dueRaw) : "";
                 const startFmt = startRaw ? formatDueCompact(startRaw) : "";
@@ -1814,7 +1831,8 @@ export function GroupBoardScreen() {
                 const base: Task = {
                     id: String(t.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
                     title: String(t.taskTitle ?? ""),
-                    statusDot: "green"
+                    statusDot: "green",
+                    assigneeName
                 };
 
                 if (startFmt) base.start = startFmt;
