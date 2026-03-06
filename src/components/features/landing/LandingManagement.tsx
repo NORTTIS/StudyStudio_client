@@ -15,22 +15,24 @@ export default function LandingManagement() {
         <div className="flex min-h-screen flex-col bg-[#FFF7ED] text-gray-800">
             <GuestNavbar />
 
-            <section className="bg-white py-20">
+            <section className="landing-fade-in bg-white py-20">
                 {/* Title */}
-                <div className="mx-auto max-w-5xl text-center">
-                    <h1 className="font-extrabold text-5xl text-gray-700 leading-tight md:text-6xl">
+                <div className="landing-fade-up mx-auto max-w-5xl text-center">
+                    <h1 className="landing-fade-up landing-delay-1 font-extrabold text-5xl text-gray-700 leading-tight md:text-6xl">
                         {t("hero.title")} <br />
                         {t("hero.titleHighlight")}
                     </h1>
 
-                    <Link href={`/${locale}/register`} className="cursor-pointer">
-                        <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 font-semibold text-lg text-white hover:bg-orange-600">
+                    <Link
+                        href={`/${locale}/register`}
+                        className="landing-pop landing-delay-2 inline-block cursor-pointer">
+                        <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 font-semibold text-lg text-white transition-transform duration-300 hover:scale-[1.03] hover:bg-orange-600">
                             {t("hero.createButton")}
                         </Button>
                     </Link>
                 </div>
 
-                <div className="mx-auto mt-12 flex max-w-5xl justify-center">
+                <div className="landing-fade-up landing-delay-3 mx-auto mt-12 flex max-w-5xl justify-center">
                     <Image
                         src="/images/management.png"
                         alt={t("hero.imageAlt")}
@@ -42,8 +44,10 @@ export default function LandingManagement() {
                 </div>
             </section>
 
-            <section className="bg-[#FFF3E6] py-24">
-                <h2 className="text-center font-extrabold text-5xl text-gray-700">{t("howToUse.title")}</h2>
+            <section className="landing-fade-up bg-[#FFF3E6] py-24">
+                <h2 className="landing-fade-up text-center font-extrabold text-5xl text-gray-700">
+                    {t("howToUse.title")}
+                </h2>
 
                 <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-10 px-6 md:grid-cols-4">
                     {[
@@ -64,7 +68,9 @@ export default function LandingManagement() {
                             desc: t("howToUse.step4.description")
                         }
                     ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center text-center">
+                        <div
+                            key={i}
+                            className={`landing-pop flex flex-col items-center text-center landing-delay-${i + 1}`}>
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] font-bold text-lg text-white">
                                 {i + 1}
                             </div>
@@ -76,11 +82,13 @@ export default function LandingManagement() {
                     ))}
                 </div>
 
-                <div className="mx-auto mt-16 flex h-[420px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-transparent" />
+                <div className="landing-fade-up landing-delay-4 mx-auto mt-16 flex h-[420px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-transparent" />
             </section>
 
-            <section className="bg-white py-24">
-                <h2 className="text-center font-extrabold text-5xl text-gray-700">{t("features.title")}</h2>
+            <section className="landing-fade-up bg-white py-24">
+                <h2 className="landing-fade-up text-center font-extrabold text-5xl text-gray-700">
+                    {t("features.title")}
+                </h2>
 
                 <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-x-16 gap-y-14 px-6 md:grid-cols-2">
                     {[
@@ -101,7 +109,9 @@ export default function LandingManagement() {
                             desc: t("features.overview.description")
                         }
                     ].map((item, i) => (
-                        <div key={i} className="rounded-2xl bg-[#FFD9D2] px-10 py-10 text-center">
+                        <div
+                            key={i}
+                            className={`landing-pop rounded-2xl bg-[#FFD9D2] px-10 py-10 text-center landing-delay-${i + 1}`}>
                             <h3 className="font-extrabold text-2xl text-black">{item.title}</h3>
 
                             <div className="my-5 h-px bg-black/20" />
@@ -112,10 +122,14 @@ export default function LandingManagement() {
                 </div>
             </section>
 
-            <section className="bg-[#FFF3E6] py-24">
-                <h2 className="text-center font-extrabold text-4xl text-gray-700">{t("users.title")}</h2>
+            <section className="landing-fade-up bg-[#FFF3E6] py-24">
+                <h2 className="landing-fade-up text-center font-extrabold text-4xl text-gray-700">
+                    {t("users.title")}
+                </h2>
 
-                <p className="mt-3 text-center text-gray-500 text-lg">{t("users.subtitle")}</p>
+                <p className="landing-fade-up landing-delay-1 mt-3 text-center text-gray-500 text-lg">
+                    {t("users.subtitle")}
+                </p>
 
                 <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-16 px-6 md:grid-cols-2">
                     {[
@@ -128,7 +142,9 @@ export default function LandingManagement() {
                             desc: t("users.education.description")
                         }
                     ].map((item, i) => (
-                        <div key={i} className="rounded-2xl bg-[#FAD7A7] px-12 py-10 text-center">
+                        <div
+                            key={i}
+                            className={`landing-pop rounded-2xl bg-[#FAD7A7] px-12 py-10 text-center landing-delay-${i + 2}`}>
                             <h3 className="font-extrabold text-2xl text-black">{item.title}</h3>
 
                             <div className="my-6 h-px bg-black/20" />

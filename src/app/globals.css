@@ -58,6 +58,85 @@
 }
 
 @layer utilities {
+    @keyframes landing-fade-up {
+        from {
+            opacity: 0;
+            transform: translateY(24px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes landing-fade-in {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes landing-pop {
+        0% {
+            opacity: 0;
+            transform: scale(0.96) translateY(18px);
+        }
+
+        60% {
+            opacity: 1;
+            transform: scale(1.01) translateY(0);
+        }
+
+        100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .landing-fade-up {
+        animation: landing-fade-up 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .landing-fade-in {
+        animation: landing-fade-in 820ms ease-out both;
+    }
+
+    .landing-pop {
+        animation: landing-pop 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .landing-delay-1 {
+        animation-delay: 120ms;
+    }
+
+    .landing-delay-2 {
+        animation-delay: 220ms;
+    }
+
+    .landing-delay-3 {
+        animation-delay: 320ms;
+    }
+
+    .landing-delay-4 {
+        animation-delay: 420ms;
+    }
+
+    .landing-delay-5 {
+        animation-delay: 520ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .landing-fade-up,
+        .landing-fade-in,
+        .landing-pop {
+            animation: none;
+        }
+    }
+
     .scrollbar-hide {
         -ms-overflow-style: none;
         scrollbar-width: none;
