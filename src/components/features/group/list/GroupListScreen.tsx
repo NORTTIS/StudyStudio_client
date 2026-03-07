@@ -1,92 +1,42 @@
 "use client";
 
-import {
-    type CollisionDetection,
-    closestCenter,
-    closestCorners,
-    DndContext,
-    type DragEndEvent,
-    DragOverlay,
-    type DragStartEvent,
-    type DroppableContainer,
-    KeyboardSensor,
-    PointerSensor,
-    useDroppable,
-    useSensor,
-    useSensors
-} from "@dnd-kit/core";
-import {
-    arrayMove,
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, CircleDot, GripVertical, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Filter, Search } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
+import type { components } from "@/api/types";
 import { Container } from "@/components/common";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type ColumnId = string;
-
-type Task = {
-    id: string;
-    title: string;
-    statusDot?: "green" | "yellow" | "red";
-    assigneeName?: string | null;
-    assigneeAvatarUrl?: string | null;
-    due?: string;
-};
-
-type Column = {
-    id: ColumnId;
-    title: string;
-    position: number;
-};
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
-type TaskStatusDto = {
-    position?: number;
-    statusId?: string;
-    statusName?: string | null;
-    taskList?: TaskItemResponse[] | null;
+type GroupTaskListResponse = components["schemas"]["GroupTaskListResponse"];
+type UserDto = components["schemas"]["UserDto"];
+type TaskPriority = components["schemas"]["TaskPriority"];
+type TaskSeverity = components["schemas"]["TaskSeverity"];
+
+type TaskRow = {
+    id: string;
+    title: string;
+    assigneeName: string;
+    assigneeAvatarUrl: string | null;
+    assigneeInitials: string;
+    severityLabel: string;
+    severityClass: string;
+    priorityLabel: string;
+    priorityClass: string;
+    statusName: string;
+    startLabel: string;
+    dueLabel: string;
 };
 
-type GroupDetailResponse = {
-    groupId?: string;
-    taskStatuses?: TaskStatusDto[] | null;
+type DateFilterValues = {
+    startDateFrom: string;
+    startDateTo: string;
+    dueDateFrom: string;
+    dueDateTo: string;
 };
-
-type GroupTaskStatusData = {
-    groupId?: string;
-    statusId?: string;
-    statusName?: string | null;
-    position?: number;
-};
-
-type TaskItemResponse = {
-    taskId?: string;
-    taskTitle?: string | null;
-    dueDate?: string;
-    startDate?: string;
-    assignee?: {
-        firstName?: string | null;
-        lastName?: string | null;
-        email?: string | null;
-        avatarUrl?: string | null;
-    } | null;
-    position?: number;
-    taskPriority?: number;
-    taskSeverity?: number;
-};
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -96,95 +46,9 @@ function isUuidLike(v: string) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
 
-function dotClass(statusDot?: Task["statusDot"]) {
-    if (statusDot === "green") return "bg-emerald-500";
-    if (statusDot === "yellow") return "bg-amber-500";
-    if (statusDot === "red") return "bg-rose-500";
-    return "bg-emerald-500";
+function asObject(v: unknown): Record<string, unknown> | null {
+    return typeof v === "object" && v !== null ? (v as Record<string, unknown>) : null;
 }
-
-function formatDueDate(input?: string) {
-    const raw = String(input ?? "").trim();
-    if (!raw) return "";
-    const d = new Date(raw);
-    if (Number.isNaN(d.getTime())) return raw;
-
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yyyy = String(d.getFullYear());
-    return `${dd}/${mm}/${yyyy}`;
-}
-
-function statusDotByPriority(priority?: number): Task["statusDot"] {
-    if (priority === 2) return "red";
-    if (priority === 1) return "yellow";
-    return "green";
-}
-
-function safeAvatarUrl(input?: string | null) {
-    const raw = String(input ?? "").trim();
-    if (!raw) return "";
-    return raw.replace("localhost", "127.0.0.1");
-}
-
-function assigneeNameOf(input?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null) {
-    const first = String(input?.firstName ?? "").trim();
-    const last = String(input?.lastName ?? "").trim();
-    const full = `${first} ${last}`.trim();
-    if (full) return full;
-    const email = String(input?.email ?? "").trim();
-    return email || null;
-}
-
-function initialsFromName(input?: string | null) {
-    const name = String(input ?? "").trim();
-    if (!name) return "U";
-    const parts = name.split(/\s+/).filter(Boolean);
-    const a = parts[0]?.[0] ?? "";
-    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
-    return `${a}${b}`.toUpperCase() || "U";
-}
-
-function detectPositionBase(cols: Column[]) {
-    if (!cols.length) return 0;
-    const positions = cols.map((c) => (Number.isFinite(c.position) ? c.position : 0)).filter((x) => Number.isFinite(x));
-    const min = positions.length ? Math.min(...positions) : 0;
-    return min >= 1 ? 1 : 0;
-}
-
-function assignPositions(cols: Column[], base: 0 | 1) {
-    return cols.map((c, idx) => ({ ...c, position: base === 1 ? idx + 1 : idx }));
-}
-
-function nextPositionForCreate(cols: Column[], base: 0 | 1) {
-    if (!cols.length) return base === 1 ? 1 : 0;
-    const max = cols.reduce((m, c) => Math.max(m, Number.isFinite(c.position) ? c.position : -1), -1);
-    return base === 1 ? Math.max(1, max + 1) : Math.max(0, max + 1);
-}
-
-function findColumnOfTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: string): ColumnId | null {
-    for (const col of columns) {
-        if ((board[col.id] ?? []).some((t) => t.id === taskId)) return col.id;
-    }
-    return null;
-}
-
-function findTask(board: Record<ColumnId, Task[]>, columns: Column[], taskId: string): Task | null {
-    for (const col of columns) {
-        const t = (board[col.id] ?? []).find((x) => x.id === taskId);
-        if (t) return t;
-    }
-    return null;
-}
-
-function filterDroppablesByType(droppables: DroppableContainer[], allow: string[]) {
-    return droppables.filter((d) => {
-        const t = d.data?.current?.type;
-        return typeof t === "string" && allow.includes(t);
-    });
-}
-
-// ─── API helpers ─────────────────────────────────────────────────────────────
 
 const readText = async (res: Response) => {
     try {
@@ -196,26 +60,36 @@ const readText = async (res: Response) => {
 
 function parseMaybeJson(raw: string) {
     const text = (raw ?? "").toString().trim();
-    if (!text) return { json: null as any, text: "" };
+    if (!text) return { json: null as unknown, text: "" };
     try {
-        return { json: JSON.parse(text.replace(/^\uFEFF/, "")), text };
+        const cleaned = text.replace(/^\uFEFF/, "");
+        return { json: JSON.parse(cleaned) as unknown, text };
     } catch {
-        return { json: null as any, text };
+        return { json: null as unknown, text };
     }
 }
 
-const okByJsonStatus = (obj: any) => {
-    const s = String(obj?.status ?? "").toLowerCase();
+const okByJsonStatus = (obj: unknown) => {
+    const s = String(asObject(obj)?.status ?? "").toLowerCase();
     return s === "" || s === "success" || s === "ok" || s === "true";
 };
 
-const extractApiMessage = (text: string, json: any) => {
-    const msg = (json?.message ?? "").toString().trim();
-    return msg || (text ?? "").toString().trim() || "Đã xảy ra lỗi";
+const extractApiMessage = (text: string, json: unknown) => {
+    const msg = String(asObject(json)?.message ?? "").trim();
+    return msg || text.trim() || "Da xay ra loi";
 };
 
 function getApiBase() {
-    return String(process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/+$/, "");
+    const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    return String(raw).replace(/\/+$/, "");
+}
+
+function apiUrl(path: string) {
+    const base = getApiBase();
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    if (!base) return cleanPath;
+    if (base.endsWith("/api")) return `${base}${cleanPath}`;
+    return `${base}/api${cleanPath}`;
 }
 
 function getAccessTokenOrNull() {
@@ -224,212 +98,201 @@ function getAccessTokenOrNull() {
     return t ? String(t) : null;
 }
 
-async function apiGetGroupDetail(groupId: string) {
-    const apiBase = getApiBase();
+function formatShortDate(input: string | null | undefined, locale: string) {
+    const raw = String(input ?? "").trim();
+    if (!raw) return "-";
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return "-";
+    const dateLocale = locale.toLowerCase().startsWith("vi") ? "vi-VN" : "en-US";
+    return d.toLocaleDateString(dateLocale, { month: "short", day: "numeric" });
+}
+
+function normalizeDateInput(value: string) {
+    return String(value).trim();
+}
+
+function severityClassOf(v?: TaskSeverity) {
+    if (v === 3) return "text-red-600";
+    if (v === 2) return "text-orange-600";
+    if (v === 1) return "text-amber-600";
+    return "text-sky-600";
+}
+
+function priorityLabelOf(v: TaskPriority | undefined, t: (key: string) => string) {
+    if (v === 2) return t("high");
+    if (v === 1) return t("medium");
+    return t("low");
+}
+
+function severityLabelOf(v: TaskSeverity | undefined, t: (key: string) => string) {
+    if (v === 3) return t("critical");
+    if (v === 2) return t("major");
+    if (v === 1) return t("moderate");
+    return t("minor");
+}
+
+function priorityClassOf(v?: TaskPriority) {
+    if (v === 2) return "text-rose-600";
+    if (v === 1) return "text-amber-700";
+    return "text-emerald-700";
+}
+
+function buildInitials(name: string) {
+    const s = String(name).trim();
+    if (!s) return "U";
+    const parts = s.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? "";
+    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+    return `${first}${last}`.toUpperCase() || "U";
+}
+
+function buildAssignee(user: UserDto | null | undefined, unassignedText: string) {
+    const fullName = `${String(user?.firstName ?? "").trim()} ${String(user?.lastName ?? "").trim()}`.trim();
+    const assigneeName = fullName || unassignedText;
+
+    return {
+        name: assigneeName,
+        avatarUrl: String(user?.avatarUrl ?? "").trim() || null,
+        initials: buildInitials(assigneeName)
+    };
+}
+
+async function apiGetGroupTasks(args: {
+    groupId: string;
+    search?: string;
+    statusId?: string;
+    startDateFrom?: string;
+    startDateTo?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    sortBy?: string;
+    sortAscending?: boolean;
+    page?: number;
+    pageSize?: number;
+}) {
+    const base = getApiBase();
     const token = getAccessTokenOrNull();
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    const res = await fetch(`${apiBase}/group/${encodeURIComponent(groupId)}/detail`, {
+    if (!base) throw new Error("Thieu NEXT_PUBLIC_API_BASE_URL.");
+
+    const query = new URLSearchParams();
+    if (args.search) query.set("search", args.search);
+    if (args.statusId) query.set("statusId", args.statusId);
+    if (args.startDateFrom) query.set("startDateFrom", args.startDateFrom);
+    if (args.startDateTo) query.set("startDateTo", args.startDateTo);
+    if (args.dueDateFrom) query.set("dueDateFrom", args.dueDateFrom);
+    if (args.dueDateTo) query.set("dueDateTo", args.dueDateTo);
+    if (args.sortBy) query.set("sortBy", args.sortBy);
+    query.set("sortAscending", String(Boolean(args.sortAscending)));
+    query.set("page", String(args.page ?? 1));
+    query.set("pageSize", String(args.pageSize ?? 100));
+
+    const suffix = query.toString();
+    const url = apiUrl(`/group/${encodeURIComponent(args.groupId)}/tasks${suffix ? `?${suffix}` : ""}`);
+
+    const res = await fetch(url, {
         method: "GET",
         credentials: "include",
         cache: "no-store",
-        headers: { Accept: "text/plain, application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }
-    });
-    const raw = await readText(res);
-    const { json } = parseMaybeJson(raw);
-    if (!res.ok || (json && !okByJsonStatus(json))) throw new Error(extractApiMessage(raw, json));
-    return (json ?? null) as ApiResponse<GroupDetailResponse> | null;
-}
-
-async function apiReorderGroupTaskStatus(args: {
-    groupId: string;
-    statusId: string;
-    prevStatusId: string | null;
-    nextStatusId: string | null;
-}) {
-    const apiBase = getApiBase();
-    const token = getAccessTokenOrNull();
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ.");
-    const res = await fetch(`${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}/reorder`, {
-        method: "PUT",
-        credentials: "include",
         headers: {
             Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-            statusId: args.statusId,
-            prevStatusId: args.prevStatusId,
-            nextStatusId: args.nextStatusId
-        })
-    });
-    const raw = await readText(res);
-    const { json } = parseMaybeJson(raw);
-    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
-    return true;
-}
-
-async function apiCreateGroupTaskStatus(args: { groupId: string; statusName: string; position: number }) {
-    const apiBase = getApiBase();
-    const token = getAccessTokenOrNull();
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ.");
-    const payload = {
-        statusName: String(args.statusName ?? "").trim(),
-        position: Math.max(0, Math.trunc(args.position))
-    };
-    if (!payload.statusName) throw new Error("Vui lòng nhập tên trạng thái.");
-    const res = await fetch(`${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify(payload)
-    });
-    const raw = await readText(res);
-    const { json } = parseMaybeJson(raw);
-    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
-    return (json ?? raw) as ApiResponse<GroupTaskStatusData> | string;
-}
-
-async function apiCreateTask(args: { groupId: string; groupStatusId: string; taskName: string }) {
-    const apiBase = getApiBase();
-    const token = getAccessTokenOrNull();
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ.");
-    if (!isUuidLike(args.groupStatusId)) throw new Error("groupStatusId không hợp lệ.");
-    const res = await fetch(`${apiBase}/Task`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-            groupId: args.groupId,
-            groupStatusId: args.groupStatusId,
-            taskName: String(args.taskName ?? "").trim()
-        })
-    });
-    const raw = await readText(res);
-    const { json } = parseMaybeJson(raw);
-    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
-    return (json ?? null) as ApiResponse<TaskItemResponse> | null;
-}
-
-async function apiRenameGroupTaskStatus(args: {
-    groupId: string;
-    statusId: string;
-    statusName: string;
-    position: number;
-}) {
-    const apiBase = getApiBase();
-    const token = getAccessTokenOrNull();
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ.");
-    if (!isUuidLike(args.statusId)) throw new Error("statusId không hợp lệ.");
-    const res = await fetch(
-        `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.statusId)}`,
-        {
-            method: "PUT",
-            credentials: "include",
-            headers: {
-                Accept: "text/plain, application/json",
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({
-                position: Math.max(0, Math.trunc(args.position)),
-                statusName: String(args.statusName ?? "").trim()
-            })
         }
-    );
+    });
+
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
-    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
-    return true;
+    if (!res.ok || (json && !okByJsonStatus(json))) {
+        throw new Error(extractApiMessage(raw, json));
+    }
+
+    return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
 }
 
-async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: string }) {
-    const apiBase = getApiBase();
-    const token = getAccessTokenOrNull();
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!isUuidLike(args.groupId)) throw new Error("groupId không hợp lệ.");
-    if (!isUuidLike(args.statusId)) throw new Error("statusId không hợp lệ.");
-    const res = await fetch(
-        `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`,
-        {
-            method: "DELETE",
-            credentials: "include",
-            headers: { Accept: "text/plain, application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }
-        }
-    );
-    const raw = await readText(res);
-    const { json } = parseMaybeJson(raw);
-    if (!(res.ok && (json ? okByJsonStatus(json) : true))) throw new Error(extractApiMessage(raw, json));
-    return true;
-}
-
-// ─── ConfirmModal ─────────────────────────────────────────────────────────────
-
-function ConfirmModal({
-    open,
-    title,
-    description,
-    confirmLabel = "Xác nhận",
-    cancelLabel = "Hủy",
-    onConfirm,
-    onCancel
-}: {
+function DateFilterModal(props: {
     open: boolean;
-    title: string;
-    description: string;
-    confirmLabel?: string;
-    cancelLabel?: string;
-    onConfirm: () => void;
-    onCancel: () => void;
+    values: DateFilterValues;
+    t: (key: string) => string;
+    onChange: (patch: Partial<DateFilterValues>) => void;
+    onClose: () => void;
+    onClear: () => void;
+    onSubmit: () => void;
 }) {
-    const [mounted, setMounted] = React.useState(false);
-    React.useEffect(() => setMounted(true), []);
-    React.useEffect(() => {
-        if (!open) return;
-        const fn = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onCancel();
-        };
-        window.addEventListener("keydown", fn);
-        return () => window.removeEventListener("keydown", fn);
-    }, [open, onCancel]);
+    const { open, values, t, onChange, onClose, onClear, onSubmit } = props;
+    if (!open) return null;
 
-    if (!(open && mounted)) return null;
     return createPortal(
         <div
-            className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
-            style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
+            className="fixed inset-0 z-12000 flex items-center justify-center bg-black/40 p-4"
             onPointerDown={(e) => {
-                if (e.target === e.currentTarget) onCancel();
+                if (e.target === e.currentTarget) onClose();
             }}>
             <div
-                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+                className="w-full max-w-xl rounded-2xl border border-zinc-200 bg-white p-5 shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
-                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
-                <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
-                <div className="mt-6 flex items-center justify-end gap-3">
+                <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-semibold text-lg text-zinc-900">{t("dateFilterTitle")}</h3>
                     <button
                         type="button"
-                        onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-100">
-                        {cancelLabel}
+                        onClick={onClose}
+                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50">
+                        {t("cancel")}
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label className="flex flex-col gap-1.5">
+                        <span className="font-medium text-sm text-zinc-600">{t("startFrom")}</span>
+                        <input
+                            type="date"
+                            value={values.startDateFrom}
+                            onChange={(e) => onChange({ startDateFrom: normalizeDateInput(e.target.value) })}
+                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                        />
+                    </label>
+
+                    <label className="flex flex-col gap-1.5">
+                        <span className="font-medium text-sm text-zinc-600">{t("startTo")}</span>
+                        <input
+                            type="date"
+                            value={values.startDateTo}
+                            onChange={(e) => onChange({ startDateTo: normalizeDateInput(e.target.value) })}
+                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                        />
+                    </label>
+
+                    <label className="flex flex-col gap-1.5">
+                        <span className="font-medium text-sm text-zinc-600">{t("dueFrom")}</span>
+                        <input
+                            type="date"
+                            value={values.dueDateFrom}
+                            onChange={(e) => onChange({ dueDateFrom: normalizeDateInput(e.target.value) })}
+                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                        />
+                    </label>
+
+                    <label className="flex flex-col gap-1.5">
+                        <span className="font-medium text-sm text-zinc-600">{t("dueTo")}</span>
+                        <input
+                            type="date"
+                            value={values.dueDateTo}
+                            onChange={(e) => onChange({ dueDateTo: normalizeDateInput(e.target.value) })}
+                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                        />
+                    </label>
+                </div>
+
+                <div className="mt-5 flex items-center justify-end gap-2.5">
+                    <button
+                        type="button"
+                        onClick={onClear}
+                        className="h-10 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                        {t("clearFilter")}
                     </button>
                     <button
                         type="button"
-                        onClick={onConfirm}
-                        className="rounded-xl bg-rose-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-rose-700">
-                        {confirmLabel}
+                        onClick={onSubmit}
+                        className="h-10 rounded-xl bg-zinc-900 px-4 font-semibold text-sm text-white hover:bg-zinc-800">
+                        {t("applyFilter")}
                     </button>
                 </div>
             </div>
@@ -437,1198 +300,321 @@ function ConfirmModal({
         document.body
     );
 }
-
-// ─── PortalDropdown ───────────────────────────────────────────────────────────
-
-function PortalDropdown({
-    open,
-    onClose,
-    anchorRef,
-    children
-}: {
-    open: boolean;
-    onClose: () => void;
-    anchorRef: React.RefObject<HTMLElement>;
-    children: React.ReactNode;
-}) {
-    const menuRef = React.useRef<HTMLDivElement | null>(null);
-    const [mounted, setMounted] = React.useState(false);
-    const [pos, setPos] = React.useState({ top: 0, left: 0, width: 208 });
-    React.useEffect(() => setMounted(true), []);
-
-    const syncPos = React.useCallback(() => {
-        const a = anchorRef.current;
-        if (!a) return;
-        const r = a.getBoundingClientRect();
-        const width = 208;
-        setPos({ top: r.bottom + 8, left: Math.max(8, r.right - width), width });
-    }, [anchorRef]);
-
-    React.useEffect(() => {
-        if (!open) return;
-        syncPos();
-        const onScroll = () => syncPos();
-        const onResize = () => syncPos();
-        window.addEventListener("scroll", onScroll, true);
-        window.addEventListener("resize", onResize);
-        return () => {
-            window.removeEventListener("scroll", onScroll, true);
-            window.removeEventListener("resize", onResize);
-        };
-    }, [open, syncPos]);
-
-    React.useEffect(() => {
-        if (!open) return;
-        const onPD = (e: PointerEvent) => {
-            const t = e.target as Node | null;
-            if (!t) return;
-            if (menuRef.current?.contains(t)) return;
-            if (anchorRef.current?.contains(t)) return;
-            onClose();
-        };
-        const onKD = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("pointerdown", onPD, true);
-        window.addEventListener("keydown", onKD);
-        return () => {
-            window.removeEventListener("pointerdown", onPD, true);
-            window.removeEventListener("keydown", onKD);
-        };
-    }, [open, onClose, anchorRef]);
-
-    if (!(open && mounted)) return null;
-    return createPortal(
-        <div
-            ref={menuRef}
-            onPointerDown={(e) => e.stopPropagation()}
-            style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
-            {children}
-        </div>,
-        document.body
-    );
-}
-
-function MenuItem({
-    icon,
-    label,
-    danger,
-    onClick
-}: {
-    icon: React.ReactNode;
-    label: string;
-    danger?: boolean;
-    onClick: () => void;
-}) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={cn(
-                "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
-                danger ? "text-rose-600 hover:bg-rose-50" : "text-zinc-700 hover:bg-zinc-100"
-            )}>
-            <span className="grid h-5 w-5 place-items-center">{icon}</span>
-            <span className="font-medium">{label}</span>
-        </button>
-    );
-}
-
-// ─── AddTaskInline ────────────────────────────────────────────────────────────
-
-function AddTaskInline({ disabled, onSubmit }: { disabled: boolean; onSubmit: (title: string) => Promise<void> }) {
-    const [open, setOpen] = React.useState(false);
-    const [title, setTitle] = React.useState("");
-    const [error, setError] = React.useState<string | null>(null);
-    const inputRef = React.useRef<HTMLInputElement | null>(null);
-
-    React.useEffect(() => {
-        if (open) {
-            setError(null);
-            setTimeout(() => inputRef.current?.focus(), 0);
-        }
-    }, [open]);
-
-    const close = () => {
-        setOpen(false);
-        setTitle("");
-        setError(null);
-    };
-    const submit = async () => {
-        const trimmed = title.trim();
-        if (!trimmed) {
-            setError("Vui lòng nhập tên công việc.");
-            inputRef.current?.focus();
-            return;
-        }
-        try {
-            setError(null);
-            await onSubmit(trimmed);
-            close();
-        } catch (e: any) {
-            setError(e?.message ?? "Tạo công việc thất bại");
-            inputRef.current?.focus();
-        }
-    };
-
-    if (!open)
-        return (
-            <button
-                type="button"
-                onClick={() => setOpen(true)}
-                disabled={disabled}
-                className={cn(
-                    "flex w-full items-center gap-2 border-zinc-100 border-t px-4 py-3 font-medium text-sm text-zinc-500 transition hover:bg-zinc-50 hover:text-zinc-700",
-                    disabled && "pointer-events-none opacity-60"
-                )}>
-                <Plus className="h-4 w-4" /> Thêm công việc
-            </button>
-        );
-
-    return (
-        <div className="border-zinc-100 border-t px-4 py-3">
-            <div className="flex items-center gap-2">
-                <input
-                    ref={inputRef}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                            void submit();
-                        }
-                        if (e.key === "Escape") {
-                            e.preventDefault();
-                            close();
-                        }
-                    }}
-                    disabled={disabled}
-                    placeholder="Nhập tên công việc..."
-                    className="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
-                />
-                <button
-                    type="button"
-                    onClick={() => void submit()}
-                    disabled={disabled}
-                    className={cn(
-                        "rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-sm text-white transition hover:bg-indigo-700",
-                        disabled && "pointer-events-none opacity-60"
-                    )}>
-                    Lưu
-                </button>
-                <button
-                    type="button"
-                    onClick={close}
-                    className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100">
-                    <X className="h-4 w-4" />
-                </button>
-            </div>
-            {error ? <div className="mt-1 font-medium text-rose-600 text-xs">{error}</div> : null}
-        </div>
-    );
-}
-
-// ─── AddColumnInline ──────────────────────────────────────────────────────────
-
-function AddColumnInline({
-    isSubmitting,
-    onSubmit
-}: {
-    isSubmitting: boolean;
-    onSubmit: (title: string) => Promise<void>;
-}) {
-    const [open, setOpen] = React.useState(false);
-    const [title, setTitle] = React.useState("");
-    const [error, setError] = React.useState<string | null>(null);
-    const inputRef = React.useRef<HTMLInputElement | null>(null);
-
-    React.useEffect(() => {
-        if (open) {
-            setError(null);
-            setTimeout(() => inputRef.current?.focus(), 0);
-        }
-    }, [open]);
-
-    const close = () => {
-        setOpen(false);
-        setTitle("");
-        setError(null);
-    };
-    const submit = async () => {
-        const trimmed = title.trim();
-        if (!trimmed) {
-            setError("Vui lòng nhập tên trạng thái.");
-            inputRef.current?.focus();
-            return;
-        }
-        try {
-            setError(null);
-            await onSubmit(trimmed);
-            close();
-        } catch (e: any) {
-            setError(e?.message ?? "Tạo trạng thái thất bại");
-            inputRef.current?.focus();
-        }
-    };
-
-    if (!open)
-        return (
-            <button
-                type="button"
-                onClick={() => setOpen(true)}
-                className="flex w-full items-center gap-2 rounded-2xl border border-zinc-300 border-dashed bg-white px-4 py-3 font-semibold text-sm text-zinc-500 transition hover:border-zinc-400 hover:text-zinc-700">
-                <Plus className="h-4 w-4" /> Tạo mới trạng thái
-            </button>
-        );
-
-    return (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <input
-                ref={inputRef}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        void submit();
-                    }
-                    if (e.key === "Escape") {
-                        e.preventDefault();
-                        close();
-                    }
-                }}
-                disabled={isSubmitting}
-                placeholder="Nhập tên trạng thái..."
-                className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
-            />
-            {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
-            <div className="mt-3 flex items-center gap-2">
-                <button
-                    type="button"
-                    onClick={() => void submit()}
-                    disabled={isSubmitting}
-                    className={cn(
-                        "rounded-xl bg-indigo-600 px-3 py-2 font-semibold text-sm text-white transition hover:bg-indigo-700",
-                        isSubmitting && "pointer-events-none opacity-60"
-                    )}>
-                    Thêm trạng thái
-                </button>
-                <button
-                    type="button"
-                    onClick={close}
-                    disabled={isSubmitting}
-                    className={cn(
-                        "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700 transition hover:bg-zinc-100",
-                        isSubmitting && "pointer-events-none opacity-60"
-                    )}>
-                    <X className="h-4 w-4" />
-                </button>
-            </div>
-        </div>
-    );
-}
-
-// ─── SortableTaskRow ──────────────────────────────────────────────────────────
-
-function SortableTaskRow({
-    task,
-    columnId,
-    onStartEdit,
-    onDelete
-}: {
-    task: Task;
-    columnId: ColumnId;
-    onStartEdit: () => void;
-    onDelete: () => void;
-}) {
-    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
-        id: task.id,
-        data: { type: "task", columnId }
-    });
-
-    const style: React.CSSProperties = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.25 : 1
-    };
-
-    const [openMenu, setOpenMenu] = React.useState(false);
-    const btnRef = React.useRef<HTMLButtonElement | null>(null);
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className="group grid grid-cols-12 items-center gap-3 border-zinc-100 border-t px-4 py-3 transition hover:bg-zinc-50">
-            {/* Drag + dot + title */}
-            <div className="col-span-6 flex min-w-0 items-center gap-3">
-                <div className={cn("h-2 w-2 shrink-0 rounded-full", dotClass(task.statusDot))} />
-                <div
-                    ref={setActivatorNodeRef}
-                    {...attributes}
-                    {...listeners}
-                    className="grid h-7 w-7 shrink-0 cursor-grab select-none place-items-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-400 opacity-0 transition active:cursor-grabbing group-hover:opacity-100">
-                    <GripVertical className="h-4 w-4" />
-                </div>
-                <span className="truncate font-medium text-sm text-zinc-900">{task.title}</span>
-            </div>
-
-            {/* Assignee */}
-            <div className="col-span-3 min-w-0">
-                {task.assigneeName ? (
-                    <div className="flex min-w-0 items-center gap-2">
-                        {task.assigneeAvatarUrl ? (
-                            <Image
-                                src={task.assigneeAvatarUrl}
-                                alt={task.assigneeName}
-                                width={24}
-                                height={24}
-                                unoptimized
-                                className="h-6 w-6 shrink-0 rounded-full border border-zinc-200 object-cover"
-                            />
-                        ) : (
-                            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-zinc-200 font-semibold text-[10px] text-zinc-700">
-                                {initialsFromName(task.assigneeName)}
-                            </span>
-                        )}
-                        <span className="truncate text-xs text-zinc-700">{task.assigneeName}</span>
-                    </div>
-                ) : (
-                    <span className="text-xs text-zinc-400">Chưa gán</span>
-                )}
-            </div>
-
-            {/* Due */}
-            <div className="col-span-2">
-                {task.due ? (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1 text-xs text-zinc-600">
-                        <CircleDot className="h-3 w-3" /> {task.due}
-                    </span>
-                ) : (
-                    <span className="text-xs text-zinc-400">—</span>
-                )}
-            </div>
-
-            {/* Menu */}
-            <div className="col-span-1 flex justify-end">
-                <button
-                    ref={btnRef}
-                    type="button"
-                    onPointerDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setOpenMenu((v) => !v);
-                    }}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }}
-                    className="grid h-8 w-8 place-items-center rounded-lg text-zinc-400 opacity-0 transition hover:bg-zinc-100 group-hover:opacity-100"
-                    aria-label="Menu">
-                    <MoreHorizontal className="h-4 w-4" />
-                </button>
-                <PortalDropdown open={openMenu} onClose={() => setOpenMenu(false)} anchorRef={btnRef as any}>
-                    <MenuItem
-                        icon={<Pencil className="h-4 w-4" />}
-                        label="Chỉnh sửa tên"
-                        onClick={() => {
-                            setOpenMenu(false);
-                            onStartEdit();
-                        }}
-                    />
-                    <MenuItem
-                        icon={<Trash2 className="h-4 w-4" />}
-                        label="Xóa"
-                        danger
-                        onClick={() => {
-                            setOpenMenu(false);
-                            onDelete();
-                        }}
-                    />
-                </PortalDropdown>
-            </div>
-        </div>
-    );
-}
-
-// ─── EditTaskInline (overlay edit inside list) ────────────────────────────────
-
-function EditTaskRow({
-    task,
-    draft,
-    onDraftChange,
-    onCommit,
-    onCancel
-}: {
-    task: Task;
-    draft: string;
-    onDraftChange: (v: string) => void;
-    onCommit: () => void;
-    onCancel: () => void;
-}) {
-    const inputRef = React.useRef<HTMLInputElement | null>(null);
-    React.useEffect(() => {
-        setTimeout(() => inputRef.current?.focus(), 0);
-    }, []);
-
-    return (
-        <div className="grid grid-cols-12 items-center gap-3 border-zinc-100 border-t bg-indigo-50/40 px-4 py-3">
-            <div className="col-span-6 flex min-w-0 items-center gap-3">
-                <div className={cn("h-2 w-2 shrink-0 rounded-full", dotClass(task.statusDot))} />
-                <div className="w-7 shrink-0" />
-                <input
-                    ref={inputRef}
-                    value={draft}
-                    onChange={(e) => onDraftChange(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                            onCommit();
-                        }
-                        if (e.key === "Escape") {
-                            e.preventDefault();
-                            onCancel();
-                        }
-                    }}
-                    className="min-w-0 flex-1 rounded-lg border border-indigo-300 bg-white px-2 py-1 font-medium text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-indigo-200"
-                />
-            </div>
-            <div className="col-span-6 flex items-center justify-end gap-2">
-                <button
-                    type="button"
-                    onClick={onCommit}
-                    className="rounded-lg bg-indigo-600 px-3 py-1.5 font-semibold text-white text-xs hover:bg-indigo-700">
-                    Lưu
-                </button>
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100">
-                    <X className="h-3.5 w-3.5" />
-                </button>
-                <span className="text-[11px] text-zinc-400">Enter lưu • Esc huỷ</span>
-            </div>
-        </div>
-    );
-}
-
-// ─── ColumnDropZone ───────────────────────────────────────────────────────────
-
-function ColumnDropZone({
-    colId,
-    isOver,
-    setNodeRef,
-    children
-}: {
-    colId: ColumnId;
-    isOver: boolean;
-    setNodeRef: (node: HTMLElement | null) => void;
-    children: React.ReactNode;
-}) {
-    return (
-        <div ref={setNodeRef} className={cn("transition", isOver && "bg-indigo-50/50")}>
-            {children}
-        </div>
-    );
-}
-
-// ─── SortableSection ──────────────────────────────────────────────────────────
-
-function SortableSection({
-    col,
-    tasks,
-    taskIds,
-    groupId,
-    creatingTask,
-    onCreateTask,
-    onRename,
-    onDeleteColumn,
-    taskEditState,
-    onTaskStartEdit,
-    onTaskCancelEdit,
-    onTaskDraftChange,
-    onTaskCommitEdit,
-    onDeleteTask,
-    isColumnEditing,
-    columnDraft,
-    columnError,
-    onColumnDraftChange,
-    onColumnCommit,
-    onColumnCancel
-}: {
-    col: Column;
-    tasks: Task[];
-    taskIds: string[];
-    groupId: string;
-    creatingTask: boolean;
-    onCreateTask: (colId: ColumnId, title: string) => Promise<void>;
-    onRename: (colId: ColumnId) => void;
-    onDeleteColumn: (colId: ColumnId) => void;
-    taskEditState: { taskId: string | null; columnId: string | null; draft: string };
-    onTaskStartEdit: (taskId: string, columnId: ColumnId, title: string) => void;
-    onTaskCancelEdit: () => void;
-    onTaskDraftChange: (v: string) => void;
-    onTaskCommitEdit: () => void;
-    onDeleteTask: (taskId: string, columnId: ColumnId) => void;
-    isColumnEditing: boolean;
-    columnDraft: string;
-    columnError: string | null;
-    onColumnDraftChange: (v: string) => void;
-    onColumnCommit: () => void;
-    onColumnCancel: () => void;
-}) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef: setSortableRef,
-        setActivatorNodeRef,
-        transform,
-        transition,
-        isDragging
-    } = useSortable({
-        id: col.id,
-        data: { type: "column" }
-    });
-
-    const dropId = `drop:${col.id}`;
-    const { setNodeRef: setDropRef, isOver } = useDroppable({
-        id: dropId,
-        data: { type: "column-drop", columnId: col.id }
-    });
-
-    const style: React.CSSProperties = {
-        transform: CSS.Transform.toString(transform),
-        transition: transition ?? "transform 180ms cubic-bezier(0.2,0.8,0.2,1)",
-        opacity: isDragging ? 0.3 : 1
-    };
-
-    const [open, setOpen] = React.useState(true);
-    const [openColMenu, setOpenColMenu] = React.useState(false);
-    const colMenuBtnRef = React.useRef<HTMLButtonElement | null>(null);
-    const colInputRef = React.useRef<HTMLInputElement | null>(null);
-    React.useEffect(() => {
-        if (isColumnEditing) setTimeout(() => colInputRef.current?.focus(), 0);
-    }, [isColumnEditing]);
-
-    return (
-        <div
-            ref={setSortableRef}
-            style={style}
-            className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-            {/* Header */}
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => setOpen((v) => !v)}
-                        className="shrink-0 text-zinc-400 transition hover:text-zinc-600">
-                        <ChevronDown className={cn("h-4 w-4 transition-transform", open ? "rotate-0" : "-rotate-90")} />
-                    </button>
-
-                    <div
-                        ref={setActivatorNodeRef}
-                        {...attributes}
-                        {...listeners}
-                        className="grid h-8 w-8 shrink-0 cursor-grab select-none place-items-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70 hover:opacity-100 active:cursor-grabbing">
-                        <GripVertical className="h-4 w-4" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                        {!isColumnEditing ? (
-                            <button type="button" onClick={() => onRename(col.id)} className="w-full text-left">
-                                <p className="truncate font-bold text-sm text-zinc-900 hover:underline">{col.title}</p>
-                            </button>
-                        ) : (
-                            <div className="space-y-0.5">
-                                <input
-                                    ref={colInputRef}
-                                    value={columnDraft}
-                                    onChange={(e) => onColumnDraftChange(e.target.value)}
-                                    onPointerDownCapture={(e) => e.stopPropagation()}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            onColumnCommit();
-                                        }
-                                        if (e.key === "Escape") {
-                                            e.preventDefault();
-                                            onColumnCancel();
-                                        }
-                                    }}
-                                    onBlur={() => setTimeout(() => onColumnCommit(), 0)}
-                                    className={cn(
-                                        "h-8 w-full rounded-lg border bg-white px-2 font-bold text-sm text-zinc-900 outline-none",
-                                        columnError
-                                            ? "border-rose-300 focus:ring-2 focus:ring-rose-100"
-                                            : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
-                                        "select-text"
-                                    )}
-                                    style={{ maxWidth: 220 }}
-                                />
-                                {columnError ? <div className="text-[11px] text-rose-600">{columnError}</div> : null}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-2">
-                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 px-2 font-semibold text-xs text-zinc-600">
-                        {tasks.length}
-                    </span>
-                    <button
-                        ref={colMenuBtnRef}
-                        type="button"
-                        onPointerDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setOpenColMenu((v) => !v);
-                        }}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                        className="grid h-8 w-8 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
-                        aria-label="Column menu">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                    <PortalDropdown
-                        open={openColMenu}
-                        onClose={() => setOpenColMenu(false)}
-                        anchorRef={colMenuBtnRef as any}>
-                        <MenuItem
-                            icon={<Pencil className="h-4 w-4" />}
-                            label="Chỉnh sửa"
-                            onClick={() => {
-                                setOpenColMenu(false);
-                                onRename(col.id);
-                            }}
-                        />
-                        <MenuItem
-                            icon={<Trash2 className="h-4 w-4" />}
-                            label="Xóa"
-                            danger
-                            onClick={() => {
-                                setOpenColMenu(false);
-                                onDeleteColumn(col.id);
-                            }}
-                        />
-                    </PortalDropdown>
-                </div>
-            </div>
-
-            {/* Body */}
-            {open && (
-                <>
-                    {/* Column header row */}
-                    <div className="grid grid-cols-12 gap-3 border-zinc-100 border-t bg-zinc-50 px-4 py-2 font-medium text-xs text-zinc-500">
-                        <div className="col-span-6">Công việc</div>
-                        <div className="col-span-3">Người thực hiện</div>
-                        <div className="col-span-2">Hạn hoàn thành</div>
-                        <div className="col-span-1" />
-                    </div>
-
-                    <ColumnDropZone colId={col.id} isOver={isOver} setNodeRef={setDropRef}>
-                        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            {tasks.map((task) => {
-                                const isEditing = taskEditState.taskId === task.id && taskEditState.columnId === col.id;
-                                if (isEditing) {
-                                    return (
-                                        <EditTaskRow
-                                            key={task.id}
-                                            task={task}
-                                            draft={taskEditState.draft}
-                                            onDraftChange={onTaskDraftChange}
-                                            onCommit={onTaskCommitEdit}
-                                            onCancel={onTaskCancelEdit}
-                                        />
-                                    );
-                                }
-                                return (
-                                    <SortableTaskRow
-                                        key={task.id}
-                                        task={task}
-                                        columnId={col.id}
-                                        onStartEdit={() => onTaskStartEdit(task.id, col.id, task.title)}
-                                        onDelete={() => onDeleteTask(task.id, col.id)}
-                                    />
-                                );
-                            })}
-                            {tasks.length === 0 && (
-                                <div className="border-zinc-100 border-t px-4 py-8 text-center text-sm text-zinc-400">
-                                    Chưa có công việc. Thêm mới bên dưới.
-                                </div>
-                            )}
-                        </SortableContext>
-                    </ColumnDropZone>
-
-                    <AddTaskInline disabled={creatingTask} onSubmit={(title) => onCreateTask(col.id, title)} />
-                </>
-            )}
-        </div>
-    );
-}
-
-// ─── Main screen ──────────────────────────────────────────────────────────────
 
 export function GroupListScreen() {
+    const locale = useLocale();
+    const t = useTranslations("GroupTaskListPage");
+
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
-
-    const [columns, setColumns] = React.useState<Column[]>([]);
-    const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
-    const [mounted, setMounted] = React.useState(false);
-    React.useEffect(() => setMounted(true), []);
+    const pageSize = 10;
 
     const [loading, setLoading] = React.useState(true);
     const [loadError, setLoadError] = React.useState<string | null>(null);
-    const [creatingColumn, setCreatingColumn] = React.useState(false);
-    const [creatingTask, setCreatingTask] = React.useState(false);
+    const [rows, setRows] = React.useState<TaskRow[]>([]);
+    const [statusOptions, setStatusOptions] = React.useState<Array<{ id: string; name: string }>>([]);
+    const [page, setPage] = React.useState(1);
+    const [totalPages, setTotalPages] = React.useState(1);
+    const [totalCount, setTotalCount] = React.useState(0);
 
-    const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null);
-    const [activeColumnId, setActiveColumnId] = React.useState<string | null>(null);
+    const [searchInput, setSearchInput] = React.useState("");
+    const [searchKeyword, setSearchKeyword] = React.useState("");
+    const [statusFilter, setStatusFilter] = React.useState("all");
+    const [sortByDeadline, setSortByDeadline] = React.useState<"asc" | "desc">("desc");
+    const [filterOpen, setFilterOpen] = React.useState(false);
+    const [draftDateFilter, setDraftDateFilter] = React.useState<DateFilterValues>({
+        startDateFrom: "",
+        startDateTo: "",
+        dueDateFrom: "",
+        dueDateTo: ""
+    });
+    const [appliedDateFilter, setAppliedDateFilter] = React.useState<DateFilterValues>({
+        startDateFrom: "",
+        startDateTo: "",
+        dueDateFrom: "",
+        dueDateTo: ""
+    });
 
-    const [editingColumn, setEditingColumn] = React.useState<{
-        id: string | null;
-        draft: string;
-        error: string | null;
-    }>({ id: null, draft: "", error: null });
-    const [editingTask, setEditingTask] = React.useState<{
-        taskId: string | null;
-        columnId: string | null;
-        draft: string;
-    }>({ taskId: null, columnId: null, draft: "" });
-    const [confirmModal, setConfirmModal] = React.useState<{
-        open: boolean;
-        columnId: ColumnId | null;
-        columnTitle: string;
-    }>({ open: false, columnId: null, columnTitle: "" });
-
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-    );
-
-    const syncColumnsFromDetail = React.useCallback((detail: GroupDetailResponse | undefined) => {
-        const statuses = (detail?.taskStatuses ?? [])
-            .filter((s) => typeof s?.statusId === "string" && !!s.statusId)
-            .map((s) => ({
-                id: String(s.statusId),
-                title: String(s.statusName ?? ""),
-                position: Number.isFinite(s.position) ? (s.position as number) : 0,
-                taskList: s.taskList ?? []
-            }))
-            .sort((a, b) => a.position - b.position);
-        setColumns(statuses.map(({ id, title, position }) => ({ id, title, position })));
-
-        const nextBoard: Record<string, Task[]> = {};
-        for (const status of statuses) {
-            const orderedTasks = (status.taskList ?? []).slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-
-            nextBoard[status.id] = orderedTasks.map((item, index) => {
-                const taskId = String(item.taskId ?? "").trim();
-                const taskTitle = String(item.taskTitle ?? "").trim();
-                const dueRaw = String(item.dueDate ?? "").trim();
-                const stableFallbackId = `task_${status.id}_${item.position ?? index}`;
-                const assigneeName = assigneeNameOf(item.assignee);
-                const assigneeAvatarUrl = safeAvatarUrl(item.assignee?.avatarUrl ?? null);
-
-                return {
-                    id: taskId || stableFallbackId,
-                    title: taskTitle || "Untitled task",
-                    statusDot: statusDotByPriority(item.taskPriority),
-                    assigneeName,
-                    assigneeAvatarUrl: assigneeAvatarUrl || null,
-                    due: dueRaw ? formatDueDate(dueRaw) : ""
-                };
-            });
-        }
-
-        setBoard(nextBoard);
-    }, []);
+    React.useEffect(() => {
+        const t = window.setTimeout(() => setSearchKeyword(searchInput.trim()), 300);
+        return () => window.clearTimeout(t);
+    }, [searchInput]);
 
     const refresh = React.useCallback(async () => {
         if (!groupId) {
             setLoading(false);
-            setLoadError("Thiếu groupId trong route.");
+            setLoadError(t("missingGroupId"));
             return;
         }
         if (!isUuidLike(groupId)) {
             setLoading(false);
-            setLoadError("groupId không hợp lệ.");
+            setLoadError(t("invalidGroupId"));
             return;
         }
         if (!getApiBase()) {
             setLoading(false);
-            setLoadError("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+            setLoadError(t("missingApiBase"));
             return;
         }
+
         setLoading(true);
         setLoadError(null);
+
         try {
-            const detail = await apiGetGroupDetail(groupId);
-            syncColumnsFromDetail(detail?.data);
-        } catch (e: any) {
-            setLoadError(e?.message ?? "Không tải được dữ liệu.");
+            const res = await apiGetGroupTasks({
+                groupId,
+                search: searchKeyword || undefined,
+                statusId: statusFilter !== "all" ? statusFilter : undefined,
+                startDateFrom: appliedDateFilter.startDateFrom || undefined,
+                startDateTo: appliedDateFilter.startDateTo || undefined,
+                dueDateFrom: appliedDateFilter.dueDateFrom || undefined,
+                dueDateTo: appliedDateFilter.dueDateTo || undefined,
+                sortBy: "dueDate",
+                sortAscending: sortByDeadline === "asc",
+                page,
+                pageSize
+            });
+
+            const data = res?.data;
+            const nextStatuses = (data?.groupStatuses ?? [])
+                .map((s) => ({ id: String(s?.statusId ?? "").trim(), name: String(s?.statusName ?? "").trim() }))
+                .filter((s) => s.id && s.name);
+
+            const nextRows = (data?.items ?? []).map((item, index) => {
+                const id = String(item.taskId ?? "").trim() || `task_${index}`;
+                const title = String(item.taskTitle ?? "").trim() || t("untitledTask");
+                const statusName = String(item.statusName ?? "").trim() || "-";
+                const primaryAssignee = item.assignees?.[0] ?? null;
+                const assignee = buildAssignee(primaryAssignee, t("unassigned"));
+
+                return {
+                    id,
+                    title,
+                    assigneeName: assignee.name,
+                    assigneeAvatarUrl: assignee.avatarUrl,
+                    assigneeInitials: assignee.initials,
+                    severityLabel: severityLabelOf(item.taskSeverity, t),
+                    severityClass: severityClassOf(item.taskSeverity),
+                    priorityLabel: priorityLabelOf(item.taskPriority, t),
+                    priorityClass: priorityClassOf(item.taskPriority),
+                    statusName,
+                    startLabel: formatShortDate(item.startDate ?? null, locale),
+                    dueLabel: formatShortDate(item.dueDate ?? null, locale)
+                } satisfies TaskRow;
+            });
+
+            setStatusOptions(nextStatuses);
+            setRows(nextRows);
+            setTotalPages(Math.max(1, Number(data?.totalPages ?? 1)));
+            setTotalCount(Math.max(0, Number(data?.totalCount ?? 0)));
+        } catch (e: unknown) {
+            setLoadError(e instanceof Error ? e.message : t("cannotLoad"));
         } finally {
             setLoading(false);
         }
-    }, [groupId, syncColumnsFromDetail]);
+    }, [appliedDateFilter, groupId, locale, page, searchKeyword, sortByDeadline, statusFilter, t]);
 
     React.useEffect(() => {
         void refresh();
     }, [refresh]);
 
-    const activeTask = React.useMemo(
-        () => (activeTaskId ? findTask(board, columns, activeTaskId) : null),
-        [activeTaskId, board, columns]
-    );
-    const activeColumn = React.useMemo(
-        () => (activeColumnId ? (columns.find((c) => c.id === activeColumnId) ?? null) : null),
-        [activeColumnId, columns]
-    );
-
-    // ── Column CRUD ──────────────────────────────────────────────────────────
-    const submitAddColumn = async (title: string) => {
-        if (!(groupId && isUuidLike(groupId))) throw new Error("groupId không hợp lệ.");
-        if (columns.some((c) => c.title.trim().toLowerCase() === title.trim().toLowerCase()))
-            throw new Error("Tên trạng thái đã tồn tại.");
-        const base = detectPositionBase(columns) as 0 | 1;
-        setCreatingColumn(true);
-        try {
-            await apiCreateGroupTaskStatus({
-                groupId,
-                statusName: title,
-                position: nextPositionForCreate(columns, base)
-            });
-            await refresh();
-        } finally {
-            setCreatingColumn(false);
-        }
-    };
-
-    const startEditColumn = (columnId: ColumnId) => {
-        const col = columns.find((c) => c.id === columnId);
-        if (!col) return;
-        setEditingColumn({ id: columnId, draft: col.title, error: null });
-    };
-    const cancelEditColumn = () => setEditingColumn({ id: null, draft: "", error: null });
-
-    const commitEditColumn = async () => {
-        if (!groupId) return;
-        const id = editingColumn.id;
-        if (!id) return;
-        const col = columns.find((c) => c.id === id);
-        if (!col) return;
-        const next = editingColumn.draft.trim();
-        if (!next) {
-            setEditingColumn((p) => ({ ...p, error: "Vui lòng nhập tên trạng thái." }));
-            return;
-        }
-        if (columns.some((c) => c.id !== id && c.title.trim().toLowerCase() === next.toLowerCase())) {
-            setEditingColumn((p) => ({ ...p, error: "Tên trạng thái đã tồn tại." }));
-            return;
-        }
-        const prevTitle = col.title;
-        setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: next } : c)));
-        try {
-            await apiRenameGroupTaskStatus({ groupId, statusId: id, statusName: next, position: col.position });
-            cancelEditColumn();
-            await refresh();
-        } catch (e: any) {
-            setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: prevTitle } : c)));
-            setEditingColumn((p) => ({ ...p, error: e?.message ?? "Đã xảy ra lỗi" }));
-        }
-    };
-
-    const onDeleteColumn = (columnId: ColumnId) => {
-        const col = columns.find((c) => c.id === columnId);
-        if (!col) return;
-        setConfirmModal({ open: true, columnId, columnTitle: col.title });
-    };
-
-    const handleConfirmDeleteColumn = async () => {
-        const columnId = confirmModal.columnId;
-        setConfirmModal({ open: false, columnId: null, columnTitle: "" });
-        if (!(columnId && groupId)) return;
-        const prevCols = columns;
-        const prevBoard = board;
-        const base = detectPositionBase(columns) as 0 | 1;
-        setColumns(
-            assignPositions(
-                columns.filter((c) => c.id !== columnId),
-                base
-            )
-        );
-        setBoard((prev) => {
-            const next = { ...prev };
-            delete next[columnId];
-            return next;
-        });
-        try {
-            await apiDeleteGroupTaskStatus({ groupId, statusId: columnId });
-            await refresh();
-        } catch (e: any) {
-            setColumns(prevCols);
-            setBoard(prevBoard);
-            alert(e?.message ?? "Đã xảy ra lỗi");
-        }
-    };
-
-    // ── Task CRUD ────────────────────────────────────────────────────────────
-    const onCreateTask = async (columnId: ColumnId, title: string) => {
-        if (!(groupId && isUuidLike(groupId))) throw new Error("groupId không hợp lệ.");
-        if (!isUuidLike(columnId)) throw new Error("columnId không hợp lệ.");
-        setCreatingTask(true);
-        try {
-            const created = await apiCreateTask({ groupId, groupStatusId: columnId, taskName: title });
-            const id = created?.data?.taskId ? String(created.data.taskId) : `task_${Date.now().toString(16)}`;
-            const next: Task = {
-                id,
-                title: created?.data?.taskTitle ?? title,
-                statusDot: "green",
-                assigneeName: null,
-                assigneeAvatarUrl: null,
-                due: created?.data?.dueDate ?? ""
-            };
-            setBoard((prev) => ({ ...prev, [columnId]: [next, ...(prev[columnId] ?? [])] }));
-        } finally {
-            setCreatingTask(false);
-        }
-    };
-
-    const onTaskStartEdit = (taskId: string, columnId: ColumnId, title: string) =>
-        setEditingTask({ taskId, columnId, draft: title });
-    const onTaskCancelEdit = () => setEditingTask({ taskId: null, columnId: null, draft: "" });
-    const onTaskCommitEdit = () => {
-        const { taskId, columnId, draft } = editingTask;
-        if (!(taskId && columnId)) return;
-        const next = draft.trim();
-        if (!next) {
-            onTaskCancelEdit();
-            return;
-        }
-        setBoard((prev) => ({
-            ...prev,
-            [columnId]: (prev[columnId] ?? []).map((t) => (t.id === taskId ? { ...t, title: next } : t))
-        }));
-        onTaskCancelEdit();
-    };
-    const onDeleteTask = (taskId: string, columnId: ColumnId) => {
-        setBoard((prev) => ({ ...prev, [columnId]: (prev[columnId] ?? []).filter((t) => t.id !== taskId) }));
-        if (editingTask.taskId === taskId) onTaskCancelEdit();
-    };
-
-    // ── DnD ─────────────────────────────────────────────────────────────────
-    const collisionDetection: CollisionDetection = React.useCallback((args) => {
-        const activeType = args.active.data.current?.type;
-        if (activeType === "column")
-            return closestCenter({
-                ...args,
-                droppableContainers: filterDroppablesByType(args.droppableContainers, ["column"])
-            });
-        return closestCorners({
-            ...args,
-            droppableContainers: filterDroppablesByType(args.droppableContainers, ["task", "column-drop"])
-        });
-    }, []);
-
-    const handleDragStart = (e: DragStartEvent) => {
-        const type = e.active.data.current?.type;
-        if (type === "task") setActiveTaskId(String(e.active.id));
-        if (type === "column") setActiveColumnId(String(e.active.id));
-    };
-
-    const handleDragEnd = (e: DragEndEvent) => {
-        const activeType = e.active.data.current?.type;
-        const overRaw = e.over?.id ? String(e.over.id) : null;
-        setActiveTaskId(null);
-        setActiveColumnId(null);
-        if (!overRaw) return;
-
-        if (activeType === "task") {
-            const activeId = String(e.active.id);
-            const overKey = overRaw.startsWith("drop:") ? overRaw.replace("drop:", "") : overRaw;
-            const fromCol = findColumnOfTask(board, columns, activeId);
-            if (!fromCol) return;
-            const toCol: ColumnId | null = columns.some((c) => c.id === overKey)
-                ? overKey
-                : findColumnOfTask(board, columns, overKey);
-            if (!toCol) return;
-
-            setBoard((prev) => {
-                const fromTasks = [...(prev[fromCol] ?? [])];
-                const toTasks = fromCol === toCol ? fromTasks : [...(prev[toCol!] ?? [])];
-                const fromIdx = fromTasks.findIndex((t) => t.id === activeId);
-                if (fromIdx === -1) return prev;
-                if (fromCol === toCol) {
-                    const toIdx = fromTasks.findIndex((t) => t.id === overKey);
-                    if (toIdx === -1 || fromIdx === toIdx) return prev;
-                    return { ...prev, [fromCol]: arrayMove(fromTasks, fromIdx, toIdx) };
-                }
-                const [moving] = fromTasks.splice(fromIdx, 1);
-                const overIsTask = toTasks.some((t) => t.id === overKey);
-                if (overIsTask) {
-                    const idx = toTasks.findIndex((t) => t.id === overKey);
-                    toTasks.splice(Math.max(0, idx), 0, moving);
-                } else toTasks.unshift(moving);
-                return { ...prev, [fromCol]: fromTasks, [toCol!]: toTasks };
-            });
-            return;
-        }
-
-        if (activeType === "column") {
-            if (!groupId) return;
-            const activeColId = String(e.active.id);
-            let overColId = overRaw.startsWith("drop:") ? overRaw.replace("drop:", "") : overRaw;
-            if (!columns.some((c) => c.id === overColId)) {
-                const m = findColumnOfTask(board, columns, overColId);
-                if (m) overColId = m;
-            }
-            if (!columns.some((c) => c.id === overColId) || activeColId === overColId) return;
-            const oldIndex = columns.findIndex((c) => c.id === activeColId);
-            const newIndex = columns.findIndex((c) => c.id === overColId);
-            if (oldIndex === -1 || newIndex === -1) return;
-            const prevCols = columns;
-            const nextCols = arrayMove(columns, oldIndex, newIndex);
-            setColumns(nextCols);
-            void (async () => {
-                try {
-                    await apiReorderGroupTaskStatus({
-                        groupId,
-                        statusId: activeColId,
-                        prevStatusId: newIndex > 0 ? nextCols[newIndex - 1].id : null,
-                        nextStatusId: newIndex < nextCols.length - 1 ? nextCols[newIndex + 1].id : null
-                    });
-                } catch {
-                    setColumns(prevCols);
-                }
-            })();
-        }
-    };
-
-    const columnIds = React.useMemo(() => columns.map((c) => c.id), [columns]);
-    const taskIdsByCol = React.useMemo(() => {
-        const out: Record<string, string[]> = {};
-        for (const col of columns) out[col.id] = (board[col.id] ?? []).map((t) => t.id);
-        return out;
-    }, [board, columns]);
-
-    const onColumnDraftChange = (v: string) => {
-        setEditingColumn((p) => {
-            const trimmed = v.trim();
-            if (!trimmed) return { ...p, draft: v, error: "Vui lòng nhập tên trạng thái." };
-            const dup = columns.some((c) => c.id !== p.id && c.title.trim().toLowerCase() === trimmed.toLowerCase());
-            return { ...p, draft: v, error: dup ? "Tên trạng thái đã tồn tại." : null };
-        });
-    };
-
-    // ── Render ───────────────────────────────────────────────────────────────
-
-    if (loading)
-        return (
-            <div className="min-h-screen bg-zinc-50">
-                <Container>
-                    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
-                        Đang tải dữ liệu…
-                    </div>
-                </Container>
-            </div>
-        );
-
-    if (loadError)
-        return (
-            <div className="min-h-screen bg-zinc-50">
-                <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
-                        {loadError}
-                    </div>
-                    <div className="mt-3">
-                        <button
-                            type="button"
-                            onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
-                            Tải lại
-                        </button>
-                    </div>
-                </Container>
-            </div>
-        );
-
-    const sectionProps = (col: Column) => ({
-        col,
-        tasks: board[col.id] ?? [],
-        taskIds: taskIdsByCol[col.id] ?? [],
-        groupId,
-        creatingTask,
-        onCreateTask,
-        onRename: startEditColumn,
-        onDeleteColumn,
-        taskEditState: editingTask,
-        onTaskStartEdit,
-        onTaskCancelEdit,
-        onTaskDraftChange: (v: string) => setEditingTask((p) => ({ ...p, draft: v })),
-        onTaskCommitEdit,
-        onDeleteTask,
-        isColumnEditing: editingColumn.id === col.id,
-        columnDraft: editingColumn.id === col.id ? editingColumn.draft : "",
-        columnError: editingColumn.id === col.id ? editingColumn.error : null,
-        onColumnDraftChange,
-        onColumnCommit: () => void commitEditColumn(),
-        onColumnCancel: cancelEditColumn
-    });
+    const showPagination = !loading && loadError === null;
 
     return (
-        <div className="min-h-screen bg-zinc-50">
-            <ConfirmModal
-                open={confirmModal.open}
-                title="Xác nhận xóa trạng thái"
-                description={`Bạn có chắc chắn muốn xóa trạng thái "${confirmModal.columnTitle}" không? Hành động này không thể hoàn tác.`}
-                confirmLabel="Xóa trạng thái"
-                cancelLabel="Hủy"
-                onConfirm={() => void handleConfirmDeleteColumn()}
-                onCancel={() => setConfirmModal({ open: false, columnId: null, columnTitle: "" })}
-            />
-
+        <div className="min-h-screen bg-zinc-50 pb-8">
             <Container>
-                {!mounted ? (
-                    // SSR fallback — no dnd hooks
-                    <div className="mt-5 flex flex-col gap-4 pb-6">
-                        {columns.map((col) => (
-                            <SortableSection key={col.id} {...sectionProps(col)} />
-                        ))}
-                        <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
-                    </div>
-                ) : (
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={collisionDetection}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}>
-                        <SortableContext items={columnIds} strategy={verticalListSortingStrategy}>
-                            <div className="mt-5 flex flex-col gap-4 pb-6">
-                                {columns.map((col) => (
-                                    <SortableSection key={col.id} {...sectionProps(col)} />
-                                ))}
-                                <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
-                            </div>
-                        </SortableContext>
+                <section className="mt-6 rounded-[34px] border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+                    <h1 className="font-bold text-2xl text-zinc-900 sm:text-3xl">{t("pageTitle")}</h1>
 
-                        <DragOverlay>
-                            {activeTask ? (
-                                <div className="rounded-xl border border-indigo-200 bg-white px-4 py-3 font-medium text-sm text-zinc-900 shadow-xl">
-                                    {activeTask.title}
+                    <div className="mt-6 grid gap-3 lg:grid-cols-[1.4fr_0.7fr_0.7fr_auto]">
+                        <label className="relative block">
+                            <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                            <input
+                                value={searchInput}
+                                onChange={(e) => {
+                                    setSearchInput(e.target.value);
+                                    setPage(1);
+                                }}
+                                placeholder={t("searchPlaceholder")}
+                                className="h-12 w-full rounded-xl border border-zinc-200 bg-white pr-4 pl-11 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                            />
+                        </label>
+
+                        <label className="relative block">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => {
+                                    setStatusFilter(e.target.value);
+                                    setPage(1);
+                                }}
+                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
+                                <option value="all">{t("allStatus")}</option>
+                                {statusOptions.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                        </label>
+
+                        <label className="relative block">
+                            <select
+                                value={sortByDeadline}
+                                onChange={(e) => {
+                                    setSortByDeadline(e.target.value === "desc" ? "desc" : "asc");
+                                    setPage(1);
+                                }}
+                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
+                                <option value="asc">{`${t("sortLabel")}: ${t("sortAsc")}`}</option>
+                                <option value="desc">{`${t("sortLabel")}: ${t("sortDesc")}`}</option>
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                        </label>
+
+                        <button
+                            type="button"
+                            onClick={() => setFilterOpen(true)}
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50">
+                            <Filter className="h-4 w-4" />
+                            {t("dateFilterButton")}
+                        </button>
+                    </div>
+
+                    <div className="mt-8 overflow-x-auto">
+                        <table className="min-w-full border-separate border-spacing-0">
+                            <thead>
+                                <tr className="border-zinc-200 border-b text-slate-500">
+                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("taskName")}</th>
+                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("assignee")}</th>
+                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("severity")}</th>
+                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("priority")}</th>
+                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("status")}</th>
+                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("startDate")}</th>
+                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("dueDate")}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-4 py-10 text-center text-sm text-zinc-500">
+                                            {t("loading")}
+                                        </td>
+                                    </tr>
+                                ) : loadError ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-4 py-10 text-center text-rose-600 text-sm">
+                                            <div>{loadError}</div>
+                                            <button
+                                                type="button"
+                                                onClick={() => void refresh()}
+                                                className="mt-3 rounded-xl border border-zinc-200 px-3 py-2 font-semibold text-xs text-zinc-700 hover:bg-zinc-100">
+                                                {t("reload")}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ) : rows.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-4 py-12 text-center text-sm text-zinc-400">
+                                            {t("noData")}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    rows.map((row) => (
+                                        <tr key={row.id} className="border-zinc-100 border-b align-middle">
+                                            <td className="px-3 py-4 font-semibold text-base text-zinc-900">
+                                                {row.title}
+                                            </td>
+                                            <td className="px-3 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    {row.assigneeAvatarUrl ? (
+                                                        <Image
+                                                            src={row.assigneeAvatarUrl}
+                                                            alt={row.assigneeName}
+                                                            width={28}
+                                                            height={28}
+                                                            className="h-7 w-7 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span className="grid h-7 w-7 place-items-center rounded-full bg-zinc-200 font-bold text-[11px] text-zinc-700">
+                                                            {row.assigneeInitials}
+                                                        </span>
+                                                    )}
+                                                    <span className="font-semibold text-sm text-zinc-800">
+                                                        {row.assigneeName}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className={cn("px-3 py-4 font-semibold text-sm", row.severityClass)}>
+                                                {row.severityLabel}
+                                            </td>
+                                            <td className={cn("px-3 py-4 font-semibold text-sm", row.priorityClass)}>
+                                                {row.priorityLabel}
+                                            </td>
+                                            <td className="px-3 py-4">
+                                                <span className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white px-3 font-semibold text-xs text-zinc-700">
+                                                    {row.statusName}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-4 font-semibold text-slate-500 text-sm">
+                                                {row.startLabel}
+                                            </td>
+                                            <td className="px-3 py-4 font-semibold text-slate-500 text-sm">
+                                                {row.dueLabel}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+
+                        {showPagination ? (
+                            <div className="mt-4 flex items-center justify-between gap-3">
+                                <div className="text-xs text-zinc-500">{t("pageInfo", { page, totalPages, totalCount })}</div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        disabled={page <= 1}
+                                        onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                                        className="inline-flex h-9 items-center gap-1 rounded-lg border border-zinc-200 px-3 font-semibold text-xs text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                        <ChevronLeft className="h-4 w-4" />
+                                        {t("previous")}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        disabled={page >= totalPages}
+                                        onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                                        className="inline-flex h-9 items-center gap-1 rounded-lg border border-zinc-200 px-3 font-semibold text-xs text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                        {t("next")}
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
                                 </div>
-                            ) : activeColumn ? (
-                                <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 opacity-90 shadow-xl">
-                                    <p className="font-bold text-sm text-zinc-900">{activeColumn.title}</p>
-                                    <p className="text-xs text-zinc-500">Đang di chuyển trạng thái…</p>
-                                </div>
-                            ) : null}
-                        </DragOverlay>
-                    </DndContext>
-                )}
+                            </div>
+                        ) : null}
+                    </div>
+                </section>
             </Container>
+
+            <DateFilterModal
+                open={filterOpen}
+                values={draftDateFilter}
+                t={t}
+                onChange={(patch) => setDraftDateFilter((prev) => ({ ...prev, ...patch }))}
+                onClose={() => setFilterOpen(false)}
+                onClear={() => {
+                    setDraftDateFilter({ startDateFrom: "", startDateTo: "", dueDateFrom: "", dueDateTo: "" });
+                    setAppliedDateFilter({ startDateFrom: "", startDateTo: "", dueDateFrom: "", dueDateTo: "" });
+                    setPage(1);
+                    setFilterOpen(false);
+                }}
+                onSubmit={() => {
+                    setAppliedDateFilter(draftDateFilter);
+                    setPage(1);
+                    setFilterOpen(false);
+                }}
+            />
         </div>
     );
 }
