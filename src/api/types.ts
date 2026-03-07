@@ -1578,6 +1578,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/group/{groupId}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    assigneeId?: string;
+                    dueDateFrom?: string;
+                    dueDateTo?: string;
+                    page?: number;
+                    pageSize?: number;
+                    priority?: components["schemas"]["TaskPriority"];
+                    search?: string;
+                    severity?: components["schemas"]["TaskSeverity"];
+                    sortAscending?: boolean;
+                    sortBy?: string;
+                    startDateFrom?: string;
+                    startDateTo?: string;
+                    statusId?: string;
+                };
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupTaskListResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupTaskListResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupTaskListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/group/member/assign-role": {
         parameters: {
             query?: never;
@@ -2176,8 +2229,11 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    groupId?: string;
                     page?: number;
                     pageSize?: number;
+                    search?: string;
+                    sortBy?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3799,6 +3855,48 @@ export interface components {
             /** Format: int32 */
             totalGroups?: number;
         };
+        GroupTaskItemResponse: {
+            assignees?: components["schemas"]["UserDto"][] | null;
+            /** Format: date-time */
+            createdAt?: string;
+            createdBy?: components["schemas"]["UserDto"];
+            /** Format: date-time */
+            dueDate?: string | null;
+            /** Format: int32 */
+            progress?: number;
+            /** Format: date-time */
+            startDate?: string | null;
+            /** Format: uuid */
+            statusId?: string;
+            statusName?: string | null;
+            taskDescription?: string | null;
+            /** Format: uuid */
+            taskId?: string;
+            taskPriority?: components["schemas"]["TaskPriority"];
+            taskSeverity?: components["schemas"]["TaskSeverity"];
+            taskTitle?: string | null;
+        };
+        GroupTaskListResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            groupStatuses?: components["schemas"]["TaskStatusInfoDto"][] | null;
+            items?: components["schemas"]["GroupTaskItemResponse"][] | null;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        GroupTaskListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupTaskListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         GroupTaskStatusDto: {
             /** Format: uuid */
             groupId?: string;
@@ -3843,6 +3941,7 @@ export interface components {
             dueDate?: string | null;
             /** Format: uuid */
             groupId?: string | null;
+            groupName?: string | null;
             /** Format: int32 */
             progress?: number;
             sourceName?: string | null;
@@ -3864,6 +3963,7 @@ export interface components {
             totalCount?: number;
             /** Format: int32 */
             totalPages?: number;
+            userGroups?: components["schemas"]["UserGroupDto"][] | null;
         };
         HomeTaskListResponseApiResponse: {
             code?: string | null;
@@ -4225,6 +4325,11 @@ export interface components {
             statusName?: string | null;
             taskList?: components["schemas"]["TaskItemResponse"][] | null;
         };
+        TaskStatusInfoDto: {
+            /** Format: uuid */
+            statusId?: string;
+            statusName?: string | null;
+        };
         TaskSummaryResponse: {
             /** Format: int32 */
             completedTasks?: number;
@@ -4386,6 +4491,11 @@ export interface components {
             /** Format: uuid */
             id?: string;
             lastName?: string | null;
+        };
+        UserGroupDto: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
         };
         UserProfileResponse: {
             /** Format: int32 */
