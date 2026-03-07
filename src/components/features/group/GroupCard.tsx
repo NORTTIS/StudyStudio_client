@@ -6,7 +6,13 @@ import { CheckSquare2, Star, Users } from "lucide-react";
 import type { Group } from "./types";
 import { RolePill } from "./RolePill";
 
-export function GroupCard({ group, onToggleStar }: { group: Group; onToggleStar: () => Promise<void> }) {
+export function GroupCard({
+    group,
+    onToggleStar
+}: {
+    group: Group;
+    onToggleStar: () => Promise<void>;
+}) {
     const router = useRouter();
     const locale = useLocale();
 
@@ -16,6 +22,7 @@ export function GroupCard({ group, onToggleStar }: { group: Group; onToggleStar:
     };
 
     const starred = !!group.isStarred;
+    const visibleTasksCount = Number(group.tasksCount ?? 0);
 
     return (
         <div
@@ -28,7 +35,8 @@ export function GroupCard({ group, onToggleStar }: { group: Group; onToggleStar:
                     goBoard();
                 }
             }}
-            className="cursor-pointer rounded-xl border border-[#E5E5E5] bg-white p-4 shadow-sm transition hover:bg-[#FAFAFA]">
+            className="cursor-pointer rounded-xl border border-[#E5E5E5] bg-white p-4 shadow-sm transition hover:bg-[#FAFAFA]"
+        >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     {group.tag && <p className="truncate text-xs text-[#6F6B99]">{group.tag}</p>}
@@ -47,11 +55,11 @@ export function GroupCard({ group, onToggleStar }: { group: Group; onToggleStar:
                         await onToggleStar();
                     }}
                     className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
-                    aria-label={starred ? "Bỏ yêu thích" : "Thêm yêu thích"}>
+                    aria-label={starred ? "Bỏ yêu thích" : "Thêm yêu thích"}
+                >
                     <Star
-                        className={`h-4 w-4 transition ${
-                            starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-[#261E33]"
-                        }`}
+                        className={`h-4 w-4 transition ${starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-[#261E33]"
+                            }`}
                         fill={starred ? "currentColor" : "transparent"}
                     />
                 </button>
@@ -76,7 +84,7 @@ export function GroupCard({ group, onToggleStar }: { group: Group; onToggleStar:
 
                         <span className="inline-flex items-center gap-1">
                             <CheckSquare2 className="h-4 w-4" />
-                            <span className="text-sm">{group.tasksCount} công việc</span>
+                            <span className="text-sm">{visibleTasksCount} công việc</span>
                         </span>
                     </div>
                 </div>
@@ -85,7 +93,8 @@ export function GroupCard({ group, onToggleStar }: { group: Group; onToggleStar:
                     {group.memberInitials.slice(0, 5).map((it, idx) => (
                         <span
                             key={`${it}-${idx}`}
-                            className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F4F5FA] px-2 text-xs font-semibold text-[#261E33]">
+                            className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F4F5FA] px-2 text-xs font-semibold text-[#261E33]"
+                        >
                             {it}
                         </span>
                     ))}

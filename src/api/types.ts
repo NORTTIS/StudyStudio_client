@@ -1922,6 +1922,290 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Home/personal-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["PersonalTaskStatusRequest"];
+                    "application/json": components["schemas"]["PersonalTaskStatusRequest"];
+                    "text/json": components["schemas"]["PersonalTaskStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PersonalTaskStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["PersonalTaskStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["PersonalTaskStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Home/personal-status/{statusId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    statusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Home/personal-status/{statusId}/update-detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    statusId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["PersonalTaskStatusRequest"];
+                    "application/json": components["schemas"]["PersonalTaskStatusRequest"];
+                    "text/json": components["schemas"]["PersonalTaskStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Home/personal-status/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ReorderPersonalTaskStatusRequest"];
+                    "application/json": components["schemas"]["ReorderPersonalTaskStatusRequest"];
+                    "text/json": components["schemas"]["ReorderPersonalTaskStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Home/personal-task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PersonalTaskBoardResponseApiResponse"];
+                        "text/json": components["schemas"]["PersonalTaskBoardResponseApiResponse"];
+                        "text/plain": components["schemas"]["PersonalTaskBoardResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Home/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HomeSummaryResponseApiResponse"];
+                        "text/json": components["schemas"]["HomeSummaryResponseApiResponse"];
+                        "text/plain": components["schemas"]["HomeSummaryResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Home/TaskList": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HomeTaskListResponseApiResponse"];
+                        "text/json": components["schemas"]["HomeTaskListResponseApiResponse"];
+                        "text/plain": components["schemas"]["HomeTaskListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/invite/accept": {
         parameters: {
             query?: never;
@@ -2437,6 +2721,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Task/{groupId}/{taskId}/permanent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Task/{groupId}/{taskId}/restore": {
         parameters: {
             query?: never;
@@ -2550,6 +2874,176 @@ export interface paths {
                         "application/json": components["schemas"]["ObjectApiResponse"];
                         "text/json": components["schemas"]["ObjectApiResponse"];
                         "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task/create-personal-task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["TaskItemPersonalRequest"];
+                    "application/json": components["schemas"]["TaskItemPersonalRequest"];
+                    "text/json": components["schemas"]["TaskItemPersonalRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/plain": components["schemas"]["TaskItemResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task/delete-personal-task/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task/reorder-personal-task": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ReorderTaskRequest"];
+                    "application/json": components["schemas"]["ReorderTaskRequest"];
+                    "text/json": components["schemas"]["ReorderTaskRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Task/update-personal-task/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdatePersonalTaskRequest"];
+                    "application/json": components["schemas"]["UpdatePersonalTaskRequest"];
+                    "text/json": components["schemas"]["UpdatePersonalTaskRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/json": components["schemas"]["TaskItemResponseApiResponse"];
+                        "text/plain": components["schemas"]["TaskItemResponseApiResponse"];
                     };
                 };
             };
@@ -3328,6 +3822,55 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        HomeSummaryResponse: {
+            /** Format: int32 */
+            completedTaskCount?: number;
+            /** Format: int32 */
+            overdueTaskCount?: number;
+            /** Format: int32 */
+            remainingTaskCount?: number;
+            /** Format: int32 */
+            totalJoinedGroupCount?: number;
+        };
+        HomeSummaryResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["HomeSummaryResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        HomeTaskListItemResponse: {
+            /** Format: date-time */
+            dueDate?: string | null;
+            /** Format: uuid */
+            groupId?: string | null;
+            /** Format: int32 */
+            progress?: number;
+            sourceName?: string | null;
+            sourceType?: string | null;
+            statusName?: string | null;
+            /** Format: uuid */
+            taskId?: string;
+            taskPriority?: components["schemas"]["TaskPriority"];
+            taskSeverity?: components["schemas"]["TaskSeverity"];
+            taskTitle?: string | null;
+        };
+        HomeTaskListResponse: {
+            items?: components["schemas"]["HomeTaskListItemResponse"][] | null;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        HomeTaskListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["HomeTaskListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         LoginRequests: {
             /** Format: email */
             email: string;
@@ -3365,12 +3908,37 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        PersonalTaskBoardResponse: {
+            personalTaskStatuses?: components["schemas"]["TaskStatusDto"][] | null;
+        };
+        PersonalTaskBoardResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["PersonalTaskBoardResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         PersonalTaskStatusDto: {
             /** Format: int32 */
             position?: number;
             statusName?: string | null;
             /** Format: uuid */
             userId?: string;
+        };
+        PersonalTaskStatusRequest: {
+            statusName: string;
+        };
+        PersonalTaskStatusResponse: {
+            /** Format: int32 */
+            position?: number;
+            /** Format: uuid */
+            statusId?: string;
+            statusName?: string | null;
+        };
+        PersonalTaskStatusResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["PersonalTaskStatusResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         RegisterRequests: {
             /** Format: email */
@@ -3406,6 +3974,14 @@ export interface components {
             status?: string | null;
         };
         ReorderGroupTaskStatusRequest: {
+            /** Format: uuid */
+            nextStatusId?: string | null;
+            /** Format: uuid */
+            prevStatusId?: string | null;
+            /** Format: uuid */
+            statusId: string;
+        };
+        ReorderPersonalTaskStatusRequest: {
             /** Format: uuid */
             nextStatusId?: string | null;
             /** Format: uuid */
@@ -3590,6 +4166,18 @@ export interface components {
             taskPriority?: components["schemas"]["TaskPriority"];
             taskSeverity?: components["schemas"]["TaskSeverity"];
         };
+        TaskItemPersonalRequest: {
+            /** Format: date-time */
+            dueDate?: string | null;
+            /** Format: uuid */
+            personalStatusId?: string | null;
+            /** Format: date-time */
+            startDate?: string | null;
+            taskDescription?: string | null;
+            taskName?: string | null;
+            taskPriority?: components["schemas"]["TaskPriority"];
+            taskSeverity?: components["schemas"]["TaskSeverity"];
+        };
         TaskItemResponse: {
             assignee?: components["schemas"]["UserDto"];
             /** Format: date-time */
@@ -3602,6 +4190,8 @@ export interface components {
             personalStatus?: components["schemas"]["PersonalTaskStatusDto"];
             /** Format: int32 */
             position?: number;
+            /** Format: int32 */
+            progress?: number;
             /** Format: date-time */
             startDate?: string | null;
             taskDescription?: string | null;
@@ -3717,6 +4307,20 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        UpdatePersonalTaskRequest: {
+            /** Format: date-time */
+            dueDate?: string | null;
+            /** Format: uuid */
+            personalStatusId?: string | null;
+            /** Format: int32 */
+            progress?: number | null;
+            /** Format: date-time */
+            startDate?: string | null;
+            taskDescription?: string | null;
+            taskName?: string | null;
+            taskPriority?: components["schemas"]["TaskPriority"];
+            taskSeverity?: components["schemas"]["TaskSeverity"];
+        };
         UpdateStudioRequest: {
             description?: string | null;
             /** Format: uuid */
@@ -3742,6 +4346,8 @@ export interface components {
             dueDate?: string | null;
             /** Format: uuid */
             groupStatusId?: string | null;
+            /** Format: int32 */
+            progress?: number | null;
             /** Format: date-time */
             startDate?: string | null;
             taskDescription?: string | null;

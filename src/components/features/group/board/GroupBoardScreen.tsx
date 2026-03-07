@@ -50,6 +50,7 @@ type Task = {
     assigneeName?: string | null;
     statusName?: string | null;
     priorityLabel?: string | null;
+    severityLabel?: string | null;
 };
 
 type Column = {
@@ -69,6 +70,7 @@ type TaskItemResponse = {
         firstName?: string | null;
         lastName?: string | null;
         email?: string | null;
+        avatarUrl?: string | null;
     } | null;
     position?: number;
     taskPriority?: number;
@@ -99,6 +101,7 @@ type GroupMemberDto = {
     firstName?: string | null;
     lastName?: string | null;
     email?: string | null;
+    avatarUrl?: string | null;
 };
 
 type GroupMemberListResponse = {
@@ -117,6 +120,33 @@ function dotClass(statusDot?: Task["statusDot"]) {
     if (statusDot === "yellow") return "bg-amber-500";
     if (statusDot === "red") return "bg-rose-500";
     return "bg-emerald-500";
+}
+
+function priorityToStatusDot(priority?: number): Task["statusDot"] {
+    if (priority === 2) return "red";
+    if (priority === 1) return "yellow";
+    return "green";
+}
+
+function priorityLabelOf(priority?: number) {
+    if (priority === 2) return "High";
+    if (priority === 1) return "Medium";
+    return "Low";
+}
+
+function severityLabelOf(severity?: number) {
+    if (severity === 3) return "Critical";
+    if (severity === 2) return "Major";
+    if (severity === 1) return "Moderate";
+    return "Minor";
+}
+
+function severityTone(label?: string | null) {
+    const v = String(label ?? "").toLowerCase();
+    if (v === "critical") return "border-rose-200 bg-rose-50 text-rose-700";
+    if (v === "major") return "border-orange-200 bg-orange-50 text-orange-700";
+    if (v === "moderate") return "border-amber-200 bg-amber-50 text-amber-700";
+    return "border-sky-200 bg-sky-50 text-sky-700";
 }
 
 function isUuidLike(v: string) {
@@ -180,6 +210,14 @@ function getApiBase() {
     return String(raw).replace(/\/+$/, "");
 }
 
+function apiUrl(path: string) {
+    const base = getApiBase();
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    if (!base) return cleanPath;
+    if (base.endsWith("/api")) return `${base}${cleanPath}`;
+    return `${base}/api${cleanPath}`;
+}
+
 function getAccessTokenOrNull() {
     if (typeof window === "undefined") return null;
     const t = localStorage.getItem("accessToken");
@@ -210,7 +248,13 @@ function formatDueCompact(input: string) {
     return `${dd}/${mm}/${yyyy}`;
 }
 
-function formatAssigneeName(input?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null) {
+function formatAssigneeName(
+    input?: {
+        firstName?: string | null;
+        lastName?: string | null;
+        email?: string | null;
+    } | null
+) {
     const first = String(input?.firstName ?? "").trim();
     const last = String(input?.lastName ?? "").trim();
     const fullName = `${first} ${last}`.trim();
@@ -230,7 +274,7 @@ async function apiGetGroupDetail(groupId: string) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    const url = `${apiBase}/group/${encodeURIComponent(groupId)}/detail`;
+    const url = apiUrl(`/group/${encodeURIComponent(groupId)}/detail`);
 
     return apiFetchJson<GroupDetailResponse>(url, {
         method: "GET",
@@ -247,7 +291,7 @@ async function apiGetGroupMembers(groupId: string) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    const url = `${apiBase}/group/${encodeURIComponent(groupId)}/members`;
+    const url = apiUrl(`/group/${encodeURIComponent(groupId)}/members`);
 
     return apiFetchJson<GroupMemberListResponse>(url, {
         method: "GET",
@@ -272,7 +316,7 @@ async function apiReorderGroupTaskStatus(args: {
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
     if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
 
-    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}/reorder`;
+    const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.groupId)}/reorder`);
 
     await apiFetchJson<unknown>(url, {
         method: "PUT",
@@ -305,10 +349,11 @@ async function apiReorderTask(args: {
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
     if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (UUID).");
     if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("taskId không hợp lệ (UUID).");
-    if (!(args.targetStatusId && isUuidLike(args.targetStatusId)))
+    if (!(args.targetStatusId && isUuidLike(args.targetStatusId))) {
         throw new Error("targetStatusId không hợp lệ (UUID).");
+    }
 
-    const url = `${apiBase}/Task/${encodeURIComponent(args.groupId)}/reorder`;
+    const url = apiUrl(`/Task/${encodeURIComponent(args.groupId)}/reorder`);
 
     const res = await fetch(url, {
         method: "PUT",
@@ -340,7 +385,7 @@ async function apiCreateGroupTaskStatus(args: { groupId: string; statusName: str
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
     if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
 
-    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}`;
+    const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.groupId)}`);
     const payload = {
         statusName: String(args.statusName ?? "").trim(),
         position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0
@@ -399,10 +444,11 @@ async function apiCreateTask(args: {
 
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
     if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
-    if (!(args.groupStatusId && isUuidLike(args.groupStatusId)))
+    if (!(args.groupStatusId && isUuidLike(args.groupStatusId))) {
         throw new Error("groupStatusId không hợp lệ (không phải UUID).");
+    }
 
-    const url = `${apiBase}/Task`;
+    const url = apiUrl("/Task");
 
     const payload: any = {
         groupId: args.groupId,
@@ -430,26 +476,23 @@ async function apiCreateTask(args: {
     });
 }
 
-async function apiDeleteTask(args: { taskId: string }) {
+async function apiDeleteTask(args: { groupId: string; taskId: string }) {
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
 
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
     if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("taskId không hợp lệ (không phải UUID).");
 
-    const url = `${apiBase}/Task/delete/${encodeURIComponent(args.taskId)}?taskId=${encodeURIComponent(args.taskId)}&id=${encodeURIComponent(
-        args.taskId
-    )}`;
+    const url = apiUrl(`/Task/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.taskId)}`);
 
     await apiFetchJson<unknown>(url, {
         method: "DELETE",
         credentials: "include",
         headers: {
             Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ taskId: args.taskId, id: args.taskId })
+        }
     });
 
     return true;
@@ -467,7 +510,7 @@ async function apiRenameGroupTaskStatus(args: {
     if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
     if (!(args.statusId && isUuidLike(args.statusId))) throw new Error("statusId không hợp lệ (không phải UUID).");
 
-    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.statusId)}`;
+    const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.statusId)}`);
 
     await apiFetchJson<unknown>(url, {
         method: "PUT",
@@ -493,7 +536,7 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
     if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
     if (!(args.statusId && isUuidLike(args.statusId))) throw new Error("statusId không hợp lệ (không phải UUID).");
 
-    const url = `${apiBase}/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`;
+    const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`);
 
     await apiFetchJson<unknown>(url, {
         method: "DELETE",
@@ -594,7 +637,8 @@ function Pill({ children }: { children: React.ReactNode }) {
                 "inline-flex items-center rounded-full px-2 py-0.5",
                 "border border-zinc-200 bg-white",
                 "font-semibold text-[10.5px] text-zinc-700"
-            )}>
+            )}
+        >
             {children}
         </span>
     );
@@ -604,16 +648,19 @@ function DuePill({ due, overdue }: { due: string; overdue: boolean }) {
     return (
         <div
             className={cn(
-                "mr-auto inline-flex flex-col items-start gap-1 rounded-xl border px-3 py-2",
+                "inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2",
                 overdue ? "border-rose-200 bg-rose-50 text-rose-700" : "border-zinc-200 bg-zinc-50 text-zinc-700"
-            )}>
-            <div className="flex items-center gap-2">
-                <Clock3 className="h-4 w-4 shrink-0" />
-                <span className="font-semibold text-xs">{due}</span>
-            </div>
-            {overdue && (
-                <span className="rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">Quá hạn</span>
             )}
+        >
+            <Clock3 className="h-4 w-4 shrink-0" />
+            <div className="flex min-w-0 items-center gap-2">
+                <div className="whitespace-nowrap text-xs font-semibold">{due}</div>
+                {overdue ? (
+                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+                        Quá hạn
+                    </span>
+                ) : null}
+            </div>
         </div>
     );
 }
@@ -657,23 +704,24 @@ function ConfirmModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
-            }}>
-            <div
-                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}>
-                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
-                <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
+            }}
+        >
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onPointerDown={(e) => e.stopPropagation()}>
+                <h2 className="text-base font-bold text-zinc-900">{title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-100">
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100"
+                    >
                         {cancelLabel}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-orange-700">
+                        className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
+                    >
                         {confirmLabel}
                     </button>
                 </div>
@@ -755,7 +803,8 @@ function PortalDropdown({
             ref={menuRef}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
+            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
+        >
             {children}
         </div>,
         document.body
@@ -780,7 +829,8 @@ function MenuItem({
             className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
                 danger ? "text-orange-700 hover:bg-orange-50" : "text-zinc-700 hover:bg-zinc-100"
-            )}>
+            )}
+        >
             <span className="grid h-5 w-5 place-items-center">{icon}</span>
             <span className="font-medium">{label}</span>
         </button>
@@ -884,30 +934,76 @@ function TaskCard({
                 }
             }}
             className={cn(
-                "group relative w-full border bg-white p-3",
-                "rounded-xl border-zinc-200",
-                "transition-colors hover:border-zinc-300 hover:bg-zinc-50",
+                "group relative min-h-[138px] w-full select-none rounded-2xl border border-zinc-200 bg-white p-4",
+                "cursor-grab transition-colors hover:border-zinc-300 hover:bg-zinc-50",
                 "focus-within:ring-2 focus-within:ring-indigo-200/60",
-                "cursor-grab select-none active:cursor-grabbing"
-            )}>
-            <div className="flex items-start gap-2">
+                "active:cursor-grabbing"
+            )}
+        >
+            <div className="flex items-start gap-3">
                 <div className="pt-1">
-                    <div className={cn("h-2 w-2 rounded-full", dotClass(task.statusDot))} />
+                    <div className={cn("h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
                 </div>
 
-                <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="min-w-0 flex-1">
                     {!isEditing ? (
                         <>
-                            <p className="line-clamp-3 font-semibold text-sm text-zinc-900">{task.title}</p>
-                            <p className="mt-1 truncate text-xs text-zinc-500">
-                                Người thực hiện: {task.assigneeName || "Chưa gán"}
-                            </p>
+                            <div className="flex items-start justify-between gap-3">
+                                <p className="line-clamp-3 pr-2 text-[17px] font-bold leading-6 text-zinc-900">{task.title}</p>
+
+                                <div
+                                    className="relative shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                >
+                                    <button
+                                        ref={btnRef}
+                                        type="button"
+                                        onPointerDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setOpenMenu((v) => !v);
+                                        }}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
+                                        aria-label="Menu"
+                                    >
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </button>
+
+                                    <PortalDropdown open={openMenu} onClose={() => setOpenMenu(false)} anchorRef={btnRef as any}>
+                                        <MenuItem
+                                            icon={<Pencil className="h-4 w-4" />}
+                                            label="Chỉnh sửa tên"
+                                            onClick={() => {
+                                                setOpenMenu(false);
+                                                onStartEdit();
+                                            }}
+                                        />
+                                        <MenuItem
+                                            icon={<Trash2 className="h-4 w-4" />}
+                                            label="Xóa"
+                                            danger
+                                            onClick={() => {
+                                                setOpenMenu(false);
+                                                onDelete();
+                                            }}
+                                        />
+                                    </PortalDropdown>
+                                </div>
+                            </div>
+
+                            <p className="mt-2 truncate text-sm text-zinc-500">Người thực hiện: {task.assigneeName || "Chưa gán"}</p>
                         </>
                     ) : (
                         <div
                             className="space-y-2"
                             onPointerDownCapture={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}>
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             <textarea
                                 ref={taRef}
                                 value={draftTitle}
@@ -933,11 +1029,9 @@ function TaskCard({
                                 }}
                                 rows={1}
                                 className={cn(
-                                    "w-full resize-none border bg-white px-3 py-2",
-                                    "rounded-lg border-zinc-200",
-                                    "font-semibold text-sm text-zinc-900 outline-none",
-                                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
-                                    "select-text"
+                                    "w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2",
+                                    "select-text text-sm font-semibold text-zinc-900 outline-none",
+                                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
                                 )}
                             />
 
@@ -950,7 +1044,8 @@ function TaskCard({
                                         e.stopPropagation();
                                         safeCommit();
                                     }}
-                                    className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
+                                    className="rounded-lg bg-[#f54a00] px-3 py-2 text-sm font-semibold text-white hover:bg-[#f54a00]/70"
+                                >
                                     Lưu
                                 </button>
 
@@ -963,61 +1058,32 @@ function TaskCard({
                                         onCancelEdit();
                                     }}
                                     className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label="Hủy">
+                                    aria-label="Hủy"
+                                >
                                     <X className="h-4 w-4" />
                                 </button>
-
                             </div>
                         </div>
                     )}
 
-                    {task.due ? (
-                        <div className="mt-3 w-full text-left">
-                            <DuePill due={task.due} overdue={overdue} />
+                    {task.due || task.severityLabel ? (
+                        <div className="mt-4 space-y-2">
+                            {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
+
+                            {task.severityLabel ? (
+                                <div>
+                                    <span
+                                        className={cn(
+                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                            severityTone(task.severityLabel)
+                                        )}
+                                    >
+                                        {task.severityLabel}
+                                    </span>
+                                </div>
+                            ) : null}
                         </div>
                     ) : null}
-                </div>
-
-                <div
-                    className="relative"
-                    onClick={(e) => e.stopPropagation()}
-                    onPointerDown={(e) => e.stopPropagation()}>
-                    <button
-                        ref={btnRef}
-                        type="button"
-                        onPointerDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setOpenMenu((v) => !v);
-                        }}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                        aria-label="Menu">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </button>
-
-                    <PortalDropdown open={openMenu} onClose={() => setOpenMenu(false)} anchorRef={btnRef as any}>
-                        <MenuItem
-                            icon={<Pencil className="h-4 w-4" />}
-                            label="Chỉnh sửa tên"
-                            onClick={() => {
-                                setOpenMenu(false);
-                                onStartEdit();
-                            }}
-                        />
-                        <MenuItem
-                            icon={<Trash2 className="h-4 w-4" />}
-                            label="Xóa"
-                            danger
-                            onClick={() => {
-                                setOpenMenu(false);
-                                onDelete();
-                            }}
-                        />
-                    </PortalDropdown>
                 </div>
             </div>
         </div>
@@ -1026,13 +1092,30 @@ function TaskCard({
 
 function GhostTaskCard({ task }: { task: Task }) {
     return (
-        <div className={cn("rounded-xl border border-indigo-300 border-dashed bg-indigo-50/60 p-3")}>
-            <div className="flex items-start gap-2">
-                <div className={cn("mt-1 h-2 w-2 rounded-full", dotClass(task.statusDot))} />
+        <div className={cn("rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/60 p-4")}>
+            <div className="flex items-start gap-3">
+                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-3 font-semibold text-sm text-zinc-800">{task.title}</p>
-                    <div className="mt-2 flex flex-wrap gap-2" />
-                    {task.due ? <DuePill due={task.due} overdue={false} /> : null}
+                    <p className="line-clamp-3 text-[17px] font-bold leading-6 text-zinc-800">{task.title}</p>
+
+                    {task.due || task.severityLabel ? (
+                        <div className="mt-4 space-y-2">
+                            {task.due ? <DuePill due={task.due} overdue={false} /> : null}
+
+                            {task.severityLabel ? (
+                                <div>
+                                    <span
+                                        className={cn(
+                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                            severityTone(task.severityLabel)
+                                        )}
+                                    >
+                                        {task.severityLabel}
+                                    </span>
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </div>
@@ -1110,9 +1193,10 @@ function AddColumnInline({
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left font-semibold text-sm text-zinc-900 shadow-sm hover:bg-zinc-100",
+                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100",
                     "transition"
-                )}>
+                )}
+            >
                 + Tạo trạng thái
             </button>
         );
@@ -1134,7 +1218,7 @@ function AddColumnInline({
                 )}
             />
 
-            {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
+            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
 
             <div className="mt-3 flex items-center gap-2">
                 <button
@@ -1142,10 +1226,11 @@ function AddColumnInline({
                     onClick={() => void submit()}
                     disabled={isSubmitting}
                     className={cn(
-                        "rounded-xl px-3 py-2 font-semibold text-sm text-white",
+                        "rounded-xl px-3 py-2 text-sm font-semibold text-white",
                         "bg-indigo-600 transition hover:bg-indigo-700",
                         isSubmitting && "pointer-events-none opacity-60"
-                    )}>
+                    )}
+                >
                     Thêm trạng thái
                 </button>
 
@@ -1158,7 +1243,8 @@ function AddColumnInline({
                         "transition hover:bg-zinc-100",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}
-                    aria-label="Hủy">
+                    aria-label="Hủy"
+                >
                     ✕
                 </button>
             </div>
@@ -1173,11 +1259,12 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 font-semibold text-sm",
+                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold",
                 "border-zinc-200/70 bg-white text-zinc-900",
                 "transition hover:bg-zinc-50 hover:shadow-sm",
                 disabled && "pointer-events-none opacity-60"
-            )}>
+            )}
+        >
             <Plus className="h-4 w-4" />
             Thêm công việc
         </button>
@@ -1267,18 +1354,15 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div
-            className={cn(
-                "rounded-2xl border border-zinc-200/80 bg-white shadow-sm",
-                "transition-shadow hover:shadow-md"
-            )}>
+        <div className={cn("rounded-2xl border border-zinc-200/80 bg-white shadow-sm", "transition-shadow hover:shadow-md")}>
             <div
                 className={cn(
                     "sticky top-0 z-10 rounded-t-2xl",
-                    "border-zinc-200/70 border-b",
+                    "border-b border-zinc-200/70",
                     "bg-white/80 backdrop-blur-xl",
                     "px-4 py-3"
-                )}>
+                )}
+            >
                 <div className="flex items-center gap-3">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                         <div
@@ -1289,24 +1373,18 @@ function ColumnView({
                             className={cn(
                                 "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
                                 "border border-zinc-200/70 bg-white",
-                                "text-zinc-500",
+                                "select-none text-zinc-500",
                                 "shadow-[0_1px_0_rgba(0,0,0,0.02)]",
                                 "transition hover:bg-zinc-50 hover:shadow-sm",
-                                "cursor-grab select-none active:cursor-grabbing"
-                            )}>
+                                "cursor-grab active:cursor-grabbing"
+                            )}
+                        >
                             <GripVertical className="h-4 w-4" />
                         </div>
 
                         <div className="min-w-0 flex-1">
                             {!isColumnEditing ? (
-                                <button
-                                    type="button"
-                                    onClick={() => onRenameColumnInline(col.id)}
-                                    className="w-full text-left">
-                                    <p className="truncate font-bold text-sm text-zinc-900 hover:underline">
-                                        {col.title}
-                                    </p>
-                                </button>
+                                <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
                             ) : (
                                 <div className="space-y-1">
                                     <input
@@ -1326,7 +1404,7 @@ function ColumnView({
                                         }}
                                         onBlur={() => setTimeout(() => onColumnCommit(), 0)}
                                         className={cn(
-                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
+                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 text-sm font-bold text-zinc-900 outline-none",
                                             columnError
                                                 ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
                                                 : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
@@ -1334,9 +1412,7 @@ function ColumnView({
                                         )}
                                         style={{ maxWidth: 220 }}
                                     />
-                                    {columnError ? (
-                                        <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
-                                    ) : null}
+                                    {columnError ? <div className="text-[11px] font-medium text-rose-600">{columnError}</div> : null}
                                 </div>
                             )}
                         </div>
@@ -1347,9 +1423,10 @@ function ColumnView({
                             className={cn(
                                 "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2",
                                 "border border-zinc-200/70 bg-white",
-                                "font-semibold text-xs text-zinc-700",
+                                "text-xs font-semibold text-zinc-700",
                                 "shadow-[0_1px_0_rgba(0,0,0,0.03)]"
-                            )}>
+                            )}
+                        >
                             {tasks.length}
                         </span>
 
@@ -1367,14 +1444,16 @@ function ColumnView({
                                     e.stopPropagation();
                                 }}
                                 className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
-                                aria-label="Column menu">
+                                aria-label="Column menu"
+                            >
                                 <MoreHorizontal className="h-5 w-5" />
                             </button>
 
                             <PortalDropdown
                                 open={openColMenu}
                                 onClose={() => setOpenColMenu(false)}
-                                anchorRef={colMenuBtnRef as any}>
+                                anchorRef={colMenuBtnRef as any}
+                            >
                                 <MenuItem
                                     icon={<Pencil className="h-4 w-4" />}
                                     label="Chỉnh sửa tên trạng thái"
@@ -1405,16 +1484,15 @@ function ColumnView({
                         "rounded-2xl border p-3 transition",
                         "border-zinc-200/70 bg-gradient-to-b from-zinc-50 to-white",
                         isOver && "border-indigo-300 bg-indigo-50/60"
-                    )}>
+                    )}
+                >
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className={cn("relative max-h-[68vh] space-y-3 overflow-y-auto pr-1")}>
+                            <div className={cn("relative max-h-[68vh] space-y-4 overflow-y-auto pr-1")}>
                                 {rendered.map((item) => {
-                                    if (item.kind === "ghost")
-                                        return <GhostTaskCard key={item.key} task={ghost!.task} />;
+                                    if (item.kind === "ghost") return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
-                                    const isEditingThis =
-                                        taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+                                    const isEditingThis = taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
 
                                     return (
                                         <TaskCard
@@ -1434,15 +1512,9 @@ function ColumnView({
                                 })}
 
                                 {tasks.length === 0 ? (
-                                    <div
-                                        className={cn(
-                                            "rounded-xl border border-zinc-200/70 bg-white",
-                                            "px-3 py-10 text-center"
-                                        )}>
-                                        <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
-                                        <div className="mt-1 text-xs text-zinc-500">
-                                            Bấm “Thêm công việc” để tạo mới
-                                        </div>
+                                    <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
+                                        <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
+                                        <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                     </div>
                                 ) : null}
 
@@ -1456,10 +1528,9 @@ function ColumnView({
                             </div>
                         </SortableContext>
                     ) : (
-                        <div className="max-h-[68vh] space-y-3 overflow-y-auto pr-1">
+                        <div className="max-h-[68vh] space-y-4 overflow-y-auto pr-1">
                             {tasks.map((t) => {
-                                const isEditingThis =
-                                    taskEditState.taskId === t.id && taskEditState.columnId === col.id;
+                                const isEditingThis = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
                                 return (
                                     <TaskCard
                                         key={t.id}
@@ -1477,12 +1548,8 @@ function ColumnView({
                                 );
                             })}
                             {tasks.length === 0 ? (
-                                <div
-                                    className={cn(
-                                        "rounded-xl border border-zinc-200/70 bg-white",
-                                        "px-3 py-10 text-center"
-                                    )}>
-                                    <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
+                                <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
+                                    <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
                                     <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                 </div>
                             ) : null}
@@ -1593,12 +1660,28 @@ function TaskOverlay({ task }: { task: Task }) {
     const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
 
     return (
-        <div className={cn("min-w-[320px] rounded-xl border border-zinc-200 bg-white p-3 shadow-xl")}>
-            <p className="font-semibold text-sm text-zinc-900">{task.title}</p>
+        <div className={cn("min-w-[320px] rounded-xl border border-zinc-200 bg-white p-4 shadow-xl")}>
+            <p className="text-[17px] font-bold leading-6 text-zinc-900">{task.title}</p>
             <div className="mt-2">
                 <Pill>Người thực hiện: {task.assigneeName || "Chưa gán"}</Pill>
             </div>
-            {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
+            {task.due || task.severityLabel ? (
+                <div className="mt-4 space-y-2">
+                    {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
+                    {task.severityLabel ? (
+                        <div>
+                            <span
+                                className={cn(
+                                    "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                    severityTone(task.severityLabel)
+                                )}
+                            >
+                                {task.severityLabel}
+                            </span>
+                        </div>
+                    ) : null}
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -1607,16 +1690,16 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     return (
         <div className="min-w-[320px] max-w-[320px]">
             <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl">
-                <div className="rounded-t-2xl border-zinc-200 border-b bg-white px-4 py-3">
-                    <p className="truncate font-bold text-sm text-zinc-900">{col.title}</p>
+                <div className="rounded-t-2xl border-b border-zinc-200 bg-white px-4 py-3">
+                    <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
                 <div className="px-4 py-4">
-                    <div className="rounded-2xl border border-zinc-200 border-dashed bg-zinc-50 p-3">
+                    <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-3">
                         {tasks.slice(0, 3).map((t) => (
                             <div key={t.id} className="mb-3 last:mb-0">
                                 <div className={cn("rounded-xl border border-zinc-200 bg-white p-3 shadow-sm")}>
-                                    <p className="font-semibold text-sm text-zinc-900">{t.title}</p>
+                                    <p className="text-sm font-semibold text-zinc-900">{t.title}</p>
                                 </div>
                             </div>
                         ))}
@@ -1790,7 +1873,7 @@ export function GroupBoardScreen() {
         setDetailOpen(false);
         setDetailTaskId(null);
         try {
-            await apiDeleteTask({ taskId });
+            await apiDeleteTask({ groupId, taskId });
             await refresh();
         } catch (e: any) {
             alert(e?.message ?? "Xóa công việc thất bại");
@@ -1831,8 +1914,10 @@ export function GroupBoardScreen() {
                 const base: Task = {
                     id: String(t.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
                     title: String(t.taskTitle ?? ""),
-                    statusDot: "green",
-                    assigneeName
+                    statusDot: priorityToStatusDot(t.taskPriority),
+                    assigneeName,
+                    priorityLabel: priorityLabelOf(t.taskPriority),
+                    severityLabel: severityLabelOf(t.taskSeverity)
                 };
 
                 if (startFmt) base.start = startFmt;
@@ -1876,7 +1961,11 @@ export function GroupBoardScreen() {
                     .filter((m) => typeof m?.userId === "string" && !!m.userId)
                     .map((m) => {
                         const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim();
-                        return { value: String(m.userId), label: name || m.email || "Unnamed" };
+                        return {
+                            value: String(m.userId),
+                            label: name || m.email || "Unnamed",
+                            avatarUrl: m.avatarUrl ?? null
+                        };
                     })
             );
         } catch (e: any) {
@@ -2079,7 +2168,7 @@ export function GroupBoardScreen() {
         if (editingTask.taskId === taskId && editingTask.columnId === columnId) onTaskCancelEdit();
 
         try {
-            await apiDeleteTask({ taskId });
+            await apiDeleteTask({ groupId, taskId });
             await refresh();
         } catch (e: any) {
             setBoard(prevBoard);
@@ -2269,14 +2358,15 @@ export function GroupBoardScreen() {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
                         {loadError}
                     </div>
                     <div className="mt-3">
                         <button
                             type="button"
                             onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
+                        >
                             Tải lại
                         </button>
                     </div>
@@ -2309,12 +2399,13 @@ export function GroupBoardScreen() {
                 onClose={closeTaskDetail}
                 taskId={detailTaskId}
                 onDelete={handleDeleteFromDetail}
+                onSaved={refresh}
             />
 
             <ConfirmModal
                 open={confirmModal.open}
                 title="Xác nhận xóa trạng thái"
-                description={`Bạn có chắc chắn muốn xóa trạng thái "${confirmModal.columnTitle}" không? Hành động này không thể hoàn tác.`}
+                description={`Bạn có chắc chắn muốn xóa trạng thái "${confirmModal.columnTitle}" không?`}
                 confirmLabel="Xóa trạng thái"
                 cancelLabel="Hủy"
                 onConfirm={() => void handleConfirmDeleteColumn()}
@@ -2324,7 +2415,7 @@ export function GroupBoardScreen() {
             <ConfirmModal
                 open={confirmDeleteTask.open}
                 title="Xác nhận xóa công việc"
-                description={`Bạn có chắc chắn muốn xóa công việc "${confirmDeleteTask.taskTitle}" không? Hành động này không thể hoàn tác.`}
+                description={`Bạn có chắc chắn muốn xóa công việc "${confirmDeleteTask.taskTitle}" không?`}
                 confirmLabel="Xóa công việc"
                 cancelLabel="Hủy"
                 onConfirm={() => void handleConfirmDeleteTask()}
@@ -2336,7 +2427,8 @@ export function GroupBoardScreen() {
                     <div
                         ref={topScrollRef}
                         onScroll={handleTopScroll}
-                        className="board-top-scrollbar mt-5 mb-2 overflow-x-auto overflow-y-hidden">
+                        className="board-top-scrollbar mt-5 mb-2 overflow-x-auto overflow-y-hidden"
+                    >
                         <div style={{ width: topScrollbarWidth, height: 1 }} />
                     </div>
                 ) : (
@@ -2347,7 +2439,8 @@ export function GroupBoardScreen() {
                     <div
                         ref={boardScrollRef}
                         onScroll={handleBoardScroll}
-                        className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6">
+                        className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6"
+                    >
                         {columns.map((col) => (
                             <ColumnView
                                 key={col.id}
@@ -2388,12 +2481,14 @@ export function GroupBoardScreen() {
                         onDragStart={handleDragStart}
                         onDragOver={handleDragOver}
                         onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}>
+                        onDragEnd={handleDragEnd}
+                    >
                         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                             <div
                                 ref={boardScrollRef}
                                 onScroll={handleBoardScroll}
-                                className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6">
+                                className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6"
+                            >
                                 {columns.map((col) => (
                                     <SortableColumn
                                         key={col.id}
