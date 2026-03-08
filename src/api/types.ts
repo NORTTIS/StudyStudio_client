@@ -2176,8 +2176,11 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    groupId?: string;
                     page?: number;
                     pageSize?: number;
+                    search?: string;
+                    sortBy?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3843,6 +3846,7 @@ export interface components {
             dueDate?: string | null;
             /** Format: uuid */
             groupId?: string | null;
+            groupName?: string | null;
             /** Format: int32 */
             progress?: number;
             sourceName?: string | null;
@@ -3864,6 +3868,7 @@ export interface components {
             totalCount?: number;
             /** Format: int32 */
             totalPages?: number;
+            userGroups?: components["schemas"]["UserGroupDto"][] | null;
         };
         HomeTaskListResponseApiResponse: {
             code?: string | null;
@@ -4386,6 +4391,11 @@ export interface components {
             /** Format: uuid */
             id?: string;
             lastName?: string | null;
+        };
+        UserGroupDto: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
         };
         UserProfileResponse: {
             /** Format: int32 */
