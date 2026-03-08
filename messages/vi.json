@@ -883,6 +883,210 @@
             "createLinkFailed": "Tạo liên kết thất bại: không thể tạo liên kết mời. Vui lòng thử lại."
         }
     },
+    "AdminSubscriptions": {
+        "title": "Quản lý Gói Đăng Ký",
+        "subtitle": "Quản lý các gói đăng ký và giới hạn của chúng",
+        "totalSubscribers": "Tổng số người đăng ký",
+        "freeUsers": "Người dùng miễn phí",
+        "premiumUsers": "Người dùng Premium",
+        "conversionRate": "Tỷ lệ chuyển đổi",
+        "tabs": {
+            "plans": "Gói Đăng Ký",
+            "billing": "Lịch Sử Thanh Toán",
+            "revenue": "Thống Kê Doanh Thu",
+            "payments": "Phương Thức Thanh Toán"
+        }
+    },
+    "AdminNews": {
+        "title": "Quản lý Tin tức & Thông báo",
+        "subtitle": "Tạo và quản lý tin tức, thông báo hệ thống",
+        "createButton": "Tạo tin tức mới",
+        "searchPlaceholder": "Tìm kiếm tin tức...",
+        "totalNews": "Tổng số tin tức",
+        "published": "Đã xuất bản",
+        "draft": "Bản nháp",
+        "archived": "Đã lưu trữ",
+        "filters": {
+            "allTypes": "Tất cả loại",
+            "system": "Hệ thống",
+            "update": "Cập nhật",
+            "maintenance": "Bảo trì",
+            "announcement": "Thông báo",
+            "allStatus": "Tất cả trạng thái",
+            "published": "Đã xuất bản",
+            "draft": "Bản nháp",
+            "archived": "Đã lưu trữ"
+        },
+        "table": {
+            "title": "Tiêu đề",
+            "type": "Loại",
+            "priority": "Ưu tiên",
+            "status": "Trạng thái",
+            "author": "Tác giả",
+            "date": "Ngày tạo",
+            "actions": "Hành động",
+            "edit": "Sửa",
+            "delete": "Xóa"
+        },
+        "noNews": "Không tìm thấy tin tức nào",
+        "createModal": {
+            "title": "Tạo tin tức mới",
+            "subtitle": "Thêm tin tức hoặc thông báo mới cho hệ thống",
+            "titleLabel": "Tiêu đề",
+            "titlePlaceholder": "Nhập tiêu đề tin tức...",
+            "contentLabel": "Nội dung",
+            "contentPlaceholder": "Nhập nội dung chi tiết...",
+            "typeLabel": "Loại tin tức",
+            "priorityLabel": "Mức độ ưu tiên",
+            "statusLabel": "Trạng thái",
+            "cancel": "Hủy",
+            "create": "Tạo tin tức",
+            "creating": "Đang tạo..."
+        },
+        "editModal": {
+            "title": "Chỉnh sửa tin tức",
+            "subtitle": "Cập nhật thông tin tin tức",
+            "titleLabel": "Tiêu đề",
+            "titlePlaceholder": "Nhập tiêu đề tin tức...",
+            "contentLabel": "Nội dung",
+            "contentPlaceholder": "Nhập nội dung chi tiết...",
+            "typeLabel": "Loại tin tức",
+            "priorityLabel": "Mức độ ưu tiên",
+            "statusLabel": "Trạng thái",
+            "cancel": "Hủy",
+            "update": "Cập nhật",
+            "updating": "Đang cập nhật..."
+        },
+        "deleteModal": {
+            "title": "Xóa tin tức",
+            "message": "Bạn có chắc chắn muốn xóa tin tức",
+            "warning": "Cảnh báo: Hành động này không thể hoàn tác. Tin tức sẽ bị xóa vĩnh viễn khỏi hệ thống.",
+            "cancel": "Hủy",
+            "delete": "Xóa tin tức",
+            "deleting": "Đang xóa..."
+        }
+    },
+    "AdminDashboard": {
+        "title": "Bảng điều khiển",
+        "subtitle": "Tổng quan hệ thống Study Studio",
+        "stats": {
+            "totalUsers": "Tổng người dùng",
+            "thisMonth": "tháng này",
+            "activeUsers": "Người dùng hoạt động",
+            "revenue": "Doanh thu",
+            "reports": "Báo cáo",
+            "pending": "chờ xử lý"
+        },
+        "charts": {
+            "userGrowth": "Tăng trưởng người dùng",
+            "revenueByMonth": "Doanh thu theo tháng",
+            "userDistribution": "Phân bố người dùng",
+            "subscriptionDistribution": "Phân bố gói đăng ký",
+            "activityByTime": "Hoạt động theo giờ",
+            "reportStatus": "Trạng thái báo cáo",
+            "newUsers": "Người dùng mới",
+            "revenue": "Doanh thu",
+            "userDistributionName": "Phân bố người dùng",
+            "subscriptionName": "Gói đăng ký",
+            "activity": "Hoạt động",
+            "activities": "hoạt động"
+        },
+        "userStatus": {
+            "active": "Hoạt động",
+            "inactive": "Không hoạt động",
+            "new": "Mới"
+        },
+        "reportStatuses": {
+            "pending": "Chờ xử lý",
+            "inProgress": "Đang xử lý",
+            "resolved": "Đã giải quyết",
+            "rejected": "Từ chối"
+        },
+        "recentActivities": {
+            "title": "Hoạt động gần đây",
+            "newUser": "Người dùng mới đăng ký",
+            "newReport": "Báo cáo mới",
+            "upgrade": "Nâng cấp Premium",
+            "newNews": "Tin tức mới được xuất bản",
+            "minutesAgo": "phút trước",
+            "hoursAgo": "giờ trước"
+        },
+        "topGroups": {
+            "title": "Nhóm hoạt động tích cực",
+            "members": "thành viên",
+            "activity": "hoạt động"
+        },
+        "months": {
+            "jan": "T1",
+            "feb": "T2",
+            "mar": "T3",
+            "apr": "T4",
+            "may": "T5",
+            "jun": "T6",
+            "jul": "T7",
+            "aug": "T8",
+            "sep": "T9",
+            "oct": "T10",
+            "nov": "T11",
+            "dec": "T12"
+        },
+        "days": {
+            "mon": "T2",
+            "tue": "T3",
+            "wed": "T4",
+            "thu": "T5",
+            "fri": "T6",
+            "sat": "T7",
+            "sun": "CN"
+        }
+    },
+    "AdminReports": {
+        "title": "Quản lý Báo cáo",
+        "subtitle": "Xem và quản lý báo cáo và phản hồi từ người dùng",
+        "searchPlaceholder": "Tìm kiếm báo cáo...",
+        "totalReports": "Tổng số báo cáo",
+        "open": "Đang mở",
+        "inProgress": "Đang xử lý",
+        "resolved": "Đã giải quyết",
+        "filters": {
+            "allTypes": "Tất cả loại",
+            "bug": "Lỗi",
+            "feedback": "Góp ý",
+            "support": "Hỗ trợ",
+            "other": "Khác",
+            "allStatus": "Tất cả trạng thái",
+            "open": "Đang mở",
+            "inProgress": "Đang xử lý",
+            "resolved": "Đã giải quyết",
+            "closed": "Đã đóng"
+        },
+        "table": {
+            "title": "Tiêu đề",
+            "type": "Loại",
+            "user": "Người dùng",
+            "priority": "Ưu tiên",
+            "status": "Trạng thái",
+            "date": "Ngày",
+            "actions": "Hành động",
+            "viewDetails": "Xem chi tiết"
+        },
+        "noReports": "Không tìm thấy báo cáo nào",
+        "modal": {
+            "userInfo": "Thông tin người dùng",
+            "name": "Tên",
+            "email": "Email",
+            "created": "Ngày tạo",
+            "lastUpdated": "Cập nhật lần cuối",
+            "description": "Mô tả",
+            "updateStatus": "Cập nhật trạng thái",
+            "updatePriority": "Cập nhật mức độ ưu tiên",
+            "addNote": "Thêm ghi chú / Bình luận",
+            "notePlaceholder": "Thêm ghi chú nội bộ hoặc bình luận về báo cáo này...",
+            "cancel": "Hủy",
+            "update": "Cập nhật báo cáo",
+            "updating": "Đang cập nhật..."
+        }
+    },
     "GroupTaskListPage": {
         "pageTitle": "Danh sách công việc",
         "searchPlaceholder": "Tìm kiếm công việc",

@@ -14,6 +14,7 @@ import { apiPost } from "@/api/api-client";
 import type { AuthTokens } from "@/api/auth";
 import { setAuthTokens } from "@/api/auth";
 import type { components } from "@/api/types";
+import { getUserProfile } from "@/api/user-profile";
 import { Button, Input, Logo } from "@/components/common";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -76,18 +77,26 @@ export default function Login() {
                 // Store tokens in localStorage
                 setAuthTokens(result.data);
 
+                // Fetch user profile to get isAdmin status
+                const profileResult = await getUserProfile(locale);
+
                 // Show success toast
                 toast({
                     description: "Đăng nhập thành công",
                     variant: "success"
                 });
 
-                // Redirect to intended destination or home page
+                // Redirect based on user role
                 const redirectUrl = searchParams.get("redirect");
                 if (redirectUrl) {
                     router.push(decodeURIComponent(redirectUrl));
                 } else {
-                    router.push(`/${locale}/home`);
+                    // Check isAdmin from profile and redirect accordingly
+                    if (profileResult.status === "success" && profileResult.data?.isAdmin === true) {
+                        router.push(`/${locale}/admin/dashboard`);
+                    } else {
+                        router.push(`/${locale}/home`);
+                    }
                 }
             }
         } catch {
@@ -136,6 +145,9 @@ export default function Login() {
 
             setAuthTokens(result.data);
 
+            // Fetch user profile to get isAdmin status
+            const profileResult = await getUserProfile(locale);
+
             toast({
                 description: "Đăng nhập thành công",
                 variant: "success"
@@ -145,7 +157,12 @@ export default function Login() {
             if (redirectUrl) {
                 router.push(decodeURIComponent(redirectUrl));
             } else {
-                router.push(`/${locale}/home`);
+                // Check isAdmin from profile and redirect accordingly
+                if (profileResult.status === "success" && profileResult.data?.isAdmin === true) {
+                    router.push(`/${locale}/admin/dashboard`);
+                } else {
+                    router.push(`/${locale}/home`);
+                }
             }
         } catch {
             toast({
@@ -207,9 +224,10 @@ export default function Login() {
                             <div className="flex items-center justify-between">
                                 <span className="font-medium text-[#261E33] text-sm">{t("password")}</span>
 
-                                {/* ✅ FIX locale link */}
+                                {/* ✅ FIX locale link - add tabIndex={-1} to skip in tab order */}
                                 <Link
                                     href={`/${locale}/forgot-password`}
+                                    tabIndex={-1}
                                     className="text-muted-foreground text-sm hover:text-orange-500">
                                     {t("forgotPassword")}
                                 </Link>
@@ -225,9 +243,10 @@ export default function Login() {
                                     className="pr-10"
                                 />
 
-                                {/* 👁 Eye Toggle */}
+                                {/* 👁 Eye Toggle - add tabIndex={-1} to skip in tab order */}
                                 <button
                                     type="button"
+                                    tabIndex={-1}
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
