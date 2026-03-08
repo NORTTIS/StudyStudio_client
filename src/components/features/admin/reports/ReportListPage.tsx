@@ -6,11 +6,13 @@ import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { ReportDetailModal } from "./ReportDetailModal";
 
-type Report = {
+export type ReportStatus = "Open" | "In Progress" | "Resolved" | "Closed";
+
+export type Report = {
     id: string;
     title: string;
     type: "Bug" | "Feedback" | "Support" | "Other";
-    status: "Open" | "In Progress" | "Resolved" | "Closed";
+    status: ReportStatus;
     priority: "Low" | "Medium" | "High" | "Critical";
     user: {
         name: string;

@@ -957,6 +957,80 @@
             "deleting": "Đang xóa..."
         }
     },
+    "AdminDashboard": {
+        "title": "Bảng điều khiển",
+        "subtitle": "Tổng quan hệ thống Study Studio",
+        "stats": {
+            "totalUsers": "Tổng người dùng",
+            "thisMonth": "tháng này",
+            "activeUsers": "Người dùng hoạt động",
+            "revenue": "Doanh thu",
+            "reports": "Báo cáo",
+            "pending": "chờ xử lý"
+        },
+        "charts": {
+            "userGrowth": "Tăng trưởng người dùng",
+            "revenueByMonth": "Doanh thu theo tháng",
+            "userDistribution": "Phân bố người dùng",
+            "subscriptionDistribution": "Phân bố gói đăng ký",
+            "activityByTime": "Hoạt động theo giờ",
+            "reportStatus": "Trạng thái báo cáo",
+            "newUsers": "Người dùng mới",
+            "revenue": "Doanh thu",
+            "userDistributionName": "Phân bố người dùng",
+            "subscriptionName": "Gói đăng ký",
+            "activity": "Hoạt động",
+            "activities": "hoạt động"
+        },
+        "userStatus": {
+            "active": "Hoạt động",
+            "inactive": "Không hoạt động",
+            "new": "Mới"
+        },
+        "reportStatuses": {
+            "pending": "Chờ xử lý",
+            "inProgress": "Đang xử lý",
+            "resolved": "Đã giải quyết",
+            "rejected": "Từ chối"
+        },
+        "recentActivities": {
+            "title": "Hoạt động gần đây",
+            "newUser": "Người dùng mới đăng ký",
+            "newReport": "Báo cáo mới",
+            "upgrade": "Nâng cấp Premium",
+            "newNews": "Tin tức mới được xuất bản",
+            "minutesAgo": "phút trước",
+            "hoursAgo": "giờ trước"
+        },
+        "topGroups": {
+            "title": "Nhóm hoạt động tích cực",
+            "members": "thành viên",
+            "activity": "hoạt động"
+        },
+        "months": {
+            "jan": "T1",
+            "feb": "T2",
+            "mar": "T3",
+            "apr": "T4",
+            "may": "T5",
+            "jun": "T6",
+            "jul": "T7",
+            "aug": "T8",
+            "sep": "T9",
+            "oct": "T10",
+            "nov": "T11",
+            "dec": "T12"
+        },
+        "days": {
+            "mon": "T2",
+            "tue": "T3",
+            "wed": "T4",
+            "thu": "T5",
+            "fri": "T6",
+            "sat": "T7",
+            "sun": "CN"
+        }
+    },
     "AdminReports": {
         "title": "Quản lý Báo cáo",
         "subtitle": "Xem và quản lý báo cáo và phản hồi từ người dùng",

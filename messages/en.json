@@ -961,6 +961,80 @@
             "deleting": "Deleting..."
         }
     },
+    "AdminDashboard": {
+        "title": "Dashboard",
+        "subtitle": "Study Studio System Overview",
+        "stats": {
+            "totalUsers": "Total Users",
+            "thisMonth": "this month",
+            "activeUsers": "Active Users",
+            "revenue": "Revenue",
+            "reports": "Reports",
+            "pending": "pending"
+        },
+        "charts": {
+            "userGrowth": "User Growth",
+            "revenueByMonth": "Revenue by Month",
+            "userDistribution": "User Distribution",
+            "subscriptionDistribution": "Subscription Distribution",
+            "activityByTime": "Activity by Time",
+            "reportStatus": "Report Status",
+            "newUsers": "New Users",
+            "revenue": "Revenue",
+            "userDistributionName": "User Distribution",
+            "subscriptionName": "Subscription",
+            "activity": "Activity",
+            "activities": "activities"
+        },
+        "userStatus": {
+            "active": "Active",
+            "inactive": "Inactive",
+            "new": "New"
+        },
+        "reportStatuses": {
+            "pending": "Pending",
+            "inProgress": "In Progress",
+            "resolved": "Resolved",
+            "rejected": "Rejected"
+        },
+        "recentActivities": {
+            "title": "Recent Activities",
+            "newUser": "New user registered",
+            "newReport": "New report",
+            "upgrade": "Premium upgrade",
+            "newNews": "New news published",
+            "minutesAgo": "minutes ago",
+            "hoursAgo": "hours ago"
+        },
+        "topGroups": {
+            "title": "Top Active Groups",
+            "members": "members",
+            "activity": "activity"
+        },
+        "months": {
+            "jan": "Jan",
+            "feb": "Feb",
+            "mar": "Mar",
+            "apr": "Apr",
+            "may": "May",
+            "jun": "Jun",
+            "jul": "Jul",
+            "aug": "Aug",
+            "sep": "Sep",
+            "oct": "Oct",
+            "nov": "Nov",
+            "dec": "Dec"
+        },
+        "days": {
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat",
+            "sun": "Sun"
+        }
+    },
     "AdminReports": {
         "title": "Reports Management",
         "subtitle": "View and manage user reports and feedback",

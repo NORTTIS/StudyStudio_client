@@ -8,6 +8,7 @@ export type AuthTokens = {
     email: string;
     firstName: string;
     lastName: string;
+    isAdmin?: boolean; // Add isAdmin field from API
     accessToken: string;
     accessExpireIn: number;
     refreshToken: string;
