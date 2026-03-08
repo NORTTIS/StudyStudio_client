@@ -1488,7 +1488,7 @@ function ColumnView({
                 >
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className={cn("relative max-h-[68vh] space-y-4 overflow-y-auto pr-1")}>
+                            <div className={cn("relative max-h-[68vh] space-y-4 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]")}>
                                 {rendered.map((item) => {
                                     if (item.kind === "ghost") return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
@@ -1528,7 +1528,7 @@ function ColumnView({
                             </div>
                         </SortableContext>
                     ) : (
-                        <div className="max-h-[68vh] space-y-4 overflow-y-auto pr-1">
+                        <div className="max-h-[68vh] space-y-4 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
                             {tasks.map((t) => {
                                 const isEditingThis = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
                                 return (
@@ -2344,7 +2344,7 @@ export function GroupBoardScreen() {
 
     if (loading) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
+            <div className="min-h-[calc(100vh-0px)] bg-white">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
                         Đang tải board…
@@ -2356,7 +2356,7 @@ export function GroupBoardScreen() {
 
     if (loadError) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
+            <div className="min-h-[calc(100vh-0px)] bg-white">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
                         {loadError}
@@ -2385,7 +2385,7 @@ export function GroupBoardScreen() {
     };
 
     return (
-        <div className="min-h-[calc(100vh-0px)] bg-gradient-to-b from-zinc-50 via-zinc-50 to-white">
+        <div className="min-h-[calc(100vh-0px)] bg-white">
             <TaskFormModal
                 open={taskFormOpen}
                 onClose={closeCreateTask}

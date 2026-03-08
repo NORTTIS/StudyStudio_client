@@ -61,7 +61,6 @@ function uniqueByIdKeepFirst(list: Group[]) {
     return out;
 }
 
-/** Premium icon badge (no text changes) */
 function IconBadge({
     variant,
     children,
@@ -86,7 +85,6 @@ function IconBadge({
                 styles[variant],
                 className
             )}>
-            {/* subtle highlight */}
             <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.55),transparent_55%)]" />
             <div className="relative">{children}</div>
         </div>
@@ -197,9 +195,7 @@ export function GroupsPage() {
 
     return (
         <Container>
-            {/* Premium header */}
             <Card className="relative overflow-hidden border-muted/60 shadow-sm">
-                {/* subtle background glow */}
                 <div className="pointer-events-none absolute -left-24 -top-24 h-56 w-56 rounded-full bg-orange-500/10 blur-3xl" />
                 <div className="pointer-events-none absolute -right-24 -bottom-24 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
 
@@ -259,7 +255,6 @@ export function GroupsPage() {
                 </CardContent>
             </Card>
 
-            {/* Sections */}
             <div className="mt-8 space-y-10">
                 <GroupsSection
                     icon={FolderKanban}
