@@ -265,8 +265,9 @@ export default function HelpPage() {
                                 <span className="font-semibold text-[#261E33]">{item.question}</span>
 
                                 <svg
-                                    className={`h-5 w-5 text-[#6F6B99] transition-transform ${expandedFAQ === item.id ? "rotate-180" : ""
-                                        }`}
+                                    className={`h-5 w-5 text-[#6F6B99] transition-transform ${
+                                        expandedFAQ === item.id ? "rotate-180" : ""
+                                    }`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24">

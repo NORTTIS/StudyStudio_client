@@ -103,7 +103,7 @@ export function NotificationDropdown() {
     const handleNotificationClick = async (notification: Notification) => {
         try {
             // Call API to mark notification as read
-            await markNotificationAsRead(notification.id);
+            await markNotificationAsRead(notification.id, locale);
         } catch (error) {
             console.error("Failed to mark notification as read:", error);
         }
@@ -197,9 +197,8 @@ export function NotificationDropdown() {
                                     key={notification.id}
                                     type="button"
                                     onClick={() => handleNotificationClick(notification)}
-                                    className={`w-full cursor-pointer border-[#E5E5E5] border-b px-4 py-3 text-left transition-colors hover:bg-[#F9F9F9] ${
-                                        !notification.read ? "bg-orange-50" : ""
-                                    }`}>
+                                    className={`w-full cursor-pointer border-[#E5E5E5] border-b px-4 py-3 text-left transition-colors hover:bg-[#F9F9F9] ${!notification.read ? "bg-orange-50" : ""
+                                        }`}>
                                     <div className="flex gap-3">
                                         <div className={`mt-1 shrink-0 ${getTypeColor(notification.type)}`}>
                                             {getTypeIcon(notification.type)}

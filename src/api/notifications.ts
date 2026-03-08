@@ -1,4 +1,4 @@
-import { apiGet } from "@/api/api-client";
+import { apiFetch, apiGet } from "@/api/api-client";
 import type { components } from "@/api/types";
 
 export interface Notification {
@@ -15,8 +15,9 @@ export interface Announcement extends Notification {
     priority: "high" | "medium" | "low";
 }
 
-type AnnouncementResponse = components["schemas"]["AnnouncementResponse"];
-type AnnouncementListResponse = AnnouncementResponse[];
+type UserAnnouncementResponse = components["schemas"]["UserAnnouncementResponse"];
+type UserAnnouncementListResponse = UserAnnouncementResponse[];
+type ObjectApiResponse = components["schemas"]["ObjectApiResponse"];
 
 const ANNOUNCEMENT_READ_KEY = "announcementReadMap";
 
@@ -74,8 +75,8 @@ function formatDate(value?: string | null): string {
     return date.toLocaleString();
 }
 
-function mapAnnouncement(item: AnnouncementResponse, readMap: Record<string, boolean>): Announcement {
-    const id = item.announcementId ?? "";
+function mapAnnouncement(item: UserAnnouncementResponse, readMap: Record<string, boolean>): Announcement {
+    const id = item.userAnnouncementId ?? item.announcementId ?? "";
     const type = detectType(item.type);
 
     return {
@@ -84,7 +85,7 @@ function mapAnnouncement(item: AnnouncementResponse, readMap: Record<string, boo
         description: item.content || "",
         type,
         date: formatDate(item.publishedAt || item.createdAt),
-        read: Boolean(readMap[id]),
+        read: Boolean(item.isRead) || Boolean(readMap[id]),
         priority: getPriorityFromType(type)
     };
 }
@@ -102,7 +103,18 @@ export async function fetchNotifications(locale = "vi"): Promise<Notification[]>
  * Mark a notification as read
  * @param notificationId - The ID of the notification to mark as read
  */
-export async function markNotificationAsRead(notificationId: string): Promise<void> {
+export async function markNotificationAsRead(notificationId: string, locale = "vi"): Promise<void> {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+    const response = await apiFetch<ObjectApiResponse>(`${baseUrl}/announcements/user/${notificationId}/read`, {
+        method: "PUT",
+        locale
+    });
+
+    if (response.status !== "success") {
+        throw new Error(response.message || "Failed to mark notification as read");
+    }
+
     const currentMap = getReadMap();
     currentMap[notificationId] = true;
     saveReadMap(currentMap);
@@ -114,6 +126,9 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
 export async function markAllNotificationsAsRead(locale = "vi"): Promise<void> {
     const announcements = await fetchAnnouncements(locale);
     const currentMap = getReadMap();
+
+    const unreadAnnouncements = announcements.filter((announcement) => !announcement.read);
+    await Promise.all(unreadAnnouncements.map(async (announcement) => markNotificationAsRead(announcement.id, locale)));
 
     for (const announcement of announcements) {
         currentMap[announcement.id] = true;
@@ -128,7 +143,7 @@ export async function markAllNotificationsAsRead(locale = "vi"): Promise<void> {
  */
 export async function fetchAnnouncements(locale = "vi"): Promise<Announcement[]> {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    const response = await apiGet<AnnouncementListResponse>(`${baseUrl}/announcements`, locale);
+    const response = await apiGet<UserAnnouncementListResponse>(`${baseUrl}/announcements/user`, locale);
     if (response.status !== "success") {
         throw new Error(response.message || "Failed to fetch announcements");
     }
@@ -142,7 +157,9 @@ export async function fetchAnnouncements(locale = "vi"): Promise<Announcement[]>
  * Mark an announcement as read
  * @param announcementId - The ID of the announcement to mark as read
  */
-export async function markAnnouncementAsRead(announcementId: string): Promise<void> {
+export async function markAnnouncementAsRead(announcementId: string, locale = "vi"): Promise<void> {
+    await markNotificationAsRead(announcementId, locale);
+
     const currentMap = getReadMap();
     currentMap[announcementId] = true;
     saveReadMap(currentMap);

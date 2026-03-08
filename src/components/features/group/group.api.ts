@@ -11,6 +11,11 @@ type GroupSections = NonNullable<GroupListResponse["sections"]>;
 type SubscriptionInfo = NonNullable<GroupListResponse["subscription"]>;
 type GroupCardDto = NonNullable<NonNullable<GroupSections["favorites"]>[number]>;
 
+type DeletedTaskResponseApi =
+    | paths["/api/Task/{groupId}/deleted-task"]["get"]["responses"][200]["content"]["application/json"]
+    | paths["/api/Task/{groupId}/deleted-task"]["get"]["responses"][200]["content"]["text/json"]
+    | paths["/api/Task/{groupId}/deleted-task"]["get"]["responses"][200]["content"]["text/plain"];
+
 type RequestDocumentUploadRequest = components["schemas"]["RequestDocumentUploadRequest"];
 type DocumentItem = components["schemas"]["DocumentItem"];
 type AIQuestionRequest = components["schemas"]["AIQuestionRequest"];
@@ -35,6 +40,7 @@ type AIAskResponseApi =
     | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["application/json"]
     | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/json"]
     | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/plain"];
+
 type AIAskStreamRequest = NonNullable<
     paths["/api/ai/ask/stream"]["post"]["requestBody"]
 >["content"]["application/json"];
@@ -42,6 +48,10 @@ type AIAskStreamRequest = NonNullable<
 function getToken() {
     if (typeof window === "undefined") return "";
     return localStorage.getItem("accessToken") || localStorage.getItem("token") || localStorage.getItem("jwt") || "";
+}
+
+function getBaseUrl() {
+    return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
 }
 
 function toInitials(firstName?: string | null, lastName?: string | null) {
@@ -72,9 +82,34 @@ function mapRole(role?: string | null): GroupRole {
     return "member";
 }
 
-function mapGroup(item: GroupCardDto): Group {
+async function fetchDeletedTaskCount(groupId: string): Promise<number> {
+    const baseUrl = getBaseUrl();
+    const token = getToken();
+
+    if (!groupId) return 0;
+
+    const res = await fetch(`${baseUrl}/Task/${encodeURIComponent(groupId)}/deleted-task`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        return 0;
+    }
+
+    const json = (await res.json()) as DeletedTaskResponseApi;
+    return Array.isArray(json.data) ? json.data.length : 0;
+}
+
+function mapGroup(item: GroupCardDto, deletedTaskCount: number): Group {
     const name = item.name || "";
     const preview = item.membersPreview || [];
+    const rawTaskCount = item.taskCount ?? 0;
+    const activeTaskCount = Math.max(0, rawTaskCount - deletedTaskCount);
 
     return {
         id: item.id || "",
@@ -82,7 +117,7 @@ function mapGroup(item: GroupCardDto): Group {
         description: item.description || "",
         role: mapRole(item.role),
         membersCount: item.memberCount ?? 0,
-        tasksCount: item.taskCount ?? 0,
+        tasksCount: activeTaskCount,
         createdByInitials: toInitials(item.createdBy?.firstName, item.createdBy?.lastName),
         memberInitials: preview.map((u) => toInitials(u.firstName, u.lastName)),
         isStarred: !!item.isFavorite,
@@ -91,8 +126,20 @@ function mapGroup(item: GroupCardDto): Group {
     };
 }
 
+async function mapGroupsWithDeletedCount(items: GroupCardDto[]): Promise<Group[]> {
+    const mapped = await Promise.all(
+        items.map(async (item) => {
+            const groupId = item.id || "";
+            const deletedTaskCount = groupId ? await fetchDeletedTaskCount(groupId) : 0;
+            return mapGroup(item, deletedTaskCount);
+        })
+    );
+
+    return mapped;
+}
+
 export async function fetchGroupsPageData(): Promise<GroupsPageData> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}/group`, {
@@ -116,19 +163,29 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     const subscription = data?.subscription as SubscriptionInfo | undefined;
     const sections = data?.sections as GroupSections | undefined;
 
+    const favoriteItems = ((sections?.favorites || []) as GroupCardDto[]).filter(Boolean);
+    const managedItems = ((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean);
+    const independentItems = ((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean);
+
+    const [favorites, managed, independent] = await Promise.all([
+        mapGroupsWithDeletedCount(favoriteItems),
+        mapGroupsWithDeletedCount(managedItems),
+        mapGroupsWithDeletedCount(independentItems)
+    ]);
+
     return {
         usage: {
             current: subscription?.groupCreated ?? 0,
             max: subscription?.groupLimit ?? 0
         },
-        favorites: (sections?.favorites || []).map((x) => mapGroup(x as GroupCardDto)),
-        managed: (sections?.studioGroups || []).map((x) => mapGroup(x as GroupCardDto)),
-        independent: (sections?.independentGroups || []).map((x) => mapGroup(x as GroupCardDto))
+        favorites,
+        managed,
+        independent
     };
 }
 
 async function apiFetch(path: string, method: "POST" | "DELETE", body: unknown) {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}${path}`, {
@@ -165,7 +222,7 @@ export async function removeFavourite(groupId: string) {
 }
 
 export async function requestDocumentUpload(payload: RequestDocumentUploadRequest) {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}/documents/request-upload`, {
@@ -193,7 +250,7 @@ export async function requestDocumentUpload(payload: RequestDocumentUploadReques
 }
 
 export async function completeDocumentUpload(attachmentId: string) {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}/documents/${attachmentId}/complete`, {
@@ -212,7 +269,7 @@ export async function completeDocumentUpload(attachmentId: string) {
 }
 
 export async function fetchGroupDocuments(groupId: string): Promise<DocumentItem[]> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}/documents/group/${groupId}`, {
@@ -234,7 +291,7 @@ export async function fetchGroupDocuments(groupId: string): Promise<DocumentItem
 }
 
 export async function deleteGroupDocument(attachmentId: string) {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}/documents/${attachmentId}`, {
@@ -253,7 +310,7 @@ export async function deleteGroupDocument(attachmentId: string) {
 }
 
 export async function getDocumentDownloadUrl(attachmentId: string, expirationMinutes?: number) {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
     const query =
         typeof expirationMinutes === "number" ? `?expirationMinutes=${encodeURIComponent(expirationMinutes)}` : "";
@@ -334,7 +391,7 @@ async function extractApiErrorMessage(res: Response): Promise<string> {
             return parsed.message;
         }
     } catch {
-        // Keep original text when body is not JSON.
+        // ignore
     }
 
     return text;
@@ -354,17 +411,12 @@ function parseSseChunk(data: string): string {
         switch (parsed.type) {
             case "chunk":
                 return typeof parsed.content === "string" ? parsed.content : "";
-
             case "metadata":
-                // metadata không phải text trả về
                 return "";
-
             case "done":
                 return "";
-
             case "error":
                 throw new Error(typeof parsed.message === "string" ? parsed.message : "AI error");
-
             default:
                 return "";
         }
@@ -395,7 +447,7 @@ function parseSseBlock(block: string): ParsedSseBlock {
     if (trimmed === "[DONE]") return { chunk: "", done: true };
 
     try {
-        const parsed = JSON.parse(trimmed) as { type?: unknown; message?: unknown; content?: unknown };
+        const parsed = JSON.parse(trimmed) as { type?: unknown; message?: unknown };
         if (parsed.type === "done") return { chunk: "", done: true };
         if (parsed.type === "error") {
             throw new Error(typeof parsed.message === "string" ? parsed.message : "AI error");
@@ -413,7 +465,7 @@ export type AskGroupAiResult = {
 };
 
 export async function askGroupAi(payload: AIQuestionRequest): Promise<AskGroupAiResult> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}/ai/ask`, {
@@ -448,7 +500,7 @@ export async function askGroupAiStream(
         onChunk?: (fullText: string, delta: string) => void;
     }
 ): Promise<AskGroupAiResult> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    const baseUrl = getBaseUrl();
     const token = getToken();
 
     const res = await fetch(`${baseUrl}/ai/ask/stream`, {
@@ -497,9 +549,7 @@ export async function askGroupAiStream(
             }
         }
 
-        if (doneByEvent) {
-            break;
-        }
+        if (doneByEvent) break;
     }
 
     buffer += decoder.decode();

@@ -43,7 +43,6 @@ export default function Login() {
         resolver: zodResolver(loginSchema)
     });
 
-    // ✅ Submit handler
     const onSubmit = async (data: LoginFormData) => {
         try {
             const result = await apiPost<AuthTokens>(
@@ -178,9 +177,9 @@ export default function Login() {
             <div className="w-full max-w-md">
                 {/* ✅ CARD */}
                 <div className="rounded-xl bg-white p-8 shadow-xl">
-                    {/* ✅ LOGO Study Studio */}
-                    <Logo className="mb-6" />
-
+                    <Link href={`/${locale}/`} className="mb-6 flex items-center justify-center">
+                        <Logo className="mb-6" />
+                    </Link>
                     {/* ✅ HEADER */}
                     <div className="mb-6 text-center">
                         <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("title")}</h1>

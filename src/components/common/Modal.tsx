@@ -113,7 +113,7 @@ export function Modal({
                 className={twMerge("relative z-10 w-full rounded-lg bg-white shadow-xl", sizeStyles[size], className)}>
                 {/* Header */}
                 {(title || showCloseButton) && (
-                    <div className="flex items-center justify-between border-[#8A8A8A] border-b px-6 py-4">
+                    <div className="flex items-center justify-between px-6 py-4">
                         {title && (
                             <h2 id="modal-title" className="font-semibold text-[#261E33] text-xl">
                                 {title}
@@ -123,7 +123,7 @@ export function Modal({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="ml-auto rounded-lg p-1.5 text-[#6F6B99] transition-colors hover:bg-[#F8F8F8] focus:outline-none focus:ring-2 focus:ring-[#4C6AA8]"
+                                className="ml-auto rounded-lg p-1.5 text-[#6F6B99] transition-colors hover:bg-[#F8F8F8]"
                                 aria-label="Close modal">
                                 <svg
                                     className="h-5 w-5"

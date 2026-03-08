@@ -1,0 +1,859 @@
+"use client";
+
+import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import * as React from "react";
+import { createPortal } from "react-dom";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/dist/style.css";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+
+function cn(...classes: Array<string | false | null | undefined>) {
+    return classes.filter(Boolean).join(" ");
+}
+
+function buildInitials(name?: string | null) {
+    const s = String(name ?? "").trim();
+    if (!s) return "U";
+    const parts = s.split(/\s+/).filter(Boolean);
+    const a = parts[0]?.[0] ?? "";
+    const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    return `${a}${b}`.toUpperCase() || "U";
+}
+
+function parseDateString(value?: string) {
+    if (!value) return undefined;
+    const [y, m, d] = value.split("-").map(Number);
+    if (!y || !m || !d) return undefined;
+    return new Date(y, m - 1, d);
+}
+
+function formatDateToInputValue(date?: Date) {
+    if (!date) return "";
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+function addDays(date: Date, amount: number) {
+    const next = new Date(date);
+    next.setDate(next.getDate() + amount);
+    return next;
+}
+
+function startOfDay(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatDateDisplay(value?: string) {
+    const date = parseDateString(value);
+    if (!date) return "Select a date";
+
+    const today = startOfDay(new Date());
+    const target = startOfDay(date);
+    const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+
+    return new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: target.getFullYear() !== today.getFullYear() ? "numeric" : undefined
+    }).format(target);
+}
+
+export type TaskPriority = "low" | "medium" | "high";
+export type TaskSeverity = "minor" | "moderate" | "major" | "critical";
+
+export type TaskFormValues = {
+    title: string;
+    description: string;
+    assigneeId: string | null;
+    statusId: string | null;
+    priority: TaskPriority;
+    severity: TaskSeverity;
+    startDate?: string;
+    dueDate?: string;
+};
+
+export type TaskFormOption = {
+    value: string;
+    label: string;
+    avatarUrl?: string | null;
+};
+
+type Props = {
+    open: boolean;
+    onClose: () => void;
+    onSubmit: (values: TaskFormValues) => Promise<void> | void;
+    members?: TaskFormOption[];
+    statuses?: TaskFormOption[];
+    defaultStatusId?: string | null;
+    defaultAssigneeId?: string | null;
+    defaultPriority?: TaskPriority;
+    defaultSeverity?: TaskSeverity;
+};
+
+function priorityTone(value: TaskPriority) {
+    if (value === "high") return "text-rose-600";
+    if (value === "medium") return "text-amber-700";
+    return "text-emerald-700";
+}
+
+function severityTone(value: TaskSeverity) {
+    if (value === "critical") return "text-red-600";
+    if (value === "major") return "text-orange-600";
+    if (value === "moderate") return "text-yellow-500";
+    return "text-sky-600";
+}
+
+function priorityLabel(value: TaskPriority) {
+    if (value === "high") return "High";
+    if (value === "medium") return "Medium";
+    return "Low";
+}
+
+function severityLabel(value: TaskSeverity) {
+    if (value === "critical") return "Critical";
+    if (value === "major") return "Major";
+    if (value === "moderate") return "Moderate";
+    return "Minor";
+}
+
+const selectItemClassName =
+    "cursor-pointer rounded-xl px-3 py-2 text-sm text-zinc-900 outline-none data-highlighted:bg-zinc-100 hover:bg-zinc-100 focus:bg-zinc-100";
+
+const monthOptions = [
+    { value: "0", label: "January" },
+    { value: "1", label: "February" },
+    { value: "2", label: "March" },
+    { value: "3", label: "April" },
+    { value: "4", label: "May" },
+    { value: "5", label: "June" },
+    { value: "6", label: "July" },
+    { value: "7", label: "August" },
+    { value: "8", label: "September" },
+    { value: "9", label: "October" },
+    { value: "10", label: "November" },
+    { value: "11", label: "December" }
+] as const;
+
+type PopupPosition = {
+    top: number;
+    left: number;
+    width: number;
+};
+
+type TrelloDatePickerProps = {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    min?: string;
+};
+
+function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps) {
+    const [open, setOpen] = React.useState(false);
+    const [mounted, setMounted] = React.useState(false);
+    const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
+
+    const rootRef = React.useRef<HTMLDivElement | null>(null);
+    const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+
+    const selectedDate = React.useMemo(() => parseDateString(value), [value]);
+    const minDate = React.useMemo(() => parseDateString(min), [min]);
+
+    const initialMonth = React.useMemo(() => selectedDate ?? minDate ?? new Date(), [selectedDate, minDate]);
+    const [month, setMonth] = React.useState<Date>(initialMonth);
+
+    React.useEffect(() => setMounted(true), []);
+
+    React.useEffect(() => {
+        if (open) {
+            setMonth(selectedDate ?? minDate ?? new Date());
+        }
+    }, [open, selectedDate, minDate]);
+
+    const updatePopupPosition = React.useCallback(() => {
+        const trigger = triggerRef.current;
+        if (!trigger) return;
+
+        const rect = trigger.getBoundingClientRect();
+        const popupWidth = 420;
+        const popupHeight = 560;
+        const gap = 8;
+        const viewportPadding = 12;
+
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        const shouldOpenUp = spaceBelow < popupHeight && spaceAbove > spaceBelow;
+
+        let top = shouldOpenUp ? rect.top - popupHeight - gap : rect.bottom + gap;
+        let left = rect.left;
+
+        if (left + popupWidth > window.innerWidth - viewportPadding) {
+            left = window.innerWidth - popupWidth - viewportPadding;
+        }
+
+        if (left < viewportPadding) {
+            left = viewportPadding;
+        }
+
+        if (top < viewportPadding) {
+            top = viewportPadding;
+        }
+
+        if (top + popupHeight > window.innerHeight - viewportPadding) {
+            top = Math.max(viewportPadding, window.innerHeight - popupHeight - viewportPadding);
+        }
+
+        setPopupPosition({
+            top,
+            left,
+            width: popupWidth
+        });
+    }, []);
+
+    React.useEffect(() => {
+        if (!open) return;
+
+        updatePopupPosition();
+
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+            const popup = rootRef.current;
+            const trigger = triggerRef.current;
+
+            if (popup?.contains(target)) return;
+            if (trigger?.contains(target)) return;
+
+            setOpen(false);
+        };
+
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setOpen(false);
+        };
+
+        const handleReposition = () => updatePopupPosition();
+
+        document.addEventListener("mousedown", handleClickOutside);
+        window.addEventListener("keydown", handleEsc);
+        window.addEventListener("resize", handleReposition);
+        window.addEventListener("scroll", handleReposition, true);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            window.removeEventListener("keydown", handleEsc);
+            window.removeEventListener("resize", handleReposition);
+            window.removeEventListener("scroll", handleReposition, true);
+        };
+    }, [open, updatePopupPosition]);
+
+    const pickDate = (date?: Date) => {
+        if (!date) return;
+
+        const normalized = startOfDay(date);
+
+        if (minDate && normalized < startOfDay(minDate)) return;
+
+        onChange(formatDateToInputValue(normalized));
+        setOpen(false);
+    };
+
+    const yearOptions = React.useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        const startYear = Math.min(minDate?.getFullYear() ?? currentYear - 5, currentYear - 5);
+        const endYear = currentYear + 10;
+
+        return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+    }, [minDate]);
+
+    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const nextMonth = Number(e.target.value);
+        setMonth(new Date(month.getFullYear(), nextMonth, 1));
+    };
+
+    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const nextYear = Number(e.target.value);
+        setMonth(new Date(nextYear, month.getMonth(), 1));
+    };
+
+    const goPrevMonth = () => {
+        const next = new Date(month.getFullYear(), month.getMonth() - 1, 1);
+
+        if (minDate) {
+            const minMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            if (next < minMonth) return;
+        }
+
+        setMonth(next);
+    };
+
+    const goNextMonth = () => {
+        setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
+    };
+
+    const isPrevDisabled = React.useMemo(() => {
+        if (!minDate) return false;
+        const prev = new Date(month.getFullYear(), month.getMonth() - 1, 1);
+        const minMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+        return prev < minMonth;
+    }, [month, minDate]);
+
+    const popup =
+        mounted && open && popupPosition
+            ? createPortal(
+                <div
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                    style={{
+                        top: popupPosition.top,
+                        left: popupPosition.left,
+                        width: popupPosition.width
+                    }}
+                >
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <select
+                                value={month.getMonth()}
+                                onChange={handleMonthChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
+                            >
+                                {monthOptions.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
+
+                        <div className="relative w-[140px]">
+                            <select
+                                value={month.getFullYear()}
+                                onChange={handleYearChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
+                            >
+                                {yearOptions.map((year) => (
+                                    <option key={year} value={year}>
+                                        {year}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
+                    </div>
+
+                    <div className="rounded-[20px] border border-zinc-200 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={goPrevMonth}
+                                disabled={isPrevDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+
+                            <div className="text-[18px] font-bold text-zinc-900">
+                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={goNextMonth}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={minDate ? { before: minDate } : undefined}
+                            showOutsideDays
+                            className="w-full"
+                            styles={{
+                                day: {
+                                    outline: "none",
+                                    boxShadow: "none"
+                                },
+                                button: {
+                                    outline: "none",
+                                    boxShadow: "none"
+                                }
+                            }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                caption: "hidden",
+                                table: "w-full border-collapse",
+                                tbody: "w-full",
+                                head_row: "flex w-full justify-between",
+                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                row: "mt-2 flex w-full justify-between",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                day_button:
+                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                selected: "!bg-orange-500 !text-white",
+                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                today: "text-orange-600 font-bold",
+                                day_today: "text-orange-600 font-bold",
+                                outside: "text-zinc-300",
+                                day_outside: "text-zinc-300",
+                                disabled: "text-zinc-300 opacity-40",
+                                day_disabled: "text-zinc-300 opacity-40",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => pickDate(new Date())}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
+                        >
+                            Today
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 1))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
+                        >
+                            Tomorrow
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 7))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
+                        >
+                            Next week
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
+                        >
+                            No date
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )
+            : null;
+
+    return (
+        <>
+            <div className="relative">
+                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+
+                <button
+                    ref={triggerRef}
+                    type="button"
+                    onClick={() => setOpen((v) => !v)}
+                    className={cn(
+                        "mt-2 flex h-11 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
+                        open
+                            ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
+                            : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
+                    )}
+                >
+                    <div className="flex min-w-0 items-center gap-2">
+                        <div
+                            className={cn(
+                                "grid h-7 w-7 shrink-0 place-items-center rounded-md",
+                                open ? "bg-orange-100 text-orange-600" : "bg-zinc-100 text-zinc-500"
+                            )}
+                        >
+                            <CalendarDays className="h-4 w-4" />
+                        </div>
+
+                        <span
+                            className={cn(
+                                "truncate text-left",
+                                value ? "font-medium text-zinc-900" : "text-zinc-400"
+                            )}
+                        >
+                            {formatDateDisplay(value)}
+                        </span>
+                    </div>
+                </button>
+            </div>
+
+            {popup}
+        </>
+    );
+}
+
+export default function TaskFormModal({
+    open,
+    onClose,
+    onSubmit,
+    members = [],
+    statuses = [],
+    defaultStatusId = null,
+    defaultAssigneeId = null,
+    defaultPriority = "low",
+    defaultSeverity = "minor"
+}: Props) {
+    const [mounted, setMounted] = React.useState(false);
+
+    const [title, setTitle] = React.useState("");
+    const [description, setDescription] = React.useState("");
+    const [assigneeId, setAssigneeId] = React.useState<string | null>(defaultAssigneeId);
+    const [statusId, setStatusId] = React.useState<string | null>(defaultStatusId ?? statuses[0]?.value ?? null);
+    const [priority, setPriority] = React.useState<TaskPriority>(defaultPriority);
+    const [severity, setSeverity] = React.useState<TaskSeverity>(defaultSeverity);
+
+    const [startDate, setStartDate] = React.useState("");
+    const [dueDate, setDueDate] = React.useState("");
+
+    const [submitting, setSubmitting] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+
+    React.useEffect(() => setMounted(true), []);
+
+    React.useEffect(() => {
+        if (!open) return;
+
+        setError(null);
+        setSubmitting(false);
+        setTitle("");
+        setDescription("");
+        setAssigneeId(defaultAssigneeId);
+        setStatusId(defaultStatusId ?? statuses[0]?.value ?? null);
+        setPriority(defaultPriority);
+        setSeverity(defaultSeverity);
+        setStartDate("");
+        setDueDate("");
+    }, [open, defaultAssigneeId, defaultStatusId, defaultPriority, defaultSeverity, statuses]);
+
+    React.useEffect(() => {
+        if (!open) return;
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [open, onClose]);
+
+    const selectedStatusName = React.useMemo(() => {
+        return statuses.find((s) => s.value === statusId)?.label ?? "No status";
+    }, [statuses, statusId]);
+
+    const selectedAssignee = React.useMemo(() => {
+        return members.find((m) => m.value === assigneeId) ?? null;
+    }, [members, assigneeId]);
+
+    const selectedAssigneeDisplay = React.useMemo(() => {
+        if (selectedAssignee) return selectedAssignee;
+        return { value: "unassigned", label: "Unassigned", avatarUrl: null };
+    }, [selectedAssignee]);
+
+    const canSubmit = title.trim().length > 0 && !submitting;
+
+    const handleSubmit = async () => {
+        const t = title.trim();
+
+        if (!t) {
+            setError("Vui lòng nhập tên công việc.");
+            return;
+        }
+
+        if (startDate && dueDate && startDate > dueDate) {
+            setError("Ngày bắt đầu phải nhỏ hơn hoặc bằng hạn hoàn thành.");
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            setError(null);
+
+            const payload: TaskFormValues = {
+                title: t,
+                description: description.trim(),
+                assigneeId,
+                statusId,
+                priority,
+                severity
+            };
+
+            if (startDate) payload.startDate = startDate;
+            if (dueDate) payload.dueDate = dueDate;
+
+            await onSubmit(payload);
+            onClose();
+        } catch (e: any) {
+            setError(e?.message ?? "Tạo công việc thất bại");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (!(open && mounted)) return null;
+
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+            style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
+            onPointerDown={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
+        >
+            <div
+                className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl"
+                onPointerDown={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                    <div className="min-w-0">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                            {selectedStatusName}
+                        </span>
+
+                        <input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Task name"
+                            className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                        />
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
+                        aria-label="Close"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+
+                <div className="px-7 py-5">
+                    {error ? (
+                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                            {error}
+                        </div>
+                    ) : null}
+
+                    <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                        <div>
+                            <div className="text-sm font-semibold text-zinc-600">Assignee</div>
+                            <Select
+                                value={assigneeId ?? "unassigned"}
+                                onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}
+                            >
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        {selectedAssigneeDisplay.avatarUrl ? (
+                                            <img
+                                                src={selectedAssigneeDisplay.avatarUrl}
+                                                alt={selectedAssigneeDisplay.label}
+                                                className="h-6 w-6 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                {buildInitials(selectedAssigneeDisplay.label)}
+                                            </div>
+                                        )}
+                                        <span className="truncate">{selectedAssigneeDisplay.label}</span>
+                                    </div>
+                                </SelectTrigger>
+
+                                <SelectContent
+                                    position="popper"
+                                    side="bottom"
+                                    align="start"
+                                    sideOffset={8}
+                                    avoidCollisions
+                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
+                                >
+                                    <SelectItem value="unassigned" className={selectItemClassName}>
+                                        <div className="flex items-center gap-2">
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                U
+                                            </div>
+                                            <span>Unassigned</span>
+                                        </div>
+                                    </SelectItem>
+
+                                    {members.map((m) => (
+                                        <SelectItem key={m.value} value={m.value} className={selectItemClassName}>
+                                            <div className="flex items-center gap-2">
+                                                {m.avatarUrl ? (
+                                                    <img
+                                                        src={m.avatarUrl}
+                                                        alt={m.label}
+                                                        className="h-6 w-6 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                        {buildInitials(m.label)}
+                                                    </div>
+                                                )}
+                                                <span className="truncate">{m.label}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <Select
+                                value={statusId ?? "no-status"}
+                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}
+                            >
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                                    <span className="truncate">{selectedStatusName}</span>
+                                </SelectTrigger>
+
+                                <SelectContent
+                                    position="popper"
+                                    side="bottom"
+                                    align="start"
+                                    sideOffset={8}
+                                    avoidCollisions
+                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
+                                >
+                                    <SelectItem value="no-status" className={selectItemClassName}>
+                                        No status
+                                    </SelectItem>
+                                    {statuses.map((s) => (
+                                        <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
+                                            {s.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                            <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                    <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
+                                        <span className="h-2 w-2 rounded-full bg-current" />
+                                        {priorityLabel(priority)}
+                                    </span>
+                                </SelectTrigger>
+
+                                <SelectContent
+                                    position="popper"
+                                    side="bottom"
+                                    align="end"
+                                    sideOffset={8}
+                                    avoidCollisions
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
+                                >
+                                    <SelectItem value="low" className={selectItemClassName}>
+                                        Low
+                                    </SelectItem>
+                                    <SelectItem value="medium" className={selectItemClassName}>
+                                        Medium
+                                    </SelectItem>
+                                    <SelectItem value="high" className={selectItemClassName}>
+                                        High
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <TrelloDatePicker label="Start Date" value={startDate} onChange={setStartDate} />
+
+                        <TrelloDatePicker
+                            label="Due Date"
+                            value={dueDate}
+                            onChange={setDueDate}
+                            min={startDate || undefined}
+                        />
+
+                        <div>
+                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
+                            <Select value={severity} onValueChange={(v) => setSeverity(v as TaskSeverity)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                    <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
+                                        <span className="h-2 w-2 rounded-full bg-current" />
+                                        {severityLabel(severity)}
+                                    </span>
+                                </SelectTrigger>
+
+                                <SelectContent
+                                    position="popper"
+                                    side="bottom"
+                                    align="end"
+                                    sideOffset={8}
+                                    avoidCollisions
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
+                                >
+                                    <SelectItem value="minor" className={selectItemClassName}>
+                                        Minor
+                                    </SelectItem>
+                                    <SelectItem value="moderate" className={selectItemClassName}>
+                                        Moderate
+                                    </SelectItem>
+                                    <SelectItem value="major" className={selectItemClassName}>
+                                        Major
+                                    </SelectItem>
+                                    <SelectItem value="critical" className={selectItemClassName}>
+                                        Critical
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="mt-6">
+                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="(No description)"
+                            className="mt-2 min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            void handleSubmit();
+                        }}
+                        disabled={!canSubmit}
+                        className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
+                    >
+                        {submitting ? "Creating..." : "Create task"}
+                    </button>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+}

@@ -178,7 +178,7 @@ export function InviteMemberModal({
                 document.execCommand("copy");
                 document.body.removeChild(ta);
                 setCopied(true);
-            } catch { }
+            } catch {}
         }
     };
 

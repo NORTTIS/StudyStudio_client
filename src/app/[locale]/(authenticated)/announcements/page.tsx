@@ -110,7 +110,7 @@ export default function AnnouncementsPage() {
     }, [selectedId]);
 
     const handleMarkAsRead = async (id: string) => {
-        await markAnnouncementAsRead(id);
+        await markAnnouncementAsRead(id, locale);
         setAnnouncements((current) => current.map((item) => (item.id === id ? { ...item, read: true } : item)));
     };
 

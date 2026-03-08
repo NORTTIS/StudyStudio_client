@@ -15,7 +15,6 @@ const userNavigation = [
     { name: "Groups", href: "/group", icon: Users },
     { name: "Master", href: "/master", icon: BarChart3 },
     { name: "Announcements", href: "/announcements", icon: Bell },
-    { name: "AI Q&A", href: "/ai-qna", icon: GraduationCap }
 ];
 
 const adminNavigation = [
