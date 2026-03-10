@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
+import type { components } from "@/api/types";
 import { sendReport } from "@/app/[locale]/(authenticated)/settings/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,16 @@ interface FAQItem {
     answer: string;
 }
 
+type FeedbackType = "bug" | "feedback" | "support" | "other";
+type ReportType = components["schemas"]["ReportType"];
+
+const FEEDBACK_TYPE_TO_REPORT_TYPE: Record<FeedbackType, ReportType> = {
+    bug: 0,
+    feedback: 1,
+    support: 2,
+    other: 3
+};
+
 export default function HelpPage() {
     const t = useTranslations("HelpPage");
     const pathname = usePathname();
@@ -24,7 +35,7 @@ export default function HelpPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [helpFormData, setHelpFormData] = useState({
-        feedbackType: "bug",
+        feedbackType: "bug" as FeedbackType,
         email: "",
         title: "",
         content: ""
@@ -104,7 +115,7 @@ export default function HelpPage() {
                     email: helpFormData.email,
                     title: helpFormData.title,
                     content: helpFormData.content,
-                    type: helpFormData.feedbackType
+                    type: FEEDBACK_TYPE_TO_REPORT_TYPE[helpFormData.feedbackType]
                 },
                 locale
             );
@@ -169,7 +180,7 @@ export default function HelpPage() {
                                 onChange={(e) =>
                                     setHelpFormData((prev) => ({
                                         ...prev,
-                                        feedbackType: e.target.value
+                                        feedbackType: e.target.value as FeedbackType
                                     }))
                                 }
                                 className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2.5 text-[#261E33] text-sm focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D]">
@@ -265,9 +276,8 @@ export default function HelpPage() {
                                 <span className="font-semibold text-[#261E33]">{item.question}</span>
 
                                 <svg
-                                    className={`h-5 w-5 text-[#6F6B99] transition-transform ${
-                                        expandedFAQ === item.id ? "rotate-180" : ""
-                                    }`}
+                                    className={`h-5 w-5 text-[#6F6B99] transition-transform ${expandedFAQ === item.id ? "rotate-180" : ""
+                                        }`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24">

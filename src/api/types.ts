@@ -157,6 +157,198 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/billing/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    PageNumber?: number;
+                    PageSize?: number;
+                    PaymentStatus?: components["schemas"]["PaymentStatus"];
+                    SearchTerm?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BillingHistoryResponseApiResponse"];
+                        "text/json": components["schemas"]["BillingHistoryResponseApiResponse"];
+                        "text/plain": components["schemas"]["BillingHistoryResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    PageNumber?: number;
+                    PageSize?: number;
+                    SearchTerm?: string;
+                    Status?: components["schemas"]["ReportStatus"];
+                    Type?: components["schemas"]["ReportType"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportListResponseApiResponse"];
+                        "text/json": components["schemas"]["ReportListResponseApiResponse"];
+                        "text/plain": components["schemas"]["ReportListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateReportRequest"];
+                    "application/json": components["schemas"]["UpdateReportRequest"];
+                    "text/json": components["schemas"]["UpdateReportRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportItemResponseApiResponse"];
+                        "text/json": components["schemas"]["ReportItemResponseApiResponse"];
+                        "text/plain": components["schemas"]["ReportItemResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/subscription-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateSubscriptionPlanRequest"];
+                    "application/json": components["schemas"]["UpdateSubscriptionPlanRequest"];
+                    "text/json": components["schemas"]["UpdateSubscriptionPlanRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubscriptionPlanDetailApiResponse"];
+                        "text/json": components["schemas"]["SubscriptionPlanDetailApiResponse"];
+                        "text/plain": components["schemas"]["SubscriptionPlanDetailApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/subscription-plans/statistics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubscriptionStatisticsResponseApiResponse"];
+                        "text/json": components["schemas"]["SubscriptionStatisticsResponseApiResponse"];
+                        "text/plain": components["schemas"]["SubscriptionStatisticsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/templates": {
         parameters: {
             query?: never;
@@ -3786,6 +3978,44 @@ export interface components {
          * @enum {integer}
          */
         BillingCycle: 0 | 1;
+        BillingHistoryItem: {
+            /** Format: double */
+            amount?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            orderCode?: number;
+            /** Format: date-time */
+            paidAt?: string | null;
+            /** Format: uuid */
+            paymentId?: string;
+            paymentMethod?: string | null;
+            paymentStatus?: components["schemas"]["PaymentStatus"];
+            /** Format: uuid */
+            planId?: string;
+            planName?: string | null;
+            userEmail?: string | null;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
+        BillingHistoryResponse: {
+            items?: components["schemas"]["BillingHistoryItem"][] | null;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            readonly totalPages?: number;
+        };
+        BillingHistoryResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["BillingHistoryResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         ChangePasswordRequest: {
             confirmPassword: string;
             currentPassword: string;
@@ -4274,7 +4504,7 @@ export interface components {
             paymentId?: string;
             /** Format: uuid */
             planId?: string;
-            status?: string | null;
+            status?: components["schemas"]["PaymentStatus"];
         };
         PaymentHistoryResponse: {
             paymentHistories?: components["schemas"]["PaymentHistory"][] | null;
@@ -4285,6 +4515,11 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        PaymentStatus: 0 | 1 | 2 | 3;
         PaymentStatusResponse: {
             /** Format: double */
             amount?: number;
@@ -4296,7 +4531,7 @@ export interface components {
             paidAt?: string | null;
             /** Format: uuid */
             paymentId?: string;
-            paymentStatus?: string | null;
+            paymentStatus?: components["schemas"]["PaymentStatus"];
             planName?: string | null;
         };
         PaymentStatusResponseApiResponse: {
@@ -4396,13 +4631,77 @@ export interface components {
             /** Format: uuid */
             taskId?: string;
         };
+        ReportItemResponse: {
+            adminNote?: string | null;
+            content?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            email?: string | null;
+            priority?: components["schemas"]["ReportPriority"];
+            /** Format: uuid */
+            reportId?: string;
+            status?: components["schemas"]["ReportStatus"];
+            title?: string | null;
+            type?: components["schemas"]["ReportType"];
+            /** Format: date-time */
+            updatedAt?: string | null;
+            /** Format: uuid */
+            userId?: string | null;
+        };
+        ReportItemResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["ReportItemResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        ReportListResponse: {
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            reportList?: components["schemas"]["ReportItemResponse"][] | null;
+            summary?: components["schemas"]["ReportSummaryResponse"];
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        ReportListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["ReportListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        ReportPriority: 0 | 1 | 2 | 3;
         ReportRequest: {
             content: string;
             /** Format: email */
             email: string;
             title: string;
-            type: string;
+            type: components["schemas"]["ReportType"];
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        ReportStatus: 0 | 1 | 2 | 3;
+        ReportSummaryResponse: {
+            /** Format: int32 */
+            totalInProgress?: number;
+            /** Format: int32 */
+            totalOpen?: number;
+            /** Format: int32 */
+            totalReport?: number;
+            /** Format: int32 */
+            totalResolved?: number;
+        };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        ReportType: 0 | 1 | 2 | 3;
         RequestDocumentUploadRequest: {
             contentType: string;
             fileName: string;
@@ -4497,6 +4796,34 @@ export interface components {
             /** Format: int32 */
             memberLimit?: number;
         };
+        SubscriptionPlanDetail: {
+            billingCycle?: components["schemas"]["BillingCycle"];
+            description?: string | null;
+            isActive?: boolean;
+            /** Format: int32 */
+            maxAiRequestsPerDay?: number;
+            /** Format: int32 */
+            maxGroups?: number;
+            /** Format: int32 */
+            maxMembersPerGroup?: number;
+            /** Format: int32 */
+            maxStorageMb?: number;
+            /** Format: int32 */
+            maxStudios?: number;
+            /** Format: uuid */
+            planId?: string;
+            planName?: string | null;
+            /** Format: double */
+            price?: number;
+            /** Format: int32 */
+            subscriberCount?: number;
+        };
+        SubscriptionPlanDetailApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["SubscriptionPlanDetail"];
+            message?: string | null;
+            status?: string | null;
+        };
         SubscriptionPlanItem: {
             billingCycle?: components["schemas"]["BillingCycle"];
             description?: string | null;
@@ -4522,6 +4849,16 @@ export interface components {
         SubscriptionPlanResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["SubscriptionPlanResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        SubscriptionStatisticsResponse: {
+            plans?: components["schemas"]["SubscriptionPlanDetail"][] | null;
+            userStats?: components["schemas"]["UserStatistics"];
+        };
+        SubscriptionStatisticsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["SubscriptionStatisticsResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -4751,6 +5088,13 @@ export interface components {
             taskPriority?: components["schemas"]["TaskPriority"];
             taskSeverity?: components["schemas"]["TaskSeverity"];
         };
+        UpdateReportRequest: {
+            adminNote?: string | null;
+            priority?: components["schemas"]["ReportPriority"];
+            /** Format: uuid */
+            reportId: string;
+            status?: components["schemas"]["ReportStatus"];
+        };
         UpdateStudioRequest: {
             description?: string | null;
             /** Format: uuid */
@@ -4768,6 +5112,26 @@ export interface components {
             data?: components["schemas"]["UpdateStudioResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        UpdateSubscriptionPlanRequest: {
+            billingCycle: components["schemas"]["BillingCycle"];
+            description: string;
+            isActive: boolean;
+            /** Format: int32 */
+            maxAiRequestsPerDay: number;
+            /** Format: int32 */
+            maxGroups: number;
+            /** Format: int32 */
+            maxMembersPerGroup: number;
+            /** Format: int32 */
+            maxStorageMb: number;
+            /** Format: int32 */
+            maxStudios: number;
+            /** Format: uuid */
+            planId: string;
+            planName: string;
+            /** Format: double */
+            price: number;
         };
         UpdateTaskRequest: {
             /** Format: uuid */
@@ -4853,6 +5217,16 @@ export interface components {
             data?: components["schemas"]["UserProfileResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        UserStatistics: {
+            /** Format: double */
+            conversionRate?: number;
+            /** Format: int32 */
+            freeUsers?: number;
+            /** Format: int32 */
+            premiumUsers?: number;
+            /** Format: int32 */
+            totalActiveUsers?: number;
         };
         Webhook: {
             code?: string | null;
