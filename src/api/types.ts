@@ -2391,6 +2391,203 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payment/{paymentId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    paymentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["PaymentStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["PaymentStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payment/{paymentId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    paymentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["PaymentStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["PaymentStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payment/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CreatePaymentRequest"];
+                    "application/json": components["schemas"]["CreatePaymentRequest"];
+                    "text/json": components["schemas"]["CreatePaymentRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreatePaymentResponseApiResponse"];
+                        "text/json": components["schemas"]["CreatePaymentResponseApiResponse"];
+                        "text/plain": components["schemas"]["CreatePaymentResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payment/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentHistoryResponseApiResponse"];
+                        "text/json": components["schemas"]["PaymentHistoryResponseApiResponse"];
+                        "text/plain": components["schemas"]["PaymentHistoryResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payment/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["Webhook"];
+                    "application/json": components["schemas"]["Webhook"];
+                    "text/json": components["schemas"]["Webhook"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports": {
         parameters: {
             query?: never;
@@ -2610,6 +2807,43 @@ export interface paths {
                         "application/json": components["schemas"]["StudioGroupListResponseApiResponse"];
                         "text/json": components["schemas"]["StudioGroupListResponseApiResponse"];
                         "text/plain": components["schemas"]["StudioGroupListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/SubscriptionPlan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubscriptionPlanResponseApiResponse"];
+                        "text/json": components["schemas"]["SubscriptionPlanResponseApiResponse"];
+                        "text/plain": components["schemas"]["SubscriptionPlanResponseApiResponse"];
                     };
                 };
             };
@@ -3547,6 +3781,11 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        BillingCycle: 0 | 1;
         ChangePasswordRequest: {
             confirmPassword: string;
             currentPassword: string;
@@ -3604,6 +3843,26 @@ export interface components {
         CreateInviteLinkResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["CreateInviteLinkResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        CreatePaymentRequest: {
+            /** Format: uuid */
+            planId?: string;
+        };
+        CreatePaymentResponse: {
+            /** Format: double */
+            amount?: number;
+            /** Format: int64 */
+            orderCode?: number;
+            /** Format: uuid */
+            paymentId?: string;
+            paymentUrl?: string | null;
+            planName?: string | null;
+        };
+        CreatePaymentResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["CreatePaymentResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -4008,6 +4267,44 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        PaymentHistory: {
+            /** Format: date-time */
+            paidAt?: string | null;
+            /** Format: uuid */
+            paymentId?: string;
+            /** Format: uuid */
+            planId?: string;
+            status?: string | null;
+        };
+        PaymentHistoryResponse: {
+            paymentHistories?: components["schemas"]["PaymentHistory"][] | null;
+        };
+        PaymentHistoryResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["PaymentHistoryResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        PaymentStatusResponse: {
+            /** Format: double */
+            amount?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            orderCode?: number;
+            /** Format: date-time */
+            paidAt?: string | null;
+            /** Format: uuid */
+            paymentId?: string;
+            paymentStatus?: string | null;
+            planName?: string | null;
+        };
+        PaymentStatusResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["PaymentStatusResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         PersonalTaskBoardResponse: {
             personalTaskStatuses?: components["schemas"]["TaskStatusDto"][] | null;
         };
@@ -4199,6 +4496,34 @@ export interface components {
             groupLimit?: number;
             /** Format: int32 */
             memberLimit?: number;
+        };
+        SubscriptionPlanItem: {
+            billingCycle?: components["schemas"]["BillingCycle"];
+            description?: string | null;
+            /** Format: int32 */
+            maxAiRequestsPerDay?: number;
+            /** Format: int32 */
+            maxGroups?: number;
+            /** Format: int32 */
+            maxMembersPerGroup?: number;
+            /** Format: int32 */
+            maxStorageMb?: number;
+            /** Format: int32 */
+            maxStudios?: number;
+            /** Format: uuid */
+            planId?: string;
+            planName?: string | null;
+            /** Format: double */
+            price?: number;
+        };
+        SubscriptionPlanResponse: {
+            plans?: components["schemas"]["SubscriptionPlanItem"][] | null;
+        };
+        SubscriptionPlanResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["SubscriptionPlanResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         TaskCommentDto: {
             /** Format: uuid */
@@ -4517,6 +4842,7 @@ export interface components {
             lastName?: string | null;
             phoneNumber?: string | null;
             status?: string | null;
+            subscriptionPlan?: components["schemas"]["SubscriptionPlanItem"];
             /** Format: date-time */
             updatedAt?: string;
             /** Format: uuid */
@@ -4527,6 +4853,33 @@ export interface components {
             data?: components["schemas"]["UserProfileResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        Webhook: {
+            code?: string | null;
+            data?: components["schemas"]["WebhookData"];
+            desc?: string | null;
+            signature?: string | null;
+            success?: boolean;
+        };
+        WebhookData: {
+            accountNumber?: string | null;
+            /** Format: int64 */
+            amount?: number;
+            code?: string | null;
+            counterAccountBankId?: string | null;
+            counterAccountBankName?: string | null;
+            counterAccountName?: string | null;
+            counterAccountNumber?: string | null;
+            currency?: string | null;
+            desc?: string | null;
+            description?: string | null;
+            /** Format: int64 */
+            orderCode?: number;
+            paymentLinkId?: string | null;
+            reference?: string | null;
+            transactionDateTime?: string | null;
+            virtualAccountName?: string | null;
+            virtualAccountNumber?: string | null;
         };
     };
     responses: never;
