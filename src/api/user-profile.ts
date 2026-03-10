@@ -3,7 +3,7 @@
  * Handles fetching and updating user profile data
  */
 
-import { type ApiResponse, apiFetch } from "@/api/api-client";
+import { type ApiResponse, apiGet } from "@/api/api-client";
 
 export interface UserProfile {
     userId: string;
@@ -23,6 +23,18 @@ export interface UserProfile {
     googleId: string | null;
     createdAt: string;
     updatedAt: string;
+    subscriptionPlan?: {
+        planId: string;
+        planName: string;
+        price: number;
+        billingCycle: number;
+        description: string;
+        maxAiRequestsPerDay: number;
+        maxGroups: number;
+        maxMembersPerGroup: number;
+        maxStorageMb: number;
+        maxStudios: number;
+    };
 }
 
 /**
@@ -30,9 +42,6 @@ export interface UserProfile {
  * @param locale - Current locale for API response messages
  */
 export async function getUserProfile(locale: string): Promise<ApiResponse<UserProfile>> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    return apiFetch<UserProfile>(`${baseUrl}/user-profile`, {
-        method: "GET",
-        locale
-    });
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    return apiGet<UserProfile>(`${baseUrl}/user-profile`, locale);
 }

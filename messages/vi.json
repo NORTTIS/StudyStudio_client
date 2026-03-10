@@ -369,7 +369,7 @@
         "currentPlan": {
             "title": "Gói đăng ký hiện tại",
             "subtitle": "Bạn hiện đang sử dụng gói",
-            "changeButton": "Thay đổi gói",
+            "changeButton": "Nâng cấp Premium",
             "cancelButton": "Hủy gói đăng ký",
             "activeBadge": "Đang hoạt động"
         },
@@ -383,7 +383,7 @@
                 "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
                 "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
                 "feature5": "20 lượt yêu cầu AI mỗi ngày",
-                "button": "Gói hiện tại"
+                "button": "Chuyển về gói Free"
             },
             "premium": {
                 "name": "Premium",
