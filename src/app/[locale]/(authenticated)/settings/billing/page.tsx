@@ -484,10 +484,11 @@ export default function BillingPage() {
                                 return (
                                     <div
                                         key={plan.id}
-                                        className={`rounded-2xl border-2 p-6 transition ${isCurrentPlan
+                                        className={`rounded-2xl border-2 p-6 transition ${
+                                            isCurrentPlan
                                                 ? "border-[#FF5F3D] bg-gray-50 opacity-75 shadow-lg"
                                                 : "border-[#E5E5E5] hover:border-gray-300"
-                                            }`}>
+                                        }`}>
                                         <h3 className={`font-bold text-lg ${isCurrentPlan ? "text-gray-600" : ""}`}>
                                             {plan.name}
                                         </h3>
@@ -500,10 +501,11 @@ export default function BillingPage() {
                                         <Button
                                             onClick={() => handlePlanChange(plan.id)}
                                             disabled={isCurrentPlan || isProcessing}
-                                            className={`mt-5 w-full gap-2 rounded-lg ${isCurrentPlan
+                                            className={`mt-5 w-full gap-2 rounded-lg ${
+                                                isCurrentPlan
                                                     ? "cursor-not-allowed bg-gray-300 text-gray-600 hover:bg-gray-300"
                                                     : ""
-                                                }`}>
+                                            }`}>
                                             {isProcessing && selectedPlan === plan.id ? (
                                                 "Đang xử lý..."
                                             ) : isCurrentPlan ? (
@@ -520,11 +522,13 @@ export default function BillingPage() {
                                             {plan.features.map((feature) => (
                                                 <p
                                                     key={feature}
-                                                    className={`flex gap-2 text-sm ${isCurrentPlan ? "text-gray-500" : "text-[#6F6B99]"
-                                                        }`}>
+                                                    className={`flex gap-2 text-sm ${
+                                                        isCurrentPlan ? "text-gray-500" : "text-[#6F6B99]"
+                                                    }`}>
                                                     <span
-                                                        className={`font-bold ${isCurrentPlan ? "text-gray-400" : "text-[#FF5F3D]"
-                                                            }`}>
+                                                        className={`font-bold ${
+                                                            isCurrentPlan ? "text-gray-400" : "text-[#FF5F3D]"
+                                                        }`}>
                                                         ✓
                                                     </span>
                                                     {feature}
@@ -566,10 +570,11 @@ export default function BillingPage() {
                                             billingHistory.map((item) => (
                                                 <tr
                                                     key={item.id}
-                                                    className={`border-t text-sm ${item.status === "PENDING"
+                                                    className={`border-t text-sm ${
+                                                        item.status === "PENDING"
                                                             ? "cursor-pointer transition-colors hover:bg-blue-50"
                                                             : ""
-                                                        }`}
+                                                    }`}
                                                     onClick={() => {
                                                         if (item.status === "PENDING") {
                                                             handleRetryPayment(item.id);
@@ -582,26 +587,27 @@ export default function BillingPage() {
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
                                                             <span
-                                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${item.status === "COMPLETED" ||
-                                                                        item.status === "SUCCESS"
+                                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
+                                                                    item.status === "COMPLETED" ||
+                                                                    item.status === "SUCCESS"
                                                                         ? "bg-green-100 text-green-800"
                                                                         : item.status === "PENDING"
-                                                                            ? "bg-yellow-100 text-yellow-800"
-                                                                            : item.status === "FAILED" ||
-                                                                                item.status === "CANCELLED"
-                                                                                ? "bg-red-100 text-red-800"
-                                                                                : "bg-gray-100 text-gray-800"
-                                                                    }`}>
+                                                                          ? "bg-yellow-100 text-yellow-800"
+                                                                          : item.status === "FAILED" ||
+                                                                              item.status === "CANCELLED"
+                                                                            ? "bg-red-100 text-red-800"
+                                                                            : "bg-gray-100 text-gray-800"
+                                                                }`}>
                                                                 {item.status === "COMPLETED" ||
-                                                                    item.status === "SUCCESS"
+                                                                item.status === "SUCCESS"
                                                                     ? "Thành công"
                                                                     : item.status === "PENDING"
-                                                                        ? "Đang xử lý"
-                                                                        : item.status === "FAILED"
-                                                                            ? "Thất bại"
-                                                                            : item.status === "CANCELLED"
-                                                                                ? "Đã hủy"
-                                                                                : item.status}
+                                                                      ? "Đang xử lý"
+                                                                      : item.status === "FAILED"
+                                                                        ? "Thất bại"
+                                                                        : item.status === "CANCELLED"
+                                                                          ? "Đã hủy"
+                                                                          : item.status}
                                                             </span>
                                                             {item.status === "PENDING" && (
                                                                 <Button
