@@ -22,6 +22,10 @@ type RefreshResponse = {
     data: AuthTokens | null;
 };
 
+type RefreshTokenRequest = {
+    refreshToken: string;
+};
+
 const STORAGE_KEYS = {
     ACCESS_TOKEN: "accessToken",
     REFRESH_TOKEN: "refreshToken",
@@ -33,6 +37,9 @@ const STORAGE_KEYS = {
  * Check if code is running in browser
  */
 const isBrowser = typeof window !== "undefined";
+
+// Mutex to prevent concurrent token refresh calls
+let refreshPromise: Promise<AuthTokens | null> | null = null;
 
 /**
  * Store authentication tokens and user data in localStorage and cookies
@@ -134,38 +141,55 @@ export function clearAuthTokens(): void {
  * @param locale - Current locale for Accept-Language header
  */
 export async function refreshAccessToken(locale = "vi"): Promise<AuthTokens | null> {
+    // If a refresh is already in progress, wait for it instead of starting another
+    if (refreshPromise) {
+        return refreshPromise;
+    }
+
     const refreshToken = getRefreshToken();
 
     if (!refreshToken) {
-        clearAuthTokens();
+        // No refresh token available, return null immediately
         return null;
     }
 
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept-Language": locale,
-                Authorization: `Bearer ${refreshToken}`
+    // Create the refresh promise and store it to prevent concurrent calls
+    refreshPromise = (async () => {
+        try {
+            const requestBody: RefreshTokenRequest = {
+                refreshToken
+            };
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept-Language": locale
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data: RefreshResponse = await response.json();
+
+            if (data.status === "success" && data.data) {
+                setAuthTokens(data.data);
+                return data.data;
             }
-        });
 
-        const data: RefreshResponse = await response.json();
-
-        if (data.status === "success" && data.data) {
-            setAuthTokens(data.data);
-            return data.data;
+            // Refresh failed, clear tokens
+            clearAuthTokens();
+            return null;
+        } catch {
+            // Network error, clear tokens
+            clearAuthTokens();
+            return null;
+        } finally {
+            // Clear the promise so future refreshes can proceed
+            refreshPromise = null;
         }
+    })();
 
-        // Refresh failed, clear tokens
-        clearAuthTokens();
-        return null;
-    } catch {
-        // Network error, clear tokens
-        clearAuthTokens();
-        return null;
-    }
+    return refreshPromise;
 }
 
 /**

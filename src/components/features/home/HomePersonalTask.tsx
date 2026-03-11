@@ -1,7 +1,5 @@
 "use client";
 
-import * as React from "react";
-import { createPortal } from "react-dom";
 import {
     type CollisionDetection,
     closestCenter,
@@ -28,7 +26,9 @@ import {
     verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import * as React from "react";
 import { DayPicker } from "react-day-picker";
+import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import {
     CalendarDays,
@@ -43,17 +43,14 @@ import {
     Trash2,
     X
 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
-type PersonalTaskBoardResponseApiResponse =
-    components["schemas"]["PersonalTaskBoardResponseApiResponse"];
-type PersonalTaskStatusResponseApiResponse =
-    components["schemas"]["PersonalTaskStatusResponseApiResponse"];
+type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
+type PersonalTaskStatusResponseApiResponse = components["schemas"]["PersonalTaskStatusResponseApiResponse"];
 type TaskItemResponseApiResponse = components["schemas"]["TaskItemResponseApiResponse"];
 type ObjectApiResponse = components["schemas"]["ObjectApiResponse"];
 type TaskItemResponse = components["schemas"]["TaskItemResponse"];
@@ -121,7 +118,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 function parseDateString(value?: string) {
     if (!value) return undefined;
     const [y, m, d] = value.split("-").map(Number);
-    if (!y || !m || !d) return undefined;
+    if (!(y && m && d)) return undefined;
     return new Date(y, m - 1, d);
 }
 
@@ -147,7 +144,7 @@ function toDateInputValue(input?: string | null) {
 function toApiDateTime(value?: string | null) {
     if (!value) return null;
     const [y, m, d] = value.split("-").map(Number);
-    if (!y || !m || !d) return null;
+    if (!(y && m && d)) return null;
     const date = new Date(y, m - 1, d, 0, 0, 0, 0);
     return date.toISOString();
 }
@@ -182,10 +179,7 @@ function formatDateDisplay(value?: string) {
 }
 
 function buildApiUrl(path: string) {
-    const rawBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        "";
+    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
     const base = rawBase.replace(/\/+$/, "");
 
     if (!base) return "";
@@ -241,11 +235,7 @@ function extractBoardData(payload: unknown): PersonalTaskBoardResponse | null {
 
     const firstLayer = source?.data;
 
-    if (
-        firstLayer &&
-        typeof firstLayer === "object" &&
-        "personalTaskStatuses" in firstLayer
-    ) {
+    if (firstLayer && typeof firstLayer === "object" && "personalTaskStatuses" in firstLayer) {
         return firstLayer as PersonalTaskBoardResponse;
     }
 
@@ -314,9 +304,7 @@ function severityLabel(value: "minor" | "moderate" | "major" | "critical") {
     return "Minor";
 }
 
-function taskSeverityToFormValue(
-    value?: number | null
-): "minor" | "moderate" | "major" | "critical" {
+function taskSeverityToFormValue(value?: number | null): "minor" | "moderate" | "major" | "critical" {
     if (value === 3) return "critical";
     if (value === 2) return "major";
     if (value === 1) return "moderate";
@@ -335,10 +323,7 @@ function priorityDotColor(priority?: number | null) {
     return "bg-emerald-500";
 }
 
-function findColumnOfTask(
-    statuses: PersonalTaskStatusDto[],
-    taskId: string
-): ColumnId | null {
+function findColumnOfTask(statuses: PersonalTaskStatusDto[], taskId: string): ColumnId | null {
     for (const status of statuses) {
         const found = (status.taskList ?? []).some((task) => String(task.taskId ?? "") === taskId);
         if (found && status.statusId) return String(status.statusId);
@@ -346,10 +331,7 @@ function findColumnOfTask(
     return null;
 }
 
-function findTaskInStatuses(
-    statuses: PersonalTaskStatusDto[],
-    taskId: string
-): PersonalTaskItemResponse | null {
+function findTaskInStatuses(statuses: PersonalTaskStatusDto[], taskId: string): PersonalTaskItemResponse | null {
     for (const status of statuses) {
         const found = ((status.taskList ?? []) as PersonalTaskItemResponse[]).find(
             (task) => String(task.taskId ?? "") === taskId
@@ -359,21 +341,14 @@ function findTaskInStatuses(
     return null;
 }
 
-function filterDroppablesByType(
-    droppables: DroppableContainer[],
-    allow: Array<string>
-) {
+function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<string>) {
     return droppables.filter((d) => {
         const t = d.data?.current?.type;
         return typeof t === "string" && allow.includes(t);
     });
 }
 
-function applyTaskDrop(args: {
-    statuses: PersonalTaskStatusDto[];
-    activeTaskId: string;
-    overRaw: string;
-}) {
+function applyTaskDrop(args: { statuses: PersonalTaskStatusDto[]; activeTaskId: string; overRaw: string }) {
     const { statuses, activeTaskId, overRaw } = args;
 
     const overIsEnd = overRaw.startsWith(END_PREFIX);
@@ -400,7 +375,7 @@ function applyTaskDrop(args: {
     const fromStatus = nextStatuses.find((s) => String(s.statusId ?? "") === fromCol);
     const toStatus = nextStatuses.find((s) => String(s.statusId ?? "") === toCol);
 
-    if (!fromStatus || !toStatus) return null;
+    if (!(fromStatus && toStatus)) return null;
 
     const fromTasks = fromStatus.taskList as PersonalTaskItemResponse[];
     const toTasks = fromCol === toCol ? fromTasks : (toStatus.taskList as PersonalTaskItemResponse[]);
@@ -422,9 +397,7 @@ function applyTaskDrop(args: {
         const newIndex = fromTasks.findIndex((t) => String(t.taskId ?? "") === activeTaskId);
         const prevTaskId = newIndex > 0 ? String(fromTasks[newIndex - 1].taskId ?? "") : null;
         const nextTaskId =
-            newIndex >= 0 && newIndex < fromTasks.length - 1
-                ? String(fromTasks[newIndex + 1].taskId ?? "")
-                : null;
+            newIndex >= 0 && newIndex < fromTasks.length - 1 ? String(fromTasks[newIndex + 1].taskId ?? "") : null;
 
         return {
             nextStatuses,
@@ -454,9 +427,7 @@ function applyTaskDrop(args: {
     const newIndex = toTasks.findIndex((t) => String(t.taskId ?? "") === activeTaskId);
     const prevTaskId = newIndex > 0 ? String(toTasks[newIndex - 1].taskId ?? "") : null;
     const nextTaskId =
-        newIndex >= 0 && newIndex < toTasks.length - 1
-            ? String(toTasks[newIndex + 1].taskId ?? "")
-            : null;
+        newIndex >= 0 && newIndex < toTasks.length - 1 ? String(toTasks[newIndex + 1].taskId ?? "") : null;
 
     return {
         nextStatuses,
@@ -472,15 +443,12 @@ function DuePill({ due, overdue }: { due: string; overdue: boolean }) {
         <div
             className={cn(
                 "inline-flex flex-wrap items-center gap-2 rounded-[16px] border px-4 py-2",
-                overdue
-                    ? "border-rose-200 bg-rose-50 text-rose-600"
-                    : "border-[#D9D9D9] bg-white text-[#595959]"
-            )}
-        >
+                overdue ? "border-rose-200 bg-rose-50 text-rose-600" : "border-[#D9D9D9] bg-white text-[#595959]"
+            )}>
             <Clock3 className="h-4 w-4 shrink-0" />
-            <span className="whitespace-nowrap text-[14px] font-semibold">{due}</span>
+            <span className="whitespace-nowrap font-semibold text-[14px]">{due}</span>
             {overdue && (
-                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[12px] font-bold text-rose-600">
+                <span className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-[12px] text-rose-600">
                     Quá hạn
                 </span>
             )}
@@ -494,10 +462,9 @@ function SummaryCount({ count }: { count: number }) {
             className={cn(
                 "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2",
                 "border border-zinc-200/70 bg-white",
-                "text-xs font-semibold text-zinc-700",
+                "font-semibold text-xs text-zinc-700",
                 "shadow-[0_1px_0_rgba(0,0,0,0.03)]"
-            )}
-        >
+            )}>
             {count}
         </span>
     );
@@ -583,8 +550,7 @@ function PortalDropdown({
             ref={menuRef}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
-        >
+            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
             {children}
         </div>,
         document.body
@@ -609,8 +575,7 @@ function MenuItem({
             className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
                 danger ? "text-orange-700 hover:bg-orange-50" : "text-zinc-700 hover:bg-zinc-100"
-            )}
-        >
+            )}>
             <span className="grid h-5 w-5 place-items-center">{icon}</span>
             <span className="font-medium">{label}</span>
         </button>
@@ -644,27 +609,23 @@ function ConfirmModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <h2 className="text-base font-bold text-zinc-900">{title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
+                onPointerDown={(e) => e.stopPropagation()}>
+                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
+                <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100"
-                    >
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-100">
                         {cancelLabel}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
-                    >
+                        className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-orange-700">
                         {confirmLabel}
                     </button>
                 </div>
@@ -723,10 +684,9 @@ function AddColumnInline({
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100",
+                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left font-semibold text-sm text-zinc-900 shadow-sm hover:bg-zinc-100",
                     "transition"
-                )}
-            >
+                )}>
                 + Tạo trạng thái
             </button>
         );
@@ -747,7 +707,7 @@ function AddColumnInline({
                 )}
             />
 
-            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
+            {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
 
             <div className="mt-3 flex items-center gap-2">
                 <button
@@ -755,11 +715,10 @@ function AddColumnInline({
                     onClick={() => void submit()}
                     disabled={isSubmitting}
                     className={cn(
-                        "rounded-xl px-3 py-2 text-sm font-semibold text-white",
+                        "rounded-xl px-3 py-2 font-semibold text-sm text-white",
                         "bg-indigo-600 transition hover:bg-indigo-700",
                         isSubmitting && "pointer-events-none opacity-60"
-                    )}
-                >
+                    )}>
                     Thêm trạng thái
                 </button>
 
@@ -772,8 +731,7 @@ function AddColumnInline({
                         "transition hover:bg-zinc-100",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}
-                    aria-label="Hủy"
-                >
+                    aria-label="Hủy">
                     <X className="h-4 w-4" />
                 </button>
             </div>
@@ -788,12 +746,11 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold",
+                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 font-semibold text-sm",
                 "border-zinc-200/70 bg-white text-zinc-900",
                 "transition hover:bg-zinc-50 hover:shadow-sm",
                 disabled && "pointer-events-none opacity-60"
-            )}
-        >
+            )}>
             <Plus className="h-4 w-4" />
             Thêm công việc
         </button>
@@ -815,14 +772,7 @@ function PersonalTaskCard({
     onRename: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
     onDelete: (task: PersonalTaskItemResponse) => Promise<void>;
 }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(task.taskId ?? ""),
         data: { type: "task", columnId }
     });
@@ -897,8 +847,7 @@ function PersonalTaskCard({
                 "group relative min-h-[150px] w-full cursor-grab rounded-[24px] border border-[#D9D9D9] bg-white p-5",
                 "transition-colors hover:bg-[#FAFAFA]",
                 "active:cursor-grabbing"
-            )}
-        >
+            )}>
             <div className="flex items-start gap-3">
                 <div className="pt-1">
                     <div className={cn("h-3 w-3 rounded-full", priorityDotColor(task.taskPriority))} />
@@ -926,16 +875,15 @@ function PersonalTaskCard({
                                             cancelEdit();
                                         }
                                     }}
-                                    className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-[18px] font-bold leading-6 text-[#1F1F1F] outline-none ring-2 ring-indigo-100"
+                                    className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 font-bold text-[#1F1F1F] text-[18px] leading-6 outline-none ring-2 ring-indigo-100"
                                 />
                             ) : (
                                 <p
-                                    className="line-clamp-2 cursor-text text-[18px] font-bold leading-6 text-[#1F1F1F]"
+                                    className="line-clamp-2 cursor-text font-bold text-[#1F1F1F] text-[18px] leading-6"
                                     onDoubleClick={(e) => {
                                         e.stopPropagation();
                                         setIsEditing(true);
-                                    }}
-                                >
+                                    }}>
                                     {title}
                                 </p>
                             )}
@@ -944,8 +892,7 @@ function PersonalTaskCard({
                         <div
                             className="relative shrink-0"
                             onClick={(e) => e.stopPropagation()}
-                            onPointerDown={(e) => e.stopPropagation()}
-                        >
+                            onPointerDown={(e) => e.stopPropagation()}>
                             <button
                                 ref={btnRef}
                                 type="button"
@@ -958,16 +905,14 @@ function PersonalTaskCard({
                                     e.preventDefault();
                                     e.stopPropagation();
                                 }}
-                                className="grid h-8 w-8 place-items-center rounded-lg text-[#8C8C8C] hover:bg-[#F5F5F5]"
-                            >
+                                className="grid h-8 w-8 place-items-center rounded-lg text-[#8C8C8C] hover:bg-[#F5F5F5]">
                                 <MoreHorizontal className="h-4 w-4" />
                             </button>
 
                             <PortalDropdown
                                 open={openMenu}
                                 onClose={() => setOpenMenu(false)}
-                                anchorRef={btnRef as React.RefObject<HTMLElement>}
-                            >
+                                anchorRef={btnRef as React.RefObject<HTMLElement>}>
                                 <MenuItem
                                     icon={<Pencil className="h-4 w-4" />}
                                     label="Chỉnh sửa tên công việc"
@@ -994,7 +939,7 @@ function PersonalTaskCard({
 
                         <span
                             className={cn(
-                                "inline-flex rounded-[14px] border px-4 py-2 text-[14px] font-semibold",
+                                "inline-flex rounded-[14px] border px-4 py-2 font-semibold text-[14px]",
                                 severity === "critical"
                                     ? "border-red-200 bg-red-50 text-red-600"
                                     : severity === "major"
@@ -1002,8 +947,7 @@ function PersonalTaskCard({
                                         : severity === "moderate"
                                             ? "border-yellow-200 bg-yellow-50 text-yellow-600"
                                             : "border-sky-200 bg-sky-50 text-sky-600"
-                            )}
-                        >
+                            )}>
                             {severityLabel(severity)}
                         </span>
                     </div>
@@ -1018,14 +962,14 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
     const severity = taskSeverityToFormValue(task.taskSeverity);
 
     return (
-        <div className="rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/60 p-5">
+        <div className="rounded-2xl border border-indigo-300 border-dashed bg-indigo-50/60 p-5">
             <div className="flex items-start gap-3">
                 <div className="pt-1">
                     <div className={cn("h-3 w-3 rounded-full", priorityDotColor(task.taskPriority))} />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[18px] font-bold leading-6 text-zinc-800">
+                    <p className="line-clamp-2 font-bold text-[18px] text-zinc-800 leading-6">
                         {task.taskTitle || "Untitled task"}
                     </p>
 
@@ -1033,7 +977,7 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
                         {dueText ? <DuePill due={dueText} overdue={false} /> : null}
                         <span
                             className={cn(
-                                "inline-flex rounded-[14px] border px-4 py-2 text-[14px] font-semibold",
+                                "inline-flex rounded-[14px] border px-4 py-2 font-semibold text-[14px]",
                                 severity === "critical"
                                     ? "border-red-200 bg-red-50 text-red-600"
                                     : severity === "major"
@@ -1041,8 +985,7 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
                                         : severity === "moderate"
                                             ? "border-yellow-200 bg-yellow-50 text-yellow-600"
                                             : "border-sky-200 bg-sky-50 text-sky-600"
-                            )}
-                        >
+                            )}>
                             {severityLabel(severity)}
                         </span>
                     </div>
@@ -1065,7 +1008,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[18px] font-bold leading-6 text-zinc-900">
+                    <p className="line-clamp-2 font-bold text-[18px] text-zinc-900 leading-6">
                         {task.taskTitle || "Untitled task"}
                     </p>
 
@@ -1073,7 +1016,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
                         {dueText ? <DuePill due={dueText} overdue={overdue} /> : null}
                         <span
                             className={cn(
-                                "inline-flex rounded-[14px] border px-4 py-2 text-[14px] font-semibold",
+                                "inline-flex rounded-[14px] border px-4 py-2 font-semibold text-[14px]",
                                 severity === "critical"
                                     ? "border-red-200 bg-red-50 text-red-600"
                                     : severity === "major"
@@ -1081,8 +1024,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
                                         : severity === "moderate"
                                             ? "border-yellow-200 bg-yellow-50 text-yellow-600"
                                             : "border-sky-200 bg-sky-50 text-sky-600"
-                            )}
-                        >
+                            )}>
                             {severityLabel(severity)}
                         </span>
                     </div>
@@ -1098,19 +1040,17 @@ function ColumnOverlay({ status }: { status: PersonalTaskStatusDto }) {
     return (
         <div className="min-w-[380px] max-w-[380px]">
             <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl">
-                <div className="rounded-t-2xl border-b border-zinc-200 bg-white px-4 py-3">
-                    <p className="truncate text-sm font-bold text-zinc-900">
-                        {status.statusName || "Untitled"}
-                    </p>
+                <div className="rounded-t-2xl border-zinc-200 border-b bg-white px-4 py-3">
+                    <p className="truncate font-bold text-sm text-zinc-900">{status.statusName || "Untitled"}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
 
                 <div className="px-4 py-4">
-                    <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-3">
+                    <div className="rounded-2xl border border-zinc-200 border-dashed bg-zinc-50 p-3">
                         {tasks.map((task) => (
                             <div key={String(task.taskId)} className="mb-3 last:mb-0">
                                 <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
-                                    <p className="text-sm font-semibold text-zinc-900">
+                                    <p className="font-semibold text-sm text-zinc-900">
                                         {task.taskTitle || "Untitled task"}
                                     </p>
                                 </div>
@@ -1155,15 +1095,7 @@ function BoardColumn({
     const taskIds = tasks.map((task) => String(task.taskId ?? ""));
     const statusName = status.statusName || "Untitled";
 
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        setActivatorNodeRef,
-        transform,
-        transition,
-        isDragging
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
         id: statusId,
         data: { type: "column" }
     });
@@ -1217,16 +1149,17 @@ function BoardColumn({
         <div
             ref={setNodeRef}
             style={style}
-            className={cn("rounded-2xl border border-zinc-200/80 bg-white shadow-sm", "transition-shadow hover:shadow-md")}
-        >
+            className={cn(
+                "rounded-2xl border border-zinc-200/80 bg-white shadow-sm",
+                "transition-shadow hover:shadow-md"
+            )}>
             <div
                 className={cn(
                     "sticky top-0 z-10 rounded-t-2xl",
-                    "border-b border-zinc-200/70",
+                    "border-zinc-200/70 border-b",
                     "bg-white/80 backdrop-blur-xl",
                     "px-4 py-3"
-                )}
-            >
+                )}>
                 <div className="flex items-center gap-3">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                         <div
@@ -1239,13 +1172,12 @@ function BoardColumn({
                                 "border border-zinc-200/70 bg-white",
                                 "text-zinc-500 shadow-[0_1px_0_rgba(0,0,0,0.02)]",
                                 "cursor-grab active:cursor-grabbing"
-                            )}
-                        >
+                            )}>
                             <GripVertical className="h-4 w-4" />
                         </div>
 
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-bold text-zinc-900">{statusName}</p>
+                            <p className="truncate font-bold text-sm text-zinc-900">{statusName}</p>
                         </div>
                     </div>
 
@@ -1266,16 +1198,14 @@ function BoardColumn({
                                     e.stopPropagation();
                                 }}
                                 className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
-                                aria-label="Column menu"
-                            >
+                                aria-label="Column menu">
                                 <MoreHorizontal className="h-5 w-5" />
                             </button>
 
                             <PortalDropdown
                                 open={openMenu}
                                 onClose={() => setOpenMenu(false)}
-                                anchorRef={btnRef as React.RefObject<HTMLElement>}
-                            >
+                                anchorRef={btnRef as React.RefObject<HTMLElement>}>
                                 <MenuItem
                                     icon={<Pencil className="h-4 w-4" />}
                                     label="Chỉnh sửa tên trạng thái"
@@ -1306,16 +1236,14 @@ function BoardColumn({
                         "rounded-2xl border p-3 transition",
                         "border-zinc-200/70 bg-gradient-to-b from-zinc-50 to-white",
                         isOver && "border-indigo-300 bg-indigo-50/60"
-                    )}
-                >
+                    )}>
                     <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                         <div
                             className="relative max-h-[68vh] space-y-4 overflow-y-auto pr-1"
                             style={{
                                 scrollbarWidth: "none",
                                 msOverflowStyle: "none"
-                            }}
-                        >
+                            }}>
                             <style jsx>{`
                                 div::-webkit-scrollbar {
                                     display: none;
@@ -1339,8 +1267,12 @@ function BoardColumn({
                             )}
 
                             {tasks.length === 0 ? (
-                                <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
-                                    <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
+                                <div
+                                    className={cn(
+                                        "rounded-xl border border-zinc-200/70 bg-white",
+                                        "px-3 py-10 text-center"
+                                    )}>
+                                    <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
                                     <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                 </div>
                             ) : null}
@@ -1348,7 +1280,7 @@ function BoardColumn({
                             <div
                                 ref={setEndRef}
                                 className={cn(
-                                    "absolute bottom-0 left-0 right-0 h-12 rounded-xl border border-dashed transition",
+                                    "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
                                     isOverEnd ? "border-indigo-300 bg-indigo-50/60" : "border-transparent"
                                 )}
                             />
@@ -1512,7 +1444,7 @@ function InlineDatePicker({
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -1528,8 +1460,7 @@ function InlineDatePicker({
                             : open
                                 ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
                                 : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
@@ -1539,8 +1470,7 @@ function InlineDatePicker({
                                     : open
                                         ? "bg-orange-100 text-orange-600"
                                         : "bg-zinc-100 text-zinc-500"
-                            )}
-                        >
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
@@ -1549,8 +1479,7 @@ function InlineDatePicker({
                                 "truncate text-left",
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
                                 disabled && "text-zinc-500"
-                            )}
-                        >
+                            )}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -1568,37 +1497,34 @@ function InlineDatePicker({
                             width: popupPosition.width,
                             maxHeight: "calc(100vh - 40px)",
                             overflowY: "auto"
-                        }}
-                    >
+                        }}>
                         <div className="mb-4 flex items-center gap-3">
                             <div className="relative flex-1">
                                 <select
                                     value={month.getMonth()}
                                     onChange={handleMonthChange}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                                >
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                     {monthOptions.map((item) => (
                                         <option key={item.value} value={item.value}>
                                             {item.label}
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                             </div>
 
                             <div className="relative w-[140px]">
                                 <select
                                     value={month.getFullYear()}
                                     onChange={handleYearChange}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                                >
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                     {yearOptions.map((year) => (
                                         <option key={year} value={year}>
                                             {year}
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                             </div>
                         </div>
 
@@ -1608,20 +1534,18 @@ function InlineDatePicker({
                                     type="button"
                                     onClick={goPrevMonth}
                                     disabled={isPrevDisabled}
-                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                >
+                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
 
-                                <div className="text-[18px] font-bold text-zinc-900">
+                                <div className="font-bold text-[18px] text-zinc-900">
                                     {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                                 </div>
 
                                 <button
                                     type="button"
                                     onClick={goNextMonth}
-                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                                >
+                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
                                     <ChevronRight className="h-5 w-5" />
                                 </button>
                             </div>
@@ -1671,24 +1595,21 @@ function InlineDatePicker({
                             <button
                                 type="button"
                                 onClick={() => pickDate(new Date())}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                                 Today
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => pickDate(addDays(new Date(), 1))}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                                 Tomorrow
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => pickDate(addDays(new Date(), 7))}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                                 Next week
                             </button>
 
@@ -1698,8 +1619,7 @@ function InlineDatePicker({
                                     onChange("");
                                     setOpen(false);
                                 }}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
                                 No date
                             </button>
                         </div>
@@ -1768,10 +1688,7 @@ function InlineTaskFormModal({
         return statuses.find((s) => s.value === statusId)?.label ?? "No status";
     }, [statuses, statusId]);
 
-    const canSubmit =
-        title.trim().length > 0 &&
-        description.trim().length > 0 &&
-        !submitting;
+    const canSubmit = title.trim().length > 0 && description.trim().length > 0 && !submitting;
 
     const handleSubmit = async () => {
         const t = title.trim();
@@ -1822,19 +1739,17 @@ function InlineTaskFormModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                onPointerDown={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Task name"
-                            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                            placeholder="Enter task name here..."
+                            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                         />
                     </div>
 
@@ -1842,27 +1757,25 @@ function InlineTaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close"
-                    >
+                        aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="px-7 py-5">
                     {error ? (
-                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {error}
                         </div>
                     ) : null}
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <div className="font-semibold text-sm text-zinc-600">Status</div>
                             <Select
                                 value={statusId ?? "no-status"}
-                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
 
@@ -1872,8 +1785,7 @@ function InlineTaskFormModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
                                         No status
                                     </SelectItem>
@@ -1887,9 +1799,9 @@ function InlineTaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                            <div className="font-semibold text-sm text-zinc-600">Priority</div>
                             <Select value={priority} onValueChange={(v) => setPriority(v as "low" | "medium" | "high")}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {priorityLabel(priority)}
@@ -1902,8 +1814,7 @@ function InlineTaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="low" className={selectItemClassName}>
                                         Low
                                     </SelectItem>
@@ -1918,9 +1829,11 @@ function InlineTaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
-                            <Select value={severity} onValueChange={(v) => setSeverity(v as "minor" | "moderate" | "major" | "critical")}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                            <div className="font-semibold text-sm text-zinc-600">Severity</div>
+                            <Select
+                                value={severity}
+                                onValueChange={(v) => setSeverity(v as "minor" | "moderate" | "major" | "critical")}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {severityLabel(severity)}
@@ -1933,8 +1846,7 @@ function InlineTaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="minor" className={selectItemClassName}>
                                         Minor
                                     </SelectItem>
@@ -1962,7 +1874,7 @@ function InlineTaskFormModal({
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <div className="font-semibold text-sm text-zinc-600">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -1972,12 +1884,11 @@ function InlineTaskFormModal({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                <div className="flex items-center justify-end gap-3 border-zinc-200 border-t bg-zinc-50 px-7 py-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                    >
+                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                         Cancel
                     </button>
 
@@ -1987,8 +1898,7 @@ function InlineTaskFormModal({
                             void handleSubmit();
                         }}
                         disabled={!canSubmit}
-                        className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
-                    >
+                        className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800 disabled:opacity-60">
                         {submitting ? "Creating..." : "Create task"}
                     </button>
                 </div>
@@ -2041,7 +1951,7 @@ function PersonalTaskDetailModal({
     React.useEffect(() => setMounted(true), []);
 
     React.useEffect(() => {
-        if (!open || !task) return;
+        if (!(open && task)) return;
 
         setError(null);
         setIsEditing(false);
@@ -2112,15 +2022,13 @@ function PersonalTaskDetailModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-auto rounded-2xl border border-zinc-200 bg-white shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                onPointerDown={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 text-sm">
                             <span className="h-2 w-2 rounded-full bg-emerald-500" />
                             {selectedStatusName}
                         </span>
@@ -2129,11 +2037,11 @@ function PersonalTaskDetailModal({
                             <input
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Task name"
-                                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                                placeholder="Enter task name here..."
+                                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                             />
                         ) : (
-                            <h2 className="mt-3 min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="mt-3 min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
                                 {title || "Task"}
                             </h2>
                         )}
@@ -2143,28 +2051,26 @@ function PersonalTaskDetailModal({
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close"
-                    >
+                        aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-7 py-5">
                     {error ? (
-                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {error}
                         </div>
                     ) : null}
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <div className="font-semibold text-sm text-zinc-600">Status</div>
                             <Select
                                 value={statusId ?? "no-status"}
                                 onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
 
@@ -2174,8 +2080,7 @@ function PersonalTaskDetailModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
                                         No status
                                     </SelectItem>
@@ -2189,9 +2094,12 @@ function PersonalTaskDetailModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
-                            <Select value={priority} onValueChange={(v) => setPriority(v as "low" | "medium" | "high")} disabled={!isEditing}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                            <div className="font-semibold text-sm text-zinc-600">Priority</div>
+                            <Select
+                                value={priority}
+                                onValueChange={(v) => setPriority(v as "low" | "medium" | "high")}
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {priorityLabel(priority)}
@@ -2204,19 +2112,27 @@ function PersonalTaskDetailModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
-                                    <SelectItem value="low" className={selectItemClassName}>Low</SelectItem>
-                                    <SelectItem value="medium" className={selectItemClassName}>Medium</SelectItem>
-                                    <SelectItem value="high" className={selectItemClassName}>High</SelectItem>
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                    <SelectItem value="low" className={selectItemClassName}>
+                                        Low
+                                    </SelectItem>
+                                    <SelectItem value="medium" className={selectItemClassName}>
+                                        Medium
+                                    </SelectItem>
+                                    <SelectItem value="high" className={selectItemClassName}>
+                                        High
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
-                            <Select value={severity} onValueChange={(v) => setSeverity(v as "minor" | "moderate" | "major" | "critical")} disabled={!isEditing}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                            <div className="font-semibold text-sm text-zinc-600">Severity</div>
+                            <Select
+                                value={severity}
+                                onValueChange={(v) => setSeverity(v as "minor" | "moderate" | "major" | "critical")}
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {severityLabel(severity)}
@@ -2229,12 +2145,19 @@ function PersonalTaskDetailModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
-                                    <SelectItem value="minor" className={selectItemClassName}>Minor</SelectItem>
-                                    <SelectItem value="moderate" className={selectItemClassName}>Moderate</SelectItem>
-                                    <SelectItem value="major" className={selectItemClassName}>Major</SelectItem>
-                                    <SelectItem value="critical" className={selectItemClassName}>Critical</SelectItem>
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                    <SelectItem value="minor" className={selectItemClassName}>
+                                        Minor
+                                    </SelectItem>
+                                    <SelectItem value="moderate" className={selectItemClassName}>
+                                        Moderate
+                                    </SelectItem>
+                                    <SelectItem value="major" className={selectItemClassName}>
+                                        Major
+                                    </SelectItem>
+                                    <SelectItem value="critical" className={selectItemClassName}>
+                                        Critical
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -2256,7 +2179,7 @@ function PersonalTaskDetailModal({
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <div className="font-semibold text-sm text-zinc-600">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -2267,13 +2190,12 @@ function PersonalTaskDetailModal({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                <div className="flex items-center justify-between gap-3 border-zinc-200 border-t bg-zinc-50 px-7 py-4">
                     <button
                         type="button"
                         onClick={() => void onDelete(task)}
                         disabled={saving}
-                        className="h-11 rounded-xl border border-rose-200 bg-white px-6 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-                    >
+                        className="h-11 rounded-xl border border-rose-200 bg-white px-6 font-semibold text-rose-600 text-sm hover:bg-rose-50 disabled:opacity-60">
                         Xóa
                     </button>
 
@@ -2281,8 +2203,7 @@ function PersonalTaskDetailModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                        >
+                            className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                             Cancel
                         </button>
 
@@ -2291,16 +2212,14 @@ function PersonalTaskDetailModal({
                                 type="button"
                                 onClick={() => void handleSave()}
                                 disabled={saving}
-                                className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
-                            >
+                                className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800 disabled:opacity-60">
                                 {saving ? "Saving..." : "Save change"}
                             </button>
                         ) : (
                             <button
                                 type="button"
                                 onClick={() => setIsEditing(true)}
-                                className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800"
-                            >
+                                className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800">
                                 Edit
                             </button>
                         )}
@@ -2426,10 +2345,7 @@ export default function HomePersonalTaskScreen() {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    const columnIds = React.useMemo(
-        () => statuses.map((s) => String(s.statusId ?? "")),
-        [statuses]
-    );
+    const columnIds = React.useMemo(() => statuses.map((s) => String(s.statusId ?? "")), [statuses]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -2442,7 +2358,7 @@ export default function HomePersonalTaskScreen() {
     }, [statuses, activeColumnId]);
 
     const ghost = React.useMemo(() => {
-        if (!activeTaskId || !overId) return null;
+        if (!(activeTaskId && overId)) return null;
 
         const task = findTaskInStatuses(statuses, activeTaskId);
         if (!task) return null;
@@ -2460,7 +2376,7 @@ export default function HomePersonalTaskScreen() {
         if (!toCol) return null;
 
         const toStatus = statuses.find((s) => String(s.statusId ?? "") === toCol);
-        const toTasks = ((toStatus?.taskList ?? []) as PersonalTaskItemResponse[]);
+        const toTasks = (toStatus?.taskList ?? []) as PersonalTaskItemResponse[];
 
         if (overId.startsWith(END_PREFIX)) {
             return { task, toCol, index: toTasks.length };
@@ -2590,13 +2506,15 @@ export default function HomePersonalTaskScreen() {
                     personalStatusId: values.statusId ?? null,
                     startDate: toApiDateTime(values.startDate),
                     dueDate: toApiDateTime(values.dueDate),
-                    taskPriority:
-                        values.priority === "high" ? 2 :
-                            values.priority === "medium" ? 1 : 0,
+                    taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
                     taskSeverity:
-                        values.severity === "critical" ? 3 :
-                            values.severity === "major" ? 2 :
-                                values.severity === "moderate" ? 1 : 0
+                        values.severity === "critical"
+                            ? 3
+                            : values.severity === "major"
+                                ? 2
+                                : values.severity === "moderate"
+                                    ? 1
+                                    : 0
                 };
 
                 console.log("create-personal-task payload:", payload);
@@ -2687,13 +2605,15 @@ export default function HomePersonalTaskScreen() {
                         startDate: toApiDateTime(values.startDate),
                         dueDate: toApiDateTime(values.dueDate),
                         progress: task.progress ?? null,
-                        taskPriority:
-                            values.priority === "high" ? 2 :
-                                values.priority === "medium" ? 1 : 0,
+                        taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
                         taskSeverity:
-                            values.severity === "critical" ? 3 :
-                                values.severity === "major" ? 2 :
-                                    values.severity === "moderate" ? 1 : 0
+                            values.severity === "critical"
+                                ? 3
+                                : values.severity === "major"
+                                    ? 2
+                                    : values.severity === "moderate"
+                                        ? 1
+                                        : 0
                     }),
                     headers: {
                         "Content-Type": "application/json"
@@ -2705,9 +2625,7 @@ export default function HomePersonalTaskScreen() {
                 setDetailTask((prev) => {
                     if (!prev || String(prev.taskId) !== String(task.taskId)) return prev;
 
-                    const nextStatus = statuses.find(
-                        (s) => String(s.statusId ?? "") === String(values.statusId ?? "")
-                    );
+                    const nextStatus = statuses.find((s) => String(s.statusId ?? "") === String(values.statusId ?? ""));
 
                     return {
                         ...prev,
@@ -2720,13 +2638,15 @@ export default function HomePersonalTaskScreen() {
                         },
                         startDate: toApiDateTime(values.startDate) ?? undefined,
                         dueDate: toApiDateTime(values.dueDate) ?? undefined,
-                        taskPriority:
-                            values.priority === "high" ? 2 :
-                                values.priority === "medium" ? 1 : 0,
+                        taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
                         taskSeverity:
-                            values.severity === "critical" ? 3 :
-                                values.severity === "major" ? 2 :
-                                    values.severity === "moderate" ? 1 : 0
+                            values.severity === "critical"
+                                ? 3
+                                : values.severity === "major"
+                                    ? 2
+                                    : values.severity === "moderate"
+                                        ? 1
+                                        : 0
                     };
                 });
             } catch (error) {
@@ -2870,12 +2790,7 @@ export default function HomePersonalTaskScreen() {
                 setStatuses(dropped.nextStatuses);
 
                 try {
-                    await handleReorderTasks(
-                        activeId,
-                        dropped.toCol,
-                        dropped.prevTaskId,
-                        dropped.nextTaskId
-                    );
+                    await handleReorderTasks(activeId, dropped.toCol, dropped.prevTaskId, dropped.nextTaskId);
                 } catch {
                     setStatuses(prevStatuses);
                 }
@@ -2907,12 +2822,9 @@ export default function HomePersonalTaskScreen() {
 
                 setStatuses(nextStatuses);
 
-                const prevStatusId =
-                    newIndex > 0 ? String(nextStatuses[newIndex - 1].statusId ?? "") : null;
+                const prevStatusId = newIndex > 0 ? String(nextStatuses[newIndex - 1].statusId ?? "") : null;
                 const nextStatusId =
-                    newIndex < nextStatuses.length - 1
-                        ? String(nextStatuses[newIndex + 1].statusId ?? "")
-                        : null;
+                    newIndex < nextStatuses.length - 1 ? String(nextStatuses[newIndex + 1].statusId ?? "") : null;
 
                 try {
                     await handleReorderColumns(activeColId, prevStatusId, nextStatusId);
@@ -2940,15 +2852,14 @@ export default function HomePersonalTaskScreen() {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-white">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
                         {loadError}
                     </div>
                     <div className="mt-3">
                         <button
                             type="button"
                             onClick={() => void fetchBoard()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
-                        >
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                             Tải lại
                         </button>
                     </div>
@@ -3006,11 +2917,11 @@ export default function HomePersonalTaskScreen() {
             />
 
             <Container>
-                <div className="mb-5 mt-5 rounded-2xl border border-[#E5E5E5] bg-white p-4 shadow-sm">
+                <div className="mt-5 mb-5 rounded-2xl border border-[#E5E5E5] bg-white p-4 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-xl font-bold text-[#261E33]">Quản lý công việc cá nhân</h2>
-                            <p className="mt-1 text-sm text-[#6F6B99]">
+                            <h2 className="font-bold text-[#261E33] text-xl">Quản lý công việc cá nhân</h2>
+                            <p className="mt-1 text-[#6F6B99] text-sm">
                                 Theo dõi và quản lý các công việc cá nhân theo từng trạng thái
                             </p>
                         </div>
@@ -3021,9 +2932,7 @@ export default function HomePersonalTaskScreen() {
                                 <span className="text-sm">{totalTaskCount} công việc</span>
                             </span>
 
-                            {isSubmitting ? (
-                                <span className="text-sm text-zinc-500">Đang xử lý...</span>
-                            ) : null}
+                            {isSubmitting ? <span className="text-sm text-zinc-500">Đang xử lý...</span> : null}
                         </div>
                     </div>
                 </div>
@@ -3033,8 +2942,7 @@ export default function HomePersonalTaskScreen() {
                         {statuses.map((status, index) => (
                             <div
                                 key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                className="min-w-[380px] max-w-[380px] self-start"
-                            >
+                                className="min-w-[380px] max-w-[380px] self-start">
                                 <BoardColumn
                                     status={status}
                                     isSubmitting={isSubmitting}
@@ -3064,15 +2972,13 @@ export default function HomePersonalTaskScreen() {
                         onDragStart={handleDragStart}
                         onDragOver={handleDragOver}
                         onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}
-                    >
+                        onDragEnd={handleDragEnd}>
                         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                             <div className="flex items-start gap-5 overflow-x-auto pb-6">
                                 {statuses.map((status, index) => (
                                     <div
                                         key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                        className="min-w-[380px] max-w-[380px] self-start"
-                                    >
+                                        className="min-w-[380px] max-w-[380px] self-start">
                                         <BoardColumn
                                             status={status}
                                             isSubmitting={isSubmitting}

@@ -75,7 +75,11 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
         const currentLocale = pathname.split("/")[1] || "vi";
         const profileLanguage = savedLocale || initialData.language || currentLocale;
 
-        if (savedAvatar) {
+        // Prefer server URL (after reload with fresh data) over stale localStorage cache
+        if (initialData.avatarUrl) {
+            setAvatarPreview(initialData.avatarUrl);
+            localStorage.removeItem("userAvatar");
+        } else if (savedAvatar) {
             setAvatarPreview(savedAvatar);
         }
 
@@ -83,9 +87,9 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             prev.language === profileLanguage
                 ? prev
                 : {
-                      ...prev,
-                      language: profileLanguage
-                  }
+                    ...prev,
+                    language: profileLanguage
+                }
         );
 
         localStorage.setItem("preferredLocale", profileLanguage);
@@ -95,7 +99,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             const newPath = `/${profileLanguage}${pathWithoutLocale || "/"}`;
             router.replace(newPath);
         }
-    }, [initialData.language, pathname, router]);
+    }, [initialData.avatarUrl, initialData.language, pathname, router]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (!isEditing) return;
@@ -144,6 +148,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
         setAvatarPreview(initialData.avatarUrl || "/images/image-removebg-preview.png");
         setAvatarFile(null);
         setErrors({}); // Clear all errors
+        localStorage.removeItem("userAvatar");
     };
 
     const validateProfileForm = () => {
@@ -213,6 +218,9 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                 // Reload page to get fresh data from server
                 window.location.reload();
             } else {
+                setAvatarPreview(initialData.avatarUrl || "/images/image-removebg-preview.png");
+                setAvatarFile(null);
+                localStorage.removeItem("userAvatar");
                 toast({
                     variant: "destructive",
                     description: response.message || t("profile.saveError")
@@ -220,6 +228,9 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             }
         } catch (error) {
             console.error("Save failed:", error);
+            setAvatarPreview(initialData.avatarUrl || "/images/image-removebg-preview.png");
+            setAvatarFile(null);
+            localStorage.removeItem("userAvatar");
             toast({
                 variant: "destructive",
                 description: t("profile.saveError")
@@ -587,15 +598,13 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
                         />
 
                         <div
-                            className={`h-6 w-11 rounded-full transition-colors ${
-                                formData.emailNotificationEnabled ? "bg-[#2563EB]" : "bg-[#E5E5E5]"
-                            }`}
+                            className={`h-6 w-11 rounded-full transition-colors ${formData.emailNotificationEnabled ? "bg-[#2563EB]" : "bg-[#E5E5E5]"
+                                }`}
                         />
 
                         <div
-                            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                                formData.emailNotificationEnabled ? "translate-x-5" : "translate-x-0"
-                            }`}
+                            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${formData.emailNotificationEnabled ? "translate-x-5" : "translate-x-0"
+                                }`}
                         />
                     </label>
                 </div>

@@ -2,8 +2,8 @@
 
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
+import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
@@ -16,14 +16,14 @@ function buildInitials(name?: string | null) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const a = parts[0]?.[0] ?? "";
-    const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
     return `${a}${b}`.toUpperCase() || "U";
 }
 
 function parseDateString(value?: string) {
     if (!value) return undefined;
     const [y, m, d] = value.split("-").map(Number);
-    if (!y || !m || !d) return undefined;
+    if (!(y && m && d)) return undefined;
     return new Date(y, m - 1, d);
 }
 
@@ -312,37 +312,34 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                         top: popupPosition.top,
                         left: popupPosition.left,
                         width: popupPosition.width
-                    }}
-                >
+                    }}>
                     <div className="mb-4 flex items-center gap-3">
                         <div className="relative flex-1">
                             <select
                                 value={month.getMonth()}
                                 onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {monthOptions.map((item) => (
                                     <option key={item.value} value={item.value}>
                                         {item.label}
                                     </option>
                                 ))}
                             </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                         </div>
 
                         <div className="relative w-[140px]">
                             <select
                                 value={month.getFullYear()}
                                 onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {yearOptions.map((year) => (
                                     <option key={year} value={year}>
                                         {year}
                                     </option>
                                 ))}
                             </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                         </div>
                     </div>
 
@@ -352,20 +349,18 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 type="button"
                                 onClick={goPrevMonth}
                                 disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
 
-                            <div className="text-[18px] font-bold text-zinc-900">
+                            <div className="font-bold text-[18px] text-zinc-900">
                                 {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                             </div>
 
                             <button
                                 type="button"
                                 onClick={goNextMonth}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                            >
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
                                 <ChevronRight className="h-5 w-5" />
                             </button>
                         </div>
@@ -403,7 +398,8 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 day_button:
                                     "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
                                 selected: "!bg-orange-500 !text-white",
-                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                day_selected:
+                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
                                 today: "text-orange-600 font-bold",
                                 day_today: "text-orange-600 font-bold",
                                 outside: "text-zinc-300",
@@ -420,24 +416,21 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                         <button
                             type="button"
                             onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Today
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Tomorrow
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Next week
                         </button>
 
@@ -447,8 +440,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 onChange("");
                                 setOpen(false);
                             }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
                             No date
                         </button>
                     </div>
@@ -460,7 +452,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -471,24 +463,18 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                         open
                             ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
                             : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
                                 "grid h-7 w-7 shrink-0 place-items-center rounded-md",
                                 open ? "bg-orange-100 text-orange-600" : "bg-zinc-100 text-zinc-500"
-                            )}
-                        >
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
                         <span
-                            className={cn(
-                                "truncate text-left",
-                                value ? "font-medium text-zinc-900" : "text-zinc-400"
-                            )}
-                        >
+                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -615,15 +601,13 @@ export default function TaskFormModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                onPointerDown={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 text-sm">
                             <span className="h-2 w-2 rounded-full bg-emerald-500" />
                             {selectedStatusName}
                         </span>
@@ -631,8 +615,8 @@ export default function TaskFormModal({
                         <input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Task name"
-                            className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                            placeholder="Enter task name here..."
+                            className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                         />
                     </div>
 
@@ -640,27 +624,25 @@ export default function TaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close"
-                    >
+                        aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="px-7 py-5">
                     {error ? (
-                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {error}
                         </div>
                     ) : null}
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Assignee</div>
+                            <div className="font-semibold text-sm text-zinc-600">Assignee</div>
                             <Select
                                 value={assigneeId ?? "unassigned"}
-                                onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                                onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <div className="flex min-w-0 items-center gap-2">
                                         {selectedAssigneeDisplay.avatarUrl ? (
                                             <img
@@ -669,7 +651,7 @@ export default function TaskFormModal({
                                                 className="h-6 w-6 rounded-full object-cover"
                                             />
                                         ) : (
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                 {buildInitials(selectedAssigneeDisplay.label)}
                                             </div>
                                         )}
@@ -683,11 +665,10 @@ export default function TaskFormModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="unassigned" className={selectItemClassName}>
                                         <div className="flex items-center gap-2">
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                 U
                                             </div>
                                             <span>Unassigned</span>
@@ -704,7 +685,7 @@ export default function TaskFormModal({
                                                         className="h-6 w-6 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                         {buildInitials(m.label)}
                                                     </div>
                                                 )}
@@ -717,12 +698,11 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <div className="font-semibold text-sm text-zinc-600">Status</div>
                             <Select
                                 value={statusId ?? "no-status"}
-                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
 
@@ -732,8 +712,7 @@ export default function TaskFormModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
                                         No status
                                     </SelectItem>
@@ -747,9 +726,9 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                            <div className="font-semibold text-sm text-zinc-600">Priority</div>
                             <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {priorityLabel(priority)}
@@ -762,8 +741,7 @@ export default function TaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="low" className={selectItemClassName}>
                                         Low
                                     </SelectItem>
@@ -787,9 +765,9 @@ export default function TaskFormModal({
                         />
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
+                            <div className="font-semibold text-sm text-zinc-600">Severity</div>
                             <Select value={severity} onValueChange={(v) => setSeverity(v as TaskSeverity)}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {severityLabel(severity)}
@@ -802,8 +780,7 @@ export default function TaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="minor" className={selectItemClassName}>
                                         Minor
                                     </SelectItem>
@@ -822,7 +799,7 @@ export default function TaskFormModal({
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <div className="font-semibold text-sm text-zinc-600">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -832,12 +809,11 @@ export default function TaskFormModal({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                <div className="flex items-center justify-end gap-3 border-zinc-200 border-t bg-zinc-50 px-7 py-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                    >
+                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                         Cancel
                     </button>
 
@@ -847,8 +823,7 @@ export default function TaskFormModal({
                             void handleSubmit();
                         }}
                         disabled={!canSubmit}
-                        className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
-                    >
+                        className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800 disabled:opacity-60">
                         {submitting ? "Creating..." : "Create task"}
                     </button>
                 </div>

@@ -4,6 +4,7 @@
  */
 
 import { apiFetch } from "../../../../api/api-client";
+import { getAccessToken, isTokenExpired, refreshAccessToken } from "../../../../api/auth";
 import type { components } from "../../../../api/types";
 
 // ===== Type Definitions =====
@@ -79,11 +80,26 @@ export async function updateUserProfile(data: UpdateProfileRequest, locale = "vi
     }
     if (data.avatar) formData.append("Avatar", data.avatar);
 
-    // Use custom fetch for multipart/form-data
     const headers = new Headers();
     headers.set("Accept-Language", locale);
 
-    const token = localStorage.getItem("accessToken");
+    // Check token expiry and refresh if needed before sending
+    if (isTokenExpired()) {
+        const refreshed = await refreshAccessToken(locale);
+        if (!refreshed) {
+            if (typeof window !== "undefined") {
+                window.location.href = `/${locale}/login`;
+            }
+            return {
+                status: "error",
+                code: "AUTH_REQUIRED",
+                message: locale === "vi" ? "Vui lòng đăng nhập lại" : "Please login again",
+                data: null
+            };
+        }
+    }
+
+    const token = getAccessToken();
     if (token) {
         headers.set("Authorization", `Bearer ${token}`);
     }
@@ -95,8 +111,30 @@ export async function updateUserProfile(data: UpdateProfileRequest, locale = "vi
             body: formData
         });
 
-        const result = await response.json();
-        return result;
+        // Handle 401 - refresh token and retry once
+        if (response.status === 401) {
+            const refreshed = await refreshAccessToken(locale);
+            if (refreshed) {
+                headers.set("Authorization", `Bearer ${refreshed.accessToken}`);
+                const retryResponse = await fetch(`${baseUrl}/user-profile`, {
+                    method: "PUT",
+                    headers,
+                    body: formData
+                });
+                return await retryResponse.json();
+            }
+            if (typeof window !== "undefined") {
+                window.location.href = `/${locale}/login`;
+            }
+            return {
+                status: "error",
+                code: "AUTH_REQUIRED",
+                message: locale === "vi" ? "Vui lòng đăng nhập lại" : "Please login again",
+                data: null
+            };
+        }
+
+        return await response.json();
     } catch {
         return {
             status: "error",

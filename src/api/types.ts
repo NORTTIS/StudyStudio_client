@@ -947,7 +947,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RefreshTokenRequest"];
+                    "application/json": components["schemas"]["RefreshTokenRequest"];
+                    "text/json": components["schemas"]["RefreshTokenRequest"];
+                };
+            };
             responses: {
                 /** @description Success */
                 200: {
@@ -2583,7 +2589,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/payment/{orderCode}/cancel": {
+    "/api/payment/{paymentId}/cancel": {
         parameters: {
             query?: never;
             header?: never;
@@ -2597,7 +2603,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    orderCode: number;
+                    paymentId: string;
                 };
                 cookie?: never;
             };
@@ -4083,8 +4089,6 @@ export interface components {
         CreatePaymentResponse: {
             /** Format: double */
             amount?: number;
-            /** Format: date-time */
-            expiredAt?: string;
             /** Format: int64 */
             orderCode?: number;
             /** Format: uuid */
@@ -4573,6 +4577,9 @@ export interface components {
             data?: components["schemas"]["PersonalTaskStatusResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        RefreshTokenRequest: {
+            refreshToken: string;
         };
         RegisterRequests: {
             /** Format: email */
