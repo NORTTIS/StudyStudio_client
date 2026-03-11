@@ -148,6 +148,8 @@ const monthOptions = [
     { value: "11", label: "December" }
 ] as const;
 
+const TASK_TITLE_MAX_LENGTH = 25;
+
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
@@ -945,7 +947,7 @@ export default function TaskDetailModal(props: {
     const [dueDate, setDueDate] = React.useState("");
     const [description, setDescription] = React.useState("");
 
-    const [saving, setSaving] = React.useState(false);
+    const [submitting, setSubmitting] = React.useState(false);
     const [saveError, setSaveError] = React.useState<string | null>(null);
     const [isEditing, setIsEditing] = React.useState(false);
 
@@ -1121,7 +1123,7 @@ export default function TaskDetailModal(props: {
     const handleSave = async () => {
         setSaveError(null);
 
-        const taskNameTrimmed = taskName.trim();
+        const taskNameTrimmed = taskName.trim().slice(0, TASK_TITLE_MAX_LENGTH);
         if (!taskNameTrimmed) {
             setSaveError("Tên task là bắt buộc.");
             return;
@@ -1138,7 +1140,7 @@ export default function TaskDetailModal(props: {
         }
 
         try {
-            setSaving(true);
+            setSubmitting(true);
 
             await apiUpdateTask({
                 groupId,
@@ -1182,7 +1184,7 @@ export default function TaskDetailModal(props: {
         } catch (e: unknown) {
             setSaveError(getErrorMessage(e, "Không cập nhật được task"));
         } finally {
-            setSaving(false);
+            setSubmitting(false);
         }
     };
 
@@ -1203,24 +1205,20 @@ export default function TaskDetailModal(props: {
             >
                 <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
                     <div className="min-w-0 flex-1">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                            {selectedStatusName}
-                        </span>
-
                         {loadingDetail ? (
-                            <h2 className="mt-3 min-w-0 truncate text-[30px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="min-w-0 truncate text-[30px] font-extrabold leading-none text-zinc-900">
                                 Loading...
                             </h2>
                         ) : isEditing ? (
                             <input
                                 value={taskName}
-                                onChange={(e) => setTaskName(e.target.value)}
+                                maxLength={TASK_TITLE_MAX_LENGTH}
+                                onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
                                 placeholder="Task name"
-                                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                                className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
                             />
                         ) : (
-                            <h2 className="mt-3 min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
                                 {taskName || "Task"}
                             </h2>
                         )}
@@ -1394,12 +1392,7 @@ export default function TaskDetailModal(props: {
                             </Select>
                         </div>
 
-                        <TrelloDatePicker
-                            label="Start Date"
-                            value={startDate}
-                            onChange={setStartDate}
-                            disabled={!isEditing}
-                        />
+                        <TrelloDatePicker label="Start Date" value={startDate} onChange={setStartDate} disabled={!isEditing} />
 
                         <TrelloDatePicker
                             label="Due Date"
@@ -1577,10 +1570,10 @@ export default function TaskDetailModal(props: {
                             onClick={() => {
                                 void handleSave();
                             }}
-                            disabled={saving}
+                            disabled={submitting}
                             className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
                         >
-                            {saving ? "Saving..." : "Save change"}
+                            {submitting ? "Saving..." : "Save change"}
                         </button>
                     ) : (
                         <button
