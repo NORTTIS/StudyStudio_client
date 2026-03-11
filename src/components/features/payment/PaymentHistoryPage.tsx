@@ -8,6 +8,7 @@ import { getPaymentHistory, type PaymentHistory } from "@/api/payment";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
+import { getPaymentStatusInfo } from "@/utils/payment-status";
 
 export function PaymentHistoryPage() {
     const locale = useLocale();
@@ -31,50 +32,28 @@ export function PaymentHistoryPage() {
         fetchHistory();
     }, [locale]);
 
-    const getStatusIcon = (status: string) => {
-        switch (status.toLowerCase()) {
-            case "completed":
-            case "success":
+    const getStatusIcon = (status: string | number) => {
+        const statusInfo = getPaymentStatusInfo(status);
+
+        switch (statusInfo.icon) {
+            case "check-circle":
                 return <CheckCircle className="h-5 w-5 text-green-500" />;
-            case "pending":
+            case "clock":
                 return <Clock className="h-5 w-5 text-yellow-500" />;
-            case "cancelled":
-            case "failed":
+            case "x-circle":
                 return <XCircle className="h-5 w-5 text-red-500" />;
             default:
                 return <Clock className="h-5 w-5 text-gray-500" />;
         }
     };
 
-    const getStatusText = (status: string) => {
-        switch (status.toLowerCase()) {
-            case "completed":
-            case "success":
-                return "Thành công";
-            case "pending":
-                return "Đang xử lý";
-            case "cancelled":
-                return "Đã hủy";
-            case "failed":
-                return "Thất bại";
-            default:
-                return status;
-        }
+    const getStatusText = (status: string | number) => {
+        return getPaymentStatusInfo(status).label;
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case "completed":
-            case "success":
-                return "text-green-600 bg-green-50";
-            case "pending":
-                return "text-yellow-600 bg-yellow-50";
-            case "cancelled":
-            case "failed":
-                return "text-red-600 bg-red-50";
-            default:
-                return "text-gray-600 bg-gray-50";
-        }
+    const getStatusColor = (status: string | number) => {
+        const statusInfo = getPaymentStatusInfo(status);
+        return `${statusInfo.color} ${statusInfo.bgColor}`;
     };
 
     return (
