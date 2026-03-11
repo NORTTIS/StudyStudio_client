@@ -203,7 +203,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     }
 
     // Check if user is admin
-    const isAdmin = userProfile?.isAdmin || false;
+    const isAdmin = userProfile?.isAdmin;
 
     return (
         <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">

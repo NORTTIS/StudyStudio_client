@@ -65,7 +65,7 @@ export function AdminAnnouncementsTab() {
         } finally {
             setIsLoading(false);
         }
-    }, []); // Empty dependency - chỉ load một lần khi mount
+    }, []); // Empty dependency - chỉ load một lần khi mount, bỏ toast để tránh infinite loop
 
     useEffect(() => {
         loadAnnouncements();

@@ -210,10 +210,11 @@ export function SubscriptionPlansPage() {
                                     key={tab.id}
                                     type="button"
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${activeTab === tab.id
-                                        ? "border-[#FF5F3D] text-[#FF5F3D]"
-                                        : "border-transparent text-[#6F6B99] hover:text-[#261E33]"
-                                        }`}>
+                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${
+                                        activeTab === tab.id
+                                            ? "border-[#FF5F3D] text-[#FF5F3D]"
+                                            : "border-transparent text-[#6F6B99] hover:text-[#261E33]"
+                                    }`}>
                                     {tab.label}
                                 </button>
                             ))}

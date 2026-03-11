@@ -106,7 +106,7 @@ export function AdminReportsTab() {
         } finally {
             setIsLoading(false);
         }
-    }, [filters]); // Dependency on filters để reload khi filters thay đổi
+    }, [filters]); // Dependency on filters để reload khi filters thay đổi, bỏ toast để tránh infinite loop
 
     useEffect(() => {
         loadReports();
