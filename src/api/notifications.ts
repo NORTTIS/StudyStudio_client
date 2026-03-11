@@ -15,6 +15,7 @@ export interface Announcement extends Notification {
     priority: "high" | "medium" | "low";
 }
 
+type AnnouncementApiResponse = components["schemas"]["AnnouncementResponse"];
 type UserAnnouncementResponse = components["schemas"]["UserAnnouncementResponse"];
 type UserAnnouncementListResponse = UserAnnouncementResponse[];
 type ObjectApiResponse = components["schemas"]["ObjectApiResponse"];
@@ -75,7 +76,10 @@ function formatDate(value?: string | null): string {
     return date.toLocaleString();
 }
 
-function mapAnnouncement(item: UserAnnouncementResponse, readMap: Record<string, boolean>): Announcement {
+/**
+ * Map a UserAnnouncementResponse to an Announcement (server-safe, no localStorage)
+ */
+export function mapUserAnnouncement(item: UserAnnouncementResponse): Announcement {
     const id = item.userAnnouncementId ?? item.announcementId ?? "";
     const type = detectType(item.type);
 
@@ -85,7 +89,30 @@ function mapAnnouncement(item: UserAnnouncementResponse, readMap: Record<string,
         description: item.content || "",
         type,
         date: formatDate(item.publishedAt || item.createdAt),
-        read: Boolean(item.isRead) || Boolean(readMap[id]),
+        read: Boolean(item.isRead),
+        priority: getPriorityFromType(type)
+    };
+}
+
+/**
+ * Merge an AnnouncementResponse with an optional UserAnnouncementResponse.
+ * Server-safe — no localStorage access.
+ */
+export function mapMergedAnnouncement(
+    announcement: AnnouncementApiResponse,
+    userAnnouncement?: UserAnnouncementResponse
+): Announcement {
+    const id =
+        userAnnouncement?.userAnnouncementId ?? userAnnouncement?.announcementId ?? announcement.announcementId ?? "";
+    const type = detectType(announcement.type);
+
+    return {
+        id,
+        title: announcement.title || "",
+        description: announcement.content || "",
+        type,
+        date: formatDate(announcement.publishedAt || announcement.createdAt),
+        read: Boolean(userAnnouncement?.isRead),
         priority: getPriorityFromType(type)
     };
 }
@@ -138,19 +165,41 @@ export async function markAllNotificationsAsRead(locale = "vi"): Promise<void> {
 }
 
 /**
- * Fetch all announcements
+ * Fetch all announcements merged with user read status.
+ * Calls both /announcements (master list) and /announcements/user (read state) in parallel.
  * @returns Promise<Announcement[]>
  */
 export async function fetchAnnouncements(locale = "vi"): Promise<Announcement[]> {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    const response = await apiGet<UserAnnouncementListResponse>(`${baseUrl}/announcements/user`, locale);
-    if (response.status !== "success") {
-        throw new Error(response.message || "Failed to fetch announcements");
+
+    const [announcementsRes, userAnnouncementsRes] = await Promise.all([
+        apiGet<AnnouncementApiResponse[]>(`${baseUrl}/announcements`, locale),
+        apiGet<UserAnnouncementListResponse>(`${baseUrl}/announcements/user`, locale)
+    ]);
+
+    if (announcementsRes.status !== "success") {
+        throw new Error(announcementsRes.message || "Failed to fetch announcements");
     }
 
-    const announcementItems = response.data || [];
+    const announcements = announcementsRes.data || [];
+    const userAnnouncements = userAnnouncementsRes.data || [];
     const readMap = getReadMap();
-    return announcementItems.map((item) => mapAnnouncement(item, readMap));
+
+    const userAnnouncementMap = new Map<string, UserAnnouncementResponse>();
+    for (const ua of userAnnouncements) {
+        if (ua.announcementId) {
+            userAnnouncementMap.set(ua.announcementId, ua);
+        }
+    }
+
+    return announcements
+        .filter((a) => a.isActive !== false)
+        .map((a) => {
+            const ua = a.announcementId ? userAnnouncementMap.get(a.announcementId) : undefined;
+            const item = mapMergedAnnouncement(a, ua);
+            item.read = item.read || Boolean(readMap[item.id]);
+            return item;
+        });
 }
 
 /**
