@@ -202,24 +202,38 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         );
     }
 
+    // Check if user is admin
+    const isAdmin = userProfile?.isAdmin || false;
+
     return (
         <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
             <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-                <div className="hidden max-w-md flex-1 md:block">
-                    <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <SearchIcon />
+                {/* Search - chỉ hiện cho user thường */}
+                {!isAdmin && (
+                    <div className="hidden max-w-md flex-1 md:block">
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <SearchIcon />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder={t("searchPlaceholder")}
+                                className="w-full rounded-lg border border-[#E5E5E5] bg-[#F9F9F9] py-2 pr-4 pl-10 text-[#261E33] text-sm placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:outline-none focus:ring-1 focus:ring-[#FF5F3D]"
+                            />
                         </div>
-                        <input
-                            type="text"
-                            placeholder={t("searchPlaceholder")}
-                            className="w-full rounded-lg border border-[#E5E5E5] bg-[#F9F9F9] py-2 pr-4 pl-10 text-[#261E33] text-sm placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:outline-none focus:ring-1 focus:ring-[#FF5F3D]"
-                        />
                     </div>
-                </div>
+                )}
+
+                {/* Admin title */}
+                {isAdmin && (
+                    <div className="flex-1">
+                        <h1 className="font-semibold text-[#261E33] text-lg">Admin Dashboard</h1>
+                    </div>
+                )}
 
                 <div className="flex items-center gap-2">
-                    <NotificationDropdown />
+                    {/* Notification - chỉ hiện cho user thường */}
+                    {!isAdmin && <NotificationDropdown />}
 
                     <div className="relative" ref={userMenuRef}>
                         <button
@@ -243,21 +257,24 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                                     <p className="text-[#9CA3AF] text-xs">{userData.email}</p>
                                 </div>
 
-                                <div className="py-2">
-                                    <Link
-                                        href={`/${locale}/settings`}
-                                        className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
-                                        <SettingsIcon />
-                                        <span>{t("settings")}</span>
-                                    </Link>
+                                {/* Menu items - khác nhau cho admin và user */}
+                                {!isAdmin && (
+                                    <div className="py-2">
+                                        <Link
+                                            href={`/${locale}/settings`}
+                                            className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
+                                            <SettingsIcon />
+                                            <span>{t("settings")}</span>
+                                        </Link>
 
-                                    <Link
-                                        href={`/${locale}/profile`}
-                                        className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
-                                        <UserIcon />
-                                        <span>{t("profile")}</span>
-                                    </Link>
-                                </div>
+                                        <Link
+                                            href={`/${locale}/profile`}
+                                            className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
+                                            <UserIcon />
+                                            <span>{t("profile")}</span>
+                                        </Link>
+                                    </div>
+                                )}
 
                                 <div className="border-[#E5E5E5] border-t py-2">
                                     <button

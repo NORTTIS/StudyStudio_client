@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     type AdminSubscriptionPlan,
     getAdminSubscriptionStats,
@@ -26,6 +26,13 @@ export function SubscriptionPlansPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedPlanForEdit, setSelectedPlanForEdit] = useState<AdminSubscriptionPlan | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Cấu hình tabs - ẩn một số tabs theo yêu cầu
+    const availableTabs = [
+        { id: "plans" as const, label: t("tabs.plans") },
+        { id: "billing" as const, label: t("tabs.billing") }
+        // Ẩn các tabs: revenue, payments, reports theo yêu cầu
+    ];
     const [stats, setStats] = useState<UserStats>({
         totalActiveUsers: 0,
         freeUsers: 0,
@@ -35,7 +42,7 @@ export function SubscriptionPlansPage() {
     const [plans, setPlans] = useState<AdminSubscriptionPlan[]>([]);
 
     // Load data from API
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
             console.log("Loading admin subscription data...");
@@ -161,7 +168,7 @@ export function SubscriptionPlansPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []); // Empty dependency array - chỉ chạy một lần khi mount
 
     useEffect(() => {
         loadData();
@@ -198,13 +205,7 @@ export function SubscriptionPlansPage() {
 
                         {/* Tabs */}
                         <div className="mb-6 flex gap-2 border-gray-200 border-b">
-                            {[
-                                { id: "plans" as const, label: t("tabs.plans") },
-                                { id: "billing" as const, label: t("tabs.billing") },
-                                { id: "revenue" as const, label: t("tabs.revenue") },
-                                { id: "payments" as const, label: t("tabs.payments") },
-                                { id: "reports" as const, label: "Báo cáo" }
-                            ].map((tab) => (
+                            {availableTabs.map((tab) => (
                                 <button
                                     key={tab.id}
                                     type="button"
@@ -346,6 +347,8 @@ export function SubscriptionPlansPage() {
                             ))}
 
                         {activeTab === "billing" && <BillingHistoryTab />}
+
+                        {/* Các tabs bị ẩn theo yêu cầu */}
                         {activeTab === "revenue" && <RevenueStatsTab />}
                         {activeTab === "payments" && <PaymentMethodsTab />}
                         {activeTab === "reports" && <AdminReportsTab />}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Empty } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     type AdminReport,
     type AdminReportsParams,
@@ -53,7 +53,7 @@ export function AdminReportsTab() {
     });
 
     // Load reports data
-    const loadReports = async () => {
+    const loadReports = useCallback(async () => {
         setIsLoading(true);
         setError(null);
 
@@ -106,7 +106,7 @@ export function AdminReportsTab() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [filters]); // Dependency on filters để reload khi filters thay đổi
 
     useEffect(() => {
         loadReports();
