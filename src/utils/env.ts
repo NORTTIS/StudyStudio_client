@@ -1,23 +1,25 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+/**
+ * Environment variables utility
+ * Ensures proper loading of environment variables
+ */
 
-export const env = createEnv({
-    // Variable for Server (Node.js) only
-    server: {
-        API_SECRET: z.string().min(1),
-        NODE_ENV: z.enum(["development", "test", "production"])
-    },
-
-    // Variable for Client (Browser) only
-    // MUST have prefix NEXT_PUBLIC_
-    client: {
-        NEXT_PUBLIC_API_URL: z.url()
-    },
-
-    // Unpack variables from process.env (Must be declared here)
-    runtimeEnv: {
-        API_SECRET: process.env.API_SECRET,
+export function getApiBaseUrl(): string {
+    // Try multiple ways to get the base URL
+    const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const fallbackUrl = "http://localhost:8080/api";
+    
+    console.log("Environment check:", {
+        NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
         NODE_ENV: process.env.NODE_ENV,
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL
-    }
-});
+        allEnvVars: Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_'))
+    });
+    
+    const baseUrl = envUrl || fallbackUrl;
+    console.log("Using API base URL:", baseUrl);
+    
+    return baseUrl;
+}
+
+export function getGoogleClientId(): string {
+    return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+}

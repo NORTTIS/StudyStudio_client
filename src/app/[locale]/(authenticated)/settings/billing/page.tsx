@@ -7,8 +7,8 @@ import { cancelPayment, createPayment, getPaymentHistory, type PaymentHistory, r
 import { getSubscriptionPlans, type SubscriptionPlan } from "@/api/subscription-plans";
 import { getUserProfile } from "@/api/user-profile";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { getPaymentStatusInfo, sortPlansByBillingCycle } from "@/utils/payment-status";
 
 interface Plan {
     id: string;
@@ -37,11 +37,7 @@ export default function BillingPage() {
     // No need for hardcoded plan IDs - use billingCycle to determine plan type
     // billingCycle: 0 = Free, billingCycle > 0 = Premium
 
-    const [emailNotifications, setEmailNotifications] = useState(true);
-    const [invoiceEmail, setInvoiceEmail] = useState("");
-    const [paymentMethod, setPaymentMethod] = useState("");
     const [currentPlan, setCurrentPlan] = useState("free");
-    const [isEditingInvoice, setIsEditingInvoice] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isLoadingPlan, setIsLoadingPlan] = useState(true);
@@ -64,17 +60,6 @@ export default function BillingPage() {
     /* ======================= */
     useEffect(() => {
         const loadData = async () => {
-            // Load local storage
-            if (typeof window !== "undefined") {
-                const savedEmail = localStorage.getItem("billingEmail");
-                const savedPayment = localStorage.getItem("billingPaymentMethod");
-                const savedNotifications = localStorage.getItem("billingEmailNotifications");
-
-                if (savedEmail) setInvoiceEmail(savedEmail);
-                if (savedPayment) setPaymentMethod(savedPayment);
-                if (savedNotifications) setEmailNotifications(savedNotifications === "true");
-            }
-
             // Gọi tất cả API song song để tăng tốc độ
             try {
                 const [plansResult, profileResult, historyResult] = await Promise.all([
@@ -85,8 +70,10 @@ export default function BillingPage() {
 
                 // Process available plans
                 if (plansResult.status === "success" && plansResult.data) {
-                    setAvailablePlans(plansResult.data.plans);
-                    console.log("Available plans:", plansResult.data.plans);
+                    // Sort plans by BillingCycle (low to high: Free first, then Premium tiers)
+                    const sortedPlans = sortPlansByBillingCycle(plansResult.data.plans);
+                    setAvailablePlans(sortedPlans);
+                    console.log("Available plans (sorted by BillingCycle):", sortedPlans);
                 }
 
                 // Process user profile and current plan
@@ -200,22 +187,6 @@ export default function BillingPage() {
     });
 
     /* ======================= */
-    /* SAVE INVOICE INFO */
-    /* ======================= */
-    const handleSaveInvoiceInfo = () => {
-        if (typeof window !== "undefined") {
-            localStorage.setItem("billingEmail", invoiceEmail);
-            localStorage.setItem("billingPaymentMethod", paymentMethod);
-            localStorage.setItem("billingEmailNotifications", emailNotifications.toString());
-        }
-
-        toast({
-            variant: "success",
-            description: t("invoiceInfo.saveSuccess")
-        });
-    };
-
-    /* ======================= */
     /* CANCEL PAYMENT */
     /* ======================= */
     const handleCancelPaymentClick = (paymentId: string) => {
@@ -314,7 +285,16 @@ export default function BillingPage() {
 
         // Check if it's free plan
         if (planId === "free") {
-            // Don't allow downgrade to free if already on free
+            // Don't allow downgrade from premium to free
+            if (currentPlan === "premium") {
+                toast({
+                    description: "Không thể chuyển từ gói Premium về gói Free. Vui lòng liên hệ hỗ trợ nếu cần hủy gói.",
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            // If already on free, show message
             if (currentPlan === "free") {
                 toast({
                     description: "Bạn đã đang sử dụng gói Free",
@@ -322,16 +302,6 @@ export default function BillingPage() {
                 });
                 return;
             }
-
-            setCurrentPlan("free");
-            if (typeof window !== "undefined") {
-                localStorage.setItem("currentPlan", "free");
-            }
-            toast({
-                description: "Đã chuyển về gói Free",
-                variant: "default"
-            });
-            return;
         }
 
         // Check if already on premium
@@ -459,7 +429,12 @@ export default function BillingPage() {
                                         )}
 
                                         {currentPlan !== "free" && (
-                                            <Button variant="outline">{t("currentPlan.cancelButton")}</Button>
+                                            <>
+                                                <Button variant="outline" disabled className="cursor-not-allowed opacity-50">
+                                                    Không thể chuyển về Free
+                                                </Button>
+                                                <Button variant="outline">{t("currentPlan.cancelButton")}</Button>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -480,36 +455,40 @@ export default function BillingPage() {
                             {subscriptionPlans.map((plan) => {
                                 // Check if this plan is currently active
                                 const isCurrentPlan = currentPlan === plan.id;
+                                // Disable free plan if user is on premium (prevent downgrade)
+                                const isDisabled = plan.id === "free" && currentPlan === "premium";
 
                                 return (
                                     <div
                                         key={plan.id}
-                                        className={`rounded-2xl border-2 p-6 transition ${
-                                            isCurrentPlan
-                                                ? "border-[#FF5F3D] bg-gray-50 opacity-75 shadow-lg"
+                                        className={`rounded-2xl border-2 p-6 transition ${isCurrentPlan
+                                            ? "border-[#FF5F3D] bg-gray-50 opacity-75 shadow-lg"
+                                            : isDisabled
+                                                ? "border-gray-200 bg-gray-50 opacity-50"
                                                 : "border-[#E5E5E5] hover:border-gray-300"
-                                        }`}>
-                                        <h3 className={`font-bold text-lg ${isCurrentPlan ? "text-gray-600" : ""}`}>
+                                            }`}>
+                                        <h3 className={`font-bold text-lg ${isCurrentPlan || isDisabled ? "text-gray-600" : ""}`}>
                                             {plan.name}
                                         </h3>
 
                                         <p
-                                            className={`mt-3 font-bold text-3xl ${isCurrentPlan ? "text-gray-600" : ""}`}>
+                                            className={`mt-3 font-bold text-3xl ${isCurrentPlan || isDisabled ? "text-gray-600" : ""}`}>
                                             {formatPrice(plan.price)}
                                         </p>
 
                                         <Button
                                             onClick={() => handlePlanChange(plan.id)}
-                                            disabled={isCurrentPlan || isProcessing}
-                                            className={`mt-5 w-full gap-2 rounded-lg ${
-                                                isCurrentPlan
-                                                    ? "cursor-not-allowed bg-gray-300 text-gray-600 hover:bg-gray-300"
-                                                    : ""
-                                            }`}>
+                                            disabled={isCurrentPlan || isProcessing || isDisabled}
+                                            className={`mt-5 w-full gap-2 rounded-lg ${isCurrentPlan || isDisabled
+                                                ? "cursor-not-allowed bg-gray-300 text-gray-600 hover:bg-gray-300"
+                                                : ""
+                                                }`}>
                                             {isProcessing && selectedPlan === plan.id ? (
                                                 "Đang xử lý..."
                                             ) : isCurrentPlan ? (
                                                 t("plans.current")
+                                            ) : isDisabled ? (
+                                                "Không khả dụng"
                                             ) : (
                                                 <>
                                                     <CreditCard className="h-4 w-4" />
@@ -522,13 +501,11 @@ export default function BillingPage() {
                                             {plan.features.map((feature) => (
                                                 <p
                                                     key={feature}
-                                                    className={`flex gap-2 text-sm ${
-                                                        isCurrentPlan ? "text-gray-500" : "text-[#6F6B99]"
-                                                    }`}>
-                                                    <span
-                                                        className={`font-bold ${
-                                                            isCurrentPlan ? "text-gray-400" : "text-[#FF5F3D]"
+                                                    className={`flex gap-2 text-sm ${isCurrentPlan || isDisabled ? "text-gray-500" : "text-[#6F6B99]"
                                                         }`}>
+                                                    <span
+                                                        className={`font-bold ${isCurrentPlan || isDisabled ? "text-gray-400" : "text-[#FF5F3D]"
+                                                            }`}>
                                                         ✓
                                                     </span>
                                                     {feature}
@@ -570,11 +547,10 @@ export default function BillingPage() {
                                             billingHistory.map((item) => (
                                                 <tr
                                                     key={item.id}
-                                                    className={`border-t text-sm ${
-                                                        item.status === "PENDING"
-                                                            ? "cursor-pointer transition-colors hover:bg-blue-50"
-                                                            : ""
-                                                    }`}
+                                                    className={`border-t text-sm ${item.status === "PENDING"
+                                                        ? "cursor-pointer transition-colors hover:bg-blue-50"
+                                                        : ""
+                                                        }`}
                                                     onClick={() => {
                                                         if (item.status === "PENDING") {
                                                             handleRetryPayment(item.id);
@@ -587,27 +563,12 @@ export default function BillingPage() {
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
                                                             <span
-                                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
-                                                                    item.status === "COMPLETED" ||
-                                                                    item.status === "SUCCESS"
-                                                                        ? "bg-green-100 text-green-800"
-                                                                        : item.status === "PENDING"
-                                                                          ? "bg-yellow-100 text-yellow-800"
-                                                                          : item.status === "FAILED" ||
-                                                                              item.status === "CANCELLED"
-                                                                            ? "bg-red-100 text-red-800"
-                                                                            : "bg-gray-100 text-gray-800"
-                                                                }`}>
-                                                                {item.status === "COMPLETED" ||
-                                                                item.status === "SUCCESS"
-                                                                    ? "Thành công"
-                                                                    : item.status === "PENDING"
-                                                                      ? "Đang xử lý"
-                                                                      : item.status === "FAILED"
-                                                                        ? "Thất bại"
-                                                                        : item.status === "CANCELLED"
-                                                                          ? "Đã hủy"
-                                                                          : item.status}
+                                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${(() => {
+                                                                    const statusInfo = getPaymentStatusInfo(item.status);
+                                                                    return `${statusInfo.color} ${statusInfo.bgColor}`;
+                                                                })()
+                                                                    }`}>
+                                                                {getPaymentStatusInfo(item.status).label}
                                                             </span>
                                                             {item.status === "PENDING" && (
                                                                 <Button
@@ -639,81 +600,6 @@ export default function BillingPage() {
                         )}
                     </div>
 
-                    {/* ================= INVOICE INFO ================= */}
-                    <div className="rounded-2xl border bg-white p-8">
-                        <h2 className="mb-1 font-semibold text-lg">{t("invoiceInfo.title")}</h2>
-
-                        <p className="mb-6 text-[#6F6B99] text-sm">{t("invoiceInfo.subtitle")}</p>
-
-                        {!isEditingInvoice && (
-                            <div className="space-y-5">
-                                <div>
-                                    <p className="font-medium">{t("invoiceInfo.email")}</p>
-                                    <p className="text-[#6F6B99] text-sm">{invoiceEmail}</p>
-                                </div>
-
-                                <div>
-                                    <p className="font-medium">{t("invoiceInfo.paymentMethod")}</p>
-                                    <p className="text-[#6F6B99] text-sm">{paymentMethod}</p>
-                                </div>
-
-                                <div className="flex items-center gap-3 rounded-xl bg-[#F5F5F5] px-4 py-4">
-                                    <input type="checkbox" checked={emailNotifications} disabled />
-                                    <span className="text-[#6F6B99] text-sm">{t("invoiceInfo.emailNotification")}</span>
-                                </div>
-
-                                <Button variant="outline" onClick={() => setIsEditingInvoice(true)}>
-                                    {t("invoiceInfo.editButton")}
-                                </Button>
-                            </div>
-                        )}
-
-                        {isEditingInvoice && (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <div>
-                                        <label htmlFor="invoiceEmail" className="font-semibold text-sm">
-                                            {t("invoiceInfo.email")}
-                                        </label>
-                                        <Input
-                                            id="invoiceEmail"
-                                            value={invoiceEmail}
-                                            onChange={(e) => setInvoiceEmail(e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="paymentMethod" className="font-semibold text-sm">
-                                            {t("invoiceInfo.paymentMethod")}
-                                        </label>
-                                        <Input
-                                            id="paymentMethod"
-                                            value={paymentMethod}
-                                            onChange={(e) => setPaymentMethod(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3 rounded-xl bg-[#F5F5F5] px-4 py-4">
-                                    <input
-                                        type="checkbox"
-                                        checked={emailNotifications}
-                                        onChange={(e) => setEmailNotifications(e.target.checked)}
-                                    />
-                                    <span className="text-[#6F6B99] text-sm">{t("invoiceInfo.emailNotification")}</span>
-                                </div>
-
-                                <Button
-                                    className="bg-[#FF5F3D] text-white"
-                                    onClick={() => {
-                                        handleSaveInvoiceInfo();
-                                        setIsEditingInvoice(false);
-                                    }}>
-                                    {t("invoiceInfo.updateButton")}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
                 </>
             )}
 

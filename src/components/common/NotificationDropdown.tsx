@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import type { Notification } from "@/api/notifications";
-import { fetchNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "@/api/notifications";
+import { getUserAnnouncements, type UserAnnouncement } from "@/api/announcements";
 
 const BellIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -71,19 +70,30 @@ export function NotificationDropdown() {
     // Get current locale from pathname
     const currentLocale = pathname.split("/")[1] || "vi";
 
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [announcements, setAnnouncements] = useState<UserAnnouncement[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const loadNotifications = async () => {
+        const loadAnnouncements = async () => {
             try {
-                const data = await fetchNotifications(locale);
-                setNotifications(data);
-            } catch {
-                setNotifications([]);
+                setIsLoading(true);
+                const result = await getUserAnnouncements(locale);
+                if (result.status === "success" && result.data) {
+                    // Only show active announcements
+                    const activeAnnouncements = result.data.filter(a => a.isActive);
+                    setAnnouncements(activeAnnouncements);
+                } else {
+                    setAnnouncements([]);
+                }
+            } catch (error) {
+                console.error("Failed to load announcements:", error);
+                setAnnouncements([]);
+            } finally {
+                setIsLoading(false);
             }
         };
 
-        loadNotifications();
+        loadAnnouncements();
     }, [locale]);
 
     // Close dropdown when clicking outside
@@ -98,36 +108,14 @@ export function NotificationDropdown() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const unreadCount = notifications.filter((n) => !n.read).length;
+    // Show count of all announcements as "unread"
+    const unreadCount = announcements.length;
 
-    const handleNotificationClick = async (notification: Notification) => {
-        try {
-            // Call API to mark notification as read
-            await markNotificationAsRead(notification.id, locale);
-        } catch (error) {
-            console.error("Failed to mark notification as read:", error);
-        }
-
-        // Optimistically update UI
-        setNotifications(notifications.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
-
+    const handleAnnouncementClick = (announcement: UserAnnouncement) => {
         // Close dropdown
         setIsOpen(false);
-
-        // Navigate to announcements page with the notification ID
-        router.push(`/${currentLocale}/announcements?id=${notification.id}`);
-    };
-
-    const handleMarkAllAsRead = async () => {
-        try {
-            // Call API to mark all notifications as read
-            await markAllNotificationsAsRead(locale);
-        } catch (error) {
-            console.error("Failed to mark all notifications as read:", error);
-        }
-
-        // Optimistically update UI
-        setNotifications(notifications.map((n) => ({ ...n, read: true })));
+        // Navigate to home page where announcements are displayed
+        router.push(`/${currentLocale}/home`);
     };
 
     const getTypeIcon = (type: string) => {
@@ -145,13 +133,13 @@ export function NotificationDropdown() {
 
     const getTypeColor = (type: string) => {
         switch (type) {
-            case "warning":
-                return "text-orange-500";
-            case "success":
-                return "text-green-500";
-            case "info":
+            case "Info":
                 return "text-blue-500";
-            case "system":
+            case "Feature":
+                return "text-green-500";
+            case "Maintenance":
+                return "text-orange-500";
+            case "Promotion":
                 return "text-purple-500";
             default:
                 return "text-gray-500";
@@ -178,46 +166,48 @@ export function NotificationDropdown() {
                 <div className="absolute top-full right-0 z-50 mt-2 w-96 rounded-xl border border-[#E5E5E5] bg-white shadow-xl">
                     {/* Header */}
                     <div className="flex items-center justify-between border-[#E5E5E5] border-b px-4 py-3">
-                        <h3 className="font-semibold text-[#261E33]">{t("title")}</h3>
-                        {unreadCount > 0 && (
-                            <button
-                                type="button"
-                                onClick={handleMarkAllAsRead}
-                                className="text-[#FF5F3D] text-xs hover:underline">
-                                {t("markAllRead")}
-                            </button>
-                        )}
+                        <h3 className="font-semibold text-[#261E33]">Thông báo</h3>
+                        <span className="text-[#6F6B99] text-xs">{announcements.length} thông báo</span>
                     </div>
 
-                    {/* Notifications List */}
+                    {/* Announcements List */}
                     <div className="max-h-96 overflow-y-auto">
-                        {notifications.length > 0 ? (
-                            notifications.map((notification) => (
+                        {isLoading ? (
+                            <div className="py-12 text-center">
+                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center text-[#9CA3AF]">
+                                    <BellIcon />
+                                </div>
+                                <p className="text-[#6F6B99] text-sm">Đang tải...</p>
+                            </div>
+                        ) : announcements.length > 0 ? (
+                            announcements.map((announcement) => (
                                 <button
-                                    key={notification.id}
+                                    key={announcement.announcementId}
                                     type="button"
-                                    onClick={() => handleNotificationClick(notification)}
-                                    className={`w-full cursor-pointer border-[#E5E5E5] border-b px-4 py-3 text-left transition-colors hover:bg-[#F9F9F9] ${!notification.read ? "bg-orange-50" : ""
-                                        }`}>
+                                    onClick={() => handleAnnouncementClick(announcement)}
+                                    className="w-full cursor-pointer border-[#E5E5E5] border-b px-4 py-3 text-left transition-colors hover:bg-[#F9F9F9]">
                                     <div className="flex gap-3">
-                                        <div className={`mt-1 shrink-0 ${getTypeColor(notification.type)}`}>
-                                            {getTypeIcon(notification.type)}
+                                        <div className={`mt-1 shrink-0 ${getTypeColor(announcement.type)}`}>
+                                            {getTypeIcon("info")}
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-start justify-between gap-2">
                                                 <h4 className="font-semibold text-[#261E33] text-sm">
-                                                    {notification.title}
+                                                    {announcement.title}
                                                 </h4>
-                                                {!notification.read && (
-                                                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#FF5F3D]" />
-                                                )}
+                                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#FF5F3D]" />
                                             </div>
                                             <p className="mt-1 line-clamp-2 text-[#6F6B99] text-xs">
-                                                {notification.description}
+                                                {announcement.content}
                                             </p>
-                                            <span className="mt-2 block text-[#9CA3AF] text-xs">
-                                                {notification.date}
-                                            </span>
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <span className={`px-2 py-1 rounded text-xs ${getTypeColor(announcement.type).replace('text-', 'bg-').replace('-500', '-100')} ${getTypeColor(announcement.type)}`}>
+                                                    {announcement.type}
+                                                </span>
+                                                <span className="text-[#9CA3AF] text-xs">
+                                                    {new Date(announcement.publishedAt).toLocaleDateString("vi-VN")}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </button>
@@ -227,19 +217,19 @@ export function NotificationDropdown() {
                                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center text-[#9CA3AF]">
                                     <BellIcon />
                                 </div>
-                                <p className="text-[#6F6B99] text-sm">{t("noNotifications")}</p>
+                                <p className="text-[#6F6B99] text-sm">Không có thông báo nào</p>
                             </div>
                         )}
                     </div>
 
                     {/* Footer */}
-                    {notifications.length > 0 && (
+                    {announcements.length > 0 && (
                         <div className="border-[#E5E5E5] border-t px-4 py-3">
                             <Link
-                                href={`/${currentLocale}/announcements`}
+                                href={`/${currentLocale}/home`}
                                 onClick={() => setIsOpen(false)}
                                 className="block text-center font-medium text-[#FF5F3D] text-sm hover:underline">
-                                {t("viewAll")}
+                                Xem tất cả thông báo
                             </Link>
                         </div>
                     )}

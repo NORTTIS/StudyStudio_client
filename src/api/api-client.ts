@@ -4,6 +4,7 @@
  */
 
 import { getAccessToken, isTokenExpired, refreshAccessToken } from "@/api/auth";
+import { getApiBaseUrl } from "@/utils/env";
 
 export type ApiResponse<T = unknown> = {
     status: "success" | "error";
@@ -25,6 +26,18 @@ type FetchOptions = RequestInit & {
  */
 export async function apiFetch<T = unknown>(url: string, options: FetchOptions = {}): Promise<ApiResponse<T>> {
     const { locale = "vi", skipAuth = false, ...fetchOptions } = options;
+
+    // Build full URL with base URL
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    const fullUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
+    
+    // Debug logging
+    console.log("API Call Debug:", {
+        originalUrl: url,
+        baseUrl: baseUrl,
+        fullUrl: fullUrl,
+        env: process.env.NEXT_PUBLIC_API_BASE_URL
+    });
 
     // Check if token needs refresh before making request (only for authenticated requests)
     if (!skipAuth && isTokenExpired()) {
@@ -56,7 +69,7 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
     }
 
     try {
-        const response = await fetch(url, {
+        const response = await fetch(fullUrl, {
             ...fetchOptions,
             headers
         });
@@ -70,7 +83,7 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
             if (refreshed) {
                 // Retry original request with new token
                 headers.set("Authorization", `Bearer ${refreshed.accessToken}`);
-                const retryResponse = await fetch(url, {
+                const retryResponse = await fetch(fullUrl, {
                     ...fetchOptions,
                     headers
                 });
@@ -123,6 +136,23 @@ export async function apiPost<T = unknown>(
 export async function apiGet<T = unknown>(url: string, locale?: string, skipAuth?: boolean): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, {
         method: "GET",
+        locale,
+        skipAuth
+    });
+}
+/**
+ * Helper for PUT requests
+ * @param skipAuth - Set to true for public endpoints to skip Authorization header
+ */
+export async function apiPut<T = unknown>(
+    url: string,
+    body: unknown,
+    locale?: string,
+    skipAuth?: boolean
+): Promise<ApiResponse<T>> {
+    return apiFetch<T>(url, {
+        method: "PUT",
+        body: JSON.stringify(body),
         locale,
         skipAuth
     });

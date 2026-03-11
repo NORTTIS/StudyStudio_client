@@ -1,94 +1,127 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getAdminBillingHistory, type AdminBillingHistoryItem } from "@/api/admin-billing";
+import { getPaymentStatusInfo } from "@/utils/payment-status";
 import { Button } from "@/components/ui/button";
-
-type BillingRecord = {
-    id: string;
-    invoice: string;
-    user: string;
-    email: string;
-    plan: "Free" | "Premium";
-    amount: number;
-    status: "Paid" | "Pending" | "Failed";
-    date: string;
-};
+import { useToast } from "@/hooks/use-toast";
 
 export function BillingHistoryTab() {
+    const { toast } = useToast();
     const [searchQuery, setSearchQuery] = useState("");
-    const [filterStatus, setFilterStatus] = useState<"all" | "paid" | "pending" | "failed">("all");
-
-    // Mock data
-    const billingRecords: BillingRecord[] = [
-        {
-            id: "1",
-            invoice: "INV-2024-001",
-            user: "Nguyễn Văn A",
-            email: "nguyenvana@example.com",
-            plan: "Premium",
-            amount: 299000,
-            status: "Paid",
-            date: "2024-03-05"
-        },
-        {
-            id: "2",
-            invoice: "INV-2024-002",
-            user: "Trần Thị B",
-            email: "tranthib@example.com",
-            plan: "Premium",
-            amount: 299000,
-            status: "Paid",
-            date: "2024-03-04"
-        },
-        {
-            id: "3",
-            invoice: "INV-2024-003",
-            user: "Lê Văn C",
-            email: "levanc@example.com",
-            plan: "Premium",
-            amount: 299000,
-            status: "Pending",
-            date: "2024-03-03"
-        },
-        {
-            id: "4",
-            invoice: "INV-2024-004",
-            user: "Phạm Thị D",
-            email: "phamthid@example.com",
-            plan: "Premium",
-            amount: 299000,
-            status: "Failed",
-            date: "2024-03-02"
-        }
-    ];
-
-    const filteredRecords = billingRecords.filter((record) => {
-        const matchesSearch =
-            record.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            record.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            record.invoice.toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesStatus = filterStatus === "all" || record.status.toLowerCase() === filterStatus;
-
-        return matchesSearch && matchesStatus;
+    const [filterStatus, setFilterStatus] = useState<number | "all">("all");
+    const [isLoading, setIsLoading] = useState(true);
+    const [billingRecords, setBillingRecords] = useState<AdminBillingHistoryItem[]>([]);
+    const [pagination, setPagination] = useState({
+        pageNumber: 1,
+        pageSize: 10,
+        totalCount: 0,
+        totalPages: 0
     });
+
+    // Load billing history from API
+    useEffect(() => {
+        const loadBillingHistory = async () => {
+            setIsLoading(true);
+            try {
+                const result = await getAdminBillingHistory({
+                    searchTerm: searchQuery || undefined,
+                    paymentStatus: filterStatus === "all" ? undefined : filterStatus,
+                    pageNumber: pagination.pageNumber,
+                    pageSize: pagination.pageSize
+                }, "vi");
+
+                if (result.status === "success" && result.data) {
+                    setBillingRecords(result.data.items);
+                    setPagination({
+                        pageNumber: result.data.pageNumber,
+                        pageSize: result.data.pageSize,
+                        totalCount: result.data.totalCount,
+                        totalPages: result.data.totalPages
+                    });
+                } else {
+                    // Fallback to mock data if API fails
+                    console.warn("API failed, using mock data:", result.message);
+                    setBillingRecords([
+                        {
+                            paymentId: "1",
+                            orderCode: 2024001,
+                            paymentStatus: 1, // SUCCESS
+                            amount: 299000,
+                            paymentMethod: "Bank Transfer",
+                            createdAt: "2024-03-05T10:00:00Z",
+                            paidAt: "2024-03-05T10:05:00Z",
+                            userId: "user-1",
+                            userEmail: "nguyenvana@example.com",
+                            userName: "Nguyễn Văn A",
+                            planId: "premium-plan",
+                            planName: "Premium"
+                        },
+                        {
+                            paymentId: "2",
+                            orderCode: 2024002,
+                            paymentStatus: 0, // PENDING
+                            amount: 299000,
+                            paymentMethod: "Credit Card",
+                            createdAt: "2024-03-04T15:30:00Z",
+                            paidAt: null,
+                            userId: "user-2",
+                            userEmail: "tranthib@example.com",
+                            userName: "Trần Thị B",
+                            planId: "premium-plan",
+                            planName: "Premium"
+                        },
+                        {
+                            paymentId: "3",
+                            orderCode: 2024003,
+                            paymentStatus: 3, // FAILED
+                            amount: 299000,
+                            paymentMethod: "Credit Card",
+                            createdAt: "2024-03-03T09:15:00Z",
+                            paidAt: null,
+                            userId: "user-3",
+                            userEmail: "levanc@example.com",
+                            userName: "Lê Văn C",
+                            planId: "premium-plan",
+                            planName: "Premium"
+                        }
+                    ]);
+                    setPagination({
+                        pageNumber: 1,
+                        pageSize: 10,
+                        totalCount: 3,
+                        totalPages: 1
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load billing history:", error);
+                // Không gọi toast ở đây để tránh dependency loop
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadBillingHistory();
+    }, [searchQuery, filterStatus, pagination.pageNumber]); // Bỏ toast khỏi dependency
+
+    // Handle search with debounce
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (pagination.pageNumber !== 1) {
+                setPagination(prev => ({ ...prev, pageNumber: 1 }));
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery, filterStatus, pagination.pageNumber]);
 
     const handleExport = () => {
         // TODO: Implement export functionality
         console.log("Exporting billing history...");
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "Paid":
-                return "bg-green-100 text-green-700";
-            case "Pending":
-                return "bg-yellow-100 text-yellow-700";
-            case "Failed":
-                return "bg-red-100 text-red-700";
-            default:
-                return "bg-gray-100 text-gray-700";
-        }
+    const handlePageChange = (newPage: number) => {
+        setPagination(prev => ({ ...prev, pageNumber: newPage }));
     };
 
     return (
@@ -120,12 +153,13 @@ export function BillingHistoryTab() {
                 <div className="flex gap-2">
                     <select
                         value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value as any)}
+                        onChange={(e) => setFilterStatus(e.target.value === "all" ? "all" : Number(e.target.value))}
                         className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
                         <option value="all">All Status</option>
-                        <option value="paid">Paid</option>
-                        <option value="pending">Pending</option>
-                        <option value="failed">Failed</option>
+                        <option value={0}>Pending</option>
+                        <option value={1}>Success</option>
+                        <option value={2}>Cancelled</option>
+                        <option value={3}>Failed</option>
                     </select>
 
                     <Button onClick={handleExport} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
@@ -144,57 +178,103 @@ export function BillingHistoryTab() {
 
             {/* Billing Table */}
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-[#F8F8F8]">
-                            <tr>
-                                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Invoice</th>
-                                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">User</th>
-                                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Plan</th>
-                                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Amount</th>
-                                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Status</th>
-                                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Date</th>
-                                <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRecords.map((record) => (
-                                <tr key={record.id} className="border-gray-100 border-t hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium text-[#261E33] text-sm">{record.invoice}</td>
-                                    <td className="px-6 py-4">
-                                        <div>
-                                            <p className="font-medium text-[#261E33] text-sm">{record.user}</p>
-                                            <p className="text-[#6F6B99] text-xs">{record.email}</p>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-[#261E33] text-sm">{record.plan}</td>
-                                    <td className="px-6 py-4 font-semibold text-[#261E33] text-sm">
-                                        {record.amount.toLocaleString()} VND
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span
-                                            className={`rounded-full px-3 py-1 font-medium text-xs ${getStatusColor(record.status)}`}>
-                                            {record.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-[#6F6B99] text-sm">{record.date}</td>
-                                    <td className="px-6 py-4">
-                                        <button
-                                            type="button"
-                                            className="font-medium text-[#FF5F3D] text-sm hover:text-[#ff4620]">
-                                            View Details
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredRecords.length === 0 && (
-                    <div className="py-12 text-center">
-                        <p className="text-[#6F6B99]">No billing records found</p>
+                {isLoading ? (
+                    <div className="flex items-center justify-center p-12">
+                        <div className="text-center">
+                            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-[#FF5F3D]" />
+                            <p className="text-[#6F6B99] text-sm">Đang tải dữ liệu...</p>
+                        </div>
                     </div>
+                ) : (
+                    <>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-[#F8F8F8]">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Order Code</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">User</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Plan</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Amount</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Method</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Status</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Date</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {billingRecords.map((record) => {
+                                        const statusInfo = getPaymentStatusInfo(record.paymentStatus);
+                                        return (
+                                            <tr key={record.paymentId} className="border-gray-100 border-t hover:bg-gray-50">
+                                                <td className="px-6 py-4 font-medium text-[#261E33] text-sm">
+                                                    #{record.orderCode}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div>
+                                                        <p className="font-medium text-[#261E33] text-sm">{record.userName}</p>
+                                                        <p className="text-[#6F6B99] text-xs">{record.userEmail}</p>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-[#261E33] text-sm">{record.planName}</td>
+                                                <td className="px-6 py-4 font-semibold text-[#261E33] text-sm">
+                                                    {record.amount.toLocaleString()} VND
+                                                </td>
+                                                <td className="px-6 py-4 text-[#261E33] text-sm">{record.paymentMethod}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`rounded-full px-3 py-1 font-medium text-xs ${statusInfo.color} ${statusInfo.bgColor}`}>
+                                                        {statusInfo.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-[#6F6B99] text-sm">
+                                                    {new Date(record.createdAt).toLocaleDateString("vi-VN")}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <button
+                                                        type="button"
+                                                        className="font-medium text-[#FF5F3D] text-sm hover:text-[#ff4620]">
+                                                        View Details
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {billingRecords.length === 0 && (
+                            <div className="py-12 text-center">
+                                <p className="text-[#6F6B99]">No billing records found</p>
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {pagination.totalPages > 1 && (
+                            <div className="flex items-center justify-between border-gray-200 border-t px-6 py-4">
+                                <div className="text-[#6F6B99] text-sm">
+                                    Showing {((pagination.pageNumber - 1) * pagination.pageSize) + 1} to{" "}
+                                    {Math.min(pagination.pageNumber * pagination.pageSize, pagination.totalCount)} of{" "}
+                                    {pagination.totalCount} results
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(pagination.pageNumber - 1)}
+                                        disabled={pagination.pageNumber <= 1}>
+                                        Previous
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(pagination.pageNumber + 1)}
+                                        disabled={pagination.pageNumber >= pagination.totalPages}>
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

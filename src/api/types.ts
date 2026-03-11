@@ -2583,7 +2583,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/payment/{paymentId}/cancel": {
+    "/api/payment/{orderCode}/cancel": {
         parameters: {
             query?: never;
             header?: never;
@@ -2597,7 +2597,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    paymentId: string;
+                    orderCode: number;
                 };
                 cookie?: never;
             };
@@ -4083,6 +4083,8 @@ export interface components {
         CreatePaymentResponse: {
             /** Format: double */
             amount?: number;
+            /** Format: date-time */
+            expiredAt?: string;
             /** Format: int64 */
             orderCode?: number;
             /** Format: uuid */
