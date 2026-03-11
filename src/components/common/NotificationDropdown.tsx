@@ -60,7 +60,7 @@ const InfoIcon = () => (
 );
 
 export function NotificationDropdown() {
-    const t = useTranslations("Notifications");
+    const _t = useTranslations("Notifications");
     const locale = useLocale();
     const router = useRouter();
     const pathname = usePathname();
@@ -80,7 +80,7 @@ export function NotificationDropdown() {
                 const result = await getUserAnnouncements(locale);
                 if (result.status === "success" && result.data) {
                     // Only show active announcements
-                    const activeAnnouncements = result.data.filter(a => a.isActive);
+                    const activeAnnouncements = result.data.filter((a) => a.isActive);
                     setAnnouncements(activeAnnouncements);
                 } else {
                     setAnnouncements([]);
@@ -111,7 +111,7 @@ export function NotificationDropdown() {
     // Show count of all announcements as "unread"
     const unreadCount = announcements.length;
 
-    const handleAnnouncementClick = (announcement: UserAnnouncement) => {
+    const handleAnnouncementClick = (_announcement: UserAnnouncement) => {
         // Close dropdown
         setIsOpen(false);
         // Navigate to home page where announcements are displayed
@@ -201,7 +201,8 @@ export function NotificationDropdown() {
                                                 {announcement.content}
                                             </p>
                                             <div className="mt-2 flex items-center gap-2">
-                                                <span className={`px-2 py-1 rounded text-xs ${getTypeColor(announcement.type).replace('text-', 'bg-').replace('-500', '-100')} ${getTypeColor(announcement.type)}`}>
+                                                <span
+                                                    className={`rounded px-2 py-1 text-xs ${getTypeColor(announcement.type).replace("text-", "bg-").replace("-500", "-100")} ${getTypeColor(announcement.type)}`}>
                                                     {announcement.type}
                                                 </span>
                                                 <span className="text-[#9CA3AF] text-xs">

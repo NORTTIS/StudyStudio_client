@@ -47,23 +47,23 @@ export async function getAdminBillingHistory(
     try {
         // Build query parameters
         const queryParams = new URLSearchParams();
-        
+
         if (params.searchTerm) {
-            queryParams.append('SearchTerm', params.searchTerm);
+            queryParams.append("SearchTerm", params.searchTerm);
         }
         if (params.paymentStatus !== undefined) {
-            queryParams.append('PaymentStatus', params.paymentStatus.toString());
+            queryParams.append("PaymentStatus", params.paymentStatus.toString());
         }
         if (params.pageNumber !== undefined) {
-            queryParams.append('PageNumber', params.pageNumber.toString());
+            queryParams.append("PageNumber", params.pageNumber.toString());
         }
         if (params.pageSize !== undefined) {
-            queryParams.append('PageSize', params.pageSize.toString());
+            queryParams.append("PageSize", params.pageSize.toString());
         }
 
-        const endpoint = `/admin/billing/history${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const endpoint = `/admin/billing/history${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
         const response = await apiGet<AdminBillingHistoryResponse>(endpoint, locale);
-        
+
         if (response.status === "success" && response.data) {
             return {
                 status: response.status,
@@ -71,14 +71,13 @@ export async function getAdminBillingHistory(
                 message: response.message,
                 data: response.data
             };
-        } else {
-            return {
-                status: "error",
-                code: response.code || "API_ERROR",
-                message: response.message || "Failed to fetch data",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Failed to fetch data",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Failed to get admin billing history:", error);
         return {

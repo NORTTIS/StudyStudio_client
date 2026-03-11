@@ -288,7 +288,8 @@ export default function BillingPage() {
             // Don't allow downgrade from premium to free
             if (currentPlan === "premium") {
                 toast({
-                    description: "Không thể chuyển từ gói Premium về gói Free. Vui lòng liên hệ hỗ trợ nếu cần hủy gói.",
+                    description:
+                        "Không thể chuyển từ gói Premium về gói Free. Vui lòng liên hệ hỗ trợ nếu cần hủy gói.",
                     variant: "destructive"
                 });
                 return;
@@ -430,7 +431,10 @@ export default function BillingPage() {
 
                                         {currentPlan !== "free" && (
                                             <>
-                                                <Button variant="outline" disabled className="cursor-not-allowed opacity-50">
+                                                <Button
+                                                    variant="outline"
+                                                    disabled
+                                                    className="cursor-not-allowed opacity-50">
                                                     Không thể chuyển về Free
                                                 </Button>
                                                 <Button variant="outline">{t("currentPlan.cancelButton")}</Button>
@@ -461,13 +465,15 @@ export default function BillingPage() {
                                 return (
                                     <div
                                         key={plan.id}
-                                        className={`rounded-2xl border-2 p-6 transition ${isCurrentPlan
-                                            ? "border-[#FF5F3D] bg-gray-50 opacity-75 shadow-lg"
-                                            : isDisabled
-                                                ? "border-gray-200 bg-gray-50 opacity-50"
-                                                : "border-[#E5E5E5] hover:border-gray-300"
-                                            }`}>
-                                        <h3 className={`font-bold text-lg ${isCurrentPlan || isDisabled ? "text-gray-600" : ""}`}>
+                                        className={`rounded-2xl border-2 p-6 transition ${
+                                            isCurrentPlan
+                                                ? "border-[#FF5F3D] bg-gray-50 opacity-75 shadow-lg"
+                                                : isDisabled
+                                                  ? "border-gray-200 bg-gray-50 opacity-50"
+                                                  : "border-[#E5E5E5] hover:border-gray-300"
+                                        }`}>
+                                        <h3
+                                            className={`font-bold text-lg ${isCurrentPlan || isDisabled ? "text-gray-600" : ""}`}>
                                             {plan.name}
                                         </h3>
 
@@ -479,10 +485,11 @@ export default function BillingPage() {
                                         <Button
                                             onClick={() => handlePlanChange(plan.id)}
                                             disabled={isCurrentPlan || isProcessing || isDisabled}
-                                            className={`mt-5 w-full gap-2 rounded-lg ${isCurrentPlan || isDisabled
-                                                ? "cursor-not-allowed bg-gray-300 text-gray-600 hover:bg-gray-300"
-                                                : ""
-                                                }`}>
+                                            className={`mt-5 w-full gap-2 rounded-lg ${
+                                                isCurrentPlan || isDisabled
+                                                    ? "cursor-not-allowed bg-gray-300 text-gray-600 hover:bg-gray-300"
+                                                    : ""
+                                            }`}>
                                             {isProcessing && selectedPlan === plan.id ? (
                                                 "Đang xử lý..."
                                             ) : isCurrentPlan ? (
@@ -501,11 +508,15 @@ export default function BillingPage() {
                                             {plan.features.map((feature) => (
                                                 <p
                                                     key={feature}
-                                                    className={`flex gap-2 text-sm ${isCurrentPlan || isDisabled ? "text-gray-500" : "text-[#6F6B99]"
-                                                        }`}>
+                                                    className={`flex gap-2 text-sm ${
+                                                        isCurrentPlan || isDisabled ? "text-gray-500" : "text-[#6F6B99]"
+                                                    }`}>
                                                     <span
-                                                        className={`font-bold ${isCurrentPlan || isDisabled ? "text-gray-400" : "text-[#FF5F3D]"
-                                                            }`}>
+                                                        className={`font-bold ${
+                                                            isCurrentPlan || isDisabled
+                                                                ? "text-gray-400"
+                                                                : "text-[#FF5F3D]"
+                                                        }`}>
                                                         ✓
                                                     </span>
                                                     {feature}
@@ -547,10 +558,11 @@ export default function BillingPage() {
                                             billingHistory.map((item) => (
                                                 <tr
                                                     key={item.id}
-                                                    className={`border-t text-sm ${item.status === "PENDING"
-                                                        ? "cursor-pointer transition-colors hover:bg-blue-50"
-                                                        : ""
-                                                        }`}
+                                                    className={`border-t text-sm ${
+                                                        item.status === "PENDING"
+                                                            ? "cursor-pointer transition-colors hover:bg-blue-50"
+                                                            : ""
+                                                    }`}
                                                     onClick={() => {
                                                         if (item.status === "PENDING") {
                                                             handleRetryPayment(item.id);
@@ -564,10 +576,11 @@ export default function BillingPage() {
                                                         <div className="flex items-center gap-2">
                                                             <span
                                                                 className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${(() => {
-                                                                    const statusInfo = getPaymentStatusInfo(item.status);
+                                                                    const statusInfo = getPaymentStatusInfo(
+                                                                        item.status
+                                                                    );
                                                                     return `${statusInfo.color} ${statusInfo.bgColor}`;
-                                                                })()
-                                                                    }`}>
+                                                                })()}`}>
                                                                 {getPaymentStatusInfo(item.status).label}
                                                             </span>
                                                             {item.status === "PENDING" && (
@@ -599,7 +612,6 @@ export default function BillingPage() {
                             </div>
                         )}
                     </div>
-
                 </>
             )}
 

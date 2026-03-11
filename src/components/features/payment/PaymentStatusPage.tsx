@@ -33,11 +33,14 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                     setPayment(newPayment);
 
                     // Auto redirect to billing page if payment is successful
-                    if (newPayment.paymentStatus?.toLowerCase() === "success" ||
-                        newPayment.paymentStatus?.toLowerCase() === "completed") {
+                    if (
+                        newPayment.paymentStatus?.toLowerCase() === "success" ||
+                        newPayment.paymentStatus?.toLowerCase() === "completed"
+                    ) {
                         setTimeout(() => {
                             toast({
-                                description: "Thanh toán thành công! Email xác nhận đã được gửi. Đang chuyển về trang quản lý gói...",
+                                description:
+                                    "Thanh toán thành công! Email xác nhận đã được gửi. Đang chuyển về trang quản lý gói...",
                                 variant: "default"
                             });
                             router.push(`/${locale}/settings/billing`);
@@ -164,12 +167,12 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                                     <p className="text-[#6F6B99]">Mã giao dịch: {payment.orderCode}</p>
                                     {(payment.paymentStatus?.toLowerCase() === "success" ||
                                         payment.paymentStatus?.toLowerCase() === "completed") && (
-                                            <div className="mt-4 rounded-lg bg-green-50 p-4">
-                                                <p className="text-green-700 text-sm">
-                                                    📧 Email xác nhận thanh toán đã được gửi đến địa chỉ email của bạn
-                                                </p>
-                                            </div>
-                                        )}
+                                        <div className="mt-4 rounded-lg bg-green-50 p-4">
+                                            <p className="text-green-700 text-sm">
+                                                📧 Email xác nhận thanh toán đã được gửi đến địa chỉ email của bạn
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Payment Details */}

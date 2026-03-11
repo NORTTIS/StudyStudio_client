@@ -40,10 +40,10 @@ export interface ApiResponse<T> {
 export async function getAdminAnnouncements(locale: string): Promise<ApiResponse<AdminAnnouncement[]>> {
     try {
         console.log("Gọi API announcements: /admin/announcements");
-        
+
         const response = await apiGet<AdminAnnouncement[]>("/admin/announcements", locale);
         console.log("Phản hồi API announcements:", response);
-        
+
         if (response.status === "success" && response.data) {
             return {
                 status: response.status,
@@ -51,14 +51,13 @@ export async function getAdminAnnouncements(locale: string): Promise<ApiResponse
                 message: response.message,
                 data: response.data
             };
-        } else {
-            return {
-                status: "error",
-                code: response.code || "API_ERROR",
-                message: response.message || "Không thể tải dữ liệu thông báo",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Không thể tải dữ liệu thông báo",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Lỗi khi gọi API admin announcements:", error);
         return {
@@ -73,13 +72,10 @@ export async function getAdminAnnouncements(locale: string): Promise<ApiResponse
 /**
  * Get single announcement by ID
  */
-export async function getAdminAnnouncementById(
-    id: string,
-    locale: string
-): Promise<ApiResponse<AdminAnnouncement>> {
+export async function getAdminAnnouncementById(id: string, locale: string): Promise<ApiResponse<AdminAnnouncement>> {
     try {
         const response = await apiGet<AdminAnnouncement>(`/admin/announcements/${id}`, locale);
-        
+
         if (response.status === "success" && response.data) {
             return {
                 status: response.status,
@@ -87,14 +83,13 @@ export async function getAdminAnnouncementById(
                 message: response.message,
                 data: response.data
             };
-        } else {
-            return {
-                status: "error",
-                code: response.code || "API_ERROR",
-                message: response.message || "Không thể tải thông báo",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Không thể tải thông báo",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Lỗi khi tải thông báo:", error);
         return {
@@ -115,7 +110,7 @@ export async function createAdminAnnouncement(
 ): Promise<ApiResponse<AdminAnnouncement>> {
     try {
         const response = await apiPost<AdminAnnouncement>("/admin/announcements", request, locale);
-        
+
         if (response.status === "success" && response.data) {
             return {
                 status: response.status,
@@ -123,14 +118,13 @@ export async function createAdminAnnouncement(
                 message: response.message,
                 data: response.data
             };
-        } else {
-            return {
-                status: "error",
-                code: response.code || "API_ERROR",
-                message: response.message || "Không thể tạo thông báo",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Không thể tạo thông báo",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Lỗi khi tạo thông báo:", error);
         return {
@@ -151,7 +145,7 @@ export async function updateAdminAnnouncement(
 ): Promise<ApiResponse<AdminAnnouncement>> {
     try {
         const response = await apiPut<AdminAnnouncement>("/admin/announcements", request, locale);
-        
+
         if (response.status === "success" && response.data) {
             return {
                 status: response.status,
@@ -159,14 +153,13 @@ export async function updateAdminAnnouncement(
                 message: response.message,
                 data: response.data
             };
-        } else {
-            return {
-                status: "error",
-                code: response.code || "API_ERROR",
-                message: response.message || "Không thể cập nhật thông báo",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Không thể cập nhật thông báo",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Lỗi khi cập nhật thông báo:", error);
         return {
@@ -181,22 +174,19 @@ export async function updateAdminAnnouncement(
 /**
  * Delete announcement
  */
-export async function deleteAdminAnnouncement(
-    id: string,
-    locale: string
-): Promise<ApiResponse<string>> {
+export async function deleteAdminAnnouncement(id: string, locale: string): Promise<ApiResponse<string>> {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/announcements/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
                 "Accept-Language": locale,
-                "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`
             }
         });
 
         const data = await response.json();
-        
+
         if (data.status === "success") {
             return {
                 status: data.status,
@@ -204,14 +194,13 @@ export async function deleteAdminAnnouncement(
                 message: data.message,
                 data: data.data
             };
-        } else {
-            return {
-                status: "error",
-                code: data.code || "API_ERROR",
-                message: data.message || "Không thể xóa thông báo",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: data.code || "API_ERROR",
+            message: data.message || "Không thể xóa thông báo",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Lỗi khi xóa thông báo:", error);
         return {
@@ -237,10 +226,15 @@ export function getAnnouncementTypeLabel(type: number): string {
 
 export function getAnnouncementTypeColor(type: number): string {
     switch (type) {
-        case 0: return "bg-blue-100 text-blue-700"; // Thông báo chung
-        case 1: return "bg-green-100 text-green-700"; // Cập nhật tính năng
-        case 2: return "bg-orange-100 text-orange-700"; // Bảo trì hệ thống
-        case 3: return "bg-purple-100 text-purple-700"; // Khuyến mãi
-        default: return "bg-gray-100 text-gray-700";
+        case 0:
+            return "bg-blue-100 text-blue-700"; // Thông báo chung
+        case 1:
+            return "bg-green-100 text-green-700"; // Cập nhật tính năng
+        case 2:
+            return "bg-orange-100 text-orange-700"; // Bảo trì hệ thống
+        case 3:
+            return "bg-purple-100 text-purple-700"; // Khuyến mãi
+        default:
+            return "bg-gray-100 text-gray-700";
     }
 }

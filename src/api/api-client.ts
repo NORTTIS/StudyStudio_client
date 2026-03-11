@@ -4,7 +4,6 @@
  */
 
 import { getAccessToken, isTokenExpired, refreshAccessToken } from "@/api/auth";
-import { getApiBaseUrl } from "@/utils/env";
 
 export type ApiResponse<T = unknown> = {
     status: "success" | "error";
@@ -30,7 +29,7 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
     // Build full URL with base URL
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
     const fullUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
-    
+
     // Debug logging
     console.log("API Call Debug:", {
         originalUrl: url,

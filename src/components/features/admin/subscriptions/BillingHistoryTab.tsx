@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAdminBillingHistory, type AdminBillingHistoryItem } from "@/api/admin-billing";
-import { getPaymentStatusInfo } from "@/utils/payment-status";
+import { type AdminBillingHistoryItem, getAdminBillingHistory } from "@/api/admin-billing";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { getPaymentStatusInfo } from "@/utils/payment-status";
 
 export function BillingHistoryTab() {
-    const { toast } = useToast();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<number | "all">("all");
     const [isLoading, setIsLoading] = useState(true);
@@ -24,12 +22,15 @@ export function BillingHistoryTab() {
         const loadBillingHistory = async () => {
             setIsLoading(true);
             try {
-                const result = await getAdminBillingHistory({
-                    searchTerm: searchQuery || undefined,
-                    paymentStatus: filterStatus === "all" ? undefined : filterStatus,
-                    pageNumber: pagination.pageNumber,
-                    pageSize: pagination.pageSize
-                }, "vi");
+                const result = await getAdminBillingHistory(
+                    {
+                        searchTerm: searchQuery || undefined,
+                        paymentStatus: filterStatus === "all" ? undefined : filterStatus,
+                        pageNumber: pagination.pageNumber,
+                        pageSize: pagination.pageSize
+                    },
+                    "vi"
+                );
 
                 if (result.status === "success" && result.data) {
                     setBillingRecords(result.data.items);
@@ -102,18 +103,18 @@ export function BillingHistoryTab() {
         };
 
         loadBillingHistory();
-    }, [searchQuery, filterStatus, pagination.pageNumber]); // Bỏ toast khỏi dependency
+    }, [searchQuery, filterStatus, pagination.pageNumber, pagination.pageSize]); // Bỏ toast khỏi dependency
 
     // Handle search with debounce
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             if (pagination.pageNumber !== 1) {
-                setPagination(prev => ({ ...prev, pageNumber: 1 }));
+                setPagination((prev) => ({ ...prev, pageNumber: 1 }));
             }
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchQuery, filterStatus, pagination.pageNumber]);
+    }, [pagination.pageNumber]);
 
     const handleExport = () => {
         // TODO: Implement export functionality
@@ -121,7 +122,7 @@ export function BillingHistoryTab() {
     };
 
     const handlePageChange = (newPage: number) => {
-        setPagination(prev => ({ ...prev, pageNumber: newPage }));
+        setPagination((prev) => ({ ...prev, pageNumber: newPage }));
     };
 
     return (
@@ -191,27 +192,47 @@ export function BillingHistoryTab() {
                             <table className="w-full">
                                 <thead className="bg-[#F8F8F8]">
                                     <tr>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Order Code</th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">User</th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Plan</th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Amount</th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Method</th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Status</th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Date</th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">Actions</th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            Order Code
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            User
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            Plan
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            Amount
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            Method
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            Date
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {billingRecords.map((record) => {
                                         const statusInfo = getPaymentStatusInfo(record.paymentStatus);
                                         return (
-                                            <tr key={record.paymentId} className="border-gray-100 border-t hover:bg-gray-50">
+                                            <tr
+                                                key={record.paymentId}
+                                                className="border-gray-100 border-t hover:bg-gray-50">
                                                 <td className="px-6 py-4 font-medium text-[#261E33] text-sm">
                                                     #{record.orderCode}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div>
-                                                        <p className="font-medium text-[#261E33] text-sm">{record.userName}</p>
+                                                        <p className="font-medium text-[#261E33] text-sm">
+                                                            {record.userName}
+                                                        </p>
                                                         <p className="text-[#6F6B99] text-xs">{record.userEmail}</p>
                                                     </div>
                                                 </td>
@@ -219,9 +240,12 @@ export function BillingHistoryTab() {
                                                 <td className="px-6 py-4 font-semibold text-[#261E33] text-sm">
                                                     {record.amount.toLocaleString()} VND
                                                 </td>
-                                                <td className="px-6 py-4 text-[#261E33] text-sm">{record.paymentMethod}</td>
+                                                <td className="px-6 py-4 text-[#261E33] text-sm">
+                                                    {record.paymentMethod}
+                                                </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`rounded-full px-3 py-1 font-medium text-xs ${statusInfo.color} ${statusInfo.bgColor}`}>
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${statusInfo.color} ${statusInfo.bgColor}`}>
                                                         {statusInfo.label}
                                                     </span>
                                                 </td>
@@ -252,7 +276,7 @@ export function BillingHistoryTab() {
                         {pagination.totalPages > 1 && (
                             <div className="flex items-center justify-between border-gray-200 border-t px-6 py-4">
                                 <div className="text-[#6F6B99] text-sm">
-                                    Showing {((pagination.pageNumber - 1) * pagination.pageSize) + 1} to{" "}
+                                    Showing {(pagination.pageNumber - 1) * pagination.pageSize + 1} to{" "}
                                     {Math.min(pagination.pageNumber * pagination.pageSize, pagination.totalCount)} of{" "}
                                     {pagination.totalCount} results
                                 </div>

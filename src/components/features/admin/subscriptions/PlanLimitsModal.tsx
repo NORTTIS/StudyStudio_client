@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateSubscriptionPlan, type AdminSubscriptionPlan } from "@/api/admin-subscription-plans";
+import { type AdminSubscriptionPlan, updateSubscriptionPlan } from "@/api/admin-subscription-plans";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -29,14 +29,17 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const result = await updateSubscriptionPlan({
-                planId: plan.planId,
-                maxStudios: limits.maxStudios,
-                maxGroups: limits.maxGroups,
-                maxMembersPerGroup: limits.maxMembersPerGroup,
-                maxStorageMb: limits.maxStorageMb,
-                maxAiRequestsPerDay: limits.maxAiRequestsPerDay
-            }, "vi");
+            const result = await updateSubscriptionPlan(
+                {
+                    planId: plan.planId,
+                    maxStudios: limits.maxStudios,
+                    maxGroups: limits.maxGroups,
+                    maxMembersPerGroup: limits.maxMembersPerGroup,
+                    maxStorageMb: limits.maxStorageMb,
+                    maxAiRequestsPerDay: limits.maxAiRequestsPerDay
+                },
+                "vi"
+            );
 
             if (result.status === "success") {
                 toast({
@@ -154,8 +157,7 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
                     <Button
                         onClick={handleSave}
                         className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]"
-                        disabled={isLoading}
-                    >
+                        disabled={isLoading}>
                         {isLoading ? "Saving..." : "Save Changes"}
                     </Button>
                 </div>

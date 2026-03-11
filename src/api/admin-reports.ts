@@ -61,29 +61,29 @@ export async function getAdminReports(
     try {
         // Build query parameters
         const queryParams = new URLSearchParams();
-        
+
         if (params.searchTerm) {
-            queryParams.append('SearchTerm', params.searchTerm);
+            queryParams.append("SearchTerm", params.searchTerm);
         }
         if (params.type !== undefined) {
-            queryParams.append('Type', params.type.toString());
+            queryParams.append("Type", params.type.toString());
         }
         if (params.status !== undefined) {
-            queryParams.append('Status', params.status.toString());
+            queryParams.append("Status", params.status.toString());
         }
         if (params.pageNumber !== undefined) {
-            queryParams.append('PageNumber', params.pageNumber.toString());
+            queryParams.append("PageNumber", params.pageNumber.toString());
         }
         if (params.pageSize !== undefined) {
-            queryParams.append('PageSize', params.pageSize.toString());
+            queryParams.append("PageSize", params.pageSize.toString());
         }
 
-        const endpoint = `/admin/reports${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const endpoint = `/admin/reports${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
         console.log("Gọi API reports:", endpoint);
-        
+
         const response = await apiGet<AdminReportsResponse>(endpoint, locale);
         console.log("Phản hồi API reports:", response);
-        
+
         if (response.status === "success" && response.data) {
             return {
                 status: response.status,
@@ -91,14 +91,13 @@ export async function getAdminReports(
                 message: response.message,
                 data: response.data
             };
-        } else {
-            return {
-                status: "error",
-                code: response.code || "API_ERROR",
-                message: response.message || "Không thể tải dữ liệu báo cáo",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Không thể tải dữ liệu báo cáo",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Lỗi khi gọi API admin reports:", error);
         return {
@@ -120,7 +119,7 @@ export async function updateAdminReport(
     try {
         // Wrap request in "request" object if needed by backend
         const response = await apiPut<AdminReport>("/admin/reports", request, locale);
-        
+
         if (response.status === "success" && response.data) {
             return {
                 status: response.status,
@@ -128,14 +127,13 @@ export async function updateAdminReport(
                 message: response.message,
                 data: response.data
             };
-        } else {
-            return {
-                status: "error",
-                code: response.code || "API_ERROR",
-                message: response.message || "Cập nhật báo cáo thất bại",
-                data: null
-            };
         }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Cập nhật báo cáo thất bại",
+            data: null
+        };
     } catch (error: unknown) {
         console.error("Lỗi khi cập nhật báo cáo admin:", error);
         return {
@@ -150,7 +148,7 @@ export async function updateAdminReport(
 // Helper functions for mapping enums
 export const REPORT_TYPES = {
     0: "Bug Report",
-    1: "Feature Request", 
+    1: "Feature Request",
     2: "Account Issue",
     3: "Other"
 } as const;
@@ -158,7 +156,7 @@ export const REPORT_TYPES = {
 export const REPORT_STATUSES = {
     0: "Open",
     1: "In Progress",
-    2: "Resolved", 
+    2: "Resolved",
     3: "Closed"
 } as const;
 
@@ -183,20 +181,30 @@ export function getReportPriorityLabel(priority: number): string {
 
 export function getReportStatusColor(status: number): string {
     switch (status) {
-        case 0: return "bg-yellow-100 text-yellow-700"; // Open
-        case 1: return "bg-blue-100 text-blue-700"; // In Progress
-        case 2: return "bg-green-100 text-green-700"; // Resolved
-        case 3: return "bg-gray-100 text-gray-700"; // Closed
-        default: return "bg-gray-100 text-gray-700";
+        case 0:
+            return "bg-yellow-100 text-yellow-700"; // Open
+        case 1:
+            return "bg-blue-100 text-blue-700"; // In Progress
+        case 2:
+            return "bg-green-100 text-green-700"; // Resolved
+        case 3:
+            return "bg-gray-100 text-gray-700"; // Closed
+        default:
+            return "bg-gray-100 text-gray-700";
     }
 }
 
 export function getReportPriorityColor(priority: number): string {
     switch (priority) {
-        case 0: return "bg-gray-100 text-gray-700"; // Low
-        case 1: return "bg-yellow-100 text-yellow-700"; // Medium
-        case 2: return "bg-orange-100 text-orange-700"; // High
-        case 3: return "bg-red-100 text-red-700"; // Urgent
-        default: return "bg-gray-100 text-gray-700";
+        case 0:
+            return "bg-gray-100 text-gray-700"; // Low
+        case 1:
+            return "bg-yellow-100 text-yellow-700"; // Medium
+        case 2:
+            return "bg-orange-100 text-orange-700"; // High
+        case 3:
+            return "bg-red-100 text-red-700"; // Urgent
+        default:
+            return "bg-gray-100 text-gray-700";
     }
 }

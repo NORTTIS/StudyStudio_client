@@ -1,9 +1,9 @@
 "use client";
 
-import HomeSummary from "./HomeSummary";
-import HomeTaskList from "@/components/features/home/HomeTaskList";
-import HomePersonalTask from "@/components/features/home/HomePersonalTask";
 import { AnnouncementsList } from "@/components/features/announcements/AnnouncementsList";
+import HomePersonalTask from "@/components/features/home/HomePersonalTask";
+import HomeTaskList from "@/components/features/home/HomeTaskList";
+import HomeSummary from "./HomeSummary";
 
 export default function HomePage() {
     return (

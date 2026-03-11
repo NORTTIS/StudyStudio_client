@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateSubscriptionPlan, type AdminSubscriptionPlan } from "@/api/admin-subscription-plans";
+import { type AdminSubscriptionPlan, updateSubscriptionPlan } from "@/api/admin-subscription-plans";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,7 +34,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
     if (!isOpen) return null;
 
     const handleInputChange = (field: string, value: string | number | boolean) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             [field]: value
         }));
@@ -58,7 +58,12 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
             return;
         }
 
-        if (formData.maxStudios <= 0 || formData.maxGroups <= 0 || formData.maxMembersPerGroup <= 0 || formData.maxStorageMb <= 0) {
+        if (
+            formData.maxStudios <= 0 ||
+            formData.maxGroups <= 0 ||
+            formData.maxMembersPerGroup <= 0 ||
+            formData.maxStorageMb <= 0
+        ) {
             toast({
                 description: "Các giới hạn phải lớn hơn 0",
                 variant: "destructive"
@@ -124,23 +129,28 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
     };
 
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^\d]/g, '');
-        handleInputChange('price', Number(value));
+        const value = e.target.value.replace(/[^\d]/g, "");
+        handleInputChange("price", Number(value));
     };
 
     const getBillingCycleText = (cycle: number) => {
         switch (cycle) {
-            case 0: return "Free";
-            case 1: return "Monthly";
-            case 3: return "Quarterly";
-            case 12: return "Yearly";
-            default: return `${cycle} months`;
+            case 0:
+                return "Free";
+            case 1:
+                return "Monthly";
+            case 3:
+                return "Quarterly";
+            case 12:
+                return "Yearly";
+            default:
+                return `${cycle} months`;
         }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
                     <div>
@@ -176,7 +186,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 id="planName"
                                 type="text"
                                 value={formData.planName}
-                                onChange={(e) => handleInputChange('planName', e.target.value)}
+                                onChange={(e) => handleInputChange("planName", e.target.value)}
                                 placeholder="Enter plan name"
                             />
                         </div>
@@ -205,7 +215,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                             <Textarea
                                 id="description"
                                 value={formData.description}
-                                onChange={(e) => handleInputChange('description', e.target.value)}
+                                onChange={(e) => handleInputChange("description", e.target.value)}
                                 placeholder="Enter plan description"
                                 rows={3}
                             />
@@ -225,7 +235,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                     id="maxStudios"
                                     type="number"
                                     value={formData.maxStudios}
-                                    onChange={(e) => handleInputChange('maxStudios', Number(e.target.value))}
+                                    onChange={(e) => handleInputChange("maxStudios", Number(e.target.value))}
                                     min="0"
                                 />
                             </div>
@@ -238,20 +248,22 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                     id="maxGroups"
                                     type="number"
                                     value={formData.maxGroups}
-                                    onChange={(e) => handleInputChange('maxGroups', Number(e.target.value))}
+                                    onChange={(e) => handleInputChange("maxGroups", Number(e.target.value))}
                                     min="0"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="maxMembersPerGroup" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                <label
+                                    htmlFor="maxMembersPerGroup"
+                                    className="mb-2 block font-medium text-[#261E33] text-sm">
                                     Max Members Per Group *
                                 </label>
                                 <Input
                                     id="maxMembersPerGroup"
                                     type="number"
                                     value={formData.maxMembersPerGroup}
-                                    onChange={(e) => handleInputChange('maxMembersPerGroup', Number(e.target.value))}
+                                    onChange={(e) => handleInputChange("maxMembersPerGroup", Number(e.target.value))}
                                     min="0"
                                 />
                             </div>
@@ -264,20 +276,22 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                     id="maxStorageMb"
                                     type="number"
                                     value={formData.maxStorageMb}
-                                    onChange={(e) => handleInputChange('maxStorageMb', Number(e.target.value))}
+                                    onChange={(e) => handleInputChange("maxStorageMb", Number(e.target.value))}
                                     min="0"
                                 />
                             </div>
 
                             <div className="col-span-2">
-                                <label htmlFor="maxAiRequestsPerDay" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                <label
+                                    htmlFor="maxAiRequestsPerDay"
+                                    className="mb-2 block font-medium text-[#261E33] text-sm">
                                     Max AI Requests Per Day
                                 </label>
                                 <Input
                                     id="maxAiRequestsPerDay"
                                     type="number"
                                     value={formData.maxAiRequestsPerDay}
-                                    onChange={(e) => handleInputChange('maxAiRequestsPerDay', Number(e.target.value))}
+                                    onChange={(e) => handleInputChange("maxAiRequestsPerDay", Number(e.target.value))}
                                     min="0"
                                 />
                             </div>
@@ -293,8 +307,8 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 id="isActive"
                                 type="checkbox"
                                 checked={formData.isActive}
-                                onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                                className="h-4 w-4 text-[#FF5F3D] focus:ring-[#FF5F3D] border-gray-300 rounded"
+                                onChange={(e) => handleInputChange("isActive", e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
                             />
                             <label htmlFor="isActive" className="font-medium text-[#261E33] text-sm">
                                 Plan is active and available for subscription
@@ -312,42 +326,53 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                         formData.maxStorageMb !== plan.maxStorageMb ||
                         formData.maxAiRequestsPerDay !== plan.maxAiRequestsPerDay ||
                         formData.isActive !== plan.isActive) && (
-                            <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-4">
-                                <p className="font-medium text-[#FF5F3D] text-sm mb-2">Changes Preview:</p>
-                                <div className="space-y-1 text-sm">
-                                    {formData.planName !== plan.planName && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Name:</span>
-                                            <span className="text-[#FF5F3D]">{plan.planName} → {formData.planName}</span>
-                                        </div>
-                                    )}
-                                    {formData.price !== plan.price && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Price:</span>
-                                            <span className="text-[#FF5F3D]">{formatPrice(plan.price)} → {formatPrice(formData.price)} VND</span>
-                                        </div>
-                                    )}
-                                    {formData.maxStudios !== plan.maxStudios && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Max Studios:</span>
-                                            <span className="text-[#FF5F3D]">{plan.maxStudios} → {formData.maxStudios}</span>
-                                        </div>
-                                    )}
-                                    {formData.maxGroups !== plan.maxGroups && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Max Groups:</span>
-                                            <span className="text-[#FF5F3D]">{plan.maxGroups} → {formData.maxGroups}</span>
-                                        </div>
-                                    )}
-                                    {formData.isActive !== plan.isActive && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Status:</span>
-                                            <span className="text-[#FF5F3D]">{plan.isActive ? 'Active' : 'Inactive'} → {formData.isActive ? 'Active' : 'Inactive'}</span>
-                                        </div>
-                                    )}
-                                </div>
+                        <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-4">
+                            <p className="mb-2 font-medium text-[#FF5F3D] text-sm">Changes Preview:</p>
+                            <div className="space-y-1 text-sm">
+                                {formData.planName !== plan.planName && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Name:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.planName} → {formData.planName}
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.price !== plan.price && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Price:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {formatPrice(plan.price)} → {formatPrice(formData.price)} VND
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.maxStudios !== plan.maxStudios && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Max Studios:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.maxStudios} → {formData.maxStudios}
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.maxGroups !== plan.maxGroups && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Max Groups:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.maxGroups} → {formData.maxGroups}
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.isActive !== plan.isActive && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Status:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.isActive ? "Active" : "Inactive"} →{" "}
+                                            {formData.isActive ? "Active" : "Inactive"}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Actions */}
@@ -358,8 +383,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                     <Button
                         onClick={handleSave}
                         className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]"
-                        disabled={isLoading}
-                    >
+                        disabled={isLoading}>
                         {isLoading ? "Saving..." : "Update Plan"}
                     </Button>
                 </div>

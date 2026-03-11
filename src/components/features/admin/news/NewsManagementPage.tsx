@@ -6,7 +6,7 @@ import { DashboardSidebar } from "@/components/layout/sidebar";
 import { AdminAnnouncementsTab } from "../announcements/AdminAnnouncementsTab";
 
 export function NewsManagementPage() {
-    const t = useTranslations("AdminNews");
+    const _t = useTranslations("AdminNews");
 
     return (
         <div className="min-h-screen bg-[#F8F8F8]">

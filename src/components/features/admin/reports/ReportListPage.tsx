@@ -6,7 +6,7 @@ import { DashboardSidebar } from "@/components/layout/sidebar";
 import { AdminReportsTab } from "./AdminReportsTab";
 
 export function ReportListPage() {
-    const t = useTranslations("AdminReports");
+    const _t = useTranslations("AdminReports");
 
     return (
         <div className="min-h-screen bg-[#F8F8F8]">

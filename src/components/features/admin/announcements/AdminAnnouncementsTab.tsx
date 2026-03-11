@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Empty } from "antd";
+import { useEffect, useState } from "react";
 import {
-    getAdminAnnouncements,
-    createAdminAnnouncement,
-    updateAdminAnnouncement,
-    deleteAdminAnnouncement,
     type AdminAnnouncement,
+    ANNOUNCEMENT_TYPES,
     type CreateAnnouncementRequest,
-    type UpdateAnnouncementRequest,
-    getAnnouncementTypeLabel,
+    createAdminAnnouncement,
+    deleteAdminAnnouncement,
+    getAdminAnnouncements,
     getAnnouncementTypeColor,
-    ANNOUNCEMENT_TYPES
+    getAnnouncementTypeLabel,
+    type UpdateAnnouncementRequest,
+    updateAdminAnnouncement
 } from "@/api/admin-announcements";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +69,7 @@ export function AdminAnnouncementsTab() {
 
     useEffect(() => {
         loadAnnouncements();
-    }, []);
+    }, [loadAnnouncements]);
 
     const resetForm = () => {
         setFormData({
@@ -91,7 +91,7 @@ export function AdminAnnouncementsTab() {
         setFormData({
             title: announcement.title,
             content: announcement.content,
-            type: parseInt(announcement.type) || 0,
+            type: Number.parseInt(announcement.type, 10) || 0,
             isActive: announcement.isActive,
             publishedAt: new Date(announcement.publishedAt).toISOString().slice(0, 16)
         });
@@ -99,7 +99,7 @@ export function AdminAnnouncementsTab() {
     };
 
     const handleSubmitCreate = async () => {
-        if (!formData.title.trim() || !formData.content.trim()) {
+        if (!(formData.title.trim() && formData.content.trim())) {
             toast({
                 description: "Vui lòng điền đầy đủ tiêu đề và nội dung",
                 variant: "destructive"
@@ -142,7 +142,7 @@ export function AdminAnnouncementsTab() {
     };
 
     const handleSubmitEdit = async () => {
-        if (!selectedAnnouncement || !formData.title.trim() || !formData.content.trim()) {
+        if (!(selectedAnnouncement && formData.title.trim() && formData.content.trim())) {
             toast({
                 description: "Vui lòng điền đầy đủ tiêu đề và nội dung",
                 variant: "destructive"
@@ -233,10 +233,7 @@ export function AdminAnnouncementsTab() {
                     <h2 className="font-bold text-[#261E33] text-xl">Quản lý thông báo</h2>
                     <p className="text-[#6F6B99] text-sm">Tạo và quản lý thông báo hệ thống</p>
                 </div>
-                <Button
-                    onClick={handleCreate}
-                    className="bg-[#FF5F3D] hover:bg-[#ff4620]"
-                >
+                <Button onClick={handleCreate} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
                     Tạo thông báo mới
                 </Button>
             </div>
@@ -259,12 +256,9 @@ export function AdminAnnouncementsTab() {
                         <Empty
                             description={
                                 <div className="text-center">
-                                    <p className="text-[#261E33] font-medium mb-2">Không thể tải dữ liệu</p>
-                                    <p className="text-[#6F6B99] text-sm mb-4">{error}</p>
-                                    <Button
-                                        onClick={loadAnnouncements}
-                                        className="bg-[#FF5F3D] hover:bg-[#ff4620]"
-                                    >
+                                    <p className="mb-2 font-medium text-[#261E33]">Không thể tải dữ liệu</p>
+                                    <p className="mb-4 text-[#6F6B99] text-sm">{error}</p>
+                                    <Button onClick={loadAnnouncements} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
                                         Thử lại
                                     </Button>
                                 </div>
@@ -276,12 +270,9 @@ export function AdminAnnouncementsTab() {
                         <Empty
                             description={
                                 <div className="text-center">
-                                    <p className="text-[#261E33] font-medium mb-2">Chưa có thông báo nào</p>
-                                    <p className="text-[#6F6B99] text-sm mb-4">Tạo thông báo đầu tiên để bắt đầu.</p>
-                                    <Button
-                                        onClick={handleCreate}
-                                        className="bg-[#FF5F3D] hover:bg-[#ff4620]"
-                                    >
+                                    <p className="mb-2 font-medium text-[#261E33]">Chưa có thông báo nào</p>
+                                    <p className="mb-4 text-[#6F6B99] text-sm">Tạo thông báo đầu tiên để bắt đầu.</p>
+                                    <Button onClick={handleCreate} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
                                         Tạo thông báo mới
                                     </Button>
                                 </div>
@@ -295,34 +286,35 @@ export function AdminAnnouncementsTab() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="mb-2 flex items-center gap-3">
-                                            <h4 className="font-semibold text-[#261E33] text-lg">{announcement.title}</h4>
-                                            <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getAnnouncementTypeColor(parseInt(announcement.type) || 0)}`}>
-                                                {getAnnouncementTypeLabel(parseInt(announcement.type) || 0)}
+                                            <h4 className="font-semibold text-[#261E33] text-lg">
+                                                {announcement.title}
+                                            </h4>
+                                            <span
+                                                className={`inline-flex rounded-full px-2 py-1 font-semibold text-xs ${getAnnouncementTypeColor(Number.parseInt(announcement.type, 10) || 0)}`}>
+                                                {getAnnouncementTypeLabel(Number.parseInt(announcement.type, 10) || 0)}
                                             </span>
-                                            <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${announcement.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                                                {announcement.isActive ? 'Đang hoạt động' : 'Tạm dừng'}
+                                            <span
+                                                className={`inline-flex rounded-full px-2 py-1 font-semibold text-xs ${announcement.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                                                {announcement.isActive ? "Đang hoạt động" : "Tạm dừng"}
                                             </span>
                                         </div>
-                                        <p className="text-[#6F6B99] text-sm mb-3 line-clamp-2">{announcement.content}</p>
+                                        <p className="mb-3 line-clamp-2 text-[#6F6B99] text-sm">
+                                            {announcement.content}
+                                        </p>
                                         <div className="flex items-center gap-4 text-[#6F6B99] text-xs">
                                             <span>Tạo: {formatDate(announcement.createdAt)}</span>
                                             <span>Xuất bản: {formatDate(announcement.publishedAt)}</span>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 ml-4">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => handleEdit(announcement)}
-                                        >
+                                    <div className="ml-4 flex gap-2">
+                                        <Button size="sm" variant="outline" onClick={() => handleEdit(announcement)}>
                                             Chỉnh sửa
                                         </Button>
                                         <Button
                                             size="sm"
                                             variant="outline"
                                             onClick={() => handleDelete(announcement)}
-                                            className="text-red-600 hover:text-red-700 hover:border-red-300"
-                                        >
+                                            className="text-red-600 hover:border-red-300 hover:text-red-700">
                                             Xóa
                                         </Button>
                                     </div>
@@ -336,16 +328,20 @@ export function AdminAnnouncementsTab() {
             {/* Create Modal */}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
                         <div className="mb-6 flex items-center justify-between">
                             <h2 className="font-bold text-[#261E33] text-xl">Tạo thông báo mới</h2>
                             <button
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(false)}
-                                className="text-[#6F6B99] transition-colors hover:text-[#261E33]"
-                            >
+                                className="text-[#6F6B99] transition-colors hover:text-[#261E33]">
                                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
                                 </svg>
                             </button>
                         </div>
@@ -355,7 +351,7 @@ export function AdminAnnouncementsTab() {
                                 <label className="mb-2 block font-medium text-[#261E33] text-sm">Tiêu đề *</label>
                                 <Input
                                     value={formData.title}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                                     placeholder="Nhập tiêu đề thông báo"
                                 />
                             </div>
@@ -364,7 +360,7 @@ export function AdminAnnouncementsTab() {
                                 <label className="mb-2 block font-medium text-[#261E33] text-sm">Nội dung *</label>
                                 <Textarea
                                     value={formData.content}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
                                     placeholder="Nhập nội dung thông báo"
                                     rows={5}
                                 />
@@ -372,25 +368,34 @@ export function AdminAnnouncementsTab() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">Loại thông báo</label>
+                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                        Loại thông báo
+                                    </label>
                                     <select
                                         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                         value={formData.type}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, type: Number(e.target.value) }))}
-                                    >
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({ ...prev, type: Number(e.target.value) }))
+                                        }>
                                         {Object.entries(ANNOUNCEMENT_TYPES).map(([value, label]) => (
-                                            <option key={value} value={value}>{label}</option>
+                                            <option key={value} value={value}>
+                                                {label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">Thời gian xuất bản</label>
+                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                        Thời gian xuất bản
+                                    </label>
                                     <input
                                         type="datetime-local"
                                         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                         value={formData.publishedAt}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, publishedAt: e.target.value }))}
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({ ...prev, publishedAt: e.target.value }))
+                                        }
                                     />
                                 </div>
                             </div>
@@ -400,8 +405,8 @@ export function AdminAnnouncementsTab() {
                                     id="isActive"
                                     type="checkbox"
                                     checked={formData.isActive}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                                    className="h-4 w-4 text-[#FF5F3D] focus:ring-[#FF5F3D] border-gray-300 rounded"
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, isActive: e.target.checked }))}
+                                    className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
                                 />
                                 <label htmlFor="isActive" className="font-medium text-[#261E33] text-sm">
                                     Kích hoạt thông báo ngay
@@ -424,16 +429,20 @@ export function AdminAnnouncementsTab() {
             {/* Edit Modal */}
             {isEditModalOpen && selectedAnnouncement && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
                         <div className="mb-6 flex items-center justify-between">
                             <h2 className="font-bold text-[#261E33] text-xl">Chỉnh sửa thông báo</h2>
                             <button
                                 type="button"
                                 onClick={() => setIsEditModalOpen(false)}
-                                className="text-[#6F6B99] transition-colors hover:text-[#261E33]"
-                            >
+                                className="text-[#6F6B99] transition-colors hover:text-[#261E33]">
                                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
                                 </svg>
                             </button>
                         </div>
@@ -443,7 +452,7 @@ export function AdminAnnouncementsTab() {
                                 <label className="mb-2 block font-medium text-[#261E33] text-sm">Tiêu đề *</label>
                                 <Input
                                     value={formData.title}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                                     placeholder="Nhập tiêu đề thông báo"
                                 />
                             </div>
@@ -452,7 +461,7 @@ export function AdminAnnouncementsTab() {
                                 <label className="mb-2 block font-medium text-[#261E33] text-sm">Nội dung *</label>
                                 <Textarea
                                     value={formData.content}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
                                     placeholder="Nhập nội dung thông báo"
                                     rows={5}
                                 />
@@ -460,25 +469,34 @@ export function AdminAnnouncementsTab() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">Loại thông báo</label>
+                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                        Loại thông báo
+                                    </label>
                                     <select
                                         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                         value={formData.type}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, type: Number(e.target.value) }))}
-                                    >
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({ ...prev, type: Number(e.target.value) }))
+                                        }>
                                         {Object.entries(ANNOUNCEMENT_TYPES).map(([value, label]) => (
-                                            <option key={value} value={value}>{label}</option>
+                                            <option key={value} value={value}>
+                                                {label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">Thời gian xuất bản</label>
+                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                        Thời gian xuất bản
+                                    </label>
                                     <input
                                         type="datetime-local"
                                         className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                         value={formData.publishedAt}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, publishedAt: e.target.value }))}
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({ ...prev, publishedAt: e.target.value }))
+                                        }
                                     />
                                 </div>
                             </div>
@@ -488,8 +506,8 @@ export function AdminAnnouncementsTab() {
                                     id="isActiveEdit"
                                     type="checkbox"
                                     checked={formData.isActive}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                                    className="h-4 w-4 text-[#FF5F3D] focus:ring-[#FF5F3D] border-gray-300 rounded"
+                                    onChange={(e) => setFormData((prev) => ({ ...prev, isActive: e.target.checked }))}
+                                    className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
                                 />
                                 <label htmlFor="isActiveEdit" className="font-medium text-[#261E33] text-sm">
                                     Kích hoạt thông báo
