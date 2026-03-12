@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { type AdminSubscriptionPlan, updateSubscriptionPlan } from "@/api/admin-subscription-plans";
+import { type AdminSubscriptionPlan, planToUpdateRequest, updateSubscriptionPlan } from "@/api/admin-subscription-plans";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -30,13 +30,7 @@ export function PlanPriceModal({ isOpen, onClose, plan, onSuccess }: PlanPriceMo
         });
 
         try {
-            const result = await updateSubscriptionPlan(
-                {
-                    planId: plan.planId,
-                    price: price
-                },
-                "vi"
-            );
+            const result = await updateSubscriptionPlan(planToUpdateRequest(plan, { price }), "vi");
 
             console.log("Update result:", result);
 
