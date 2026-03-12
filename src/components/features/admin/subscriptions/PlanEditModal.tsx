@@ -93,7 +93,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                     maxAiRequestsPerDay: Number(formData.maxAiRequestsPerDay),
                     maxGroups: Number(formData.maxGroups),
                     maxMembersPerGroup: Number(formData.maxMembersPerGroup),
-                    isActive: Boolean(formData.isActive)
+                    isActive: true
                 }),
                 "vi"
             );
@@ -306,7 +306,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                             <input
                                 id="isActive"
                                 type="checkbox"
-                                checked={true}
+                                checked={formData.isActive}
                                 onChange={(e) => handleInputChange("isActive", e.target.checked)}
                                 className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
                             />
