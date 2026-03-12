@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAnnouncementDetail, type Notification } from "@/api/notifications";
 
 interface NotificationDetailModalProps {
@@ -119,21 +119,22 @@ export function NotificationDetailModal({ isOpen, onClose, notificationId, local
                             <div className="flex items-center gap-2">
                                 <span className="text-[#6F6B99] text-sm">{t("type")}:</span>
                                 <span
-                                    className={`rounded-full px-3 py-1 font-medium text-xs ${notification.type === "success"
+                                    className={`rounded-full px-3 py-1 font-medium text-xs ${
+                                        notification.type === "success"
                                             ? "bg-green-100 text-green-700"
                                             : notification.type === "warning"
-                                                ? "bg-yellow-100 text-yellow-700"
-                                                : notification.type === "info"
-                                                    ? "bg-blue-100 text-blue-700"
-                                                    : "bg-gray-100 text-gray-700"
-                                        }`}>
+                                              ? "bg-yellow-100 text-yellow-700"
+                                              : notification.type === "info"
+                                                ? "bg-blue-100 text-blue-700"
+                                                : "bg-gray-100 text-gray-700"
+                                    }`}>
                                     {notification.type === "success"
                                         ? t("typeSuccess")
                                         : notification.type === "warning"
-                                            ? t("typeWarning")
-                                            : notification.type === "info"
-                                                ? t("typeInfo")
-                                                : t("typeSystem")}
+                                          ? t("typeWarning")
+                                          : notification.type === "info"
+                                            ? t("typeInfo")
+                                            : t("typeSystem")}
                                 </span>
                             </div>
                         </div>
