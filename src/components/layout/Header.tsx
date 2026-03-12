@@ -7,7 +7,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/api/auth";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
-import { NotificationDropdown } from "@/components/common/NotificationDropdown";
 
 const SearchIcon = () => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -232,8 +231,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                 )}
 
                 <div className="flex items-center gap-2">
-                    {/* Notification - chỉ hiện cho user thường */}
-                    {!isAdmin && <NotificationDropdown />}
+                    {/* Không có notification cho cả admin và user */}
 
                     <div className="relative" ref={userMenuRef}>
                         <button
@@ -268,7 +266,8 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                                         </Link>
 
                                         <Link
-                                            href={`/${locale}/profile`}
+                                            href={`/${locale}/settings`}
+                                            onClick={() => setIsUserMenuOpen(false)}
                                             className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
                                             <UserIcon />
                                             <span>{t("profile")}</span>

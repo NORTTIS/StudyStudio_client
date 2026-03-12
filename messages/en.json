@@ -285,17 +285,6 @@
             "comingSoon": "Notification features coming soon"
         }
     },
-    "AnnouncementsPage": {
-        "title": "Announcements",
-        "subtitle": "Track all notifications and system updates",
-        "searchPlaceholder": "Search announcements...",
-        "filters": {
-            "all": "All",
-            "unread": "Unread"
-        },
-        "upgradeNow": "Upgrade Now",
-        "noAnnouncements": "No announcements"
-    },
     "Notifications": {
         "title": "Notifications",
         "markAllRead": "Mark all as read",
@@ -1045,50 +1034,199 @@
         }
     },
     "AdminReports": {
-        "title": "Reports Management",
-        "subtitle": "View and manage user reports and feedback",
-        "searchPlaceholder": "Search reports...",
-        "totalReports": "Total Reports",
-        "open": "Open",
-        "inProgress": "In Progress",
-        "resolved": "Resolved",
-        "filters": {
-            "allTypes": "All Types",
-            "bug": "Bug",
-            "feedback": "Feedback",
-            "support": "Support",
-            "other": "Other",
-            "allStatus": "All Status",
+        "loading": "Loading data...",
+        "summary": {
+            "totalReports": "Total Reports",
             "open": "Open",
             "inProgress": "In Progress",
-            "resolved": "Resolved",
-            "closed": "Closed"
+            "resolved": "Resolved"
+        },
+        "filters": {
+            "title": "Filters",
+            "search": "Search",
+            "searchPlaceholder": "Search by email, title...",
+            "type": "Report Type",
+            "status": "Status",
+            "pageSize": "Items per page",
+            "all": "All",
+            "types": {
+                "bugReport": "Bug Report",
+                "featureRequest": "Feature Request",
+                "accountIssue": "Account Issue",
+                "other": "Other"
+            },
+            "statuses": {
+                "open": "Open",
+                "inProgress": "In Progress",
+                "resolved": "Resolved",
+                "closed": "Closed"
+            }
         },
         "table": {
-            "title": "Title",
-            "type": "Type",
-            "user": "User",
+            "title": "Report List",
+            "headers": {
+                "email": "Email",
+                "title": "Title",
+                "type": "Type",
+                "status": "Status",
+                "priority": "Priority",
+                "createdAt": "Created Date",
+                "actions": "Actions"
+            }
+        },
+        "actions": {
+            "edit": "Edit",
+            "retry": "Try Again"
+        },
+        "pagination": {
+            "showing": "Showing {{start}} - {{end}} of {{total}} reports",
+            "previous": "Previous",
+            "next": "Next"
+        },
+        "empty": {
+            "title": "No reports yet",
+            "description": "There are currently no reports from users."
+        },
+        "errors": {
+            "loadFailed": "Unable to load report data",
+            "loadFailedTitle": "Unable to load data",
+            "loadError": "An error occurred while loading report data",
+            "updateFailed": "Failed to update report",
+            "updateError": "An error occurred while updating report"
+        },
+        "success": {
+            "updateReport": "Report updated successfully!"
+        },
+        "modal": {
+            "title": "Edit Report",
+            "reportTitle": "Title",
+            "content": "Content",
+            "status": "Status",
             "priority": "Priority",
+            "adminNote": "Admin Note",
+            "adminNotePlaceholder": "Enter admin note...",
+            "cancel": "Cancel",
+            "update": "Update"
+        }
+    },
+    "BillingHistoryTab": {
+        "search": {
+            "placeholder": "Search by user, email, or invoice..."
+        },
+        "filters": {
+            "allStatus": "All Status",
+            "pending": "Pending",
+            "success": "Success",
+            "cancelled": "Cancelled",
+            "failed": "Failed"
+        },
+        "actions": {
+            "export": "Export"
+        },
+        "table": {
+            "orderCode": "Order Code",
+            "user": "User",
+            "plan": "Plan",
+            "amount": "Amount",
+            "method": "Method",
             "status": "Status",
             "date": "Date",
+            "actions": "Actions"
+        }
+    },
+    "PaymentPage": {
+        "title": "Subscription Plans",
+        "subtitle": "Choose the plan that fits your needs",
+        "historyButton": "Payment History",
+        "plans": {
+            "popular": "Popular",
+            "current": "Current Plan",
+            "free": {
+                "feature1": "Up to 3 Management Spaces",
+                "feature2": "Up to 5 Group Spaces",
+                "feature3": "Up to 10 members/group",
+                "feature4": "500 MB storage/group",
+                "feature5": "20 AI requests/day"
+            },
+            "premium": {
+                "feature1": "Up to 10 Management Spaces",
+                "feature2": "Up to 10 Group Spaces",
+                "feature3": "Up to 50 members/group",
+                "feature4": "1 GB storage/group",
+                "feature5": "100 AI requests/day"
+            },
+            "enterprise": {
+                "feature1": "Unlimited Management Spaces",
+                "feature2": "Unlimited Group Spaces",
+                "feature3": "Unlimited members",
+                "feature4": "10 GB storage/group",
+                "feature5": "Unlimited AI requests"
+            }
+        },
+        "buttons": {
+            "processing": "Processing...",
+            "currentPlan": "Current Plan",
+            "upgrade": "Upgrade Now"
+        },
+        "info": {
+            "title": "Payment Information",
+            "secure": "Secure payment via PayOS payment gateway",
+            "methods": "Support payment via QR Code, bank transfer",
+            "activation": "Subscription will be activated immediately after successful payment",
+            "cancellation": "You can cancel subscription at any time"
+        },
+        "messages": {
+            "alreadyFree": "You are using the Free plan",
+            "paymentFailed": "Unable to create payment",
+            "paymentError": "An error occurred. Please try again!"
+        }
+    },
+    "PaymentHistoryPage": {
+        "title": "Payment History",
+        "subtitle": "View all your payment transactions",
+        "backButton": "Back",
+        "loading": "Loading...",
+        "empty": {
+            "title": "No transactions yet",
+            "description": "You haven't made any payment transactions yet",
+            "upgradeButton": "Upgrade plan now"
+        },
+        "table": {
+            "paymentId": "Payment ID",
+            "plan": "Subscription Plan",
+            "status": "Status",
+            "date": "Payment Date",
             "actions": "Actions",
             "viewDetails": "View Details"
+        }
+    },
+    "PaymentStatusPage": {
+        "title": "Payment Details",
+        "subtitle": "Detailed information about the transaction",
+        "backButton": "Back",
+        "loading": "Loading...",
+        "notFound": {
+            "title": "Payment not found",
+            "description": "Payment ID is invalid or has been deleted"
         },
-        "noReports": "No reports found",
-        "modal": {
-            "userInfo": "User Information",
-            "name": "Name",
-            "email": "Email",
-            "created": "Created",
-            "lastUpdated": "Last Updated",
-            "description": "Description",
-            "updateStatus": "Update Status",
-            "updatePriority": "Update Priority",
-            "addNote": "Add Note / Comment",
-            "notePlaceholder": "Add internal notes or comments about this report...",
-            "cancel": "Cancel",
-            "update": "Update Report",
-            "updating": "Updating..."
+        "details": {
+            "title": "Payment Information",
+            "plan": "Subscription Plan",
+            "amount": "Amount",
+            "createdAt": "Created Date",
+            "paidAt": "Payment Date"
+        },
+        "actions": {
+            "cancel": "Cancel Payment",
+            "cancelling": "Cancelling...",
+            "backToBilling": "Back to Subscription Plans"
+        },
+        "messages": {
+            "cancelSuccess": "Payment cancelled successfully",
+            "cancelFailed": "Unable to cancel payment",
+            "cancelError": "An error occurred. Please try again!",
+            "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to billing page...",
+            "emailSent": "📧 Payment confirmation email has been sent to your email address"
         }
     },
     "GroupTaskListPage": {

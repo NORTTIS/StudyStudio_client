@@ -1,11 +1,13 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { type AdminBillingHistoryItem, getAdminBillingHistory } from "@/api/admin-billing";
 import { Button } from "@/components/ui/button";
 import { getPaymentStatusInfo } from "@/utils/payment-status";
 
 export function BillingHistoryTab() {
+    const t = useTranslations("BillingHistoryTab");
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<number | "all">("all");
     const [isLoading, setIsLoading] = useState(true);
@@ -132,7 +134,7 @@ export function BillingHistoryTab() {
                 <div className="relative max-w-md flex-1">
                     <input
                         type="text"
-                        placeholder="Search by user, email, or invoice..."
+                        placeholder={t("search.placeholder")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20"
@@ -156,11 +158,11 @@ export function BillingHistoryTab() {
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value === "all" ? "all" : Number(e.target.value))}
                         className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
-                        <option value="all">All Status</option>
-                        <option value={0}>Pending</option>
-                        <option value={1}>Success</option>
-                        <option value={2}>Cancelled</option>
-                        <option value={3}>Failed</option>
+                        <option value="all">{t("filters.allStatus")}</option>
+                        <option value={0}>{t("filters.pending")}</option>
+                        <option value={1}>{t("filters.success")}</option>
+                        <option value={2}>{t("filters.cancelled")}</option>
+                        <option value={3}>{t("filters.failed")}</option>
                     </select>
 
                     <Button onClick={handleExport} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
@@ -172,7 +174,7 @@ export function BillingHistoryTab() {
                                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                             />
                         </svg>
-                        Export
+                        {t("actions.export")}
                     </Button>
                 </div>
             </div>
@@ -193,28 +195,28 @@ export function BillingHistoryTab() {
                                 <thead className="bg-[#F8F8F8]">
                                     <tr>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            Order Code
+                                            {t("table.orderCode")}
                                         </th>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            User
+                                            {t("table.user")}
                                         </th>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            Plan
+                                            {t("table.plan")}
                                         </th>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            Amount
+                                            {t("table.amount")}
                                         </th>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            Method
+                                            {t("table.method")}
                                         </th>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            Status
+                                            {t("table.status")}
                                         </th>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            Date
+                                            {t("table.date")}
                                         </th>
                                         <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            Actions
+                                            {t("table.actions")}
                                         </th>
                                     </tr>
                                 </thead>

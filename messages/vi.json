@@ -296,17 +296,6 @@
             "comingSoon": "Tính năng thông báo sẽ sớm có"
         }
     },
-    "AnnouncementsPage": {
-        "title": "Thông báo",
-        "subtitle": "Theo dõi tất cả thông báo và cập nhật hệ thống",
-        "searchPlaceholder": "Tìm kiếm thông báo...",
-        "filters": {
-            "all": "Tất cả",
-            "unread": "Chưa đọc"
-        },
-        "upgradeNow": "Nâng cấp ngay",
-        "noAnnouncements": "Không có thông báo nào"
-    },
     "Notifications": {
         "title": "Thông báo",
         "markAllRead": "Đánh dấu tất cả đã đọc",
@@ -1041,50 +1030,199 @@
         }
     },
     "AdminReports": {
-        "title": "Quản lý Báo cáo",
-        "subtitle": "Xem và quản lý báo cáo và phản hồi từ người dùng",
-        "searchPlaceholder": "Tìm kiếm báo cáo...",
-        "totalReports": "Tổng số báo cáo",
-        "open": "Đang mở",
-        "inProgress": "Đang xử lý",
-        "resolved": "Đã giải quyết",
-        "filters": {
-            "allTypes": "Tất cả loại",
-            "bug": "Lỗi",
-            "feedback": "Góp ý",
-            "support": "Hỗ trợ",
-            "other": "Khác",
-            "allStatus": "Tất cả trạng thái",
+        "loading": "Đang tải dữ liệu...",
+        "summary": {
+            "totalReports": "Tổng báo cáo",
             "open": "Đang mở",
             "inProgress": "Đang xử lý",
-            "resolved": "Đã giải quyết",
-            "closed": "Đã đóng"
+            "resolved": "Đã giải quyết"
+        },
+        "filters": {
+            "title": "Bộ lọc",
+            "search": "Tìm kiếm",
+            "searchPlaceholder": "Tìm theo email, tiêu đề...",
+            "type": "Loại báo cáo",
+            "status": "Trạng thái",
+            "pageSize": "Số lượng/trang",
+            "all": "Tất cả",
+            "types": {
+                "bugReport": "Báo cáo lỗi",
+                "featureRequest": "Yêu cầu tính năng",
+                "accountIssue": "Vấn đề tài khoản",
+                "other": "Khác"
+            },
+            "statuses": {
+                "open": "Đang mở",
+                "inProgress": "Đang xử lý",
+                "resolved": "Đã giải quyết",
+                "closed": "Đã đóng"
+            }
         },
         "table": {
-            "title": "Tiêu đề",
-            "type": "Loại",
+            "title": "Danh sách báo cáo",
+            "headers": {
+                "email": "Email",
+                "title": "Tiêu đề",
+                "type": "Loại",
+                "status": "Trạng thái",
+                "priority": "Độ ưu tiên",
+                "createdAt": "Ngày tạo",
+                "actions": "Thao tác"
+            }
+        },
+        "actions": {
+            "edit": "Chỉnh sửa",
+            "retry": "Thử lại"
+        },
+        "pagination": {
+            "showing": "Hiển thị {{start}} - {{end}} trong tổng số {{total}} báo cáo",
+            "previous": "Trước",
+            "next": "Sau"
+        },
+        "empty": {
+            "title": "Chưa có báo cáo nào",
+            "description": "Hiện tại chưa có báo cáo nào từ người dùng."
+        },
+        "errors": {
+            "loadFailed": "Không thể tải dữ liệu báo cáo",
+            "loadFailedTitle": "Không thể tải dữ liệu",
+            "loadError": "Có lỗi xảy ra khi tải dữ liệu báo cáo",
+            "updateFailed": "Cập nhật báo cáo thất bại",
+            "updateError": "Có lỗi xảy ra khi cập nhật báo cáo"
+        },
+        "success": {
+            "updateReport": "Cập nhật báo cáo thành công!"
+        },
+        "modal": {
+            "title": "Chỉnh sửa báo cáo",
+            "reportTitle": "Tiêu đề",
+            "content": "Nội dung",
+            "status": "Trạng thái",
+            "priority": "Độ ưu tiên",
+            "adminNote": "Ghi chú admin",
+            "adminNotePlaceholder": "Nhập ghi chú của admin...",
+            "cancel": "Hủy",
+            "update": "Cập nhật"
+        }
+    },
+    "BillingHistoryTab": {
+        "search": {
+            "placeholder": "Tìm theo người dùng, email hoặc hóa đơn..."
+        },
+        "filters": {
+            "allStatus": "Tất cả trạng thái",
+            "pending": "Đang chờ",
+            "success": "Thành công",
+            "cancelled": "Đã hủy",
+            "failed": "Thất bại"
+        },
+        "actions": {
+            "export": "Xuất dữ liệu"
+        },
+        "table": {
+            "orderCode": "Mã đơn hàng",
             "user": "Người dùng",
-            "priority": "Ưu tiên",
+            "plan": "Gói",
+            "amount": "Số tiền",
+            "method": "Phương thức",
             "status": "Trạng thái",
             "date": "Ngày",
+            "actions": "Hành động"
+        }
+    },
+    "PaymentPage": {
+        "title": "Gói đăng ký",
+        "subtitle": "Chọn gói phù hợp với nhu cầu của bạn",
+        "historyButton": "Lịch sử thanh toán",
+        "plans": {
+            "popular": "Phổ biến",
+            "current": "Gói hiện tại",
+            "free": {
+                "feature1": "Tối đa 3 Không gian quản lý",
+                "feature2": "Tối đa 5 Không gian nhóm",
+                "feature3": "Tối đa 10 thành viên/nhóm",
+                "feature4": "500 MB lưu trữ/nhóm",
+                "feature5": "20 yêu cầu AI/ngày"
+            },
+            "premium": {
+                "feature1": "Tối đa 10 Không gian quản lý",
+                "feature2": "Tối đa 10 Không gian nhóm",
+                "feature3": "Tối đa 50 thành viên/nhóm",
+                "feature4": "1 GB lưu trữ/nhóm",
+                "feature5": "100 yêu cầu AI/ngày"
+            },
+            "enterprise": {
+                "feature1": "Không giới hạn Không gian quản lý",
+                "feature2": "Không giới hạn Không gian nhóm",
+                "feature3": "Không giới hạn thành viên",
+                "feature4": "10 GB lưu trữ/nhóm",
+                "feature5": "Không giới hạn yêu cầu AI"
+            }
+        },
+        "buttons": {
+            "processing": "Đang xử lý...",
+            "currentPlan": "Gói hiện tại",
+            "upgrade": "Nâng cấp ngay"
+        },
+        "info": {
+            "title": "Thông tin thanh toán",
+            "secure": "Thanh toán an toàn qua cổng thanh toán PayOS",
+            "methods": "Hỗ trợ thanh toán qua QR Code, chuyển khoản ngân hàng",
+            "activation": "Gói đăng ký sẽ được kích hoạt ngay sau khi thanh toán thành công",
+            "cancellation": "Bạn có thể hủy đăng ký bất cứ lúc nào"
+        },
+        "messages": {
+            "alreadyFree": "Bạn đang sử dụng gói Free",
+            "paymentFailed": "Không thể tạo thanh toán",
+            "paymentError": "Có lỗi xảy ra. Vui lòng thử lại!"
+        }
+    },
+    "PaymentHistoryPage": {
+        "title": "Lịch sử thanh toán",
+        "subtitle": "Xem tất cả giao dịch thanh toán của bạn",
+        "backButton": "Quay lại",
+        "loading": "Đang tải...",
+        "empty": {
+            "title": "Chưa có giao dịch nào",
+            "description": "Bạn chưa thực hiện giao dịch thanh toán nào",
+            "upgradeButton": "Nâng cấp gói ngay"
+        },
+        "table": {
+            "paymentId": "Mã thanh toán",
+            "plan": "Gói đăng ký",
+            "status": "Trạng thái",
+            "date": "Ngày thanh toán",
             "actions": "Hành động",
             "viewDetails": "Xem chi tiết"
+        }
+    },
+    "PaymentStatusPage": {
+        "title": "Chi tiết thanh toán",
+        "subtitle": "Thông tin chi tiết về giao dịch",
+        "backButton": "Quay lại",
+        "loading": "Đang tải...",
+        "notFound": {
+            "title": "Không tìm thấy thanh toán",
+            "description": "Mã thanh toán không hợp lệ hoặc đã bị xóa"
         },
-        "noReports": "Không tìm thấy báo cáo nào",
-        "modal": {
-            "userInfo": "Thông tin người dùng",
-            "name": "Tên",
-            "email": "Email",
-            "created": "Ngày tạo",
-            "lastUpdated": "Cập nhật lần cuối",
-            "description": "Mô tả",
-            "updateStatus": "Cập nhật trạng thái",
-            "updatePriority": "Cập nhật mức độ ưu tiên",
-            "addNote": "Thêm ghi chú / Bình luận",
-            "notePlaceholder": "Thêm ghi chú nội bộ hoặc bình luận về báo cáo này...",
-            "cancel": "Hủy",
-            "update": "Cập nhật báo cáo",
-            "updating": "Đang cập nhật..."
+        "details": {
+            "title": "Thông tin thanh toán",
+            "plan": "Gói đăng ký",
+            "amount": "Số tiền",
+            "createdAt": "Ngày tạo",
+            "paidAt": "Ngày thanh toán"
+        },
+        "actions": {
+            "cancel": "Hủy thanh toán",
+            "cancelling": "Đang hủy...",
+            "backToBilling": "Về trang gói đăng ký"
+        },
+        "messages": {
+            "cancelSuccess": "Đã hủy thanh toán thành công",
+            "cancelFailed": "Không thể hủy thanh toán",
+            "cancelError": "Có lỗi xảy ra. Vui lòng thử lại!",
+            "paymentSuccess": "Thanh toán thành công! Email xác nhận đã được gửi. Đang chuyển về trang quản lý gói...",
+            "emailSent": "📧 Email xác nhận thanh toán đã được gửi đến địa chỉ email của bạn"
         }
     },
     "GroupTaskListPage": {

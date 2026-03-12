@@ -1,6 +1,7 @@
 "use client";
 
 import { Empty } from "antd";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import {
     type AdminReport,
@@ -22,6 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 export function AdminReportsTab() {
+    const t = useTranslations("AdminReports");
+    const locale = useLocale();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
     const [reports, setReports] = useState<AdminReportsResponse>({
@@ -58,13 +61,13 @@ export function AdminReportsTab() {
         setError(null);
 
         try {
-            const result = await getAdminReports(filters, "vi");
+            const result = await getAdminReports(filters, locale);
 
             if (result.status === "success" && result.data) {
                 setReports(result.data);
                 console.log("Đã tải dữ liệu reports thành công:", result.data);
             } else {
-                setError(result.message || "Không thể tải dữ liệu báo cáo");
+                setError(result.message || t("errors.loadFailed"));
                 console.error("API reports thất bại:", result.message);
                 // Reset về empty state
                 setReports({
@@ -81,7 +84,7 @@ export function AdminReportsTab() {
                 });
             }
         } catch (error) {
-            const errorMessage = "Có lỗi xảy ra khi tải dữ liệu báo cáo";
+            const errorMessage = t("errors.loadError");
             setError(errorMessage);
             console.error("Lỗi khi tải reports:", error);
 
@@ -106,7 +109,7 @@ export function AdminReportsTab() {
         } finally {
             setIsLoading(false);
         }
-    }, [filters]); // Dependency on filters để reload khi filters thay đổi, bỏ toast để tránh infinite loop
+    }, [filters, locale, t, toast]); // Dependency on filters để reload khi filters thay đổi, bỏ toast để tránh infinite loop
 
     useEffect(() => {
         loadReports();
@@ -133,12 +136,12 @@ export function AdminReportsTab() {
                     priority: editForm.priority,
                     adminNote: editForm.adminNote
                 },
-                "vi"
+                locale
             );
 
             if (result.status === "success") {
                 toast({
-                    description: "Cập nhật báo cáo thành công!",
+                    description: t("success.updateReport"),
                     variant: "default"
                 });
                 setIsEditModalOpen(false);
@@ -146,14 +149,14 @@ export function AdminReportsTab() {
                 loadReports(); // Reload data
             } else {
                 toast({
-                    description: result.message || "Cập nhật báo cáo thất bại",
+                    description: result.message || t("errors.updateFailed"),
                     variant: "destructive"
                 });
             }
         } catch (error) {
             console.error("Failed to update report:", error);
             toast({
-                description: "Có lỗi xảy ra khi cập nhật báo cáo",
+                description: t("errors.updateError"),
                 variant: "destructive"
             });
         }
@@ -183,7 +186,7 @@ export function AdminReportsTab() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div className="rounded-xl border border-gray-200 bg-white p-5">
                     <div className="mb-2 flex items-center justify-between">
-                        <p className="text-[#6F6B99] text-sm">Tổng báo cáo</p>
+                        <p className="text-[#6F6B99] text-sm">{t("summary.totalReports")}</p>
                         <svg className="h-5 w-5 text-[#6F6B99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 strokeLinecap="round"
@@ -198,7 +201,7 @@ export function AdminReportsTab() {
 
                 <div className="rounded-xl border border-gray-200 bg-white p-5">
                     <div className="mb-2 flex items-center justify-between">
-                        <p className="text-[#6F6B99] text-sm">Đang mở</p>
+                        <p className="text-[#6F6B99] text-sm">{t("summary.open")}</p>
                         <div className="h-3 w-3 rounded-full bg-yellow-500" />
                     </div>
                     <p className="font-bold text-2xl text-[#261E33]">{reports.summary.totalOpen}</p>
@@ -206,7 +209,7 @@ export function AdminReportsTab() {
 
                 <div className="rounded-xl border border-gray-200 bg-white p-5">
                     <div className="mb-2 flex items-center justify-between">
-                        <p className="text-[#6F6B99] text-sm">Đang xử lý</p>
+                        <p className="text-[#6F6B99] text-sm">{t("summary.inProgress")}</p>
                         <div className="h-3 w-3 rounded-full bg-blue-500" />
                     </div>
                     <p className="font-bold text-2xl text-[#261E33]">{reports.summary.totalInProgress}</p>
@@ -214,7 +217,7 @@ export function AdminReportsTab() {
 
                 <div className="rounded-xl border border-gray-200 bg-white p-5">
                     <div className="mb-2 flex items-center justify-between">
-                        <p className="text-[#6F6B99] text-sm">Đã giải quyết</p>
+                        <p className="text-[#6F6B99] text-sm">{t("summary.resolved")}</p>
                         <div className="h-3 w-3 rounded-full bg-green-500" />
                     </div>
                     <p className="font-bold text-2xl text-[#261E33]">{reports.summary.totalResolved}</p>
@@ -224,49 +227,49 @@ export function AdminReportsTab() {
             {/* Filters */}
             <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <div className="mb-4">
-                    <h3 className="font-semibold text-[#261E33] text-lg">Bộ lọc</h3>
+                    <h3 className="font-semibold text-[#261E33] text-lg">{t("filters.title")}</h3>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">Tìm kiếm</label>
+                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.search")}</label>
                         <Input
-                            placeholder="Tìm theo email, tiêu đề..."
+                            placeholder={t("filters.searchPlaceholder")}
                             value={filters.searchTerm || ""}
                             onChange={(e) => handleFilterChange("searchTerm", e.target.value)}
                         />
                     </div>
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">Loại báo cáo</label>
+                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.type")}</label>
                         <select
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                             value={filters.type || ""}
                             onChange={(e) =>
                                 handleFilterChange("type", e.target.value ? Number(e.target.value) : undefined)
                             }>
-                            <option value="">Tất cả</option>
-                            <option value="0">Bug Report</option>
-                            <option value="1">Feature Request</option>
-                            <option value="2">Account Issue</option>
-                            <option value="3">Other</option>
+                            <option value="">{t("filters.all")}</option>
+                            <option value="0">{t("filters.types.bugReport")}</option>
+                            <option value="1">{t("filters.types.featureRequest")}</option>
+                            <option value="2">{t("filters.types.accountIssue")}</option>
+                            <option value="3">{t("filters.types.other")}</option>
                         </select>
                     </div>
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">Trạng thái</label>
+                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.status")}</label>
                         <select
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                             value={filters.status || ""}
                             onChange={(e) =>
                                 handleFilterChange("status", e.target.value ? Number(e.target.value) : undefined)
                             }>
-                            <option value="">Tất cả</option>
-                            <option value="0">Open</option>
-                            <option value="1">In Progress</option>
-                            <option value="2">Resolved</option>
-                            <option value="3">Closed</option>
+                            <option value="">{t("filters.all")}</option>
+                            <option value="0">{t("filters.statuses.open")}</option>
+                            <option value="1">{t("filters.statuses.inProgress")}</option>
+                            <option value="2">{t("filters.statuses.resolved")}</option>
+                            <option value="3">{t("filters.statuses.closed")}</option>
                         </select>
                     </div>
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">Số lượng/trang</label>
+                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.pageSize")}</label>
                         <select
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                             value={filters.pageSize || 10}
@@ -282,14 +285,14 @@ export function AdminReportsTab() {
             {/* Reports Table */}
             <div className="rounded-xl border border-gray-200 bg-white">
                 <div className="border-gray-200 border-b p-6">
-                    <h3 className="font-semibold text-[#261E33] text-lg">Danh sách báo cáo</h3>
+                    <h3 className="font-semibold text-[#261E33] text-lg">{t("table.title")}</h3>
                 </div>
 
                 {isLoading ? (
                     <div className="flex items-center justify-center p-12">
                         <div className="text-center">
                             <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-[#FF5F3D]" />
-                            <p className="text-[#6F6B99] text-sm">Đang tải dữ liệu...</p>
+                            <p className="text-[#6F6B99] text-sm">{t("loading")}</p>
                         </div>
                     </div>
                 ) : error ? (
@@ -297,10 +300,10 @@ export function AdminReportsTab() {
                         <Empty
                             description={
                                 <div className="text-center">
-                                    <p className="mb-2 font-medium text-[#261E33]">Không thể tải dữ liệu</p>
+                                    <p className="mb-2 font-medium text-[#261E33]">{t("errors.loadFailedTitle")}</p>
                                     <p className="mb-4 text-[#6F6B99] text-sm">{error}</p>
                                     <Button onClick={loadReports} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
-                                        Thử lại
+                                        {t("actions.retry")}
                                     </Button>
                                 </div>
                             }
@@ -311,10 +314,8 @@ export function AdminReportsTab() {
                         <Empty
                             description={
                                 <div className="text-center">
-                                    <p className="mb-2 font-medium text-[#261E33]">Chưa có báo cáo nào</p>
-                                    <p className="text-[#6F6B99] text-sm">
-                                        Hiện tại chưa có báo cáo nào từ người dùng.
-                                    </p>
+                                    <p className="mb-2 font-medium text-[#261E33]">{t("empty.title")}</p>
+                                    <p className="text-[#6F6B99] text-sm">{t("empty.description")}</p>
                                 </div>
                             }
                         />
@@ -325,25 +326,25 @@ export function AdminReportsTab() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
-                                        Email
+                                        {t("table.headers.email")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
-                                        Tiêu đề
+                                        {t("table.headers.title")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
-                                        Loại
+                                        {t("table.headers.type")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
-                                        Trạng thái
+                                        {t("table.headers.status")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
-                                        Độ ưu tiên
+                                        {t("table.headers.priority")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
-                                        Ngày tạo
+                                        {t("table.headers.createdAt")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
-                                        Thao tác
+                                        {t("table.headers.actions")}
                                     </th>
                                 </tr>
                             </thead>
@@ -382,7 +383,7 @@ export function AdminReportsTab() {
                                                 size="sm"
                                                 variant="outline"
                                                 onClick={() => handleEditReport(report)}>
-                                                Chỉnh sửa
+                                                {t("actions.edit")}
                                             </Button>
                                         </td>
                                     </tr>
@@ -396,9 +397,11 @@ export function AdminReportsTab() {
                 {reports.totalCount > 0 && (
                     <div className="flex items-center justify-between border-gray-200 border-t px-6 py-3">
                         <div className="text-[#6F6B99] text-sm">
-                            Hiển thị {(reports.pageNumber - 1) * reports.pageSize + 1} -{" "}
-                            {Math.min(reports.pageNumber * reports.pageSize, reports.totalCount)} trong tổng số{" "}
-                            {reports.totalCount} báo cáo
+                            {t("pagination.showing", {
+                                start: (reports.pageNumber - 1) * reports.pageSize + 1,
+                                end: Math.min(reports.pageNumber * reports.pageSize, reports.totalCount),
+                                total: reports.totalCount
+                            })}
                         </div>
                         <div className="flex gap-2">
                             <Button
@@ -406,14 +409,14 @@ export function AdminReportsTab() {
                                 variant="outline"
                                 disabled={reports.pageNumber <= 1}
                                 onClick={() => handleFilterChange("pageNumber", reports.pageNumber - 1)}>
-                                Trước
+                                {t("pagination.previous")}
                             </Button>
                             <Button
                                 size="sm"
                                 variant="outline"
                                 disabled={reports.pageNumber * reports.pageSize >= reports.totalCount}
                                 onClick={() => handleFilterChange("pageNumber", reports.pageNumber + 1)}>
-                                Sau
+                                {t("pagination.next")}
                             </Button>
                         </div>
                     </div>
@@ -425,7 +428,7 @@ export function AdminReportsTab() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
                         <div className="mb-6 flex items-center justify-between">
-                            <h2 className="font-bold text-[#261E33] text-xl">Chỉnh sửa báo cáo</h2>
+                            <h2 className="font-bold text-[#261E33] text-xl">{t("modal.title")}</h2>
                             <button
                                 type="button"
                                 onClick={() => setIsEditModalOpen(false)}
@@ -443,17 +446,19 @@ export function AdminReportsTab() {
 
                         <div className="space-y-4">
                             <div>
-                                <p className="mb-2 font-medium text-[#261E33] text-sm">Tiêu đề:</p>
+                                <p className="mb-2 font-medium text-[#261E33] text-sm">{t("modal.reportTitle")}:</p>
                                 <p className="text-[#6F6B99] text-sm">{selectedReport.title}</p>
                             </div>
 
                             <div>
-                                <p className="mb-2 font-medium text-[#261E33] text-sm">Nội dung:</p>
+                                <p className="mb-2 font-medium text-[#261E33] text-sm">{t("modal.content")}:</p>
                                 <p className="text-[#6F6B99] text-sm">{selectedReport.content}</p>
                             </div>
 
                             <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">Trạng thái</label>
+                                <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                    {t("modal.status")}
+                                </label>
                                 <select
                                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                     value={editForm.status}
@@ -469,7 +474,9 @@ export function AdminReportsTab() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">Độ ưu tiên</label>
+                                <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                    {t("modal.priority")}
+                                </label>
                                 <select
                                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                     value={editForm.priority}
@@ -485,11 +492,13 @@ export function AdminReportsTab() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">Ghi chú admin</label>
+                                <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                    {t("modal.adminNote")}
+                                </label>
                                 <Textarea
                                     value={editForm.adminNote}
                                     onChange={(e) => setEditForm((prev) => ({ ...prev, adminNote: e.target.value }))}
-                                    placeholder="Nhập ghi chú của admin..."
+                                    placeholder={t("modal.adminNotePlaceholder")}
                                     rows={3}
                                 />
                             </div>
@@ -497,10 +506,10 @@ export function AdminReportsTab() {
 
                         <div className="mt-6 flex gap-3">
                             <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1">
-                                Hủy
+                                {t("modal.cancel")}
                             </Button>
                             <Button onClick={handleUpdateReport} className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
-                                Cập nhật
+                                {t("modal.update")}
                             </Button>
                         </div>
                     </div>
