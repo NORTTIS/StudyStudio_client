@@ -180,3 +180,21 @@ export async function apiDelete<T = unknown>(
         skipAuth
     });
 }
+
+/**
+ * Helper for PATCH requests
+ * @param skipAuth - Set to true for public endpoints to skip Authorization header
+ */
+export async function apiPatch<T = unknown>(
+    url: string,
+    body: unknown,
+    locale?: string,
+    skipAuth?: boolean
+): Promise<ApiResponse<T>> {
+    return apiFetch<T>(url, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+        locale,
+        skipAuth
+    });
+}

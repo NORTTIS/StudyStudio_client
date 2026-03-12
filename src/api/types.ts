@@ -199,6 +199,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    GroupType?: string;
+                    PageNumber?: number;
+                    PageSize?: number;
+                    SearchTerm?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminGroupListResponseApiResponse"];
+                        "text/json": components["schemas"]["AdminGroupListResponseApiResponse"];
+                        "text/plain": components["schemas"]["AdminGroupListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/groups/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateGroupStatusRequest"];
+                    "application/json": components["schemas"]["UpdateGroupStatusRequest"];
+                    "text/json": components["schemas"]["UpdateGroupStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StringApiResponse"];
+                        "text/json": components["schemas"]["StringApiResponse"];
+                        "text/plain": components["schemas"]["StringApiResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/admin/reports": {
         parameters: {
             query?: never;
@@ -829,6 +916,133 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Package?: string;
+                    PageNumber?: number;
+                    PageSize?: number;
+                    SearchTerm?: string;
+                    Status?: components["schemas"]["UserStatus"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserListResponseApiResponse"];
+                        "text/json": components["schemas"]["UserListResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserDetailItemApiResponse"];
+                        "text/json": components["schemas"]["UserDetailItemApiResponse"];
+                        "text/plain": components["schemas"]["UserDetailItemApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateUserStatusRequest"];
+                    "application/json": components["schemas"]["UpdateUserStatusRequest"];
+                    "text/json": components["schemas"]["UpdateUserStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StringApiResponse"];
+                        "text/json": components["schemas"]["StringApiResponse"];
+                        "text/plain": components["schemas"]["StringApiResponse"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/ai/ask": {
@@ -4228,6 +4442,24 @@ export interface components {
             /** Format: uuid */
             groupId: string;
         };
+        AdminGroupListResponse: {
+            groupList?: components["schemas"]["GroupListItem"][] | null;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            summary?: components["schemas"]["GroupListSummary"];
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            readonly totalPages?: number;
+        };
+        AdminGroupListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["AdminGroupListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         AIAnswerResponse: {
             answer?: string | null;
             /** Format: int32 */
@@ -4595,6 +4827,22 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        GroupListItem: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            groupType?: string | null;
+            isActive?: boolean;
+            /** Format: date-time */
+            lastActivityAt?: string | null;
+            /** Format: int32 */
+            memberCount?: number;
+            studioName?: string | null;
+            /** Format: int32 */
+            taskCount?: number;
+        };
         GroupListResponse: {
             sections?: components["schemas"]["GroupSections"];
             subscription?: components["schemas"]["SubscriptionInfo"];
@@ -4605,6 +4853,18 @@ export interface components {
             data?: components["schemas"]["GroupListResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        GroupListSummary: {
+            /** Format: int32 */
+            activeGroups?: number;
+            /** Format: int32 */
+            inactiveGroups?: number;
+            /** Format: int32 */
+            independentGroups?: number;
+            /** Format: int32 */
+            studioGroups?: number;
+            /** Format: int32 */
+            totalGroups?: number;
         };
         GroupMemberDto: {
             avatarUrl?: string | null;
@@ -5231,6 +5491,12 @@ export interface components {
             /** Format: float */
             relevanceScore?: number;
         };
+        StringApiResponse: {
+            code?: string | null;
+            data?: string | null;
+            message?: string | null;
+            status?: string | null;
+        };
         StudioDto: {
             /** Format: uuid */
             id?: string;
@@ -5308,6 +5574,19 @@ export interface components {
             data?: components["schemas"]["SubscriptionPlanDetail"];
             message?: string | null;
             status?: string | null;
+        };
+        SubscriptionPlanInfo: {
+            billingCycle?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
+            isActive?: boolean;
+            /** Format: uuid */
+            planId?: string;
+            planName?: string | null;
+            /** Format: double */
+            price?: number;
+            /** Format: date-time */
+            startDate?: string | null;
         };
         SubscriptionPlanItem: {
             billingCycle?: components["schemas"]["BillingCycle"];
@@ -5623,6 +5902,9 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        UpdateGroupStatusRequest: {
+            isActive?: boolean;
+        };
         UpdatePersonalTaskRequest: {
             /** Format: date-time */
             dueDate?: string | null;
@@ -5703,6 +5985,9 @@ export interface components {
             groupId: string;
             isSystemTemplate?: boolean;
         };
+        UpdateUserStatusRequest: {
+            status?: string | null;
+        };
         UserAnnouncementResponse: {
             /** Format: uuid */
             announcementId?: string;
@@ -5727,6 +6012,36 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        UserDetailItem: {
+            avatarUrl?: string | null;
+            bio?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            email?: string | null;
+            fullName?: string | null;
+            /** Format: int32 */
+            groupCount?: number;
+            isAdmin?: boolean;
+            isVerify?: boolean;
+            /** Format: date-time */
+            lastLoginAt?: string | null;
+            package?: string | null;
+            phoneNumber?: string | null;
+            status?: string | null;
+            /** Format: int32 */
+            studioCount?: number;
+            subscription?: components["schemas"]["SubscriptionPlanInfo"];
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: uuid */
+            userId?: string;
+        };
+        UserDetailItemApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserDetailItem"];
+            message?: string | null;
+            status?: string | null;
+        };
         UserDto: {
             avatarUrl?: string | null;
             firstName?: string | null;
@@ -5738,6 +6053,54 @@ export interface components {
             /** Format: uuid */
             groupId?: string;
             groupName?: string | null;
+        };
+        UserListItem: {
+            /** Format: date-time */
+            createdAt?: string;
+            email?: string | null;
+            fullName?: string | null;
+            /** Format: int32 */
+            groupCount?: number;
+            /** Format: date-time */
+            lastLoginAt?: string | null;
+            package?: string | null;
+            status?: string | null;
+            /** Format: int32 */
+            studioCount?: number;
+            /** Format: uuid */
+            userId?: string;
+        };
+        UserListResponse: {
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            summary?: components["schemas"]["UserListSummary"];
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            readonly totalPages?: number;
+            userList?: components["schemas"]["UserListItem"][] | null;
+        };
+        UserListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        UserListSummary: {
+            /** Format: int32 */
+            activeUsers?: number;
+            /** Format: int32 */
+            deletedUsers?: number;
+            /** Format: int32 */
+            freeUsers?: number;
+            /** Format: int32 */
+            inactiveUsers?: number;
+            /** Format: int32 */
+            premiumUsers?: number;
+            /** Format: int32 */
+            totalUsers?: number;
         };
         UserProfileResponse: {
             /** Format: int32 */
@@ -5781,6 +6144,11 @@ export interface components {
             /** Format: int32 */
             totalActiveUsers?: number;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        UserStatus: 0 | 1 | 2;
         Webhook: {
             code?: string | null;
             data?: components["schemas"]["WebhookData"];
