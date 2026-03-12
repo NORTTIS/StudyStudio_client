@@ -131,9 +131,7 @@ export async function fetchNotifications(locale = "vi"): Promise<Notification[]>
  * @param notificationId - The ID of the notification to mark as read
  */
 export async function markNotificationAsRead(notificationId: string, locale = "vi"): Promise<void> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-
-    const response = await apiFetch<ObjectApiResponse>(`${baseUrl}/announcements/user/${notificationId}/read`, {
+    const response = await apiFetch<ObjectApiResponse>(`/announcements/user/${notificationId}/read`, {
         method: "PUT",
         locale
     });
@@ -170,11 +168,9 @@ export async function markAllNotificationsAsRead(locale = "vi"): Promise<void> {
  * @returns Promise<Announcement[]>
  */
 export async function fetchAnnouncements(locale = "vi"): Promise<Announcement[]> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-
     const [announcementsRes, userAnnouncementsRes] = await Promise.all([
-        apiGet<AnnouncementApiResponse[]>(`${baseUrl}/announcements`, locale),
-        apiGet<UserAnnouncementListResponse>(`${baseUrl}/announcements/user`, locale)
+        apiGet<AnnouncementApiResponse[]>("/announcements", locale),
+        apiGet<UserAnnouncementListResponse>("/announcements/user", locale)
     ]);
 
     if (announcementsRes.status !== "success") {

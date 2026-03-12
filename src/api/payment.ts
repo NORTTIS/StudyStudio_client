@@ -34,16 +34,10 @@ export interface PaymentHistoryResponse {
     paymentHistories: PaymentHistory[];
 }
 
-// Helper to get API base URL
-const getApiBaseUrl = () => {
-    return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
-};
-
 // Create Payment
 export async function createPayment(planId: string, locale: string): Promise<ApiResponse<CreatePaymentResponse>> {
     try {
-        const baseUrl = getApiBaseUrl();
-        const response = await apiPost<CreatePaymentResponse>(`${baseUrl}/payment/create`, { planId }, locale);
+        const response = await apiPost<CreatePaymentResponse>("/payment/create", { planId }, locale);
         return response;
     } catch (error: unknown) {
         return {
@@ -58,8 +52,7 @@ export async function createPayment(planId: string, locale: string): Promise<Api
 // Get Payment Status
 export async function getPaymentStatus(paymentId: string, locale: string): Promise<ApiResponse<PaymentStatusResponse>> {
     try {
-        const baseUrl = getApiBaseUrl();
-        const response = await apiGet<PaymentStatusResponse>(`${baseUrl}/payment/${paymentId}/status`, locale);
+        const response = await apiGet<PaymentStatusResponse>(`/payment/${paymentId}/status`, locale);
         return response;
     } catch (error: unknown) {
         return {
@@ -74,8 +67,7 @@ export async function getPaymentStatus(paymentId: string, locale: string): Promi
 // Retry Payment - Get payment URL for existing payment
 export async function retryPayment(paymentId: string, locale: string): Promise<ApiResponse<CreatePaymentResponse>> {
     try {
-        const baseUrl = getApiBaseUrl();
-        const response = await apiPost<CreatePaymentResponse>(`${baseUrl}/payment/${paymentId}/retry`, {}, locale);
+        const response = await apiPost<CreatePaymentResponse>(`/payment/${paymentId}/retry`, {}, locale);
         return response;
     } catch (error: unknown) {
         return {
@@ -90,8 +82,7 @@ export async function retryPayment(paymentId: string, locale: string): Promise<A
 // Cancel Payment
 export async function cancelPayment(paymentId: string, locale: string): Promise<ApiResponse<PaymentStatusResponse>> {
     try {
-        const baseUrl = getApiBaseUrl();
-        const response = await apiPost<PaymentStatusResponse>(`${baseUrl}/payment/${paymentId}/cancel`, {}, locale);
+        const response = await apiPost<PaymentStatusResponse>(`/payment/${paymentId}/cancel`, {}, locale);
         return response;
     } catch (error: unknown) {
         return {
@@ -106,8 +97,7 @@ export async function cancelPayment(paymentId: string, locale: string): Promise<
 // Get Payment History
 export async function getPaymentHistory(locale: string): Promise<ApiResponse<PaymentHistoryResponse>> {
     try {
-        const baseUrl = getApiBaseUrl();
-        const response = await apiGet<PaymentHistoryResponse>(`${baseUrl}/payment/history`, locale);
+        const response = await apiGet<PaymentHistoryResponse>("/payment/history", locale);
         return response;
     } catch (error: unknown) {
         return {

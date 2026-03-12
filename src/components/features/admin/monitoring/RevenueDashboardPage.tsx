@@ -1,136 +1,261 @@
 "use client";
 
-import { ArrowDown, ArrowUp, CreditCard, DollarSign, Download, Star, TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowUp, DollarSign, Download, Star, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
+} from "recharts";
+import type {
+    MRRBreakdownData,
+    PlanRevenueSummary,
+    RevenueByPeriodData,
+    RevenueByPlanData,
+    RevenueOverviewData,
+    RevenueTransactionsData,
+    RevenueTrendsData,
+    TopPlansData,
+    TransactionDetail
+} from "@/api/admin-revenue";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRevenueData } from "@/hooks/use-revenue-data";
+
+export interface RevenueDashboardData {
+    overview: RevenueOverviewData | null;
+    byPeriod: RevenueByPeriodData | null;
+    byPlan: RevenueByPlanData | null;
+    trends: RevenueTrendsData | null;
+    topPlans: TopPlansData | null;
+    transactions: RevenueTransactionsData | null;
+    mrr: MRRBreakdownData | null;
+}
+
+interface RevenueDashboardPageProps {
+    data: RevenueDashboardData;
+}
 
 type TimeRange = "week" | "month" | "year";
 
-const MONTHLY_DATA = [
-    { month: "Th7", revenue: 45_000_000, subscriptions: 150, newUsers: 320 },
-    { month: "Th8", revenue: 52_000_000, subscriptions: 174, newUsers: 410 },
-    { month: "Th9", revenue: 58_000_000, subscriptions: 195, newUsers: 390 },
-    { month: "Th10", revenue: 61_000_000, subscriptions: 204, newUsers: 450 },
-    { month: "Th11", revenue: 67_000_000, subscriptions: 224, newUsers: 500 },
-    { month: "Th12", revenue: 72_000_000, subscriptions: 241, newUsers: 560 },
-    { month: "Th1", revenue: 68_000_000, subscriptions: 228, newUsers: 420 },
-    { month: "Th2", revenue: 74_000_000, subscriptions: 247, newUsers: 510 },
-    { month: "Th3", revenue: 80_250_000, subscriptions: 268, newUsers: 590 }
-];
+// Helper function to format Vietnamese month names
+const getVietnameseMonth = (month: number): string => {
+    const months = ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"];
+    return months[month - 1] || `Th${month}`;
+};
 
-const PAYMENT_METHODS = [
-    { name: "Thẻ tín dụng / thẻ ghi nợ", count: 1524, percent: 65, color: "bg-[#FF5F3D]" },
-    { name: "VNPay", count: 563, percent: 24, color: "bg-blue-500" },
-    { name: "Momo", count: 188, percent: 8, color: "bg-pink-400" },
-    { name: "Chuyển khoản ngân hàng", count: 66, percent: 3, color: "bg-purple-400" }
-];
+const getSafeDate = (value?: string | null): Date | null => {
+    if (!value) {
+        return null;
+    }
 
-const RECENT_TRANSACTIONS = [
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const normalizePaymentStatus = (status?: TransactionDetail["paymentStatus"]): string => {
+    const statusMap: Record<number, string> = {
+        0: "PENDING",
+        1: "SUCCESS",
+        2: "CANCELLED",
+        3: "FAILED"
+    };
+
+    if (typeof status === "number") {
+        return statusMap[status] ?? String(status);
+    }
+
+    return status ?? "UNKNOWN";
+};
+
+// Helper to convert payment status to Vietnamese
+const getPaymentStatusLabel = (status?: TransactionDetail["paymentStatus"]): string => {
+    const statusMap: Record<string, string> = {
+        SUCCESS: "Thành công",
+        PENDING: "Đang xử lý",
+        CANCELLED: "Đã hủy",
+        FAILED: "Thất bại"
+    };
+
+    const normalizedStatus = normalizePaymentStatus(status);
+    return statusMap[normalizedStatus] ?? normalizedStatus;
+};
+
+// Status colors
+const STATUS_COLOR: Record<string, string> = {
+    "Thành công": "bg-green-100 text-green-700",
+    SUCCESS: "bg-green-100 text-green-700",
+    "Thất bại": "bg-red-100 text-red-700",
+    FAILED: "bg-red-100 text-red-700",
+    "Đang xử lý": "bg-amber-100 text-amber-700",
+    PENDING: "bg-amber-100 text-amber-700",
+    "Đã hủy": "bg-gray-100 text-gray-700",
+    CANCELLED: "bg-gray-100 text-gray-700"
+};
+
+const MRR_COLUMN_EXPLANATIONS = [
     {
-        id: "TXN-8821",
-        user: "Nguyễn Văn A",
-        email: "a@example.com",
-        plan: "Premium",
-        amount: 299_000,
-        method: "Thẻ tín dụng",
-        date: "05/03/2024",
-        status: "Thành công"
+        color: "bg-[#22C55E]",
+        label: "New MRR",
+        description: "Doanh thu mới từ khách hàng hoặc gói đăng ký phát sinh lần đầu trong tháng."
     },
     {
-        id: "TXN-8820",
-        user: "Trần Thị B",
-        email: "b@example.com",
-        plan: "Premium",
-        amount: 299_000,
-        method: "VNPay",
-        date: "05/03/2024",
-        status: "Thành công"
+        color: "bg-[#7C3AED]",
+        label: "Expansion",
+        description: "Phần doanh thu tăng thêm khi người dùng nâng cấp gói hoặc mua thêm dịch vụ."
     },
     {
-        id: "TXN-8819",
-        user: "Lê Văn C",
-        email: "c@example.com",
-        plan: "Premium",
-        amount: 299_000,
-        method: "Momo",
-        date: "04/03/2024",
-        status: "Thất bại"
+        color: "bg-[#EF4444]",
+        label: "Churn",
+        description: "Doanh thu mất đi do người dùng hủy đăng ký hoặc ngừng gia hạn."
     },
     {
-        id: "TXN-8818",
-        user: "Phạm Thị D",
-        email: "d@example.com",
-        plan: "Premium",
-        amount: 299_000,
-        method: "VNPay",
-        date: "04/03/2024",
-        status: "Đang xử lý"
-    },
-    {
-        id: "TXN-8817",
-        user: "Hoàng Văn E",
-        email: "e@example.com",
-        plan: "Premium",
-        amount: 299_000,
-        method: "Thẻ tín dụng",
-        date: "03/03/2024",
-        status: "Thành công"
+        color: "bg-[#F59E0B]",
+        label: "Contraction",
+        description: "Phần doanh thu giảm do hạ gói hoặc giảm giá trị sử dụng từ khách hàng hiện tại."
     }
 ];
 
-const STATUS_COLOR: Record<string, string> = {
-    "Thành công": "bg-green-100 text-green-700",
-    "Thất bại": "bg-red-100 text-red-700",
-    "Đang xử lý": "bg-amber-100 text-amber-700"
-};
+export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
+    const [timeRange] = useState<TimeRange>("month");
 
-export function RevenueDashboardPage() {
-    const [timeRange, setTimeRange] = useState<TimeRange>("month");
+    // Use the custom hook for filter handling and API calls
+    const {
+        byPeriod: periodData,
+        byPlan: planData,
+        transactions: transactionsData,
+        mrr: mrrData,
+        topPlans: topPlansData,
+        filters,
+        applyFilters
+    } = useRevenueData({
+        initialByPeriod: data?.byPeriod ?? undefined,
+        initialByPlan: data?.byPlan ?? undefined,
+        initialTrends: data?.trends ?? undefined,
+        initialTransactions: data?.transactions ?? undefined,
+        initialMRR: data?.mrr ?? undefined,
+        initialTopPlans: data?.topPlans ?? undefined
+    });
 
-    const totalRevenue = MONTHLY_DATA.reduce((s, d) => s + d.revenue, 0);
-    const latestRevenue = MONTHLY_DATA[MONTHLY_DATA.length - 1].revenue;
-    const prevRevenue = MONTHLY_DATA[MONTHLY_DATA.length - 2].revenue;
-    const growth = (((latestRevenue - prevRevenue) / prevRevenue) * 100).toFixed(1);
-    const isPositive = latestRevenue >= prevRevenue;
+    // Use API data or fallback to default values
+    const overview = data?.overview;
+    const byPeriod = periodData ?? data?.byPeriod;
+    const byPlan = planData ?? data?.byPlan;
+    const transactions = transactionsData ?? data?.transactions;
+    const mrrBreakdown = mrrData ?? data?.mrr;
+    const topPlans = topPlansData ?? data?.topPlans;
+    const availablePlans = (byPlan?.plans ?? []).filter((plan): plan is PlanRevenueSummary & { planId: string } =>
+        Boolean(plan.planId)
+    );
+    const chartData = byPeriod?.breakdown ?? [];
+    const transactionRows = transactions?.transactions ?? [];
 
-    const maxRevenue = Math.max(...MONTHLY_DATA.map((d) => d.revenue));
+    // Calculate derived values
+    const totalRevenue = overview?.totalRevenue ?? 0;
+    const monthlyRevenue = overview?.monthlyRevenue ?? 0;
+    const prevRevenue = monthlyRevenue * 0.9; // Fallback estimate
+    const growth = monthlyRevenue > 0 ? (((monthlyRevenue - prevRevenue) / prevRevenue) * 100).toFixed(1) : "0";
+    const isPositive = monthlyRevenue >= prevRevenue;
+
+    // Process byPeriod data for chart
+    const maxRevenue = chartData.length > 0 ? Math.max(...chartData.map((point) => point.revenue ?? 0)) : 1;
+
+    // Calculate successful transactions for summary
+    const successfulTransactions = overview?.successfulTransactions ?? 0;
+    const yearlyRevenue = overview?.yearlyRevenue ?? 0;
+    const mrr = overview?.mrr ?? 0;
+    const successRate = overview?.successRate ?? 0;
 
     const STATS = [
         {
             label: "Tổng doanh thu",
-            value: `${(totalRevenue / 1_000_000).toFixed(0)}M VND`,
-            sub: `+${growth}% so với tháng trước`,
-            positive: true,
+            value: formatCurrency(totalRevenue),
+            sub: isPositive ? `+${growth}% so với tháng trước` : `${growth}% so với tháng trước`,
+            positive: isPositive,
             icon: <DollarSign className="h-5 w-5 text-[#FF5F3D]" />,
             bg: "border-[#FF5F3D]/20 bg-gradient-to-br from-[#FFF5F3] to-white"
         },
         {
             label: "Doanh thu tháng này",
-            value: `${(latestRevenue / 1_000_000).toFixed(2)}M VND`,
+            value: formatCurrency(monthlyRevenue),
             sub: isPositive ? `Tăng ${growth}%` : `Giảm ${Math.abs(Number(growth))}%`,
             positive: isPositive,
             icon: <TrendingUp className="h-5 w-5 text-blue-500" />,
             bg: "border-blue-100 bg-blue-50"
         },
         {
+            label: "Doanh thu năm",
+            value: formatCurrency(yearlyRevenue),
+            sub: "Tổng năm nay",
+            positive: true,
+            icon: <DollarSign className="h-5 w-5 text-green-500" />,
+            bg: "border-green-100 bg-green-50"
+        },
+        {
+            label: "MRR",
+            value: formatCurrency(mrr),
+            sub: "Doanh thu hàng tháng",
+            positive: true,
+            icon: <TrendingUp className="h-5 w-5 text-purple-500" />,
+            bg: "border-purple-100 bg-purple-50"
+        },
+        {
             label: "Người dùng Premium",
-            value: "2,341",
-            sub: "+268 trong tháng này",
+            value: formatNumber(overview?.activeSubscriptions ?? 0),
+            sub: "Đăng ký hoạt động",
             positive: true,
             icon: <Star className="h-5 w-5 text-amber-500" />,
             bg: "border-amber-100 bg-amber-50"
         },
         {
-            label: "ARPU (VND)",
-            value: "299,000",
-            sub: "Doanh thu TB / người",
-            positive: true,
-            icon: <CreditCard className="h-5 w-5 text-purple-500" />,
-            bg: "border-purple-100 bg-purple-50"
+            label: "Tỷ lệ thành công",
+            value: `${successRate.toFixed(1)}%`,
+            sub: `${successfulTransactions.toLocaleString("vi-VN")} giao dịch`,
+            positive: successRate >= 90,
+            icon: <Star className="h-5 w-5 text-cyan-500" />,
+            bg: "border-cyan-100 bg-cyan-50"
         }
     ];
+
+    // Format currency to VND
+    function formatCurrency(value: number): string {
+        if (value >= 1_000_000_000) {
+            return `${(value / 1_000_000_000).toFixed(1)}B VND`;
+        }
+
+        if (value >= 1_000_000) {
+            return `${(value / 1_000_000).toFixed(1)}M VND`;
+        }
+
+        if (value >= 1_000) {
+            return `${(value / 1_000).toFixed(0)}K VND`;
+        }
+
+        return `${value.toFixed(0)} VND`;
+    }
+
+    // Format number with thousand separators
+    function formatNumber(value: number): string {
+        return value.toLocaleString("vi-VN");
+    }
+
+    // Handle export
+    const handleExport = () => {
+        // TODO: Implement export functionality
+        console.log("Exporting revenue report...");
+    };
 
     return (
         <div className="min-h-screen bg-[#F8F8F8]">
@@ -150,24 +275,66 @@ export function RevenueDashboardPage() {
                             </div>
 
                             <div className="flex items-center gap-3">
-                                {/* Time range tabs */}
-                                <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-1">
-                                    {(["week", "month", "year"] as TimeRange[]).map((r) => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            onClick={() => setTimeRange(r)}
-                                            className={`cursor-pointer rounded-md px-4 py-2 font-medium text-sm transition-colors ${
-                                                timeRange === r
-                                                    ? "bg-[#FF5F3D] text-white"
-                                                    : "text-[#6F6B99] hover:text-[#261E33]"
-                                            }`}>
-                                            {r === "week" ? "Tuần" : r === "month" ? "Tháng" : "Năm"}
-                                        </button>
-                                    ))}
-                                </div>
+                                {/* Period Filter */}
+                                <Select
+                                    value={filters.period}
+                                    onValueChange={(value: "daily" | "weekly" | "monthly" | "yearly") =>
+                                        applyFilters({ period: value })
+                                    }>
+                                    <SelectTrigger className="w-35 bg-white">
+                                        <SelectValue placeholder="Kỳ hạn" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="daily">Ngày</SelectItem>
+                                        <SelectItem value="weekly">Tuần</SelectItem>
+                                        <SelectItem value="monthly">Tháng</SelectItem>
+                                        <SelectItem value="yearly">Năm</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                                <Button className="bg-[#FF5F3D] hover:bg-[#ff4620]">
+                                {/* Plan Filter */}
+                                <Select
+                                    value={filters.planId || "all"}
+                                    onValueChange={(value) =>
+                                        applyFilters({ planId: value === "all" ? undefined : value })
+                                    }>
+                                    <SelectTrigger className="w-40 bg-white">
+                                        <SelectValue placeholder="Tất cả gói" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Tất cả gói</SelectItem>
+                                        {availablePlans.map((plan) => (
+                                            <SelectItem key={plan.planId} value={plan.planId}>
+                                                {plan.planName}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                {/* Status Filter */}
+                                <Select
+                                    value={filters.paymentStatus || "all"}
+                                    onValueChange={(value: "PENDING" | "SUCCESS" | "CANCELLED" | "FAILED" | "all") =>
+                                        applyFilters({
+                                            paymentStatus:
+                                                value === "all"
+                                                    ? undefined
+                                                    : (value as "PENDING" | "SUCCESS" | "CANCELLED" | "FAILED")
+                                        })
+                                    }>
+                                    <SelectTrigger className="w-35 bg-white">
+                                        <SelectValue placeholder="Trạng thái" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Tất cả</SelectItem>
+                                        <SelectItem value="SUCCESS">Thành công</SelectItem>
+                                        <SelectItem value="PENDING">Đang xử lý</SelectItem>
+                                        <SelectItem value="FAILED">Thất bại</SelectItem>
+                                        <SelectItem value="CANCELLED">Đã hủy</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Button className="bg-[#FF5F3D] hover:bg-[#ff4620]" onClick={handleExport}>
                                     <Download className="mr-2 h-4 w-4" />
                                     Xuất báo cáo
                                 </Button>
@@ -175,7 +342,7 @@ export function RevenueDashboardPage() {
                         </div>
 
                         {/* Stats cards */}
-                        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                             {STATS.map((stat) => (
                                 <div key={stat.label} className={`rounded-xl border p-5 ${stat.bg}`}>
                                     <div className="mb-3 flex items-center justify-between">
@@ -198,98 +365,296 @@ export function RevenueDashboardPage() {
                             ))}
                         </div>
 
-                        {/* Revenue chart + Payment methods */}
-                        <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-3">
-                            {/* Bar chart */}
+                        {/* Revenue Chart + Revenue by Plan */}
+                        <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-3">
+                            {/* Revenue Trend - AreaChart */}
                             <div className="col-span-2 rounded-2xl border border-gray-200 bg-white p-6">
                                 <div className="mb-5 flex items-center justify-between">
                                     <h2 className="font-bold text-[#261E33] text-lg">Xu hướng doanh thu</h2>
-                                    <span className="text-[#6F6B99] text-sm">9 tháng gần nhất</span>
+                                    <span className="text-[#6F6B99] text-sm">{chartData.length} kỳ gần nhất</span>
                                 </div>
 
-                                {/* Chart bars */}
-                                <div className="flex h-48 items-end gap-3">
-                                    {MONTHLY_DATA.map((d, i) => {
-                                        const h = (d.revenue / maxRevenue) * 100;
-                                        const isLast = i === MONTHLY_DATA.length - 1;
+                                <ResponsiveContainer width="100%" height={320}>
+                                    <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#FF5F3D" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#FF5F3D" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                        <XAxis
+                                            dataKey="date"
+                                            tickFormatter={(value) => {
+                                                const date = new Date(value);
+                                                return getVietnameseMonth(date.getMonth() + 1);
+                                            }}
+                                            stroke="#9CA3AF"
+                                            fontSize={12}
+                                        />
+                                        <YAxis
+                                            tickFormatter={(value) => formatCurrency(value)}
+                                            stroke="#9CA3AF"
+                                            fontSize={12}
+                                        />
+                                        <Tooltip
+                                            formatter={(value) => [formatCurrency(value as number), "Doanh thu"]}
+                                            labelFormatter={(label) => {
+                                                const date = getSafeDate(String(label));
+                                                return date ? date.toLocaleDateString("vi-VN") : "Không rõ ngày";
+                                            }}
+                                            contentStyle={{
+                                                backgroundColor: "#fff",
+                                                border: "1px solid #E5E7EB",
+                                                borderRadius: "8px"
+                                            }}
+                                        />
+                                        <Legend />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="revenue"
+                                            stroke="#FF5F3D"
+                                            strokeWidth={2}
+                                            fillOpacity={1}
+                                            fill="url(#colorRevenue)"
+                                            name="Doanh thu"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+
+                                {/* Recent months summary */}
+                                <div className="mt-4 space-y-2">
+                                    {chartData.slice(-4).map((d) => {
+                                        const date = getSafeDate(d.date);
+                                        const monthLabel = date ? getVietnameseMonth(date.getMonth() + 1) : "N/A";
+                                        const revenue = d.revenue ?? 0;
+                                        const transactionCount = d.transactionCount ?? 0;
+
                                         return (
-                                            <div
-                                                key={d.month}
-                                                className="group flex flex-1 flex-col items-center gap-2">
-                                                <div className="relative w-full">
+                                            <div key={d.date ?? monthLabel} className="flex items-center gap-3">
+                                                <span className="w-10 text-[#6F6B99] text-xs">{monthLabel}</span>
+                                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
                                                     <div
-                                                        className={`w-full rounded-t-lg transition-all ${
-                                                            isLast
-                                                                ? "bg-gradient-to-t from-[#FF5F3D] to-[#ff8c6b]"
-                                                                : "bg-gradient-to-t from-gray-200 to-gray-100 group-hover:from-[#FF5F3D]/40 group-hover:to-[#FF5F3D]/20"
-                                                        }`}
-                                                        style={{ height: `${h * 1.8}px` }}
+                                                        className="h-full rounded-full bg-linear-to-r from-[#FF5F3D] to-[#ff8c6b]"
+                                                        style={{
+                                                            width: `${maxRevenue > 0 ? (revenue / maxRevenue) * 100 : 0}%`
+                                                        }}
                                                     />
-                                                    {/* Tooltip */}
-                                                    <div className="pointer-events-none absolute -top-10 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#261E33] px-2 py-1 text-white text-xs group-hover:block">
-                                                        {(d.revenue / 1_000_000).toFixed(1)}M
-                                                    </div>
                                                 </div>
-                                                <p className="text-center text-[#6F6B99] text-[10px]">{d.month}</p>
+                                                <span className="w-28 text-right font-semibold text-[#261E33] text-sm">
+                                                    {revenue.toLocaleString("vi-VN")} ₫
+                                                </span>
+                                                <span className="w-20 text-right text-[#6F6B99] text-xs">
+                                                    {transactionCount} giao dịch
+                                                </span>
                                             </div>
                                         );
                                     })}
                                 </div>
-
-                                {/* Subscriptions row */}
-                                <div className="mt-4 space-y-2">
-                                    {MONTHLY_DATA.slice(-4).map((d) => (
-                                        <div key={d.month} className="flex items-center gap-3">
-                                            <span className="w-10 text-[#6F6B99] text-xs">{d.month}</span>
-                                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
-                                                <div
-                                                    className="h-full rounded-full bg-gradient-to-r from-[#FF5F3D] to-[#ff8c6b]"
-                                                    style={{ width: `${(d.revenue / maxRevenue) * 100}%` }}
-                                                />
-                                            </div>
-                                            <span className="w-28 text-right font-semibold text-[#261E33] text-sm">
-                                                {d.revenue.toLocaleString()} ₫
-                                            </span>
-                                            <span className="w-20 text-right text-[#6F6B99] text-xs">
-                                                {d.subscriptions} thuê bao
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
 
-                            {/* Payment breakdown */}
+                            {/* Revenue by Plan - PieChart */}
                             <div className="rounded-2xl border border-gray-200 bg-white p-6">
-                                <h2 className="mb-5 font-bold text-[#261E33] text-lg">Phương thức thanh toán</h2>
-                                <div className="space-y-4">
-                                    {PAYMENT_METHODS.map((pm) => (
-                                        <div key={pm.name}>
-                                            <div className="mb-1.5 flex items-center justify-between">
-                                                <p className="text-[#261E33] text-sm">{pm.name}</p>
-                                                <p className="font-semibold text-[#261E33] text-sm">{pm.percent}%</p>
-                                            </div>
-                                            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                                                <div
-                                                    className={`h-full rounded-full ${pm.color}`}
-                                                    style={{ width: `${pm.percent}%` }}
-                                                />
-                                            </div>
-                                            <p className="mt-1 text-[#6F6B99] text-xs">
-                                                {pm.count.toLocaleString()} giao dịch
-                                            </p>
+                                <h2 className="mb-5 font-bold text-[#261E33] text-lg">Doanh thu theo gói</h2>
+
+                                {byPlan?.plans && byPlan.plans.length > 0 ? (
+                                    <>
+                                        <ResponsiveContainer width="100%" height={220}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={byPlan.plans}
+                                                    dataKey="totalRevenue"
+                                                    nameKey="planName"
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={50}
+                                                    outerRadius={80}
+                                                    paddingAngle={2}
+                                                    label={({ name, percent }) =>
+                                                        `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
+                                                    }
+                                                    labelLine={false}>
+                                                    {byPlan.plans.map((plan, index) => (
+                                                        <Cell
+                                                            key={plan.planId ?? plan.planName ?? `plan-${index}`}
+                                                            fill={
+                                                                ["#FF5F3D", "#7C3AED", "#22C55E", "#F59E0B", "#3B82F6"][
+                                                                index % 5
+                                                                ]
+                                                            }
+                                                        />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+
+                                        {/* Plan Legend */}
+                                        <div className="mt-4 space-y-3">
+                                            {byPlan.plans.map((plan, index) => (
+                                                <div key={plan.planId} className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div
+                                                            className="h-3 w-3 rounded-full"
+                                                            style={{
+                                                                backgroundColor: [
+                                                                    "#FF5F3D",
+                                                                    "#7C3AED",
+                                                                    "#22C55E",
+                                                                    "#F59E0B",
+                                                                    "#3B82F6"
+                                                                ][index % 5]
+                                                            }}
+                                                        />
+                                                        <span className="text-[#261E33] text-sm">{plan.planName}</span>
+                                                    </div>
+                                                    <span className="font-semibold text-[#261E33] text-sm">
+                                                        {plan.percentage}%
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </>
+                                ) : (
+                                    <div className="flex h-40 items-center justify-center text-[#6F6B99]">
+                                        Chưa có dữ liệu
+                                    </div>
+                                )}
 
                                 {/* Summary */}
                                 <div className="mt-5 rounded-xl border border-[#FF5F3D]/20 bg-[#FFF5F3] p-4">
                                     <p className="mb-1 text-[#6F6B99] text-xs">Tổng giao dịch thành công</p>
-                                    <p className="font-bold text-[#FF5F3D] text-xl">2,341</p>
+                                    <p className="font-bold text-[#FF5F3D] text-xl">
+                                        {successfulTransactions.toLocaleString("vi-VN")}
+                                    </p>
                                     <p className="mt-0.5 text-[#6F6B99] text-xs">
                                         trong {timeRange === "week" ? "tuần" : timeRange === "month" ? "tháng" : "năm"}{" "}
                                         này
                                     </p>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* MRR Breakdown + Top Plans */}
+                        <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                            {/* MRR Breakdown - Stacked BarChart */}
+                            <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                                <div className="mb-5 flex items-center justify-between">
+                                    <h2 className="font-bold text-[#261E33] text-lg">Phân tích đoanh thu theo chu kỳ</h2>
+                                    <span className="text-[#6F6B99] text-sm">
+                                        {mrrBreakdown
+                                            ? `MRR hiện tại: ${formatCurrency(mrrBreakdown.currentMRR ?? 0)}`
+                                            : "Chưa có dữ liệu"}
+                                    </span>
+                                </div>
+
+                                {mrrBreakdown?.monthlyBreakdown && mrrBreakdown.monthlyBreakdown.length > 0 ? (
+                                    <>
+                                        <ResponsiveContainer width="100%" height={280}>
+                                            <BarChart
+                                                data={mrrBreakdown.monthlyBreakdown}
+                                                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                                <XAxis
+                                                    dataKey="month"
+                                                    tickFormatter={(value) => getVietnameseMonth(Number(value))}
+                                                    stroke="#9CA3AF"
+                                                    fontSize={12}
+                                                />
+                                                <YAxis
+                                                    tickFormatter={(value) => formatCurrency(value)}
+                                                    stroke="#9CA3AF"
+                                                    fontSize={12}
+                                                />
+                                                <Tooltip
+                                                    formatter={(value) => formatCurrency(value as number)}
+                                                    contentStyle={{
+                                                        backgroundColor: "#fff",
+                                                        border: "1px solid #E5E7EB",
+                                                        borderRadius: "8px"
+                                                    }}
+                                                />
+                                                <Legend />
+                                                <Bar dataKey="newMRR" stackId="mrr" fill="#22C55E" name="New MRR" />
+                                                <Bar dataKey="expansionMRR" stackId="mrr" fill="#7C3AED" name="Expansion" />
+                                                <Bar dataKey="churnMRR" stackId="mrr" fill="#EF4444" name="Churn" />
+                                                <Bar
+                                                    dataKey="contractionMRR"
+                                                    stackId="mrr"
+                                                    fill="#F59E0B"
+                                                    name="Contraction"
+                                                />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+
+                                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                            {MRR_COLUMN_EXPLANATIONS.map((item) => (
+                                                <div
+                                                    key={item.label}
+                                                    className="rounded-xl border border-gray-100 bg-[#F8F8F8] p-3">
+                                                    <div className="mb-1 flex items-center gap-2">
+                                                        <span className={`h-2.5 w-2.5 rounded-full ${item.color}`} />
+                                                        <span className="font-semibold text-[#261E33] text-sm">{item.label}</span>
+                                                    </div>
+                                                    <p className="text-[#6F6B99] text-xs leading-5">{item.description}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex h-40 items-center justify-center text-[#6F6B99]">
+                                        Chưa có dữ liệu doanh thu theo chu kỳ
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Top Plans - Horizontal BarChart */}
+                            <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                                <div className="mb-5 flex items-center justify-between">
+                                    <h2 className="font-bold text-[#261E33] text-lg">Top gói phổ biến</h2>
+                                </div>
+
+                                {topPlans?.topPlans && topPlans.topPlans.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height={280}>
+                                        <BarChart
+                                            data={topPlans.topPlans}
+                                            layout="vertical"
+                                            margin={{ top: 10, right: 30, left: 80, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                            <XAxis
+                                                type="number"
+                                                tickFormatter={(value) => formatCurrency(value)}
+                                                stroke="#9CA3AF"
+                                                fontSize={12}
+                                            />
+                                            <YAxis
+                                                dataKey="planName"
+                                                type="category"
+                                                stroke="#9CA3AF"
+                                                fontSize={12}
+                                                width={80}
+                                            />
+                                            <Tooltip
+                                                formatter={(value) => [formatCurrency(value as number), "Doanh thu"]}
+                                                contentStyle={{
+                                                    backgroundColor: "#fff",
+                                                    border: "1px solid #E5E7EB",
+                                                    borderRadius: "8px"
+                                                }}
+                                            />
+                                            <Bar
+                                                dataKey="totalRevenue"
+                                                fill="#FF5F3D"
+                                                radius={[0, 4, 4, 0]}
+                                                name="Doanh thu"
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="flex h-40 items-center justify-center text-[#6F6B99]">
+                                        Chưa có dữ liệu
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -326,38 +691,60 @@ export function RevenueDashboardPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {RECENT_TRANSACTIONS.map((txn) => (
-                                            <tr
-                                                key={txn.id}
-                                                className="border-gray-100 border-t transition-colors hover:bg-gray-50">
-                                                <td className="px-6 py-4">
-                                                    <span className="font-mono font-semibold text-[#261E33] text-xs">
-                                                        {txn.id}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="font-medium text-[#261E33] text-sm">{txn.user}</p>
-                                                    <p className="text-[#6F6B99] text-xs">{txn.email}</p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF5F3] px-2.5 py-1 font-medium text-[#FF5F3D] text-xs">
-                                                        <Star className="h-3 w-3" />
-                                                        {txn.plan}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 font-semibold text-[#261E33] text-sm">
-                                                    {txn.amount.toLocaleString()} ₫
-                                                </td>
-                                                <td className="px-6 py-4 text-[#6F6B99] text-sm">{txn.method}</td>
-                                                <td className="px-6 py-4 text-[#6F6B99] text-sm">{txn.date}</td>
-                                                <td className="px-6 py-4">
-                                                    <span
-                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${STATUS_COLOR[txn.status]}`}>
-                                                        {txn.status}
-                                                    </span>
+                                        {transactionRows.length > 0 ? (
+                                            transactionRows.map((txn) => {
+                                                const normalizedStatus = normalizePaymentStatus(txn.paymentStatus);
+                                                const createdAt = getSafeDate(txn.createdAt);
+
+                                                return (
+                                                    <tr
+                                                        key={
+                                                            txn.paymentId ??
+                                                            String(txn.orderCode ?? txn.userId ?? txn.userEmail)
+                                                        }
+                                                        className="border-gray-100 border-t transition-colors hover:bg-gray-50">
+                                                        <td className="px-6 py-4">
+                                                            <span className="font-mono font-semibold text-[#261E33] text-xs">
+                                                                {txn.orderCode}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <p className="font-medium text-[#261E33] text-sm">
+                                                                {txn.userName}
+                                                            </p>
+                                                            <p className="text-[#6F6B99] text-xs">{txn.userEmail}</p>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF5F3] px-2.5 py-1 font-medium text-[#FF5F3D] text-xs">
+                                                                <Star className="h-3 w-3" />
+                                                                {txn.planName}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 font-semibold text-[#261E33] text-sm">
+                                                            {(txn.amount ?? 0).toLocaleString("vi-VN")} ₫
+                                                        </td>
+                                                        <td className="px-6 py-4 text-[#6F6B99] text-sm">
+                                                            {txn.paymentMethod}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-[#6F6B99] text-sm">
+                                                            {createdAt ? createdAt.toLocaleDateString("vi-VN") : "N/A"}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span
+                                                                className={`rounded-full px-3 py-1 font-medium text-xs ${STATUS_COLOR[normalizedStatus] || "bg-gray-100 text-gray-700"}`}>
+                                                                {getPaymentStatusLabel(txn.paymentStatus)}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={7} className="px-6 py-8 text-center text-[#6F6B99]">
+                                                    Không có giao dịch nào
                                                 </td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
