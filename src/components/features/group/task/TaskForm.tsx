@@ -140,6 +140,8 @@ const monthOptions = [
     { value: "11", label: "December" }
 ] as const;
 
+const TASK_TITLE_MAX_LENGTH = 25;
+
 type PopupPosition = {
     top: number;
     left: number;
@@ -556,7 +558,7 @@ export default function TaskFormModal({
     const canSubmit = title.trim().length > 0 && !submitting;
 
     const handleSubmit = async () => {
-        const t = title.trim();
+        const t = title.trim().slice(0, TASK_TITLE_MAX_LENGTH);
 
         if (!t) {
             setError("Vui lòng nhập tên công việc.");
@@ -605,25 +607,22 @@ export default function TaskFormModal({
             <div
                 className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
-                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
-                    <div className="min-w-0">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 text-sm">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                            {selectedStatusName}
-                        </span>
-
-                        <input
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Enter task name here..."
-                            className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
-                        />
-                    </div>
+                <div className="relative border-zinc-200 border-b px-7 py-5 pr-24">
+                    <input
+                        value={title}
+                        maxLength={TASK_TITLE_MAX_LENGTH}
+                        onChange={(e) => {
+                            setTitle(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH));
+                            if (error) setError(null);
+                        }}
+                        placeholder="Task name"
+                        className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-4 py-3 font-extrabold text-[30px] text-zinc-900 leading-none outline-none"
+                    />
 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
+                        className="absolute top-1/2 right-7 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
                         aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>

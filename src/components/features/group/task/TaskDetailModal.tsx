@@ -148,6 +148,8 @@ const monthOptions = [
     { value: "11", label: "December" }
 ] as const;
 
+const TASK_TITLE_MAX_LENGTH = 25;
+
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
@@ -929,7 +931,7 @@ export default function TaskDetailModal(props: {
     const [dueDate, setDueDate] = React.useState("");
     const [description, setDescription] = React.useState("");
 
-    const [saving, setSaving] = React.useState(false);
+    const [submitting, setSubmitting] = React.useState(false);
     const [saveError, setSaveError] = React.useState<string | null>(null);
     const [isEditing, setIsEditing] = React.useState(false);
 
@@ -1105,7 +1107,7 @@ export default function TaskDetailModal(props: {
     const handleSave = async () => {
         setSaveError(null);
 
-        const taskNameTrimmed = taskName.trim();
+        const taskNameTrimmed = taskName.trim().slice(0, TASK_TITLE_MAX_LENGTH);
         if (!taskNameTrimmed) {
             setSaveError("Tên task là bắt buộc.");
             return;
@@ -1122,7 +1124,7 @@ export default function TaskDetailModal(props: {
         }
 
         try {
-            setSaving(true);
+            setSubmitting(true);
 
             await apiUpdateTask({
                 groupId,
@@ -1166,7 +1168,7 @@ export default function TaskDetailModal(props: {
         } catch (e: unknown) {
             setSaveError(getErrorMessage(e, "Không cập nhật được task"));
         } finally {
-            setSaving(false);
+            setSubmitting(false);
         }
     };
 
@@ -1185,24 +1187,20 @@ export default function TaskDetailModal(props: {
                 onPointerDown={(e) => e.stopPropagation()}>
                 <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 text-sm">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                            {selectedStatusName}
-                        </span>
-
                         {loadingDetail ? (
-                            <h2 className="mt-3 min-w-0 truncate font-extrabold text-[30px] text-zinc-900 leading-none">
+                            <h2 className="min-w-0 truncate font-extrabold text-[30px] text-zinc-900 leading-none">
                                 Loading...
                             </h2>
                         ) : isEditing ? (
                             <input
                                 value={taskName}
-                                onChange={(e) => setTaskName(e.target.value)}
-                                placeholder="Enter task name here..."
-                                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
+                                maxLength={TASK_TITLE_MAX_LENGTH}
+                                onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
+                                placeholder="Task name"
+                                className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                             />
                         ) : (
-                            <h2 className="mt-3 min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
+                            <h2 className="min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
                                 {taskName || "Task"}
                             </h2>
                         )}
@@ -1563,9 +1561,9 @@ export default function TaskDetailModal(props: {
                             onClick={() => {
                                 void handleSave();
                             }}
-                            disabled={saving}
+                            disabled={submitting}
                             className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800 disabled:opacity-60">
-                            {saving ? "Saving..." : "Save change"}
+                            {submitting ? "Saving..." : "Save change"}
                         </button>
                     ) : (
                         <button

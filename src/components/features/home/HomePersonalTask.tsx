@@ -36,7 +36,6 @@ import {
     ChevronLeft,
     ChevronRight,
     Clock3,
-    GripVertical,
     MoreHorizontal,
     Pencil,
     Plus,
@@ -442,16 +441,18 @@ function DuePill({ due, overdue }: { due: string; overdue: boolean }) {
     return (
         <div
             className={cn(
-                "inline-flex flex-wrap items-center gap-2 rounded-[16px] border px-4 py-2",
-                overdue ? "border-rose-200 bg-rose-50 text-rose-600" : "border-[#D9D9D9] bg-white text-[#595959]"
+                "inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2",
+                overdue ? "border-rose-200 bg-rose-50 text-rose-700" : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
-            <span className="whitespace-nowrap font-semibold text-[14px]">{due}</span>
-            {overdue && (
-                <span className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-[12px] text-rose-600">
-                    Quá hạn
-                </span>
-            )}
+            <div className="flex min-w-0 items-center gap-2">
+                <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
+                {overdue ? (
+                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">
+                        Quá hạn
+                    </span>
+                ) : null}
+            </div>
         </div>
     );
 }
@@ -661,7 +662,8 @@ function AddColumnInline({
     };
 
     const submit = async () => {
-        const trimmed = title.trim();
+        const trimmed = title.trim().slice(0, 25);
+
         if (!trimmed) {
             setError("Vui lòng nhập tên trạng thái.");
             inputRef.current?.focus();
@@ -678,14 +680,25 @@ function AddColumnInline({
         }
     };
 
+    const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            void submit();
+        }
+        if (e.key === "Escape") {
+            e.preventDefault();
+            close();
+        }
+    };
+
     if (!open) {
         return (
             <button
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left font-semibold text-sm text-zinc-900 shadow-sm hover:bg-zinc-100",
-                    "transition"
+                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left font-semibold text-sm text-white shadow-sm",
+                    "transition hover:bg-[#f54a00]/80"
                 )}>
                 + Tạo trạng thái
             </button>
@@ -693,11 +706,13 @@ function AddColumnInline({
     }
 
     return (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm">
+        <div className="rounded-xl bg-white p-3 shadow-sm">
             <input
                 ref={inputRef}
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                maxLength={25}
+                onChange={(e) => setTitle(e.target.value.slice(0, 25))}
+                onKeyDown={onKeyDown}
                 disabled={isSubmitting}
                 placeholder="Nhập tên trạng thái..."
                 className={cn(
@@ -706,6 +721,8 @@ function AddColumnInline({
                     "select-text"
                 )}
             />
+
+            <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/25</div>
 
             {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
 
@@ -716,7 +733,7 @@ function AddColumnInline({
                     disabled={isSubmitting}
                     className={cn(
                         "rounded-xl px-3 py-2 font-semibold text-sm text-white",
-                        "bg-indigo-600 transition hover:bg-indigo-700",
+                        "bg-[#f54a00] transition hover:bg-[#f54a00]/80",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}>
                     Thêm trạng thái
@@ -730,9 +747,8 @@ function AddColumnInline({
                         "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
                         "transition hover:bg-zinc-100",
                         isSubmitting && "pointer-events-none opacity-60"
-                    )}
-                    aria-label="Hủy">
-                    <X className="h-4 w-4" />
+                    )}>
+                    ✕
                 </button>
             </div>
         </div>
@@ -746,9 +762,9 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 font-semibold text-sm",
-                "border-zinc-200/70 bg-white text-zinc-900",
-                "transition hover:bg-zinc-50 hover:shadow-sm",
+                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 font-semibold text-sm",
+                "bg-[#f54a00] text-white",
+                "transition hover:bg-[#f54a00]/80",
                 disabled && "pointer-events-none opacity-60"
             )}>
             <Plus className="h-4 w-4" />
@@ -843,114 +859,158 @@ function PersonalTaskCard({
             onClick={() => {
                 if (!isEditing) onOpen(task);
             }}
+            onKeyDown={(e) => {
+                if (isEditing) return;
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onOpen(task);
+                }
+            }}
             className={cn(
-                "group relative min-h-[150px] w-full cursor-grab rounded-[24px] border border-[#D9D9D9] bg-white p-5",
-                "transition-colors hover:bg-[#FAFAFA]",
+                "group relative w-full select-none rounded-xl bg-white p-3",
+                "cursor-grab border border-black/5 shadow-[0_1px_1px_rgba(9,30,66,0.08),0_0_0_1px_rgba(9,30,66,0.04)]",
+                "transition hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]",
+                "focus-within:ring-2 focus-within:ring-blue-200/60",
                 "active:cursor-grabbing"
             )}>
             <div className="flex items-start gap-3">
                 <div className="pt-1">
-                    <div className={cn("h-3 w-3 rounded-full", priorityDotColor(task.taskPriority))} />
+                    <div className={cn("h-2.5 w-2.5 rounded-full", priorityDotColor(task.taskPriority))} />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1 pr-2">
-                            {isEditing ? (
-                                <input
-                                    ref={inputRef}
-                                    value={draftTitle}
-                                    disabled={isSubmitting}
-                                    onChange={(e) => setDraftTitle(e.target.value)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                    onBlur={() => void submitEdit()}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            void submitEdit();
-                                        }
-                                        if (e.key === "Escape") {
-                                            e.preventDefault();
-                                            cancelEdit();
-                                        }
-                                    }}
-                                    className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 font-bold text-[#1F1F1F] text-[18px] leading-6 outline-none ring-2 ring-indigo-100"
-                                />
-                            ) : (
-                                <p
-                                    className="line-clamp-2 cursor-text font-bold text-[#1F1F1F] text-[18px] leading-6"
-                                    onDoubleClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsEditing(true);
-                                    }}>
+                    {!isEditing ? (
+                        <>
+                            <div className="flex items-start justify-between gap-3">
+                                <p className="line-clamp-3 pr-2 font-semibold text-sm text-zinc-900 leading-5">
                                     {title}
                                 </p>
-                            )}
-                        </div>
 
+                                <div
+                                    className="relative shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onPointerDown={(e) => e.stopPropagation()}>
+                                    <button
+                                        ref={btnRef}
+                                        type="button"
+                                        onPointerDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setOpenMenu((v) => !v);
+                                        }}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
+                                        aria-label="Menu">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </button>
+
+                                    <PortalDropdown
+                                        open={openMenu}
+                                        onClose={() => setOpenMenu(false)}
+                                        anchorRef={btnRef as React.RefObject<HTMLElement>}>
+                                        <MenuItem
+                                            icon={<Pencil className="h-4 w-4" />}
+                                            label="Chỉnh sửa tên"
+                                            onClick={() => {
+                                                setOpenMenu(false);
+                                                setIsEditing(true);
+                                            }}
+                                        />
+                                        <MenuItem
+                                            icon={<Trash2 className="h-4 w-4" />}
+                                            label="Xóa"
+                                            danger
+                                            onClick={() => {
+                                                setOpenMenu(false);
+                                                void onDelete(task);
+                                            }}
+                                        />
+                                    </PortalDropdown>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
                         <div
-                            className="relative shrink-0"
-                            onClick={(e) => e.stopPropagation()}
-                            onPointerDown={(e) => e.stopPropagation()}>
-                            <button
-                                ref={btnRef}
-                                type="button"
-                                onPointerDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setOpenMenu((v) => !v);
+                            className="space-y-2"
+                            onPointerDownCapture={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}>
+                            <input
+                                ref={inputRef}
+                                value={draftTitle}
+                                maxLength={25}
+                                disabled={isSubmitting}
+                                onChange={(e) => setDraftTitle(e.target.value.slice(0, 25))}
+                                onBlur={() => void submitEdit()}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        void submitEdit();
+                                    }
+                                    if (e.key === "Escape") {
+                                        e.preventDefault();
+                                        cancelEdit();
+                                    }
                                 }}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                                className="grid h-8 w-8 place-items-center rounded-lg text-[#8C8C8C] hover:bg-[#F5F5F5]">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </button>
+                                className={cn(
+                                    "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2",
+                                    "select-text font-semibold text-sm text-zinc-900 outline-none",
+                                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
+                                )}
+                            />
 
-                            <PortalDropdown
-                                open={openMenu}
-                                onClose={() => setOpenMenu(false)}
-                                anchorRef={btnRef as React.RefObject<HTMLElement>}>
-                                <MenuItem
-                                    icon={<Pencil className="h-4 w-4" />}
-                                    label="Chỉnh sửa tên công việc"
-                                    onClick={() => {
-                                        setOpenMenu(false);
-                                        setIsEditing(true);
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        void submitEdit();
                                     }}
-                                />
-                                <MenuItem
-                                    icon={<Trash2 className="h-4 w-4" />}
-                                    label="Xóa"
-                                    danger
-                                    onClick={() => {
-                                        setOpenMenu(false);
-                                        void onDelete(task);
+                                    className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
+                                    Lưu
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        cancelEdit();
                                     }}
-                                />
-                            </PortalDropdown>
+                                    className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
+                                    aria-label="Hủy">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
-                        {dueText && <DuePill due={dueText} overdue={overdue} />}
+                    {dueText || severity ? (
+                        <div className="mt-3 space-y-2">
+                            {dueText ? <DuePill due={dueText} overdue={overdue} /> : null}
 
-                        <span
-                            className={cn(
-                                "inline-flex rounded-[14px] border px-4 py-2 font-semibold text-[14px]",
-                                severity === "critical"
-                                    ? "border-red-200 bg-red-50 text-red-600"
-                                    : severity === "major"
-                                        ? "border-orange-200 bg-orange-50 text-orange-600"
-                                        : severity === "moderate"
-                                            ? "border-yellow-200 bg-yellow-50 text-yellow-600"
-                                            : "border-sky-200 bg-sky-50 text-sky-600"
-                            )}>
-                            {severityLabel(severity)}
-                        </span>
-                    </div>
+                            {severity ? (
+                                <div>
+                                    <span
+                                        className={cn(
+                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
+                                            severity === "critical"
+                                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                : severity === "major"
+                                                    ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                    : severity === "moderate"
+                                                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                        : "border-sky-200 bg-sky-50 text-sky-700"
+                                        )}>
+                                        {severityLabel(severity)}
+                                    </span>
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </div>
@@ -962,33 +1022,37 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
     const severity = taskSeverityToFormValue(task.taskSeverity);
 
     return (
-        <div className="rounded-2xl border border-indigo-300 border-dashed bg-indigo-50/60 p-5">
+        <div className="rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3">
             <div className="flex items-start gap-3">
-                <div className="pt-1">
-                    <div className={cn("h-3 w-3 rounded-full", priorityDotColor(task.taskPriority))} />
-                </div>
-
+                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", priorityDotColor(task.taskPriority))} />
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 font-bold text-[18px] text-zinc-800 leading-6">
+                    <p className="line-clamp-3 font-semibold text-sm text-zinc-800 leading-5">
                         {task.taskTitle || "Untitled task"}
                     </p>
 
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
-                        {dueText ? <DuePill due={dueText} overdue={false} /> : null}
-                        <span
-                            className={cn(
-                                "inline-flex rounded-[14px] border px-4 py-2 font-semibold text-[14px]",
-                                severity === "critical"
-                                    ? "border-red-200 bg-red-50 text-red-600"
-                                    : severity === "major"
-                                        ? "border-orange-200 bg-orange-50 text-orange-600"
-                                        : severity === "moderate"
-                                            ? "border-yellow-200 bg-yellow-50 text-yellow-600"
-                                            : "border-sky-200 bg-sky-50 text-sky-600"
-                            )}>
-                            {severityLabel(severity)}
-                        </span>
-                    </div>
+                    {dueText || severity ? (
+                        <div className="mt-3 space-y-2">
+                            {dueText ? <DuePill due={dueText} overdue={false} /> : null}
+
+                            {severity ? (
+                                <div>
+                                    <span
+                                        className={cn(
+                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
+                                            severity === "critical"
+                                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                : severity === "major"
+                                                    ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                    : severity === "moderate"
+                                                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                        : "border-sky-200 bg-sky-50 text-sky-700"
+                                        )}>
+                                        {severityLabel(severity)}
+                                    </span>
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </div>
@@ -1001,35 +1065,31 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
     const severity = taskSeverityToFormValue(task.taskSeverity);
 
     return (
-        <div className="min-w-[380px] rounded-2xl border border-zinc-200 bg-white p-5 shadow-xl">
-            <div className="flex items-start gap-3">
-                <div className="pt-1">
-                    <div className={cn("h-3 w-3 rounded-full", priorityDotColor(task.taskPriority))} />
-                </div>
+        <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
+            <p className="font-semibold text-sm text-zinc-900 leading-5">{task.taskTitle || "Untitled task"}</p>
 
-                <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 font-bold text-[18px] text-zinc-900 leading-6">
-                        {task.taskTitle || "Untitled task"}
-                    </p>
-
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
-                        {dueText ? <DuePill due={dueText} overdue={overdue} /> : null}
-                        <span
-                            className={cn(
-                                "inline-flex rounded-[14px] border px-4 py-2 font-semibold text-[14px]",
-                                severity === "critical"
-                                    ? "border-red-200 bg-red-50 text-red-600"
-                                    : severity === "major"
-                                        ? "border-orange-200 bg-orange-50 text-orange-600"
-                                        : severity === "moderate"
-                                            ? "border-yellow-200 bg-yellow-50 text-yellow-600"
-                                            : "border-sky-200 bg-sky-50 text-sky-600"
-                            )}>
-                            {severityLabel(severity)}
-                        </span>
-                    </div>
+            {dueText || severity ? (
+                <div className="mt-3 space-y-2">
+                    {dueText ? <DuePill due={dueText} overdue={overdue} /> : null}
+                    {severity ? (
+                        <div>
+                            <span
+                                className={cn(
+                                    "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
+                                    severity === "critical"
+                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                        : severity === "major"
+                                            ? "border-orange-200 bg-orange-50 text-orange-700"
+                                            : severity === "moderate"
+                                                ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                : "border-sky-200 bg-sky-50 text-sky-700"
+                                )}>
+                                {severityLabel(severity)}
+                            </span>
+                        </div>
+                    ) : null}
                 </div>
-            </div>
+            ) : null}
         </div>
     );
 }
@@ -1038,18 +1098,18 @@ function ColumnOverlay({ status }: { status: PersonalTaskStatusDto }) {
     const tasks = ((status.taskList ?? []) as PersonalTaskItemResponse[]).slice(0, 3);
 
     return (
-        <div className="min-w-[380px] max-w-[380px]">
-            <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl">
-                <div className="rounded-t-2xl border-zinc-200 border-b bg-white px-4 py-3">
+        <div className="min-w-[300px] max-w-[300px]">
+            <div className="rounded-xl bg-[#f1f2f4] shadow-xl">
+                <div className="rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2">
                     <p className="truncate font-bold text-sm text-zinc-900">{status.statusName || "Untitled"}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
 
-                <div className="px-4 py-4">
-                    <div className="rounded-2xl border border-zinc-200 border-dashed bg-zinc-50 p-3">
+                <div className="px-2 pb-2">
+                    <div className="rounded-b-xl bg-[#f1f2f4]">
                         {tasks.map((task) => (
-                            <div key={String(task.taskId)} className="mb-3 last:mb-0">
-                                <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
+                            <div key={String(task.taskId)} className="mb-2 last:mb-0">
+                                <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
                                     <p className="font-semibold text-sm text-zinc-900">
                                         {task.taskTitle || "Untitled task"}
                                     </p>
@@ -1058,7 +1118,7 @@ function ColumnOverlay({ status }: { status: PersonalTaskStatusDto }) {
                         ))}
 
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                            <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                 (Trạng thái trống)
                             </div>
                         ) : null}
@@ -1078,17 +1138,29 @@ function BoardColumn({
     onDeleteStatus,
     onRenameTask,
     onDeleteTask,
-    ghost
+    ghost,
+    isEditing,
+    columnDraft,
+    columnError,
+    onColumnDraftChange,
+    onColumnCommit,
+    onColumnCancel
 }: {
     status: PersonalTaskStatusDto;
     isSubmitting: boolean;
     onCreateTask: (status: PersonalTaskStatusDto) => Promise<void>;
     onOpenTask: (task: PersonalTaskItemResponse) => void;
-    onRenameStatus: (status: PersonalTaskStatusDto) => Promise<void>;
+    onRenameStatus: (status: PersonalTaskStatusDto) => void;
     onDeleteStatus: (status: PersonalTaskStatusDto) => Promise<void>;
     onRenameTask: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
     onDeleteTask: (task: PersonalTaskItemResponse) => Promise<void>;
     ghost?: { task: PersonalTaskItemResponse; toCol: ColumnId; index: number } | null;
+    isEditing: boolean;
+    columnDraft: string;
+    columnError: string | null;
+    onColumnDraftChange: (value: string) => void;
+    onColumnCommit: () => void;
+    onColumnCancel: () => void;
 }) {
     const statusId = String(status.statusId ?? "");
     const tasks = [...((status.taskList ?? []) as PersonalTaskItemResponse[])];
@@ -1102,9 +1174,10 @@ function BoardColumn({
 
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.25 : 1,
-        touchAction: "none"
+        transition: transition ?? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        willChange: "transform",
+        touchAction: "none",
+        opacity: isDragging ? 0.25 : 1
     };
 
     const dropId = `${DROP_PREFIX}${statusId}`;
@@ -1145,149 +1218,169 @@ function BoardColumn({
     const btnRef = React.useRef<HTMLButtonElement | null>(null);
     const [openMenu, setOpenMenu] = React.useState(false);
 
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+    React.useEffect(() => {
+        if (isEditing) {
+            setTimeout(() => inputRef.current?.focus(), 0);
+        }
+    }, [isEditing]);
+
     return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className={cn(
-                "rounded-2xl border border-zinc-200/80 bg-white shadow-sm",
-                "transition-shadow hover:shadow-md"
-            )}>
-            <div
-                className={cn(
-                    "sticky top-0 z-10 rounded-t-2xl",
-                    "border-zinc-200/70 border-b",
-                    "bg-white/80 backdrop-blur-xl",
-                    "px-4 py-3"
-                )}>
-                <div className="flex items-center gap-3">
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <div
-                            ref={setActivatorNodeRef}
-                            {...attributes}
-                            {...listeners}
-                            style={{ touchAction: "none" }}
-                            className={cn(
-                                "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
-                                "border border-zinc-200/70 bg-white",
-                                "text-zinc-500 shadow-[0_1px_0_rgba(0,0,0,0.02)]",
-                                "cursor-grab active:cursor-grabbing"
-                            )}>
-                            <GripVertical className="h-4 w-4" />
+        <div ref={setNodeRef} style={style} className="min-w-[300px] max-w-[300px] self-start">
+            <div className="rounded-xl bg-[#f1f2f4]">
+                <div
+                    ref={(node) => setActivatorNodeRef(node as HTMLElement | null)}
+                    {...attributes}
+                    {...listeners}
+                    style={{ touchAction: "none" }}
+                    className={cn(
+                        "sticky top-0 z-10 rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2",
+                        "cursor-grab select-none active:cursor-grabbing"
+                    )}>
+                    <div className="flex items-center gap-3">
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <div className="min-w-0 flex-1">
+                                {!isEditing ? (
+                                    <p className="truncate font-bold text-sm text-zinc-900">{statusName}</p>
+                                ) : (
+                                    <div className="space-y-1">
+                                        <input
+                                            ref={inputRef}
+                                            value={columnDraft}
+                                            maxLength={25}
+                                            disabled={isSubmitting}
+                                            onChange={(e) => onColumnDraftChange(e.target.value)}
+                                            onPointerDownCapture={(e) => e.stopPropagation()}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    onColumnCommit();
+                                                }
+
+                                                if (e.key === "Escape") {
+                                                    e.preventDefault();
+                                                    onColumnCancel();
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(() => onColumnCommit(), 0);
+                                            }}
+                                            className={cn(
+                                                "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
+                                                columnError
+                                                    ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                                                    : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                                                "select-text"
+                                            )}
+                                            style={{ maxWidth: 220 }}
+                                        />
+
+                                        <div className="flex justify-end text-[11px] text-zinc-500">
+                                            {columnDraft.length}/25
+                                        </div>
+
+                                        {columnError ? (
+                                            <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
+                                        ) : null}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="min-w-0 flex-1">
-                            <p className="truncate font-bold text-sm text-zinc-900">{statusName}</p>
-                        </div>
-                    </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                            <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 font-semibold text-xs text-zinc-700">
+                                {tasks.length}
+                            </span>
 
-                    <div className="flex shrink-0 items-center gap-2">
-                        <SummaryCount count={tasks.length} />
-
-                        <div className="relative">
-                            <button
-                                ref={btnRef}
-                                type="button"
-                                onPointerDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setOpenMenu((v) => !v);
-                                }}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                                className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
-                                aria-label="Column menu">
-                                <MoreHorizontal className="h-5 w-5" />
-                            </button>
-
-                            <PortalDropdown
-                                open={openMenu}
-                                onClose={() => setOpenMenu(false)}
-                                anchorRef={btnRef as React.RefObject<HTMLElement>}>
-                                <MenuItem
-                                    icon={<Pencil className="h-4 w-4" />}
-                                    label="Chỉnh sửa tên trạng thái"
-                                    onClick={() => {
-                                        setOpenMenu(false);
-                                        void onRenameStatus(status);
+                            <div className="relative">
+                                <button
+                                    ref={btnRef}
+                                    type="button"
+                                    onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setOpenMenu((v) => !v);
                                     }}
-                                />
-                                <MenuItem
-                                    icon={<Trash2 className="h-4 w-4" />}
-                                    label="Xóa trạng thái"
-                                    danger
-                                    onClick={() => {
-                                        setOpenMenu(false);
-                                        void onDeleteStatus(status);
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                     }}
-                                />
-                            </PortalDropdown>
+                                    className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
+                                    aria-label="Column menu">
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </button>
+
+                                <PortalDropdown
+                                    open={openMenu}
+                                    onClose={() => setOpenMenu(false)}
+                                    anchorRef={btnRef as React.RefObject<HTMLElement>}>
+                                    <MenuItem
+                                        icon={<Pencil className="h-4 w-4" />}
+                                        label="Chỉnh sửa tên trạng thái"
+                                        onClick={() => {
+                                            setOpenMenu(false);
+                                            void onRenameStatus(status);
+                                        }}
+                                    />
+                                    <MenuItem
+                                        icon={<Trash2 className="h-4 w-4" />}
+                                        label="Xóa trạng thái"
+                                        danger
+                                        onClick={() => {
+                                            setOpenMenu(false);
+                                            void onDeleteStatus(status);
+                                        }}
+                                    />
+                                </PortalDropdown>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="px-4 py-4">
-                <div
-                    ref={setDroppableRef}
-                    className={cn(
-                        "rounded-2xl border p-3 transition",
-                        "border-zinc-200/70 bg-gradient-to-b from-zinc-50 to-white",
-                        isOver && "border-indigo-300 bg-indigo-50/60"
-                    )}>
-                    <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                        <div
-                            className="relative max-h-[68vh] space-y-4 overflow-y-auto pr-1"
-                            style={{
-                                scrollbarWidth: "none",
-                                msOverflowStyle: "none"
-                            }}>
-                            <style jsx>{`
-                                div::-webkit-scrollbar {
-                                    display: none;
-                                }
-                            `}</style>
-
-                            {rendered.map((item, index) =>
-                                item.kind === "ghost" ? (
-                                    <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} />
-                                ) : (
-                                    <PersonalTaskCard
-                                        key={String(item.task.taskId)}
-                                        task={item.task}
-                                        columnId={statusId}
-                                        isSubmitting={isSubmitting}
-                                        onOpen={onOpenTask}
-                                        onRename={onRenameTask}
-                                        onDelete={onDeleteTask}
-                                    />
-                                )
-                            )}
-
-                            {tasks.length === 0 ? (
-                                <div
-                                    className={cn(
-                                        "rounded-xl border border-zinc-200/70 bg-white",
-                                        "px-3 py-10 text-center"
-                                    )}>
-                                    <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
-                                    <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
-                                </div>
-                            ) : null}
-
-                            <div
-                                ref={setEndRef}
-                                className={cn(
-                                    "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
-                                    isOverEnd ? "border-indigo-300 bg-indigo-50/60" : "border-transparent"
+                <div className="px-2 pb-2">
+                    <div
+                        ref={setDroppableRef}
+                        className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}>
+                        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                {rendered.map((item, index) =>
+                                    item.kind === "ghost" ? (
+                                        <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} />
+                                    ) : (
+                                        <PersonalTaskCard
+                                            key={String(item.task.taskId)}
+                                            task={item.task}
+                                            columnId={statusId}
+                                            isSubmitting={isSubmitting}
+                                            onOpen={onOpenTask}
+                                            onRename={onRenameTask}
+                                            onDelete={onDeleteTask}
+                                        />
+                                    )
                                 )}
-                            />
-                        </div>
-                    </SortableContext>
 
-                    <AddTaskButton disabled={isSubmitting} onClick={() => void onCreateTask(status)} />
+                                {tasks.length === 0 ? (
+                                    <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
+                                        <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
+                                        <div className="mt-1 text-xs text-zinc-500">
+                                            Bấm “Thêm công việc” để tạo mới
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                <div
+                                    ref={setEndRef}
+                                    className={cn(
+                                        "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
+                                        isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
+                                    )}
+                                />
+                            </div>
+                        </SortableContext>
+
+                        <AddTaskButton disabled={isSubmitting} onClick={() => void onCreateTask(status)} />
+                    </div>
                 </div>
             </div>
         </div>
@@ -1747,9 +1840,10 @@ function InlineTaskFormModal({
                     <div className="min-w-0 flex-1">
                         <input
                             value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Enter task name here..."
-                            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
+                            maxLength={25}
+                            onChange={(e) => setTitle(e.target.value.slice(0, 25))}
+                            placeholder="Task name"
+                            className="w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                         />
                     </div>
 
@@ -2028,20 +2122,16 @@ function PersonalTaskDetailModal({
                 onPointerDown={(e) => e.stopPropagation()}>
                 <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 text-sm">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                            {selectedStatusName}
-                        </span>
-
                         {isEditing ? (
                             <input
                                 value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Enter task name here..."
-                                className="mt-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
+                                maxLength={25}
+                                onChange={(e) => setTitle(e.target.value.slice(0, 25))}
+                                placeholder="Task name"
+                                className="mt-0 w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                             />
                         ) : (
-                            <h2 className="mt-3 min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
+                            <h2 className="mt-0 min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
                                 {title || "Task"}
                             </h2>
                         )}
@@ -2267,6 +2357,16 @@ export default function HomePersonalTaskScreen() {
     const [detailTask, setDetailTask] = React.useState<PersonalTaskItemResponse | null>(null);
     const [detailOpen, setDetailOpen] = React.useState(false);
 
+    const [editingColumn, setEditingColumn] = React.useState<{
+        id: string | null;
+        draft: string;
+        error: string | null;
+    }>({
+        id: null,
+        draft: "",
+        error: null
+    });
+
     React.useEffect(() => setMounted(true), []);
 
     const fetchBoard = React.useCallback(async () => {
@@ -2432,38 +2532,116 @@ export default function HomePersonalTaskScreen() {
         [fetchBoard]
     );
 
-    const handleRenameColumn = React.useCallback(
-        async (status: PersonalTaskStatusDto) => {
-            if (!status.statusId) return;
+    const handleRenameColumn = React.useCallback((status: PersonalTaskStatusDto) => {
+        if (!status.statusId) return;
 
-            const statusName = window.prompt("Đổi tên trạng thái", status.statusName ?? "");
-            if (!statusName?.trim()) return;
+        setEditingColumn({
+            id: String(status.statusId),
+            draft: String(status.statusName ?? "").slice(0, 25),
+            error: null
+        });
+    }, []);
 
-            try {
-                setIsSubmitting(true);
+    const handleColumnDraftChange = React.useCallback(
+        (value: string) => {
+            setEditingColumn((prev) => {
+                const nextDraft = value.slice(0, 25);
+                const trimmed = nextDraft.trim();
 
-                await apiFetch<PersonalTaskStatusResponseApiResponse>(
-                    buildUpdatePersonalStatusUrl(String(status.statusId)),
-                    {
-                        method: "PUT",
-                        body: JSON.stringify({
-                            statusName: statusName.trim()
-                        }),
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                if (!trimmed) {
+                    return {
+                        ...prev,
+                        draft: nextDraft,
+                        error: "Vui lòng nhập tên trạng thái."
+                    };
+                }
+
+                const duplicated = statuses.some(
+                    (s) =>
+                        String(s.statusId ?? "") !== String(prev.id ?? "") &&
+                        String(s.statusName ?? "")
+                            .trim()
+                            .toLowerCase() === trimmed.toLowerCase()
                 );
 
-                await fetchBoard();
-            } catch (error) {
-                console.error("Failed to update personal status:", error);
-            } finally {
-                setIsSubmitting(false);
-            }
+                return {
+                    ...prev,
+                    draft: nextDraft,
+                    error: duplicated ? "Tên trạng thái đã tồn tại. Hãy nhập tên khác." : null
+                };
+            });
         },
-        [fetchBoard]
+        [statuses]
     );
+
+    const cancelEditColumn = React.useCallback(() => {
+        setEditingColumn({
+            id: null,
+            draft: "",
+            error: null
+        });
+    }, []);
+
+    const commitEditColumn = React.useCallback(async () => {
+        const id = editingColumn.id;
+        const nextName = editingColumn.draft.trim();
+
+        if (!id) return;
+
+        if (!nextName) {
+            setEditingColumn((prev) => ({
+                ...prev,
+                error: "Vui lòng nhập tên trạng thái."
+            }));
+            return;
+        }
+
+        const duplicated = statuses.some(
+            (s) =>
+                String(s.statusId ?? "") !== String(id) &&
+                String(s.statusName ?? "")
+                    .trim()
+                    .toLowerCase() === nextName.toLowerCase()
+        );
+
+        if (duplicated) {
+            setEditingColumn((prev) => ({
+                ...prev,
+                error: "Tên trạng thái đã tồn tại. Hãy nhập tên khác."
+            }));
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+
+            await apiFetch<PersonalTaskStatusResponseApiResponse>(buildUpdatePersonalStatusUrl(String(id)), {
+                method: "PUT",
+                body: JSON.stringify({
+                    statusName: nextName
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            await fetchBoard();
+
+            setEditingColumn({
+                id: null,
+                draft: "",
+                error: null
+            });
+        } catch (error: any) {
+            console.error("Failed to update personal status:", error);
+            setEditingColumn((prev) => ({
+                ...prev,
+                error: error?.message ?? "Cập nhật trạng thái thất bại"
+            }));
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, [editingColumn, statuses, fetchBoard]);
 
     const handleDeleteColumn = React.useCallback(async () => {
         const status = confirmDeleteColumn.status;
@@ -2917,101 +3095,115 @@ export default function HomePersonalTaskScreen() {
             />
 
             <Container>
-                <div className="mt-5 mb-5 rounded-2xl border border-[#E5E5E5] bg-white p-4 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h2 className="font-bold text-[#261E33] text-xl">Quản lý công việc cá nhân</h2>
-                            <p className="mt-1 text-[#6F6B99] text-sm">
-                                Theo dõi và quản lý các công việc cá nhân theo từng trạng thái
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-4 text-[#6F6B99]">
-                            <span className="inline-flex items-center gap-1">
-                                <CheckSquare2 className="h-4 w-4" />
-                                <span className="text-sm">{totalTaskCount} công việc</span>
-                            </span>
-
-                            {isSubmitting ? <span className="text-sm text-zinc-500">Đang xử lý...</span> : null}
-                        </div>
+                <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+                    <div className="mb-4">
+                        <h2 className="font-bold text-xl text-zinc-900">Quản lý công việc cá nhân</h2>
                     </div>
-                </div>
 
-                {!mounted ? (
-                    <div className="flex items-start gap-5 overflow-x-auto pb-6">
-                        {statuses.map((status, index) => (
-                            <div
-                                key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                className="min-w-[380px] max-w-[380px] self-start">
-                                <BoardColumn
-                                    status={status}
-                                    isSubmitting={isSubmitting}
-                                    onCreateTask={handleOpenCreateTask}
-                                    onOpenTask={handleOpenTaskDetail}
-                                    onRenameStatus={handleRenameColumn}
-                                    onDeleteStatus={async (s) => {
-                                        setConfirmDeleteColumn({ open: true, status: s });
-                                    }}
-                                    onRenameTask={handleRenameTask}
-                                    onDeleteTask={async (task) => {
-                                        setConfirmDeleteTask({ open: true, task, fromDetail: false });
-                                    }}
-                                    ghost={null}
-                                />
-                            </div>
-                        ))}
-
-                        <div className="min-w-[380px] max-w-[380px] self-start">
-                            <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
-                        </div>
-                    </div>
-                ) : (
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={collisionDetection}
-                        onDragStart={handleDragStart}
-                        onDragOver={handleDragOver}
-                        onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}>
-                        <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                            <div className="flex items-start gap-5 overflow-x-auto pb-6">
-                                {statuses.map((status, index) => (
-                                    <div
-                                        key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                        className="min-w-[380px] max-w-[380px] self-start">
-                                        <BoardColumn
-                                            status={status}
-                                            isSubmitting={isSubmitting}
-                                            onCreateTask={handleOpenCreateTask}
-                                            onOpenTask={handleOpenTaskDetail}
-                                            onRenameStatus={handleRenameColumn}
-                                            onDeleteStatus={async (s) => {
-                                                setConfirmDeleteColumn({ open: true, status: s });
-                                            }}
-                                            onRenameTask={handleRenameTask}
-                                            onDeleteTask={async (task) => {
-                                                setConfirmDeleteTask({ open: true, task, fromDetail: false });
-                                            }}
-                                            ghost={ghost}
-                                        />
-                                    </div>
-                                ))}
-
-                                <div className="min-w-[380px] max-w-[380px] self-start">
-                                    <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
+                    {!mounted ? (
+                        <div className="flex items-start gap-4 overflow-x-auto pb-6">
+                            {statuses.map((status, index) => (
+                                <div
+                                    key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
+                                    className="min-w-[300px] max-w-[300px] self-start">
+                                    <BoardColumn
+                                        status={status}
+                                        isSubmitting={isSubmitting}
+                                        onCreateTask={handleOpenCreateTask}
+                                        onOpenTask={handleOpenTaskDetail}
+                                        onRenameStatus={handleRenameColumn}
+                                        onDeleteStatus={async (s) => {
+                                            setConfirmDeleteColumn({ open: true, status: s });
+                                        }}
+                                        onRenameTask={handleRenameTask}
+                                        onDeleteTask={async (task) => {
+                                            setConfirmDeleteTask({ open: true, task, fromDetail: false });
+                                        }}
+                                        ghost={null}
+                                        isEditing={editingColumn.id === String(status.statusId ?? "")}
+                                        columnDraft={
+                                            editingColumn.id === String(status.statusId ?? "")
+                                                ? editingColumn.draft
+                                                : ""
+                                        }
+                                        columnError={
+                                            editingColumn.id === String(status.statusId ?? "")
+                                                ? editingColumn.error
+                                                : null
+                                        }
+                                        onColumnDraftChange={handleColumnDraftChange}
+                                        onColumnCommit={() => void commitEditColumn()}
+                                        onColumnCancel={cancelEditColumn}
+                                    />
                                 </div>
-                            </div>
-                        </SortableContext>
+                            ))}
 
-                        <DragOverlay>
-                            {activeTask ? (
-                                <TaskOverlay task={activeTask} />
-                            ) : activeColumn ? (
-                                <ColumnOverlay status={activeColumn} />
-                            ) : null}
-                        </DragOverlay>
-                    </DndContext>
-                )}
+                            <div className="min-w-[300px] max-w-[300px] self-start">
+                                <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
+                            </div>
+                        </div>
+                    ) : (
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={collisionDetection}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDragCancel={handleDragCancel}
+                            onDragEnd={handleDragEnd}>
+                            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                                <div className="flex items-start gap-4 overflow-x-auto pb-6">
+                                    {statuses.map((status, index) => (
+                                        <div
+                                            key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
+                                            className="min-w-[300px] max-w-[300px] self-start">
+                                            <BoardColumn
+                                                status={status}
+                                                isSubmitting={isSubmitting}
+                                                onCreateTask={handleOpenCreateTask}
+                                                onOpenTask={handleOpenTaskDetail}
+                                                onRenameStatus={handleRenameColumn}
+                                                onDeleteStatus={async (s) => {
+                                                    setConfirmDeleteColumn({ open: true, status: s });
+                                                }}
+                                                onRenameTask={handleRenameTask}
+                                                onDeleteTask={async (task) => {
+                                                    setConfirmDeleteTask({ open: true, task, fromDetail: false });
+                                                }}
+                                                ghost={ghost}
+                                                isEditing={editingColumn.id === String(status.statusId ?? "")}
+                                                columnDraft={
+                                                    editingColumn.id === String(status.statusId ?? "")
+                                                        ? editingColumn.draft
+                                                        : ""
+                                                }
+                                                columnError={
+                                                    editingColumn.id === String(status.statusId ?? "")
+                                                        ? editingColumn.error
+                                                        : null
+                                                }
+                                                onColumnDraftChange={handleColumnDraftChange}
+                                                onColumnCommit={() => void commitEditColumn()}
+                                                onColumnCancel={cancelEditColumn}
+                                            />
+                                        </div>
+                                    ))}
+
+                                    <div className="min-w-[300px] max-w-[300px] self-start">
+                                        <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
+                                    </div>
+                                </div>
+                            </SortableContext>
+
+                            <DragOverlay>
+                                {activeTask ? (
+                                    <TaskOverlay task={activeTask} />
+                                ) : activeColumn ? (
+                                    <ColumnOverlay status={activeColumn} />
+                                ) : null}
+                            </DragOverlay>
+                        </DndContext>
+                    )}
+                </div>
             </Container>
         </div>
     );

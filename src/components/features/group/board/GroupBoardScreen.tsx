@@ -26,7 +26,7 @@ import {
     verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Clock3, GripVertical, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import * as React from "react";
 import { createPortal } from "react-dom";
@@ -934,9 +934,10 @@ function TaskCard({
                 }
             }}
             className={cn(
-                "group relative min-h-[138px] w-full select-none rounded-2xl border border-zinc-200 bg-white p-4",
-                "cursor-grab transition-colors hover:border-zinc-300 hover:bg-zinc-50",
-                "focus-within:ring-2 focus-within:ring-indigo-200/60",
+                "group relative w-full select-none rounded-xl bg-white p-3",
+                "cursor-grab border border-black/5 shadow-[0_1px_1px_rgba(9,30,66,0.08),0_0_0_1px_rgba(9,30,66,0.04)]",
+                "transition hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]",
+                "focus-within:ring-2 focus-within:ring-blue-200/60",
                 "active:cursor-grabbing"
             )}
         >
@@ -949,7 +950,7 @@ function TaskCard({
                     {!isEditing ? (
                         <>
                             <div className="flex items-start justify-between gap-3">
-                                <p className="line-clamp-3 pr-2 text-[17px] font-bold leading-6 text-zinc-900">{task.title}</p>
+                                <p className="line-clamp-3 pr-2 text-sm font-semibold leading-5 text-zinc-900">{task.title}</p>
 
                                 <div
                                     className="relative shrink-0"
@@ -996,7 +997,7 @@ function TaskCard({
                                 </div>
                             </div>
 
-                            <p className="mt-2 truncate text-sm text-zinc-500">Người thực hiện: {task.assigneeName || "Chưa gán"}</p>
+                            <p className="mt-2 truncate text-xs text-zinc-500">Người thực hiện: {task.assigneeName || "Chưa gán"}</p>
                         </>
                     ) : (
                         <div
@@ -1067,7 +1068,7 @@ function TaskCard({
                     )}
 
                     {task.due || task.severityLabel ? (
-                        <div className="mt-4 space-y-2">
+                        <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
 
                             {task.severityLabel ? (
@@ -1092,14 +1093,14 @@ function TaskCard({
 
 function GhostTaskCard({ task }: { task: Task }) {
     return (
-        <div className={cn("rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/60 p-4")}>
+        <div className={cn("rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/70 p-3")}>
             <div className="flex items-start gap-3">
                 <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-3 text-[17px] font-bold leading-6 text-zinc-800">{task.title}</p>
+                    <p className="line-clamp-3 text-sm font-semibold leading-5 text-zinc-800">{task.title}</p>
 
                     {task.due || task.severityLabel ? (
-                        <div className="mt-4 space-y-2">
+                        <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={false} /> : null}
 
                             {task.severityLabel ? (
@@ -1159,7 +1160,8 @@ function AddColumnInline({
     };
 
     const submit = async () => {
-        const trimmed = title.trim();
+        const trimmed = title.trim().slice(0, 25);
+
         if (!trimmed) {
             setError("Vui lòng nhập tên trạng thái.");
             inputRef.current?.focus();
@@ -1193,8 +1195,8 @@ function AddColumnInline({
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-left text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-100",
-                    "transition"
+                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left text-sm font-semibold text-white shadow-sm",
+                    "transition hover:bg-[#f54a00]/80"
                 )}
             >
                 + Tạo trạng thái
@@ -1203,11 +1205,12 @@ function AddColumnInline({
     }
 
     return (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm">
+        <div className="rounded-xl bg-white p-3 shadow-sm">
             <input
                 ref={inputRef}
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                maxLength={25}
+                onChange={(e) => setTitle(e.target.value.slice(0, 25))}
                 onKeyDown={onKeyDown}
                 disabled={isSubmitting}
                 placeholder="Nhập tên trạng thái..."
@@ -1218,6 +1221,10 @@ function AddColumnInline({
                 )}
             />
 
+            <div className="mt-1 text-right text-[11px] text-zinc-500">
+                {title.length}/25
+            </div>
+
             {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
 
             <div className="mt-3 flex items-center gap-2">
@@ -1227,7 +1234,7 @@ function AddColumnInline({
                     disabled={isSubmitting}
                     className={cn(
                         "rounded-xl px-3 py-2 text-sm font-semibold text-white",
-                        "bg-indigo-600 transition hover:bg-indigo-700",
+                        "bg-[#f54a00] transition hover:bg-[#f54a00]/80",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}
                 >
@@ -1243,7 +1250,6 @@ function AddColumnInline({
                         "transition hover:bg-zinc-100",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}
-                    aria-label="Hủy"
                 >
                     ✕
                 </button>
@@ -1259,9 +1265,9 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold",
-                "border-zinc-200/70 bg-white text-zinc-900",
-                "transition hover:bg-zinc-50 hover:shadow-sm",
+                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
+                "bg-[#f54a00] text-white",
+                "transition hover:bg-[#f54a00]/80",
                 disabled && "pointer-events-none opacity-60"
             )}
         >
@@ -1354,34 +1360,19 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div className={cn("rounded-2xl border border-zinc-200/80 bg-white shadow-sm", "transition-shadow hover:shadow-md")}>
+        <div className="rounded-xl bg-[#f1f2f4]">
             <div
+                ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
+                {...(headerDragProps?.attributes ?? {})}
+                {...(headerDragProps?.listeners ?? {})}
+                style={{ touchAction: "none" }}
                 className={cn(
-                    "sticky top-0 z-10 rounded-t-2xl",
-                    "border-b border-zinc-200/70",
-                    "bg-white/80 backdrop-blur-xl",
-                    "px-4 py-3"
+                    "sticky top-0 z-10 rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2",
+                    "cursor-grab select-none active:cursor-grabbing"
                 )}
             >
                 <div className="flex items-center gap-3">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <div
-                            ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
-                            {...(headerDragProps?.attributes ?? {})}
-                            {...(headerDragProps?.listeners ?? {})}
-                            style={{ touchAction: "none" }}
-                            className={cn(
-                                "grid h-8 w-8 shrink-0 place-items-center rounded-xl",
-                                "border border-zinc-200/70 bg-white",
-                                "select-none text-zinc-500",
-                                "shadow-[0_1px_0_rgba(0,0,0,0.02)]",
-                                "transition hover:bg-zinc-50 hover:shadow-sm",
-                                "cursor-grab active:cursor-grabbing"
-                            )}
-                        >
-                            <GripVertical className="h-4 w-4" />
-                        </div>
-
                         <div className="min-w-0 flex-1">
                             {!isColumnEditing ? (
                                 <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
@@ -1390,19 +1381,26 @@ function ColumnView({
                                     <input
                                         ref={colInputRef}
                                         value={columnDraft}
-                                        onChange={(e) => onColumnDraftChange(e.target.value)}
+                                        maxLength={25}
+                                        onChange={(e) => {
+                                            const value = e.target.value.slice(0, 25);
+                                            onColumnDraftChange(value);
+                                        }}
                                         onPointerDownCapture={(e) => e.stopPropagation()}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 e.preventDefault();
                                                 onColumnCommit();
                                             }
+
                                             if (e.key === "Escape") {
                                                 e.preventDefault();
                                                 onColumnCancel();
                                             }
                                         }}
-                                        onBlur={() => setTimeout(() => onColumnCommit(), 0)}
+                                        onBlur={() => {
+                                            setTimeout(() => onColumnCommit(), 0);
+                                        }}
                                         className={cn(
                                             "h-9 w-full min-w-0 rounded-lg border bg-white px-3 text-sm font-bold text-zinc-900 outline-none",
                                             columnError
@@ -1412,21 +1410,22 @@ function ColumnView({
                                         )}
                                         style={{ maxWidth: 220 }}
                                     />
-                                    {columnError ? <div className="text-[11px] font-medium text-rose-600">{columnError}</div> : null}
+                                    <div className="flex justify-end text-[11px] text-zinc-500">
+                                        {columnDraft.length}/25
+                                    </div>
+
+                                    {columnError ? (
+                                        <div className="text-[11px] font-medium text-rose-600">
+                                            {columnError}
+                                        </div>
+                                    ) : null}
                                 </div>
                             )}
                         </div>
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2">
-                        <span
-                            className={cn(
-                                "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2",
-                                "border border-zinc-200/70 bg-white",
-                                "text-xs font-semibold text-zinc-700",
-                                "shadow-[0_1px_0_rgba(0,0,0,0.03)]"
-                            )}
-                        >
+                        <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 text-xs font-semibold text-zinc-700">
                             {tasks.length}
                         </span>
 
@@ -1443,7 +1442,7 @@ function ColumnView({
                                     e.preventDefault();
                                     e.stopPropagation();
                                 }}
-                                className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 hover:bg-zinc-100"
+                                className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
                                 aria-label="Column menu"
                             >
                                 <MoreHorizontal className="h-5 w-5" />
@@ -1477,18 +1476,17 @@ function ColumnView({
                 </div>
             </div>
 
-            <div className="px-4 py-4">
+            <div className="px-2 pb-2">
                 <div
                     ref={setDroppableRef}
                     className={cn(
-                        "rounded-2xl border p-3 transition",
-                        "border-zinc-200/70 bg-gradient-to-b from-zinc-50 to-white",
-                        isOver && "border-indigo-300 bg-indigo-50/60"
+                        "rounded-b-xl bg-[#f1f2f4] transition",
+                        isOver && "bg-[#e9f2ff]"
                     )}
                 >
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className={cn("relative max-h-[68vh] space-y-4 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]")}>
+                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
                                 {rendered.map((item) => {
                                     if (item.kind === "ghost") return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
@@ -1512,7 +1510,7 @@ function ColumnView({
                                 })}
 
                                 {tasks.length === 0 ? (
-                                    <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
+                                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center">
                                         <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
                                         <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                     </div>
@@ -1522,13 +1520,13 @@ function ColumnView({
                                     ref={setEndRef}
                                     className={cn(
                                         "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
-                                        isOverEnd ? "border-indigo-300 bg-indigo-50/60" : "border-transparent"
+                                        isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
                                     )}
                                 />
                             </div>
                         </SortableContext>
                     ) : (
-                        <div className="max-h-[68vh] space-y-4 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+                        <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
                             {tasks.map((t) => {
                                 const isEditingThis = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
                                 return (
@@ -1548,7 +1546,7 @@ function ColumnView({
                                 );
                             })}
                             {tasks.length === 0 ? (
-                                <div className={cn("rounded-xl border border-zinc-200/70 bg-white", "px-3 py-10 text-center")}>
+                                <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center">
                                     <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
                                     <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                 </div>
@@ -1626,7 +1624,7 @@ function SortableColumn(props: {
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="min-w-[320px] max-w-[320px] self-start">
+        <div ref={setNodeRef} style={style} className="min-w-[300px] max-w-[300px] self-start">
             <ColumnView
                 col={col}
                 tasks={tasks}
@@ -1660,13 +1658,13 @@ function TaskOverlay({ task }: { task: Task }) {
     const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
 
     return (
-        <div className={cn("min-w-[320px] rounded-xl border border-zinc-200 bg-white p-4 shadow-xl")}>
-            <p className="text-[17px] font-bold leading-6 text-zinc-900">{task.title}</p>
+        <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
+            <p className="text-sm font-semibold leading-5 text-zinc-900">{task.title}</p>
             <div className="mt-2">
                 <Pill>Người thực hiện: {task.assigneeName || "Chưa gán"}</Pill>
             </div>
             {task.due || task.severityLabel ? (
-                <div className="mt-4 space-y-2">
+                <div className="mt-3 space-y-2">
                     {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
                     {task.severityLabel ? (
                         <div>
@@ -1688,23 +1686,23 @@ function TaskOverlay({ task }: { task: Task }) {
 
 function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     return (
-        <div className="min-w-[320px] max-w-[320px]">
-            <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl">
-                <div className="rounded-t-2xl border-b border-zinc-200 bg-white px-4 py-3">
+        <div className="min-w-[300px] max-w-[300px]">
+            <div className="rounded-xl bg-[#f1f2f4] shadow-xl">
+                <div className="rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2">
                     <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
-                <div className="px-4 py-4">
-                    <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-3">
+                <div className="px-2 pb-2">
+                    <div className="rounded-b-xl bg-[#f1f2f4]">
                         {tasks.slice(0, 3).map((t) => (
-                            <div key={t.id} className="mb-3 last:mb-0">
-                                <div className={cn("rounded-xl border border-zinc-200 bg-white p-3 shadow-sm")}>
+                            <div key={t.id} className="mb-2 last:mb-0">
+                                <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
                                     <p className="text-sm font-semibold text-zinc-900">{t.title}</p>
                                 </div>
                             </div>
                         ))}
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-zinc-200 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                            <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                 (Trạng thái trống)
                             </div>
                         ) : null}
@@ -2344,7 +2342,7 @@ export function GroupBoardScreen() {
 
     if (loading) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-white">
+            <div className="min-h-[calc(100vh-0px)] bg-[#fafbfc]">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
                         Đang tải board…
@@ -2356,7 +2354,7 @@ export function GroupBoardScreen() {
 
     if (loadError) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-white">
+            <div className="min-h-[calc(100vh-0px)] bg-[#fafbfc]">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
                         {loadError}
@@ -2385,7 +2383,7 @@ export function GroupBoardScreen() {
     };
 
     return (
-        <div className="min-h-[calc(100vh-0px)] bg-white">
+        <div className="min-h-[calc(100vh-0px)] bg-[#fafbfc]">
             <TaskFormModal
                 open={taskFormOpen}
                 onClose={closeCreateTask}
@@ -2439,7 +2437,7 @@ export function GroupBoardScreen() {
                     <div
                         ref={boardScrollRef}
                         onScroll={handleBoardScroll}
-                        className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6"
+                        className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6"
                     >
                         {columns.map((col) => (
                             <ColumnView
@@ -2470,7 +2468,7 @@ export function GroupBoardScreen() {
                             />
                         ))}
 
-                        <div className="min-w-[320px] max-w-[320px] self-start">
+                        <div className="min-w-[300px] max-w-[300px] self-start">
                             <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
                         </div>
                     </div>
@@ -2487,7 +2485,7 @@ export function GroupBoardScreen() {
                             <div
                                 ref={boardScrollRef}
                                 onScroll={handleBoardScroll}
-                                className="scrollbar-hide flex items-start gap-5 overflow-x-auto pb-6"
+                                className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6"
                             >
                                 {columns.map((col) => (
                                     <SortableColumn
@@ -2517,7 +2515,7 @@ export function GroupBoardScreen() {
                                     />
                                 ))}
 
-                                <div className="min-w-[320px] max-w-[320px] self-start">
+                                <div className="min-w-[300px] max-w-[300px] self-start">
                                     <AddColumnInline isSubmitting={creatingColumn} onSubmit={submitAddColumn} />
                                 </div>
                             </div>
