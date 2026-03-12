@@ -85,7 +85,7 @@ export function DashboardSidebar() {
     const renderHeader = () => {
         if (collapsed) {
             return (
-                <div className="flex h-20 items-center justify-center border-b border-[#E5E5E5] px-4">
+                <div className="flex h-20 items-center justify-center border-[#E5E5E5] border-b px-4">
                     <button
                         type="button"
                         onClick={() => setCollapsed(false)}
@@ -104,7 +104,7 @@ export function DashboardSidebar() {
         }
 
         return (
-            <div className="flex h-20 items-center justify-between border-b border-[#E5E5E5] px-5">
+            <div className="flex h-20 items-center justify-between border-[#E5E5E5] border-b px-5">
                 <Link href={homeHref} className="flex min-w-0 items-center overflow-hidden">
                     <Logo size="md" className="m-0 shrink-0" />
                 </Link>
@@ -124,13 +124,13 @@ export function DashboardSidebar() {
         return (
             <aside
                 className={twMerge(
-                    "hidden h-screen shrink-0 border-r border-[#E5E5E5] bg-white transition-all duration-300 lg:block",
+                    "hidden h-screen shrink-0 border-[#E5E5E5] border-r bg-white transition-all duration-300 lg:block",
                     collapsed ? "w-24" : "w-72"
                 )}>
                 {renderHeader()}
 
                 <div className="flex items-center justify-center p-8">
-                    <div className="text-base text-[#6F6B99]">{collapsed ? "..." : "Loading..."}</div>
+                    <div className="text-[#6F6B99] text-base">{collapsed ? "..." : "Loading..."}</div>
                 </div>
             </aside>
         );
@@ -139,7 +139,7 @@ export function DashboardSidebar() {
     return (
         <aside
             className={twMerge(
-                "hidden h-screen shrink-0 border-r border-[#E5E5E5] bg-white transition-all duration-300 lg:block",
+                "hidden h-screen shrink-0 border-[#E5E5E5] border-r bg-white transition-all duration-300 lg:block",
                 collapsed ? "w-24" : "w-72"
             )}>
             {renderHeader()}
@@ -173,7 +173,7 @@ export function DashboardSidebar() {
                                     )}
                                 />
 
-                                {!collapsed && <span className="text-[16px] font-medium">{item.name}</span>}
+                                {!collapsed && <span className="font-medium text-[16px]">{item.name}</span>}
 
                                 {!collapsed && (
                                     <span
