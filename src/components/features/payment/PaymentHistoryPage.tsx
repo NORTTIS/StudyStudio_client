@@ -2,7 +2,7 @@
 
 import { ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { getPaymentHistory, type PaymentHistory } from "@/api/payment";
 import { Header } from "@/components/layout/Header";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { getPaymentStatusInfo } from "@/utils/payment-status";
 
 export function PaymentHistoryPage() {
+    const t = useTranslations("PaymentHistoryPage");
     const locale = useLocale();
     const [payments, setPayments] = useState<PaymentHistory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -69,12 +70,12 @@ export function PaymentHistoryPage() {
                             <Link href={`/${locale}/payment`}>
                                 <Button variant="ghost" size="sm" className="gap-2">
                                     <ArrowLeft className="h-4 w-4" />
-                                    Quay lại
+                                    {t("backButton")}
                                 </Button>
                             </Link>
                             <div>
-                                <h1 className="mb-1 font-bold text-2xl text-[#261E33]">Lịch sử thanh toán</h1>
-                                <p className="text-[#6F6B99] text-sm">Xem tất cả giao dịch thanh toán của bạn</p>
+                                <h1 className="mb-1 font-bold text-2xl text-[#261E33]">{t("title")}</h1>
+                                <p className="text-[#6F6B99] text-sm">{t("subtitle")}</p>
                             </div>
                         </div>
 
@@ -131,7 +132,7 @@ export function PaymentHistoryPage() {
                                                 <tr key={payment.paymentId} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4">
                                                         <span className="font-mono text-[#261E33] text-sm">
-                                                            {payment.paymentId.slice(0, 8)}...
+                                                            {payment.orderCode}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">

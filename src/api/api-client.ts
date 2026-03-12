@@ -156,3 +156,19 @@ export async function apiPut<T = unknown>(
         skipAuth
     });
 }
+
+/**
+ * Helper for DELETE requests
+ * @param skipAuth - Set to true for public endpoints to skip Authorization header
+ */
+export async function apiDelete<T = unknown>(
+    url: string,
+    locale?: string,
+    skipAuth?: boolean
+): Promise<ApiResponse<T>> {
+    return apiFetch<T>(url, {
+        method: "DELETE",
+        locale,
+        skipAuth
+    });
+}
