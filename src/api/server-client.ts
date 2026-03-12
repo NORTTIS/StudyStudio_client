@@ -71,6 +71,7 @@ class ServerApiClient {
 
             // Check if response is ok and has content
             if (!response.ok) {
+                console.log(`GET ${endpoint} failed with status ${response.status}`);
                 return {
                     status: "error",
                     code: `HTTP_${response.status}`,

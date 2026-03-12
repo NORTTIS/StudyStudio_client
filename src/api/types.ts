@@ -269,6 +269,333 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/revenue/by-period": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    Period?: string;
+                    PlanId?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RevenueByPeriodResponseApiResponse"];
+                        "text/json": components["schemas"]["RevenueByPeriodResponseApiResponse"];
+                        "text/plain": components["schemas"]["RevenueByPeriodResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/revenue/by-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RevenueByPlanResponseApiResponse"];
+                        "text/json": components["schemas"]["RevenueByPlanResponseApiResponse"];
+                        "text/plain": components["schemas"]["RevenueByPlanResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/revenue/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    IncludeCharts?: boolean;
+                    Period?: string;
+                    ReportType?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/revenue/mrr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Year?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MRRBreakdownResponseApiResponse"];
+                        "text/json": components["schemas"]["MRRBreakdownResponseApiResponse"];
+                        "text/plain": components["schemas"]["MRRBreakdownResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/revenue/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RevenueOverviewResponseApiResponse"];
+                        "text/json": components["schemas"]["RevenueOverviewResponseApiResponse"];
+                        "text/plain": components["schemas"]["RevenueOverviewResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/revenue/top-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    Limit?: number;
+                    SortBy?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TopPlansResponseApiResponse"];
+                        "text/json": components["schemas"]["TopPlansResponseApiResponse"];
+                        "text/plain": components["schemas"]["TopPlansResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/revenue/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    PageNumber?: number;
+                    PageSize?: number;
+                    PaymentStatus?: string;
+                    PlanId?: string;
+                    SearchTerm?: string;
+                    StartDate?: string;
+                    SubscriptionStatus?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RevenueTransactionsResponseApiResponse"];
+                        "text/json": components["schemas"]["RevenueTransactionsResponseApiResponse"];
+                        "text/plain": components["schemas"]["RevenueTransactionsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/revenue/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Comparison?: boolean;
+                    EndDate?: string;
+                    Period?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RevenueTrendsResponseApiResponse"];
+                        "text/json": components["schemas"]["RevenueTrendsResponseApiResponse"];
+                        "text/plain": components["schemas"]["RevenueTrendsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/subscription-plans": {
         parameters: {
             query?: never;
@@ -2589,7 +2916,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/payment/{paymentId}/cancel": {
+    "/api/payment/{orderCode}/cancel": {
         parameters: {
             query?: never;
             header?: never;
@@ -2603,7 +2930,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    paymentId: string;
+                    orderCode: number;
                 };
                 cookie?: never;
             };
@@ -3953,7 +4280,7 @@ export interface components {
          * Format: int32
          * @enum {integer}
          */
-        AnnouncementType: 0 | 1 | 2;
+        AnnouncementType: 0 | 1 | 2 | 3 | 4;
         AssignRoleRequest: {
             /** Format: uuid */
             groupId: string;
@@ -4089,6 +4416,8 @@ export interface components {
         CreatePaymentResponse: {
             /** Format: double */
             amount?: number;
+            /** Format: date-time */
+            expiredAt?: string;
             /** Format: int64 */
             orderCode?: number;
             /** Format: uuid */
@@ -4497,6 +4826,37 @@ export interface components {
             id?: string;
             lastName?: string | null;
         };
+        MRRBreakdownResponse: {
+            /** Format: double */
+            currentMRR?: number;
+            monthlyBreakdown?: components["schemas"]["MRRMonthData"][] | null;
+        };
+        MRRBreakdownResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["MRRBreakdownResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        MRRMonthData: {
+            /** Format: double */
+            churnMRR?: number;
+            /** Format: double */
+            contractionMRR?: number;
+            /** Format: double */
+            endMRR?: number;
+            /** Format: double */
+            expansionMRR?: number;
+            /** Format: int32 */
+            month?: number;
+            /** Format: double */
+            netMRR?: number;
+            /** Format: double */
+            newMRR?: number;
+            /** Format: double */
+            startMRR?: number;
+            /** Format: int32 */
+            year?: number;
+        };
         ObjectApiResponse: {
             code?: string | null;
             data?: unknown;
@@ -4577,6 +4937,23 @@ export interface components {
             data?: components["schemas"]["PersonalTaskStatusResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        PlanRevenueSummary: {
+            /** Format: int32 */
+            activeSubscriptions?: number;
+            billingCycle?: string | null;
+            /** Format: double */
+            percentage?: number;
+            /** Format: uuid */
+            planId?: string;
+            planName?: string | null;
+            /** Format: double */
+            price?: number;
+            /** Format: double */
+            totalRevenue?: number;
+            /** Format: int32 */
+            transactionCount?: number;
+            trend?: string | null;
         };
         RefreshTokenRequest: {
             refreshToken: string;
@@ -4739,6 +5116,105 @@ export interface components {
         ResetPasswordRequest: {
             newPassword: string;
             token: string;
+        };
+        RevenueByPeriodResponse: {
+            /** Format: double */
+            averageOrderValue?: number;
+            breakdown?: components["schemas"]["RevenueDataPoint"][] | null;
+            /** Format: date-time */
+            endDate?: string;
+            period?: string | null;
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: double */
+            totalRevenue?: number;
+            /** Format: int32 */
+            transactionCount?: number;
+        };
+        RevenueByPeriodResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RevenueByPeriodResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        RevenueByPlanResponse: {
+            plans?: components["schemas"]["PlanRevenueSummary"][] | null;
+        };
+        RevenueByPlanResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RevenueByPlanResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        RevenueDataPoint: {
+            /** Format: date-time */
+            date?: string;
+            /** Format: int32 */
+            newSubscriptions?: number;
+            /** Format: int32 */
+            renewals?: number;
+            /** Format: double */
+            revenue?: number;
+            /** Format: int32 */
+            transactionCount?: number;
+        };
+        RevenueOverviewResponse: {
+            /** Format: int32 */
+            activeSubscriptions?: number;
+            /** Format: double */
+            arpu?: number;
+            /** Format: int32 */
+            failedTransactions?: number;
+            /** Format: double */
+            monthlyRevenue?: number;
+            /** Format: double */
+            mrr?: number;
+            /** Format: int32 */
+            successfulTransactions?: number;
+            /** Format: double */
+            successRate?: number;
+            /** Format: double */
+            totalRevenue?: number;
+            /** Format: int32 */
+            totalTransactions?: number;
+            /** Format: double */
+            yearlyRevenue?: number;
+        };
+        RevenueOverviewResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RevenueOverviewResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        RevenueTransactionsResponse: {
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            transactions?: components["schemas"]["TransactionDetail"][] | null;
+        };
+        RevenueTransactionsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RevenueTransactionsResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        RevenueTrendsResponse: {
+            currentPeriod?: components["schemas"]["TrendData"];
+            /** Format: double */
+            growthRate?: number;
+            previousPeriod?: components["schemas"]["TrendData"];
+            trendDirection?: string | null;
+        };
+        RevenueTrendsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RevenueTrendsResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         SendInviteEmailRequest: {
             /** Format: email */
@@ -5046,6 +5522,70 @@ export interface components {
             position: number;
             statusName: string;
         };
+        TopPlanItem: {
+            /** Format: int32 */
+            activeSubscriptions?: number;
+            /** Format: double */
+            conversionRate?: number;
+            /** Format: int32 */
+            newSubscriptions?: number;
+            /** Format: uuid */
+            planId?: string;
+            planName?: string | null;
+            /** Format: double */
+            price?: number;
+            /** Format: int32 */
+            rank?: number;
+            /** Format: double */
+            totalRevenue?: number;
+        };
+        TopPlansResponse: {
+            topPlans?: components["schemas"]["TopPlanItem"][] | null;
+        };
+        TopPlansResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TopPlansResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        TransactionDetail: {
+            /** Format: double */
+            amount?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            orderCode?: number;
+            /** Format: date-time */
+            paidAt?: string | null;
+            /** Format: uuid */
+            paymentId?: string;
+            paymentMethod?: string | null;
+            paymentStatus?: components["schemas"]["PaymentStatus"];
+            /** Format: uuid */
+            planId?: string;
+            planName?: string | null;
+            userEmail?: string | null;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
+        TrendData: {
+            /** Format: double */
+            averageOrderValue?: number;
+            /** Format: int32 */
+            churnedCustomers?: number;
+            /** Format: date-time */
+            endDate?: string;
+            /** Format: int32 */
+            newCustomers?: number;
+            period?: string | null;
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: double */
+            totalRevenue?: number;
+            /** Format: int32 */
+            transactionCount?: number;
+        };
         UpdateAnnouncementRequest: {
             /** Format: uuid */
             announcementId: string;
@@ -5169,7 +5709,11 @@ export interface components {
             content?: string | null;
             /** Format: date-time */
             createdAt?: string;
+            /** Format: uuid */
+            createdBy?: string | null;
             isRead?: boolean;
+            /** Format: uuid */
+            mentionedId?: string;
             /** Format: date-time */
             publishedAt?: string | null;
             title?: string | null;

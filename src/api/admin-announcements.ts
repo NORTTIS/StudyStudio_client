@@ -217,7 +217,8 @@ export const ANNOUNCEMENT_TYPES = {
     0: "Thông báo chung",
     1: "Cập nhật tính năng",
     2: "Bảo trì hệ thống",
-    3: "Khuyến mãi"
+    3: "Khuyến mãi",
+    4: "Khác"
 } as const;
 
 export function getAnnouncementTypeLabel(type: number): string {

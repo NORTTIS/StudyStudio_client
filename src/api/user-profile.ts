@@ -42,6 +42,5 @@ export interface UserProfile {
  * @param locale - Current locale for API response messages
  */
 export async function getUserProfile(locale: string): Promise<ApiResponse<UserProfile>> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
-    return apiGet<UserProfile>(`${baseUrl}/user-profile`, locale);
+    return apiGet<UserProfile>("/user-profile", locale);
 }
