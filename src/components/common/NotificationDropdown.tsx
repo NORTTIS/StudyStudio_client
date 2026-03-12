@@ -1,102 +1,57 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
-import { getUserAnnouncements, type UserAnnouncement } from "@/api/announcements";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+    deleteUserAnnouncement,
+    getAllAnnouncements,
+    markUserAnnouncementAsRead,
+    type Notification
+} from "@/api/notifications";
+import { NotificationDetailModal } from "./NotificationDetailModal";
 
-const BellIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-        <path
-            d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-    </svg>
-);
-
-const CheckIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 10L8 16L18 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-const WarningIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M10 2L2 17H18L10 2Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-        <path d="M10 8V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M10 16H10.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
-
-const InfoIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-        <path d="M10 14V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M10 6H10.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+const BellIcon = ({ hasUnread }: { hasUnread: boolean }) => (
+    <div className="relative">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+        {hasUnread && (
+            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500">
+                <div className="h-full w-full animate-ping rounded-full bg-red-400" />
+            </div>
+        )}
+    </div>
 );
 
 export function NotificationDropdown() {
-    const _t = useTranslations("Notifications");
+    console.log("🔔 NotificationDropdown: Component mounted/rendered");
+    const t = useTranslations("Notifications");
     const locale = useLocale();
-    const router = useRouter();
-    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedNotificationId, setSelectedNotificationId] = useState<string>("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [notificationToDelete, setNotificationToDelete] = useState<string>("");
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Get current locale from pathname
-    const currentLocale = pathname.split("/")[1] || "vi";
+    const unreadCount = notifications.filter((n) => !n.read).length;
+    const hasUnread = unreadCount > 0;
 
-    const [announcements, setAnnouncements] = useState<UserAnnouncement[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const loadAnnouncements = async () => {
-            try {
-                setIsLoading(true);
-                const result = await getUserAnnouncements(locale);
-                if (result.status === "success" && result.data) {
-                    // Only show active announcements
-                    const activeAnnouncements = result.data.filter((a) => a.isActive);
-                    setAnnouncements(activeAnnouncements);
-                } else {
-                    setAnnouncements([]);
-                }
-            } catch (error) {
-                console.error("Failed to load announcements:", error);
-                setAnnouncements([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadAnnouncements();
-    }, [locale]);
-
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -108,132 +63,272 @@ export function NotificationDropdown() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Show count of all announcements as "unread"
-    const unreadCount = announcements.length;
+    const loadNotifications = useCallback(async () => {
+        console.log("🔔 NotificationDropdown: Starting to load notifications...");
+        setIsLoading(true);
+        try {
+            // Sử dụng getAllAnnouncements thay vì fetchNotifications để lấy tất cả announcements
+            const data = await getAllAnnouncements(locale);
+            console.log("🔔 NotificationDropdown: Received notifications:", data);
+            setNotifications(data);
+        } catch (error) {
+            console.error("🔔 NotificationDropdown: Failed to load notifications:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [locale]);
 
-    const handleAnnouncementClick = (_announcement: UserAnnouncement) => {
-        // Close dropdown
-        setIsOpen(false);
-        // Navigate to home page where announcements are displayed
-        router.push(`/${currentLocale}/home`);
+    useEffect(() => {
+        loadNotifications();
+    }, [loadNotifications]);
+
+    const handleNotificationClick = async (notification: Notification) => {
+        console.log("🔔 UI: Click vào thông báo:", notification.id);
+
+        // Đánh dấu đã đọc nếu chưa đọc
+        if (!notification.read) {
+            try {
+                const result = await markUserAnnouncementAsRead(notification.id, locale);
+                if (result.status === "success") {
+                    // Cập nhật local state
+                    setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+                }
+            } catch (error) {
+                console.error("🔔 UI: Lỗi khi đánh dấu đã đọc:", error);
+                // Vẫn cập nhật local state nếu API thất bại
+                setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+            }
+        }
+
+        // Mở modal chi tiết sử dụng announcementId
+        setSelectedNotificationId(notification.id); // Bây giờ id chính là announcementId
+        setIsDetailModalOpen(true);
+        setIsOpen(false); // Đóng dropdown
     };
 
-    const getTypeIcon = (type: string) => {
+    const handleMarkAllAsRead = async () => {
+        try {
+            console.log("🔔 UI: Đánh dấu tất cả đã đọc");
+
+            // Lấy danh sách thông báo chưa đọc
+            const unreadNotifications = notifications.filter((n) => !n.read);
+
+            // Đánh dấu từng thông báo đã đọc
+            const promises = unreadNotifications.map((notification) =>
+                markUserAnnouncementAsRead(notification.id, locale)
+            );
+
+            await Promise.all(promises);
+
+            // Cập nhật local state
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        } catch (error) {
+            console.error("🔔 UI: Lỗi khi đánh dấu tất cả đã đọc:", error);
+            // Vẫn cập nhật local state nếu API thất bại
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        }
+    };
+
+    const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
+        event.stopPropagation(); // Prevent triggering the notification click
+
+        // Show confirmation dialog
+        setNotificationToDelete(notificationId);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDeleteNotification = async () => {
+        try {
+            console.log("🔔 UI: Xóa thông báo ID:", notificationToDelete);
+
+            const result = await deleteUserAnnouncement(notificationToDelete, locale);
+
+            if (result.status === "success") {
+                // Xóa khỏi local state
+                setNotifications((prev) => prev.filter((n) => n.id !== notificationToDelete));
+            } else {
+                console.error("🔔 UI: Lỗi API khi xóa thông báo:", result.message);
+                // Show error message to user
+                alert(result.message || (locale === "vi" ? "Không thể xóa thông báo" : "Cannot delete notification"));
+            }
+        } catch (error) {
+            console.error("🔔 UI: Lỗi khi xóa thông báo:", error);
+            alert(
+                locale === "vi" ? "Có lỗi xảy ra khi xóa thông báo" : "An error occurred while deleting notification"
+            );
+        } finally {
+            setShowDeleteConfirm(false);
+            setNotificationToDelete("");
+        }
+    };
+
+    const getNotificationIcon = (type: Notification["type"]) => {
         switch (type) {
-            case "warning":
-                return <WarningIcon />;
             case "success":
-                return <CheckIcon />;
+                return "✅";
+            case "warning":
+                return "⚠️";
             case "info":
-                return <InfoIcon />;
+                return "ℹ️";
             default:
-                return <InfoIcon />;
+                return "🔔";
         }
     };
 
-    const getTypeColor = (type: string) => {
-        switch (type) {
-            case "Info":
-                return "text-blue-500";
-            case "Feature":
-                return "text-green-500";
-            case "Maintenance":
-                return "text-orange-500";
-            case "Promotion":
-                return "text-purple-500";
-            default:
-                return "text-gray-500";
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+        if (diffInHours < 1) {
+            return t("justNow");
         }
+        if (diffInHours < 24) {
+            return t("hoursAgo", { hours: diffInHours });
+        }
+        const diffInDays = Math.floor(diffInHours / 24);
+        return t("daysAgo", { days: diffInDays });
     };
 
     return (
         <div className="relative" ref={dropdownRef}>
-            {/* Bell Button */}
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative rounded-lg p-2 text-[#6F6B99] transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
-                <BellIcon />
+                <BellIcon hasUnread={hasUnread} />
                 {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF5F3D] font-bold text-white text-xs">
-                        {unreadCount}
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 font-medium text-white text-xs">
+                        {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                 )}
             </button>
 
-            {/* Dropdown */}
             {isOpen && (
-                <div className="absolute top-full right-0 z-50 mt-2 w-96 rounded-xl border border-[#E5E5E5] bg-white shadow-xl">
-                    {/* Header */}
+                <div className="absolute top-full right-0 z-50 mt-2 w-80 rounded-xl border border-[#E5E5E5] bg-white shadow-xl">
                     <div className="flex items-center justify-between border-[#E5E5E5] border-b px-4 py-3">
-                        <h3 className="font-semibold text-[#261E33]">Thông báo</h3>
-                        <span className="text-[#6F6B99] text-xs">{announcements.length} thông báo</span>
+                        <h3 className="font-semibold text-[#261E33] text-sm">{t("title")}</h3>
+                        {hasUnread && (
+                            <button
+                                type="button"
+                                onClick={handleMarkAllAsRead}
+                                className="text-[#FF5F3D] text-xs hover:underline">
+                                {t("markAllRead")}
+                            </button>
+                        )}
                     </div>
 
-                    {/* Announcements List */}
                     <div className="max-h-96 overflow-y-auto">
                         {isLoading ? (
-                            <div className="py-12 text-center">
-                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center text-[#9CA3AF]">
-                                    <BellIcon />
-                                </div>
-                                <p className="text-[#6F6B99] text-sm">Đang tải...</p>
+                            <div className="flex items-center justify-center py-8">
+                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#FF5F3D] border-t-transparent" />
                             </div>
-                        ) : announcements.length > 0 ? (
-                            announcements.map((announcement) => (
-                                <button
-                                    key={announcement.announcementId}
-                                    type="button"
-                                    onClick={() => handleAnnouncementClick(announcement)}
-                                    className="w-full cursor-pointer border-[#E5E5E5] border-b px-4 py-3 text-left transition-colors hover:bg-[#F9F9F9]">
-                                    <div className="flex gap-3">
-                                        <div className={`mt-1 shrink-0 ${getTypeColor(announcement.type)}`}>
-                                            {getTypeIcon("info")}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <h4 className="font-semibold text-[#261E33] text-sm">
-                                                    {announcement.title}
-                                                </h4>
-                                                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#FF5F3D]" />
-                                            </div>
-                                            <p className="mt-1 line-clamp-2 text-[#6F6B99] text-xs">
-                                                {announcement.content}
-                                            </p>
-                                            <div className="mt-2 flex items-center gap-2">
-                                                <span
-                                                    className={`rounded px-2 py-1 text-xs ${getTypeColor(announcement.type).replace("text-", "bg-").replace("-500", "-100")} ${getTypeColor(announcement.type)}`}>
-                                                    {announcement.type}
-                                                </span>
-                                                <span className="text-[#9CA3AF] text-xs">
-                                                    {new Date(announcement.publishedAt).toLocaleDateString("vi-VN")}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </button>
-                            ))
-                        ) : (
-                            <div className="py-12 text-center">
-                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center text-[#9CA3AF]">
-                                    <BellIcon />
+                        ) : notifications.length === 0 ? (
+                            <div className="py-8 text-center">
+                                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                                    <BellIcon hasUnread={false} />
                                 </div>
-                                <p className="text-[#6F6B99] text-sm">Không có thông báo nào</p>
+                                <p className="text-[#6F6B99] text-sm">{t("noNotifications")}</p>
+                            </div>
+                        ) : (
+                            <div className="py-2">
+                                {notifications.map((notification) => (
+                                    <button
+                                        key={notification.id}
+                                        type="button"
+                                        onClick={() => handleNotificationClick(notification)}
+                                        className={`w-full px-4 py-3 text-left transition-colors hover:bg-[#F4F5FA] ${!notification.read ? "bg-blue-50" : ""}`}>
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-lg">{getNotificationIcon(notification.type)}</span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <p
+                                                        className={`text-sm ${!notification.read ? "font-semibold text-[#261E33]" : "text-[#261E33]"}`}>
+                                                        {notification.title}
+                                                    </p>
+                                                    {!notification.read && (
+                                                        <div className="h-2 w-2 rounded-full bg-[#FF5F3D]" />
+                                                    )}
+                                                </div>
+                                                <p className="mt-1 text-[#6F6B99] text-xs">
+                                                    {notification.description.length > 100
+                                                        ? `${notification.description.substring(0, 100)}...`
+                                                        : notification.description}
+                                                </p>
+                                                <p className="mt-1 text-[#9CA3AF] text-xs">
+                                                    {formatDate(notification.date)}
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => handleDeleteNotification(notification.id, e)}
+                                                className="ml-2 rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                                                title={t("delete")}>
+                                                <svg
+                                                    className="h-4 w-4"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
                         )}
                     </div>
 
-                    {/* Footer */}
-                    {announcements.length > 0 && (
+                    {notifications.length > 0 && (
                         <div className="border-[#E5E5E5] border-t px-4 py-3">
-                            <Link
-                                href={`/${currentLocale}/home`}
+                            <button
+                                type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="block text-center font-medium text-[#FF5F3D] text-sm hover:underline">
-                                Xem tất cả thông báo
-                            </Link>
+                                className="w-full text-center text-[#FF5F3D] text-sm hover:underline">
+                                {t("viewAll")}
+                            </button>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Modal chi tiết thông báo */}
+            <NotificationDetailModal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                notificationId={selectedNotificationId}
+                locale={locale}
+            />
+
+            {/* Confirmation Dialog for Delete */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-xl">
+                        <h3 className="mb-2 font-semibold text-gray-900 text-lg">{t("confirmDeleteTitle")}</h3>
+                        <p className="mb-4 text-gray-600">{t("confirmDelete")}</p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowDeleteConfirm(false);
+                                    setNotificationToDelete("");
+                                }}
+                                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-600 transition-colors hover:bg-gray-50">
+                                {t("cancel")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmDeleteNotification}
+                                className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600">
+                                {t("confirm")}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

@@ -86,7 +86,7 @@ export function ResetPassword({ token }: Props) {
             password: z
                 .string()
                 .min(1, t("passwordRequired"))
-                .regex(/^(?=.*[A-Z])(?=.*\d).{10,20}$/, t("passwordInvalid")),
+                .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{10,20}$/, t("passwordInvalid")),
             confirmPassword: z.string().min(1, t("confirmPasswordRequired"))
         })
         .refine((data) => data.password === data.confirmPassword, {
@@ -180,6 +180,7 @@ export function ResetPassword({ token }: Props) {
                             <Input type={showPassword ? "text" : "password"} {...register("password")} />
                             <button
                                 type="button"
+                                tabIndex={-1}
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500">
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -194,6 +195,7 @@ export function ResetPassword({ token }: Props) {
                             <Input type={showConfirm ? "text" : "password"} {...register("confirmPassword")} />
                             <button
                                 type="button"
+                                tabIndex={-1}
                                 onClick={() => setShowConfirm(!showConfirm)}
                                 className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500">
                                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}

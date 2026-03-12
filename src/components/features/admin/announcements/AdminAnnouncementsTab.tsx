@@ -1,7 +1,7 @@
 "use client";
 
 import { Empty } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     type AdminAnnouncement,
     ANNOUNCEMENT_TYPES,
@@ -37,7 +37,7 @@ export function AdminAnnouncementsTab() {
     });
 
     // Load announcements data
-    const loadAnnouncements = async () => {
+    const loadAnnouncements = useCallback(async () => {
         setIsLoading(true);
         setError(null);
 
@@ -65,7 +65,7 @@ export function AdminAnnouncementsTab() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []); // Empty dependency - chỉ load một lần khi mount, bỏ toast để tránh infinite loop
 
     useEffect(() => {
         loadAnnouncements();

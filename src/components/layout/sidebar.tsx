@@ -1,7 +1,7 @@
 // src/components/features/dashboard/DashboardSidebar.tsx
 "use client";
 
-import { BarChart3, Bell, CreditCard, FileText, GraduationCap, LayoutDashboard, Newspaper, Users } from "lucide-react";
+import { BarChart3, CreditCard, FileText, LayoutDashboard, Newspaper, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -13,8 +13,7 @@ import { Logo } from "@/components/common";
 const userNavigation = [
     { name: "Home", href: "/home", icon: LayoutDashboard },
     { name: "Groups", href: "/group", icon: Users },
-    { name: "Master", href: "/master", icon: BarChart3 },
-    { name: "Announcements", href: "/announcements", icon: Bell },
+    { name: "Master", href: "/master", icon: BarChart3 }
 ];
 
 const adminNavigation = [

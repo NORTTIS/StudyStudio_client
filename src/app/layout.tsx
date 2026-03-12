@@ -23,8 +23,8 @@ export default async function RootLayout({
     const { locale } = await params;
 
     return (
-        <html lang={locale || "en"}>
-            <body className={`${interSans.variable} antialiased`}>
+        <html lang={locale || "en"} suppressHydrationWarning>
+            <body className={`${interSans.variable} antialiased`} suppressHydrationWarning>
                 {children}
                 <Toaster />
             </body>

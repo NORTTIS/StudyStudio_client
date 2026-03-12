@@ -19,6 +19,7 @@ export interface AdminReport {
     createdAt: string;
     updatedAt: string;
     userId: string;
+    planStatus: number; // 0=Free, 1=Premium
 }
 
 export interface AdminReportsResponse {
@@ -206,5 +207,27 @@ export function getReportPriorityColor(priority: number): string {
             return "bg-red-100 text-red-700"; // Urgent
         default:
             return "bg-gray-100 text-gray-700";
+    }
+}
+
+export function getPlanStatusLabel(planStatus: number): string {
+    switch (planStatus) {
+        case 0:
+            return "Free";
+        case 1:
+            return "Premium";
+        default:
+            return "Unknown";
+    }
+}
+
+export function getPlanStatusColor(planStatus: number): string {
+    switch (planStatus) {
+        case 0:
+            return "bg-gray-100 text-gray-600"; // Free
+        case 1:
+            return "bg-purple-100 text-purple-700"; // Premium
+        default:
+            return "bg-gray-100 text-gray-600";
     }
 }

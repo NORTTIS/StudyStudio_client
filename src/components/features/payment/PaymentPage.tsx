@@ -18,11 +18,11 @@ const PLANS = [
         price: 0,
         currency: "VNĐ",
         features: [
-            "Tối đa 3 Không gian quản lý",
-            "Tối đa 5 Không gian nhóm",
-            "Tối đa 10 thành viên/nhóm",
-            "500 MB lưu trữ/nhóm",
-            "20 yêu cầu AI/ngày"
+            "plans.free.feature1",
+            "plans.free.feature2",
+            "plans.free.feature3",
+            "plans.free.feature4",
+            "plans.free.feature5"
         ],
         current: true
     },
@@ -33,11 +33,11 @@ const PLANS = [
         currency: "VNĐ",
         period: "/tháng",
         features: [
-            "Tối đa 10 Không gian quản lý",
-            "Tối đa 10 Không gian nhóm",
-            "Tối đa 50 thành viên/nhóm",
-            "1 GB lưu trữ/nhóm",
-            "100 yêu cầu AI/ngày"
+            "plans.premium.feature1",
+            "plans.premium.feature2",
+            "plans.premium.feature3",
+            "plans.premium.feature4",
+            "plans.premium.feature5"
         ],
         popular: true
     },
@@ -48,17 +48,17 @@ const PLANS = [
         currency: "VNĐ",
         period: "/tháng",
         features: [
-            "Không giới hạn Không gian quản lý",
-            "Không giới hạn Không gian nhóm",
-            "Không giới hạn thành viên",
-            "10 GB lưu trữ/nhóm",
-            "Không giới hạn yêu cầu AI"
+            "plans.enterprise.feature1",
+            "plans.enterprise.feature2",
+            "plans.enterprise.feature3",
+            "plans.enterprise.feature4",
+            "plans.enterprise.feature5"
         ]
     }
 ];
 
 export function PaymentPage() {
-    const _t = useTranslations("PaymentPage");
+    const t = useTranslations("PaymentPage");
     const locale = useLocale();
     const _router = useRouter();
     const { toast } = useToast();
@@ -68,7 +68,7 @@ export function PaymentPage() {
     const handleUpgrade = async (planId: string) => {
         if (planId === "free") {
             toast({
-                description: "Bạn đang sử dụng gói Free",
+                description: t("messages.alreadyFree"),
                 variant: "default"
             });
             return;
@@ -85,13 +85,13 @@ export function PaymentPage() {
                 window.location.href = result.data.paymentUrl;
             } else {
                 toast({
-                    description: result.message || "Không thể tạo thanh toán",
+                    description: result.message || t("messages.paymentFailed"),
                     variant: "destructive"
                 });
             }
         } catch (_error) {
             toast({
-                description: "Có lỗi xảy ra. Vui lòng thử lại!",
+                description: t("messages.paymentError"),
                 variant: "destructive"
             });
         } finally {
@@ -111,13 +111,13 @@ export function PaymentPage() {
                         {/* Header */}
                         <div className="mb-6 flex items-center justify-between">
                             <div>
-                                <h1 className="mb-2 font-bold text-2xl text-[#261E33]">Gói đăng ký</h1>
-                                <p className="text-[#6F6B99] text-sm">Chọn gói phù hợp với nhu cầu của bạn</p>
+                                <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("title")}</h1>
+                                <p className="text-[#6F6B99] text-sm">{t("subtitle")}</p>
                             </div>
                             <Link href={`/${locale}/payment/history`}>
                                 <Button variant="outline" className="gap-2">
                                     <History className="h-4 w-4" />
-                                    Lịch sử thanh toán
+                                    {t("historyButton")}
                                 </Button>
                             </Link>
                         </div>
@@ -133,7 +133,7 @@ export function PaymentPage() {
                                     {plan.popular && (
                                         <div className="absolute top-0 right-6 -translate-y-1/2">
                                             <span className="rounded-full bg-[#FF5F3D] px-3 py-1 font-medium text-white text-xs">
-                                                Phổ biến
+                                                {t("plans.popular")}
                                             </span>
                                         </div>
                                     )}
@@ -141,7 +141,7 @@ export function PaymentPage() {
                                     {plan.current && (
                                         <div className="absolute top-0 right-6 -translate-y-1/2">
                                             <span className="rounded-full bg-green-500 px-3 py-1 font-medium text-white text-xs">
-                                                Gói hiện tại
+                                                {t("plans.current")}
                                             </span>
                                         </div>
                                     )}
@@ -163,7 +163,7 @@ export function PaymentPage() {
                                         {plan.features.map((feature, index) => (
                                             <li key={index} className="flex items-start gap-2">
                                                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
-                                                <span className="text-[#6F6B99] text-sm">{feature}</span>
+                                                <span className="text-[#6F6B99] text-sm">{t(feature)}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -177,13 +177,13 @@ export function PaymentPage() {
                                                 : "bg-[#261E33] hover:bg-[#261E33]/90"
                                         }`}>
                                         {isProcessing && selectedPlan === plan.id ? (
-                                            "Đang xử lý..."
+                                            t("buttons.processing")
                                         ) : plan.current ? (
-                                            "Gói hiện tại"
+                                            t("buttons.currentPlan")
                                         ) : (
                                             <>
                                                 <CreditCard className="mr-2 h-4 w-4" />
-                                                Nâng cấp ngay
+                                                {t("buttons.upgrade")}
                                             </>
                                         )}
                                     </Button>
@@ -193,12 +193,12 @@ export function PaymentPage() {
 
                         {/* Info Section */}
                         <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
-                            <h3 className="mb-4 font-semibold text-[#261E33]">Thông tin thanh toán</h3>
+                            <h3 className="mb-4 font-semibold text-[#261E33]">{t("info.title")}</h3>
                             <div className="space-y-2 text-[#6F6B99] text-sm">
-                                <p>• Thanh toán an toàn qua cổng thanh toán PayOS</p>
-                                <p>• Hỗ trợ thanh toán qua QR Code, chuyển khoản ngân hàng</p>
-                                <p>• Gói đăng ký sẽ được kích hoạt ngay sau khi thanh toán thành công</p>
-                                <p>• Bạn có thể hủy đăng ký bất cứ lúc nào</p>
+                                <p>• {t("info.secure")}</p>
+                                <p>• {t("info.methods")}</p>
+                                <p>• {t("info.activation")}</p>
+                                <p>• {t("info.cancellation")}</p>
                             </div>
                         </div>
                     </div>

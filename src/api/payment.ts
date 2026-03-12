@@ -25,8 +25,9 @@ export interface PaymentStatusResponse {
 
 export interface PaymentHistory {
     paymentId: string;
+    orderCode: number;
     planId: string;
-    status: string;
+    status: number; // 0=PENDING, 1=SUCCESS, 2=CANCELLED, 3=FAILED
     paidAt: string | null;
 }
 

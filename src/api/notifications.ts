@@ -1,211 +1,231 @@
-import { apiFetch, apiGet } from "@/api/api-client";
-import type { components } from "@/api/types";
+import { type ApiResponse, apiDelete, apiGet, apiPut } from "./api-client";
 
 export interface Notification {
-    id: string;
+    id: string; // userAnnouncementId for user announcements
     title: string;
     description: string;
     type: "system" | "warning" | "info" | "success";
     date: string;
     read: boolean;
     link?: string;
+    announcementId?: string; // Original announcementId for detail view
 }
 
-export interface Announcement extends Notification {
-    priority: "high" | "medium" | "low";
+// API response interfaces based on the provided schema
+interface AnnouncementResponse {
+    announcementId: string;
+    title: string;
+    content: string;
+    type: string;
+    isActive: boolean;
+    createdAt: string;
+    publishedAt: string;
 }
 
-type AnnouncementApiResponse = components["schemas"]["AnnouncementResponse"];
-type UserAnnouncementResponse = components["schemas"]["UserAnnouncementResponse"];
-type UserAnnouncementListResponse = UserAnnouncementResponse[];
-type ObjectApiResponse = components["schemas"]["ObjectApiResponse"];
-
-const ANNOUNCEMENT_READ_KEY = "announcementReadMap";
-
-function isBrowser() {
-    return typeof window !== "undefined";
-}
-
-function getReadMap(): Record<string, boolean> {
-    if (!isBrowser()) return {};
-
-    const raw = localStorage.getItem(ANNOUNCEMENT_READ_KEY);
-    if (!raw) return {};
-
-    try {
-        return JSON.parse(raw) as Record<string, boolean>;
-    } catch {
-        return {};
-    }
-}
-
-function saveReadMap(map: Record<string, boolean>): void {
-    if (!isBrowser()) return;
-    localStorage.setItem(ANNOUNCEMENT_READ_KEY, JSON.stringify(map));
-}
-
-function detectType(rawType?: string | null): Notification["type"] {
-    const normalized = (rawType || "").toLowerCase();
-
-    if (normalized.includes("warn") || normalized.includes("critical") || normalized.includes("urgent")) {
-        return "warning";
-    }
-
-    if (normalized.includes("success") || normalized.includes("done") || normalized.includes("complete")) {
-        return "success";
-    }
-
-    if (normalized.includes("system") || normalized.includes("maintain") || normalized.includes("update")) {
-        return "system";
-    }
-
-    return "info";
-}
-
-function getPriorityFromType(type: Notification["type"]): Announcement["priority"] {
-    if (type === "warning") return "high";
-    if (type === "system") return "medium";
-    return "low";
-}
-
-function formatDate(value?: string | null): string {
-    if (!value) return "";
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString();
+interface UserAnnouncementResponse {
+    userAnnouncementId: string;
+    announcementId: string;
+    title: string;
+    content: string;
+    type: string;
+    isRead: boolean;
+    createdAt: string;
+    publishedAt: string;
 }
 
 /**
- * Map a UserAnnouncementResponse to an Announcement (server-safe, no localStorage)
- */
-export function mapUserAnnouncement(item: UserAnnouncementResponse): Announcement {
-    const id = item.userAnnouncementId ?? item.announcementId ?? "";
-    const type = detectType(item.type);
-
-    return {
-        id,
-        title: item.title || "",
-        description: item.content || "",
-        type,
-        date: formatDate(item.publishedAt || item.createdAt),
-        read: Boolean(item.isRead),
-        priority: getPriorityFromType(type)
-    };
-}
-
-/**
- * Merge an AnnouncementResponse with an optional UserAnnouncementResponse.
- * Server-safe — no localStorage access.
- */
-export function mapMergedAnnouncement(
-    announcement: AnnouncementApiResponse,
-    userAnnouncement?: UserAnnouncementResponse
-): Announcement {
-    const id =
-        userAnnouncement?.userAnnouncementId ?? userAnnouncement?.announcementId ?? announcement.announcementId ?? "";
-    const type = detectType(announcement.type);
-
-    return {
-        id,
-        title: announcement.title || "",
-        description: announcement.content || "",
-        type,
-        date: formatDate(announcement.publishedAt || announcement.createdAt),
-        read: Boolean(userAnnouncement?.isRead),
-        priority: getPriorityFromType(type)
-    };
-}
-
-/**
- * Fetch all notifications for the current user
- * @returns Promise<Notification[]>
+ * Fetch user notifications from user announcements API
  */
 export async function fetchNotifications(locale = "vi"): Promise<Notification[]> {
-    const announcements = await fetchAnnouncements(locale);
-    return announcements.map(({ priority: _priority, ...notification }) => notification);
-}
+    console.log("🔔 API: fetchNotifications được gọi với locale:", locale);
 
-/**
- * Mark a notification as read
- * @param notificationId - The ID of the notification to mark as read
- */
-export async function markNotificationAsRead(notificationId: string, locale = "vi"): Promise<void> {
-    const response = await apiFetch<ObjectApiResponse>(`/announcements/user/${notificationId}/read`, {
-        method: "PUT",
-        locale
-    });
+    try {
+        // Gọi API user announcements để lấy thông báo của user với userAnnouncementId
+        console.log("🔔 API: Đang gọi /announcements/user...");
+        const response = await apiGet<UserAnnouncementResponse[]>("/announcements/user", locale);
+        console.log("🔔 API: Phản hồi từ /announcements/user:", response);
 
-    if (response.status !== "success") {
-        throw new Error(response.message || "Failed to mark notification as read");
-    }
-
-    const currentMap = getReadMap();
-    currentMap[notificationId] = true;
-    saveReadMap(currentMap);
-}
-
-/**
- * Mark all notifications as read
- */
-export async function markAllNotificationsAsRead(locale = "vi"): Promise<void> {
-    const announcements = await fetchAnnouncements(locale);
-    const currentMap = getReadMap();
-
-    const unreadAnnouncements = announcements.filter((announcement) => !announcement.read);
-    await Promise.all(unreadAnnouncements.map(async (announcement) => markNotificationAsRead(announcement.id, locale)));
-
-    for (const announcement of announcements) {
-        currentMap[announcement.id] = true;
-    }
-
-    saveReadMap(currentMap);
-}
-
-/**
- * Fetch all announcements merged with user read status.
- * Calls both /announcements (master list) and /announcements/user (read state) in parallel.
- * @returns Promise<Announcement[]>
- */
-export async function fetchAnnouncements(locale = "vi"): Promise<Announcement[]> {
-    const [announcementsRes, userAnnouncementsRes] = await Promise.all([
-        apiGet<AnnouncementApiResponse[]>("/announcements", locale),
-        apiGet<UserAnnouncementListResponse>("/announcements/user", locale)
-    ]);
-
-    if (announcementsRes.status !== "success") {
-        throw new Error(announcementsRes.message || "Failed to fetch announcements");
-    }
-
-    const announcements = announcementsRes.data || [];
-    const userAnnouncements = userAnnouncementsRes.data || [];
-    const readMap = getReadMap();
-
-    const userAnnouncementMap = new Map<string, UserAnnouncementResponse>();
-    for (const ua of userAnnouncements) {
-        if (ua.announcementId) {
-            userAnnouncementMap.set(ua.announcementId, ua);
+        if (response.status === "success" && response.data && Array.isArray(response.data)) {
+            const notifications = response.data.map((userAnnouncement: UserAnnouncementResponse) => ({
+                id: userAnnouncement.userAnnouncementId, // Sử dụng userAnnouncementId để có thể mark as read/delete
+                title: userAnnouncement.title,
+                description: userAnnouncement.content,
+                type: getNotificationType(userAnnouncement.type),
+                date: userAnnouncement.publishedAt,
+                read: userAnnouncement.isRead,
+                link: undefined,
+                announcementId: userAnnouncement.announcementId // Lưu announcementId để xem chi tiết
+            }));
+            console.log("🔔 API: Trả về thông báo user:", notifications);
+            return notifications;
         }
-    }
 
-    return announcements
-        .filter((a) => a.isActive !== false)
-        .map((a) => {
-            const ua = a.announcementId ? userAnnouncementMap.get(a.announcementId) : undefined;
-            const item = mapMergedAnnouncement(a, ua);
-            item.read = item.read || Boolean(readMap[item.id]);
-            return item;
-        });
+        // Handle specific error cases
+        if (response.status === "error") {
+            console.log("🔔 API: Lỗi từ server:", response.message);
+
+            // If it's "Không tìm thấy thông báo" (no notifications found), return empty array
+            if (response.code === "ANNOUNCEMENT001") {
+                console.log("🔔 API: Không có thông báo nào - trả về mảng rỗng");
+                return [];
+            }
+        }
+
+        // Return empty array for other cases
+        console.log("🔔 API: Không có dữ liệu hợp lệ - trả về mảng rỗng");
+        return [];
+    } catch (error) {
+        console.error("🔔 API: Lỗi trong fetchNotifications:", error);
+        return [];
+    }
 }
 
 /**
- * Mark an announcement as read
- * @param announcementId - The ID of the announcement to mark as read
+ * Mark a notification as read using announcementId
+ * PUT /api/announcements/user/{userAnnouncementId}/read
+ * Note: We use announcementId as userAnnouncementId since we don't have user-specific mapping
  */
-export async function markAnnouncementAsRead(announcementId: string, locale = "vi"): Promise<void> {
-    await markNotificationAsRead(announcementId, locale);
+export async function markUserAnnouncementAsRead(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+    try {
+        console.log("🔔 API: Đánh dấu thông báo đã đọc ID:", announcementId);
+        const response = await apiPut<string>(`/announcements/user/${announcementId}/read`, {}, locale);
+        console.log("🔔 API: Phản hồi đánh dấu đã đọc:", response);
+        return response;
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi đánh dấu thông báo đã đọc:", error);
+        return {
+            status: "error",
+            code: "NETWORK_ERROR",
+            message: locale === "vi" ? "Không thể đánh dấu đã đọc" : "Cannot mark as read",
+            data: null
+        };
+    }
+}
 
-    const currentMap = getReadMap();
-    currentMap[announcementId] = true;
-    saveReadMap(currentMap);
+/**
+ * Delete a notification using announcementId
+ * DELETE /api/announcements/user/{userAnnouncementId}
+ * Note: We use announcementId as userAnnouncementId since we don't have user-specific mapping
+ */
+export async function deleteUserAnnouncement(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+    try {
+        console.log("🔔 API: Xóa thông báo ID:", announcementId);
+        const response = await apiDelete<string>(`/announcements/user/${announcementId}`, locale);
+        console.log("🔔 API: Phản hồi xóa thông báo:", response);
+        return response;
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi xóa thông báo:", error);
+        return {
+            status: "error",
+            code: "NETWORK_ERROR",
+            message: locale === "vi" ? "Không thể xóa thông báo" : "Cannot delete notification",
+            data: null
+        };
+    }
+}
+
+/**
+ * Get all announcements from the system
+ * GET /api/announcements
+ */
+export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]> {
+    try {
+        console.log("🔔 API: Lấy tất cả announcements...");
+        const response = await apiGet<AnnouncementResponse[]>("/announcements", locale);
+        console.log("🔔 API: Phản hồi từ /announcements:", response);
+
+        if (response.status === "success" && response.data && Array.isArray(response.data)) {
+            const announcements = response.data.map((announcement: AnnouncementResponse) => ({
+                id: announcement.announcementId,
+                title: announcement.title,
+                description: announcement.content,
+                type: getNotificationType(announcement.type),
+                date: announcement.publishedAt,
+                read: false, // System announcements don't have read status
+                link: undefined,
+                announcementId: announcement.announcementId
+            }));
+            console.log("🔔 API: Trả về announcements:", announcements);
+            return announcements;
+        }
+
+        // Handle error response
+        if (response.status === "error") {
+            console.log("🔔 API: Lỗi từ server:", response.message);
+        }
+
+        return [];
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi lấy announcements:", error);
+        return [];
+    }
+}
+
+/**
+ * Get notification count (unread) - tính từ announcements chung
+ */
+export async function getNotificationCount(locale = "vi"): Promise<number> {
+    try {
+        const response = await apiGet<AnnouncementResponse[]>("/announcements", locale);
+
+        if (response.status === "success" && response.data && Array.isArray(response.data)) {
+            // Đếm số thông báo đang hoạt động
+            return response.data.filter((announcement: AnnouncementResponse) => announcement.isActive).length;
+        }
+
+        return 0;
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi lấy số lượng thông báo:", error);
+        return 0;
+    }
+}
+
+/**
+ * Get announcement detail by ID
+ */
+export async function getAnnouncementDetail(announcementId: string, locale = "vi"): Promise<Notification | null> {
+    try {
+        console.log("🔔 API: Lấy chi tiết thông báo ID:", announcementId);
+        // apiGet trả về ApiResponse<AnnouncementResponse>, không cần wrap thêm
+        const response = await apiGet<AnnouncementResponse>(`/announcements/${announcementId}`, locale);
+        console.log("🔔 API: Phản hồi chi tiết thông báo:", response);
+
+        if (response.status === "success" && response.data) {
+            const announcement = response.data;
+            return {
+                id: announcement.announcementId,
+                title: announcement.title,
+                description: announcement.content,
+                type: getNotificationType(announcement.type),
+                date: announcement.publishedAt,
+                read: false,
+                link: undefined,
+                announcementId: announcement.announcementId
+            };
+        }
+
+        // Handle error response from API
+        if (response.status === "error") {
+            console.log("🔔 API: Không tìm thấy thông báo:", response.message);
+        }
+
+        return null;
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi lấy chi tiết thông báo:", error);
+        return null;
+    }
+}
+
+// Helper functions
+function getNotificationType(type: string): Notification["type"] {
+    switch (type.toLowerCase()) {
+        case "success":
+            return "success";
+        case "warning":
+            return "warning";
+        case "info":
+            return "info";
+        default:
+            return "system";
+    }
 }
