@@ -23,30 +23,21 @@ const MUTED = "#6F6B99";
 const BORDER = "#E5E5E5";
 
 /* ── Password strength ──────────────────────────── */
-const REQUIREMENTS = [
-    { key: "length", label: "10–20 ký tự", test: (v: string) => v.length >= 10 && v.length <= 20 },
-    { key: "upper", label: "Chữ hoa (A–Z)", test: (v: string) => /[A-Z]/.test(v) },
-    { key: "lower", label: "Chữ thường (a–z)", test: (v: string) => /[a-z]/.test(v) },
-    { key: "number", label: "Chữ số (0–9)", test: (v: string) => /\d/.test(v) },
-    { key: "special", label: "Ký tự đặc biệt (@$!…)", test: (v: string) => /[@$!%*?&]/.test(v) }
+const REQUIREMENT_TESTS = [
+    { key: "length", test: (v: string) => v.length >= 10 && v.length <= 20 },
+    { key: "upper", test: (v: string) => /[A-Z]/.test(v) },
+    { key: "lower", test: (v: string) => /[a-z]/.test(v) },
+    { key: "number", test: (v: string) => /\d/.test(v) }
 ];
 
-function getStrength(pw: string) {
+function getStrength(pw: string, labels: { weak: string; fair: string; good: string; strong: string }) {
     if (!pw) return { percent: 0, color: "#E5E5E5", label: "", score: 0 };
-    const score = REQUIREMENTS.filter((r) => r.test(pw)).length;
-    if (score <= 1) return { percent: 20, color: "#ff4d4f", label: "Yếu", score };
-    if (score === 2) return { percent: 45, color: "#fa8c16", label: "Trung bình", score };
-    if (score === 3) return { percent: 70, color: "#fadb14", label: "Khá", score };
-    return { percent: 100, color: "#52c41a", label: "Mạnh", score };
+    const score = REQUIREMENT_TESTS.filter((r) => r.test(pw)).length;
+    if (score <= 1) return { percent: 25, color: "#ff4d4f", label: labels.weak, score };
+    if (score === 2) return { percent: 50, color: "#fa8c16", label: labels.fair, score };
+    if (score === 3) return { percent: 75, color: "#fadb14", label: labels.good, score };
+    return { percent: 100, color: "#52c41a", label: labels.strong, score };
 }
-
-/* ── Security tips ─────────────────────────────── */
-const TIPS = [
-    "Đừng dùng mật khẩu giống nhau cho nhiều tài khoản",
-    "Tránh thông tin cá nhân như ngày sinh, tên",
-    "Đổi mật khẩu định kỳ 3–6 tháng/lần",
-    "Dùng trình quản lý mật khẩu (1Password, Bitwarden...)"
-];
 
 export default function SecuritySettingsPage() {
     const t = useTranslations("SecurityPage");
@@ -62,7 +53,23 @@ export default function SecuritySettingsPage() {
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const strength = useMemo(() => getStrength(passwordData.newPassword), [passwordData.newPassword]);
+    const strengthLabels = {
+        weak: t("strength.weak"),
+        fair: t("strength.fair"),
+        good: t("strength.good"),
+        strong: t("strength.strong")
+    };
+    const REQUIREMENTS = [
+        { key: "length", label: t("strength.reqLength"), test: (v: string) => v.length >= 10 && v.length <= 20 },
+        { key: "upper", label: t("strength.reqUpper"), test: (v: string) => /[A-Z]/.test(v) },
+        { key: "lower", label: t("strength.reqLower"), test: (v: string) => /[a-z]/.test(v) },
+        { key: "number", label: t("strength.reqNumber"), test: (v: string) => /\d/.test(v) }
+    ];
+
+    const strength = useMemo(
+        () => getStrength(passwordData.newPassword, strengthLabels),
+        [passwordData.newPassword, strengthLabels.weak, strengthLabels]
+    );
     const isMatch =
         passwordData.newPassword &&
         passwordData.confirmPassword &&
@@ -78,7 +85,7 @@ export default function SecuritySettingsPage() {
         const errs: Record<string, string> = {};
         if (!passwordData.currentPassword) errs.currentPassword = t("currentPasswordRequired");
         if (!passwordData.newPassword) errs.newPassword = t("newPasswordRequired");
-        else if (strength.percent < 45) errs.newPassword = t("passwordInvalid");
+        else if (strength.percent < 50) errs.newPassword = t("passwordInvalid");
         if (!passwordData.confirmPassword) errs.confirmPassword = t("confirmPasswordRequired");
         else if (!isMatch) errs.confirmPassword = t("passwordMismatch");
         setErrors(errs);
@@ -147,11 +154,16 @@ export default function SecuritySettingsPage() {
                 value={value}
                 onChange={handleChange}
                 prefix={<LockOutlined style={{ color: MUTED }} />}
-                iconRender={(v) =>
-                    v ? <EyeOutlined style={{ color: MUTED }} /> : <EyeInvisibleOutlined style={{ color: MUTED }} />
+                iconRender={(visible) =>
+                    visible ? (
+                        <EyeOutlined style={{ color: MUTED }} />
+                    ) : (
+                        <EyeInvisibleOutlined style={{ color: MUTED }} />
+                    )
                 }
                 status={error ? "error" : ""}
                 style={{ borderRadius: 10, fontSize: 14 }}
+                autoComplete="off"
             />
             {error && (
                 <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
@@ -218,7 +230,11 @@ export default function SecuritySettingsPage() {
                             flexWrap: "wrap",
                             justifyContent: "flex-end"
                         }}>
-                        {["🔒 Mã hóa an toàn", "🔄 Cập nhật ngay lập tức", "📱 Đăng xuất thiết bị khác"].map((c) => (
+                        {[
+                            `🔒 ${t("strength.reqLength")}`,
+                            `🔄 ${t("changePasswordTitle")}`,
+                            `📱 ${t("updateButton")}`
+                        ].map((c) => (
                             <span
                                 key={c}
                                 style={{
@@ -253,17 +269,15 @@ export default function SecuritySettingsPage() {
                             style={{ fontSize: 52, color: "#52c41a", display: "block", marginBottom: 16 }}
                         />
                         <Title level={4} style={{ color: "#237804", margin: "0 0 8px" }}>
-                            Đổi mật khẩu thành công!
+                            {t("successTitle")}
                         </Title>
-                        <Text style={{ color: "#52c41a", fontSize: 14 }}>
-                            Mật khẩu của bạn đã được cập nhật an toàn.
-                        </Text>
+                        <Text style={{ color: "#52c41a", fontSize: 14 }}>{t("successMessage")}</Text>
                         <br />
                         <Button
                             type="primary"
                             style={{ marginTop: 24, background: "#52c41a", borderColor: "#52c41a", borderRadius: 10 }}
                             onClick={() => setStep("form")}>
-                            Đổi mật khẩu khác
+                            {t("changeAnother")}
                         </Button>
                     </div>
                 ) : (
@@ -288,16 +302,16 @@ export default function SecuritySettingsPage() {
                                     background: "#FAFAFA"
                                 }}>
                                 {[
-                                    { num: 1, label: "Mật khẩu hiện tại" },
-                                    { num: 2, label: "Mật khẩu mới" },
-                                    { num: 3, label: "Xác nhận" }
+                                    { num: 1, label: t("currentPassword") },
+                                    { num: 2, label: t("newPassword") },
+                                    { num: 3, label: t("confirmPassword") }
                                 ].map(({ num, label }) => {
                                     const done =
                                         (num === 1 && !!passwordData.currentPassword && !errors.currentPassword) ||
                                         (num === 2 &&
                                             !!passwordData.newPassword &&
                                             !errors.newPassword &&
-                                            strength.percent >= 45) ||
+                                            strength.percent >= 50) ||
                                         (num === 3 && !!isMatch);
                                     return (
                                         <div
@@ -355,7 +369,7 @@ export default function SecuritySettingsPage() {
                                     id="newPassword"
                                     name="newPassword"
                                     label={t("newPassword")}
-                                    hint="Tối thiểu trung bình"
+                                    hint={t("strength.title")}
                                     value={passwordData.newPassword}
                                     error={errors.newPassword}
                                 />
@@ -372,16 +386,12 @@ export default function SecuritySettingsPage() {
                                         {isMatch ? (
                                             <>
                                                 <CheckCircleFilled style={{ color: "#52c41a", fontSize: 12 }} />
-                                                <Text style={{ color: "#52c41a", fontSize: 12 }}>
-                                                    Mật khẩu khớp nhau ✓
-                                                </Text>
+                                                <Text style={{ color: "#52c41a", fontSize: 12 }}>{t("matchOk")}</Text>
                                             </>
                                         ) : (
                                             <>
                                                 <CloseCircleFilled style={{ color: "#ff4d4f", fontSize: 12 }} />
-                                                <Text style={{ color: "#ff4d4f", fontSize: 12 }}>
-                                                    Mật khẩu chưa khớp
-                                                </Text>
+                                                <Text style={{ color: "#ff4d4f", fontSize: 12 }}>{t("matchFail")}</Text>
                                             </>
                                         )}
                                     </div>
@@ -438,10 +448,10 @@ export default function SecuritySettingsPage() {
                                     boxShadow: "0 1px 6px rgba(0,0,0,0.05)"
                                 }}>
                                 <Text strong style={{ color: DARK, display: "block", fontSize: 13, marginBottom: 12 }}>
-                                    Độ mạnh mật khẩu
+                                    {t("strength.title")}
                                 </Text>
 
-                                {passwordData.newPassword ? (
+                                {passwordData.newPassword && passwordData.newPassword.length > 0 ? (
                                     <>
                                         <div
                                             style={{
@@ -449,7 +459,9 @@ export default function SecuritySettingsPage() {
                                                 justifyContent: "space-between",
                                                 marginBottom: 6
                                             }}>
-                                            <Text style={{ fontSize: 12, color: MUTED }}>Mức độ</Text>
+                                            <Text style={{ fontSize: 12, color: MUTED }}>
+                                                {t("strength.levelLabel")}
+                                            </Text>
                                             <Text style={{ fontSize: 12, fontWeight: 700, color: strength.color }}>
                                                 {strength.label}
                                             </Text>
@@ -469,23 +481,24 @@ export default function SecuritySettingsPage() {
                                                     <div
                                                         key={req.key}
                                                         style={{ display: "flex", gap: 7, alignItems: "center" }}>
-                                                        {ok ? (
-                                                            <CheckCircleFilled
-                                                                style={{
-                                                                    color: "#52c41a",
-                                                                    fontSize: 12,
-                                                                    flexShrink: 0
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <CloseCircleFilled
-                                                                style={{
-                                                                    color: "#d9d9d9",
-                                                                    fontSize: 12,
-                                                                    flexShrink: 0
-                                                                }}
-                                                            />
-                                                        )}
+                                                        <div
+                                                            style={{
+                                                                width: 16,
+                                                                height: 16,
+                                                                borderRadius: "50%",
+                                                                background: ok ? "#52c41a" : "#E5E5E5",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                flexShrink: 0,
+                                                                transition: "background 0.2s"
+                                                            }}>
+                                                            {ok && (
+                                                                <CheckCircleFilled
+                                                                    style={{ color: "#fff", fontSize: 10 }}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <Text style={{ fontSize: 12, color: ok ? "#237804" : MUTED }}>
                                                             {req.label}
                                                         </Text>
@@ -495,39 +508,8 @@ export default function SecuritySettingsPage() {
                                         </div>
                                     </>
                                 ) : (
-                                    <Text style={{ color: MUTED, fontSize: 12 }}>Nhập mật khẩu mới để xem độ mạnh</Text>
+                                    <Text style={{ color: MUTED, fontSize: 12 }}>{t("strength.empty")}</Text>
                                 )}
-                            </div>
-
-                            {/* Tips card */}
-                            <div
-                                style={{
-                                    background: "#FFF7F4",
-                                    borderRadius: 16,
-                                    border: "1.5px solid #FFDFD8",
-                                    padding: "18px 20px"
-                                }}>
-                                <Text
-                                    strong
-                                    style={{ color: PRIMARY, display: "block", fontSize: 13, marginBottom: 12 }}>
-                                    💡 Mẹo bảo mật
-                                </Text>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                    {TIPS.map((tip, i) => (
-                                        <div key={i} style={{ display: "flex", gap: 7 }}>
-                                            <span
-                                                style={{
-                                                    color: PRIMARY,
-                                                    fontWeight: 700,
-                                                    flexShrink: 0,
-                                                    fontSize: 13
-                                                }}>
-                                                •
-                                            </span>
-                                            <Text style={{ fontSize: 12, color: DARK, lineHeight: "1.5" }}>{tip}</Text>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
                         </div>
                     </div>

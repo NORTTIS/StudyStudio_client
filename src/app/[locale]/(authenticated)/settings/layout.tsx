@@ -32,25 +32,25 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             key: `/${locale}/settings`,
             icon: <UserOutlined />,
             label: <Link href={`/${locale}/settings`}>{t("menu.profile")}</Link>,
-            description: "Thông tin cá nhân"
+            description: t("menu.profile")
         },
         {
             key: `/${locale}/settings/security`,
             icon: <LockOutlined />,
             label: <Link href={`/${locale}/settings/security`}>{t("menu.security")}</Link>,
-            description: "Mật khẩu & bảo mật"
+            description: t("menu.security")
         },
         {
             key: `/${locale}/settings/billing`,
             icon: <CreditCardOutlined />,
             label: <Link href={`/${locale}/settings/billing`}>{t("menu.billing")}</Link>,
-            description: "Gói & thanh toán"
+            description: t("menu.billing")
         },
         {
             key: `/${locale}/settings/help`,
             icon: <QuestionCircleOutlined />,
             label: <Link href={`/${locale}/settings/help`}>{t("menu.help")}</Link>,
-            description: "Hỗ trợ & báo cáo"
+            description: t("menu.help")
         }
     ];
 
@@ -121,7 +121,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                 textTransform: "uppercase",
                                 color: "#B0AAC5"
                             }}>
-                            Cài đặt tài khoản
+                            {t("sectionLabel")}
                         </Text>
                     </div>
 
@@ -195,7 +195,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                 flexShrink: 0,
                                 boxShadow: "0 3px 10px rgba(255,95,61,0.30)"
                             }}>
-                            <SettingOutlined style={{ color: "#fff", fontSize: 18 }} />
+                            <SettingOutlined style={{ color: "#fff", fontSize: 15 }} />
                         </div>
 
                         {/* Title + breadcrumb */}

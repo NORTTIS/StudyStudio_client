@@ -284,7 +284,23 @@
             "saveButton": "Lưu thay đổi",
             "savingButton": "Đang lưu...",
             "saveSuccess": "Cài đặt đã được lưu thành công!",
-            "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!"
+            "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!",
+            "sectionBasicInfo": "Thông tin cơ bản",
+            "sectionContact": "Liên hệ",
+            "sectionBio": "Giới thiệu bản thân",
+            "hintFirstName": "Họ hiển thị của bạn",
+            "hintLastName": "Tên trong họ và tên",
+            "hintEmail": "Email không thể thay đổi",
+            "hintPhone": "10–11 chữ số, chỉ nhập số",
+            "placeholderFirstName": "Nhập họ của bạn",
+            "placeholderLastName": "Nhập tên của bạn",
+            "languageHint": "Tải lại trang khi đổi",
+            "switchOn": "Bật",
+            "switchOff": "Tắt",
+            "statusOn": "Đang bật",
+            "statusOff": "Đang tắt",
+            "deleteConfirmPlaceholder": "Nhập \"DELETE\" để xác nhận",
+            "deleteIrreversible": "⚠️  Hành động này không thể hoàn tác!"
         },
         "security": {
             "comingSoon": "Tính năng bảo mật sẽ sớm có"
@@ -294,13 +310,8 @@
         },
         "notifications": {
             "comingSoon": "Tính năng thông báo sẽ sớm có"
-        }
-    },
-    "Notifications": {
-        "title": "Thông báo",
-        "markAllRead": "Đánh dấu tất cả đã đọc",
-        "viewAll": "Xem tất cả thông báo",
-        "noNotifications": "Không có thông báo"
+        },
+        "sectionLabel": "Cài đặt tài khoản"
     },
     "Header": {
         "searchPlaceholder": "Tìm kiếm dự án, công việc...",
@@ -330,6 +341,24 @@
         "updatingButton": "Đang cập nhật...",
         "changePasswordSuccess": "Cập nhật mật khẩu thành công!",
         "changePasswordError": "Cập nhật mật khẩu thất bại. Vui lòng thử lại!",
+        "strength": {
+            "title": "Độ mạnh mật khẩu",
+            "levelLabel": "Mức độ",
+            "empty": "Nhập mật khẩu mới để xem độ mạnh",
+            "weak": "Yếu",
+            "fair": "Trung bình",
+            "good": "Khá",
+            "strong": "Mạnh",
+            "reqLength": "10–20 ký tự",
+            "reqUpper": "Chữ hoa (A–Z)",
+            "reqLower": "Chữ thường (a–z)",
+            "reqNumber": "Chữ số (0–9)"
+        },
+        "matchOk": "Mật khẩu khớp nhau ✓",
+        "matchFail": "Mật khẩu chưa khớp",
+        "successTitle": "Đổi mật khẩu thành công!",
+        "successMessage": "Mật khẩu của bạn đã được cập nhật an toàn.",
+        "changeAnother": "Đổi mật khẩu khác",
         "deleteAccount": {
             "title": "Vùng nguy hiểm",
             "subtitle": "Xóa tài khoản (bị đánh dấu) và có thể khôi phục sau",
@@ -1104,6 +1133,32 @@
             "cancel": "Hủy",
             "update": "Cập nhật"
         }
+    },
+    "Notifications": {
+        "title": "Thông báo",
+        "markAllRead": "Đánh dấu tất cả đã đọc",
+        "noNotifications": "Chưa có thông báo nào",
+        "justNow": "Vừa xong",
+        "hoursAgo": "{{hours}} giờ trước",
+        "daysAgo": "{{days}} ngày trước",
+        "viewAll": "Xem tất cả thông báo",
+        "delete": "Xóa thông báo",
+        "confirmDelete": "Bạn có chắc chắn muốn xóa thông báo này?",
+        "confirmDeleteTitle": "Xác nhận xóa",
+        "cancel": "Hủy",
+        "confirm": "Xác nhận",
+        "detailTitle": "Chi tiết thông báo",
+        "content": "Nội dung",
+        "type": "Loại",
+        "typeSuccess": "Thành công",
+        "typeWarning": "Cảnh báo",
+        "typeInfo": "Thông tin",
+        "typeSystem": "Hệ thống",
+        "publishedAt": "Thời gian đăng",
+        "notFound": "Không tìm thấy thông báo",
+        "notFoundDescription": "Thông báo này có thể đã bị xóa hoặc không tồn tại.",
+        "close": "Đóng",
+        "loading": "Đang tải..."
     },
     "BillingHistoryTab": {
         "search": {

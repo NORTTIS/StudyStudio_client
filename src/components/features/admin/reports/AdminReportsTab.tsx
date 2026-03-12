@@ -2,12 +2,14 @@
 
 import { Empty } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     type AdminReport,
     type AdminReportsParams,
     type AdminReportsResponse,
     getAdminReports,
+    getPlanStatusColor,
+    getPlanStatusLabel,
     getReportPriorityColor,
     getReportPriorityLabel,
     getReportStatusColor,
@@ -26,6 +28,10 @@ export function AdminReportsTab() {
     const t = useTranslations("AdminReports");
     const locale = useLocale();
     const { toast } = useToast();
+    const toastRef = useRef(toast);
+    useEffect(() => {
+        toastRef.current = toast;
+    });
     const [isLoading, setIsLoading] = useState(true);
     const [reports, setReports] = useState<AdminReportsResponse>({
         summary: {
@@ -102,14 +108,14 @@ export function AdminReportsTab() {
                 pageSize: 10
             });
 
-            toast({
+            toastRef.current({
                 description: errorMessage,
                 variant: "destructive"
             });
         } finally {
             setIsLoading(false);
         }
-    }, [filters, locale, t, toast]); // Dependency on filters để reload khi filters thay đổi, bỏ toast để tránh infinite loop
+    }, [filters, locale, t]); // toast được bỏ khỏi deps vì tạo reference mới mỗi render → gây infinite loop
 
     useEffect(() => {
         loadReports();
@@ -341,6 +347,9 @@ export function AdminReportsTab() {
                                         {t("table.headers.priority")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
+                                        Gói
+                                    </th>
+                                    <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
                                         {t("table.headers.createdAt")}
                                     </th>
                                     <th className="px-6 py-3 text-left font-medium text-[#261E33] text-xs uppercase tracking-wider">
@@ -373,6 +382,12 @@ export function AdminReportsTab() {
                                             <span
                                                 className={`inline-flex rounded-full px-2 py-1 font-semibold text-xs ${getReportPriorityColor(report.priority)}`}>
                                                 {getReportPriorityLabel(report.priority)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span
+                                                className={`inline-flex rounded-full px-2 py-1 font-semibold text-xs ${getPlanStatusColor(report.planStatus)}`}>
+                                                {getPlanStatusLabel(report.planStatus)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-[#6F6B99] text-sm">

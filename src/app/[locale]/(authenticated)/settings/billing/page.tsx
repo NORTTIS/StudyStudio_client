@@ -6,13 +6,12 @@ import {
     CrownFilled,
     ExclamationCircleFilled,
     HistoryOutlined,
-    ReloadOutlined,
     RocketOutlined,
     StarFilled,
     ThunderboltOutlined,
     WarningFilled
 } from "@ant-design/icons";
-import { Badge, Button, ConfigProvider, Modal, message, Skeleton, Spin, Table, Tag, Tooltip, Typography } from "antd";
+import { Badge, Button, ConfigProvider, Modal, message, Skeleton, Spin, Table, Tag, Typography } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { cancelPayment, createPayment, getPaymentHistory, type PaymentHistory, retryPayment } from "@/api/payment";
@@ -33,14 +32,14 @@ const formatPrice = (vnd: number) => (vnd === 0 ? "Miễn phí" : `${vnd.toLocal
 /* ══════════════════════════════════════════════════════════════
    STATUS TAG
 ══════════════════════════════════════════════════════════════ */
-function StatusTag({ status }: { status: string }) {
-    const map: Record<string, { color: string; label: string; icon: React.ReactNode }> = {
-        PAID: { color: "success", label: "Đã thanh toán", icon: <CheckCircleFilled /> },
-        PENDING: { color: "warning", label: "Chờ xử lý", icon: <ClockCircleOutlined /> },
-        CANCELLED: { color: "default", label: "Đã hủy", icon: <ExclamationCircleFilled /> },
-        FAILED: { color: "error", label: "Thất bại", icon: <ExclamationCircleFilled /> }
+function StatusTag({ status }: { status: number }) {
+    const map: Record<number, { color: string; label: string; icon: React.ReactNode }> = {
+        0: { color: "warning", label: "Chờ xử lý", icon: <ClockCircleOutlined /> },
+        1: { color: "success", label: "Đã thanh toán", icon: <CheckCircleFilled /> },
+        2: { color: "default", label: "Đã hủy", icon: <ExclamationCircleFilled /> },
+        3: { color: "error", label: "Thất bại", icon: <ExclamationCircleFilled /> }
     };
-    const info = map[status] ?? { color: "default", label: status, icon: null };
+    const info = map[status] ?? { color: "default", label: String(status), icon: null };
     return (
         <Tag color={info.color} icon={info.icon} style={{ borderRadius: 20, fontWeight: 600, fontSize: 11 }}>
             {info.label}
@@ -280,7 +279,7 @@ export default function BillingPage() {
                 if (historyResult.status === "success" && historyResult.data) {
                     setPaymentHistoryData(historyResult.data.paymentHistories);
                     const pending = historyResult.data.paymentHistories.filter(
-                        (p: PaymentHistory) => p.status === "PENDING"
+                        (p: PaymentHistory) => p.status === 0 // 0 = PENDING
                     );
                     setPendingPayments(pending);
                     if (pending.length > 0) {
@@ -331,7 +330,7 @@ export default function BillingPage() {
         };
     });
 
-    const handleCancelPaymentClick = (paymentId: string) => {
+    const _handleCancelPaymentClick = (paymentId: string) => {
         setPaymentToCancel(paymentId);
         setCancelModalOpen(true);
     };
@@ -346,7 +345,7 @@ export default function BillingPage() {
                 const h = await getPaymentHistory(locale);
                 if (h.status === "success" && h.data) {
                     setPaymentHistoryData(h.data.paymentHistories);
-                    setPendingPayments(h.data.paymentHistories.filter((p: PaymentHistory) => p.status === "PENDING"));
+                    setPendingPayments(h.data.paymentHistories.filter((p: PaymentHistory) => p.status === 0));
                 }
                 setIsLoadingHistory(false);
             } else {
@@ -361,7 +360,7 @@ export default function BillingPage() {
         }
     };
 
-    const handleRetryPayment = async (paymentId: string) => {
+    const _handleRetryPayment = async (paymentId: string) => {
         setIsProcessing(true);
         try {
             const result = await retryPayment(paymentId, locale);
@@ -441,33 +440,7 @@ export default function BillingPage() {
             title: "Trạng thái",
             dataIndex: "status",
             key: "status",
-            render: (status: string, record: (typeof billingHistory)[0]) => (
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <StatusTag status={status} />
-                    {status === "PENDING" && (
-                        <div style={{ display: "flex", gap: 4 }}>
-                            <Tooltip title="Thanh toán lại">
-                                <Button
-                                    type="link"
-                                    size="small"
-                                    icon={<ReloadOutlined />}
-                                    style={{ color: PRIMARY, padding: "0 4px" }}
-                                    onClick={() => handleRetryPayment(record.id)}
-                                    loading={isProcessing}
-                                />
-                            </Tooltip>
-                            <Button
-                                size="small"
-                                danger
-                                ghost
-                                style={{ borderRadius: 6, fontSize: 11, height: 22, padding: "0 8px" }}
-                                onClick={() => handleCancelPaymentClick(record.id)}>
-                                Hủy
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            )
+            render: (status: number) => <StatusTag status={status} />
         },
         {
             title: "Số tiền",
@@ -678,7 +651,6 @@ export default function BillingPage() {
                                     )
                                 }}
                                 style={{ fontSize: 13 }}
-                                rowStyle={{ cursor: "default" }}
                             />
                         )}
                     </div>

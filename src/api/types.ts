@@ -947,7 +947,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RefreshTokenRequest"];
+                    "application/json": components["schemas"]["RefreshTokenRequest"];
+                    "text/json": components["schemas"]["RefreshTokenRequest"];
+                };
+            };
             responses: {
                 /** @description Success */
                 200: {
@@ -4573,6 +4579,9 @@ export interface components {
             data?: components["schemas"]["PersonalTaskStatusResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        RefreshTokenRequest: {
+            refreshToken: string;
         };
         RegisterRequests: {
             /** Format: email */

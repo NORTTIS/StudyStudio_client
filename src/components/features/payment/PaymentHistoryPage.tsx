@@ -132,7 +132,7 @@ export function PaymentHistoryPage() {
                                                 <tr key={payment.paymentId} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4">
                                                         <span className="font-mono text-[#261E33] text-sm">
-                                                            {payment.paymentId.slice(0, 8)}...
+                                                            {payment.orderCode}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">

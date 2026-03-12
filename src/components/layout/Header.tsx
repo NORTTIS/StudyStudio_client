@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/api/auth";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
+import { NotificationDropdown } from "@/components/common/NotificationDropdown";
 
 const SearchIcon = () => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -203,6 +204,9 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
     // Check if user is admin
     const isAdmin = userProfile?.isAdmin;
+    console.log("🔔 Header: User profile:", userProfile);
+    console.log("🔔 Header: Is admin?", isAdmin);
+    console.log("🔔 Header: Should show notifications?", !isAdmin);
 
     return (
         <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
@@ -231,7 +235,8 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                 )}
 
                 <div className="flex items-center gap-2">
-                    {/* Không có notification cho cả admin và user */}
+                    {/* Notifications - chỉ hiện cho user thường */}
+                    {!isAdmin && <NotificationDropdown />}
 
                     <div className="relative" ref={userMenuRef}>
                         <button

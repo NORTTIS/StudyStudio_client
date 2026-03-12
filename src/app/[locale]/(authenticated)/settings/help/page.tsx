@@ -306,9 +306,9 @@ export default function HelpPage() {
                                                 <Text
                                                     style={{
                                                         fontSize: 11,
-                                                        color: form.content.length > 900 ? "#ff4d4f" : MUTED
+                                                        color: form.content.length > 450 ? "#ff4d4f" : MUTED
                                                     }}>
-                                                    {form.content.length}/1000
+                                                    {form.content.length}/500
                                                 </Text>
                                             </div>
                                             <TextArea
@@ -317,7 +317,7 @@ export default function HelpPage() {
                                                 onChange={handleChange}
                                                 placeholder={t("form.contentPlaceholder")}
                                                 rows={5}
-                                                maxLength={1000}
+                                                maxLength={500}
                                                 style={{ borderRadius: 10, resize: "vertical" }}
                                             />
                                         </div>
