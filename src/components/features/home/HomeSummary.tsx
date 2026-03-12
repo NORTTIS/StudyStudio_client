@@ -23,7 +23,7 @@ type CompletionCardProps = {
 function SummaryCard({ label, value }: SummaryCardProps) {
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-[#6F6B99]">{label}</p>
+            <p className="text-[#6F6B99] text-sm">{label}</p>
             <p className="mt-5 font-bold text-3xl text-[#261E33]">{value}</p>
         </div>
     );
@@ -87,12 +87,7 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
         return (firstLayer as HomeSummaryResponseApiResponse).data ?? null;
     }
 
-    if (
-        source &&
-        typeof source === "object" &&
-        "data" in source &&
-        (source as HomeSummaryResponseApiResponse).data
-    ) {
+    if (source && typeof source === "object" && "data" in source && (source as HomeSummaryResponseApiResponse).data) {
         return (source as HomeSummaryResponseApiResponse).data ?? null;
     }
 
@@ -158,13 +153,13 @@ export default function HomeSummary() {
                         <p className="text-[#6F6B99]">Tổng hợp tất cả công việc và hoạt động của bạn</p>
                     </div>
 
-                    <Button
+                    {/* <Button
                         variant="outline"
                         className="border-gray-200 bg-white text-[#261E33] shadow-sm hover:bg-gray-50"
                     >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         Lịch
-                    </Button>
+                    </Button> */}
                 </div>
 
                 {isLoading ? (
