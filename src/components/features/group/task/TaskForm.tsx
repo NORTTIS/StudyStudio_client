@@ -504,7 +504,7 @@ export default function TaskFormModal({
     const [title, setTitle] = React.useState("");
     const [description, setDescription] = React.useState("");
     const [assigneeId, setAssigneeId] = React.useState<string | null>(defaultAssigneeId);
-    const [statusId, setStatusId] = React.useState<string | null>(defaultStatusId ?? statuses[0]?.value ?? null);
+    const [statusId, setStatusId] = React.useState<string>(defaultStatusId ?? statuses[0]?.value ?? "");
     const [priority, setPriority] = React.useState<TaskPriority>(defaultPriority);
     const [severity, setSeverity] = React.useState<TaskSeverity>(defaultSeverity);
 
@@ -543,7 +543,7 @@ export default function TaskFormModal({
     }, [open, onClose]);
 
     const selectedStatusName = React.useMemo(() => {
-        return statuses.find((s) => s.value === statusId)?.label ?? "No status";
+        return statuses.find((s) => s.value === statusId)?.label ?? "";
     }, [statuses, statusId]);
 
     const selectedAssignee = React.useMemo(() => {
@@ -698,9 +698,7 @@ export default function TaskFormModal({
 
                         <div>
                             <div className="font-semibold text-sm text-zinc-600">Status</div>
-                            <Select
-                                value={statusId ?? "no-status"}
-                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}>
+                            <Select value={statusId} onValueChange={(v) => setStatusId(v)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
@@ -712,9 +710,6 @@ export default function TaskFormModal({
                                     sideOffset={8}
                                     avoidCollisions
                                     className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                    <SelectItem value="no-status" className={selectItemClassName}>
-                                        No status
-                                    </SelectItem>
                                     {statuses.map((s) => (
                                         <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
                                             {s.label}

@@ -1091,11 +1091,13 @@ function FilterPopover({
     );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-
 const ITEMS_PER_PAGE = 10;
 
-export default function Trashed() {
+export default function Trashed({
+    canManageTrash = false
+}: {
+    canManageTrash?: boolean;
+}) {
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
@@ -1122,6 +1124,30 @@ export default function Trashed() {
         taskId: string | null;
         taskName: string;
     }>({ open: false, taskId: null, taskName: "" });
+
+    const [permissionModal, setPermissionModal] = React.useState<{
+        open: boolean;
+        title: string;
+        message: string;
+    }>({
+        open: false,
+        title: "",
+        message: ""
+    });
+
+    const closePermissionModal = () =>
+        setPermissionModal({
+            open: false,
+            title: "",
+            message: ""
+        });
+
+    const openNoPermissionModal = (message: string) =>
+        setPermissionModal({
+            open: true,
+            title: "Không có thẩm quyền",
+            message
+        });
 
     const [confirmDelete, setConfirmDelete] = React.useState<{
         open: boolean;
@@ -1267,12 +1293,32 @@ export default function Trashed() {
 
     const handleAskRestore = (item: TrashItem) => {
         setOpenMenuKey(null);
-        setConfirmRestore({ open: true, taskId: item.id, taskName: item.name });
+
+        if (!canManageTrash) {
+            openNoPermissionModal("Bạn không có thẩm quyền khôi phục task này");
+            return;
+        }
+
+        setConfirmRestore({
+            open: true,
+            taskId: item.id,
+            taskName: item.name
+        });
     };
 
     const handleAskDelete = (item: TrashItem) => {
         setOpenMenuKey(null);
-        setConfirmDelete({ open: true, taskId: item.id, taskName: item.name });
+
+        if (!canManageTrash) {
+            openNoPermissionModal("Bạn không có thẩm quyền xóa vĩnh viễn task này");
+            return;
+        }
+
+        setConfirmDelete({
+            open: true,
+            taskId: item.id,
+            taskName: item.name
+        });
     };
 
     const handleConfirmRestore = async () => {
@@ -1290,7 +1336,7 @@ export default function Trashed() {
             await refresh();
         } catch (e: any) {
             setItems(prev);
-            alert(e?.message ?? "Khôi phục task thất bại");
+            openNoPermissionModal("Bạn không có thẩm quyền khôi phục task này");
         } finally {
             setProcessingId(null);
         }
@@ -1311,7 +1357,7 @@ export default function Trashed() {
             await refresh();
         } catch (e: any) {
             setItems(prev);
-            alert(e?.message ?? "Xóa vĩnh viễn task thất bại");
+            openNoPermissionModal("Bạn không có thẩm quyền xóa vĩnh viễn task này");
         } finally {
             setProcessingId(null);
         }
@@ -1362,6 +1408,17 @@ export default function Trashed() {
                 confirmTone="orange"
                 onConfirm={() => void handleConfirmDelete()}
                 onCancel={() => setConfirmDelete({ open: false, taskId: null, taskName: "" })}
+            />
+
+            <ConfirmModal
+                open={permissionModal.open}
+                title={permissionModal.title || "Không có thẩm quyền"}
+                description={permissionModal.message}
+                confirmLabel="Đóng"
+                cancelLabel="Đóng"
+                confirmTone="orange"
+                onConfirm={closePermissionModal}
+                onCancel={closePermissionModal}
             />
 
             <Container>

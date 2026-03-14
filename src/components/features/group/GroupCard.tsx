@@ -24,6 +24,9 @@ export function GroupCard({
     const starred = !!group.isStarred;
     const visibleTasksCount = Number(group.tasksCount ?? 0);
 
+    const displayTitle =
+        group.title.length > 30 ? group.title.slice(0, 30) + "..." : group.title;
+
     return (
         <div
             role="button"
@@ -40,12 +43,14 @@ export function GroupCard({
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     {group.tag && (
-                        <p className="truncate text-xs text-[#6F6B99]">{group.tag}</p>
+                        <p className="truncate text-xs text-[#6F6B99]">
+                            {group.tag}
+                        </p>
                     )}
 
                     <div className={`${group.tag ? "mt-1" : ""} flex items-center gap-2`}>
                         <h3 className="truncate font-semibold text-[#261E33]">
-                            {group.title}
+                            {displayTitle}
                         </h3>
                         <RolePill role={group.role} />
                     </div>
@@ -94,7 +99,9 @@ export function GroupCard({
 
                         <span className="inline-flex items-center gap-1">
                             <CheckSquare2 className="h-4 w-4" />
-                            <span className="text-sm">{visibleTasksCount} công việc</span>
+                            <span className="text-sm">
+                                {visibleTasksCount} công việc
+                            </span>
                         </span>
                     </div>
                 </div>

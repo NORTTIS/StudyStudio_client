@@ -225,16 +225,19 @@ function DateFilterModal(props: {
             className="fixed inset-0 z-12000 flex items-center justify-center bg-black/40 p-4"
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}>
+            }}
+        >
             <div
                 className="w-full max-w-xl rounded-2xl border border-zinc-200 bg-white p-5 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}>
+                onPointerDown={(e) => e.stopPropagation()}
+            >
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-semibold text-lg text-zinc-900">{t("dateFilterTitle")}</h3>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50">
+                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50"
+                    >
                         {t("cancel")}
                     </button>
                 </div>
@@ -285,13 +288,15 @@ function DateFilterModal(props: {
                     <button
                         type="button"
                         onClick={onClear}
-                        className="h-10 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                        className="h-10 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 hover:bg-zinc-50"
+                    >
                         {t("clearFilter")}
                     </button>
                     <button
                         type="button"
                         onClick={onSubmit}
-                        className="h-10 rounded-xl bg-zinc-900 px-4 font-semibold text-sm text-white hover:bg-zinc-800">
+                        className="h-10 rounded-xl bg-zinc-900 px-4 font-semibold text-sm text-white hover:bg-zinc-800"
+                    >
                         {t("applyFilter")}
                     </button>
                 </div>
@@ -336,8 +341,10 @@ export function GroupListScreen() {
     });
 
     React.useEffect(() => {
-        const t = window.setTimeout(() => setSearchKeyword(searchInput.trim()), 300);
-        return () => window.clearTimeout(t);
+        const timer = window.setTimeout(() => {
+            setSearchKeyword(searchInput.trim());
+        }, 300);
+        return () => window.clearTimeout(timer);
     }, [searchInput]);
 
     const refresh = React.useCallback(async () => {
@@ -377,7 +384,10 @@ export function GroupListScreen() {
 
             const data = res?.data;
             const nextStatuses = (data?.groupStatuses ?? [])
-                .map((s) => ({ id: String(s?.statusId ?? "").trim(), name: String(s?.statusName ?? "").trim() }))
+                .map((s) => ({
+                    id: String(s?.statusId ?? "").trim(),
+                    name: String(s?.statusName ?? "").trim()
+                }))
                 .filter((s) => s.id && s.name);
 
             const nextRows = (data?.items ?? []).map((item, index) => {
@@ -423,7 +433,7 @@ export function GroupListScreen() {
     return (
         <div className="min-h-screen bg-zinc-50 pb-8">
             <Container>
-                <section className="mt-6 rounded-[34px] border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+                <section className="mt-6 rounded-[34px] border border-zinc-200 bg-white px-6 py-6 shadow-sm sm:px-10 sm:py-8">
                     <h1 className="font-bold text-2xl text-zinc-900 sm:text-3xl">{t("pageTitle")}</h1>
 
                     <div className="mt-6 grid gap-3 lg:grid-cols-[1.4fr_0.7fr_0.7fr_auto]">
@@ -447,7 +457,8 @@ export function GroupListScreen() {
                                     setStatusFilter(e.target.value);
                                     setPage(1);
                                 }}
-                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
+                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                            >
                                 <option value="all">{t("allStatus")}</option>
                                 {statusOptions.map((s) => (
                                     <option key={s.id} value={s.id}>
@@ -465,7 +476,8 @@ export function GroupListScreen() {
                                     setSortByDeadline(e.target.value === "desc" ? "desc" : "asc");
                                     setPage(1);
                                 }}
-                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
+                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                            >
                                 <option value="asc">{`${t("sortLabel")}: ${t("sortAsc")}`}</option>
                                 <option value="desc">{`${t("sortLabel")}: ${t("sortDesc")}`}</option>
                             </select>
@@ -475,125 +487,133 @@ export function GroupListScreen() {
                         <button
                             type="button"
                             onClick={() => setFilterOpen(true)}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50">
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50"
+                        >
                             <Filter className="h-4 w-4" />
                             {t("dateFilterButton")}
                         </button>
                     </div>
 
                     <div className="mt-8 overflow-x-auto">
-                        <table className="min-w-full border-separate border-spacing-0">
-                            <thead>
-                                <tr className="border-zinc-200 border-b text-slate-500">
-                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("taskName")}</th>
-                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("assignee")}</th>
-                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("severity")}</th>
-                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("priority")}</th>
-                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("status")}</th>
-                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("startDate")}</th>
-                                    <th className="px-3 py-3 text-left font-semibold text-sm">{t("dueDate")}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-4 py-10 text-center text-sm text-zinc-500">
-                                            {t("loading")}
-                                        </td>
+                        <div className="min-w-full align-middle">
+                            <table className="min-w-full border-separate border-spacing-0">
+                                <thead>
+                                    <tr className="border-zinc-200 border-b text-slate-500">
+                                        <th className="px-3 py-3 text-left font-semibold text-sm">{t("taskName")}</th>
+                                        <th className="px-3 py-3 text-left font-semibold text-sm">{t("assignee")}</th>
+                                        <th className="px-3 py-3 text-left font-semibold text-sm">{t("severity")}</th>
+                                        <th className="px-3 py-3 text-left font-semibold text-sm">{t("priority")}</th>
+                                        <th className="px-3 py-3 text-left font-semibold text-sm">{t("status")}</th>
+                                        <th className="px-3 py-3 text-left font-semibold text-sm">{t("startDate")}</th>
+                                        <th className="px-3 py-3 text-left font-semibold text-sm">{t("dueDate")}</th>
                                     </tr>
-                                ) : loadError ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-4 py-10 text-center text-rose-600 text-sm">
-                                            <div>{loadError}</div>
-                                            <button
-                                                type="button"
-                                                onClick={() => void refresh()}
-                                                className="mt-3 rounded-xl border border-zinc-200 px-3 py-2 font-semibold text-xs text-zinc-700 hover:bg-zinc-100">
-                                                {t("reload")}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ) : rows.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-4 py-12 text-center text-sm text-zinc-400">
-                                            {t("noData")}
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    rows.map((row) => (
-                                        <tr key={row.id} className="border-zinc-100 border-b align-middle">
-                                            <td className="px-3 py-4 font-semibold text-base text-zinc-900">
-                                                {row.title}
-                                            </td>
-                                            <td className="px-3 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    {row.assigneeAvatarUrl ? (
-                                                        <Image
-                                                            src={row.assigneeAvatarUrl}
-                                                            alt={row.assigneeName}
-                                                            width={28}
-                                                            height={28}
-                                                            className="h-7 w-7 rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <span className="grid h-7 w-7 place-items-center rounded-full bg-zinc-200 font-bold text-[11px] text-zinc-700">
-                                                            {row.assigneeInitials}
-                                                        </span>
-                                                    )}
-                                                    <span className="font-semibold text-sm text-zinc-800">
-                                                        {row.assigneeName}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className={cn("px-3 py-4 font-semibold text-sm", row.severityClass)}>
-                                                {row.severityLabel}
-                                            </td>
-                                            <td className={cn("px-3 py-4 font-semibold text-sm", row.priorityClass)}>
-                                                {row.priorityLabel}
-                                            </td>
-                                            <td className="px-3 py-4">
-                                                <span className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white px-3 font-semibold text-xs text-zinc-700">
-                                                    {row.statusName}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-4 font-semibold text-slate-500 text-sm">
-                                                {row.startLabel}
-                                            </td>
-                                            <td className="px-3 py-4 font-semibold text-slate-500 text-sm">
-                                                {row.dueLabel}
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan={7} className="px-4 py-10 text-center text-sm text-zinc-500">
+                                                {t("loading")}
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-
-                        {showPagination ? (
-                            <div className="mt-4 flex items-center justify-between gap-3">
-                                <div className="text-xs text-zinc-500">{t("pageInfo", { page, totalPages, totalCount })}</div>
-
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        disabled={page <= 1}
-                                        onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                                        className="inline-flex h-9 items-center gap-1 rounded-lg border border-zinc-200 px-3 font-semibold text-xs text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
-                                        <ChevronLeft className="h-4 w-4" />
-                                        {t("previous")}
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        disabled={page >= totalPages}
-                                        onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                                        className="inline-flex h-9 items-center gap-1 rounded-lg border border-zinc-200 px-3 font-semibold text-xs text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
-                                        {t("next")}
-                                        <ChevronRight className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        ) : null}
+                                    ) : loadError ? (
+                                        <tr>
+                                            <td colSpan={7} className="px-4 py-10 text-center text-rose-600 text-sm">
+                                                <div>{loadError}</div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => void refresh()}
+                                                    className="mt-3 rounded-xl border border-zinc-200 px-3 py-2 font-semibold text-xs text-zinc-700 hover:bg-zinc-100"
+                                                >
+                                                    {t("reload")}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ) : rows.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className="px-4 py-12 text-center text-sm text-zinc-400">
+                                                {t("noData")}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.map((row) => (
+                                            <tr key={row.id} className="border-zinc-100 border-b align-middle">
+                                                <td className="px-3 py-4 font-semibold text-base text-zinc-900">
+                                                    {row.title}
+                                                </td>
+                                                <td className="px-3 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        {row.assigneeAvatarUrl ? (
+                                                            <Image
+                                                                src={row.assigneeAvatarUrl}
+                                                                alt={row.assigneeName}
+                                                                width={28}
+                                                                height={28}
+                                                                className="h-7 w-7 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <span className="grid h-7 w-7 place-items-center rounded-full bg-zinc-200 font-bold text-[11px] text-zinc-700">
+                                                                {row.assigneeInitials}
+                                                            </span>
+                                                        )}
+                                                        <span className="font-semibold text-sm text-zinc-800">
+                                                            {row.assigneeName}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className={cn("px-3 py-4 font-semibold text-sm", row.severityClass)}>
+                                                    {row.severityLabel}
+                                                </td>
+                                                <td className={cn("px-3 py-4 font-semibold text-sm", row.priorityClass)}>
+                                                    {row.priorityLabel}
+                                                </td>
+                                                <td className="px-3 py-4">
+                                                    <span className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white px-3 font-semibold text-xs text-zinc-700">
+                                                        {row.statusName}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-4 font-semibold text-slate-500 text-sm">
+                                                    {row.startLabel}
+                                                </td>
+                                                <td className="px-3 py-4 font-semibold text-slate-500 text-sm">
+                                                    {row.dueLabel}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
+                    {showPagination ? (
+                        <div className="mt-8 flex w-full justify-center">
+                            <div className="flex flex-wrap items-center justify-center gap-3 text-zinc-900">
+                                <button
+                                    type="button"
+                                    disabled={page <= 1}
+                                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                    {t("previous")}
+                                </button>
+
+                                <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-700">
+                                    {t("pageInfo", { page, totalPages, totalCount })}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    disabled={page >= totalPages}
+                                    onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45"
+                                >
+                                    {t("next")}
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    ) : null}
                 </section>
             </Container>
 
@@ -604,8 +624,14 @@ export function GroupListScreen() {
                 onChange={(patch) => setDraftDateFilter((prev) => ({ ...prev, ...patch }))}
                 onClose={() => setFilterOpen(false)}
                 onClear={() => {
-                    setDraftDateFilter({ startDateFrom: "", startDateTo: "", dueDateFrom: "", dueDateTo: "" });
-                    setAppliedDateFilter({ startDateFrom: "", startDateTo: "", dueDateFrom: "", dueDateTo: "" });
+                    const emptyFilter = {
+                        startDateFrom: "",
+                        startDateTo: "",
+                        dueDateFrom: "",
+                        dueDateTo: ""
+                    };
+                    setDraftDateFilter(emptyFilter);
+                    setAppliedDateFilter(emptyFilter);
                     setPage(1);
                     setFilterOpen(false);
                 }}
