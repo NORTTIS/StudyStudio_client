@@ -2,14 +2,16 @@
 
 import { ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { getPaymentHistory, type PaymentHistory } from "@/api/payment";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
+import { getPaymentStatusInfo } from "@/utils/payment-status";
 
 export function PaymentHistoryPage() {
+    const t = useTranslations("PaymentHistoryPage");
     const locale = useLocale();
     const [payments, setPayments] = useState<PaymentHistory[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -31,50 +33,28 @@ export function PaymentHistoryPage() {
         fetchHistory();
     }, [locale]);
 
-    const getStatusIcon = (status: string) => {
-        switch (status.toLowerCase()) {
-            case "completed":
-            case "success":
+    const getStatusIcon = (status: string | number) => {
+        const statusInfo = getPaymentStatusInfo(status);
+
+        switch (statusInfo.icon) {
+            case "check-circle":
                 return <CheckCircle className="h-5 w-5 text-green-500" />;
-            case "pending":
+            case "clock":
                 return <Clock className="h-5 w-5 text-yellow-500" />;
-            case "cancelled":
-            case "failed":
+            case "x-circle":
                 return <XCircle className="h-5 w-5 text-red-500" />;
             default:
                 return <Clock className="h-5 w-5 text-gray-500" />;
         }
     };
 
-    const getStatusText = (status: string) => {
-        switch (status.toLowerCase()) {
-            case "completed":
-            case "success":
-                return "Thành công";
-            case "pending":
-                return "Đang xử lý";
-            case "cancelled":
-                return "Đã hủy";
-            case "failed":
-                return "Thất bại";
-            default:
-                return status;
-        }
+    const getStatusText = (status: string | number) => {
+        return getPaymentStatusInfo(status).label;
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case "completed":
-            case "success":
-                return "text-green-600 bg-green-50";
-            case "pending":
-                return "text-yellow-600 bg-yellow-50";
-            case "cancelled":
-            case "failed":
-                return "text-red-600 bg-red-50";
-            default:
-                return "text-gray-600 bg-gray-50";
-        }
+    const getStatusColor = (status: string | number) => {
+        const statusInfo = getPaymentStatusInfo(status);
+        return `${statusInfo.color} ${statusInfo.bgColor}`;
     };
 
     return (
@@ -90,12 +70,12 @@ export function PaymentHistoryPage() {
                             <Link href={`/${locale}/payment`}>
                                 <Button variant="ghost" size="sm" className="gap-2">
                                     <ArrowLeft className="h-4 w-4" />
-                                    Quay lại
+                                    {t("backButton")}
                                 </Button>
                             </Link>
                             <div>
-                                <h1 className="mb-1 font-bold text-2xl text-[#261E33]">Lịch sử thanh toán</h1>
-                                <p className="text-[#6F6B99] text-sm">Xem tất cả giao dịch thanh toán của bạn</p>
+                                <h1 className="mb-1 font-bold text-2xl text-[#261E33]">{t("title")}</h1>
+                                <p className="text-[#6F6B99] text-sm">{t("subtitle")}</p>
                             </div>
                         </div>
 
@@ -152,7 +132,7 @@ export function PaymentHistoryPage() {
                                                 <tr key={payment.paymentId} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4">
                                                         <span className="font-mono text-[#261E33] text-sm">
-                                                            {payment.paymentId.slice(0, 8)}...
+                                                            {payment.orderCode}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">

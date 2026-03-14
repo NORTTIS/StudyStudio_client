@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RegisterSuccess } from "./RegisterSuccess";
 
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{10,20}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{10,20}$/;
 
 export function RegisterForm() {
     const router = useRouter();
@@ -182,6 +182,7 @@ export function RegisterForm() {
 
                         <button
                             type="button"
+                            tabIndex={-1}
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -202,6 +203,7 @@ export function RegisterForm() {
 
                         <button
                             type="button"
+                            tabIndex={-1}
                             onClick={() => setShowConfirm(!showConfirm)}
                             className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
                             {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}

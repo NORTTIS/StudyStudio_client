@@ -30,145 +30,47 @@ import {
     Typography
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
+import {
+    convertGroupStatus,
+    formatDate,
+    getGroupType,
+    getGroupTypeLabel,
+    getGroups,
+    getMemberPercent,
+    GroupDisplayStatus,
+    type GroupListItem,
+    type GroupListSummary,
+    updateGroupStatus
+} from "@/api/admin-groups";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 
+/**
+ * Local Group type for UI (mapped from API GroupListItem)
+ */
 export type Group = {
     id: string;
     name: string;
     studioName: string;
-    ownerName: string;
-    ownerEmail: string;
     memberCount: number;
     maxMembers: number;
-    status: "active" | "inactive";
+    status: GroupDisplayStatus;
+    originalIsActive?: boolean;
     type: "public" | "private";
     createdAt: string;
     lastActivity: string;
-    reportCount: number;
 };
 
-const MOCK_GROUPS: Group[] = [
-    {
-        id: "GRP-001",
-        name: "Toán cao cấp K22",
-        studioName: "Studio Toán học",
-        ownerName: "Nguyễn Văn An",
-        ownerEmail: "an.nv@example.com",
-        memberCount: 45,
-        maxMembers: 50,
-        status: "active",
-        type: "public",
-        createdAt: "10/01/2024",
-        lastActivity: "05/03/2024",
-        reportCount: 0
-    },
-    {
-        id: "GRP-002",
-        name: "Lập trình Python nâng cao",
-        studioName: "Studio CNTT",
-        ownerName: "Trần Thị Bích",
-        ownerEmail: "bich.tt@example.com",
-        memberCount: 28,
-        maxMembers: 50,
-        status: "active",
-        type: "private",
-        createdAt: "12/01/2024",
-        lastActivity: "04/03/2024",
-        reportCount: 1
-    },
-    {
-        id: "GRP-003",
-        name: "Ôn thi IELTS 2024",
-        studioName: "Studio Ngoại ngữ",
-        ownerName: "Lê Minh Công",
-        ownerEmail: "cong.lm@example.com",
-        memberCount: 50,
-        maxMembers: 50,
-        status: "active",
-        type: "public",
-        createdAt: "15/01/2024",
-        lastActivity: "05/03/2024",
-        reportCount: 0
-    },
-    {
-        id: "GRP-004",
-        name: "Vi phạm cộng đồng",
-        studioName: "Studio Test",
-        ownerName: "Phạm Thị Dung",
-        ownerEmail: "dung.pt@example.com",
-        memberCount: 12,
-        maxMembers: 50,
-        status: "inactive",
-        type: "public",
-        createdAt: "20/01/2024",
-        lastActivity: "10/02/2024",
-        reportCount: 5
-    },
-    {
-        id: "GRP-005",
-        name: "Vật lý lý thuyết",
-        studioName: "Studio Khoa học",
-        ownerName: "Hoàng Văn Ế",
-        ownerEmail: "e.hv@example.com",
-        memberCount: 37,
-        maxMembers: 50,
-        status: "active",
-        type: "private",
-        createdAt: "22/01/2024",
-        lastActivity: "03/03/2024",
-        reportCount: 0
-    },
-    {
-        id: "GRP-006",
-        name: "Hoá học hữu cơ",
-        studioName: "Studio Khoa học",
-        ownerName: "Vũ Thị Phương",
-        ownerEmail: "phuong.vt@example.com",
-        memberCount: 19,
-        maxMembers: 50,
-        status: "active",
-        type: "public",
-        createdAt: "25/01/2024",
-        lastActivity: "02/03/2024",
-        reportCount: 2
-    },
-    {
-        id: "GRP-007",
-        name: "Spam & quảng cáo",
-        studioName: "Studio Ảo",
-        ownerName: "Đặng Quốc Hưng",
-        ownerEmail: "hung.dq@example.com",
-        memberCount: 3,
-        maxMembers: 50,
-        status: "inactive",
-        type: "private",
-        createdAt: "28/01/2024",
-        lastActivity: "05/02/2024",
-        reportCount: 8
-    },
-    {
-        id: "GRP-008",
-        name: "Lịch sử Việt Nam",
-        studioName: "Studio Xã hội",
-        ownerName: "Bùi Thị Kim",
-        ownerEmail: "kim.bt@example.com",
-        memberCount: 41,
-        maxMembers: 50,
-        status: "active",
-        type: "public",
-        createdAt: "01/02/2024",
-        lastActivity: "05/03/2024",
-        reportCount: 0
-    }
-];
+const MAX_MEMBERS_DEFAULT = 50;
 
 export function GroupManagementPage() {
-    const [groups, setGroups] = useState<Group[]>(MOCK_GROUPS);
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [summary, setSummary] = useState<GroupListSummary | null>(null);
+    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
     const [filterType, setFilterType] = useState<"all" | "public" | "private">("all");
@@ -181,15 +83,78 @@ export function GroupManagementPage() {
     }>({ open: false, group: null, action: "activate" });
     const [messageApi, contextHolder] = message.useMessage();
 
-    const filtered = groups.filter((g) => {
-        const matchSearch =
-            g.name.toLowerCase().includes(search.toLowerCase()) ||
-            g.studioName.toLowerCase().includes(search.toLowerCase()) ||
-            g.ownerName.toLowerCase().includes(search.toLowerCase()) ||
-            g.id.toLowerCase().includes(search.toLowerCase());
+    // Pagination state
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
+
+    // Fetch groups from API
+    const fetchGroups = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = {
+                PageNumber: pageNumber,
+                PageSize: pageSize,
+                SearchTerm: search || undefined,
+                GroupType: filterType !== "all" ? filterType : undefined
+            };
+
+            const response = await getGroups(params);
+
+            if (response.status === "success" && response.data) {
+                // Map API response to local Group type
+                const mappedGroups: Group[] = (response.data.groupList || []).map((item: GroupListItem) => ({
+                    id: item.groupId || "",
+                    name: item.groupName || "",
+                    studioName: item.studioName || "",
+                    memberCount: item.memberCount || 0,
+                    maxMembers: MAX_MEMBERS_DEFAULT,
+                    status: convertGroupStatus(item.isActive),
+                    originalIsActive: item.isActive,
+                    type: getGroupType(item.groupType),
+                    createdAt: formatDate(item.createdAt),
+                    lastActivity: formatDate(item.lastActivityAt)
+                }));
+
+                setGroups(mappedGroups);
+                setSummary(response.data.summary || null);
+                setTotalCount(response.data.totalCount || 0);
+            } else {
+                messageApi.error({
+                    content: response.message || "Không thể tải danh sách nhóm"
+                });
+            }
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách nhóm:", error);
+            messageApi.error({
+                content: "Có lỗi xảy ra khi tải danh sách nhóm"
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [pageNumber, pageSize, search, filterType, messageApi]);
+
+    // Fetch data when filters change
+    useEffect(() => {
+        fetchGroups();
+    }, [fetchGroups]);
+
+    // Reset page when search changes
+    const handleSearchChange = (value: string) => {
+        setSearch(value);
+        setPageNumber(1);
+    };
+
+    // Reset page when filter type changes
+    const handleFilterTypeChange = (value: "all" | "public" | "private") => {
+        setFilterType(value);
+        setPageNumber(1);
+    };
+
+    // Client-side filtering for status (since API doesn't have status filter)
+    const filteredGroups = groups.filter((g) => {
         const matchStatus = filterStatus === "all" || g.status === filterStatus;
-        const matchType = filterType === "all" || g.type === filterType;
-        return matchSearch && matchStatus && matchType;
+        return matchStatus;
     });
 
     const handleToggleStatus = (group: Group) => {
@@ -197,23 +162,43 @@ export function GroupManagementPage() {
         setConfirmModal({ open: true, group, action });
     };
 
-    const confirmToggle = () => {
+    const confirmToggle = async () => {
         if (!confirmModal.group) return;
-        const newStatus = confirmModal.action === "activate" ? "active" : "inactive";
-        setGroups((prev) => prev.map((g) => (g.id === confirmModal.group!.id ? { ...g, status: newStatus } : g)));
-        if (selectedGroup?.id === confirmModal.group.id) {
-            setSelectedGroup((prev) => (prev ? { ...prev, status: newStatus } : null));
+
+        const newStatus = confirmModal.action === "activate";
+        const newStatusDisplay = confirmModal.action === "activate" ? "active" : "inactive";
+
+        try {
+            const response = await updateGroupStatus(confirmModal.group.id, newStatus);
+
+            if (response.status === "success") {
+                // Update local state
+                setGroups((prev) =>
+                    prev.map((g) => (g.id === confirmModal.group!.id ? { ...g, status: newStatusDisplay } : g))
+                );
+                if (selectedGroup?.id === confirmModal.group.id) {
+                    setSelectedGroup((prev) => (prev ? { ...prev, status: newStatusDisplay } : null));
+                }
+                messageApi.success({
+                    content:
+                        confirmModal.action === "activate"
+                            ? `Đã kích hoạt nhóm "${confirmModal.group.name}"`
+                            : `Đã vô hiệu hoá nhóm "${confirmModal.group.name}"`
+                });
+            } else {
+                messageApi.error({
+                    content: response.message || "Không thể cập nhật trạng thái nhóm"
+                });
+            }
+        } catch (error) {
+            console.error("Lỗi khi cập nhật trạng thái nhóm:", error);
+            messageApi.error({
+                content: "Có lỗi xảy ra khi cập nhật trạng thái nhóm"
+            });
         }
-        messageApi.success({
-            content:
-                confirmModal.action === "activate"
-                    ? `Đã kích hoạt nhóm "${confirmModal.group.name}"`
-                    : `Đã vô hiệu hoá nhóm "${confirmModal.group.name}"`
-        });
+
         setConfirmModal({ open: false, group: null, action: "activate" });
     };
-
-    const getMemberPercent = (count: number, max: number) => Math.round((count / max) * 100);
 
     const columns: ColumnsType<Group> = [
         {
@@ -223,33 +208,14 @@ export function GroupManagementPage() {
                 <Space>
                     <Avatar
                         style={{
-                            backgroundColor:
-                                record.status === "inactive"
-                                    ? "#d9d9d9"
-                                    : record.reportCount > 3
-                                      ? "#ff4d4f"
-                                      : "#FF5F3D",
+                            backgroundColor: record.status === "inactive" ? "#d9d9d9" : "#FF5F3D",
                             flexShrink: 0
                         }}
                         icon={<TeamOutlined />}
                         size={38}
                     />
                     <div>
-                        <div
-                            style={{
-                                fontWeight: 600,
-                                color: "#261E33",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6
-                            }}>
-                            {record.name}
-                            {record.reportCount > 0 && (
-                                <Tag color="red" style={{ fontSize: 10, padding: "0 4px", lineHeight: "16px" }}>
-                                    {record.reportCount} báo cáo
-                                </Tag>
-                            )}
-                        </div>
+                        <div style={{ fontWeight: 600, color: "#261E33" }}>{record.name}</div>
                         <div style={{ fontSize: 12, color: "#6F6B99" }}>{record.studioName}</div>
                     </div>
                 </Space>
@@ -260,16 +226,6 @@ export function GroupManagementPage() {
             dataIndex: "id",
             key: "id",
             render: (id) => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#6F6B99" }}>{id}</span>
-        },
-        {
-            title: "Chủ nhóm",
-            key: "owner",
-            render: (_, record) => (
-                <div>
-                    <div style={{ fontWeight: 500, color: "#261E33", fontSize: 13 }}>{record.ownerName}</div>
-                    <div style={{ fontSize: 12, color: "#6F6B99" }}>{record.ownerEmail}</div>
-                </div>
-            )
         },
         {
             title: "Loại",
@@ -357,11 +313,11 @@ export function GroupManagementPage() {
         }
     ];
 
+    // Stats from API summary
     const stats = {
-        total: groups.length,
-        active: groups.filter((g) => g.status === "active").length,
-        inactive: groups.filter((g) => g.status === "inactive").length,
-        reported: groups.filter((g) => g.reportCount > 0).length
+        total: summary?.totalGroups ?? filteredGroups.length,
+        active: summary?.activeGroups ?? filteredGroups.filter((g) => g.status === "active").length,
+        inactive: summary?.inactiveGroups ?? filteredGroups.filter((g) => g.status === "inactive").length
     };
 
     return (
@@ -378,24 +334,21 @@ export function GroupManagementPage() {
                             <Title level={4} style={{ color: "#261E33", margin: 0 }}>
                                 Quản lý nhóm học tập
                             </Title>
-                            <Text style={{ color: "#6F6B99" }}>
-                                Xem và quản lý nhóm — thực thi chính sách và theo dõi vi phạm
-                            </Text>
+                            <Text style={{ color: "#6F6B99" }}>Xem và quản lý nhóm học tập</Text>
                         </div>
 
                         {/* Stats */}
                         <div
                             style={{
                                 display: "grid",
-                                gridTemplateColumns: "repeat(4, 1fr)",
+                                gridTemplateColumns: "repeat(3, 1fr)",
                                 gap: 16,
                                 marginBottom: 24
                             }}>
                             {[
                                 { label: "Tổng số nhóm", value: stats.total, color: "#261E33" },
                                 { label: "Đang hoạt động", value: stats.active, color: "#52c41a" },
-                                { label: "Bị vô hiệu", value: stats.inactive, color: "#ff4d4f" },
-                                { label: "Có báo cáo vi phạm", value: stats.reported, color: "#FF5F3D" }
+                                { label: "Bị vô hiệu", value: stats.inactive, color: "#ff4d4f" }
                             ].map((s) => (
                                 <div
                                     key={s.label}
@@ -414,10 +367,10 @@ export function GroupManagementPage() {
                         {/* Filters */}
                         <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
                             <Search
-                                placeholder="Tìm tên nhóm, studio, chủ nhóm..."
+                                placeholder="Tìm tên nhóm, studio..."
                                 allowClear
                                 prefix={<SearchOutlined style={{ color: "#6F6B99" }} />}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => handleSearchChange(e.target.value)}
                                 style={{ width: 320 }}
                             />
                             <Select
@@ -432,7 +385,7 @@ export function GroupManagementPage() {
                             />
                             <Select
                                 value={filterType}
-                                onChange={(v) => setFilterType(v)}
+                                onChange={handleFilterTypeChange}
                                 style={{ width: 140 }}
                                 options={[
                                     { label: "Tất cả loại", value: "all" },
@@ -441,7 +394,7 @@ export function GroupManagementPage() {
                                 ]}
                             />
                             <Text style={{ color: "#6F6B99", alignSelf: "center", marginLeft: "auto" }}>
-                                Hiển thị {filtered.length} / {groups.length} nhóm
+                                Hiển thị {filteredGroups.length} / {totalCount} nhóm
                             </Text>
                         </div>
 
@@ -455,10 +408,18 @@ export function GroupManagementPage() {
                             }}>
                             <Table
                                 columns={columns}
-                                dataSource={filtered}
+                                dataSource={filteredGroups}
                                 rowKey="id"
-                                pagination={{ pageSize: 10, showSizeChanger: false }}
-                                rowClassName={(record) => (record.reportCount > 3 ? "table-row-warning" : "")}
+                                loading={loading}
+                                pagination={{
+                                    current: pageNumber,
+                                    pageSize: pageSize,
+                                    total: totalCount,
+                                    showSizeChanger: false,
+                                    onChange: (page) => setPageNumber(page),
+                                    showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} nhóm`
+                                }}
+                                rowClassName={() => ""}
                             />
                         </div>
                     </div>
@@ -498,21 +459,6 @@ export function GroupManagementPage() {
                 }>
                 {selectedGroup && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                        {selectedGroup.reportCount > 0 && (
-                            <div
-                                style={{
-                                    background: "#fff2f0",
-                                    border: "1px solid #ffccc7",
-                                    borderRadius: 8,
-                                    padding: "12px 16px"
-                                }}>
-                                <Text style={{ color: "#ff4d4f" }}>
-                                    ⚠️ Nhóm này có <strong>{selectedGroup.reportCount} báo cáo vi phạm</strong> chưa được
-                                    xử lý.
-                                </Text>
-                            </div>
-                        )}
-
                         <div style={{ padding: "16px", background: "#F8F8F8", borderRadius: 10 }}>
                             <Badge
                                 status={selectedGroup.status === "active" ? "success" : "default"}
@@ -549,15 +495,6 @@ export function GroupManagementPage() {
                             <Descriptions.Item
                                 label={
                                     <>
-                                        <UserOutlined /> Chủ nhóm
-                                    </>
-                                }>
-                                {selectedGroup.ownerName}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Email chủ nhóm">{selectedGroup.ownerEmail}</Descriptions.Item>
-                            <Descriptions.Item
-                                label={
-                                    <>
                                         <TeamOutlined /> Thành viên
                                     </>
                                 }>
@@ -588,13 +525,6 @@ export function GroupManagementPage() {
                                     </>
                                 }>
                                 {selectedGroup.lastActivity}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Số báo cáo">
-                                {selectedGroup.reportCount > 0 ? (
-                                    <Tag color="red">{selectedGroup.reportCount} vi phạm</Tag>
-                                ) : (
-                                    <Tag color="green">Không có vi phạm</Tag>
-                                )}
                             </Descriptions.Item>
                         </Descriptions>
 
@@ -653,8 +583,4 @@ export function GroupManagementPage() {
             </Modal>
         </div>
     );
-}
-
-function _getMemberPercent(count: number, max: number) {
-    return Math.round((count / max) * 100);
 }

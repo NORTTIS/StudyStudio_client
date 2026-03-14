@@ -1,6 +1,36 @@
 "use client";
 
-import Image from "next/image";
+import {
+    BellFilled,
+    CameraOutlined,
+    CheckCircleFilled,
+    CloseOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    ExclamationCircleFilled,
+    GlobalOutlined,
+    InfoCircleOutlined,
+    LockOutlined,
+    MailOutlined,
+    PhoneOutlined,
+    SaveOutlined,
+    UserOutlined,
+    WarningOutlined
+} from "@ant-design/icons";
+import {
+    Alert,
+    Avatar,
+    Button,
+    Card,
+    ConfigProvider,
+    Input,
+    Modal,
+    message,
+    Select,
+    Switch,
+    Tooltip,
+    Typography
+} from "antd";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -8,43 +38,85 @@ import { z } from "zod";
 import type { components } from "@/api/types";
 import type { UpdateProfileRequest } from "@/app/[locale]/(authenticated)/settings/user";
 import { deleteUserProfile, updateUserProfile } from "@/app/[locale]/(authenticated)/settings/user";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 
+const { Title, Text } = Typography;
+const { TextArea } = Input;
+
+const PRIMARY = "#FF5F3D";
+const DARK = "#261E33";
+const MUTED = "#6F6B99";
+const BORDER = "#E5E5E5";
+const BG = "#F8F8F8";
+
 const languages = [
-    { value: "en", label: "English" },
-    { value: "vi", label: "Tiếng Việt" }
+    { value: "en", label: "English", flag: "https://flagcdn.com/w20/gb.png" },
+    { value: "vi", label: "Tiếng Việt", flag: "https://flagcdn.com/w20/vn.png" }
 ];
+
+const FlagOption = ({ flag, label }: { flag: string; label: string }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <img
+            src={flag}
+            alt={label}
+            style={{ width: 20, height: 14, objectFit: "cover", borderRadius: 2, flexShrink: 0 }}
+        />
+        <span>{label}</span>
+    </div>
+);
 
 const nameRegex = /^[A-Za-zÀ-ỹ0-9\s!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{1,20}$/;
 const phoneRegex = /^\d{10,11}$/;
 const maxBioLength = 500;
 
-const profileValidationSchema = z.object({
+const profileSchema = z.object({
     firstName: z.string().min(1, { message: "firstNameRequired" }).regex(nameRegex, { message: "firstNameInvalid" }),
     lastName: z.string().min(1, { message: "lastNameRequired" }).regex(nameRegex, { message: "lastNameInvalid" }),
-    phoneNumber: z.string().refine((value) => value.length === 0 || phoneRegex.test(value), {
-        message: "phoneNumberInvalid"
-    }),
+    phoneNumber: z.string().refine((v) => v.length === 0 || phoneRegex.test(v), { message: "phoneNumberInvalid" }),
     bio: z.string().max(maxBioLength, { message: "bioMaxLength" })
 });
 
 type UserProfile = components["schemas"]["UserProfileResponse"];
 
-const normalizeProfile = (profile: UserProfile, fallbackLocale: string): UserProfile => ({
-    ...profile,
-    firstName: profile.firstName ?? "",
-    lastName: profile.lastName ?? "",
-    email: profile.email ?? "",
-    phoneNumber: profile.phoneNumber ?? "",
-    bio: profile.bio ?? "",
-    language: profile.language ?? fallbackLocale,
-    emailNotificationEnabled: Boolean(profile.emailNotificationEnabled)
+const normalize = (p: UserProfile, locale: string): UserProfile => ({
+    ...p,
+    firstName: p.firstName ?? "",
+    lastName: p.lastName ?? "",
+    email: p.email ?? "",
+    phoneNumber: p.phoneNumber ?? "",
+    bio: p.bio ?? "",
+    language: p.language ?? locale,
+    emailNotificationEnabled: Boolean(p.emailNotificationEnabled)
 });
 
 interface SettingsClientProps {
     initialData: UserProfile;
+}
+
+function FieldWrapper({
+    label,
+    hint,
+    error,
+    children
+}: {
+    label: string;
+    hint?: string;
+    error?: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: DARK }}>{label}</label>
+            {hint && <Text style={{ fontSize: 12, color: MUTED }}>{hint}</Text>}
+            {children}
+            {error && (
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                    <ExclamationCircleFilled style={{ color: "#ff4d4f", fontSize: 12 }} />
+                    <Text style={{ color: "#ff4d4f", fontSize: 12 }}>{error}</Text>
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function SettingsClient({ initialData }: SettingsClientProps) {
@@ -52,13 +124,11 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
+    const [messageApi, contextHolder] = message.useMessage();
+
+    // ── Profile states ─────────────────────────────────
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
-    const [isUpdatingNotification, setIsUpdatingNotification] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; phoneNumber?: string; bio?: string }>(
         {}
     );
@@ -66,65 +136,50 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // ── Settings states ────────────────────────────────
+    const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+    const [isUpdatingNotification, setIsUpdatingNotification] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
     const initialLocale = typeof window !== "undefined" ? pathname.split("/")[1] || "vi" : "vi";
-    const [formData, setFormData] = useState<UserProfile>(() => normalizeProfile(initialData, initialLocale));
+    const [formData, setFormData] = useState<UserProfile>(() => normalize(initialData, initialLocale));
+    const initials = `${formData.firstName?.[0] ?? ""}${formData.lastName?.[0] ?? ""}`.toUpperCase() || "U";
 
     useEffect(() => {
         const savedAvatar = localStorage.getItem("userAvatar");
         const savedLocale = localStorage.getItem("preferredLocale");
         const currentLocale = pathname.split("/")[1] || "vi";
-        const profileLanguage = savedLocale || initialData.language || currentLocale;
+        const lang = savedLocale || initialData.language || currentLocale;
 
-        if (savedAvatar) {
-            setAvatarPreview(savedAvatar);
-        }
+        if (savedAvatar) setAvatarPreview(savedAvatar);
+        setFormData((p) => (p.language === lang ? p : { ...p, language: lang }));
+        localStorage.setItem("preferredLocale", lang);
 
-        setFormData((prev) =>
-            prev.language === profileLanguage
-                ? prev
-                : {
-                      ...prev,
-                      language: profileLanguage
-                  }
-        );
-
-        localStorage.setItem("preferredLocale", profileLanguage);
-
-        if (profileLanguage !== currentLocale) {
-            const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
-            const newPath = `/${profileLanguage}${pathWithoutLocale || "/"}`;
-            router.replace(newPath);
+        if (lang !== currentLocale) {
+            const noLocale = pathname.replace(/^\/(en|vi)/, "");
+            router.replace(`/${lang}${noLocale || "/"}`);
         }
     }, [initialData.language, pathname, router]);
 
+    // ── Profile handlers ───────────────────────────────
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (!isEditing) return;
-
         const { name, value } = e.target;
-        const nextValue = name === "phoneNumber" ? value.replace(/\D/g, "") : value;
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: nextValue
-        }));
-
-        if (name === "firstName" || name === "lastName" || name === "phoneNumber" || name === "bio") {
-            setErrors((prev) => ({
-                ...prev,
-                [name]: ""
-            }));
-        }
+        const next = name === "phoneNumber" ? value.replace(/\D/g, "") : value;
+        setFormData((p) => ({ ...p, [name]: next }));
+        setErrors((p) => ({ ...p, [name]: "" }));
     };
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!isEditing) return;
-
         const file = e.target.files?.[0];
         if (file) {
             setAvatarFile(file);
             const reader = new FileReader();
-            reader.onload = (event) => {
-                const result = event.target?.result as string;
+            reader.onload = (ev) => {
+                const result = ev.target?.result as string;
                 setAvatarPreview(result);
                 localStorage.setItem("userAvatar", result);
             };
@@ -132,542 +187,685 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
         }
     };
 
-    const handleEdit = () => {
-        setIsEditing(true);
-        setErrors({}); // Clear errors when starting to edit
-    };
-
     const handleCancel = () => {
         setIsEditing(false);
-        const currentLocale = pathname.split("/")[1] || "vi";
-        setFormData(normalizeProfile(initialData, currentLocale));
+        setFormData(normalize(initialData, pathname.split("/")[1] || "vi"));
         setAvatarPreview(initialData.avatarUrl || "/images/image-removebg-preview.png");
         setAvatarFile(null);
-        setErrors({}); // Clear all errors
+        setErrors({});
     };
 
-    const validateProfileForm = () => {
-        const validated = profileValidationSchema.safeParse({
+    const validate = () => {
+        const result = profileSchema.safeParse({
             firstName: formData.firstName ?? "",
             lastName: formData.lastName ?? "",
             phoneNumber: formData.phoneNumber?.trim() || "",
             bio: formData.bio ?? ""
         });
-
-        if (validated.success) {
+        if (result.success) {
             setErrors({});
             return true;
         }
-
-        const newErrors: { firstName?: string; lastName?: string; phoneNumber?: string; bio?: string } = {};
-        for (const issue of validated.error.issues) {
-            const field = issue.path[0];
-            if (field === "firstName") {
-                newErrors.firstName =
+        const errs: typeof errors = {};
+        for (const issue of result.error.issues) {
+            const f = issue.path[0];
+            if (f === "firstName")
+                errs.firstName =
                     issue.message === "firstNameRequired"
                         ? t("profile.firstNameRequired")
                         : t("profile.firstNameInvalid");
-            }
-            if (field === "lastName") {
-                newErrors.lastName =
+            if (f === "lastName")
+                errs.lastName =
                     issue.message === "lastNameRequired" ? t("profile.lastNameRequired") : t("profile.lastNameInvalid");
-            }
-            if (field === "phoneNumber") {
-                newErrors.phoneNumber = t("profile.phoneNumberInvalid");
-            }
-            if (field === "bio") {
-                newErrors.bio = t("profile.bioMaxLength");
-            }
+            if (f === "phoneNumber") errs.phoneNumber = t("profile.phoneNumberInvalid");
+            if (f === "bio") errs.bio = t("profile.bioMaxLength");
         }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        setErrors(errs);
+        return false;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!validateProfileForm()) {
-            return;
-        }
-
+        if (!validate()) return;
         setIsSubmitting(true);
-
         try {
-            const locale = pathname.split("/")[1] || "vi";
-
-            const updateData: UpdateProfileRequest = {
+            const loc = pathname.split("/")[1] || "vi";
+            const payload: UpdateProfileRequest = {
                 firstName: formData.firstName?.trim() || "",
                 lastName: formData.lastName?.trim() || "",
                 phoneNumber: formData.phoneNumber?.trim() || "",
                 bio: formData.bio || ""
             };
-
-            if (avatarFile) {
-                updateData.avatar = avatarFile;
-            }
-
-            const response = await updateUserProfile(updateData, locale);
-
-            if (response.status === "success") {
-                // Reload page to get fresh data from server
-                window.location.reload();
-            } else {
-                toast({
-                    variant: "destructive",
-                    description: response.message || t("profile.saveError")
+            if (avatarFile) payload.avatar = avatarFile;
+            const res = await updateUserProfile(payload, loc);
+            if (res.status === "success") {
+                messageApi.success({
+                    content: t("profile.saveSuccess"),
+                    icon: <CheckCircleFilled style={{ color: "#52c41a" }} />
                 });
+                setTimeout(() => window.location.reload(), 900);
+            } else {
+                messageApi.error(res.message || t("profile.saveError"));
             }
-        } catch (error) {
-            console.error("Save failed:", error);
-            toast({
-                variant: "destructive",
-                description: t("profile.saveError")
-            });
+        } catch {
+            messageApi.error(t("profile.saveError"));
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const nextLanguage = e.target.value;
-        const previousLanguage = formData.language;
-
-        if (nextLanguage === previousLanguage || isUpdatingLanguage) {
-            return;
-        }
-
-        setFormData((prev) => ({
-            ...prev,
-            language: nextLanguage
-        }));
+    // ── Language handler ───────────────────────────────
+    const handleLanguageChange = async (next: string) => {
+        const prev = formData.language;
+        if (next === prev || isUpdatingLanguage) return;
+        setFormData((p) => ({ ...p, language: next }));
         setIsUpdatingLanguage(true);
-
         try {
-            const locale = pathname.split("/")[1] || "vi";
-            const response = await updateUserProfile({ language: nextLanguage }, locale);
-
-            if (response.status !== "success") {
-                setFormData((prev) => ({
-                    ...prev,
-                    language: previousLanguage
-                }));
-                toast({
-                    variant: "destructive",
-                    description: response.message || t("profile.saveError")
-                });
+            const loc = pathname.split("/")[1] || "vi";
+            const res = await updateUserProfile({ language: next }, loc);
+            if (res.status !== "success") {
+                setFormData((p) => ({ ...p, language: prev }));
+                messageApi.error(res.message || t("profile.saveError"));
                 return;
             }
-
-            localStorage.setItem("preferredLocale", nextLanguage);
-            localStorage.setItem(
-                "userSettings",
-                JSON.stringify({
-                    ...formData,
-                    language: nextLanguage
-                })
-            );
-
-            const pathWithoutLocale = pathname.replace(/^\/(en|vi)/, "");
-            const newPath = `/${nextLanguage}${pathWithoutLocale || "/"}`;
-            toast({
-                variant: "success",
-                description: response.message || t("profile.saveSuccess")
-            });
-            router.push(newPath);
+            localStorage.setItem("preferredLocale", next);
+            messageApi.success(res.message || t("profile.saveSuccess"));
+            router.push(`/${next}${pathname.replace(/^\/(en|vi)/, "") || "/"}`);
         } catch {
-            setFormData((prev) => ({
-                ...prev,
-                language: previousLanguage
-            }));
-            toast({
-                variant: "destructive",
-                description: t("profile.saveError")
-            });
+            setFormData((p) => ({ ...p, language: prev }));
+            messageApi.error(t("profile.saveError"));
         } finally {
             setIsUpdatingLanguage(false);
         }
     };
 
-    const handleNotificationChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const nextValue = e.target.checked;
-        const previousValue = formData.emailNotificationEnabled;
-
-        if (nextValue === previousValue || isUpdatingNotification) {
-            return;
-        }
-
-        setFormData((prev) => ({
-            ...prev,
-            emailNotificationEnabled: nextValue
-        }));
+    // ── Notification handler ───────────────────────────
+    const handleNotificationChange = async (checked: boolean) => {
+        const prev = formData.emailNotificationEnabled;
+        if (checked === prev || isUpdatingNotification) return;
+        setFormData((p) => ({ ...p, emailNotificationEnabled: checked }));
         setIsUpdatingNotification(true);
-
         try {
-            const locale = pathname.split("/")[1] || "vi";
-            const response = await updateUserProfile({ emailNotificationEnabled: nextValue }, locale);
-
-            if (response.status !== "success") {
-                setFormData((prev) => ({
-                    ...prev,
-                    emailNotificationEnabled: previousValue
-                }));
-                toast({
-                    variant: "destructive",
-                    description: response.message || t("profile.saveError")
-                });
+            const loc = pathname.split("/")[1] || "vi";
+            const res = await updateUserProfile({ emailNotificationEnabled: checked }, loc);
+            if (res.status !== "success") {
+                setFormData((p) => ({ ...p, emailNotificationEnabled: prev }));
+                messageApi.error(res.message || t("profile.saveError"));
                 return;
             }
-
-            localStorage.setItem(
-                "userSettings",
-                JSON.stringify({
-                    ...formData,
-                    emailNotificationEnabled: nextValue
-                })
-            );
-            toast({
-                variant: "success",
-                description: response.message || t("profile.saveSuccess")
-            });
+            messageApi.success(res.message || t("profile.saveSuccess"));
         } catch {
-            setFormData((prev) => ({
-                ...prev,
-                emailNotificationEnabled: previousValue
-            }));
-            toast({
-                variant: "destructive",
-                description: t("profile.saveError")
-            });
+            setFormData((p) => ({ ...p, emailNotificationEnabled: prev }));
+            messageApi.error(t("profile.saveError"));
         } finally {
             setIsUpdatingNotification(false);
         }
     };
 
+    // ── Delete handler ─────────────────────────────────
     const handleDeleteAccount = async () => {
         if (deleteConfirmText !== "DELETE") {
-            toast({
-                variant: "destructive",
-                description: t("profile.deleteAccount.confirmTextError")
-            });
+            messageApi.error(t("profile.deleteAccount.confirmTextError"));
             return;
         }
-
         setIsDeleting(true);
-
         try {
-            const locale = pathname.split("/")[1] || "vi";
-            const response = await deleteUserProfile(locale);
-
-            if (response.status !== "success") {
-                toast({
-                    variant: "destructive",
-                    description: response.message || t("profile.deleteAccount.error")
-                });
+            const loc = pathname.split("/")[1] || "vi";
+            const res = await deleteUserProfile(loc);
+            if (res.status !== "success") {
+                messageApi.error(res.message || t("profile.deleteAccount.error"));
                 return;
             }
-
-            toast({
-                variant: "success",
-                description: response.message || t("profile.deleteAccount.success")
-            });
-
+            messageApi.success(res.message || t("profile.deleteAccount.success"));
             localStorage.clear();
-            window.location.href = `/${locale}/login`;
+            window.location.href = `/${loc}/login`;
         } catch {
-            toast({
-                variant: "destructive",
-                description: t("profile.deleteAccount.error")
-            });
+            messageApi.error(t("profile.deleteAccount.error"));
         } finally {
             setIsDeleting(false);
         }
     };
 
+    const cardStyle: React.CSSProperties = {
+        borderRadius: 16,
+        border: `1px solid ${BORDER}`,
+        boxShadow: "0 1px 6px rgba(0,0,0,0.05)"
+    };
+
+    const sectionIconStyle: React.CSSProperties = {
+        width: 34,
+        height: 34,
+        borderRadius: 8,
+        background: "#FFF0ED",
+        border: "1px solid rgba(255,95,61,0.15)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0
+    };
+
     return (
-        <div className="mx-auto max-w-3xl space-y-8 pb-16">
-            <form onSubmit={handleSubmit} className="space-y-8">
-                {/* User Info Card */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                    <h2 className="mb-1 font-semibold text-[#261E33] text-lg">{t("profile.userInfoTitle")}</h2>
+        <ConfigProvider
+            theme={{
+                token: { colorPrimary: PRIMARY, borderRadius: 10, fontFamily: "inherit", colorBorder: BORDER },
+                components: {
+                    Input: { activeBorderColor: PRIMARY, hoverBorderColor: PRIMARY, paddingBlock: 9, fontSize: 14 },
+                    Select: { optionActiveBg: "#FFF5F3", optionSelectedBg: "#FFF5F3", optionSelectedColor: PRIMARY },
+                    Switch: { colorPrimary: PRIMARY },
+                    Button: { defaultBorderColor: BORDER, fontWeight: 600 }
+                }
+            }}>
+            {contextHolder}
 
-                    <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.userInfoSubtitle")}</p>
-
-                    <div className="mb-6">
-                        <h3 className="mb-1 font-medium text-[#261E33] text-sm">{t("profile.avatarTitle")}</h3>
-                        <p className="mb-4 text-[#6F6B99] text-xs">{t("profile.avatarSupport")}</p>
-
-                        <div className="flex items-center gap-6">
-                            <div className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-200">
-                                <Image src={avatarPreview} alt="User Avatar" fill className="object-cover" />
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleAvatarChange}
-                                    className="hidden"
-                                    disabled={!isEditing}
-                                />
-
-                                <Button
-                                    type="button"
-                                    className="w-40 rounded-lg bg-[#261E33] text-white hover:bg-[#1a1424] disabled:opacity-50"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={!isEditing}>
-                                    {t("profile.changeAvatar")}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                        <div>
-                            <label htmlFor="firstName" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                {t("profile.firstName")}
-                            </label>
-                            <Input
-                                id="firstName"
-                                name="firstName"
-                                value={formData.firstName ?? ""}
-                                onChange={handleInputChange}
-                                disabled={!isEditing}
-                            />
-                            {errors.firstName && <p className="mt-1 text-red-500 text-xs">{errors.firstName}</p>}
-                        </div>
-
-                        <div>
-                            <label htmlFor="lastName" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                {t("profile.lastName")}
-                            </label>
-                            <Input
-                                id="lastName"
-                                name="lastName"
-                                value={formData.lastName ?? ""}
-                                onChange={handleInputChange}
-                                disabled={!isEditing}
-                            />
-                            {errors.lastName && <p className="mt-1 text-red-500 text-xs">{errors.lastName}</p>}
-                        </div>
-                    </div>
-
-                    <div className="mt-6">
-                        <label htmlFor="email" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            {t("profile.email")}
-                        </label>
-                        <Input id="email" value={formData.email ?? ""} disabled />
-                    </div>
-
-                    <div className="mt-6">
-                        <label htmlFor="phoneNumber" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            {t("profile.phoneNumber")}
-                        </label>
-                        <Input
-                            id="phoneNumber"
-                            name="phoneNumber"
-                            value={formData.phoneNumber ?? ""}
-                            onChange={handleInputChange}
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            maxLength={11}
-                            disabled={!isEditing}
+            {/* ── 2-column grid ── */}
+            <div style={{ display: "flex", gap: 24, alignItems: "flex-start", paddingBottom: 80 }}>
+                {/* ════════════════════════════════
+                    LEFT — Profile form
+                ════════════════════════════════ */}
+                <div style={{ flex: "1 1 0", minWidth: 0 }}>
+                    <Card style={cardStyle} styles={{ body: { padding: 0 } }}>
+                        {/* Gradient banner */}
+                        <div
+                            style={{
+                                height: 88,
+                                borderRadius: "16px 16px 0 0",
+                                background: "linear-gradient(135deg,#261E33 0%,#3d2f54 50%,#FF5F3D22 100%)"
+                            }}
                         />
-                        {isEditing && errors.phoneNumber && (
-                            <p className="mt-1 text-red-500 text-xs">{errors.phoneNumber}</p>
-                        )}
-                    </div>
 
-                    <div className="mt-6">
-                        <div className="mb-2 flex items-center justify-between">
-                            <label htmlFor="bio" className="font-medium text-[#261E33] text-sm">
-                                {t("profile.bio")}
-                            </label>
-                        </div>
-
-                        <div className="relative">
-                            <textarea
-                                id="bio"
-                                name="bio"
-                                value={formData.bio ?? ""}
-                                onChange={handleInputChange}
-                                rows={4}
-                                placeholder="Viết gì đó về bạn..."
-                                disabled={!isEditing}
-                                className="w-full resize-none rounded-lg border border-[#E5E5E5] bg-white p-3 text-[#261E33] text-sm placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] disabled:cursor-not-allowed disabled:opacity-60"
-                            />
-                            <span className="absolute right-2 bottom-2 text-[#6F6B99] text-xs">
-                                {(formData.bio ?? "").length}/{maxBioLength}
-                            </span>
-                        </div>
-                        {isEditing && errors.bio && <p className="mt-1 text-red-500 text-xs">{errors.bio}</p>}
-                    </div>
-
-                    <div className="mt-6 flex justify-end gap-4">
-                        {isEditing ? (
-                            <>
-                                <Button type="button" variant="outline" onClick={handleCancel}>
-                                    {t("profile.cancelButton")}
-                                </Button>
-
-                                <Button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]">
-                                    {isSubmitting ? t("profile.savingButton") : t("profile.saveButton")}
-                                </Button>
-                            </>
-                        ) : (
-                            <Button
-                                type="button"
-                                onClick={handleEdit}
-                                className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]">
-                                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        <div style={{ padding: "0 32px 28px", position: "relative" }}>
+                            {/* Avatar row */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "flex-end",
+                                    justifyContent: "space-between",
+                                    marginBottom: 20
+                                }}>
+                                <div style={{ position: "relative", marginTop: -44 }}>
+                                    <Avatar
+                                        size={88}
+                                        src={avatarPreview}
+                                        style={{
+                                            border: "4px solid #fff",
+                                            background: PRIMARY,
+                                            fontSize: 32,
+                                            fontWeight: 700,
+                                            boxShadow: "0 4px 16px rgba(0,0,0,0.15)"
+                                        }}>
+                                        {initials}
+                                    </Avatar>
+                                    <span
+                                        style={{
+                                            position: "absolute",
+                                            bottom: 6,
+                                            right: 4,
+                                            width: 14,
+                                            height: 14,
+                                            borderRadius: "50%",
+                                            background: "#52c41a",
+                                            border: "2.5px solid #fff"
+                                        }}
                                     />
-                                </svg>
-                                {t("profile.editButton")}
-                            </Button>
-                        )}
-                    </div>
+                                    {isEditing && (
+                                        <Tooltip title={t("profile.changeAvatar")}>
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                style={{
+                                                    position: "absolute",
+                                                    inset: 0,
+                                                    borderRadius: "50%",
+                                                    border: "none",
+                                                    background: "rgba(0,0,0,0.45)",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    cursor: "pointer",
+                                                    color: "#fff",
+                                                    fontSize: 22
+                                                }}>
+                                                <CameraOutlined />
+                                            </button>
+                                        </Tooltip>
+                                    )}
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAvatarChange}
+                                        style={{ display: "none" }}
+                                        disabled={!isEditing}
+                                    />
+                                </div>
+
+                                <div style={{ display: "flex", gap: 8, paddingTop: 8 }}>
+                                    {isEditing ? (
+                                        <>
+                                            <Button
+                                                icon={<CloseOutlined />}
+                                                onClick={handleCancel}
+                                                style={{ borderColor: BORDER, color: MUTED }}>
+                                                {t("profile.cancelButton")}
+                                            </Button>
+                                            <Button
+                                                type="primary"
+                                                icon={<SaveOutlined />}
+                                                loading={isSubmitting}
+                                                style={{ background: PRIMARY, borderColor: PRIMARY }}
+                                                onClick={() =>
+                                                    (
+                                                        document.getElementById("profile-form") as HTMLFormElement
+                                                    )?.requestSubmit()
+                                                }>
+                                                {isSubmitting ? t("profile.savingButton") : t("profile.saveButton")}
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button
+                                            type="primary"
+                                            icon={<EditOutlined />}
+                                            onClick={() => setIsEditing(true)}
+                                            style={{ background: PRIMARY, borderColor: PRIMARY }}>
+                                            {t("profile.editButton")}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Name + email display */}
+                            <div style={{ marginBottom: 24 }}>
+                                <Title level={4} style={{ margin: 0, color: DARK }}>
+                                    {formData.firstName} {formData.lastName}
+                                </Title>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                                    <MailOutlined style={{ color: MUTED, fontSize: 13 }} />
+                                    <Text style={{ color: MUTED, fontSize: 13 }}>{formData.email}</Text>
+                                </div>
+                                {isEditing && (
+                                    <Text style={{ fontSize: 12, color: MUTED, display: "block", marginTop: 6 }}>
+                                        💡 {t("profile.avatarSupport")}
+                                    </Text>
+                                )}
+                            </div>
+
+                            {/* Form */}
+                            <form id="profile-form" onSubmit={handleSubmit}>
+                                {/* Basic Info */}
+                                <div style={{ marginBottom: 28 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                                        <UserOutlined style={{ color: PRIMARY, fontSize: 15 }} />
+                                        <Text strong style={{ color: DARK, fontSize: 14 }}>
+                                            {t("profile.sectionBasicInfo")}
+                                        </Text>
+                                        <div style={{ flex: 1, height: 1, background: BORDER, marginLeft: 8 }} />
+                                    </div>
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                                        <FieldWrapper
+                                            label={t("profile.firstName")}
+                                            hint={t("profile.hintFirstName")}
+                                            error={errors.firstName}>
+                                            <Input
+                                                name="firstName"
+                                                value={formData.firstName ?? ""}
+                                                onChange={handleInputChange}
+                                                disabled={!isEditing}
+                                                status={errors.firstName ? "error" : ""}
+                                                placeholder={t("profile.placeholderFirstName")}
+                                                prefix={<UserOutlined style={{ color: MUTED }} />}
+                                            />
+                                        </FieldWrapper>
+                                        <FieldWrapper
+                                            label={t("profile.lastName")}
+                                            hint={t("profile.hintLastName")}
+                                            error={errors.lastName}>
+                                            <Input
+                                                name="lastName"
+                                                value={formData.lastName ?? ""}
+                                                onChange={handleInputChange}
+                                                disabled={!isEditing}
+                                                status={errors.lastName ? "error" : ""}
+                                                placeholder={t("profile.placeholderLastName")}
+                                                prefix={<UserOutlined style={{ color: MUTED }} />}
+                                            />
+                                        </FieldWrapper>
+                                    </div>
+                                </div>
+
+                                {/* Contact */}
+                                <div style={{ marginBottom: 28 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                                        <MailOutlined style={{ color: PRIMARY, fontSize: 15 }} />
+                                        <Text strong style={{ color: DARK, fontSize: 14 }}>
+                                            {t("profile.sectionContact")}
+                                        </Text>
+                                        <div style={{ flex: 1, height: 1, background: BORDER, marginLeft: 8 }} />
+                                    </div>
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                                        <FieldWrapper label={t("profile.email")} hint={t("profile.hintEmail")}>
+                                            <Input
+                                                value={formData.email ?? ""}
+                                                disabled
+                                                prefix={<MailOutlined style={{ color: MUTED }} />}
+                                                suffix={<LockOutlined style={{ color: MUTED, fontSize: 12 }} />}
+                                                style={{ background: BG, color: MUTED }}
+                                            />
+                                        </FieldWrapper>
+                                        <FieldWrapper
+                                            label={t("profile.phoneNumber")}
+                                            hint={t("profile.hintPhone")}
+                                            error={errors.phoneNumber}>
+                                            <Input
+                                                name="phoneNumber"
+                                                value={formData.phoneNumber ?? ""}
+                                                onChange={handleInputChange}
+                                                disabled={!isEditing}
+                                                status={errors.phoneNumber ? "error" : ""}
+                                                placeholder="0901234567"
+                                                prefix={<PhoneOutlined style={{ color: MUTED }} />}
+                                                inputMode="numeric"
+                                                maxLength={11}
+                                            />
+                                        </FieldWrapper>
+                                    </div>
+                                </div>
+
+                                {/* Bio */}
+                                <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                                        <InfoCircleOutlined style={{ color: PRIMARY, fontSize: 15 }} />
+                                        <Text strong style={{ color: DARK, fontSize: 14 }}>
+                                            Giới thiệu bản thân
+                                        </Text>
+                                        <div style={{ flex: 1, height: 1, background: BORDER, marginLeft: 8 }} />
+                                    </div>
+                                    <FieldWrapper label={t("profile.bio")} error={errors.bio}>
+                                        <TextArea
+                                            name="bio"
+                                            value={formData.bio ?? ""}
+                                            onChange={handleInputChange}
+                                            disabled={!isEditing}
+                                            rows={4}
+                                            placeholder={t("profile.bioPlaceholder")}
+                                            style={{ resize: "none" }}
+                                            status={errors.bio ? "error" : ""}
+                                            showCount
+                                            maxLength={maxBioLength}
+                                        />
+                                    </FieldWrapper>
+                                </div>
+                            </form>
+                        </div>
+                    </Card>
                 </div>
-            </form>
+                {/* /LEFT */}
 
-            {/* Preferences Card */}
-            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                <h2 className="mb-1 font-semibold text-[#261E33] text-lg">{t("profile.preferencesTitle")}</h2>
+                {/* ════════════════════════════════
+                    RIGHT — sticky sidebar
+                ════════════════════════════════ */}
+                <div
+                    style={{
+                        width: 320,
+                        flexShrink: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 16,
+                        position: "sticky",
+                        top: 24,
+                        alignSelf: "flex-start"
+                    }}>
+                    {/* ── Language ── */}
+                    <Card style={cardStyle} styles={{ body: { padding: "20px" } }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                            <div style={sectionIconStyle}>
+                                <GlobalOutlined style={{ color: PRIMARY, fontSize: 13 }} />
+                            </div>
+                            <div>
+                                <Text strong style={{ color: DARK, display: "block", fontSize: 14, lineHeight: "1.3" }}>
+                                    {t("profile.preferencesTitle")}
+                                </Text>
+                                <Text style={{ color: MUTED, fontSize: 11 }}>{t("profile.preferencesSubtitle")}</Text>
+                            </div>
+                        </div>
+                        <div
+                            style={{
+                                background: BG,
+                                borderRadius: 10,
+                                border: `1px solid ${BORDER}`,
+                                padding: "12px 14px"
+                            }}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: 8
+                                }}>
+                                <Text strong style={{ color: DARK, fontSize: 13 }}>
+                                    {t("profile.language")}
+                                </Text>
+                                <Text style={{ color: MUTED, fontSize: 11 }}>{t("profile.languageHint")}</Text>
+                            </div>
+                            <Select
+                                value={formData.language ?? "vi"}
+                                onChange={handleLanguageChange}
+                                disabled={isUpdatingLanguage}
+                                loading={isUpdatingLanguage}
+                                style={{ width: "100%" }}
+                                options={languages.map((l) => ({ label: l.label, value: l.value }))}
+                                labelRender={({ value }) => {
+                                    const l = languages.find((x) => x.value === value);
+                                    return l ? <FlagOption flag={l.flag} label={l.label} /> : <span>{value}</span>;
+                                }}
+                                optionRender={(opt) => {
+                                    const l = languages.find((x) => x.value === opt.value);
+                                    return l ? <FlagOption flag={l.flag} label={l.label} /> : <span>{opt.label}</span>;
+                                }}
+                            />
+                        </div>
+                    </Card>
 
-                <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.preferencesSubtitle")}</p>
+                    {/* ── Notifications ── */}
+                    <Card style={cardStyle} styles={{ body: { padding: "20px" } }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                            <div style={sectionIconStyle}>
+                                <BellFilled style={{ color: PRIMARY, fontSize: 13 }} />
+                            </div>
+                            <div>
+                                <Text strong style={{ color: DARK, display: "block", fontSize: 14, lineHeight: "1.3" }}>
+                                    {t("profile.notificationsTitle")}
+                                </Text>
+                                <Text style={{ color: MUTED, fontSize: 11 }}>{t("profile.notificationsSubtitle")}</Text>
+                            </div>
+                        </div>
+                        <div
+                            style={{
+                                background: BG,
+                                borderRadius: 10,
+                                border: `1px solid ${BORDER}`,
+                                padding: "12px 14px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 10
+                            }}>
+                            <div style={{ minWidth: 0 }}>
+                                <Text strong style={{ color: DARK, fontSize: 13, display: "block" }}>
+                                    {t("profile.studioNotifications")}
+                                </Text>
+                                <Text style={{ color: MUTED, fontSize: 11 }}>
+                                    {t("profile.studioNotificationsDesc")}
+                                </Text>
+                            </div>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: 2,
+                                    flexShrink: 0
+                                }}>
+                                <Switch
+                                    checked={Boolean(formData.emailNotificationEnabled)}
+                                    onChange={handleNotificationChange}
+                                    loading={isUpdatingNotification}
+                                    checkedChildren={t("profile.switchOn")}
+                                    unCheckedChildren={t("profile.switchOff")}
+                                    style={formData.emailNotificationEnabled ? { background: PRIMARY } : {}}
+                                />
+                                <Text
+                                    style={{
+                                        fontSize: 10,
+                                        color: formData.emailNotificationEnabled ? PRIMARY : MUTED,
+                                        fontWeight: 700
+                                    }}>
+                                    {formData.emailNotificationEnabled ? t("profile.statusOn") : t("profile.statusOff")}
+                                </Text>
+                            </div>
+                        </div>
+                    </Card>
 
-                <label htmlFor="language" className="mb-2 block font-medium text-[#261E33] text-sm">
-                    {t("profile.language")}
-                </label>
-
-                <select
-                    id="language"
-                    name="language"
-                    value={formData.language ?? "vi"}
-                    onChange={handleLanguageChange}
-                    disabled={isUpdatingLanguage}
-                    className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2 text-sm focus:border-[#FF5F3D] focus:ring-1 focus:ring-[#FF5F3D] disabled:cursor-not-allowed disabled:opacity-60">
-                    {languages.map((lang) => (
-                        <option key={lang.value} value={lang.value}>
-                            {lang.label}
-                        </option>
-                    ))}
-                </select>
+                    {/* ── Danger Zone ── */}
+                    <Card
+                        style={{
+                            borderRadius: 16,
+                            border: "2px solid #FFCCC7",
+                            background: "#FFF2F0",
+                            boxShadow: "0 1px 6px rgba(255,77,79,0.08)"
+                        }}
+                        styles={{ body: { padding: "20px" } }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                            <div style={{ ...sectionIconStyle, background: "#FFCCC7", border: "1px solid #FFAAA5" }}>
+                                <WarningOutlined style={{ color: "#ff4d4f", fontSize: 13 }} />
+                            </div>
+                            <div>
+                                <Text
+                                    strong
+                                    style={{ color: "#cf1322", display: "block", fontSize: 14, lineHeight: "1.3" }}>
+                                    {t("profile.deleteAccount.title")}
+                                </Text>
+                                <Text style={{ color: "#ff4d4f", fontSize: 11 }}>
+                                    {t("profile.deleteAccount.subtitle")}
+                                </Text>
+                            </div>
+                        </div>
+                        <div
+                            style={{
+                                background: "#fff",
+                                borderRadius: 10,
+                                border: "1px solid #FFCCC7",
+                                padding: "12px 14px",
+                                marginBottom: 14
+                            }}>
+                            <Text strong style={{ color: "#cf1322", fontSize: 12, display: "block", marginBottom: 8 }}>
+                                ⚠️ {t("profile.deleteAccount.warning")}
+                            </Text>
+                            {[
+                                t("profile.deleteAccount.consequence1"),
+                                t("profile.deleteAccount.consequence2"),
+                                t("profile.deleteAccount.consequence3")
+                            ].map((c, i) => (
+                                <div key={i} style={{ display: "flex", gap: 6, marginBottom: 4 }}>
+                                    <span style={{ color: "#ff4d4f", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                                        •
+                                    </span>
+                                    <Text style={{ color: "#cf1322", fontSize: 12, lineHeight: "1.5" }}>{c}</Text>
+                                </div>
+                            ))}
+                        </div>
+                        <Button
+                            danger
+                            block
+                            icon={<DeleteOutlined />}
+                            style={{ borderRadius: 10, fontWeight: 700 }}
+                            onClick={() => setShowDeleteModal(true)}>
+                            {t("profile.deleteAccount.button")}
+                        </Button>
+                    </Card>
+                </div>
+                {/* /RIGHT */}
             </div>
 
-            {/* Notifications Card */}
-            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-8">
-                <h2 className="mb-1 font-semibold text-[#261E33] text-lg">{t("profile.notificationsTitle")}</h2>
-
-                <p className="mb-6 text-[#6F6B99] text-sm">{t("profile.notificationsSubtitle")}</p>
-
-                <div className="flex items-center justify-between rounded-lg border border-[#E5E5E5] p-4">
-                    <div>
-                        <p className="font-medium text-[#261E33]">{t("profile.studioNotifications")}</p>
-                        <p className="text-[#6F6B99] text-sm">{t("profile.studioNotificationsDesc")}</p>
+            {/* ── Delete Modal ── */}
+            <Modal
+                open={showDeleteModal}
+                onCancel={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText("");
+                }}
+                footer={null}
+                centered
+                width={480}
+                closable={false}>
+                <div style={{ textAlign: "center", marginBottom: 24 }}>
+                    <div
+                        style={{
+                            width: 68,
+                            height: 68,
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg,#FFF2F0,#FFE4E0)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 16px",
+                            border: "2px solid #FFCCC7"
+                        }}>
+                        <ExclamationCircleFilled style={{ fontSize: 32, color: "#ff4d4f" }} />
                     </div>
-
-                    <label
-                        className={`relative inline-flex items-center ${isUpdatingNotification ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
-                        <input
-                            type="checkbox"
-                            name="emailNotificationEnabled"
-                            checked={Boolean(formData.emailNotificationEnabled)}
-                            onChange={handleNotificationChange}
-                            disabled={isUpdatingNotification}
-                            className="sr-only"
-                        />
-
-                        <div
-                            className={`h-6 w-11 rounded-full transition-colors ${
-                                formData.emailNotificationEnabled ? "bg-[#2563EB]" : "bg-[#E5E5E5]"
-                            }`}
-                        />
-
-                        <div
-                            className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                                formData.emailNotificationEnabled ? "translate-x-5" : "translate-x-0"
-                            }`}
-                        />
+                    <Title level={4} style={{ color: DARK, margin: "0 0 6px" }}>
+                        {t("profile.deleteAccount.modalTitle")}
+                    </Title>
+                    <Text style={{ color: MUTED, fontSize: 13 }}>{t("profile.deleteAccount.modalSubtitle")}</Text>
+                </div>
+                <Alert
+                    type="error"
+                    message={t("profile.deleteIrreversible")}
+                    style={{ marginBottom: 20, borderRadius: 8 }}
+                    showIcon={false}
+                    banner
+                />
+                <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: DARK, marginBottom: 8 }}>
+                        {t("profile.deleteAccount.confirmLabel")}
                     </label>
+                    <Input
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder={t("profile.deleteConfirmPlaceholder")}
+                        status={deleteConfirmText && deleteConfirmText !== "DELETE" ? "error" : ""}
+                        style={{ letterSpacing: 2, fontWeight: 600, fontSize: 15 }}
+                        size="large"
+                    />
+                    <Text style={{ color: MUTED, fontSize: 12, display: "block", marginTop: 6 }}>
+                        {t("profile.deleteAccount.confirmHint")}
+                    </Text>
                 </div>
-            </div>
-
-            {/* Delete Account Section */}
-            <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-8">
-                <h2 className="mb-2 font-semibold text-lg text-red-600">{t("profile.deleteAccount.title")}</h2>
-                <p className="mb-6 text-red-600 text-sm">{t("profile.deleteAccount.subtitle")}</p>
-
-                <div className="rounded-lg bg-white p-6">
-                    <p className="font-medium text-[#261E33] text-sm">{t("profile.deleteAccount.warning")}</p>
-                    <ul className="mt-3 space-y-1 text-[#6F6B99] text-sm">
-                        <li>• {t("profile.deleteAccount.consequence1")}</li>
-                        <li>• {t("profile.deleteAccount.consequence2")}</li>
-                        <li>• {t("profile.deleteAccount.consequence3")}</li>
-                    </ul>
-
+                <div style={{ display: "flex", gap: 12 }}>
                     <Button
-                        type="button"
-                        onClick={() => setShowDeleteModal(true)}
-                        className="mt-6 w-full rounded-lg border-2 border-red-500 bg-white px-6 py-2.5 font-semibold text-red-600 text-sm hover:bg-red-50">
-                        {t("profile.deleteAccount.button")}
+                        block
+                        size="large"
+                        style={{ borderRadius: 10, fontWeight: 600 }}
+                        onClick={() => {
+                            setShowDeleteModal(false);
+                            setDeleteConfirmText("");
+                        }}
+                        disabled={isDeleting}>
+                        {t("profile.deleteAccount.cancelButton")}
+                    </Button>
+                    <Button
+                        block
+                        danger
+                        type="primary"
+                        size="large"
+                        loading={isDeleting}
+                        disabled={deleteConfirmText !== "DELETE"}
+                        icon={<DeleteOutlined />}
+                        onClick={handleDeleteAccount}
+                        style={{ borderRadius: 10, fontWeight: 700 }}>
+                        {isDeleting ? t("profile.deleteAccount.deleting") : t("profile.deleteAccount.confirmButton")}
                     </Button>
                 </div>
-            </div>
-
-            {/* Delete Confirmation Modal */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
-                        <h3 className="mb-2 font-bold text-[#261E33] text-xl">
-                            {t("profile.deleteAccount.modalTitle")}
-                        </h3>
-                        <p className="mb-5 text-[#6F6B99] text-sm">{t("profile.deleteAccount.modalSubtitle")}</p>
-
-                        <label htmlFor="deleteConfirmText" className="mb-2 block font-semibold text-[#261E33] text-sm">
-                            {t("profile.deleteAccount.confirmLabel")}
-                        </label>
-                        <Input
-                            id="deleteConfirmText"
-                            value={deleteConfirmText}
-                            onChange={(e) => setDeleteConfirmText(e.target.value)}
-                            placeholder="DELETE"
-                            className="rounded-lg border-red-300 focus:border-red-500 focus:ring-red-500"
-                        />
-                        <p className="mt-1 text-[#6F6B99] text-xs">{t("profile.deleteAccount.confirmHint")}</p>
-
-                        <div className="mt-6 flex gap-3">
-                            <Button
-                                type="button"
-                                onClick={() => {
-                                    setShowDeleteModal(false);
-                                    setDeleteConfirmText("");
-                                }}
-                                disabled={isDeleting}
-                                className="flex-1 rounded-lg border border-[#E5E5E5] bg-white px-6 py-2.5 font-semibold text-[#261E33] text-sm hover:bg-[#F5F5F5]">
-                                {t("profile.deleteAccount.cancelButton")}
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={handleDeleteAccount}
-                                disabled={isDeleting || deleteConfirmText !== "DELETE"}
-                                className="flex-1 rounded-lg bg-red-600 px-6 py-2.5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
-                                {isDeleting
-                                    ? t("profile.deleteAccount.deleting")
-                                    : t("profile.deleteAccount.confirmButton")}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+            </Modal>
+        </ConfigProvider>
     );
 }

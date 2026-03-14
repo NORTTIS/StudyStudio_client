@@ -41,8 +41,7 @@ export type AcceptInviteResponse = {
  * Create invite link for a group
  */
 export async function createInviteLink(data: CreateInviteRequest, locale = "vi") {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    return apiFetch<CreateInviteResponse>(`${baseUrl}/invite/create`, {
+    return apiFetch<CreateInviteResponse>("/invite/create", {
         method: "POST",
         body: JSON.stringify(data),
         locale
@@ -53,8 +52,7 @@ export async function createInviteLink(data: CreateInviteRequest, locale = "vi")
  * Send invite email to a user
  */
 export async function sendInviteEmail(data: SendInviteEmailRequest, locale = "vi") {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    return apiFetch<string>(`${baseUrl}/invite/email`, {
+    return apiFetch<string>("/invite/email", {
         method: "POST",
         body: JSON.stringify(data),
         locale
@@ -65,8 +63,7 @@ export async function sendInviteEmail(data: SendInviteEmailRequest, locale = "vi
  * Accept an invite using token
  */
 export async function acceptInvite(data: AcceptInviteRequest, locale = "vi") {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-    return apiFetch<AcceptInviteResponse>(`${baseUrl}/invite/accept`, {
+    return apiFetch<AcceptInviteResponse>("/invite/accept", {
         method: "POST",
         body: JSON.stringify(data),
         locale
