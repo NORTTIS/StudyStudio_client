@@ -26,7 +26,7 @@ import {
     verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
+import { CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import * as React from "react";
 import { createPortal } from "react-dom";
@@ -51,6 +51,7 @@ type Task = {
     statusName?: string | null;
     priorityLabel?: string | null;
     severityLabel?: string | null;
+    progress?: number;
 };
 
 type Column = {
@@ -75,6 +76,7 @@ type TaskItemResponse = {
     position?: number;
     taskPriority?: number;
     taskSeverity?: number;
+    progress?: number;
 };
 
 type TaskStatusDto = {
@@ -268,6 +270,10 @@ function isOverdue(raw?: string) {
     const d = new Date(raw);
     if (Number.isNaN(d.getTime())) return false;
     return d.getTime() < Date.now();
+}
+
+function isTaskDone(task?: Pick<Task, "progress"> | null) {
+    return Number(task?.progress ?? 0) >= 100;
 }
 
 async function apiGetGroupDetail(groupId: string) {
@@ -644,18 +650,44 @@ function Pill({ children }: { children: React.ReactNode }) {
     );
 }
 
-function DuePill({ due, overdue }: { due: string; overdue: boolean }) {
+function DonePill() {
+    return (
+        <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+            <CheckCircle2 className="h-4 w-4" />
+            Done
+        </span>
+    );
+}
+
+function shouldShowProgress(task?: Pick<Task, "progress"> | null) {
+    const p = Number(task?.progress ?? 0);
+    return p > 0 && p < 100;
+}
+
+function ProgressPill({ progress }: { progress: number }) {
+    return (
+        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700">
+            {progress}%
+        </span>
+    );
+}
+
+function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?: boolean }) {
     return (
         <div
             className={cn(
                 "inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2",
-                overdue ? "border-rose-200 bg-rose-50 text-rose-700" : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                done
+                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                    : overdue
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}
         >
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
                 <div className="whitespace-nowrap text-xs font-semibold">{due}</div>
-                {overdue ? (
+                {!done && overdue ? (
                     <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
                         Quá hạn
                     </span>
@@ -890,6 +922,8 @@ function TaskCard({
     useAutosizeTextarea(taRef, draftTitle);
 
     const clickingActionRef = React.useRef(false);
+    const done = isTaskDone(task);
+    const showProgress = shouldShowProgress(task);
 
     React.useEffect(() => {
         if (isEditing) {
@@ -934,23 +968,33 @@ function TaskCard({
                 }
             }}
             className={cn(
-                "group relative w-full select-none rounded-xl bg-white p-3",
+                "group relative w-full select-none rounded-xl p-3",
                 "cursor-grab border border-black/5 shadow-[0_1px_1px_rgba(9,30,66,0.08),0_0_0_1px_rgba(9,30,66,0.04)]",
-                "transition hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]",
-                "focus-within:ring-2 focus-within:ring-blue-200/60",
-                "active:cursor-grabbing"
+                "transition focus-within:ring-2 focus-within:ring-blue-200/60 active:cursor-grabbing",
+                done
+                    ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
+                    : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
             )}
         >
             <div className="flex items-start gap-3">
                 <div className="pt-1">
-                    <div className={cn("h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
+                    <div className={cn("h-2.5 w-2.5 rounded-full", done ? "bg-emerald-500" : dotClass(task.statusDot))} />
                 </div>
 
                 <div className="min-w-0 flex-1">
                     {!isEditing ? (
                         <>
                             <div className="flex items-start justify-between gap-3">
-                                <p className="line-clamp-3 pr-2 text-sm font-semibold leading-5 text-zinc-900">{task.title}</p>
+                                <div className="min-w-0 flex-1">
+                                    <p
+                                        className={cn(
+                                            "line-clamp-3 pr-2 text-sm font-semibold leading-5",
+                                            done ? "text-zinc-500 line-through" : "text-zinc-900"
+                                        )}
+                                    >
+                                        {task.title}
+                                    </p>
+                                </div>
 
                                 <div
                                     className="relative shrink-0"
@@ -997,7 +1041,9 @@ function TaskCard({
                                 </div>
                             </div>
 
-                            <p className="mt-2 truncate text-xs text-zinc-500">Người thực hiện: {task.assigneeName || "Chưa gán"}</p>
+                            <p className={cn("mt-2 truncate text-xs", done ? "text-zinc-400" : "text-zinc-500")}>
+                                Người thực hiện: {task.assigneeName || "Chưa gán"}
+                            </p>
                         </>
                     ) : (
                         <div
@@ -1067,20 +1113,26 @@ function TaskCard({
                         </div>
                     )}
 
-                    {task.due || task.severityLabel ? (
+                    {task.due || task.severityLabel || done || showProgress ? (
                         <div className="mt-3 space-y-2">
-                            {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
+                            {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {task.severityLabel ? (
-                                <div>
-                                    <span
-                                        className={cn(
-                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
-                                            severityTone(task.severityLabel)
-                                        )}
-                                    >
-                                        {task.severityLabel}
-                                    </span>
+                            {task.severityLabel || done || showProgress ? (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {task.severityLabel ? (
+                                        <span
+                                            className={cn(
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                                done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severityLabel)
+                                            )}
+                                        >
+                                            {task.severityLabel}
+                                        </span>
+                                    ) : null}
+
+                                    {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
+
+                                    {done ? <DonePill /> : null}
                                 </div>
                             ) : null}
                         </div>
@@ -1092,27 +1144,39 @@ function TaskCard({
 }
 
 function GhostTaskCard({ task }: { task: Task }) {
+    const done = isTaskDone(task);
+    const showProgress = shouldShowProgress(task);
+    const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
+
     return (
         <div className={cn("rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/70 p-3")}>
             <div className="flex items-start gap-3">
-                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
+                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", done ? "bg-emerald-500" : dotClass(task.statusDot))} />
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-3 text-sm font-semibold leading-5 text-zinc-800">{task.title}</p>
+                    <p className={cn("line-clamp-3 text-sm font-semibold leading-5", done ? "text-zinc-500 line-through" : "text-zinc-800")}>
+                        {task.title}
+                    </p>
 
-                    {task.due || task.severityLabel ? (
+                    {task.due || task.severityLabel || done || showProgress ? (
                         <div className="mt-3 space-y-2">
-                            {task.due ? <DuePill due={task.due} overdue={false} /> : null}
+                            {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {task.severityLabel ? (
-                                <div>
-                                    <span
-                                        className={cn(
-                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
-                                            severityTone(task.severityLabel)
-                                        )}
-                                    >
-                                        {task.severityLabel}
-                                    </span>
+                            {task.severityLabel || done || showProgress ? (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {task.severityLabel ? (
+                                        <span
+                                            className={cn(
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                                done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severityLabel)
+                                            )}
+                                        >
+                                            {task.severityLabel}
+                                        </span>
+                                    ) : null}
+
+                                    {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
+
+                                    {done ? <DonePill /> : null}
                                 </div>
                             ) : null}
                         </div>
@@ -1410,14 +1474,10 @@ function ColumnView({
                                         )}
                                         style={{ maxWidth: 220 }}
                                     />
-                                    <div className="flex justify-end text-[11px] text-zinc-500">
-                                        {columnDraft.length}/25
-                                    </div>
+                                    <div className="flex justify-end text-[11px] text-zinc-500">{columnDraft.length}/25</div>
 
                                     {columnError ? (
-                                        <div className="text-[11px] font-medium text-rose-600">
-                                            {columnError}
-                                        </div>
+                                        <div className="text-[11px] font-medium text-rose-600">{columnError}</div>
                                     ) : null}
                                 </div>
                             )}
@@ -1479,10 +1539,7 @@ function ColumnView({
             <div className="px-2 pb-2">
                 <div
                     ref={setDroppableRef}
-                    className={cn(
-                        "rounded-b-xl bg-[#f1f2f4] transition",
-                        isOver && "bg-[#e9f2ff]"
-                    )}
+                    className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}
                 >
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
@@ -1656,26 +1713,39 @@ function SortableColumn(props: {
 
 function TaskOverlay({ task }: { task: Task }) {
     const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
+    const done = isTaskDone(task);
+    const showProgress = shouldShowProgress(task);
 
     return (
         <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
-            <p className="text-sm font-semibold leading-5 text-zinc-900">{task.title}</p>
+            <p className={cn("text-sm font-semibold leading-5", done ? "text-zinc-500 line-through" : "text-zinc-900")}>
+                {task.title}
+            </p>
+
             <div className="mt-2">
                 <Pill>Người thực hiện: {task.assigneeName || "Chưa gán"}</Pill>
             </div>
-            {task.due || task.severityLabel ? (
+
+            {task.due || task.severityLabel || done || showProgress ? (
                 <div className="mt-3 space-y-2">
-                    {task.due ? <DuePill due={task.due} overdue={overdue} /> : null}
-                    {task.severityLabel ? (
-                        <div>
-                            <span
-                                className={cn(
-                                    "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
-                                    severityTone(task.severityLabel)
-                                )}
-                            >
-                                {task.severityLabel}
-                            </span>
+                    {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
+
+                    {task.severityLabel || done || showProgress ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                            {task.severityLabel ? (
+                                <span
+                                    className={cn(
+                                        "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severityLabel)
+                                    )}
+                                >
+                                    {task.severityLabel}
+                                </span>
+                            ) : null}
+
+                            {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
+
+                            {done ? <DonePill /> : null}
                         </div>
                     ) : null}
                 </div>
@@ -1697,7 +1767,9 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
                         {tasks.slice(0, 3).map((t) => (
                             <div key={t.id} className="mb-2 last:mb-0">
                                 <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
-                                    <p className="text-sm font-semibold text-zinc-900">{t.title}</p>
+                                    <p className={cn("text-sm font-semibold", isTaskDone(t) ? "text-zinc-500 line-through" : "text-zinc-900")}>
+                                        {t.title}
+                                    </p>
                                 </div>
                             </div>
                         ))}
@@ -1713,7 +1785,7 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     );
 }
 
-export function GroupBoardScreen() {
+export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean }) {
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
@@ -1773,6 +1845,30 @@ export function GroupBoardScreen() {
         taskId: null,
         columnId: null,
         taskTitle: ""
+    });
+
+    const closePermissionModal = () =>
+        setPermissionModal({
+            open: false,
+            title: "",
+            message: ""
+        });
+
+    const openNoPermissionModal = (message: string) =>
+        setPermissionModal({
+            open: true,
+            title: "Không có thẩm quyền",
+            message
+        });
+
+    const [permissionModal, setPermissionModal] = React.useState<{
+        open: boolean;
+        title: string;
+        message: string;
+    }>({
+        open: false,
+        title: "",
+        message: ""
     });
 
     const [taskFormOpen, setTaskFormOpen] = React.useState(false);
@@ -1868,13 +1964,19 @@ export function GroupBoardScreen() {
     };
 
     const handleDeleteFromDetail = async (taskId: string) => {
+        if (!canDelete) {
+            openNoPermissionModal("Bạn không có thẩm quyền xóa công việc này");
+            return;
+        }
+
         setDetailOpen(false);
         setDetailTaskId(null);
+
         try {
             await apiDeleteTask({ groupId, taskId });
             await refresh();
         } catch (e: any) {
-            alert(e?.message ?? "Xóa công việc thất bại");
+            openNoPermissionModal("Bạn không có thẩm quyền xóa công việc này");
         }
     };
 
@@ -1915,7 +2017,8 @@ export function GroupBoardScreen() {
                     statusDot: priorityToStatusDot(t.taskPriority),
                     assigneeName,
                     priorityLabel: priorityLabelOf(t.taskPriority),
-                    severityLabel: severityLabelOf(t.taskSeverity)
+                    severityLabel: severityLabelOf(t.taskSeverity),
+                    progress: Number.isFinite(t.progress as number) ? Number(t.progress) : 0
                 };
 
                 if (startFmt) base.start = startFmt;
@@ -2075,9 +2178,19 @@ export function GroupBoardScreen() {
     };
 
     const onDeleteColumn = (columnId: ColumnId) => {
+        if (!canDelete) {
+            openNoPermissionModal("Bạn không có thẩm quyền xóa trạng thái này");
+            return;
+        }
+
         const col = columns.find((c) => c.id === columnId);
         if (!col) return;
-        setConfirmModal({ open: true, columnId, columnTitle: col.title });
+
+        setConfirmModal({
+            open: true,
+            columnId,
+            columnTitle: col.title
+        });
     };
 
     const handleConfirmDeleteColumn = async () => {
@@ -2107,7 +2220,12 @@ export function GroupBoardScreen() {
         } catch (e: any) {
             setColumns(prevCols);
             setBoard(prevBoard);
-            alert(e?.message ?? "Đã xảy ra lỗi");
+
+            setPermissionModal({
+                open: true,
+                title: "Không có thẩm quyền",
+                message: "Bạn không có thẩm quyền xóa trạng thái này"
+            });
         }
     };
 
@@ -2136,7 +2254,13 @@ export function GroupBoardScreen() {
     };
 
     const onDeleteTask = (taskId: string, columnId: ColumnId) => {
+        if (!canDelete) {
+            openNoPermissionModal("Bạn không có thẩm quyền xóa công việc này");
+            return;
+        }
+
         const t = (board[columnId] ?? []).find((x) => x.id === taskId);
+
         setConfirmDeleteTask({
             open: true,
             taskId,
@@ -2170,7 +2294,12 @@ export function GroupBoardScreen() {
             await refresh();
         } catch (e: any) {
             setBoard(prevBoard);
-            alert(e?.message ?? "Xóa công việc thất bại");
+
+            setPermissionModal({
+                open: true,
+                title: "Không có thẩm quyền",
+                message: "Bạn không có thẩm quyền xóa công việc này"
+            });
         }
     };
 
@@ -2188,7 +2317,7 @@ export function GroupBoardScreen() {
         if (!groupId) throw new Error("Thiếu groupId.");
         if (!isUuidLike(groupId)) throw new Error("groupId route không hợp lệ (không phải UUID).");
 
-        const columnId = taskFormColumnId ?? (values as any).statusId ?? null;
+        const columnId = (values as any).statusId ?? taskFormColumnId ?? null;
         if (!columnId) throw new Error("Thiếu trạng thái.");
         if (!isUuidLike(columnId)) throw new Error("Sai columnId.");
 
@@ -2418,6 +2547,16 @@ export function GroupBoardScreen() {
                 cancelLabel="Hủy"
                 onConfirm={() => void handleConfirmDeleteTask()}
                 onCancel={handleCancelDeleteTask}
+            />
+
+            <ConfirmModal
+                open={permissionModal.open}
+                title={permissionModal.title || "Không có thẩm quyền"}
+                description={permissionModal.message}
+                confirmLabel="Đóng"
+                cancelLabel="Đóng"
+                onConfirm={closePermissionModal}
+                onCancel={closePermissionModal}
             />
 
             <Container>

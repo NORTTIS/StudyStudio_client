@@ -18,6 +18,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
+import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { useToast } from "@/components/ui/use-toast";
@@ -61,10 +62,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-            | {
-                  role?: string | null;
-              }[]
-            | null;
+        | {
+            role?: string | null;
+        }[]
+        | null;
     } | null;
 };
 
@@ -179,7 +180,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch {}
+                } catch { }
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
@@ -218,7 +219,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch {}
+                    } catch { }
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -275,9 +276,15 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const apiBase = getApiBase();
 
     const visibleTabs = React.useMemo(() => {
-        if (userRole === "owner") return tabs;
-        return tabs.filter((x) => x.key !== "setting");
-    }, [tabs, userRole]);
+        const canSeeSetting = userRole === "owner";
+        const canSeeTrashed = userRole === "owner" || userRole === "moderator";
+
+        return tabs.filter((tab) => {
+            if (tab.key === "setting" && !canSeeSetting) return false;
+            if (tab.key === "trashed" && !canSeeTrashed) return false;
+            return true;
+        });
+    }, [userRole, t]);
 
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
@@ -309,7 +316,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
@@ -352,7 +359,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -368,58 +375,126 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
     return (
         <Container>
-            <div className="w-full bg-white">
+            <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="w-full bg-white"
+            >
                 <div>
-                    {/* ====== HEADER GIỮ NGUYÊN STYLE NHƯ ẢNH (bạn muốn giữ) ====== */}
                     <div className="flex items-start justify-between gap-6">
                         <div className="min-w-0">
-                            {studioName ? (
-                                <p className="flex items-center gap-2 text-[#6F6B99] text-sm">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                                    {studioName}
-                                </p>
-                            ) : null}
+                            <AnimatePresence mode="wait">
+                                {studioName ? (
+                                    <motion.p
+                                        key={studioName}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -6 }}
+                                        transition={{ duration: 0.22 }}
+                                        className="flex items-center gap-2 text-sm text-[#6F6B99]"
+                                    >
+                                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                        {studioName}
+                                    </motion.p>
+                                ) : null}
+                            </AnimatePresence>
 
                             <div className="flex items-center gap-2">
-                                <h1 className="mt-1 truncate font-semibold text-3xl text-[#261E33]">{groupName}</h1>
-                                <RolePill role={userRole} />
+                                <motion.h1
+                                    layout
+                                    transition={{ type: "spring", stiffness: 280, damping: 26 }}
+                                    className="mt-1 truncate text-3xl font-semibold text-[#261E33]"
+                                >
+                                    {groupName}
+                                </motion.h1>
+
+                                <motion.div layout transition={{ type: "spring", stiffness: 280, damping: 26 }}>
+                                    <RolePill role={userRole} />
+                                </motion.div>
                             </div>
 
-                            {groupDesc ? <p className="mt-2 text-[#6F6B99] text-lg">{groupDesc}</p> : null}
+                            <AnimatePresence mode="wait">
+                                {groupDesc ? (
+                                    <motion.p
+                                        key={groupDesc}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -6 }}
+                                        transition={{ duration: 0.22 }}
+                                        className="mt-2 text-lg text-[#6F6B99]"
+                                    >
+                                        {groupDesc}
+                                    </motion.p>
+                                ) : null}
+                            </AnimatePresence>
 
-                            {error ? (
-                                <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700 text-sm">
-                                    {error}
-                                </p>
-                            ) : null}
+                            <AnimatePresence>
+                                {error ? (
+                                    <motion.p
+                                        initial={{ opacity: 0, height: 0, y: -6 }}
+                                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                                        exit={{ opacity: 0, height: 0, y: -6 }}
+                                        transition={{ duration: 0.22 }}
+                                        className="mt-3 overflow-hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                                    >
+                                        {error}
+                                    </motion.p>
+                                ) : null}
+                            </AnimatePresence>
                         </div>
 
-                        <div className="flex items-center gap-3 text-[#6F6B99]">
-                            {/* badge thành viên giống ảnh (bọc pill) */}
-                            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 shadow-sm">
+                        <motion.div
+                            layout
+                            transition={{ type: "spring", stiffness: 260, damping: 24 }}
+                            className="flex items-center gap-3 text-[#6F6B99]"
+                        >
+                            <motion.div
+                                layout
+                                whileHover={{ y: -1 }}
+                                transition={{ duration: 0.18 }}
+                                className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 shadow-sm"
+                            >
                                 <Users className="h-4 w-4" />
                                 <span className="text-sm">
-                                    <span className="font-semibold text-[#261E33]">{memberCount}</span> thành viên
+                                    <motion.span
+                                        key={memberCount}
+                                        initial={{ opacity: 0.6, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="font-semibold text-[#261E33]"
+                                    >
+                                        {memberCount}
+                                    </motion.span>{" "}
+                                    thành viên
                                 </span>
-                            </div>
+                            </motion.div>
 
                             {canInvite ? (
-                                <button
+                                <motion.button
                                     type="button"
                                     onClick={() => setInviteOpen(true)}
-                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 font-semibold text-sm text-white shadow-sm transition hover:bg-orange-700 active:scale-[0.98]">
+                                    whileHover={{ scale: 1.02, y: -1 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    transition={{ duration: 0.16 }}
+                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 text-sm font-semibold text-white shadow-sm"
+                                >
                                     <UserPlus className="h-4 w-4" />
                                     Thêm thành viên
-                                </button>
+                                </motion.button>
                             ) : null}
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
 
-                {/* ====== TABS: bọc thẻ + pill đẹp hơn (phần bạn chê xấu) ====== */}
-                <div className="mt-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05, duration: 0.3 }}
+                    className="mt-6"
+                >
                     <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto p-2">
+                        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto p-2 scroll-smooth">
                             {visibleTabs.map((tab) => {
                                 const Icon = tab.icon;
                                 const href = groupId ? tab.href(locale, groupId) : "#";
@@ -431,29 +506,44 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         : curPath === target || curPath.startsWith(target + "/");
 
                                 return (
-                                    <Link
-                                        key={tab.key}
-                                        href={href}
-                                        className={twMerge(
-                                            "group inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 font-medium text-sm transition",
-                                            "text-[#6F6B99] hover:bg-zinc-50 hover:text-[#261E33]",
-                                            "focus:outline-none focus:ring-2 focus:ring-orange-500/25",
-                                            active &&
-                                                "bg-orange-600 text-white shadow-sm hover:bg-orange-600 hover:text-white"
-                                        )}>
-                                        <Icon
+                                    <Link key={tab.key} href={href} className="relative shrink-0">
+                                        <motion.div
+                                            whileHover={{ y: -1 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            transition={{ duration: 0.15 }}
                                             className={twMerge(
-                                                "h-4 w-4",
-                                                active ? "text-white" : "text-[#6F6B99] group-hover:text-[#261E33]"
+                                                "group relative inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-200",
+                                                active
+                                                    ? "text-white"
+                                                    : "text-[#6F6B99] hover:bg-zinc-50 hover:text-[#261E33]"
                                             )}
-                                        />
-                                        {tab.label}
+                                        >
+                                            {active ? (
+                                                <motion.div
+                                                    layoutId="activeGroupTab"
+                                                    className="absolute inset-0 rounded-xl bg-orange-600 shadow-sm"
+                                                    transition={{
+                                                        type: "spring",
+                                                        stiffness: 380,
+                                                        damping: 30
+                                                    }}
+                                                />
+                                            ) : null}
+
+                                            <Icon
+                                                className={twMerge(
+                                                    "relative z-10 h-4 w-4 transition-colors duration-200",
+                                                    active ? "text-white" : "text-[#6F6B99] group-hover:text-[#261E33]"
+                                                )}
+                                            />
+                                            <span className="relative z-10">{tab.label}</span>
+                                        </motion.div>
                                     </Link>
                                 );
                             })}
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 <InviteMemberModal
                     open={inviteOpen}
@@ -471,7 +561,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                         if (!ok) return;
                     }}
                 />
-            </div>
+            </motion.div>
         </Container>
     );
 }

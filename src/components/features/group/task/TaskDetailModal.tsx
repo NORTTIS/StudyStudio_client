@@ -36,6 +36,7 @@ type TaskItemResponse = {
     position?: number;
     taskPriority?: number;
     taskSeverity?: number;
+    progress?: number;
     taskDescription?: string | null;
     assignee?: UserDto | null;
     groupStatus?: { groupId?: string; statusId?: string; position?: number; statusName?: string | null } | null;
@@ -94,6 +95,8 @@ export type TaskDetail = {
     priorityLabel: string;
     severityValue: number;
     severityLabel: string;
+    progressValue: number;
+    progressLabel: string;
     startDateRaw?: string | null;
     dueDateRaw?: string | null;
     startDateFmt?: string | null;
@@ -149,6 +152,7 @@ const monthOptions = [
 ] as const;
 
 const TASK_TITLE_MAX_LENGTH = 25;
+const PROGRESS_OPTIONS = [0, 25, 50, 75, 100] as const;
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -253,6 +257,15 @@ function severityLabelOf(n?: number) {
     return "Minor";
 }
 
+function progressLabelOf(n?: number) {
+    const value = normalizeProgressValue(n);
+    if (value === 0) return "To do";
+    if (value < 50) return "Started";
+    if (value < 75) return "In progress";
+    if (value < 100) return "Review";
+    return "Done";
+}
+
 function normalizePriorityValue(n?: number) {
     if (n === 0 || n === 1 || n === 2) return n;
     return 0;
@@ -261,6 +274,38 @@ function normalizePriorityValue(n?: number) {
 function normalizeSeverityValue(n?: number) {
     if (n === 0 || n === 1 || n === 2 || n === 3) return n;
     return 0;
+}
+
+function normalizeProgressValue(n?: number) {
+    if (typeof n !== "number" || !Number.isFinite(n)) return 0;
+    const value = Math.floor(n);
+    if (value < 0) return 0;
+    if (value > 100) return 100;
+    return value;
+}
+
+function sanitizeProgressInput(value: string) {
+    const digits = value.replace(/\D+/g, "");
+
+    if (digits === "") return "";
+
+    if (digits === "100") return "100";
+
+    if (digits.startsWith("100")) return "100";
+
+    return digits.slice(0, 2);
+}
+
+function clampProgressInput(value: string) {
+    if (value === "") return "";
+
+    if (value === "100") return "100";
+
+    const n = Number(value);
+
+    if (!Number.isFinite(n)) return "";
+
+    return String(Math.min(Math.max(Math.floor(n), 0), 100));
 }
 
 function relativeTimeOf(input?: string | null) {
@@ -760,8 +805,10 @@ function mapTaskDetailFromTaskItem(
     const statusId = String(task?.groupStatus?.statusId ?? fallbackStatusId ?? "").trim() || null;
     const priorityValue = normalizePriorityValue(task?.taskPriority);
     const severityValue = normalizeSeverityValue(task?.taskSeverity);
+    const progressValue = normalizeProgressValue(task?.progress);
     const priorityLabel = priorityLabelOf(priorityValue);
     const severityLabel = severityLabelOf(severityValue);
+    const progressLabel = progressLabelOf(progressValue);
     const startDateRaw = task?.startDate ?? null;
     const dueDateRaw = task?.dueDate ?? null;
     const startFmt = startDateRaw ? formatDisplayDate(String(startDateRaw)) : "";
@@ -780,6 +827,8 @@ function mapTaskDetailFromTaskItem(
         priorityLabel,
         severityValue,
         severityLabel,
+        progressValue,
+        progressLabel,
         startDateRaw,
         dueDateRaw,
         startDateFmt: startFmt,
@@ -943,6 +992,7 @@ export default function TaskDetailModal(props: {
     const [taskName, setTaskName] = React.useState("");
     const [priority, setPriority] = React.useState("");
     const [severity, setSeverity] = React.useState("");
+    const [progress, setProgress] = React.useState("0");
     const [startDate, setStartDate] = React.useState("");
     const [dueDate, setDueDate] = React.useState("");
     const [description, setDescription] = React.useState("");
@@ -953,6 +1003,14 @@ export default function TaskDetailModal(props: {
 
     const handleSendComment = () => {
         setCommentDraft("");
+    };
+
+    const handleProgressInputChange = (value: string) => {
+        setProgress(sanitizeProgressInput(value));
+    };
+
+    const handleProgressInputBlur = () => {
+        setProgress((prev) => clampProgressInput(prev));
     };
 
     React.useEffect(() => {
@@ -1072,6 +1130,7 @@ export default function TaskDetailModal(props: {
         setStatusId(task?.statusId ?? "");
         setPriority(String(normalizePriorityValue(task?.priorityValue)));
         setSeverity(String(normalizeSeverityValue(task?.severityValue)));
+        setProgress(String(normalizeProgressValue(task?.progressValue)));
         setStartDate(toDateInputValue(task?.startDateRaw));
         setDueDate(toDateInputValue(task?.dueDateRaw));
         setDescription(task?.description ?? "");
@@ -1120,6 +1179,13 @@ export default function TaskDetailModal(props: {
     const selectedSeverityValue = React.useMemo(() => normalizeSeverityValue(Number(severity)), [severity]);
     const selectedSeverityLabel = React.useMemo(() => severityLabelOf(selectedSeverityValue), [selectedSeverityValue]);
 
+    const selectedProgressValue = React.useMemo(() => {
+        if (progress === "") return 0;
+        return normalizeProgressValue(Number(progress));
+    }, [progress]);
+
+    const selectedProgressLabel = React.useMemo(() => progressLabelOf(selectedProgressValue), [selectedProgressValue]);
+
     const handleSave = async () => {
         setSaveError(null);
 
@@ -1139,6 +1205,9 @@ export default function TaskDetailModal(props: {
             return;
         }
 
+        const normalizedProgressValue =
+            progress === "" ? 0 : normalizeProgressValue(Number(clampProgressInput(progress)));
+
         try {
             setSubmitting(true);
 
@@ -1153,7 +1222,8 @@ export default function TaskDetailModal(props: {
                     startDate: toApiDateTimeOrNull(startDate),
                     dueDate: toApiDateTimeOrNull(dueDate),
                     taskPriority: selectedPriorityValue,
-                    taskSeverity: selectedSeverityValue
+                    taskSeverity: selectedSeverityValue,
+                    progress: normalizedProgressValue
                 }
             });
 
@@ -1171,6 +1241,8 @@ export default function TaskDetailModal(props: {
                     priorityLabel: selectedPriorityLabel,
                     severityValue: selectedSeverityValue,
                     severityLabel: selectedSeverityLabel,
+                    progressValue: normalizedProgressValue,
+                    progressLabel: progressLabelOf(normalizedProgressValue),
                     startDateRaw: startDate ? toApiDateTimeOrNull(startDate) : null,
                     dueDateRaw: dueDate ? toApiDateTimeOrNull(dueDate) : null,
                     startDateFmt: startDate ? formatDisplayDate(startDate) : "",
@@ -1178,6 +1250,8 @@ export default function TaskDetailModal(props: {
                     description: description.trim() || null
                 };
             });
+
+            setProgress(String(normalizedProgressValue));
 
             await onSaved?.();
             setIsEditing(false);
@@ -1435,6 +1509,61 @@ export default function TaskDetailModal(props: {
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        <div className="md:col-span-2 xl:col-span-3">
+                            <div className="text-sm font-semibold text-zinc-600">Progress</div>
+
+                            <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
+                                <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+                                    <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
+
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            value={progress}
+                                            onChange={(e) => handleProgressInputChange(e.target.value)}
+                                            onBlur={handleProgressInputBlur}
+                                            disabled={!isEditing}
+                                            placeholder="0"
+                                            className="h-9 w-16 rounded-lg border border-zinc-200 px-0 text-center text-sm font-semibold leading-none text-zinc-900 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                                        />
+                                        <span className="font-bold text-zinc-900">%</span>
+                                    </div>
+                                </div>
+
+                                <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                                    <div
+                                        className="h-full rounded-full bg-orange-500 transition-all"
+                                        style={{ width: `${selectedProgressValue}%` }}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-5 gap-2">
+                                    {PROGRESS_OPTIONS.map((value) => {
+                                        const active = selectedProgressValue === value;
+                                        return (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                disabled={!isEditing}
+                                                onClick={() => setProgress(String(value))}
+                                                className={cn(
+                                                    "h-10 rounded-xl border text-sm font-semibold transition",
+                                                    active
+                                                        ? "border-orange-500 bg-orange-500 text-white"
+                                                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                                                    !isEditing && "cursor-not-allowed opacity-70"
+                                                )}
+                                            >
+                                                {value}%
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="mt-6">
@@ -1571,7 +1700,7 @@ export default function TaskDetailModal(props: {
                                 void handleSave();
                             }}
                             disabled={submitting}
-                            className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
+                            className="h-11 rounded-xl bg-orange-500 px-8 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60"
                         >
                             {submitting ? "Saving..." : "Save change"}
                         </button>
@@ -1580,7 +1709,7 @@ export default function TaskDetailModal(props: {
                             type="button"
                             onClick={() => setIsEditing(true)}
                             disabled={loadingDetail || !!detailError || !task}
-                            className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
+                            className="h-11 rounded-xl bg-orange-500 px-8 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60"
                         >
                             Edit
                         </button>

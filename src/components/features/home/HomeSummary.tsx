@@ -1,6 +1,12 @@
 "use client";
 
-import { BarChart3, CalendarDays } from "lucide-react";
+import {
+    CalendarDays,
+    CheckCircle2,
+    Clock3,
+    Layers3,
+    AlertTriangle
+} from "lucide-react";
 import * as React from "react";
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
@@ -8,49 +14,79 @@ import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 
 type HomeSummaryResponse = components["schemas"]["HomeSummaryResponse"];
-type HomeSummaryResponseApiResponse = components["schemas"]["HomeSummaryResponseApiResponse"];
+type HomeSummaryResponseApiResponse =
+    components["schemas"]["HomeSummaryResponseApiResponse"];
 
-type SummaryCardProps = {
+type StatCardProps = {
     label: string;
     value: number;
+    icon: React.ReactNode;
 };
 
-type CompletionCardProps = {
+type ProgressCardProps = {
     completed: number;
     total: number;
 };
 
-function SummaryCard({ label, value }: SummaryCardProps) {
+function StatCard({ label, value, icon }: StatCardProps) {
     return (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-[#6F6B99]">{label}</p>
-            <p className="mt-5 font-bold text-3xl text-[#261E33]">{value}</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <p className="text-sm text-gray-500">{label}</p>
+                    <p className="mt-2 text-2xl font-semibold text-gray-900">{value}</p>
+                </div>
+
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
+                    {icon}
+                </div>
+            </div>
         </div>
     );
 }
 
-function CompletionCard({ completed, total }: CompletionCardProps) {
+function ProgressCard({ completed, total }: ProgressCardProps) {
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-[#261E33]" />
-                <p className="font-semibold text-[#261E33] text-sm">Task Completion</p>
+            <div className="mb-4 flex items-center justify-between">
+                <div>
+                    <h2 className="text-base font-semibold text-gray-900">Tiến độ công việc</h2>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Tỷ lệ hoàn thành trên tổng số công việc hiện tại
+                    </p>
+                </div>
+
+                <span className="rounded-md bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-700">
+                    {percentage}%
+                </span>
             </div>
 
-            <div className="flex h-[140px] flex-col items-center justify-center text-center">
-                <p className="font-bold text-4xl text-[#261E33]">{percentage}%</p>
-                <p className="mt-1 text-[#6F6B99] text-sm">
-                    {completed} of {total} completed
-                </p>
+            <div className="mb-3 flex items-end justify-between gap-4">
+                <div>
+                    <p className="text-3xl font-semibold text-gray-900">{percentage}%</p>
+                    <p className="mt-1 text-sm text-gray-500">
+                        {completed} / {total} công việc đã hoàn thành
+                    </p>
+                </div>
+            </div>
+
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                <div
+                    className="h-full rounded-full bg-violet-600 transition-all duration-300"
+                    style={{ width: `${percentage}%` }}
+                />
             </div>
         </div>
     );
 }
 
 function buildSummaryUrl() {
-    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+    const rawBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "";
     const base = rawBase.replace(/\/+$/, "");
 
     if (!base) return "";
@@ -150,17 +186,19 @@ export default function HomeSummary() {
     const totalTasks = remainingTaskCount + overdueTaskCount + completedTaskCount;
 
     return (
-        <div className="bg-white">
-            <Container className="bg-white py-6">
-                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="bg-gray-50">
+            <Container className="py-6">
+                <div className="mb-6 flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="mb-2 font-bold text-3xl text-[#261E33]">Home Dashboard</h1>
-                        <p className="text-[#6F6B99]">Tổng hợp tất cả công việc và hoạt động của bạn</p>
+                        <h1 className="text-2xl font-semibold text-gray-900">Tổng quan</h1>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Theo dõi nhanh công việc và nhóm bạn đang tham gia
+                        </p>
                     </div>
 
                     <Button
                         variant="outline"
-                        className="border-gray-200 bg-white text-[#261E33] shadow-sm hover:bg-gray-50"
+                        className="h-10 rounded-lg border-gray-300 bg-white px-4 text-gray-700 hover:bg-gray-50"
                     >
                         <CalendarDays className="mr-2 h-4 w-4" />
                         Lịch
@@ -169,37 +207,104 @@ export default function HomeSummary() {
 
                 {isLoading ? (
                     <>
-                        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                             {Array.from({ length: 4 }).map((_, index) => (
                                 <div
                                     key={index}
-                                    className="h-[132px] animate-pulse rounded-xl border border-gray-200 bg-white"
-                                />
+                                    className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+                                >
+                                    <div className="animate-pulse">
+                                        <div className="mb-3 h-4 w-28 rounded bg-gray-200" />
+                                        <div className="h-8 w-20 rounded bg-gray-200" />
+                                    </div>
+                                </div>
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">
-                            {Array.from({ length: 3 }).map((_, index) => (
-                                <div
-                                    key={index}
-                                    className="h-[190px] animate-pulse rounded-xl border border-gray-200 bg-white"
-                                />
-                            ))}
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
+                                <div className="animate-pulse">
+                                    <div className="mb-3 h-5 w-40 rounded bg-gray-200" />
+                                    <div className="mb-3 h-8 w-24 rounded bg-gray-200" />
+                                    <div className="mb-4 h-4 w-48 rounded bg-gray-200" />
+                                    <div className="h-2.5 w-full rounded-full bg-gray-200" />
+                                </div>
+                            </div>
+
+                            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                                <div className="animate-pulse">
+                                    <div className="mb-3 h-5 w-32 rounded bg-gray-200" />
+                                    <div className="space-y-3">
+                                        <div className="h-4 w-full rounded bg-gray-200" />
+                                        <div className="h-4 w-5/6 rounded bg-gray-200" />
+                                        <div className="h-4 w-4/6 rounded bg-gray-200" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </>
                 ) : (
                     <>
-                        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-                            <SummaryCard label="Công việc còn lại" value={remainingTaskCount} />
-                            <SummaryCard label="Công việc quá hạn" value={overdueTaskCount} />
-                            <SummaryCard label="Công việc đã hoàn thành" value={completedTaskCount} />
-                            <SummaryCard label="Tổng số nhóm tham gia" value={totalJoinedGroupCount} />
+                        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            <StatCard
+                                label="Công việc còn lại"
+                                value={remainingTaskCount}
+                                icon={<Clock3 className="h-5 w-5" />}
+                            />
+                            <StatCard
+                                label="Công việc quá hạn"
+                                value={overdueTaskCount}
+                                icon={<AlertTriangle className="h-5 w-5" />}
+                            />
+                            <StatCard
+                                label="Đã hoàn thành"
+                                value={completedTaskCount}
+                                icon={<CheckCircle2 className="h-5 w-5" />}
+                            />
+                            <StatCard
+                                label="Số nhóm tham gia"
+                                value={totalJoinedGroupCount}
+                                icon={<Layers3 className="h-5 w-5" />}
+                            />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">
-                            <CompletionCard completed={completedTaskCount} total={totalTasks} />
-                            <CompletionCard completed={completedTaskCount} total={totalTasks} />
-                            <CompletionCard completed={completedTaskCount} total={totalTasks} />
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                            <div className="lg:col-span-2">
+                                <ProgressCard
+                                    completed={completedTaskCount}
+                                    total={totalTasks}
+                                />
+                            </div>
+
+                            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                                <h2 className="text-base font-semibold text-gray-900">Tóm tắt</h2>
+                                <div className="mt-4 space-y-3 text-sm text-gray-600">
+                                    <div className="flex items-center justify-between">
+                                        <span>Còn lại</span>
+                                        <span className="font-medium text-gray-900">
+                                            {remainingTaskCount}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>Quá hạn</span>
+                                        <span className="font-medium text-gray-900">
+                                            {overdueTaskCount}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>Hoàn thành</span>
+                                        <span className="font-medium text-gray-900">
+                                            {completedTaskCount}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>Nhóm tham gia</span>
+                                        <span className="font-medium text-gray-900">
+                                            {totalJoinedGroupCount}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </>
                 )}

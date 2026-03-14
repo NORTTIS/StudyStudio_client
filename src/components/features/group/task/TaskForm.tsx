@@ -405,7 +405,8 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 day_button:
                                     "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
                                 selected: "!bg-orange-500 !text-white",
-                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                day_selected:
+                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
                                 today: "text-orange-600 font-bold",
                                 day_today: "text-orange-600 font-bold",
                                 outside: "text-zinc-300",
@@ -486,10 +487,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                         </div>
 
                         <span
-                            className={cn(
-                                "truncate text-left",
-                                value ? "font-medium text-zinc-900" : "text-zinc-400"
-                            )}
+                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}
                         >
                             {formatDateDisplay(value)}
                         </span>
@@ -518,7 +516,9 @@ export default function TaskFormModal({
     const [title, setTitle] = React.useState("");
     const [description, setDescription] = React.useState("");
     const [assigneeId, setAssigneeId] = React.useState<string | null>(defaultAssigneeId);
-    const [statusId, setStatusId] = React.useState<string | null>(defaultStatusId ?? statuses[0]?.value ?? null);
+    const [statusId, setStatusId] = React.useState<string>(
+        defaultStatusId ?? statuses[0]?.value ?? ""
+    );
     const [priority, setPriority] = React.useState<TaskPriority>(defaultPriority);
     const [severity, setSeverity] = React.useState<TaskSeverity>(defaultSeverity);
 
@@ -557,7 +557,7 @@ export default function TaskFormModal({
     }, [open, onClose]);
 
     const selectedStatusName = React.useMemo(() => {
-        return statuses.find((s) => s.value === statusId)?.label ?? "No status";
+        return statuses.find((s) => s.value === statusId)?.label ?? "";
     }, [statuses, statusId]);
 
     const selectedAssignee = React.useMemo(() => {
@@ -718,8 +718,8 @@ export default function TaskFormModal({
                         <div>
                             <div className="text-sm font-semibold text-zinc-600">Status</div>
                             <Select
-                                value={statusId ?? "no-status"}
-                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}
+                                value={statusId}
+                                onValueChange={(v) => setStatusId(v)}
                             >
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
                                     <span className="truncate">{selectedStatusName}</span>
@@ -733,9 +733,7 @@ export default function TaskFormModal({
                                     avoidCollisions
                                     className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
                                 >
-                                    <SelectItem value="no-status" className={selectItemClassName}>
-                                        No status
-                                    </SelectItem>
+
                                     {statuses.map((s) => (
                                         <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
                                             {s.label}
@@ -778,12 +776,7 @@ export default function TaskFormModal({
 
                         <TrelloDatePicker label="Start Date" value={startDate} onChange={setStartDate} />
 
-                        <TrelloDatePicker
-                            label="Due Date"
-                            value={dueDate}
-                            onChange={setDueDate}
-                            min={startDate || undefined}
-                        />
+                        <TrelloDatePicker label="Due Date" value={dueDate} onChange={setDueDate} min={startDate || undefined} />
 
                         <div>
                             <div className="text-sm font-semibold text-zinc-600">Severity</div>
