@@ -88,13 +88,12 @@ export function DashboardSidebar() {
     const renderHeader = () => {
         if (collapsed) {
             return (
-                <div className="flex h-20 items-center justify-center border-b border-[#E5E5E5] px-4">
+                <div className="flex h-20 items-center justify-center border-[#E5E5E5] border-b px-4">
                     <button
                         type="button"
                         onClick={() => setCollapsed(false)}
                         aria-label="Expand sidebar"
-                        className="group relative flex h-11 w-11 items-center justify-center rounded-xl text-[#6F6B99] transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-[#FFF3E8] hover:text-[#F97316] active:scale-[0.98]"
-                    >
+                        className="group relative flex h-11 w-11 items-center justify-center rounded-xl text-[#6F6B99] transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-[#FFF3E8] hover:text-[#F97316] active:scale-[0.98]">
                         <span className="absolute inset-0 flex items-center justify-center transition-all duration-200 ease-out group-hover:scale-75 group-hover:opacity-0">
                             <Logo showText={false} size="md" className="m-0 shrink-0" />
                         </span>
@@ -108,11 +107,10 @@ export function DashboardSidebar() {
         }
 
         return (
-            <div className="flex h-20 items-center justify-between border-b border-[#E5E5E5] px-5">
+            <div className="flex h-20 items-center justify-between border-[#E5E5E5] border-b px-5">
                 <Link
                     href={homeHref}
-                    className="flex min-w-0 items-center overflow-hidden transition-transform duration-300 ease-out hover:scale-[1.01]"
-                >
+                    className="flex min-w-0 items-center overflow-hidden transition-transform duration-300 ease-out hover:scale-[1.01]">
                     <Logo size="md" className="m-0 shrink-0" />
                 </Link>
 
@@ -120,8 +118,7 @@ export function DashboardSidebar() {
                     type="button"
                     onClick={() => setCollapsed(true)}
                     className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6F6B99] transition-all duration-300 ease-out hover:scale-105 hover:bg-[#FFF3E8] hover:text-[#F97316] active:scale-95"
-                    aria-label="Collapse sidebar"
-                >
+                    aria-label="Collapse sidebar">
                     <ChevronLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-0.5" />
                 </button>
             </div>
@@ -132,14 +129,13 @@ export function DashboardSidebar() {
         return (
             <aside
                 className={twMerge(
-                    "hidden h-screen shrink-0 overflow-hidden border-r border-[#E5E5E5] bg-white transition-[width] duration-300 ease-in-out lg:block",
+                    "hidden h-screen shrink-0 overflow-hidden border-[#E5E5E5] border-r bg-white transition-[width] duration-300 ease-in-out lg:block",
                     collapsed ? "w-24" : "w-72"
-                )}
-            >
+                )}>
                 {renderHeader()}
 
                 <div className="flex items-center justify-center p-8">
-                    <div className="flex items-center gap-2 text-base text-[#6F6B99]">
+                    <div className="flex items-center gap-2 text-[#6F6B99] text-base">
                         <span className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
                         <span className="transition-all duration-200">{collapsed ? "..." : "Loading..."}</span>
                     </div>
@@ -151,10 +147,9 @@ export function DashboardSidebar() {
     return (
         <aside
             className={twMerge(
-                "hidden h-screen shrink-0 overflow-hidden border-r border-[#E5E5E5] bg-white transition-[width] duration-300 ease-in-out lg:block",
+                "hidden h-screen shrink-0 overflow-hidden border-[#E5E5E5] border-r bg-white transition-[width] duration-300 ease-in-out lg:block",
                 collapsed ? "w-24" : "w-72"
-            )}
-        >
+            )}>
             {renderHeader()}
 
             <nav className="p-4">
@@ -177,12 +172,13 @@ export function DashboardSidebar() {
                                     active
                                         ? "bg-orange-100 text-orange-600 shadow-[inset_0_0_0_1px_rgba(249,115,22,0.08)]"
                                         : "text-[#6F6B99] hover:bg-[#FFF3E8] hover:text-[#F97316] hover:shadow-sm"
-                                )}
-                            >
+                                )}>
                                 <span
                                     className={twMerge(
-                                        "absolute left-0 top-1/2 w-1 -translate-y-1/2 rounded-r-full bg-orange-500 transition-all duration-300",
-                                        active ? "h-8 opacity-100" : "h-0 opacity-0 group-hover:h-6 group-hover:opacity-60"
+                                        "absolute top-1/2 left-0 w-1 -translate-y-1/2 rounded-r-full bg-orange-500 transition-all duration-300",
+                                        active
+                                            ? "h-8 opacity-100"
+                                            : "h-0 opacity-0 group-hover:h-6 group-hover:opacity-60"
                                     )}
                                 />
 
@@ -198,18 +194,15 @@ export function DashboardSidebar() {
 
                                 <span
                                     className={twMerge(
-                                        "relative z-10 overflow-hidden whitespace-nowrap text-[16px] font-medium transition-all duration-300 ease-out",
-                                        collapsed
-                                            ? "w-0 translate-x-2 opacity-0"
-                                            : "w-auto translate-x-0 opacity-100"
-                                    )}
-                                >
+                                        "relative z-10 overflow-hidden whitespace-nowrap font-medium text-[16px] transition-all duration-300 ease-out",
+                                        collapsed ? "w-0 translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+                                    )}>
                                     {item.name}
                                 </span>
 
                                 <span
                                     className={twMerge(
-                                        "ml-auto mt-auto mb-auto h-2 w-2 shrink-0 rounded-full transition-all duration-300 ease-out",
+                                        "mt-auto mb-auto ml-auto h-2 w-2 shrink-0 rounded-full transition-all duration-300 ease-out",
                                         collapsed
                                             ? "scale-0 opacity-0"
                                             : active

@@ -13,8 +13,8 @@ import {
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
+import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import type { components } from "@/api/types";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -159,10 +159,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 function getApiBase() {
-    const raw =
-        process.env.NEXT_PUBLIC_API_BASE_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        "";
+    const raw = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
     return String(raw).replace(/\/+$/, "");
 }
 
@@ -383,7 +380,7 @@ function buildInitials(name?: string | null) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const a = parts[0]?.[0] ?? "";
-    const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
     return `${a}${b}`.toUpperCase() || "U";
 }
 
@@ -394,7 +391,7 @@ function parseDateString(value?: string) {
     const y = Number(match[1]);
     const m = Number(match[2]);
     const d = Number(match[3]);
-    if (!y || !m || !d) return undefined;
+    if (!(y && m && d)) return undefined;
     return new Date(y, m - 1, d);
 }
 
@@ -440,11 +437,7 @@ function readParam(params: Record<string, string | string[] | undefined>, key: s
 }
 
 function getGroupIdFromParams(params: Record<string, string | string[] | undefined>) {
-    const direct =
-        readParam(params, "groupId") ||
-        readParam(params, "id") ||
-        readParam(params, "slug") ||
-        null;
+    const direct = readParam(params, "groupId") || readParam(params, "id") || readParam(params, "slug") || null;
 
     if (direct) return direct;
 
@@ -596,37 +589,34 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         width: popupPosition.width,
                         maxHeight: "calc(100vh - 40px)",
                         overflowY: "auto"
-                    }}
-                >
+                    }}>
                     <div className="mb-4 flex items-center gap-3">
                         <div className="relative flex-1">
                             <select
                                 value={month.getMonth()}
                                 onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {monthOptions.map((item) => (
                                     <option key={item.value} value={item.value}>
                                         {item.label}
                                     </option>
                                 ))}
                             </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                         </div>
 
                         <div className="relative w-[140px]">
                             <select
                                 value={month.getFullYear()}
                                 onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {yearOptions.map((year) => (
                                     <option key={year} value={year}>
                                         {year}
                                     </option>
                                 ))}
                             </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                         </div>
                     </div>
 
@@ -636,20 +626,18 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 type="button"
                                 onClick={goPrevMonth}
                                 disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
 
-                            <div className="text-[18px] font-bold text-zinc-900">
+                            <div className="font-bold text-[18px] text-zinc-900">
                                 {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                             </div>
 
                             <button
                                 type="button"
                                 onClick={goNextMonth}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                            >
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
                                 <ChevronRight className="h-5 w-5" />
                             </button>
                         </div>
@@ -699,24 +687,21 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         <button
                             type="button"
                             onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Today
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Tomorrow
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Next week
                         </button>
 
@@ -726,8 +711,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 onChange("");
                                 setOpen(false);
                             }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
                             No date
                         </button>
                     </div>
@@ -739,7 +723,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -755,8 +739,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             : open
                                 ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
                                 : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
@@ -766,8 +749,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                     : open
                                         ? "bg-orange-100 text-orange-600"
                                         : "bg-zinc-100 text-zinc-500"
-                            )}
-                        >
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
@@ -776,8 +758,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 "truncate text-left",
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
                                 disabled && "text-zinc-500"
-                            )}
-                        >
+                            )}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -877,7 +858,7 @@ function mapStatusOptions(detail: GroupDetailResponse | null | undefined): Statu
         .map((s) => {
             const statusId = String(s?.statusId ?? "").trim();
             const statusName = String(s?.statusName ?? "").trim();
-            if (!statusId || !statusName) return null;
+            if (!(statusId && statusName)) return null;
             return { statusId, statusName };
         })
         .filter((s): s is StatusOption => s != null);
@@ -980,11 +961,7 @@ function toApiDateTimeOrNull(input: string) {
     return `${s}T00:00:00`;
 }
 
-async function apiUpdateTask(args: {
-    groupId: string;
-    taskId: string;
-    payload: UpdateTaskRequest;
-}) {
+async function apiUpdateTask(args: { groupId: string; taskId: string; payload: UpdateTaskRequest }) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
@@ -1092,7 +1069,7 @@ export default function TaskDetailModal(props: {
     }, [open, taskId]);
 
     const refreshTaskDetailSilently = React.useCallback(async () => {
-        if (!open || !taskId || !groupId) return;
+        if (!(open && taskId && groupId)) return;
 
         try {
             setIsRefreshingDetail(true);
@@ -1114,7 +1091,7 @@ export default function TaskDetailModal(props: {
     }, [open, taskId, groupId]);
 
     React.useEffect(() => {
-        if (!open || !taskId) return;
+        if (!(open && taskId)) return;
         let alive = true;
 
         (async () => {
@@ -1143,7 +1120,7 @@ export default function TaskDetailModal(props: {
     }, [open, taskId, groupId]);
 
     React.useEffect(() => {
-        if (!open || !taskId) return;
+        if (!(open && taskId)) return;
         let alive = true;
 
         (async () => {
@@ -1170,7 +1147,7 @@ export default function TaskDetailModal(props: {
     }, [open, taskId]);
 
     React.useEffect(() => {
-        if (!open || !groupId) return;
+        if (!(open && groupId)) return;
         let alive = true;
 
         (async () => {
@@ -1264,35 +1241,20 @@ export default function TaskDetailModal(props: {
         return hit?.statusName ?? task?.statusName ?? "—";
     }, [statusId, statusOptions, task?.statusName]);
 
-    const selectedPriorityValue = React.useMemo(
-        () => normalizePriorityValue(Number(priority)),
-        [priority]
-    );
+    const selectedPriorityValue = React.useMemo(() => normalizePriorityValue(Number(priority)), [priority]);
 
-    const selectedPriorityLabel = React.useMemo(
-        () => priorityLabelOf(selectedPriorityValue),
-        [selectedPriorityValue]
-    );
+    const selectedPriorityLabel = React.useMemo(() => priorityLabelOf(selectedPriorityValue), [selectedPriorityValue]);
 
-    const selectedSeverityValue = React.useMemo(
-        () => normalizeSeverityValue(Number(severity)),
-        [severity]
-    );
+    const selectedSeverityValue = React.useMemo(() => normalizeSeverityValue(Number(severity)), [severity]);
 
-    const selectedSeverityLabel = React.useMemo(
-        () => severityLabelOf(selectedSeverityValue),
-        [selectedSeverityValue]
-    );
+    const selectedSeverityLabel = React.useMemo(() => severityLabelOf(selectedSeverityValue), [selectedSeverityValue]);
 
     const selectedProgressValue = React.useMemo(() => {
         if (progress === "") return 0;
         return normalizeProgressValue(Number(progress));
     }, [progress]);
 
-    const selectedProgressLabel = React.useMemo(
-        () => progressLabelOf(selectedProgressValue),
-        [selectedProgressValue]
-    );
+    const selectedProgressLabel = React.useMemo(() => progressLabelOf(selectedProgressValue), [selectedProgressValue]);
 
     const handleSave = async () => {
         setSaveError(null);
@@ -1314,9 +1276,7 @@ export default function TaskDetailModal(props: {
         }
 
         const normalizedProgressValue =
-            progress === ""
-                ? 0
-                : normalizeProgressValue(Number(clampProgressInput(progress)));
+            progress === "" ? 0 : normalizeProgressValue(Number(clampProgressInput(progress)));
 
         try {
             setSubmitting(true);
@@ -1365,10 +1325,7 @@ export default function TaskDetailModal(props: {
             setProgress(String(normalizedProgressValue));
             setIsEditing(false);
 
-            void Promise.allSettled([
-                refreshTaskDetailSilently(),
-                Promise.resolve(onSaved?.())
-            ]);
+            void Promise.allSettled([refreshTaskDetailSilently(), Promise.resolve(onSaved?.())]);
         } catch (e: unknown) {
             setSaveError(getErrorMessage(e, "Không cập nhật được task"));
         } finally {
@@ -1385,36 +1342,32 @@ export default function TaskDetailModal(props: {
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="relative flex max-h-[88vh] w-full max-w-5xl flex-col overflow-auto rounded-2xl border border-zinc-200 bg-white shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                onPointerDown={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
                         {loadingDetail ? (
-                            <h2 className="min-w-0 truncate text-[30px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="min-w-0 truncate font-extrabold text-[30px] text-zinc-900 leading-none">
                                 Loading...
                             </h2>
                         ) : isEditing ? (
                             <input
                                 value={taskName}
                                 maxLength={TASK_TITLE_MAX_LENGTH}
-                                onChange={(e) =>
-                                    setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))
-                                }
+                                onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
                                 placeholder="Task name"
-                                className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                                className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                             />
                         ) : (
                             <div className="flex min-w-0 items-center gap-3">
-                                <h2 className="min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
+                                <h2 className="min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
                                     {taskName || "Task"}
                                 </h2>
 
                                 {isRefreshingDetail ? (
-                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-500">
+                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 font-semibold text-xs text-zinc-500">
                                         Syncing...
                                     </div>
                                 ) : null}
@@ -1426,15 +1379,14 @@ export default function TaskDetailModal(props: {
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close"
-                    >
+                        aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-7 py-5">
                     {detailError ? (
-                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {detailError}
                         </div>
                     ) : null}
@@ -1447,26 +1399,25 @@ export default function TaskDetailModal(props: {
                     ) : null}
 
                     {membersError ? (
-                        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {membersError}
                         </div>
                     ) : null}
 
                     {saveError ? (
-                        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {saveError}
                         </div>
                     ) : null}
 
                     <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Assignee</div>
+                            <div className="font-semibold text-sm text-zinc-600">Assignee</div>
                             <Select
                                 value={assigneeId || "unassigned"}
                                 onValueChange={(v) => setAssigneeId(v === "unassigned" ? "" : v)}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                     <div className="flex min-w-0 items-center gap-2">
                                         {selectedAssigneeDisplay.avatarUrl ? (
                                             <Image
@@ -1478,7 +1429,7 @@ export default function TaskDetailModal(props: {
                                                 className="h-6 w-6 rounded-full object-cover"
                                             />
                                         ) : (
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                 {buildInitials(selectedAssigneeDisplay.label)}
                                             </div>
                                         )}
@@ -1492,11 +1443,10 @@ export default function TaskDetailModal(props: {
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="unassigned" className={selectItemClassName}>
                                         <div className="flex items-center gap-2">
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                 U
                                             </div>
                                             <span>Unassigned</span>
@@ -1504,11 +1454,7 @@ export default function TaskDetailModal(props: {
                                     </SelectItem>
 
                                     {assigneeOptions.map((m) => (
-                                        <SelectItem
-                                            key={m.userId}
-                                            value={m.userId}
-                                            className={selectItemClassName}
-                                        >
+                                        <SelectItem key={m.userId} value={m.userId} className={selectItemClassName}>
                                             <div className="flex items-center gap-2">
                                                 {m.avatarUrl ? (
                                                     <Image
@@ -1520,7 +1466,7 @@ export default function TaskDetailModal(props: {
                                                         className="h-6 w-6 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                         {buildInitials(m.label)}
                                                     </div>
                                                 )}
@@ -1533,13 +1479,12 @@ export default function TaskDetailModal(props: {
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <div className="font-semibold text-sm text-zinc-600">Status</div>
                             <Select
                                 value={statusId || "no-status"}
                                 onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
 
@@ -1549,18 +1494,13 @@ export default function TaskDetailModal(props: {
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-[216px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-[216px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
                                         No status
                                     </SelectItem>
 
                                     {statusOptions.map((s) => (
-                                        <SelectItem
-                                            key={s.statusId}
-                                            value={s.statusId}
-                                            className={selectItemClassName}
-                                        >
+                                        <SelectItem key={s.statusId} value={s.statusId} className={selectItemClassName}>
                                             {s.statusName}
                                         </SelectItem>
                                     ))}
@@ -1569,14 +1509,17 @@ export default function TaskDetailModal(props: {
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                            <div className="font-semibold text-sm text-zinc-600">Priority</div>
                             <Select
                                 value={String(selectedPriorityValue)}
                                 onValueChange={setPriority}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
-                                    <span className={cn("inline-flex items-center gap-2", priorityTone(selectedPriorityLabel))}>
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
+                                    <span
+                                        className={cn(
+                                            "inline-flex items-center gap-2",
+                                            priorityTone(selectedPriorityLabel)
+                                        )}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {selectedPriorityLabel}
                                     </span>
@@ -1588,11 +1531,16 @@ export default function TaskDetailModal(props: {
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
-                                    <SelectItem value="0" className={selectItemClassName}>Low</SelectItem>
-                                    <SelectItem value="1" className={selectItemClassName}>Medium</SelectItem>
-                                    <SelectItem value="2" className={selectItemClassName}>High</SelectItem>
+                                    className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                    <SelectItem value="0" className={selectItemClassName}>
+                                        Low
+                                    </SelectItem>
+                                    <SelectItem value="1" className={selectItemClassName}>
+                                        Medium
+                                    </SelectItem>
+                                    <SelectItem value="2" className={selectItemClassName}>
+                                        High
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -1613,14 +1561,17 @@ export default function TaskDetailModal(props: {
                         />
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
+                            <div className="font-semibold text-sm text-zinc-600">Severity</div>
                             <Select
                                 value={String(selectedSeverityValue)}
                                 onValueChange={setSeverity}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
-                                    <span className={cn("inline-flex items-center gap-2", severityTone(selectedSeverityLabel))}>
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
+                                    <span
+                                        className={cn(
+                                            "inline-flex items-center gap-2",
+                                            severityTone(selectedSeverityLabel)
+                                        )}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {selectedSeverityLabel}
                                     </span>
@@ -1632,18 +1583,25 @@ export default function TaskDetailModal(props: {
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
-                                    <SelectItem value="0" className={selectItemClassName}>Minor</SelectItem>
-                                    <SelectItem value="1" className={selectItemClassName}>Moderate</SelectItem>
-                                    <SelectItem value="2" className={selectItemClassName}>Major</SelectItem>
-                                    <SelectItem value="3" className={selectItemClassName}>Critical</SelectItem>
+                                    className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                    <SelectItem value="0" className={selectItemClassName}>
+                                        Minor
+                                    </SelectItem>
+                                    <SelectItem value="1" className={selectItemClassName}>
+                                        Moderate
+                                    </SelectItem>
+                                    <SelectItem value="2" className={selectItemClassName}>
+                                        Major
+                                    </SelectItem>
+                                    <SelectItem value="3" className={selectItemClassName}>
+                                        Critical
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div className="md:col-span-2 xl:col-span-3">
-                            <div className="text-sm font-semibold text-zinc-600">Progress</div>
+                            <div className="font-semibold text-sm text-zinc-600">Progress</div>
 
                             <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
                                 <div className="mb-3 flex items-center justify-between gap-3 text-sm">
@@ -1659,7 +1617,7 @@ export default function TaskDetailModal(props: {
                                             onBlur={handleProgressInputBlur}
                                             disabled={!isEditing}
                                             placeholder="0"
-                                            className="h-9 w-16 rounded-lg border border-zinc-200 px-0 text-center text-sm font-semibold leading-none text-zinc-900 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                                            className="h-9 w-16 rounded-lg border border-zinc-200 px-0 text-center font-semibold text-sm text-zinc-900 leading-none outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
                                         />
                                         <span className="font-bold text-zinc-900">%</span>
                                     </div>
@@ -1682,13 +1640,12 @@ export default function TaskDetailModal(props: {
                                                 disabled={!isEditing}
                                                 onClick={() => setProgress(String(value))}
                                                 className={cn(
-                                                    "h-10 rounded-xl border text-sm font-semibold transition",
+                                                    "h-10 rounded-xl border font-semibold text-sm transition",
                                                     active
                                                         ? "border-orange-500 bg-orange-500 text-white"
                                                         : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
                                                     !isEditing && "cursor-not-allowed opacity-70"
-                                                )}
-                                            >
+                                                )}>
                                                 {value}%
                                             </button>
                                         );
@@ -1699,7 +1656,7 @@ export default function TaskDetailModal(props: {
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <div className="font-semibold text-sm text-zinc-600">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -1709,17 +1666,17 @@ export default function TaskDetailModal(props: {
                         />
                     </div>
 
-                    <div className="mt-6 border-t border-zinc-200 pt-5">
+                    <div className="mt-6 border-zinc-200 border-t pt-5">
                         <div className="flex items-center gap-2">
                             <MessageSquare className="h-4 w-4 text-zinc-700" />
-                            <div className="text-2xl font-extrabold text-zinc-900">Comments</div>
-                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-600">
+                            <div className="font-extrabold text-2xl text-zinc-900">Comments</div>
+                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-bold text-xs text-zinc-600">
                                 {loadingComments ? "…" : comments.length}
                             </span>
                         </div>
 
                         {commentError ? (
-                            <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                            <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                 {commentError}
                             </div>
                         ) : null}
@@ -1739,8 +1696,7 @@ export default function TaskDetailModal(props: {
                                     return (
                                         <div
                                             key={c.commentId ?? `${c.userId ?? "u"}-${c.createdAt ?? "t"}`}
-                                            className="flex items-start gap-3"
-                                        >
+                                            className="flex items-start gap-3">
                                             {safeAvatarUrl(u?.avatarUrl) ? (
                                                 <Image
                                                     src={safeAvatarUrl(u?.avatarUrl)}
@@ -1751,7 +1707,7 @@ export default function TaskDetailModal(props: {
                                                     className="h-9 w-9 rounded-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 text-xs font-extrabold text-white">
+                                                <div className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 font-extrabold text-white text-xs">
                                                     {initials(u)}
                                                 </div>
                                             )}
@@ -1782,7 +1738,7 @@ export default function TaskDetailModal(props: {
                                     className="h-9 w-9 rounded-full object-cover"
                                 />
                             ) : (
-                                <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">
+                                <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 font-bold text-sm text-white">
                                     D
                                 </div>
                             )}
@@ -1798,8 +1754,7 @@ export default function TaskDetailModal(props: {
                                     <button
                                         type="button"
                                         className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                                        aria-label="Attach"
-                                    >
+                                        aria-label="Attach">
                                         <Paperclip className="h-4 w-4" />
                                     </button>
                                     <button
@@ -1807,8 +1762,7 @@ export default function TaskDetailModal(props: {
                                         onClick={handleSendComment}
                                         className="grid h-8 w-8 place-items-center rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-60"
                                         aria-label="Send"
-                                        disabled={!commentDraft.trim()}
-                                    >
+                                        disabled={!commentDraft.trim()}>
                                         <SendHorizontal className="h-4 w-4" />
                                     </button>
                                 </div>
@@ -1817,12 +1771,11 @@ export default function TaskDetailModal(props: {
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                <div className="flex items-center justify-end gap-3 border-zinc-200 border-t bg-zinc-50 px-7 py-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                    >
+                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                         Cancel
                     </button>
 
@@ -1833,8 +1786,7 @@ export default function TaskDetailModal(props: {
                                 void handleSave();
                             }}
                             disabled={submitting}
-                            className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
-                        >
+                            className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                             {submitting ? "Saving..." : "Save change"}
                         </button>
                     ) : (
@@ -1842,8 +1794,7 @@ export default function TaskDetailModal(props: {
                             type="button"
                             onClick={() => setIsEditing(true)}
                             disabled={loadingDetail || !!detailError || !task}
-                            className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
-                        >
+                            className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                             Edit
                         </button>
                     )}

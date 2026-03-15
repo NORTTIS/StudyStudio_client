@@ -10,6 +10,7 @@ import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { getPaymentStatusInfo } from "@/utils/payment-status";
 
 interface PaymentStatusPageProps {
     paymentId: string;
@@ -28,7 +29,23 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
             try {
                 const result = await getPaymentStatus(paymentId, locale);
                 if (result.status === "success" && result.data) {
-                    setPayment(result.data);
+                    const newPayment = result.data;
+                    setPayment(newPayment);
+
+                    // Auto redirect to billing page if payment is successful
+                    if (
+                        newPayment.paymentStatus?.toLowerCase() === "success" ||
+                        newPayment.paymentStatus?.toLowerCase() === "completed"
+                    ) {
+                        setTimeout(() => {
+                            toast({
+                                description:
+                                    "Thanh toán thành công! Email xác nhận đã được gửi. Đang chuyển về trang quản lý gói...",
+                                variant: "default"
+                            });
+                            router.push(`/${locale}/settings/billing`);
+                        }, 2000); // Wait 2 seconds to show success message
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch payment status:", error);
@@ -47,7 +64,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [paymentId, locale, payment?.paymentStatus]);
+    }, [paymentId, locale, payment?.paymentStatus, router, toast]);
 
     const handleCancel = async () => {
         if (!payment) return;
@@ -60,7 +77,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                     description: "Đã hủy thanh toán thành công",
                     variant: "default"
                 });
-                router.push(`/${locale}/payment/history`);
+                router.push(`/${locale}/settings/billing`);
             } else {
                 toast({
                     description: result.message || "Không thể hủy thanh toán",
@@ -80,14 +97,14 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
     const getStatusIcon = () => {
         if (!payment) return null;
 
-        switch (payment.paymentStatus?.toLowerCase()) {
-            case "completed":
-            case "success":
+        const statusInfo = getPaymentStatusInfo(payment.paymentStatus || "");
+
+        switch (statusInfo.icon) {
+            case "check-circle":
                 return <CheckCircle className="h-16 w-16 text-green-500" />;
-            case "pending":
+            case "clock":
                 return <Clock className="h-16 w-16 text-yellow-500" />;
-            case "cancelled":
-            case "failed":
+            case "x-circle":
                 return <XCircle className="h-16 w-16 text-red-500" />;
             default:
                 return <Clock className="h-16 w-16 text-gray-500" />;
@@ -96,37 +113,12 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
 
     const getStatusText = () => {
         if (!payment) return "";
-
-        switch (payment.paymentStatus?.toLowerCase()) {
-            case "completed":
-            case "success":
-                return "Thanh toán thành công";
-            case "pending":
-                return "Đang chờ thanh toán";
-            case "cancelled":
-                return "Đã hủy thanh toán";
-            case "failed":
-                return "Thanh toán thất bại";
-            default:
-                return payment.paymentStatus;
-        }
+        return getPaymentStatusInfo(payment.paymentStatus || "").label;
     };
 
     const getStatusColor = () => {
         if (!payment) return "text-gray-600";
-
-        switch (payment.paymentStatus?.toLowerCase()) {
-            case "completed":
-            case "success":
-                return "text-green-600";
-            case "pending":
-                return "text-yellow-600";
-            case "cancelled":
-            case "failed":
-                return "text-red-600";
-            default:
-                return "text-gray-600";
-        }
+        return getPaymentStatusInfo(payment.paymentStatus || "").color;
     };
 
     return (
@@ -173,6 +165,14 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                                     <div className="mx-auto mb-4 flex justify-center">{getStatusIcon()}</div>
                                     <h2 className={`mb-2 font-bold text-2xl ${getStatusColor()}`}>{getStatusText()}</h2>
                                     <p className="text-[#6F6B99]">Mã giao dịch: {payment.orderCode}</p>
+                                    {(payment.paymentStatus?.toLowerCase() === "success" ||
+                                        payment.paymentStatus?.toLowerCase() === "completed") && (
+                                        <div className="mt-4 rounded-lg bg-green-50 p-4">
+                                            <p className="text-green-700 text-sm">
+                                                📧 Email xác nhận thanh toán đã được gửi đến địa chỉ email của bạn
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Payment Details */}
@@ -217,7 +217,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                                             {isCancelling ? "Đang hủy..." : "Hủy thanh toán"}
                                         </Button>
                                     )}
-                                    <Link href={`/${locale}/payment`} className="flex-1">
+                                    <Link href={`/${locale}/settings/billing`} className="flex-1">
                                         <Button variant="outline" className="w-full">
                                             Về trang gói đăng ký
                                         </Button>

@@ -2,8 +2,8 @@
 
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
+import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
@@ -16,14 +16,14 @@ function buildInitials(name?: string | null) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const a = parts[0]?.[0] ?? "";
-    const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
     return `${a}${b}`.toUpperCase() || "U";
 }
 
 function parseDateString(value?: string) {
     if (!value) return undefined;
     const [y, m, d] = value.split("-").map(Number);
-    if (!y || !m || !d) return undefined;
+    if (!(y && m && d)) return undefined;
     return new Date(y, m - 1, d);
 }
 
@@ -314,37 +314,34 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                         top: popupPosition.top,
                         left: popupPosition.left,
                         width: popupPosition.width
-                    }}
-                >
+                    }}>
                     <div className="mb-4 flex items-center gap-3">
                         <div className="relative flex-1">
                             <select
                                 value={month.getMonth()}
                                 onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {monthOptions.map((item) => (
                                     <option key={item.value} value={item.value}>
                                         {item.label}
                                     </option>
                                 ))}
                             </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                         </div>
 
                         <div className="relative w-[140px]">
                             <select
                                 value={month.getFullYear()}
                                 onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {yearOptions.map((year) => (
                                     <option key={year} value={year}>
                                         {year}
                                     </option>
                                 ))}
                             </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                         </div>
                     </div>
 
@@ -354,20 +351,18 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 type="button"
                                 onClick={goPrevMonth}
                                 disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
 
-                            <div className="text-[18px] font-bold text-zinc-900">
+                            <div className="font-bold text-[18px] text-zinc-900">
                                 {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                             </div>
 
                             <button
                                 type="button"
                                 onClick={goNextMonth}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                            >
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
                                 <ChevronRight className="h-5 w-5" />
                             </button>
                         </div>
@@ -423,24 +418,21 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                         <button
                             type="button"
                             onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Hôm nay
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Ngày mai
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                             Tuần sau
                         </button>
 
@@ -450,8 +442,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 onChange("");
                                 setOpen(false);
                             }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                        >
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
                             Không chọn ngày
                         </button>
                     </div>
@@ -463,7 +454,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -474,21 +465,18 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                         open
                             ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
                             : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
                                 "grid h-7 w-7 shrink-0 place-items-center rounded-md",
                                 open ? "bg-orange-100 text-orange-600" : "bg-zinc-100 text-zinc-500"
-                            )}
-                        >
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
                         <span
-                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}
-                        >
+                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -516,9 +504,7 @@ export default function TaskFormModal({
     const [title, setTitle] = React.useState("");
     const [description, setDescription] = React.useState("");
     const [assigneeId, setAssigneeId] = React.useState<string | null>(defaultAssigneeId);
-    const [statusId, setStatusId] = React.useState<string>(
-        defaultStatusId ?? statuses[0]?.value ?? ""
-    );
+    const [statusId, setStatusId] = React.useState<string>(defaultStatusId ?? statuses[0]?.value ?? "");
     const [priority, setPriority] = React.useState<TaskPriority>(defaultPriority);
     const [severity, setSeverity] = React.useState<TaskSeverity>(defaultSeverity);
 
@@ -617,13 +603,11 @@ export default function TaskFormModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <div className="relative border-b border-zinc-200 px-7 py-5 pr-24">
+                onPointerDown={(e) => e.stopPropagation()}>
+                <div className="relative border-zinc-200 border-b px-7 py-5 pr-24">
                     <input
                         value={title}
                         maxLength={TASK_TITLE_MAX_LENGTH}
@@ -632,34 +616,32 @@ export default function TaskFormModal({
                             if (error) setError(null);
                         }}
                         placeholder="Tên công việc"
-                        className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-4 py-3 text-[30px] font-extrabold leading-none text-zinc-900 outline-none"
+                        className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-4 py-3 font-extrabold text-[30px] text-zinc-900 leading-none outline-none"
                     />
 
                     <button
                         type="button"
                         onClick={onClose}
                         className="absolute top-1/2 right-7 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Đóng"
-                    >
+                        aria-label="Đóng">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="px-7 py-5">
                     {error ? (
-                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {error}
                         </div>
                     ) : null}
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Người được giao</div>
+                            <div className="font-semibold text-sm text-zinc-600">Người được giao</div>
                             <Select
                                 value={assigneeId ?? "unassigned"}
-                                onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                                onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <div className="flex min-w-0 items-center gap-2">
                                         {selectedAssigneeDisplay.avatarUrl ? (
                                             <img
@@ -668,7 +650,7 @@ export default function TaskFormModal({
                                                 className="h-6 w-6 rounded-full object-cover"
                                             />
                                         ) : (
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                 {buildInitials(selectedAssigneeDisplay.label)}
                                             </div>
                                         )}
@@ -682,11 +664,10 @@ export default function TaskFormModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="unassigned" className={selectItemClassName}>
                                         <div className="flex items-center gap-2">
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                 U
                                             </div>
                                             <span>Chưa giao</span>
@@ -703,7 +684,7 @@ export default function TaskFormModal({
                                                         className="h-6 w-6 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                         {buildInitials(m.label)}
                                                     </div>
                                                 )}
@@ -716,12 +697,9 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Trạng thái</div>
-                            <Select
-                                value={statusId}
-                                onValueChange={(v) => setStatusId(v)}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                            <div className="font-semibold text-sm text-zinc-600">Trạng thái</div>
+                            <Select value={statusId} onValueChange={(v) => setStatusId(v)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
 
@@ -731,8 +709,7 @@ export default function TaskFormModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     {statuses.map((s) => (
                                         <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
                                             {s.label}
@@ -743,9 +720,9 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Mức ưu tiên</div>
+                            <div className="font-semibold text-sm text-zinc-600">Mức ưu tiên</div>
                             <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {priorityLabel(priority)}
@@ -758,8 +735,7 @@ export default function TaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="low" className={selectItemClassName}>
                                         Thấp
                                     </SelectItem>
@@ -775,12 +751,17 @@ export default function TaskFormModal({
 
                         <TrelloDatePicker label="Ngày bắt đầu" value={startDate} onChange={setStartDate} />
 
-                        <TrelloDatePicker label="Hạn hoàn thành" value={dueDate} onChange={setDueDate} min={startDate || undefined} />
+                        <TrelloDatePicker
+                            label="Hạn hoàn thành"
+                            value={dueDate}
+                            onChange={setDueDate}
+                            min={startDate || undefined}
+                        />
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Mức độ</div>
+                            <div className="font-semibold text-sm text-zinc-600">Mức độ</div>
                             <Select value={severity} onValueChange={(v) => setSeverity(v as TaskSeverity)}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {severityLabel(severity)}
@@ -793,8 +774,7 @@ export default function TaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="minor" className={selectItemClassName}>
                                         Thấp
                                     </SelectItem>
@@ -813,7 +793,7 @@ export default function TaskFormModal({
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Mô tả</div>
+                        <div className="font-semibold text-sm text-zinc-600">Mô tả</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -823,12 +803,11 @@ export default function TaskFormModal({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                <div className="flex items-center justify-end gap-3 border-zinc-200 border-t bg-zinc-50 px-7 py-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                    >
+                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                         Hủy
                     </button>
 
@@ -838,8 +817,7 @@ export default function TaskFormModal({
                             void handleSubmit();
                         }}
                         disabled={!canSubmit}
-                        className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
-                    >
+                        className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                         {submitting ? "Đang tạo..." : "Tạo công việc"}
                     </button>
                 </div>

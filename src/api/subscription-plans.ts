@@ -27,6 +27,5 @@ export interface SubscriptionPlansResponse {
  * @param locale - Current locale for API response messages
  */
 export async function getSubscriptionPlans(locale: string): Promise<ApiResponse<SubscriptionPlansResponse>> {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
-    return apiGet<SubscriptionPlansResponse>(`${baseUrl}/SubscriptionPlan`, locale);
+    return apiGet<SubscriptionPlansResponse>("/SubscriptionPlan", locale);
 }

@@ -1,7 +1,5 @@
 "use client";
 
-import * as React from "react";
-import { createPortal } from "react-dom";
 import {
     type CollisionDetection,
     closestCenter,
@@ -28,7 +26,9 @@ import {
     verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import * as React from "react";
 import { DayPicker } from "react-day-picker";
+import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import {
     CalendarDays,
@@ -42,17 +42,20 @@ import {
     Trash2,
     X
 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { TaskProgressEditor } from "@/components/features/home/Editor";
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
+import { TaskProgressEditor } from "@/components/features/home/Editor";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+} from "@/components/ui/select";
 
 type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
-type PersonalTaskBoardResponseApiResponse =
-    components["schemas"]["PersonalTaskBoardResponseApiResponse"];
-type PersonalTaskStatusResponseApiResponse =
-    components["schemas"]["PersonalTaskStatusResponseApiResponse"];
+type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
+type PersonalTaskStatusResponseApiResponse = components["schemas"]["PersonalTaskStatusResponseApiResponse"];
 type TaskItemResponseApiResponse = components["schemas"]["TaskItemResponseApiResponse"];
 type ObjectApiResponse = components["schemas"]["ObjectApiResponse"];
 type TaskItemResponse = components["schemas"]["TaskItemResponse"];
@@ -120,7 +123,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 function parseDateString(value?: string) {
     if (!value) return undefined;
     const [y, m, d] = value.split("-").map(Number);
-    if (!y || !m || !d) return undefined;
+    if (!(y && m && d)) return undefined;
     return new Date(y, m - 1, d);
 }
 
@@ -146,7 +149,7 @@ function toDateInputValue(input?: string | null) {
 function toApiDateTime(value?: string | null) {
     if (!value) return null;
     const [y, m, d] = value.split("-").map(Number);
-    if (!y || !m || !d) return null;
+    if (!(y && m && d)) return null;
     const date = new Date(y, m - 1, d, 0, 0, 0, 0);
     return date.toISOString();
 }
@@ -181,10 +184,7 @@ function formatDateDisplay(value?: string) {
 }
 
 function buildApiUrl(path: string) {
-    const rawBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        "";
+    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
     const base = rawBase.replace(/\/+$/, "");
 
     if (!base) return "";
@@ -240,11 +240,7 @@ function extractBoardData(payload: unknown): PersonalTaskBoardResponse | null {
 
     const firstLayer = source?.data;
 
-    if (
-        firstLayer &&
-        typeof firstLayer === "object" &&
-        "personalTaskStatuses" in firstLayer
-    ) {
+    if (firstLayer && typeof firstLayer === "object" && "personalTaskStatuses" in firstLayer) {
         return firstLayer as PersonalTaskBoardResponse;
     }
 
@@ -343,7 +339,7 @@ function isTaskDone(task?: Pick<TaskItemResponse, "progress"> | null) {
 
 function ProgressPill({ progress }: { progress: number }) {
     return (
-        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700">
+        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 font-semibold text-indigo-700 text-xs">
             {progress}%
         </span>
     );
@@ -353,16 +349,14 @@ import { CheckCircle2 } from "lucide-react";
 
 function DonePill() {
     return (
-        <span className="inline-flex h-10 items-center gap-2 rounded-[16px] border border-emerald-300 bg-emerald-50 px-4 text-sm font-medium text-emerald-700">
+        <span className="inline-flex h-10 items-center gap-2 rounded-[16px] border border-emerald-300 bg-emerald-50 px-4 font-medium text-emerald-700 text-sm">
             <CheckCircle2 className="h-4 w-4" />
             Done
         </span>
     );
 }
 
-function taskSeverityToFormValue(
-    value?: number | null
-): "minor" | "moderate" | "major" | "critical" {
+function taskSeverityToFormValue(value?: number | null): "minor" | "moderate" | "major" | "critical" {
     if (value === 3) return "critical";
     if (value === 2) return "major";
     if (value === 1) return "moderate";
@@ -381,10 +375,7 @@ function priorityDotColor(priority?: number | null) {
     return "bg-emerald-500";
 }
 
-function findColumnOfTask(
-    statuses: PersonalTaskStatusDto[],
-    taskId: string
-): ColumnId | null {
+function findColumnOfTask(statuses: PersonalTaskStatusDto[], taskId: string): ColumnId | null {
     for (const status of statuses) {
         const found = (status.taskList ?? []).some((task) => String(task.taskId ?? "") === taskId);
         if (found && status.statusId) return String(status.statusId);
@@ -392,10 +383,7 @@ function findColumnOfTask(
     return null;
 }
 
-function findTaskInStatuses(
-    statuses: PersonalTaskStatusDto[],
-    taskId: string
-): PersonalTaskItemResponse | null {
+function findTaskInStatuses(statuses: PersonalTaskStatusDto[], taskId: string): PersonalTaskItemResponse | null {
     for (const status of statuses) {
         const found = ((status.taskList ?? []) as PersonalTaskItemResponse[]).find(
             (task) => String(task.taskId ?? "") === taskId
@@ -405,21 +393,14 @@ function findTaskInStatuses(
     return null;
 }
 
-function filterDroppablesByType(
-    droppables: DroppableContainer[],
-    allow: Array<string>
-) {
+function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<string>) {
     return droppables.filter((d) => {
         const t = d.data?.current?.type;
         return typeof t === "string" && allow.includes(t);
     });
 }
 
-function applyTaskDrop(args: {
-    statuses: PersonalTaskStatusDto[];
-    activeTaskId: string;
-    overRaw: string;
-}) {
+function applyTaskDrop(args: { statuses: PersonalTaskStatusDto[]; activeTaskId: string; overRaw: string }) {
     const { statuses, activeTaskId, overRaw } = args;
 
     const overIsEnd = overRaw.startsWith(END_PREFIX);
@@ -446,7 +427,7 @@ function applyTaskDrop(args: {
     const fromStatus = nextStatuses.find((s) => String(s.statusId ?? "") === fromCol);
     const toStatus = nextStatuses.find((s) => String(s.statusId ?? "") === toCol);
 
-    if (!fromStatus || !toStatus) return null;
+    if (!(fromStatus && toStatus)) return null;
 
     const fromTasks = fromStatus.taskList as PersonalTaskItemResponse[];
     const toTasks = fromCol === toCol ? fromTasks : (toStatus.taskList as PersonalTaskItemResponse[]);
@@ -468,9 +449,7 @@ function applyTaskDrop(args: {
         const newIndex = fromTasks.findIndex((t) => String(t.taskId ?? "") === activeTaskId);
         const prevTaskId = newIndex > 0 ? String(fromTasks[newIndex - 1].taskId ?? "") : null;
         const nextTaskId =
-            newIndex >= 0 && newIndex < fromTasks.length - 1
-                ? String(fromTasks[newIndex + 1].taskId ?? "")
-                : null;
+            newIndex >= 0 && newIndex < fromTasks.length - 1 ? String(fromTasks[newIndex + 1].taskId ?? "") : null;
 
         return {
             nextStatuses,
@@ -500,9 +479,7 @@ function applyTaskDrop(args: {
     const newIndex = toTasks.findIndex((t) => String(t.taskId ?? "") === activeTaskId);
     const prevTaskId = newIndex > 0 ? String(toTasks[newIndex - 1].taskId ?? "") : null;
     const nextTaskId =
-        newIndex >= 0 && newIndex < toTasks.length - 1
-            ? String(toTasks[newIndex + 1].taskId ?? "")
-            : null;
+        newIndex >= 0 && newIndex < toTasks.length - 1 ? String(toTasks[newIndex + 1].taskId ?? "") : null;
 
     return {
         nextStatuses,
@@ -513,15 +490,7 @@ function applyTaskDrop(args: {
     };
 }
 
-function DuePill({
-    due,
-    overdue,
-    done
-}: {
-    due: string;
-    overdue: boolean;
-    done?: boolean;
-}) {
+function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?: boolean }) {
     return (
         <div
             className={cn(
@@ -531,13 +500,12 @@ function DuePill({
                     : overdue
                         ? "border-rose-200 bg-rose-50 text-rose-700"
                         : "border-zinc-200 bg-zinc-50 text-zinc-700"
-            )}
-        >
+            )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
-                <div className="whitespace-nowrap text-xs font-semibold">{due}</div>
+                <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
                 {!done && overdue ? (
-                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">
                         Quá hạn
                     </span>
                 ) : null}
@@ -552,10 +520,9 @@ function SummaryCount({ count }: { count: number }) {
             className={cn(
                 "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2",
                 "border border-zinc-200/70 bg-white",
-                "text-xs font-semibold text-zinc-700",
+                "font-semibold text-xs text-zinc-700",
                 "shadow-[0_1px_0_rgba(0,0,0,0.03)]"
-            )}
-        >
+            )}>
             {count}
         </span>
     );
@@ -641,8 +608,7 @@ function PortalDropdown({
             ref={menuRef}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
-        >
+            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
             {children}
         </div>,
         document.body
@@ -667,8 +633,7 @@ function MenuItem({
             className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
                 danger ? "text-orange-700 hover:bg-orange-50" : "text-zinc-700 hover:bg-zinc-100"
-            )}
-        >
+            )}>
             <span className="grid h-5 w-5 place-items-center">{icon}</span>
             <span className="font-medium">{label}</span>
         </button>
@@ -702,27 +667,23 @@ function ConfirmModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <h2 className="text-base font-bold text-zinc-900">{title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
+                onPointerDown={(e) => e.stopPropagation()}>
+                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
+                <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100"
-                    >
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-100">
                         {cancelLabel}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
-                    >
+                        className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-orange-700">
                         {confirmLabel}
                     </button>
                 </div>
@@ -793,10 +754,9 @@ function AddColumnInline({
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left text-sm font-semibold text-white shadow-sm",
+                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left font-semibold text-sm text-white shadow-sm",
                     "transition hover:bg-[#f54a00]/80"
-                )}
-            >
+                )}>
                 + Tạo trạng thái
             </button>
         );
@@ -819,11 +779,9 @@ function AddColumnInline({
                 )}
             />
 
-            <div className="mt-1 text-right text-[11px] text-zinc-500">
-                {title.length}/25
-            </div>
+            <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/25</div>
 
-            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
+            {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
 
             <div className="mt-3 flex items-center gap-2">
                 <button
@@ -831,11 +789,10 @@ function AddColumnInline({
                     onClick={() => void submit()}
                     disabled={isSubmitting}
                     className={cn(
-                        "rounded-xl px-3 py-2 text-sm font-semibold text-white",
+                        "rounded-xl px-3 py-2 font-semibold text-sm text-white",
                         "bg-[#f54a00] transition hover:bg-[#f54a00]/80",
                         isSubmitting && "pointer-events-none opacity-60"
-                    )}
-                >
+                    )}>
                     Thêm trạng thái
                 </button>
 
@@ -847,8 +804,7 @@ function AddColumnInline({
                         "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
                         "transition hover:bg-zinc-100",
                         isSubmitting && "pointer-events-none opacity-60"
-                    )}
-                >
+                    )}>
                     ✕
                 </button>
             </div>
@@ -863,12 +819,11 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
+                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 font-semibold text-sm",
                 "bg-[#f54a00] text-white",
                 "transition hover:bg-[#f54a00]/80",
                 disabled && "pointer-events-none opacity-60"
-            )}
-        >
+            )}>
             <Plus className="h-4 w-4" />
             Thêm công việc
         </button>
@@ -890,14 +845,7 @@ function PersonalTaskCard({
     onRename: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
     onDelete: (task: PersonalTaskItemResponse) => Promise<void>;
 }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(task.taskId ?? ""),
         data: { type: "task", columnId }
     });
@@ -986,16 +934,10 @@ function PersonalTaskCard({
                 done
                     ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
                     : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
-            )}
-        >
+            )}>
             <div className="flex items-start gap-3">
                 <div className="pt-1">
-                    <div
-                        className={cn(
-                            "h-2.5 w-2.5 rounded-full",
-                            priorityDotColor(task.taskPriority)
-                        )}
-                    />
+                    <div className={cn("h-2.5 w-2.5 rounded-full", priorityDotColor(task.taskPriority))} />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -1004,18 +946,16 @@ function PersonalTaskCard({
                             <div className="flex items-start justify-between gap-3">
                                 <p
                                     className={cn(
-                                        "line-clamp-3 pr-2 text-sm font-semibold leading-5",
+                                        "line-clamp-3 pr-2 font-semibold text-sm leading-5",
                                         done ? "text-zinc-500 line-through" : "text-zinc-900"
-                                    )}
-                                >
+                                    )}>
                                     {title}
                                 </p>
 
                                 <div
                                     className="relative shrink-0"
                                     onClick={(e) => e.stopPropagation()}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                >
+                                    onPointerDown={(e) => e.stopPropagation()}>
                                     <button
                                         ref={btnRef}
                                         type="button"
@@ -1029,16 +969,14 @@ function PersonalTaskCard({
                                             e.stopPropagation();
                                         }}
                                         className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                                        aria-label="Menu"
-                                    >
+                                        aria-label="Menu">
                                         <MoreHorizontal className="h-4 w-4" />
                                     </button>
 
                                     <PortalDropdown
                                         open={openMenu}
                                         onClose={() => setOpenMenu(false)}
-                                        anchorRef={btnRef as React.RefObject<HTMLElement>}
-                                    >
+                                        anchorRef={btnRef as React.RefObject<HTMLElement>}>
                                         <MenuItem
                                             icon={<Pencil className="h-4 w-4" />}
                                             label="Chỉnh sửa tên"
@@ -1064,8 +1002,7 @@ function PersonalTaskCard({
                         <div
                             className="space-y-2"
                             onPointerDownCapture={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}
-                        >
+                            onClick={(e) => e.stopPropagation()}>
                             <input
                                 ref={inputRef}
                                 value={draftTitle}
@@ -1085,7 +1022,7 @@ function PersonalTaskCard({
                                 }}
                                 className={cn(
                                     "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2",
-                                    "select-text text-sm font-semibold text-zinc-900 outline-none",
+                                    "select-text font-semibold text-sm text-zinc-900 outline-none",
                                     "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
                                 )}
                             />
@@ -1098,8 +1035,7 @@ function PersonalTaskCard({
                                         e.stopPropagation();
                                         void submitEdit();
                                     }}
-                                    className="rounded-lg bg-[#f54a00] px-3 py-2 text-sm font-semibold text-white hover:bg-[#f54a00]/70"
-                                >
+                                    className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
                                     Lưu
                                 </button>
 
@@ -1111,8 +1047,7 @@ function PersonalTaskCard({
                                         cancelEdit();
                                     }}
                                     className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label="Hủy"
-                                >
+                                    aria-label="Hủy">
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
@@ -1128,7 +1063,7 @@ function PersonalTaskCard({
                                     {severity ? (
                                         <span
                                             className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                                     : severity === "critical"
@@ -1138,8 +1073,7 @@ function PersonalTaskCard({
                                                             : severity === "moderate"
                                                                 ? "border-amber-200 bg-amber-50 text-amber-700"
                                                                 : "border-sky-200 bg-sky-50 text-sky-700"
-                                            )}
-                                        >
+                                            )}>
                                             {severityLabel(severity)}
                                         </span>
                                     ) : null}
@@ -1166,21 +1100,15 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
     const normalizedProgress = normalizeProgressValue(task.progress);
 
     return (
-        <div className="rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/70 p-3">
+        <div className="rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3">
             <div className="flex items-start gap-3">
-                <div
-                    className={cn(
-                        "mt-1 h-2.5 w-2.5 rounded-full",
-                        priorityDotColor(task.taskPriority)
-                    )}
-                />
+                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", priorityDotColor(task.taskPriority))} />
                 <div className="min-w-0 flex-1">
                     <p
                         className={cn(
-                            "line-clamp-3 text-sm font-semibold leading-5",
+                            "line-clamp-3 font-semibold text-sm leading-5",
                             done ? "text-zinc-500 line-through" : "text-zinc-800"
-                        )}
-                    >
+                        )}>
                         {task.taskTitle || "Untitled task"}
                     </p>
 
@@ -1193,7 +1121,7 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
                                     {severity ? (
                                         <span
                                             className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                                     : severity === "critical"
@@ -1203,8 +1131,7 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
                                                             : severity === "moderate"
                                                                 ? "border-amber-200 bg-amber-50 text-amber-700"
                                                                 : "border-sky-200 bg-sky-50 text-sky-700"
-                                            )}
-                                        >
+                                            )}>
                                             {severityLabel(severity)}
                                         </span>
                                     ) : null}
@@ -1231,12 +1158,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
 
     return (
         <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
-            <p
-                className={cn(
-                    "text-sm font-semibold leading-5",
-                    done ? "text-zinc-500 line-through" : "text-zinc-900"
-                )}
-            >
+            <p className={cn("font-semibold text-sm leading-5", done ? "text-zinc-500 line-through" : "text-zinc-900")}>
                 {task.taskTitle || "Untitled task"}
             </p>
 
@@ -1249,7 +1171,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
                             {severity ? (
                                 <span
                                     className={cn(
-                                        "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                        "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                         done
                                             ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                             : severity === "critical"
@@ -1259,8 +1181,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
                                                     : severity === "moderate"
                                                         ? "border-amber-200 bg-amber-50 text-amber-700"
                                                         : "border-sky-200 bg-sky-50 text-sky-700"
-                                    )}
-                                >
+                                    )}>
                                     {severityLabel(severity)}
                                 </span>
                             ) : null}
@@ -1282,9 +1203,7 @@ function ColumnOverlay({ status }: { status: PersonalTaskStatusDto }) {
         <div className="min-w-[300px] max-w-[300px]">
             <div className="rounded-xl bg-[#f1f2f4] shadow-xl">
                 <div className="rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2">
-                    <p className="truncate text-sm font-bold text-zinc-900">
-                        {status.statusName || "Untitled"}
-                    </p>
+                    <p className="truncate font-bold text-sm text-zinc-900">{status.statusName || "Untitled"}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
 
@@ -1293,7 +1212,7 @@ function ColumnOverlay({ status }: { status: PersonalTaskStatusDto }) {
                         {tasks.map((task) => (
                             <div key={String(task.taskId)} className="mb-2 last:mb-0">
                                 <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
-                                    <p className="text-sm font-semibold text-zinc-900">
+                                    <p className="font-semibold text-sm text-zinc-900">
                                         {task.taskTitle || "Untitled task"}
                                     </p>
                                 </div>
@@ -1301,7 +1220,7 @@ function ColumnOverlay({ status }: { status: PersonalTaskStatusDto }) {
                         ))}
 
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                            <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                 (Trạng thái trống)
                             </div>
                         ) : null}
@@ -1350,15 +1269,7 @@ function BoardColumn({
     const taskIds = tasks.map((task) => String(task.taskId ?? ""));
     const statusName = status.statusName || "Untitled";
 
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        setActivatorNodeRef,
-        transform,
-        transition,
-        isDragging
-    } = useSortable({
+    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
         id: statusId,
         data: { type: "column" }
     });
@@ -1428,13 +1339,12 @@ function BoardColumn({
                     className={cn(
                         "sticky top-0 z-10 rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2",
                         "cursor-grab select-none active:cursor-grabbing"
-                    )}
-                >
+                    )}>
                     <div className="flex items-center gap-3">
                         <div className="flex min-w-0 flex-1 items-center gap-2">
                             <div className="min-w-0 flex-1">
                                 {!isEditing ? (
-                                    <p className="truncate text-sm font-bold text-zinc-900">{statusName}</p>
+                                    <p className="truncate font-bold text-sm text-zinc-900">{statusName}</p>
                                 ) : (
                                     <div className="space-y-1">
                                         <input
@@ -1459,7 +1369,7 @@ function BoardColumn({
                                                 setTimeout(() => onColumnCommit(), 0);
                                             }}
                                             className={cn(
-                                                "h-9 w-full min-w-0 rounded-lg border bg-white px-3 text-sm font-bold text-zinc-900 outline-none",
+                                                "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
                                                 columnError
                                                     ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
                                                     : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
@@ -1473,9 +1383,7 @@ function BoardColumn({
                                         </div>
 
                                         {columnError ? (
-                                            <div className="text-[11px] font-medium text-rose-600">
-                                                {columnError}
-                                            </div>
+                                            <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
                                         ) : null}
                                     </div>
                                 )}
@@ -1483,7 +1391,7 @@ function BoardColumn({
                         </div>
 
                         <div className="flex shrink-0 items-center gap-2">
-                            <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 text-xs font-semibold text-zinc-700">
+                            <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 font-semibold text-xs text-zinc-700">
                                 {tasks.length}
                             </span>
 
@@ -1501,16 +1409,14 @@ function BoardColumn({
                                         e.stopPropagation();
                                     }}
                                     className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
-                                    aria-label="Column menu"
-                                >
+                                    aria-label="Column menu">
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
 
                                 <PortalDropdown
                                     open={openMenu}
                                     onClose={() => setOpenMenu(false)}
-                                    anchorRef={btnRef as React.RefObject<HTMLElement>}
-                                >
+                                    anchorRef={btnRef as React.RefObject<HTMLElement>}>
                                     <MenuItem
                                         icon={<Pencil className="h-4 w-4" />}
                                         label="Chỉnh sửa tên trạng thái"
@@ -1537,13 +1443,9 @@ function BoardColumn({
                 <div className="px-2 pb-2">
                     <div
                         ref={setDroppableRef}
-                        className={cn(
-                            "rounded-b-xl bg-[#f1f2f4] transition",
-                            isOver && "bg-[#e9f2ff]"
-                        )}
-                    >
+                        className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}>
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {rendered.map((item, index) =>
                                     item.kind === "ghost" ? (
                                         <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} />
@@ -1561,9 +1463,11 @@ function BoardColumn({
                                 )}
 
                                 {tasks.length === 0 ? (
-                                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center">
-                                        <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
-                                        <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
+                                    <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
+                                        <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
+                                        <div className="mt-1 text-xs text-zinc-500">
+                                            Bấm “Thêm công việc” để tạo mới
+                                        </div>
                                     </div>
                                 ) : null}
 
@@ -1735,7 +1639,7 @@ function InlineDatePicker({
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -1751,8 +1655,7 @@ function InlineDatePicker({
                             : open
                                 ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
                                 : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
@@ -1762,8 +1665,7 @@ function InlineDatePicker({
                                     : open
                                         ? "bg-orange-100 text-orange-600"
                                         : "bg-zinc-100 text-zinc-500"
-                            )}
-                        >
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
@@ -1772,8 +1674,7 @@ function InlineDatePicker({
                                 "truncate text-left",
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
                                 disabled && "text-zinc-500"
-                            )}
-                        >
+                            )}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -1791,37 +1692,34 @@ function InlineDatePicker({
                             width: popupPosition.width,
                             maxHeight: "calc(100vh - 40px)",
                             overflowY: "auto"
-                        }}
-                    >
+                        }}>
                         <div className="mb-4 flex items-center gap-3">
                             <div className="relative flex-1">
                                 <select
                                     value={month.getMonth()}
                                     onChange={handleMonthChange}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                                >
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                     {monthOptions.map((item) => (
                                         <option key={item.value} value={item.value}>
                                             {item.label}
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                             </div>
 
                             <div className="relative w-[140px]">
                                 <select
                                     value={month.getFullYear()}
                                     onChange={handleYearChange}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                                >
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                     {yearOptions.map((year) => (
                                         <option key={year} value={year}>
                                             {year}
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                             </div>
                         </div>
 
@@ -1831,20 +1729,18 @@ function InlineDatePicker({
                                     type="button"
                                     onClick={goPrevMonth}
                                     disabled={isPrevDisabled}
-                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                                >
+                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
 
-                                <div className="text-[18px] font-bold text-zinc-900">
+                                <div className="font-bold text-[18px] text-zinc-900">
                                     {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                                 </div>
 
                                 <button
                                     type="button"
                                     onClick={goNextMonth}
-                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                                >
+                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
                                     <ChevronRight className="h-5 w-5" />
                                 </button>
                             </div>
@@ -1894,24 +1790,21 @@ function InlineDatePicker({
                             <button
                                 type="button"
                                 onClick={() => pickDate(new Date())}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                                 Today
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => pickDate(addDays(new Date(), 1))}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                                 Tomorrow
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => pickDate(addDays(new Date(), 7))}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
                                 Next week
                             </button>
 
@@ -1921,8 +1814,7 @@ function InlineDatePicker({
                                     onChange("");
                                     setOpen(false);
                                 }}
-                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                            >
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
                                 No date
                             </button>
                         </div>
@@ -1991,10 +1883,7 @@ function InlineTaskFormModal({
         return statuses.find((s) => s.value === statusId)?.label ?? "No status";
     }, [statuses, statusId]);
 
-    const canSubmit =
-        title.trim().length > 0 &&
-        description.trim().length > 0 &&
-        !submitting;
+    const canSubmit = title.trim().length > 0 && description.trim().length > 0 && !submitting;
 
     const handleSubmit = async () => {
         const t = title.trim();
@@ -2045,20 +1934,18 @@ function InlineTaskFormModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                onPointerDown={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
                         <input
                             value={title}
                             maxLength={25}
                             onChange={(e) => setTitle(e.target.value.slice(0, 25))}
                             placeholder="Task name"
-                            className="w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                            className="w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                         />
                     </div>
 
@@ -2066,27 +1953,25 @@ function InlineTaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close"
-                    >
+                        aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="px-7 py-5">
                     {error ? (
-                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="mt-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {error}
                         </div>
                     ) : null}
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <div className="font-semibold text-sm text-zinc-600">Status</div>
                             <Select
                                 value={statusId ?? "no-status"}
-                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800">
+                                onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
 
@@ -2096,8 +1981,7 @@ function InlineTaskFormModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
                                         No status
                                     </SelectItem>
@@ -2111,9 +1995,9 @@ function InlineTaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                            <div className="font-semibold text-sm text-zinc-600">Priority</div>
                             <Select value={priority} onValueChange={(v) => setPriority(v as "low" | "medium" | "high")}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {priorityLabel(priority)}
@@ -2126,8 +2010,7 @@ function InlineTaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="low" className={selectItemClassName}>
                                         Low
                                     </SelectItem>
@@ -2142,9 +2025,11 @@ function InlineTaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
-                            <Select value={severity} onValueChange={(v) => setSeverity(v as "minor" | "moderate" | "major" | "critical")}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
+                            <div className="font-semibold text-sm text-zinc-600">Severity</div>
+                            <Select
+                                value={severity}
+                                onValueChange={(v) => setSeverity(v as "minor" | "moderate" | "major" | "critical")}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {severityLabel(severity)}
@@ -2157,8 +2042,7 @@ function InlineTaskFormModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="minor" className={selectItemClassName}>
                                         Minor
                                     </SelectItem>
@@ -2186,7 +2070,7 @@ function InlineTaskFormModal({
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <div className="font-semibold text-sm text-zinc-600">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -2196,12 +2080,11 @@ function InlineTaskFormModal({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                <div className="flex items-center justify-end gap-3 border-zinc-200 border-t bg-zinc-50 px-7 py-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                    >
+                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                         Cancel
                     </button>
 
@@ -2211,8 +2094,7 @@ function InlineTaskFormModal({
                             void handleSubmit();
                         }}
                         disabled={!canSubmit}
-                        className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
-                    >
+                        className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                         {submitting ? "Creating..." : "Create task"}
                     </button>
                 </div>
@@ -2267,7 +2149,7 @@ function PersonalTaskDetailModal({
     React.useEffect(() => setMounted(true), []);
 
     React.useEffect(() => {
-        if (!open || !task) return;
+        if (!(open && task)) return;
 
         setError(null);
         setIsEditing(false);
@@ -2340,13 +2222,11 @@ function PersonalTaskDetailModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="relative flex max-h-[88vh] w-full max-w-4xl flex-col overflow-auto rounded-2xl border border-zinc-200 bg-white shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                onPointerDown={(e) => e.stopPropagation()}>
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
                         {isEditing ? (
                             <input
@@ -2354,10 +2234,10 @@ function PersonalTaskDetailModal({
                                 maxLength={25}
                                 onChange={(e) => setTitle(e.target.value.slice(0, 25))}
                                 placeholder="Task name"
-                                className="mt-0 w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                                className="mt-0 w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                             />
                         ) : (
-                            <h2 className="mt-0 min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="mt-0 min-w-0 break-words font-extrabold text-[30px] text-zinc-900 leading-none">
                                 {title || "Task"}
                             </h2>
                         )}
@@ -2367,28 +2247,26 @@ function PersonalTaskDetailModal({
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close"
-                    >
+                        aria-label="Close">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-7 py-5">
                     {error ? (
-                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                             {error}
                         </div>
                     ) : null}
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <div className="font-semibold text-sm text-zinc-600">Status</div>
                             <Select
                                 value={statusId ?? "no-status"}
                                 onValueChange={(v) => setStatusId(v === "no-status" ? null : v)}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className="truncate">{selectedStatusName}</span>
                                 </SelectTrigger>
 
@@ -2398,8 +2276,7 @@ function PersonalTaskDetailModal({
                                     align="start"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
+                                    className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
                                         No status
                                     </SelectItem>
@@ -2413,13 +2290,12 @@ function PersonalTaskDetailModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                            <div className="font-semibold text-sm text-zinc-600">Priority</div>
                             <Select
                                 value={priority}
                                 onValueChange={(v) => setPriority(v as "low" | "medium" | "high")}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {priorityLabel(priority)}
@@ -2432,23 +2308,27 @@ function PersonalTaskDetailModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
-                                    <SelectItem value="low" className={selectItemClassName}>Low</SelectItem>
-                                    <SelectItem value="medium" className={selectItemClassName}>Medium</SelectItem>
-                                    <SelectItem value="high" className={selectItemClassName}>High</SelectItem>
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                    <SelectItem value="low" className={selectItemClassName}>
+                                        Low
+                                    </SelectItem>
+                                    <SelectItem value="medium" className={selectItemClassName}>
+                                        Medium
+                                    </SelectItem>
+                                    <SelectItem value="high" className={selectItemClassName}>
+                                        High
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
+                            <div className="font-semibold text-sm text-zinc-600">Severity</div>
                             <Select
                                 value={severity}
                                 onValueChange={(v) => setSeverity(v as "minor" | "moderate" | "major" | "critical")}
-                                disabled={!isEditing}
-                            >
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                disabled={!isEditing}>
+                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
                                         {severityLabel(severity)}
@@ -2461,12 +2341,19 @@ function PersonalTaskDetailModal({
                                     align="end"
                                     sideOffset={8}
                                     avoidCollisions
-                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
-                                >
-                                    <SelectItem value="minor" className={selectItemClassName}>Minor</SelectItem>
-                                    <SelectItem value="moderate" className={selectItemClassName}>Moderate</SelectItem>
-                                    <SelectItem value="major" className={selectItemClassName}>Major</SelectItem>
-                                    <SelectItem value="critical" className={selectItemClassName}>Critical</SelectItem>
+                                    className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                    <SelectItem value="minor" className={selectItemClassName}>
+                                        Minor
+                                    </SelectItem>
+                                    <SelectItem value="moderate" className={selectItemClassName}>
+                                        Moderate
+                                    </SelectItem>
+                                    <SelectItem value="major" className={selectItemClassName}>
+                                        Major
+                                    </SelectItem>
+                                    <SelectItem value="critical" className={selectItemClassName}>
+                                        Critical
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -2486,15 +2373,11 @@ function PersonalTaskDetailModal({
                             disabled={!isEditing}
                         />
 
-                        <TaskProgressEditor
-                            value={progress}
-                            onChange={setProgress}
-                            disabled={!isEditing}
-                        />
+                        <TaskProgressEditor value={progress} onChange={setProgress} disabled={!isEditing} />
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <div className="font-semibold text-sm text-zinc-600">Description</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -2505,13 +2388,12 @@ function PersonalTaskDetailModal({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
+                <div className="flex items-center justify-between gap-3 border-zinc-200 border-t bg-zinc-50 px-7 py-4">
                     <button
                         type="button"
                         onClick={() => void onDelete(task)}
                         disabled={saving}
-                        className="h-11 rounded-xl border border-rose-200 bg-white px-6 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-                    >
+                        className="h-11 rounded-xl border border-rose-200 bg-white px-6 font-semibold text-rose-600 text-sm hover:bg-rose-50 disabled:opacity-60">
                         Xóa
                     </button>
 
@@ -2519,8 +2401,7 @@ function PersonalTaskDetailModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                        >
+                            className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                             Cancel
                         </button>
 
@@ -2529,16 +2410,14 @@ function PersonalTaskDetailModal({
                                 type="button"
                                 onClick={() => void handleSave()}
                                 disabled={saving}
-                                className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
-                            >
+                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                                 {saving ? "Saving..." : "Save change"}
                             </button>
                         ) : (
                             <button
                                 type="button"
                                 onClick={() => setIsEditing(true)}
-                                className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80"
-                            >
+                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80">
                                 Edit
                             </button>
                         )}
@@ -2674,10 +2553,7 @@ export default function HomePersonalTaskScreen() {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    const columnIds = React.useMemo(
-        () => statuses.map((s) => String(s.statusId ?? "")),
-        [statuses]
-    );
+    const columnIds = React.useMemo(() => statuses.map((s) => String(s.statusId ?? "")), [statuses]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -2690,7 +2566,7 @@ export default function HomePersonalTaskScreen() {
     }, [statuses, activeColumnId]);
 
     const ghost = React.useMemo(() => {
-        if (!activeTaskId || !overId) return null;
+        if (!(activeTaskId && overId)) return null;
 
         const task = findTaskInStatuses(statuses, activeTaskId);
         if (!task) return null;
@@ -2708,7 +2584,7 @@ export default function HomePersonalTaskScreen() {
         if (!toCol) return null;
 
         const toStatus = statuses.find((s) => String(s.statusId ?? "") === toCol);
-        const toTasks = ((toStatus?.taskList ?? []) as PersonalTaskItemResponse[]);
+        const toTasks = (toStatus?.taskList ?? []) as PersonalTaskItemResponse[];
 
         if (overId.startsWith(END_PREFIX)) {
             return { task, toCol, index: toTasks.length };
@@ -2774,32 +2650,37 @@ export default function HomePersonalTaskScreen() {
         });
     }, []);
 
-    const handleColumnDraftChange = React.useCallback((value: string) => {
-        setEditingColumn((prev) => {
-            const nextDraft = value.slice(0, 25);
-            const trimmed = nextDraft.trim();
+    const handleColumnDraftChange = React.useCallback(
+        (value: string) => {
+            setEditingColumn((prev) => {
+                const nextDraft = value.slice(0, 25);
+                const trimmed = nextDraft.trim();
 
-            if (!trimmed) {
+                if (!trimmed) {
+                    return {
+                        ...prev,
+                        draft: nextDraft,
+                        error: "Vui lòng nhập tên trạng thái."
+                    };
+                }
+
+                const duplicated = statuses.some(
+                    (s) =>
+                        String(s.statusId ?? "") !== String(prev.id ?? "") &&
+                        String(s.statusName ?? "")
+                            .trim()
+                            .toLowerCase() === trimmed.toLowerCase()
+                );
+
                 return {
                     ...prev,
                     draft: nextDraft,
-                    error: "Vui lòng nhập tên trạng thái."
+                    error: duplicated ? "Tên trạng thái đã tồn tại. Hãy nhập tên khác." : null
                 };
-            }
-
-            const duplicated = statuses.some(
-                (s) =>
-                    String(s.statusId ?? "") !== String(prev.id ?? "") &&
-                    String(s.statusName ?? "").trim().toLowerCase() === trimmed.toLowerCase()
-            );
-
-            return {
-                ...prev,
-                draft: nextDraft,
-                error: duplicated ? "Tên trạng thái đã tồn tại. Hãy nhập tên khác." : null
-            };
-        });
-    }, [statuses]);
+            });
+        },
+        [statuses]
+    );
 
     const cancelEditColumn = React.useCallback(() => {
         setEditingColumn({
@@ -2826,7 +2707,9 @@ export default function HomePersonalTaskScreen() {
         const duplicated = statuses.some(
             (s) =>
                 String(s.statusId ?? "") !== String(id) &&
-                String(s.statusName ?? "").trim().toLowerCase() === nextName.toLowerCase()
+                String(s.statusName ?? "")
+                    .trim()
+                    .toLowerCase() === nextName.toLowerCase()
         );
 
         if (duplicated) {
@@ -2840,18 +2723,15 @@ export default function HomePersonalTaskScreen() {
         try {
             setIsSubmitting(true);
 
-            await apiFetch<PersonalTaskStatusResponseApiResponse>(
-                buildUpdatePersonalStatusUrl(String(id)),
-                {
-                    method: "PUT",
-                    body: JSON.stringify({
-                        statusName: nextName
-                    }),
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
+            await apiFetch<PersonalTaskStatusResponseApiResponse>(buildUpdatePersonalStatusUrl(String(id)), {
+                method: "PUT",
+                body: JSON.stringify({
+                    statusName: nextName
+                }),
+                headers: {
+                    "Content-Type": "application/json"
                 }
-            );
+            });
 
             await fetchBoard();
 
@@ -2912,13 +2792,15 @@ export default function HomePersonalTaskScreen() {
                     personalStatusId: values.statusId ?? null,
                     startDate: toApiDateTime(values.startDate),
                     dueDate: toApiDateTime(values.dueDate),
-                    taskPriority:
-                        values.priority === "high" ? 2 :
-                            values.priority === "medium" ? 1 : 0,
+                    taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
                     taskSeverity:
-                        values.severity === "critical" ? 3 :
-                            values.severity === "major" ? 2 :
-                                values.severity === "moderate" ? 1 : 0
+                        values.severity === "critical"
+                            ? 3
+                            : values.severity === "major"
+                                ? 2
+                                : values.severity === "moderate"
+                                    ? 1
+                                    : 0
                 };
 
                 console.log("create-personal-task payload:", payload);
@@ -3010,13 +2892,15 @@ export default function HomePersonalTaskScreen() {
                         startDate: toApiDateTime(values.startDate),
                         dueDate: toApiDateTime(values.dueDate),
                         progress: values.progress,
-                        taskPriority:
-                            values.priority === "high" ? 2 :
-                                values.priority === "medium" ? 1 : 0,
+                        taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
                         taskSeverity:
-                            values.severity === "critical" ? 3 :
-                                values.severity === "major" ? 2 :
-                                    values.severity === "moderate" ? 1 : 0
+                            values.severity === "critical"
+                                ? 3
+                                : values.severity === "major"
+                                    ? 2
+                                    : values.severity === "moderate"
+                                        ? 1
+                                        : 0
                     }),
                     headers: {
                         "Content-Type": "application/json"
@@ -3028,9 +2912,7 @@ export default function HomePersonalTaskScreen() {
                 setDetailTask((prev) => {
                     if (!prev || String(prev.taskId) !== String(task.taskId)) return prev;
 
-                    const nextStatus = statuses.find(
-                        (s) => String(s.statusId ?? "") === String(values.statusId ?? "")
-                    );
+                    const nextStatus = statuses.find((s) => String(s.statusId ?? "") === String(values.statusId ?? ""));
 
                     return {
                         ...prev,
@@ -3044,13 +2926,15 @@ export default function HomePersonalTaskScreen() {
                         },
                         startDate: toApiDateTime(values.startDate) ?? undefined,
                         dueDate: toApiDateTime(values.dueDate) ?? undefined,
-                        taskPriority:
-                            values.priority === "high" ? 2 :
-                                values.priority === "medium" ? 1 : 0,
+                        taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
                         taskSeverity:
-                            values.severity === "critical" ? 3 :
-                                values.severity === "major" ? 2 :
-                                    values.severity === "moderate" ? 1 : 0
+                            values.severity === "critical"
+                                ? 3
+                                : values.severity === "major"
+                                    ? 2
+                                    : values.severity === "moderate"
+                                        ? 1
+                                        : 0
                     };
                 });
             } catch (error) {
@@ -3194,12 +3078,7 @@ export default function HomePersonalTaskScreen() {
                 setStatuses(dropped.nextStatuses);
 
                 try {
-                    await handleReorderTasks(
-                        activeId,
-                        dropped.toCol,
-                        dropped.prevTaskId,
-                        dropped.nextTaskId
-                    );
+                    await handleReorderTasks(activeId, dropped.toCol, dropped.prevTaskId, dropped.nextTaskId);
                 } catch {
                     setStatuses(prevStatuses);
                 }
@@ -3231,12 +3110,9 @@ export default function HomePersonalTaskScreen() {
 
                 setStatuses(nextStatuses);
 
-                const prevStatusId =
-                    newIndex > 0 ? String(nextStatuses[newIndex - 1].statusId ?? "") : null;
+                const prevStatusId = newIndex > 0 ? String(nextStatuses[newIndex - 1].statusId ?? "") : null;
                 const nextStatusId =
-                    newIndex < nextStatuses.length - 1
-                        ? String(nextStatuses[newIndex + 1].statusId ?? "")
-                        : null;
+                    newIndex < nextStatuses.length - 1 ? String(nextStatuses[newIndex + 1].statusId ?? "") : null;
 
                 try {
                     await handleReorderColumns(activeColId, prevStatusId, nextStatusId);
@@ -3264,15 +3140,14 @@ export default function HomePersonalTaskScreen() {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-white">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
                         {loadError}
                     </div>
                     <div className="mt-3">
                         <button
                             type="button"
                             onClick={() => void fetchBoard()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
-                        >
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                             Tải lại
                         </button>
                     </div>
@@ -3332,9 +3207,7 @@ export default function HomePersonalTaskScreen() {
             <Container>
                 <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
                     <div className="mb-4">
-                        <h2 className="text-xl font-bold text-zinc-900">
-                            Quản lý công việc cá nhân
-                        </h2>
+                        <h2 className="font-bold text-xl text-zinc-900">Quản lý công việc cá nhân</h2>
                     </div>
 
                     {!mounted ? (
@@ -3342,8 +3215,7 @@ export default function HomePersonalTaskScreen() {
                             {statuses.map((status, index) => (
                                 <div
                                     key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                    className="min-w-[300px] max-w-[300px] self-start"
-                                >
+                                    className="min-w-[300px] max-w-[300px] self-start">
                                     <BoardColumn
                                         status={status}
                                         isSubmitting={isSubmitting}
@@ -3359,8 +3231,16 @@ export default function HomePersonalTaskScreen() {
                                         }}
                                         ghost={null}
                                         isEditing={editingColumn.id === String(status.statusId ?? "")}
-                                        columnDraft={editingColumn.id === String(status.statusId ?? "") ? editingColumn.draft : ""}
-                                        columnError={editingColumn.id === String(status.statusId ?? "") ? editingColumn.error : null}
+                                        columnDraft={
+                                            editingColumn.id === String(status.statusId ?? "")
+                                                ? editingColumn.draft
+                                                : ""
+                                        }
+                                        columnError={
+                                            editingColumn.id === String(status.statusId ?? "")
+                                                ? editingColumn.error
+                                                : null
+                                        }
                                         onColumnDraftChange={handleColumnDraftChange}
                                         onColumnCommit={() => void commitEditColumn()}
                                         onColumnCancel={cancelEditColumn}
@@ -3369,10 +3249,7 @@ export default function HomePersonalTaskScreen() {
                             ))}
 
                             <div className="min-w-[300px] max-w-[300px] self-start">
-                                <AddColumnInline
-                                    isSubmitting={isSubmitting}
-                                    onSubmit={handleCreateColumn}
-                                />
+                                <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
                             </div>
                         </div>
                     ) : (
@@ -3382,15 +3259,13 @@ export default function HomePersonalTaskScreen() {
                             onDragStart={handleDragStart}
                             onDragOver={handleDragOver}
                             onDragCancel={handleDragCancel}
-                            onDragEnd={handleDragEnd}
-                        >
+                            onDragEnd={handleDragEnd}>
                             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                                 <div className="flex items-start gap-4 overflow-x-auto pb-6">
                                     {statuses.map((status, index) => (
                                         <div
                                             key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                            className="min-w-[300px] max-w-[300px] self-start"
-                                        >
+                                            className="min-w-[300px] max-w-[300px] self-start">
                                             <BoardColumn
                                                 status={status}
                                                 isSubmitting={isSubmitting}
@@ -3406,8 +3281,16 @@ export default function HomePersonalTaskScreen() {
                                                 }}
                                                 ghost={ghost}
                                                 isEditing={editingColumn.id === String(status.statusId ?? "")}
-                                                columnDraft={editingColumn.id === String(status.statusId ?? "") ? editingColumn.draft : ""}
-                                                columnError={editingColumn.id === String(status.statusId ?? "") ? editingColumn.error : null}
+                                                columnDraft={
+                                                    editingColumn.id === String(status.statusId ?? "")
+                                                        ? editingColumn.draft
+                                                        : ""
+                                                }
+                                                columnError={
+                                                    editingColumn.id === String(status.statusId ?? "")
+                                                        ? editingColumn.error
+                                                        : null
+                                                }
                                                 onColumnDraftChange={handleColumnDraftChange}
                                                 onColumnCommit={() => void commitEditColumn()}
                                                 onColumnCancel={cancelEditColumn}
@@ -3416,10 +3299,7 @@ export default function HomePersonalTaskScreen() {
                                     ))}
 
                                     <div className="min-w-[300px] max-w-[300px] self-start">
-                                        <AddColumnInline
-                                            isSubmitting={isSubmitting}
-                                            onSubmit={handleCreateColumn}
-                                        />
+                                        <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
                                     </div>
                                 </div>
                             </SortableContext>
