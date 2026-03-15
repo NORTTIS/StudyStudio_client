@@ -1,4 +1,8 @@
+import type { components } from "@/api/types";
 import { apiGet, apiPut } from "./api-client";
+
+export type UpdateSubscriptionPlanRequest = components["schemas"]["UpdateSubscriptionPlanRequest"];
+export type SubscriptionPlanDetail = components["schemas"]["SubscriptionPlanDetail"];
 
 export interface AdminSubscriptionPlan {
     planId: string;
@@ -107,16 +111,32 @@ export async function getSubscriptionPlans(locale: string): Promise<ApiResponse<
         };
     }
 }
-export async function updateSubscriptionPlan(
-    plan: Partial<AdminSubscriptionPlan> | Record<string, unknown>,
-    locale: string
-): Promise<ApiResponse<AdminSubscriptionPlan>> {
-    try {
-        // Wrap the plan data in a "request" object as expected by the backend
-        const requestBody = { request: plan };
-        console.log("Dữ liệu gửi đến API:", JSON.stringify(requestBody, null, 2));
+export function planToUpdateRequest(
+    plan: AdminSubscriptionPlan,
+    overrides?: Partial<UpdateSubscriptionPlanRequest>
+): UpdateSubscriptionPlanRequest {
+    return {
+        planId: plan.planId,
+        planName: plan.planName,
+        price: plan.price,
+        billingCycle: plan.billingCycle as UpdateSubscriptionPlanRequest["billingCycle"],
+        description: plan.description,
+        maxStudios: plan.maxStudios,
+        maxStorageMb: plan.maxStorageMb,
+        maxAiRequestsPerDay: plan.maxAiRequestsPerDay,
+        maxGroups: plan.maxGroups,
+        maxMembersPerGroup: plan.maxMembersPerGroup,
+        isActive: plan.isActive,
+        ...overrides
+    };
+}
 
-        const response = await apiPut<AdminSubscriptionPlan>("/admin/subscription-plans", requestBody, locale);
+export async function updateSubscriptionPlan(
+    plan: UpdateSubscriptionPlanRequest,
+    locale: string
+): Promise<ApiResponse<SubscriptionPlanDetail>> {
+    try {
+        const response = await apiPut<SubscriptionPlanDetail>("/admin/subscription-plans", plan, locale);
         console.log("Phản hồi từ API:", response);
 
         if (response.status === "success" && response.data) {

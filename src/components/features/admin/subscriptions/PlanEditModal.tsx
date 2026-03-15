@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { type AdminSubscriptionPlan, updateSubscriptionPlan } from "@/api/admin-subscription-plans";
+import {
+    type AdminSubscriptionPlan,
+    planToUpdateRequest,
+    updateSubscriptionPlan
+} from "@/api/admin-subscription-plans";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,24 +83,20 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
         });
 
         try {
-            // Tạo object theo đúng format camelCase như trong Swagger API
-            const updateData = {
-                planId: plan.planId,
-                planName: formData.planName.trim(),
-                price: Number(formData.price),
-                billingCycle: Number(plan.billingCycle),
-                description: formData.description.trim(),
-                maxStudios: Number(formData.maxStudios),
-                maxStorageMb: Number(formData.maxStorageMb),
-                maxAiRequestsPerDay: Number(formData.maxAiRequestsPerDay),
-                maxGroups: Number(formData.maxGroups),
-                maxMembersPerGroup: Number(formData.maxMembersPerGroup),
-                isActive: Boolean(formData.isActive)
-            };
-
-            console.log("Dữ liệu gửi lên backend:", updateData);
-
-            const result = await updateSubscriptionPlan(updateData, "vi");
+            const result = await updateSubscriptionPlan(
+                planToUpdateRequest(plan, {
+                    planName: formData.planName.trim(),
+                    price: Number(formData.price),
+                    description: formData.description.trim(),
+                    maxStudios: Number(formData.maxStudios),
+                    maxStorageMb: Number(formData.maxStorageMb),
+                    maxAiRequestsPerDay: Number(formData.maxAiRequestsPerDay),
+                    maxGroups: Number(formData.maxGroups),
+                    maxMembersPerGroup: Number(formData.maxMembersPerGroup),
+                    isActive: true
+                }),
+                "vi"
+            );
 
             console.log("Update result:", result);
 
@@ -299,7 +299,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                     </div>
 
                     {/* Status Section */}
-                    <div className="space-y-4">
+                    <div className="hidden space-y-4">
                         <h3 className="font-semibold text-[#261E33] text-lg">Status</h3>
 
                         <div className="flex items-center space-x-2">
@@ -326,53 +326,53 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                         formData.maxStorageMb !== plan.maxStorageMb ||
                         formData.maxAiRequestsPerDay !== plan.maxAiRequestsPerDay ||
                         formData.isActive !== plan.isActive) && (
-                        <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-4">
-                            <p className="mb-2 font-medium text-[#FF5F3D] text-sm">Changes Preview:</p>
-                            <div className="space-y-1 text-sm">
-                                {formData.planName !== plan.planName && (
-                                    <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Name:</span>
-                                        <span className="text-[#FF5F3D]">
-                                            {plan.planName} → {formData.planName}
-                                        </span>
-                                    </div>
-                                )}
-                                {formData.price !== plan.price && (
-                                    <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Price:</span>
-                                        <span className="text-[#FF5F3D]">
-                                            {formatPrice(plan.price)} → {formatPrice(formData.price)} VND
-                                        </span>
-                                    </div>
-                                )}
-                                {formData.maxStudios !== plan.maxStudios && (
-                                    <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Max Studios:</span>
-                                        <span className="text-[#FF5F3D]">
-                                            {plan.maxStudios} → {formData.maxStudios}
-                                        </span>
-                                    </div>
-                                )}
-                                {formData.maxGroups !== plan.maxGroups && (
-                                    <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Max Groups:</span>
-                                        <span className="text-[#FF5F3D]">
-                                            {plan.maxGroups} → {formData.maxGroups}
-                                        </span>
-                                    </div>
-                                )}
-                                {formData.isActive !== plan.isActive && (
-                                    <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Status:</span>
-                                        <span className="text-[#FF5F3D]">
-                                            {plan.isActive ? "Active" : "Inactive"} →{" "}
-                                            {formData.isActive ? "Active" : "Inactive"}
-                                        </span>
-                                    </div>
-                                )}
+                            <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-4">
+                                <p className="mb-2 font-medium text-[#FF5F3D] text-sm">Changes Preview:</p>
+                                <div className="space-y-1 text-sm">
+                                    {formData.planName !== plan.planName && (
+                                        <div className="flex justify-between">
+                                            <span className="text-[#6F6B99]">Name:</span>
+                                            <span className="text-[#FF5F3D]">
+                                                {plan.planName} → {formData.planName}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {formData.price !== plan.price && (
+                                        <div className="flex justify-between">
+                                            <span className="text-[#6F6B99]">Price:</span>
+                                            <span className="text-[#FF5F3D]">
+                                                {formatPrice(plan.price)} → {formatPrice(formData.price)} VND
+                                            </span>
+                                        </div>
+                                    )}
+                                    {formData.maxStudios !== plan.maxStudios && (
+                                        <div className="flex justify-between">
+                                            <span className="text-[#6F6B99]">Max Studios:</span>
+                                            <span className="text-[#FF5F3D]">
+                                                {plan.maxStudios} → {formData.maxStudios}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {formData.maxGroups !== plan.maxGroups && (
+                                        <div className="flex justify-between">
+                                            <span className="text-[#6F6B99]">Max Groups:</span>
+                                            <span className="text-[#FF5F3D]">
+                                                {plan.maxGroups} → {formData.maxGroups}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {formData.isActive !== plan.isActive && (
+                                        <div className="flex justify-between">
+                                            <span className="text-[#6F6B99]">Status:</span>
+                                            <span className="text-[#FF5F3D]">
+                                                {plan.isActive ? "Active" : "Inactive"} →{" "}
+                                                {formData.isActive ? "Active" : "Inactive"}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                 </div>
 
                 {/* Actions */}

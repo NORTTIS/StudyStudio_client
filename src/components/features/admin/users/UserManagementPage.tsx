@@ -9,8 +9,7 @@ import {
     SearchOutlined,
     StopOutlined,
     TeamOutlined,
-    UnlockOutlined,
-    UserOutlined
+    UnlockOutlined
 } from "@ant-design/icons";
 import {
     Avatar,
@@ -30,116 +29,60 @@ import {
     Typography
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
+import {
+    getUsers,
+    getUserById,
+    updateUserStatus,
+    canChangeUserStatus,
+    convertApiStatus,
+    formatDate,
+    getInitials,
+    type UserListItem,
+    type UserDetailItem,
+    type GetUsersParams,
+    type UserDisplayStatus
+} from "@/api/admin-users";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 
+/**
+ * Convert API user to display format
+ */
 export type User = {
     id: string;
     name: string;
     email: string;
     role: "user" | "premium" | "admin";
-    status: "active" | "inactive";
+    status: UserDisplayStatus;
+    originalStatus?: string; // Store original status from API to check if deleted
     joinDate: string;
     lastLogin: string;
     groups: number;
     studios: number;
-    avatar?: string;
+    avatarUrl?: string;
 };
 
-const MOCK_USERS: User[] = [
-    {
-        id: "USR-001",
-        name: "Nguyễn Văn An",
-        email: "an.nv@example.com",
-        role: "premium",
-        status: "active",
-        joinDate: "10/01/2024",
-        lastLogin: "05/03/2024",
-        groups: 5,
-        studios: 3
-    },
-    {
-        id: "USR-002",
-        name: "Trần Thị Bích",
-        email: "bich.tt@example.com",
-        role: "user",
-        status: "active",
-        joinDate: "15/01/2024",
-        lastLogin: "04/03/2024",
-        groups: 2,
-        studios: 1
-    },
-    {
-        id: "USR-003",
-        name: "Lê Minh Công",
-        email: "cong.lm@example.com",
-        role: "user",
-        status: "inactive",
-        joinDate: "20/01/2024",
-        lastLogin: "15/02/2024",
-        groups: 0,
-        studios: 0
-    },
-    {
-        id: "USR-004",
-        name: "Phạm Thị Dung",
-        email: "dung.pt@example.com",
-        role: "premium",
-        status: "active",
-        joinDate: "22/01/2024",
-        lastLogin: "05/03/2024",
-        groups: 8,
-        studios: 3
-    },
-    {
-        id: "USR-005",
-        name: "Hoàng Văn Ế",
-        email: "e.hv@example.com",
-        role: "user",
-        status: "active",
-        joinDate: "25/01/2024",
-        lastLogin: "03/03/2024",
-        groups: 3,
-        studios: 2
-    },
-    {
-        id: "USR-006",
-        name: "Vũ Thị Phương",
-        email: "phuong.vt@example.com",
-        role: "user",
-        status: "inactive",
-        joinDate: "28/01/2024",
-        lastLogin: "01/02/2024",
-        groups: 1,
-        studios: 1
-    },
-    {
-        id: "USR-007",
-        name: "Đặng Quốc Hưng",
-        email: "hung.dq@example.com",
-        role: "premium",
-        status: "active",
-        joinDate: "01/02/2024",
-        lastLogin: "05/03/2024",
-        groups: 6,
-        studios: 3
-    },
-    {
-        id: "USR-008",
-        name: "Bùi Thị Kim",
-        email: "kim.bt@example.com",
-        role: "user",
-        status: "active",
-        joinDate: "05/02/2024",
-        lastLogin: "04/03/2024",
-        groups: 2,
-        studios: 1
-    }
-];
+/**
+ * Convert UserListItem from API to User type
+ */
+function convertToUser(apiUser: UserListItem): User {
+    return {
+        id: apiUser.userId || "",
+        name: apiUser.fullName || "Unknown",
+        email: apiUser.email || "",
+        role: convertApiStatus(apiUser.package) === "inactive" && apiUser.package ? "user" : apiUser.package === "Premium" ? "premium" : "user",
+        status: convertApiStatus(apiUser.status),
+        joinDate: formatDate(apiUser.createdAt),
+        lastLogin: formatDate(apiUser.lastLoginAt),
+        groups: apiUser.groupCount || 0,
+        studios: apiUser.studioCount || 0,
+        avatarUrl: undefined
+    };
+}
 
 const ROLE_CONFIG: Record<User["role"], { color: string; label: string }> = {
     admin: { color: "red", label: "Admin" },
@@ -148,11 +91,13 @@ const ROLE_CONFIG: Record<User["role"], { color: string; label: string }> = {
 };
 
 export function UserManagementPage() {
-    const [users, setUsers] = useState<User[]>(MOCK_USERS);
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
     const [filterRole, setFilterRole] = useState<"all" | User["role"]>("all");
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUserDetail, setSelectedUserDetail] = useState<UserDetailItem | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [confirmModal, setConfirmModal] = useState<{
         open: boolean;
@@ -161,14 +106,57 @@ export function UserManagementPage() {
     }>({ open: false, user: null, action: "activate" });
     const [messageApi, contextHolder] = message.useMessage();
 
+    // Fetch users from API
+    const fetchUsers = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params: GetUsersParams = {
+                PageSize: 100,
+                SearchTerm: search || undefined,
+                Status: filterStatus === "all" ? undefined : filterStatus === "active" ? 0 : 1
+            };
+
+            const response = await getUsers(params);
+
+            if (response.status === "success" && response.data?.userList) {
+                const convertedUsers: User[] = response.data.userList.map((apiUser): User => ({
+                    id: apiUser.userId || "",
+                    name: apiUser.fullName || "Unknown",
+                    email: apiUser.email || "",
+                    role: (apiUser.package === "Premium" ? "premium" : "user") as User["role"],
+                    status: convertApiStatus(apiUser.status),
+                    originalStatus: apiUser.status || undefined,
+                    joinDate: formatDate(apiUser.createdAt),
+                    lastLogin: formatDate(apiUser.lastLoginAt),
+                    groups: apiUser.groupCount || 0,
+                    studios: apiUser.studioCount || 0,
+                    avatarUrl: undefined
+                }));
+                setUsers(convertedUsers);
+            } else {
+                messageApi.error(response.message || "Không thể tải danh sách người dùng");
+            }
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            messageApi.error("Có lỗi xảy ra khi tải dữ liệu");
+        } finally {
+            setLoading(false);
+        }
+    }, [search, filterStatus, messageApi]);
+
+    // Initial load and refetch on filter changes
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
+
+    // Filter locally (for search)
     const filtered = users.filter((u) => {
         const matchSearch =
             u.name.toLowerCase().includes(search.toLowerCase()) ||
             u.email.toLowerCase().includes(search.toLowerCase()) ||
             u.id.toLowerCase().includes(search.toLowerCase());
-        const matchStatus = filterStatus === "all" || u.status === filterStatus;
         const matchRole = filterRole === "all" || u.role === filterRole;
-        return matchSearch && matchStatus && matchRole;
+        return matchSearch && matchRole;
     });
 
     const handleToggleStatus = (user: User) => {
@@ -176,26 +164,67 @@ export function UserManagementPage() {
         setConfirmModal({ open: true, user, action });
     };
 
-    const confirmToggle = () => {
+    const confirmToggle = async () => {
         if (!confirmModal.user) return;
-        const newStatus = confirmModal.action === "activate" ? "active" : "inactive";
-        setUsers((prev) => prev.map((u) => (u.id === confirmModal.user!.id ? { ...u, status: newStatus } : u)));
-        if (selectedUser?.id === confirmModal.user.id) {
-            setSelectedUser((prev) => (prev ? { ...prev, status: newStatus } : null));
+
+        // Check if user status can be changed (not deleted)
+        if (!canChangeUserStatus(confirmModal.user.originalStatus)) {
+            messageApi.error("Không thể thay đổi trạng thái của người dùng đã bị xóa");
+            setConfirmModal({ open: false, user: null, action: "activate" });
+            return;
         }
-        messageApi.success({
-            content:
-                confirmModal.action === "activate"
-                    ? `Đã kích hoạt tài khoản ${confirmModal.user.name}`
-                    : `Đã vô hiệu hoá tài khoản ${confirmModal.user.name}`,
-            icon:
-                confirmModal.action === "activate" ? (
-                    <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                ) : (
-                    <StopOutlined style={{ color: "#ff4d4f" }} />
-                )
-        });
+
+        const newStatusApi = confirmModal.action === "activate" ? "Active" : "Inactive";
+        const newStatusLocal = confirmModal.action === "activate" ? "active" : "inactive";
+
+        try {
+            const response = await updateUserStatus(confirmModal.user.id, newStatusApi);
+
+            if (response.status === "success") {
+                // Update local state after successful API call
+                setUsers((prev) => prev.map((u) => (u.id === confirmModal.user!.id ? { ...u, status: newStatusLocal } : u)));
+                if (selectedUser?.id === confirmModal.user.id) {
+                    setSelectedUser((prev) => (prev ? { ...prev, status: newStatusLocal } : null));
+                }
+                messageApi.success({
+                    content:
+                        confirmModal.action === "activate"
+                            ? `Đã kích hoạt tài khoản ${confirmModal.user.name}`
+                            : `Đã vô hiệu hoá tài khoản ${confirmModal.user.name}`,
+                    icon:
+                        confirmModal.action === "activate" ? (
+                            <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                        ) : (
+                            <StopOutlined style={{ color: "#ff4d4f" }} />
+                        )
+                });
+            } else {
+                messageApi.error(response.message || "Không thể cập nhật trạng thái");
+            }
+        } catch (error) {
+            console.error("Error updating user status:", error);
+            messageApi.error("Có lỗi xảy ra khi cập nhật trạng thái");
+        }
+
         setConfirmModal({ open: false, user: null, action: "activate" });
+    };
+
+    // Handle viewing user details - fetch from API
+    const handleViewUser = async (user: User) => {
+        setSelectedUser(user);
+        setDrawerOpen(true);
+
+        try {
+            const response = await getUserById(user.id);
+            if (response.status === "success" && response.data) {
+                setSelectedUserDetail(response.data);
+            } else {
+                messageApi.error(response.message || "Không thể tải thông tin người dùng");
+            }
+        } catch (error) {
+            console.error("Error fetching user details:", error);
+            messageApi.error("Có lỗi xảy ra khi tải thông tin người dùng");
+        }
     };
 
     const columns: ColumnsType<User> = [
@@ -204,11 +233,23 @@ export function UserManagementPage() {
             key: "user",
             render: (_, record) => (
                 <Space>
-                    <Avatar
-                        style={{ backgroundColor: record.role === "premium" ? "#FF5F3D" : "#6F6B99", flexShrink: 0 }}
-                        icon={<UserOutlined />}
-                        size={38}
-                    />
+                    {record.avatarUrl ? (
+                        <Avatar
+                            src={record.avatarUrl}
+                            style={{ flexShrink: 0 }}
+                            size={38}
+                        />
+                    ) : (
+                        <Avatar
+                            style={{
+                                backgroundColor: record.role === "premium" ? "#FF5F3D" : "#6F6B99",
+                                flexShrink: 0
+                            }}
+                            size={38}
+                        >
+                            {getInitials(record.name)}
+                        </Avatar>
+                    )}
                     <div>
                         <div style={{ fontWeight: 600, color: "#261E33" }}>{record.name}</div>
                         <div style={{ fontSize: 12, color: "#6F6B99" }}>{record.email}</div>
@@ -253,10 +294,16 @@ export function UserManagementPage() {
             title: "Trạng thái",
             dataIndex: "status",
             key: "status",
-            render: (status: User["status"]) => (
+            render: (status: UserDisplayStatus) => (
                 <Badge
-                    status={status === "active" ? "success" : "default"}
-                    text={status === "active" ? "Hoạt động" : "Bị vô hiệu"}
+                    status={status === "active" ? "success" : status === "deleted" ? "error" : "default"}
+                    text={
+                        status === "active"
+                            ? "Hoạt động"
+                            : status === "deleted"
+                                ? "Đã xóa"
+                                : "Bị vô hiệu"
+                    }
                 />
             )
         },
@@ -270,21 +317,20 @@ export function UserManagementPage() {
                             type="text"
                             icon={<EyeOutlined />}
                             style={{ color: "#FF5F3D" }}
-                            onClick={() => {
-                                setSelectedUser(record);
-                                setDrawerOpen(true);
-                            }}
+                            onClick={() => handleViewUser(record)}
                         />
                     </Tooltip>
-                    <Tooltip title={record.status === "active" ? "Vô hiệu hoá" : "Kích hoạt"}>
-                        <Switch
-                            checked={record.status === "active"}
-                            onChange={() => handleToggleStatus(record)}
-                            checkedChildren={<UnlockOutlined />}
-                            unCheckedChildren={<LockOutlined />}
-                            style={{ backgroundColor: record.status === "active" ? "#FF5F3D" : undefined }}
-                        />
-                    </Tooltip>
+                    {canChangeUserStatus(record.originalStatus) && (
+                        <Tooltip title={record.status === "active" ? "Vô hiệu hoá" : "Kích hoạt"}>
+                            <Switch
+                                checked={record.status === "active"}
+                                onChange={() => handleToggleStatus(record)}
+                                checkedChildren={<UnlockOutlined />}
+                                unCheckedChildren={<LockOutlined />}
+                                style={{ backgroundColor: record.status === "active" ? "#FF5F3D" : undefined }}
+                            />
+                        </Tooltip>
+                    )}
                 </Space>
             )
         }
@@ -389,6 +435,7 @@ export function UserManagementPage() {
                                 columns={columns}
                                 dataSource={filtered}
                                 rowKey="id"
+                                loading={loading}
                                 pagination={{ pageSize: 10, showSizeChanger: false }}
                                 rowClassName={() => "hover-row"}
                             />
@@ -401,10 +448,17 @@ export function UserManagementPage() {
             <Drawer
                 title={
                     <Space>
-                        <Avatar
-                            style={{ backgroundColor: selectedUser?.role === "premium" ? "#FF5F3D" : "#6F6B99" }}
-                            icon={<UserOutlined />}
-                        />
+                        {selectedUserDetail?.avatarUrl ? (
+                            <Avatar src={selectedUserDetail.avatarUrl} />
+                        ) : (
+                            <Avatar
+                                style={{
+                                    backgroundColor: selectedUser?.role === "premium" ? "#FF5F3D" : "#6F6B99"
+                                }}
+                            >
+                                {getInitials(selectedUser?.name)}
+                            </Avatar>
+                        )}
                         <div>
                             <div style={{ fontWeight: 700, color: "#261E33" }}>{selectedUser?.name}</div>
                             <div style={{ fontSize: 12, color: "#6F6B99" }}>{selectedUser?.id}</div>
@@ -412,10 +466,13 @@ export function UserManagementPage() {
                     </Space>
                 }
                 open={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
+                onClose={() => {
+                    setDrawerOpen(false);
+                    setSelectedUserDetail(null);
+                }}
                 width={480}
                 extra={
-                    selectedUser && (
+                    selectedUser && canChangeUserStatus(selectedUser.originalStatus) && (
                         <Switch
                             checked={selectedUser.status === "active"}
                             onChange={() => {
@@ -432,14 +489,22 @@ export function UserManagementPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                         <div style={{ padding: "16px", background: "#F8F8F8", borderRadius: 10 }}>
                             <Badge
-                                status={selectedUser.status === "active" ? "success" : "default"}
+                                status={selectedUser.status === "active" ? "success" : selectedUser.status === "deleted" ? "error" : "default"}
                                 text={
                                     <Text
                                         strong
-                                        style={{ color: selectedUser.status === "active" ? "#52c41a" : "#ff4d4f" }}>
+                                        style={{
+                                            color: selectedUser.status === "active"
+                                                ? "#52c41a"
+                                                : selectedUser.status === "deleted"
+                                                    ? "#ff4d4f"
+                                                    : "#faad14"
+                                        }}>
                                         {selectedUser.status === "active"
                                             ? "Tài khoản đang hoạt động"
-                                            : "Tài khoản bị vô hiệu hoá"}
+                                            : selectedUser.status === "deleted"
+                                                ? "Tài khoản đã bị xóa"
+                                                : "Tài khoản bị vô hiệu hoá"}
                                     </Text>
                                 }
                             />
@@ -484,22 +549,26 @@ export function UserManagementPage() {
                         </Descriptions>
 
                         <div style={{ display: "flex", gap: 10 }}>
-                            <Button
-                                block
-                                danger={selectedUser.status === "active"}
-                                type={selectedUser.status === "inactive" ? "primary" : "default"}
-                                icon={selectedUser.status === "active" ? <LockOutlined /> : <UnlockOutlined />}
-                                style={
-                                    selectedUser.status === "inactive"
-                                        ? { background: "#FF5F3D", borderColor: "#FF5F3D" }
-                                        : {}
-                                }
-                                onClick={() => {
-                                    setDrawerOpen(false);
-                                    handleToggleStatus(selectedUser);
-                                }}>
-                                {selectedUser.status === "active" ? "Vô hiệu hoá tài khoản" : "Kích hoạt tài khoản"}
-                            </Button>
+                            {canChangeUserStatus(selectedUser.originalStatus) && (
+                                <Button
+                                    block
+                                    danger={selectedUser.status === "active"}
+                                    type={selectedUser.status === "inactive" ? "primary" : "default"}
+                                    icon={selectedUser.status === "active" ? <LockOutlined /> : <UnlockOutlined />}
+                                    style={
+                                        selectedUser.status === "inactive"
+                                            ? { background: "#FF5F3D", borderColor: "#FF5F3D" }
+                                            : {}
+                                    }
+                                    onClick={() => {
+                                        setDrawerOpen(false);
+                                        handleToggleStatus(selectedUser);
+                                    }}>
+                                    {selectedUser.status === "active"
+                                        ? "Vô hiệu hoá tài khoản"
+                                        : "Kích hoạt tài khoản"}
+                                </Button>
+                            )}
                         </div>
                     </div>
                 )}

@@ -32,14 +32,12 @@ function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
         const out: Group[] = [];
         for (const g of list ?? []) {
             const id = getGroupId(g);
-            if (!id) continue;
-            if (seen.has(id)) continue;
+            if (!id || seen.has(id)) continue;
             seen.add(id);
             out.push(g);
         }
         return out;
     };
-
     return {
         ...raw,
         favorites: uniqKeepOrder(raw.favorites ?? []),
@@ -53,44 +51,82 @@ function uniqueByIdKeepFirst(list: Group[]) {
     const out: Group[] = [];
     for (const g of list) {
         const id = getGroupId(g);
-        if (!id) continue;
-        if (seen.has(id)) continue;
+        if (!id || seen.has(id)) continue;
         seen.add(id);
         out.push(g);
     }
     return out;
 }
 
+// ─── Icon Badge ────────────────────────────────────────────────────────────────
 function IconBadge({
     variant,
     children,
-    className = ""
+    className = "",
+    size = "md"
 }: {
     variant: "orange" | "yellow" | "blue" | "purple" | "slate";
     children: React.ReactNode;
     className?: string;
+    size?: "sm" | "md" | "lg";
 }) {
-    const styles: Record<typeof variant, string> = {
-        orange: "bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_8px_20px_-10px_rgba(234,88,12,0.7)]",
-        yellow: "bg-gradient-to-br from-amber-300 to-yellow-500 shadow-[0_8px_20px_-10px_rgba(245,158,11,0.7)]",
-        blue: "bg-gradient-to-br from-sky-400 to-blue-600 shadow-[0_8px_20px_-10px_rgba(37,99,235,0.7)]",
-        purple: "bg-gradient-to-br from-violet-400 to-purple-600 shadow-[0_8px_20px_-10px_rgba(147,51,234,0.7)]",
-        slate: "bg-gradient-to-br from-slate-200 to-slate-300 shadow-[0_8px_20px_-12px_rgba(15,23,42,0.35)]"
+    const gradients: Record<typeof variant, string> = {
+        orange: "from-orange-400 via-orange-500 to-rose-500",
+        yellow: "from-amber-300 via-yellow-400 to-orange-400",
+        blue: "from-sky-400 via-blue-500 to-indigo-500",
+        purple: "from-violet-400 via-purple-500 to-fuchsia-500",
+        slate: "from-slate-300 via-slate-400 to-slate-500"
     };
+
+    const shadows: Record<typeof variant, string> = {
+        orange: "shadow-orange-500/30",
+        yellow: "shadow-amber-400/30",
+        blue: "shadow-blue-500/30",
+        purple: "shadow-purple-500/30",
+        slate: "shadow-slate-400/20"
+    };
+
+    const sizes = { sm: "h-8 w-8", md: "h-10 w-10", lg: "h-12 w-12" };
 
     return (
         <div
             className={cn(
-                "relative flex items-center justify-center rounded-xl ring-1 ring-black/5",
-                styles[variant],
+                "relative flex shrink-0 items-center justify-center rounded-xl",
+                `bg-gradient-to-br ${gradients[variant]}`,
+                `shadow-lg ${shadows[variant]}`,
+                sizes[size],
                 className
             )}>
-            <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.55),transparent_55%)]" />
-            <div className="relative">{children}</div>
+            {/* Glass shine overlay */}
+            <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-white/10 to-transparent" />
+            {/* Inner border shimmer */}
+            <div className="pointer-events-none absolute inset-px rounded-[10px] border border-white/30" />
+            <div className="relative z-10">{children}</div>
         </div>
     );
 }
 
+// ─── Count Pill ────────────────────────────────────────────────────────────────
+function CountPill({ count }: { count: number }) {
+    return (
+        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100 px-2 text-[11px] font-bold tracking-wide text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+            {count}
+        </span>
+    );
+}
+
+// ─── Section Skeleton ──────────────────────────────────────────────────────────
+function SectionSkeleton() {
+    return (
+        <div className="space-y-3 p-1">
+            {[...Array(2)].map((_, i) => (
+                <div key={i} className="h-20 animate-pulse rounded-xl bg-gradient-to-r from-slate-100 to-slate-50" />
+            ))}
+        </div>
+    );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 export function GroupsPage() {
     const [view, setView] = useState<"grid" | "list">("grid");
     const [data, setData] = useState<GroupsPageData>(emptyData);
@@ -119,7 +155,6 @@ export function GroupsPage() {
 
     useEffect(() => {
         let alive = true;
-
         (async () => {
             try {
                 setLoading(true);
@@ -136,32 +171,22 @@ export function GroupsPage() {
                 setLoading(false);
             }
         })();
-
-        return () => {
-            alive = false;
-        };
+        return () => { alive = false; };
     }, []);
 
     const { usage, favorites, managed, independent } = useMemo(() => data, [data]);
-
-    const allGroups = useMemo(() => {
-        return uniqueByIdKeepFirst([...favorites, ...managed, ...independent]);
-    }, [favorites, managed, independent]);
+    const allGroups = useMemo(() => uniqueByIdKeepFirst([...favorites, ...managed, ...independent]), [favorites, managed, independent]);
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
-    const currentGroupsCount =
-        usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
-
+    const currentGroupsCount = usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
     const limitReached = currentGroupsCount >= maxGroups;
 
     const onToggleStar = async (groupIdRaw: string) => {
         const groupId = normId(groupIdRaw);
         const snapshot = data;
-
         const all = [...snapshot.favorites, ...snapshot.managed, ...snapshot.independent];
         const current = all.find((g) => getGroupId(g) === groupId);
         if (!current) return;
-
         const wasStarred = !!(current as any).isStarred;
         const updated: Group = { ...(current as any), isStarred: !wasStarred };
 
@@ -175,7 +200,6 @@ export function GroupsPage() {
                     independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g))
                 };
             }
-
             return {
                 ...prev,
                 favorites: prev.favorites.filter((g) => getGroupId(g) !== groupId),
@@ -195,110 +219,157 @@ export function GroupsPage() {
 
     return (
         <Container>
-            <Card className="relative overflow-hidden border-muted/60 shadow-sm">
-                <div className="pointer-events-none absolute -left-24 -top-24 h-56 w-56 rounded-full bg-orange-500/10 blur-3xl" />
-                <div className="pointer-events-none absolute -right-24 -bottom-24 h-56 w-56 rounded-full bg-violet-500/10 blur-3xl" />
+            {/* Page background */}
+            <div className="relative min-h-screen space-y-5 py-2">
 
-                <CardHeader className="pb-4">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-3">
-                                <IconBadge variant="orange" className="h-11 w-11">
-                                    <Users className="h-5 w-5 text-white" />
+                {/* ── Hero Header Card ─────────────────────────────────── */}
+                <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white via-orange-50/30 to-violet-50/20 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_32px_-8px_rgba(0,0,0,0.08)] ring-1 ring-slate-900/[0.06]">
+                    {/* Ambient orbs */}
+                    <div className="pointer-events-none absolute -left-32 -top-32 h-72 w-72 rounded-full bg-orange-400/[0.08] blur-[60px]" />
+                    <div className="pointer-events-none absolute -bottom-20 right-0 h-64 w-64 rounded-full bg-violet-500/[0.08] blur-[60px]" />
+                    <div className="pointer-events-none absolute left-1/2 top-0 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-orange-300/40 to-transparent" />
+
+                    <CardHeader className="relative pb-3 pt-6">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            {/* Title block */}
+                            <div className="flex items-center gap-4">
+                                <IconBadge variant="orange" size="lg" className="h-13 w-13 rounded-2xl">
+                                    <Users className="h-6 w-6 text-white drop-shadow-sm" />
                                 </IconBadge>
-
                                 <div>
-                                    <h1 className="text-2xl font-bold tracking-tight text-[#261E33]">Nhóm</h1>
-                                    <p className="mt-1 text-sm text-[#6F6B99]">Quản lý các nhóm học tập của bạn</p>
+                                    <div className="flex items-center gap-2.5">
+                                        <h1 className="text-[1.625rem] font-bold tracking-tight text-slate-900">Nhóm</h1>
+                                        <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-orange-600">
+                                            {currentGroupsCount}/{maxGroups}
+                                        </span>
+                                    </div>
+                                    <p className="mt-0.5 text-sm text-slate-500">Quản lý các nhóm học tập của bạn</p>
                                 </div>
                             </div>
+
+                            {/* Controls */}
+                            <div className="flex flex-wrap items-center gap-2.5">
+                                {/* View toggle */}
+                                <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                                    <button
+                                        onClick={() => setView("grid")}
+                                        className={cn(
+                                            "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150",
+                                            view === "grid"
+                                                ? "bg-slate-900 text-white shadow-sm"
+                                                : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                        )}>
+                                        <LayoutGrid className="h-[15px] w-[15px]" />
+                                    </button>
+                                    <button
+                                        onClick={() => setView("list")}
+                                        className={cn(
+                                            "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150",
+                                            view === "list"
+                                                ? "bg-slate-900 text-white shadow-sm"
+                                                : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                        )}>
+                                        <List className="h-[15px] w-[15px]" />
+                                    </button>
+                                </div>
+
+                                {/* Create button */}
+                                <Button
+                                    disabled={limitReached}
+                                    onClick={() => setOpenCreate(true)}
+                                    className={cn(
+                                        "relative h-9 gap-1.5 overflow-hidden rounded-xl px-4 text-sm font-semibold shadow-lg transition-all duration-200",
+                                        !limitReached
+                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-orange-500/25 hover:shadow-orange-500/40 hover:brightness-105 active:scale-[0.98]"
+                                            : "cursor-not-allowed bg-slate-100 text-slate-400 shadow-none"
+                                    )}>
+                                    {!limitReached && (
+                                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/15 to-transparent" />
+                                    )}
+                                    <Plus className="h-4 w-4" />
+                                    <span>Nhóm mới</span>
+                                </Button>
+                            </div>
                         </div>
+                    </CardHeader>
 
-                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                            <ToggleGroup
-                                type="single"
-                                value={view}
-                                onValueChange={(v) => (v === "grid" || v === "list" ? setView(v) : null)}
-                                className="rounded-xl border bg-background p-1 shadow-sm"
-                                aria-label="View">
-                                <ToggleGroupItem
-                                    value="grid"
-                                    aria-label="Grid"
-                                    className="h-9 w-9 rounded-lg data-[state=on]:bg-muted data-[state=on]:text-foreground">
-                                    <LayoutGrid className="h-4 w-4" />
-                                </ToggleGroupItem>
-                                <ToggleGroupItem
-                                    value="list"
-                                    aria-label="List"
-                                    className="h-9 w-9 rounded-lg data-[state=on]:bg-muted data-[state=on]:text-foreground">
-                                    <List className="h-4 w-4" />
-                                </ToggleGroupItem>
-                            </ToggleGroup>
-
-                            <Button
-                                className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 shadow-sm"
-                                disabled={limitReached}
-                                onClick={() => setOpenCreate(true)}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Nhóm mới
-                            </Button>
+                    <CardContent className="relative pb-5 pt-1">
+                        <div className="space-y-2.5">
+                            <UsageBar current={usage.current} max={usage.max} />
+                            {loading && (
+                                <div className="flex items-center gap-2 text-sm text-slate-400">
+                                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-orange-400" />
+                                    Đang tải...
+                                </div>
+                            )}
+                            {!loading && error && (
+                                <p className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 ring-1 ring-red-100">
+                                    {error}
+                                </p>
+                            )}
                         </div>
-                    </div>
-                </CardHeader>
+                    </CardContent>
+                </Card>
 
-                <CardContent className="pt-0">
-                    <div className="space-y-2">
-                        <UsageBar current={usage.current} max={usage.max} />
-                        {loading ? <p className="text-sm text-[#6F6B99]">Đang tải...</p> : null}
-                        {!loading && error ? <p className="text-sm text-red-600">{error}</p> : null}
-                    </div>
-                </CardContent>
-            </Card>
+                <div className="space-y-3.5">
 
-            <div className="mt-8 space-y-10">
-                <GroupsSection
-                    icon={FolderKanban}
-                    iconVariant="blue"
-                    title={`Các nhóm bạn đã tạo (${allGroups.length})`}
-                    view={view}
-                    items={allGroups}
-                    expanded={expandAll}
-                    onToggle={() => setExpandAll((v) => !v)}
-                    onToggleStar={onToggleStar}
-                />
+                    <GroupsSection
+                        icon={Star}
+                        iconVariant="yellow"
+                        title="Nhóm yêu thích"
+                        count={favorites.length}
+                        view={view}
+                        items={favorites}
+                        expanded={expandFav}
+                        onToggle={() => setExpandFav((v) => !v)}
+                        onToggleStar={onToggleStar}
+                        emptyText="Chưa có nhóm nào trong mục yêu thích."
+                        loading={loading}
+                    />
 
-                <GroupsSection
-                    icon={Star}
-                    iconVariant="yellow"
-                    title={`Nhóm yêu thích (${favorites.length})`}
-                    view={view}
-                    items={favorites}
-                    expanded={expandFav}
-                    onToggle={() => setExpandFav((v) => !v)}
-                    onToggleStar={onToggleStar}
-                />
+                    <GroupsSection
+                        icon={FolderKanban}
+                        iconVariant="blue"
+                        title="Các nhóm bạn đã tạo"
+                        count={allGroups.length}
+                        view={view}
+                        items={allGroups}
+                        expanded={expandAll}
+                        onToggle={() => setExpandAll((v) => !v)}
+                        onToggleStar={onToggleStar}
+                        emptyText="Bạn chưa có nhóm nào."
+                        loading={loading}
+                    />
 
-                <GroupsSection
-                    icon={Layers}
-                    iconVariant="purple"
-                    title={`Nhóm thuộc studio tôi quản lý (${managed.length})`}
-                    view={view}
-                    items={managed}
-                    expanded={expandManaged}
-                    onToggle={() => setExpandManaged((v) => !v)}
-                    onToggleStar={onToggleStar}
-                />
+                    <GroupsSection
+                        icon={Layers}
+                        iconVariant="purple"
+                        title="Nhóm thuộc studio tôi quản lý"
+                        count={managed.length}
+                        view={view}
+                        items={managed}
+                        expanded={expandManaged}
+                        onToggle={() => setExpandManaged((v) => !v)}
+                        onToggleStar={onToggleStar}
+                        emptyText="Chưa có nhóm nào thuộc studio bạn quản lý."
+                        loading={loading}
+                    />
 
-                <GroupsSection
-                    icon={Users}
-                    iconVariant="slate"
-                    title={`Nhóm độc lập (${independent.length})`}
-                    view={view}
-                    items={independent}
-                    expanded={expandIndependent}
-                    onToggle={() => setExpandIndependent((v) => !v)}
-                    onToggleStar={onToggleStar}
-                />
+                    <GroupsSection
+                        icon={Users}
+                        iconVariant="slate"
+                        title="Nhóm độc lập"
+                        count={independent.length}
+                        view={view}
+                        items={independent}
+                        expanded={expandIndependent}
+                        onToggle={() => setExpandIndependent((v) => !v)}
+                        onToggleStar={onToggleStar}
+                        emptyText="Chưa có nhóm độc lập nào."
+                        loading={loading}
+                    />
+
+                </div>
             </div>
 
             <CreateGroupModal
@@ -306,16 +377,16 @@ export function GroupsPage() {
                 onClose={() => setOpenCreate(false)}
                 currentGroupCount={currentGroupsCount}
                 maxGroups={maxGroups}
-                onCreate={async () => {
-                    await reload();
-                }}
+                onCreate={async () => { await reload(); }}
             />
         </Container>
     );
 }
 
+// ─── Groups Section ────────────────────────────────────────────────────────────
 function GroupsSection({
     title,
+    count,
     icon: Icon,
     iconVariant,
     items,
@@ -323,9 +394,12 @@ function GroupsSection({
     className = "",
     expanded,
     onToggle,
-    onToggleStar
+    onToggleStar,
+    emptyText,
+    loading = false
 }: {
     title: string;
+    count: number;
     icon: React.ElementType;
     iconVariant: "orange" | "yellow" | "blue" | "purple" | "slate";
     items: Group[];
@@ -334,51 +408,102 @@ function GroupsSection({
     expanded: boolean;
     onToggle: () => void;
     onToggleStar: (groupId: string) => Promise<void>;
+    emptyText: string;
+    loading?: boolean;
 }) {
     const canToggle = items.length > PREVIEW_COUNT;
     const visibleItems = expanded || !canToggle ? items : items.slice(0, PREVIEW_COUNT);
 
+    const accentColors: Record<typeof iconVariant, string> = {
+        orange: "from-orange-500/[0.04]",
+        yellow: "from-amber-400/[0.05]",
+        blue: "from-blue-500/[0.04]",
+        purple: "from-purple-500/[0.04]",
+        slate: "from-slate-400/[0.03]"
+    };
+
+    const headerAccents: Record<typeof iconVariant, string> = {
+        orange: "border-orange-100 bg-orange-50/60",
+        yellow: "border-amber-100 bg-amber-50/60",
+        blue: "border-blue-100 bg-blue-50/60",
+        purple: "border-purple-100 bg-purple-50/60",
+        slate: "border-slate-100 bg-slate-50/60"
+    };
+
     return (
-        <Card className={cn("border-muted/60 shadow-sm", className)}>
-            <CardHeader className="pb-3">
-                <div className="group flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <IconBadge
-                            variant={iconVariant}
-                            className="h-9 w-9 transition-transform duration-200 group-hover:scale-105">
-                            <Icon className="h-[18px] w-[18px] text-white" />
+        <section
+            className={cn(
+                "group/section overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_-4px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_-8px_rgba(0,0,0,0.10)]",
+                className
+            )}>
+
+            {/* Section header */}
+            <div className={cn("border-b px-5 py-3.5 transition-colors", headerAccents[iconVariant])}>
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <IconBadge variant={iconVariant} size="sm" className="rounded-xl">
+                            <Icon className="h-4 w-4 text-white drop-shadow-sm" />
                         </IconBadge>
 
-                        <h2 className="text-sm font-semibold text-[#261E33]">{title}</h2>
+                        <div className="min-w-0 flex items-center gap-2.5">
+                            <h2 className="truncate text-sm font-semibold text-slate-800">{title}</h2>
+                            <CountPill count={count} />
+                        </div>
                     </div>
 
-                    {canToggle ? (
-                        <Button
+                    {canToggle && (
+                        <button
                             type="button"
-                            variant="ghost"
                             onClick={onToggle}
-                            className="h-9 gap-2 rounded-lg px-2 text-sm font-medium text-[#6F6B99] hover:bg-muted hover:text-[#261E33]"
-                            aria-label={expanded ? "Thu gọn" : "Mở rộng"}>
+                            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-slate-500 transition-all duration-150 hover:bg-white/80 hover:text-slate-700">
                             <span>{expanded ? "Thu gọn" : "Xem tất cả"}</span>
-                            <ChevronDown className={cn("h-4 w-4 transition", expanded && "rotate-180")} />
-                        </Button>
-                    ) : null}
+                            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")} />
+                        </button>
+                    )}
                 </div>
+            </div>
 
-                <Separator className="mt-3" />
-            </CardHeader>
-
-            <CardContent className="pt-0">
-                <div className={view === "grid" ? "grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3" : "space-y-4"}>
-                    {visibleItems.map((g) => (
-                        <div
-                            key={getGroupId(g)}
-                            className="transition-transform duration-200 hover:-translate-y-0.5 hover:drop-shadow-sm">
-                            <GroupCard group={g} onToggleStar={() => onToggleStar(getGroupId(g))} />
+            {/* Content */}
+            <div className={cn("bg-gradient-to-b p-5 to-transparent", accentColors[iconVariant])}>
+                {loading ? (
+                    <SectionSkeleton />
+                ) : visibleItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-8 text-center">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+                            <Icon className="h-4 w-4 text-slate-400" />
                         </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
+                        <p className="text-sm text-slate-400">{emptyText}</p>
+                    </div>
+                ) : (
+                    <>
+                        <div
+                            className={cn(
+                                view === "grid"
+                                    ? "grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3"
+                                    : "flex flex-col gap-2.5"
+                            )}>
+                            {visibleItems.map((g) => (
+                                <div
+                                    key={getGroupId(g)}
+                                    className={cn(
+                                        "rounded-xl transition-all duration-200",
+                                        view === "grid" && "hover:-translate-y-0.5 hover:shadow-md"
+                                    )}>
+                                    <GroupCard group={g} onToggleStar={() => onToggleStar(getGroupId(g))} />
+                                </div>
+                            ))}
+                        </div>
+
+                        {canToggle && !expanded && items.length > PREVIEW_COUNT && (
+                            <button
+                                onClick={onToggle}
+                                className="mt-3.5 w-full rounded-xl border border-dashed border-slate-200 py-2.5 text-[13px] font-medium text-slate-400 transition-all hover:border-slate-300 hover:bg-slate-50/60 hover:text-slate-600">
+                                + {items.length - PREVIEW_COUNT} nhóm khác
+                            </button>
+                        )}
+                    </>
+                )}
+            </div>
+        </section>
     );
 }

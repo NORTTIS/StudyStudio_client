@@ -12,40 +12,42 @@ export default function LandingManagement() {
     const locale = useLocale();
 
     return (
-        <div className="flex min-h-screen flex-col bg-[#FFF7ED] text-gray-800">
+        <div className="flex min-h-screen scroll-smooth flex-col bg-[#FFF7ED] text-gray-800">
             <GuestNavbar />
 
             <section className="landing-fade-in bg-white py-20">
-                {/* Title */}
-                <div className="landing-fade-up mx-auto max-w-5xl text-center">
-                    <h1 className="landing-fade-up landing-delay-1 font-extrabold text-5xl text-gray-700 leading-tight md:text-6xl">
+                <div className="landing-fade-up mx-auto max-w-5xl px-6 text-center">
+                    <h1 className="landing-fade-up landing-delay-1 text-5xl leading-tight font-extrabold text-gray-700 md:text-6xl">
                         {t("hero.title")} <br />
                         {t("hero.titleHighlight")}
                     </h1>
 
                     <Link
                         href={`/${locale}/register`}
-                        className="landing-pop landing-delay-2 inline-block cursor-pointer">
-                        <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 font-semibold text-lg text-white transition-transform duration-300 hover:scale-[1.03] hover:bg-orange-600">
+                        className="landing-pop landing-delay-2 inline-block cursor-pointer"
+                    >
+                        <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 text-lg font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.createButton")}
                         </Button>
                     </Link>
                 </div>
 
-                <div className="landing-fade-up landing-delay-3 mx-auto mt-12 flex max-w-5xl justify-center">
-                    <Image
-                        src="/images/management.png"
-                        alt={t("hero.imageAlt")}
-                        width={950}
-                        height={650}
-                        priority
-                        className="w-full max-w-[950px] object-contain"
-                    />
+                <div className="landing-fade-up landing-delay-3 mx-auto mt-12 flex max-w-5xl justify-center px-6">
+                    <div className="overflow-hidden rounded-3xl">
+                        <Image
+                            src="/images/management.png"
+                            alt={t("hero.imageAlt")}
+                            width={950}
+                            height={650}
+                            priority
+                            className="w-full max-w-[950px] object-contain transition-transform duration-[1400ms] ease-out hover:scale-[1.015]"
+                        />
+                    </div>
                 </div>
             </section>
 
             <section className="landing-fade-up bg-[#FFF3E6] py-24">
-                <h2 className="landing-fade-up text-center font-extrabold text-5xl text-gray-700">
+                <h2 className="landing-fade-up px-6 text-center text-5xl font-extrabold text-gray-700">
                     {t("howToUse.title")}
                 </h2>
 
@@ -70,23 +72,24 @@ export default function LandingManagement() {
                     ].map((item, i) => (
                         <div
                             key={i}
-                            className={`landing-pop flex flex-col items-center text-center landing-delay-${i + 1}`}>
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] font-bold text-lg text-white">
+                            className={`landing-pop landing-delay-${i + 1} flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40`}
+                        >
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] text-lg font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                                 {i + 1}
                             </div>
 
-                            <h3 className="mt-4 font-extrabold text-black text-lg">{item.title}</h3>
+                            <h3 className="mt-4 text-lg font-extrabold text-black">{item.title}</h3>
 
-                            <p className="mt-2 text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                            <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.desc}</p>
                         </div>
                     ))}
                 </div>
 
-                <div className="landing-fade-up landing-delay-4 mx-auto mt-16 flex h-[420px] w-[85%] items-center justify-center rounded-lg border-2 border-orange-400 bg-transparent" />
+                <div className="landing-fade-up landing-delay-4 mx-auto mt-16 flex h-[420px] w-[85%] items-center justify-center rounded-2xl border-2 border-orange-300 bg-white/20 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md" />
             </section>
 
             <section className="landing-fade-up bg-white py-24">
-                <h2 className="landing-fade-up text-center font-extrabold text-5xl text-gray-700">
+                <h2 className="landing-fade-up px-6 text-center text-5xl font-extrabold text-gray-700">
                     {t("features.title")}
                 </h2>
 
@@ -111,23 +114,24 @@ export default function LandingManagement() {
                     ].map((item, i) => (
                         <div
                             key={i}
-                            className={`landing-pop rounded-2xl bg-[#FFD9D2] px-10 py-10 text-center landing-delay-${i + 1}`}>
-                            <h3 className="font-extrabold text-2xl text-black">{item.title}</h3>
+                            className={`landing-pop landing-delay-${i + 1} rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg`}
+                        >
+                            <h3 className="text-2xl font-extrabold text-black">{item.title}</h3>
 
                             <div className="my-5 h-px bg-black/20" />
 
-                            <p className="text-black text-lg leading-relaxed">{item.desc}</p>
+                            <p className="text-lg leading-relaxed text-black">{item.desc}</p>
                         </div>
                     ))}
                 </div>
             </section>
 
             <section className="landing-fade-up bg-[#FFF3E6] py-24">
-                <h2 className="landing-fade-up text-center font-extrabold text-4xl text-gray-700">
+                <h2 className="landing-fade-up px-6 text-center text-4xl font-extrabold text-gray-700">
                     {t("users.title")}
                 </h2>
 
-                <p className="landing-fade-up landing-delay-1 mt-3 text-center text-gray-500 text-lg">
+                <p className="landing-fade-up landing-delay-1 mt-3 px-6 text-center text-lg text-gray-500">
                     {t("users.subtitle")}
                 </p>
 
@@ -144,12 +148,13 @@ export default function LandingManagement() {
                     ].map((item, i) => (
                         <div
                             key={i}
-                            className={`landing-pop rounded-2xl bg-[#FAD7A7] px-12 py-10 text-center landing-delay-${i + 2}`}>
-                            <h3 className="font-extrabold text-2xl text-black">{item.title}</h3>
+                            className={`landing-pop landing-delay-${i + 2} rounded-3xl bg-[#FAD7A7] px-12 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg`}
+                        >
+                            <h3 className="text-2xl font-extrabold text-black">{item.title}</h3>
 
                             <div className="my-6 h-px bg-black/20" />
 
-                            <p className="whitespace-pre-line text-black text-lg leading-relaxed">{item.desc}</p>
+                            <p className="whitespace-pre-line text-lg leading-relaxed text-black">{item.desc}</p>
                         </div>
                     ))}
                 </div>
