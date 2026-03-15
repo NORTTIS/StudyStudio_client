@@ -3,40 +3,133 @@
 import type { EChartsOption } from "echarts";
 import { Activity, DollarSign, FileText, Newspaper, TrendingUp, UserPlus, Users } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
+import { getDashboardStats, getHourlyActivity, getReportStatus, getUserDistribution, getSubscriptionDistribution, getRecentActivity, getTopActiveGroups } from "@/api/admin-statistics";
+import { getRevenueTrends } from "@/api/admin-revenue";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
 export function AdminDashboardPage() {
-    // Mock data
-    const stats = {
-        totalUsers: 1247,
-        newUsersThisMonth: 89,
-        activeUsers: 856,
-        totalRevenue: 45678000,
-        revenueGrowth: 12.5,
-        totalReports: 23,
-        pendingReports: 8,
-        totalNews: 15,
-        publishedNews: 12
+    const locale = useLocale();
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        newUsersThisMonth: 0,
+        activeUsers: 0,
+        totalRevenue: 0,
+        revenueGrowth: 0,
+        totalReports: 0,
+        pendingReports: 0,
+        totalNews: 0,
+        publishedNews: 0
+    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [recentActivities, setRecentActivities] = useState<any[]>([]);
+    const [topGroups, setTopGroups] = useState<any[]>([]);
+    const [userGrowthData, setUserGrowthData] = useState<number[]>([]);
+    const [revenueData, setRevenueData] = useState<number[]>([]);
+    const [userDistData, setUserDistData] = useState<any[]>([]);
+    const [subscriptionDistData, setSubscriptionDistData] = useState<any[]>([]);
+    const [hourlyActivityData, setHourlyActivityData] = useState<any[]>([]);
+    const [reportStatusData, setReportStatusData] = useState<any[]>([]);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, [locale]);
+
+    const loadDashboardData = async () => {
+        setIsLoading(true);
+        try {
+            // Load all data in parallel
+            const [
+                statsResult,
+                revenueResult,
+                recentResult,
+                groupsResult,
+                userDistResult,
+                subDistResult,
+                hourlyResult,
+                reportResult
+            ] = await Promise.all([
+                getDashboardStats(locale),
+                getRevenueTrends("year", locale),
+                getRecentActivity(5, locale),
+                getTopActiveGroups(5, locale),
+                getUserDistribution(locale),
+                getSubscriptionDistribution(locale),
+                getHourlyActivity(undefined, locale),
+                getReportStatus(locale)
+            ]);
+
+            // Update stats
+            if (statsResult.status === "success" && statsResult.data) {
+                setStats({
+                    totalUsers: statsResult.data.totalUsers,
+                    newUsersThisMonth: statsResult.data.totalUsers - statsResult.data.activeUsers,
+                    activeUsers: statsResult.data.activeUsers,
+                    totalRevenue: statsResult.data.totalRevenue,
+                    revenueGrowth: statsResult.data.revenueGrowth,
+                    totalReports: 0,
+                    pendingReports: 0,
+                    totalNews: 0,
+                    publishedNews: 0
+                });
+            }
+
+            // Update revenue trends
+            if (revenueResult.status === "success" && revenueResult.data) {
+                setRevenueData(revenueResult.data.map(d => d.revenue));
+                setUserGrowthData(revenueResult.data.map(d => d.subscriptions));
+            }
+
+            // Update recent activities
+            if (recentResult.status === "success" && recentResult.data) {
+                setRecentActivities(recentResult.data.map(activity => ({
+                    id: activity.id,
+                    type: activity.type,
+                    message: activity.description,
+                    time: new Date(activity.createdAt).toLocaleString('vi-VN')
+                })));
+            }
+
+            // Update top groups
+            if (groupsResult.status === "success" && groupsResult.data) {
+                setTopGroups(groupsResult.data.map(group => ({
+                    id: group.groupId,
+                    name: group.groupName,
+                    members: group.memberCount,
+                    activity: group.activityScore
+                })));
+            }
+
+            // Update user distribution
+            if (userDistResult.status === "success" && userDistResult.data) {
+                setUserDistData(userDistResult.data);
+            }
+
+            // Update subscription distribution
+            if (subDistResult.status === "success" && subDistResult.data) {
+                setSubscriptionDistData(subDistResult.data);
+            }
+
+            // Update hourly activity
+            if (hourlyResult.status === "success" && hourlyResult.data) {
+                setHourlyActivityData(hourlyResult.data);
+            }
+
+            // Update report status
+            if (reportResult.status === "success" && reportResult.data) {
+                setReportStatusData(reportResult.data);
+            }
+
+        } catch (error) {
+            console.error("Failed to load dashboard data:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
-
-    const recentActivities = [
-        { id: 1, type: "user", message: "Người dùng mới đăng ký: nguyenvana@example.com", time: "5 phút trước" },
-        { id: 2, type: "report", message: "Báo cáo mới: Lạm dụng nội dung", time: "15 phút trước" },
-        { id: 3, type: "subscription", message: "Nâng cấp Premium: tranthib@example.com", time: "1 giờ trước" },
-        { id: 4, type: "news", message: "Tin tức mới được xuất bản: Cập nhật hệ thống", time: "2 giờ trước" },
-        { id: 5, type: "user", message: "Người dùng mới đăng ký: levanc@example.com", time: "3 giờ trước" }
-    ];
-
-    const topGroups = [
-        { id: 1, name: "Nhóm Toán cao cấp K22", members: 45, activity: 98 },
-        { id: 2, name: "Lập trình Web", members: 38, activity: 95 },
-        { id: 3, name: "Vật lý đại cương", members: 52, activity: 87 },
-        { id: 4, name: "Hóa học hữu cơ", members: 29, activity: 82 },
-        { id: 5, name: "Tiếng Anh chuyên ngành", members: 41, activity: 79 }
-    ];
 
     // User Growth Chart Data
     const userGrowthOption: EChartsOption = {
@@ -61,7 +154,7 @@ export function AdminDashboardPage() {
             {
                 name: "Người dùng mới",
                 type: "bar",
-                data: [65, 78, 92, 88, 105, 120, 135, 142, 158, 165, 178, 189],
+                data: userGrowthData.length > 0 ? userGrowthData : [65, 78, 92, 88, 105, 120, 135, 142, 158, 165, 178, 189],
                 itemStyle: {
                     color: "#FF5F3D",
                     borderRadius: [4, 4, 0, 0]
@@ -96,7 +189,7 @@ export function AdminDashboardPage() {
             {
                 name: "Doanh thu",
                 type: "line",
-                data: [
+                data: revenueData.length > 0 ? revenueData : [
                     2500000, 3200000, 2800000, 3500000, 4200000, 3800000, 4500000, 4800000, 5200000, 4900000, 5500000,
                     5800000
                 ],
@@ -154,7 +247,11 @@ export function AdminDashboardPage() {
                     }
                 },
                 labelLine: { show: false },
-                data: [
+                data: userDistData.length > 0 ? userDistData.map(d => ({
+                    value: d.count,
+                    name: d.category,
+                    itemStyle: { color: d.category === "Hoạt động" ? "#10B981" : d.category === "Mới" ? "#FF5F3D" : "#6B7280" }
+                })) : [
                     { value: 856, name: "Hoạt động", itemStyle: { color: "#10B981" } },
                     { value: 302, name: "Không hoạt động", itemStyle: { color: "#6B7280" } },
                     { value: 89, name: "Mới", itemStyle: { color: "#FF5F3D" } }
@@ -198,7 +295,11 @@ export function AdminDashboardPage() {
                     }
                 },
                 labelLine: { show: false },
-                data: [
+                data: subscriptionDistData.length > 0 ? subscriptionDistData.map(d => ({
+                    value: d.count,
+                    name: d.planName,
+                    itemStyle: { color: d.planName === "Free" ? "#94A3B8" : d.planName === "Premium" ? "#FF5F3D" : "#261E33" }
+                })) : [
                     { value: 892, name: "Free", itemStyle: { color: "#94A3B8" } },
                     { value: 245, name: "Premium", itemStyle: { color: "#FF5F3D" } },
                     { value: 110, name: "Enterprise", itemStyle: { color: "#261E33" } }

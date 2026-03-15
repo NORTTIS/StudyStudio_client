@@ -1,35 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { getRevenueOverview, getRevenueTrends, getTopPlans, getMRR, exportRevenueData } from "@/api/admin-revenue";
 
 export function RevenueStatsTab() {
+    const locale = useLocale();
     const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month");
+    const [isLoading, setIsLoading] = useState(true);
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+        averageRevenuePerUser: 0,
+        growth: 0
+    });
+    const [monthlyData, setMonthlyData] = useState<any[]>([]);
+    const [topPlans, setTopPlans] = useState<any[]>([]);
 
-    // Mock data
-    const stats = {
-        totalRevenue: 699717000,
-        monthlyRevenue: 58309750,
-        averageRevenuePerUser: 24900,
-        growth: 12.5
+    useEffect(() => {
+        loadRevenueData();
+    }, [locale, timeRange]);
+
+    const loadRevenueData = async () => {
+        setIsLoading(true);
+        try {
+            const [overviewResult, trendsResult, plansResult, mrrResult] = await Promise.all([
+                getRevenueOverview(locale),
+                getRevenueTrends(timeRange, locale),
+                getTopPlans(5, locale),
+                getMRR(locale)
+            ]);
+
+            // Update stats
+            if (overviewResult.status === "success" && overviewResult.data) {
+                setStats({
+                    totalRevenue: overviewResult.data.totalRevenue,
+                    monthlyRevenue: overviewResult.data.monthlyRevenue,
+                    averageRevenuePerUser: overviewResult.data.averageRevenuePerUser,
+                    growth: overviewResult.data.revenueGrowth
+                });
+            }
+
+            // Update trends
+            if (trendsResult.status === "success" && trendsResult.data) {
+                setMonthlyData(trendsResult.data.map(d => ({
+                    month: new Date(d.date).toLocaleDateString('en-US', { month: 'short' }),
+                    revenue: d.revenue,
+                    subscriptions: d.subscriptions
+                })));
+            }
+
+            // Update top plans
+            if (plansResult.status === "success" && plansResult.data) {
+                const totalRevenue = plansResult.data.reduce((sum, p) => sum + p.revenue, 0);
+                setTopPlans(plansResult.data.map(p => ({
+                    plan: p.planName,
+                    subscribers: p.subscriptions,
+                    revenue: p.revenue,
+                    percentage: totalRevenue > 0 ? ((p.revenue / totalRevenue) * 100).toFixed(1) : 0
+                })));
+            }
+
+        } catch (error) {
+            console.error("Failed to load revenue data:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const monthlyData = [
-        { month: "Jan", revenue: 45000000, subscriptions: 150 },
-        { month: "Feb", revenue: 52000000, subscriptions: 174 },
-        { month: "Mar", revenue: 58309750, subscriptions: 195 },
-        { month: "Apr", revenue: 61000000, subscriptions: 204 },
-        { month: "May", revenue: 67000000, subscriptions: 224 },
-        { month: "Jun", revenue: 72000000, subscriptions: 241 }
-    ];
+    const handleExportReport = async () => {
+        try {
+            const endDate = new Date().toISOString().split('T')[0];
+            const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const topPlans = [
-        { plan: "Premium", subscribers: 2341, revenue: 699717000, percentage: 100 },
-        { plan: "Free", subscribers: 10117, revenue: 0, percentage: 0 }
-    ];
-
-    const handleExportReport = () => {
-        console.log("Exporting revenue report...");
+            const result = await exportRevenueData(startDate, endDate, locale);
+            if (result.status === "success") {
+                console.log("Revenue report exported successfully");
+                // TODO: Handle file download
+            }
+        } catch (error) {
+            console.error("Failed to export revenue report:", error);
+        }
     };
 
     return (
@@ -40,31 +92,28 @@ export function RevenueStatsTab() {
                     <button
                         type="button"
                         onClick={() => setTimeRange("week")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "week"
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "week"
                                 ? "bg-[#FF5F3D] text-white"
                                 : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                            }`}>
                         This Week
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("month")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "month"
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "month"
                                 ? "bg-[#FF5F3D] text-white"
                                 : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                            }`}>
                         This Month
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("year")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "year"
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "year"
                                 ? "bg-[#FF5F3D] text-white"
                                 : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                            }`}>
                         This Year
                     </button>
                 </div>
