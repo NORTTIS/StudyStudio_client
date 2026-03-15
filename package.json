@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "api:types": "openapi-typescript http://localhost:5006/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
+        "api:types": "openapi-typescript http://localhost:8080/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
         "build": "pnpm api:types && next build",
         "build:skip-api": "next build",
         "start": "next start",
@@ -49,6 +49,7 @@
         "react-icons": "^5.5.0",
         "recharts": "^3.7.0",
         "sonner": "^2.0.7",
+        "swr": "^2.4.1",
         "tailwind-merge": "^3.4.0",
         "zod": "^4.2.1",
         "zustand": "^5.0.9"

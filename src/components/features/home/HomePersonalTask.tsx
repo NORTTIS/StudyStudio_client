@@ -45,7 +45,13 @@ import {
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { TaskProgressEditor } from "@/components/features/home/Editor";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+} from "@/components/ui/select";
 
 type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
 type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
@@ -303,6 +309,53 @@ function severityLabel(value: "minor" | "moderate" | "major" | "critical") {
     return "Minor";
 }
 
+const PROGRESS_OPTIONS = [0, 25, 50, 75, 100] as const;
+
+function normalizeProgressValue(n?: number | null) {
+    if (typeof n !== "number" || !Number.isFinite(n)) return 0;
+    const value = Math.floor(n);
+    if (value < 0) return 0;
+    if (value > 100) return 100;
+    return value;
+}
+
+function progressLabelOf(n?: number | null) {
+    const value = normalizeProgressValue(n);
+    if (value === 0) return "To do";
+    if (value < 50) return "Started";
+    if (value < 75) return "In progress";
+    if (value < 100) return "Review";
+    return "Done";
+}
+
+function shouldShowProgress(task?: Pick<TaskItemResponse, "progress"> | null) {
+    const p = Number(task?.progress ?? 0);
+    return p > 0 && p < 100;
+}
+
+function isTaskDone(task?: Pick<TaskItemResponse, "progress"> | null) {
+    return Number(task?.progress ?? 0) >= 100;
+}
+
+function ProgressPill({ progress }: { progress: number }) {
+    return (
+        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 font-semibold text-indigo-700 text-xs">
+            {progress}%
+        </span>
+    );
+}
+
+import { CheckCircle2 } from "lucide-react";
+
+function DonePill() {
+    return (
+        <span className="inline-flex h-10 items-center gap-2 rounded-[16px] border border-emerald-300 bg-emerald-50 px-4 font-medium text-emerald-700 text-sm">
+            <CheckCircle2 className="h-4 w-4" />
+            Done
+        </span>
+    );
+}
+
 function taskSeverityToFormValue(value?: number | null): "minor" | "moderate" | "major" | "critical" {
     if (value === 3) return "critical";
     if (value === 2) return "major";
@@ -437,17 +490,21 @@ function applyTaskDrop(args: { statuses: PersonalTaskStatusDto[]; activeTaskId: 
     };
 }
 
-function DuePill({ due, overdue }: { due: string; overdue: boolean }) {
+function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?: boolean }) {
     return (
         <div
             className={cn(
                 "inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2",
-                overdue ? "border-rose-200 bg-rose-50 text-rose-700" : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                done
+                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                    : overdue
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
                 <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
-                {overdue ? (
+                {!done && overdue ? (
                     <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">
                         Quá hạn
                     </span>
@@ -824,6 +881,10 @@ function PersonalTaskCard({
     const title = task.taskTitle || "Untitled task";
     const severity = taskSeverityToFormValue(task.taskSeverity);
 
+    const done = isTaskDone(task);
+    const showProgress = shouldShowProgress(task);
+    const normalizedProgress = normalizeProgressValue(task.progress);
+
     const cancelEdit = () => {
         setDraftTitle(task.taskTitle || "");
         setIsEditing(false);
@@ -867,11 +928,12 @@ function PersonalTaskCard({
                 }
             }}
             className={cn(
-                "group relative w-full select-none rounded-xl bg-white p-3",
+                "group relative w-full select-none rounded-xl p-3",
                 "cursor-grab border border-black/5 shadow-[0_1px_1px_rgba(9,30,66,0.08),0_0_0_1px_rgba(9,30,66,0.04)]",
-                "transition hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]",
-                "focus-within:ring-2 focus-within:ring-blue-200/60",
-                "active:cursor-grabbing"
+                "transition focus-within:ring-2 focus-within:ring-blue-200/60 active:cursor-grabbing",
+                done
+                    ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
+                    : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
             )}>
             <div className="flex items-start gap-3">
                 <div className="pt-1">
@@ -882,7 +944,11 @@ function PersonalTaskCard({
                     {!isEditing ? (
                         <>
                             <div className="flex items-start justify-between gap-3">
-                                <p className="line-clamp-3 pr-2 font-semibold text-sm text-zinc-900 leading-5">
+                                <p
+                                    className={cn(
+                                        "line-clamp-3 pr-2 font-semibold text-sm leading-5",
+                                        done ? "text-zinc-500 line-through" : "text-zinc-900"
+                                    )}>
                                     {title}
                                 </p>
 
@@ -988,25 +1054,33 @@ function PersonalTaskCard({
                         </div>
                     )}
 
-                    {dueText || severity ? (
+                    {dueText || severity || done || showProgress ? (
                         <div className="mt-3 space-y-2">
-                            {dueText ? <DuePill due={dueText} overdue={overdue} /> : null}
+                            {dueText ? <DuePill due={dueText} overdue={overdue} done={done} /> : null}
 
-                            {severity ? (
-                                <div>
-                                    <span
-                                        className={cn(
-                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                            severity === "critical"
-                                                ? "border-rose-200 bg-rose-50 text-rose-700"
-                                                : severity === "major"
-                                                    ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                    : severity === "moderate"
-                                                        ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                        : "border-sky-200 bg-sky-50 text-sky-700"
-                                        )}>
-                                        {severityLabel(severity)}
-                                    </span>
+                            {severity || done || showProgress ? (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {severity ? (
+                                        <span
+                                            className={cn(
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
+                                                done
+                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                                    : severity === "critical"
+                                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                        : severity === "major"
+                                                            ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                            : severity === "moderate"
+                                                                ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                                : "border-sky-200 bg-sky-50 text-sky-700"
+                                            )}>
+                                            {severityLabel(severity)}
+                                        </span>
+                                    ) : null}
+
+                                    {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
+
+                                    {done ? <DonePill /> : null}
                                 </div>
                             ) : null}
                         </div>
@@ -1020,35 +1094,50 @@ function PersonalTaskCard({
 function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
     const dueText = formatDueDate(task.dueDate);
     const severity = taskSeverityToFormValue(task.taskSeverity);
+    const done = isTaskDone(task);
+    const showProgress = shouldShowProgress(task);
+    const overdue = isOverdue(task.dueDate);
+    const normalizedProgress = normalizeProgressValue(task.progress);
 
     return (
         <div className="rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3">
             <div className="flex items-start gap-3">
                 <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", priorityDotColor(task.taskPriority))} />
                 <div className="min-w-0 flex-1">
-                    <p className="line-clamp-3 font-semibold text-sm text-zinc-800 leading-5">
+                    <p
+                        className={cn(
+                            "line-clamp-3 font-semibold text-sm leading-5",
+                            done ? "text-zinc-500 line-through" : "text-zinc-800"
+                        )}>
                         {task.taskTitle || "Untitled task"}
                     </p>
 
-                    {dueText || severity ? (
+                    {dueText || severity || done || showProgress ? (
                         <div className="mt-3 space-y-2">
-                            {dueText ? <DuePill due={dueText} overdue={false} /> : null}
+                            {dueText ? <DuePill due={dueText} overdue={overdue} done={done} /> : null}
 
-                            {severity ? (
-                                <div>
-                                    <span
-                                        className={cn(
-                                            "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                            severity === "critical"
-                                                ? "border-rose-200 bg-rose-50 text-rose-700"
-                                                : severity === "major"
-                                                    ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                    : severity === "moderate"
-                                                        ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                        : "border-sky-200 bg-sky-50 text-sky-700"
-                                        )}>
-                                        {severityLabel(severity)}
-                                    </span>
+                            {severity || done || showProgress ? (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {severity ? (
+                                        <span
+                                            className={cn(
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
+                                                done
+                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                                    : severity === "critical"
+                                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                        : severity === "major"
+                                                            ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                            : severity === "moderate"
+                                                                ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                                : "border-sky-200 bg-sky-50 text-sky-700"
+                                            )}>
+                                            {severityLabel(severity)}
+                                        </span>
+                                    ) : null}
+
+                                    {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
+                                    {done ? <DonePill /> : null}
                                 </div>
                             ) : null}
                         </div>
@@ -1063,29 +1152,42 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
     const dueText = formatDueDate(task.dueDate);
     const overdue = isOverdue(task.dueDate);
     const severity = taskSeverityToFormValue(task.taskSeverity);
+    const done = isTaskDone(task);
+    const showProgress = shouldShowProgress(task);
+    const normalizedProgress = normalizeProgressValue(task.progress);
 
     return (
         <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
-            <p className="font-semibold text-sm text-zinc-900 leading-5">{task.taskTitle || "Untitled task"}</p>
+            <p className={cn("font-semibold text-sm leading-5", done ? "text-zinc-500 line-through" : "text-zinc-900")}>
+                {task.taskTitle || "Untitled task"}
+            </p>
 
-            {dueText || severity ? (
+            {dueText || severity || done || showProgress ? (
                 <div className="mt-3 space-y-2">
-                    {dueText ? <DuePill due={dueText} overdue={overdue} /> : null}
-                    {severity ? (
-                        <div>
-                            <span
-                                className={cn(
-                                    "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                    severity === "critical"
-                                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                                        : severity === "major"
-                                            ? "border-orange-200 bg-orange-50 text-orange-700"
-                                            : severity === "moderate"
-                                                ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                : "border-sky-200 bg-sky-50 text-sky-700"
-                                )}>
-                                {severityLabel(severity)}
-                            </span>
+                    {dueText ? <DuePill due={dueText} overdue={overdue} done={done} /> : null}
+
+                    {severity || done || showProgress ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                            {severity ? (
+                                <span
+                                    className={cn(
+                                        "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
+                                        done
+                                            ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                            : severity === "critical"
+                                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                : severity === "major"
+                                                    ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                    : severity === "moderate"
+                                                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                        : "border-sky-200 bg-sky-50 text-sky-700"
+                                    )}>
+                                    {severityLabel(severity)}
+                                </span>
+                            ) : null}
+
+                            {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
+                            {done ? <DonePill /> : null}
                         </div>
                     ) : null}
                 </div>
@@ -1992,7 +2094,7 @@ function InlineTaskFormModal({
                             void handleSubmit();
                         }}
                         disabled={!canSubmit}
-                        className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800 disabled:opacity-60">
+                        className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                         {submitting ? "Creating..." : "Create task"}
                     </button>
                 </div>
@@ -2026,6 +2128,7 @@ function PersonalTaskDetailModal({
             severity: "minor" | "moderate" | "major" | "critical";
             startDate: string;
             dueDate: string;
+            progress: number;
         };
     }) => Promise<void>;
     onDelete: (task: PersonalTaskItemResponse) => Promise<void>;
@@ -2041,6 +2144,7 @@ function PersonalTaskDetailModal({
     const [severity, setSeverity] = React.useState<"minor" | "moderate" | "major" | "critical">("minor");
     const [startDate, setStartDate] = React.useState("");
     const [dueDate, setDueDate] = React.useState("");
+    const [progress, setProgress] = React.useState("0");
 
     React.useEffect(() => setMounted(true), []);
 
@@ -2056,6 +2160,7 @@ function PersonalTaskDetailModal({
         setSeverity(taskSeverityToFormValue(task.taskSeverity));
         setStartDate(toDateInputValue(task.startDate ?? null));
         setDueDate(toDateInputValue(task.dueDate ?? null));
+        setProgress(String(normalizeProgressValue(task.progress)));
     }, [open, task]);
 
     React.useEffect(() => {
@@ -2098,7 +2203,8 @@ function PersonalTaskDetailModal({
                     priority,
                     severity,
                     startDate,
-                    dueDate
+                    dueDate,
+                    progress: normalizeProgressValue(Number(progress))
                 }
             });
 
@@ -2266,6 +2372,8 @@ function PersonalTaskDetailModal({
                             min={startDate || undefined}
                             disabled={!isEditing}
                         />
+
+                        <TaskProgressEditor value={progress} onChange={setProgress} disabled={!isEditing} />
                     </div>
 
                     <div className="mt-6">
@@ -2302,14 +2410,14 @@ function PersonalTaskDetailModal({
                                 type="button"
                                 onClick={() => void handleSave()}
                                 disabled={saving}
-                                className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800 disabled:opacity-60">
+                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                                 {saving ? "Saving..." : "Save change"}
                             </button>
                         ) : (
                             <button
                                 type="button"
                                 onClick={() => setIsEditing(true)}
-                                className="h-11 rounded-xl bg-zinc-900 px-8 font-semibold text-sm text-white hover:bg-zinc-800">
+                                className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80">
                                 Edit
                             </button>
                         )}
@@ -2767,6 +2875,7 @@ export default function HomePersonalTaskScreen() {
                 severity: "minor" | "moderate" | "major" | "critical";
                 startDate: string;
                 dueDate: string;
+                progress: number;
             };
         }) => {
             if (!task.taskId) return;
@@ -2782,7 +2891,7 @@ export default function HomePersonalTaskScreen() {
                         personalStatusId: values.statusId ?? null,
                         startDate: toApiDateTime(values.startDate),
                         dueDate: toApiDateTime(values.dueDate),
-                        progress: task.progress ?? null,
+                        progress: values.progress,
                         taskPriority: values.priority === "high" ? 2 : values.priority === "medium" ? 1 : 0,
                         taskSeverity:
                             values.severity === "critical"
@@ -2809,6 +2918,7 @@ export default function HomePersonalTaskScreen() {
                         ...prev,
                         taskTitle: values.title.trim(),
                         taskDescription: values.description.trim() || null,
+                        progress: values.progress,
                         personalStatus: {
                             ...(prev.personalStatus ?? {}),
                             statusId: values.statusId ?? undefined,
