@@ -159,7 +159,10 @@ function cn(...classes: Array<string | false | null | undefined>) {
 }
 
 function getApiBase() {
-    const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    const raw =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "";
     return String(raw).replace(/\/+$/, "");
 }
 
@@ -223,8 +226,22 @@ function formatDisplayDate(input?: string | null) {
     if (!s) return "";
     if (s.startsWith("0001-01-01")) return "";
     const d = new Date(s);
-    if (Number.isNaN(d.getTime())) return s;
-    return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+    if (Number.isNaN(d.getTime())) {
+        const onlyDate = parseDateString(s);
+        if (onlyDate) {
+            return onlyDate.toLocaleDateString("en-US", {
+                month: "short",
+                day: "2-digit",
+                year: "numeric"
+            });
+        }
+        return s;
+    }
+    return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric"
+    });
 }
 
 function initials(u?: UserDto) {
@@ -288,22 +305,19 @@ function sanitizeProgressInput(value: string) {
     const digits = value.replace(/\D+/g, "");
 
     if (digits === "") return "";
-
+    if (/^0+$/.test(digits)) return "0";
     if (digits === "100") return "100";
-
     if (digits.startsWith("100")) return "100";
 
     return digits.slice(0, 2);
 }
 
 function clampProgressInput(value: string) {
-    if (value === "") return "";
-
+    if (value === "") return "0";
     if (value === "100") return "100";
 
     const n = Number(value);
-
-    if (!Number.isFinite(n)) return "";
+    if (!Number.isFinite(n)) return "0";
 
     return String(Math.min(Math.max(Math.floor(n), 0), 100));
 }
@@ -347,6 +361,9 @@ const selectItemClassName =
 function toDateInputValue(input?: string | null) {
     const s = String(input ?? "").trim();
     if (!s || s.startsWith("0001-01-01")) return "";
+    const dateOnly = s.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return dateOnly;
+
     const d = new Date(s);
     if (Number.isNaN(d.getTime())) return "";
     const y = d.getFullYear();
@@ -372,7 +389,11 @@ function buildInitials(name?: string | null) {
 
 function parseDateString(value?: string) {
     if (!value) return undefined;
-    const [y, m, d] = value.split("-").map(Number);
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+    if (!match) return undefined;
+    const y = Number(match[1]);
+    const m = Number(match[2]);
+    const d = Number(match[3]);
     if (!y || !m || !d) return undefined;
     return new Date(y, m - 1, d);
 }
@@ -419,12 +440,19 @@ function readParam(params: Record<string, string | string[] | undefined>, key: s
 }
 
 function getGroupIdFromParams(params: Record<string, string | string[] | undefined>) {
-    const direct = readParam(params, "groupId") || readParam(params, "id") || readParam(params, "slug") || null;
+    const direct =
+        readParam(params, "groupId") ||
+        readParam(params, "id") ||
+        readParam(params, "slug") ||
+        null;
+
     if (direct) return direct;
+
     const firstKey = Object.keys(params).find((k) => {
         const value = params[k];
         return typeof value === "string" || (Array.isArray(value) && typeof value[0] === "string");
     });
+
     return firstKey ? readParam(params, firstKey) : null;
 }
 
@@ -585,6 +613,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             </select>
                             <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
                         </div>
+
                         <div className="relative w-[140px]">
                             <select
                                 value={month.getFullYear()}
@@ -611,9 +640,11 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             >
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
+
                             <div className="text-[18px] font-bold text-zinc-900">
                                 {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                             </div>
+
                             <button
                                 type="button"
                                 onClick={goNextMonth}
@@ -633,14 +664,8 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             showOutsideDays
                             className="w-full"
                             styles={{
-                                day: {
-                                    outline: "none",
-                                    boxShadow: "none"
-                                },
-                                button: {
-                                    outline: "none",
-                                    boxShadow: "none"
-                                }
+                                day: { outline: "none", boxShadow: "none" },
+                                button: { outline: "none", boxShadow: "none" }
                             }}
                             classNames={{
                                 months: "flex w-full flex-col",
@@ -678,6 +703,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         >
                             Today
                         </button>
+
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
@@ -685,6 +711,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         >
                             Tomorrow
                         </button>
+
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
@@ -692,6 +719,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         >
                             Next week
                         </button>
+
                         <button
                             type="button"
                             onClick={() => {
@@ -712,6 +740,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
         <>
             <div className="relative">
                 <div className="text-sm font-semibold text-zinc-600">{label}</div>
+
                 <button
                     ref={triggerRef}
                     type="button"
@@ -741,6 +770,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         >
                             <CalendarDays className="h-4 w-4" />
                         </div>
+
                         <span
                             className={cn(
                                 "truncate text-left",
@@ -762,6 +792,7 @@ async function apiGetGroupDetail(groupId: string) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+
     const url = apiUrl(`/group/${encodeURIComponent(groupId)}/detail`);
     const res = await fetch(url, {
         method: "GET",
@@ -772,21 +803,32 @@ async function apiGetGroupDetail(groupId: string) {
         },
         cache: "no-store"
     });
+
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
+
     if (!res.ok || (json && !okByJsonStatus(json))) {
         throw new Error(extractApiMessage(raw, json));
     }
+
     return (json ?? null) as ApiResponse<GroupDetailResponse> | null;
 }
 
 function findTaskInGroupDetail(detail: GroupDetailResponse | null | undefined, taskId: string) {
     const statuses = detail?.taskStatuses ?? [];
+
     for (const st of statuses) {
         const list = st?.taskList ?? [];
         const found = list.find((t) => String(t?.taskId ?? "") === taskId);
-        if (found) return { task: found, statusName: st?.statusName ?? null, statusId: st?.statusId ?? null };
+        if (found) {
+            return {
+                task: found,
+                statusName: st?.statusName ?? null,
+                statusId: st?.statusId ?? null
+            };
+        }
     }
+
     return null;
 }
 
@@ -806,13 +848,6 @@ function mapTaskDetailFromTaskItem(
     const priorityValue = normalizePriorityValue(task?.taskPriority);
     const severityValue = normalizeSeverityValue(task?.taskSeverity);
     const progressValue = normalizeProgressValue(task?.progress);
-    const priorityLabel = priorityLabelOf(priorityValue);
-    const severityLabel = severityLabelOf(severityValue);
-    const progressLabel = progressLabelOf(progressValue);
-    const startDateRaw = task?.startDate ?? null;
-    const dueDateRaw = task?.dueDate ?? null;
-    const startFmt = startDateRaw ? formatDisplayDate(String(startDateRaw)) : "";
-    const dueFmt = dueDateRaw ? formatDisplayDate(String(dueDateRaw)) : "";
 
     return {
         id: String(task?.taskId ?? taskId),
@@ -824,15 +859,15 @@ function mapTaskDetailFromTaskItem(
         statusId,
         statusName,
         priorityValue,
-        priorityLabel,
+        priorityLabel: priorityLabelOf(priorityValue),
         severityValue,
-        severityLabel,
+        severityLabel: severityLabelOf(severityValue),
         progressValue,
-        progressLabel,
-        startDateRaw,
-        dueDateRaw,
-        startDateFmt: startFmt,
-        dueDateFmt: dueFmt,
+        progressLabel: progressLabelOf(progressValue),
+        startDateRaw: task?.startDate ?? null,
+        dueDateRaw: task?.dueDate ?? null,
+        startDateFmt: task?.startDate ? formatDisplayDate(String(task.startDate)) : "",
+        dueDateFmt: task?.dueDate ? formatDisplayDate(String(task.dueDate)) : "",
         raw: task
     };
 }
@@ -842,8 +877,7 @@ function mapStatusOptions(detail: GroupDetailResponse | null | undefined): Statu
         .map((s) => {
             const statusId = String(s?.statusId ?? "").trim();
             const statusName = String(s?.statusName ?? "").trim();
-            if (!statusId) return null;
-            if (!statusName) return null;
+            if (!statusId || !statusName) return null;
             return { statusId, statusName };
         })
         .filter((s): s is StatusOption => s != null);
@@ -853,7 +887,9 @@ async function apiGetTaskDetailFromGroup(groupId: string, taskId: string) {
     const resp = await apiGetGroupDetail(groupId);
     const group = resp?.data ?? null;
     const hit = findTaskInGroupDetail(group, taskId);
+
     if (!hit) throw new Error("Không tìm thấy task trong group");
+
     return {
         task: mapTaskDetailFromTaskItem(hit.task, taskId, hit.statusName, hit.statusId),
         statusOptions: mapStatusOptions(group)
@@ -864,6 +900,7 @@ async function apiGetGroupMembers(groupId: string) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+
     const url = apiUrl(`/group/${encodeURIComponent(groupId)}/members`);
     const res = await fetch(url, {
         method: "GET",
@@ -874,11 +911,14 @@ async function apiGetGroupMembers(groupId: string) {
         },
         cache: "no-store"
     });
+
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
+
     if (!res.ok || (json && !okByJsonStatus(json))) {
         throw new Error(extractApiMessage(raw, json));
     }
+
     return (json ?? null) as ApiResponse<GroupMemberListResponse> | null;
 }
 
@@ -886,6 +926,7 @@ async function apiGetMyProfile() {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+
     const url = apiUrl("/user-profile");
     const res = await fetch(url, {
         method: "GET",
@@ -896,11 +937,14 @@ async function apiGetMyProfile() {
         },
         cache: "no-store"
     });
+
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
+
     if (!res.ok || (json && !okByJsonStatus(json))) {
         throw new Error(extractApiMessage(raw, json));
     }
+
     return (json ?? null) as ApiResponse<UserProfileResponse> | null;
 }
 
@@ -908,6 +952,7 @@ async function apiGetTaskComments(taskId: string) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+
     const url = apiUrl(`/task-comments/${encodeURIComponent(taskId)}?limit=50&offset=0`);
     const res = await fetch(url, {
         method: "GET",
@@ -918,11 +963,14 @@ async function apiGetTaskComments(taskId: string) {
         },
         cache: "no-store"
     });
+
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
+
     if (!res.ok || (json && !okByJsonStatus(json))) {
         throw new Error(extractApiMessage(raw, json));
     }
+
     return (json ?? null) as ApiResponse<TaskCommentListResponse> | null;
 }
 
@@ -940,6 +988,7 @@ async function apiUpdateTask(args: {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
+
     const url = apiUrl(`/Task/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.taskId)}`);
     const res = await fetch(url, {
         method: "PUT",
@@ -951,11 +1000,14 @@ async function apiUpdateTask(args: {
         },
         body: JSON.stringify(args.payload)
     });
+
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
+
     if (!res.ok || (json && !okByJsonStatus(json))) {
         throw new Error(extractApiMessage(raw, json));
     }
+
     return json;
 }
 
@@ -974,6 +1026,7 @@ export default function TaskDetailModal(props: {
     React.useEffect(() => setMounted(true), []);
 
     const [loadingDetail, setLoadingDetail] = React.useState(false);
+    const [isRefreshingDetail, setIsRefreshingDetail] = React.useState(false);
     const [detailError, setDetailError] = React.useState<string | null>(null);
     const [task, setTask] = React.useState<TaskDetail | null>(null);
 
@@ -1001,6 +1054,15 @@ export default function TaskDetailModal(props: {
     const [saveError, setSaveError] = React.useState<string | null>(null);
     const [isEditing, setIsEditing] = React.useState(false);
 
+    const isAliveRef = React.useRef(true);
+
+    React.useEffect(() => {
+        isAliveRef.current = true;
+        return () => {
+            isAliveRef.current = false;
+        };
+    }, []);
+
     const handleSendComment = () => {
         setCommentDraft("");
     };
@@ -1015,9 +1077,11 @@ export default function TaskDetailModal(props: {
 
     React.useEffect(() => {
         if (!open) return;
+
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
         };
+
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [open, onClose]);
@@ -1027,6 +1091,28 @@ export default function TaskDetailModal(props: {
         setIsEditing(false);
     }, [open, taskId]);
 
+    const refreshTaskDetailSilently = React.useCallback(async () => {
+        if (!open || !taskId || !groupId) return;
+
+        try {
+            setIsRefreshingDetail(true);
+            const result = await apiGetTaskDetailFromGroup(groupId, taskId);
+
+            if (!isAliveRef.current) return;
+
+            setTask(result.task);
+            setStatusOptions(result.statusOptions);
+            setDetailError(null);
+        } catch (e: unknown) {
+            if (!isAliveRef.current) return;
+            setDetailError(getErrorMessage(e, "Không tải được task detail"));
+        } finally {
+            if (isAliveRef.current) {
+                setIsRefreshingDetail(false);
+            }
+        }
+    }, [open, taskId, groupId]);
+
     React.useEffect(() => {
         if (!open || !taskId) return;
         let alive = true;
@@ -1034,6 +1120,7 @@ export default function TaskDetailModal(props: {
         (async () => {
             setLoadingDetail(true);
             setDetailError(null);
+
             try {
                 if (!groupId) throw new Error("Thiếu groupId từ route");
                 const result = await apiGetTaskDetailFromGroup(groupId, taskId);
@@ -1062,6 +1149,7 @@ export default function TaskDetailModal(props: {
         (async () => {
             setLoadingComments(true);
             setCommentError(null);
+
             try {
                 const resp = await apiGetTaskComments(taskId);
                 const list = (resp?.data?.comments ?? []) as TaskCommentDto[];
@@ -1087,6 +1175,7 @@ export default function TaskDetailModal(props: {
 
         (async () => {
             setMembersError(null);
+
             try {
                 const resp = await apiGetGroupMembers(groupId);
                 const list = resp?.data?.members ?? [];
@@ -1158,6 +1247,7 @@ export default function TaskDetailModal(props: {
 
     const selectedAssigneeDisplay = React.useMemo(() => {
         if (selectedAssignee) return selectedAssignee;
+
         if (task?.assigneeId && task.assigneeName) {
             return {
                 userId: task.assigneeId,
@@ -1165,6 +1255,7 @@ export default function TaskDetailModal(props: {
                 avatarUrl: safeAvatarUrl(task.assigneeAvatarUrl)
             };
         }
+
         return { userId: "", label: "Unassigned", avatarUrl: "" };
     }, [selectedAssignee, task?.assigneeAvatarUrl, task?.assigneeId, task?.assigneeName]);
 
@@ -1173,18 +1264,35 @@ export default function TaskDetailModal(props: {
         return hit?.statusName ?? task?.statusName ?? "—";
     }, [statusId, statusOptions, task?.statusName]);
 
-    const selectedPriorityValue = React.useMemo(() => normalizePriorityValue(Number(priority)), [priority]);
-    const selectedPriorityLabel = React.useMemo(() => priorityLabelOf(selectedPriorityValue), [selectedPriorityValue]);
+    const selectedPriorityValue = React.useMemo(
+        () => normalizePriorityValue(Number(priority)),
+        [priority]
+    );
 
-    const selectedSeverityValue = React.useMemo(() => normalizeSeverityValue(Number(severity)), [severity]);
-    const selectedSeverityLabel = React.useMemo(() => severityLabelOf(selectedSeverityValue), [selectedSeverityValue]);
+    const selectedPriorityLabel = React.useMemo(
+        () => priorityLabelOf(selectedPriorityValue),
+        [selectedPriorityValue]
+    );
+
+    const selectedSeverityValue = React.useMemo(
+        () => normalizeSeverityValue(Number(severity)),
+        [severity]
+    );
+
+    const selectedSeverityLabel = React.useMemo(
+        () => severityLabelOf(selectedSeverityValue),
+        [selectedSeverityValue]
+    );
 
     const selectedProgressValue = React.useMemo(() => {
         if (progress === "") return 0;
         return normalizeProgressValue(Number(progress));
     }, [progress]);
 
-    const selectedProgressLabel = React.useMemo(() => progressLabelOf(selectedProgressValue), [selectedProgressValue]);
+    const selectedProgressLabel = React.useMemo(
+        () => progressLabelOf(selectedProgressValue),
+        [selectedProgressValue]
+    );
 
     const handleSave = async () => {
         setSaveError(null);
@@ -1206,7 +1314,9 @@ export default function TaskDetailModal(props: {
         }
 
         const normalizedProgressValue =
-            progress === "" ? 0 : normalizeProgressValue(Number(clampProgressInput(progress)));
+            progress === ""
+                ? 0
+                : normalizeProgressValue(Number(clampProgressInput(progress)));
 
         try {
             setSubmitting(true);
@@ -1229,6 +1339,7 @@ export default function TaskDetailModal(props: {
 
             setTask((prev) => {
                 if (!prev) return prev;
+
                 return {
                     ...prev,
                     title: taskNameTrimmed,
@@ -1252,9 +1363,12 @@ export default function TaskDetailModal(props: {
             });
 
             setProgress(String(normalizedProgressValue));
-
-            await onSaved?.();
             setIsEditing(false);
+
+            void Promise.allSettled([
+                refreshTaskDetailSilently(),
+                Promise.resolve(onSaved?.())
+            ]);
         } catch (e: unknown) {
             setSaveError(getErrorMessage(e, "Không cập nhật được task"));
         } finally {
@@ -1287,14 +1401,24 @@ export default function TaskDetailModal(props: {
                             <input
                                 value={taskName}
                                 maxLength={TASK_TITLE_MAX_LENGTH}
-                                onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
+                                onChange={(e) =>
+                                    setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))
+                                }
                                 placeholder="Task name"
                                 className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
                             />
                         ) : (
-                            <h2 className="min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
-                                {taskName || "Task"}
-                            </h2>
+                            <div className="flex min-w-0 items-center gap-3">
+                                <h2 className="min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
+                                    {taskName || "Task"}
+                                </h2>
+
+                                {isRefreshingDetail ? (
+                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-500">
+                                        Syncing...
+                                    </div>
+                                ) : null}
+                            </div>
                         )}
                     </div>
 
@@ -1380,7 +1504,11 @@ export default function TaskDetailModal(props: {
                                     </SelectItem>
 
                                     {assigneeOptions.map((m) => (
-                                        <SelectItem key={m.userId} value={m.userId} className={selectItemClassName}>
+                                        <SelectItem
+                                            key={m.userId}
+                                            value={m.userId}
+                                            className={selectItemClassName}
+                                        >
                                             <div className="flex items-center gap-2">
                                                 {m.avatarUrl ? (
                                                     <Image
@@ -1426,8 +1554,13 @@ export default function TaskDetailModal(props: {
                                     <SelectItem value="no-status" className={selectItemClassName}>
                                         No status
                                     </SelectItem>
+
                                     {statusOptions.map((s) => (
-                                        <SelectItem key={s.statusId} value={s.statusId} className={selectItemClassName}>
+                                        <SelectItem
+                                            key={s.statusId}
+                                            value={s.statusId}
+                                            className={selectItemClassName}
+                                        >
                                             {s.statusName}
                                         </SelectItem>
                                     ))}
@@ -1437,7 +1570,11 @@ export default function TaskDetailModal(props: {
 
                         <div>
                             <div className="text-sm font-semibold text-zinc-600">Priority</div>
-                            <Select value={String(selectedPriorityValue)} onValueChange={setPriority} disabled={!isEditing}>
+                            <Select
+                                value={String(selectedPriorityValue)}
+                                onValueChange={setPriority}
+                                disabled={!isEditing}
+                            >
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(selectedPriorityLabel))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
@@ -1453,20 +1590,19 @@ export default function TaskDetailModal(props: {
                                     avoidCollisions
                                     className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
                                 >
-                                    <SelectItem value="0" className={selectItemClassName}>
-                                        Low
-                                    </SelectItem>
-                                    <SelectItem value="1" className={selectItemClassName}>
-                                        Medium
-                                    </SelectItem>
-                                    <SelectItem value="2" className={selectItemClassName}>
-                                        High
-                                    </SelectItem>
+                                    <SelectItem value="0" className={selectItemClassName}>Low</SelectItem>
+                                    <SelectItem value="1" className={selectItemClassName}>Medium</SelectItem>
+                                    <SelectItem value="2" className={selectItemClassName}>High</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <TrelloDatePicker label="Start Date" value={startDate} onChange={setStartDate} disabled={!isEditing} />
+                        <TrelloDatePicker
+                            label="Start Date"
+                            value={startDate}
+                            onChange={setStartDate}
+                            disabled={!isEditing}
+                        />
 
                         <TrelloDatePicker
                             label="Due Date"
@@ -1478,7 +1614,11 @@ export default function TaskDetailModal(props: {
 
                         <div>
                             <div className="text-sm font-semibold text-zinc-600">Severity</div>
-                            <Select value={String(selectedSeverityValue)} onValueChange={setSeverity} disabled={!isEditing}>
+                            <Select
+                                value={String(selectedSeverityValue)}
+                                onValueChange={setSeverity}
+                                disabled={!isEditing}
+                            >
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(selectedSeverityLabel))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
@@ -1494,18 +1634,10 @@ export default function TaskDetailModal(props: {
                                     avoidCollisions
                                     className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
                                 >
-                                    <SelectItem value="0" className={selectItemClassName}>
-                                        Minor
-                                    </SelectItem>
-                                    <SelectItem value="1" className={selectItemClassName}>
-                                        Moderate
-                                    </SelectItem>
-                                    <SelectItem value="2" className={selectItemClassName}>
-                                        Major
-                                    </SelectItem>
-                                    <SelectItem value="3" className={selectItemClassName}>
-                                        Critical
-                                    </SelectItem>
+                                    <SelectItem value="0" className={selectItemClassName}>Minor</SelectItem>
+                                    <SelectItem value="1" className={selectItemClassName}>Moderate</SelectItem>
+                                    <SelectItem value="2" className={selectItemClassName}>Major</SelectItem>
+                                    <SelectItem value="3" className={selectItemClassName}>Critical</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -1600,7 +1732,8 @@ export default function TaskDetailModal(props: {
                             ) : (
                                 comments.map((c) => {
                                     const u = c.user;
-                                    const name = `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() || "User";
+                                    const name =
+                                        `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() || "User";
                                     const when = c.createdAt ? relativeTimeOf(c.createdAt) : "";
 
                                     return (
@@ -1700,7 +1833,7 @@ export default function TaskDetailModal(props: {
                                 void handleSave();
                             }}
                             disabled={submitting}
-                            className="h-11 rounded-xl bg-orange-500 px-8 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60"
+                            className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
                         >
                             {submitting ? "Saving..." : "Save change"}
                         </button>
@@ -1709,7 +1842,7 @@ export default function TaskDetailModal(props: {
                             type="button"
                             onClick={() => setIsEditing(true)}
                             disabled={loadingDetail || !!detailError || !task}
-                            className="h-11 rounded-xl bg-orange-500 px-8 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60"
+                            className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
                         >
                             Edit
                         </button>

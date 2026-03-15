@@ -47,16 +47,16 @@ function startOfDay(date: Date) {
 
 function formatDateDisplay(value?: string) {
     const date = parseDateString(value);
-    if (!date) return "Select a date";
+    if (!date) return "Chọn ngày";
 
     const today = startOfDay(new Date());
     const target = startOfDay(date);
     const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
 
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === 0) return "Hôm nay";
+    if (diffDays === 1) return "Ngày mai";
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat("vi-VN", {
         weekday: "short",
         month: "short",
         day: "numeric",
@@ -110,34 +110,34 @@ function severityTone(value: TaskSeverity) {
 }
 
 function priorityLabel(value: TaskPriority) {
-    if (value === "high") return "High";
-    if (value === "medium") return "Medium";
-    return "Low";
+    if (value === "high") return "Cao";
+    if (value === "medium") return "Trung bình";
+    return "Thấp";
 }
 
 function severityLabel(value: TaskSeverity) {
-    if (value === "critical") return "Critical";
-    if (value === "major") return "Major";
-    if (value === "moderate") return "Moderate";
-    return "Minor";
+    if (value === "critical") return "Nghiêm trọng";
+    if (value === "major") return "Cao";
+    if (value === "moderate") return "Trung bình";
+    return "Thấp";
 }
 
 const selectItemClassName =
     "cursor-pointer rounded-xl px-3 py-2 text-sm text-zinc-900 outline-none data-highlighted:bg-zinc-100 hover:bg-zinc-100 focus:bg-zinc-100";
 
 const monthOptions = [
-    { value: "0", label: "January" },
-    { value: "1", label: "February" },
-    { value: "2", label: "March" },
-    { value: "3", label: "April" },
-    { value: "4", label: "May" },
-    { value: "5", label: "June" },
-    { value: "6", label: "July" },
-    { value: "7", label: "August" },
-    { value: "8", label: "September" },
-    { value: "9", label: "October" },
-    { value: "10", label: "November" },
-    { value: "11", label: "December" }
+    { value: "0", label: "Tháng 1" },
+    { value: "1", label: "Tháng 2" },
+    { value: "2", label: "Tháng 3" },
+    { value: "3", label: "Tháng 4" },
+    { value: "4", label: "Tháng 5" },
+    { value: "5", label: "Tháng 6" },
+    { value: "6", label: "Tháng 7" },
+    { value: "7", label: "Tháng 8" },
+    { value: "8", label: "Tháng 9" },
+    { value: "9", label: "Tháng 10" },
+    { value: "10", label: "Tháng 11" },
+    { value: "11", label: "Tháng 12" }
 ] as const;
 
 const TASK_TITLE_MAX_LENGTH = 25;
@@ -425,7 +425,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                             onClick={() => pickDate(new Date())}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
                         >
-                            Today
+                            Hôm nay
                         </button>
 
                         <button
@@ -433,7 +433,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                             onClick={() => pickDate(addDays(new Date(), 1))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
                         >
-                            Tomorrow
+                            Ngày mai
                         </button>
 
                         <button
@@ -441,7 +441,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                             onClick={() => pickDate(addDays(new Date(), 7))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
                         >
-                            Next week
+                            Tuần sau
                         </button>
 
                         <button
@@ -452,7 +452,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                             }}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
                         >
-                            No date
+                            Không chọn ngày
                         </button>
                     </div>
                 </div>,
@@ -566,7 +566,7 @@ export default function TaskFormModal({
 
     const selectedAssigneeDisplay = React.useMemo(() => {
         if (selectedAssignee) return selectedAssignee;
-        return { value: "unassigned", label: "Unassigned", avatarUrl: null };
+        return { value: "unassigned", label: "Chưa giao", avatarUrl: null };
     }, [selectedAssignee]);
 
     const canSubmit = title.trim().length > 0 && !submitting;
@@ -631,7 +631,7 @@ export default function TaskFormModal({
                             setTitle(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH));
                             if (error) setError(null);
                         }}
-                        placeholder="Task name"
+                        placeholder="Tên công việc"
                         className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-4 py-3 text-[30px] font-extrabold leading-none text-zinc-900 outline-none"
                     />
 
@@ -639,7 +639,7 @@ export default function TaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="absolute top-1/2 right-7 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close"
+                        aria-label="Đóng"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -654,7 +654,7 @@ export default function TaskFormModal({
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Assignee</div>
+                            <div className="text-sm font-semibold text-zinc-600">Người được giao</div>
                             <Select
                                 value={assigneeId ?? "unassigned"}
                                 onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}
@@ -689,7 +689,7 @@ export default function TaskFormModal({
                                             <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
                                                 U
                                             </div>
-                                            <span>Unassigned</span>
+                                            <span>Chưa giao</span>
                                         </div>
                                     </SelectItem>
 
@@ -716,7 +716,7 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
+                            <div className="text-sm font-semibold text-zinc-600">Trạng thái</div>
                             <Select
                                 value={statusId}
                                 onValueChange={(v) => setStatusId(v)}
@@ -733,7 +733,6 @@ export default function TaskFormModal({
                                     avoidCollisions
                                     className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
                                 >
-
                                     {statuses.map((s) => (
                                         <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
                                             {s.label}
@@ -744,7 +743,7 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                            <div className="text-sm font-semibold text-zinc-600">Mức ưu tiên</div>
                             <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
@@ -762,24 +761,24 @@ export default function TaskFormModal({
                                     className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
                                 >
                                     <SelectItem value="low" className={selectItemClassName}>
-                                        Low
+                                        Thấp
                                     </SelectItem>
                                     <SelectItem value="medium" className={selectItemClassName}>
-                                        Medium
+                                        Trung bình
                                     </SelectItem>
                                     <SelectItem value="high" className={selectItemClassName}>
-                                        High
+                                        Cao
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <TrelloDatePicker label="Start Date" value={startDate} onChange={setStartDate} />
+                        <TrelloDatePicker label="Ngày bắt đầu" value={startDate} onChange={setStartDate} />
 
-                        <TrelloDatePicker label="Due Date" value={dueDate} onChange={setDueDate} min={startDate || undefined} />
+                        <TrelloDatePicker label="Hạn hoàn thành" value={dueDate} onChange={setDueDate} min={startDate || undefined} />
 
                         <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
+                            <div className="text-sm font-semibold text-zinc-600">Mức độ</div>
                             <Select value={severity} onValueChange={(v) => setSeverity(v as TaskSeverity)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
@@ -797,16 +796,16 @@ export default function TaskFormModal({
                                     className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl"
                                 >
                                     <SelectItem value="minor" className={selectItemClassName}>
-                                        Minor
+                                        Thấp
                                     </SelectItem>
                                     <SelectItem value="moderate" className={selectItemClassName}>
-                                        Moderate
+                                        Trung bình
                                     </SelectItem>
                                     <SelectItem value="major" className={selectItemClassName}>
-                                        Major
+                                        Cao
                                     </SelectItem>
                                     <SelectItem value="critical" className={selectItemClassName}>
-                                        Critical
+                                        Nghiêm trọng
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -814,11 +813,11 @@ export default function TaskFormModal({
                     </div>
 
                     <div className="mt-6">
-                        <div className="text-sm font-semibold text-zinc-600">Description</div>
+                        <div className="text-sm font-semibold text-zinc-600">Mô tả</div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="(No description)"
+                            placeholder="(Không có mô tả)"
                             className="mt-2 min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none"
                         />
                     </div>
@@ -830,7 +829,7 @@ export default function TaskFormModal({
                         onClick={onClose}
                         className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
                     >
-                        Cancel
+                        Hủy
                     </button>
 
                     <button
@@ -839,9 +838,9 @@ export default function TaskFormModal({
                             void handleSubmit();
                         }}
                         disabled={!canSubmit}
-                        className="h-11 rounded-xl bg-zinc-900 px-8 text-sm font-semibold text-white hover:bg-zinc-800 disabled:opacity-60"
+                        className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
                     >
-                        {submitting ? "Creating..." : "Create task"}
+                        {submitting ? "Đang tạo..." : "Tạo công việc"}
                     </button>
                 </div>
             </div>
