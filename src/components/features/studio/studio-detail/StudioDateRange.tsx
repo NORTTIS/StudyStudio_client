@@ -1,0 +1,124 @@
+"use client";
+
+import { CalendarDays, Clock3 } from "lucide-react";
+import { useMemo } from "react";
+
+interface StudioDateRangeProps {
+    startDate: string;
+    dueDate: string;
+    showProgress?: boolean;
+}
+
+export function StudioDateRange({ startDate, dueDate, showProgress = true }: StudioDateRangeProps) {
+    const dateInfo = useMemo(() => {
+        const start = new Date(startDate);
+        const due = new Date(dueDate);
+        const now = new Date();
+
+        const totalDays = Math.ceil((due.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        const elapsedDays = Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        const remainingDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+        let progressPercent = Math.round((elapsedDays / totalDays) * 100);
+        progressPercent = Math.max(0, Math.min(100, progressPercent));
+
+        const isOverdue = now > due;
+
+        return {
+            startDate: start.toLocaleDateString("vi-VN", { day: "numeric", month: "short", year: "numeric" }),
+            dueDate: due.toLocaleDateString("vi-VN", { day: "numeric", month: "short", year: "numeric" }),
+            totalDays,
+            elapsedDays,
+            remainingDays: isOverdue ? 0 : remainingDays,
+            progressPercent,
+            isOverdue,
+            isFuture: now < start
+        };
+    }, [startDate, dueDate]);
+
+    return (
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-semibold text-[#261E33]">Thời gian dự án</h3>
+                {dateInfo.isOverdue && (
+                    <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-600">
+                        Đã quá hạn
+                    </span>
+                )}
+                {dateInfo.isFuture && (
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-600">
+                        Sắp bắt đầu
+                    </span>
+                )}
+            </div>
+
+            <div className="mb-4 flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
+                        <CalendarDays className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500">Bắt đầu</p>
+                        <p className="font-medium text-[#261E33]">{dateInfo.startDate}</p>
+                    </div>
+                </div>
+
+                <div className="h-10 w-px bg-gray-200" />
+
+                <div className="flex items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
+                        <Clock3 className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500">Kết thúc</p>
+                        <p className="font-medium text-[#261E33]">{dateInfo.dueDate}</p>
+                    </div>
+                </div>
+
+                <div className="h-10 w-px bg-gray-200" />
+
+                <div className="flex items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                        <Clock3 className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500">
+                            {dateInfo.isOverdue ? "Quá hạn" : dateInfo.isFuture ? "Còn lại" : "Còn lại"}
+                        </p>
+                        <p className={`font-medium ${dateInfo.isOverdue ? "text-red-600" : "text-[#261E33]"}`}>
+                            {dateInfo.isOverdue
+                                ? `${Math.abs(dateInfo.remainingDays)} ngày`
+                                : `${dateInfo.remainingDays} ngày`}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {showProgress && (
+                <div>
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Tiến độ thời gian</span>
+                        <span className="font-medium text-[#261E33]">{dateInfo.progressPercent}%</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div
+                            className={`h-full transition-all ${
+                                dateInfo.isOverdue
+                                    ? "bg-red-500"
+                                    : dateInfo.progressPercent > 75
+                                        ? "bg-green-500"
+                                        : dateInfo.progressPercent > 50
+                                            ? "bg-blue-500"
+                                            : "bg-orange-500"
+                            }`}
+                            style={{ width: `${dateInfo.progressPercent}%` }}
+                        />
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                        Đã trôi qua {dateInfo.elapsedDays} / {dateInfo.totalDays} ngày
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
