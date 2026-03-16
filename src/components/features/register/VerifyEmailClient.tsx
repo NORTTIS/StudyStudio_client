@@ -24,6 +24,8 @@ export default function VerifyEmailClient() {
 
     // ================= VERIFY EMAIL =================
     useEffect(() => {
+        let ignore = false;
+
         const verifyEmail = async () => {
             setLoading(true);
 
@@ -37,7 +39,9 @@ export default function VerifyEmailClient() {
             try {
                 const result = await verifyEmailToken(token, locale);
 
-                // ✅ Verify success
+                if (ignore) return;
+
+                // Verify success
                 if (result.status === "success") {
                     setStatus("success");
                     setMessage(result.message);
@@ -45,7 +49,7 @@ export default function VerifyEmailClient() {
                     return;
                 }
 
-                // ❌ Error - parse message to determine type
+                //parse message to determine type
                 const msg = result.message.toLowerCase();
 
                 // Case: Already verified
@@ -69,14 +73,24 @@ export default function VerifyEmailClient() {
                     setMessage(result.message);
                 }
             } catch {
+                // ✅ Nếu đã bị ignore, bỏ qua
+                if (ignore) return;
+
                 setStatus("error");
                 setMessage("");
             } finally {
-                setLoading(false);
+                if (!ignore) {
+                    setLoading(false);
+                }
             }
         };
 
         verifyEmail();
+
+        // Cleanup: set ignore = true khi component unmount hoặc useEffect re-run
+        return () => {
+            ignore = true;
+        };
     }, [token, locale]);
 
     // ================= RENDER =================
