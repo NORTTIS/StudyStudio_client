@@ -42,7 +42,7 @@ export function AdminDashboardPage() {
     const loadDashboardData = async () => {
         setIsLoading(true);
         try {
-            // Load all data in parallel
+            // Load all data in parallel - with error handling for each
             const [
                 statsResult,
                 revenueResult,
@@ -52,25 +52,25 @@ export function AdminDashboardPage() {
                 subDistResult,
                 hourlyResult,
                 reportResult
-            ] = await Promise.all([
-                getDashboardStats(locale),
-                getRevenueTrends("year", locale),
-                getRecentActivity(5, locale),
-                getTopActiveGroups(5, locale),
-                getUserDistribution(locale),
-                getSubscriptionDistribution(locale),
-                getHourlyActivity(undefined, locale),
-                getReportStatus(locale)
+            ] = await Promise.allSettled([
+                getDashboardStats(locale).catch(e => ({ status: "error", message: "API not ready", data: null })),
+                getRevenueTrends("year", locale).catch(e => ({ status: "error", message: "API not ready", data: null })),
+                getRecentActivity(5, locale).catch(e => ({ status: "error", message: "API not ready", data: null })),
+                getTopActiveGroups(5, locale).catch(e => ({ status: "error", message: "API not ready", data: null })),
+                getUserDistribution(locale).catch(e => ({ status: "error", message: "API not ready", data: null })),
+                getSubscriptionDistribution(locale).catch(e => ({ status: "error", message: "API not ready", data: null })),
+                getHourlyActivity(undefined, locale).catch(e => ({ status: "error", message: "API not ready", data: null })),
+                getReportStatus(locale).catch(e => ({ status: "error", message: "API not ready", data: null }))
             ]);
 
             // Update stats
-            if (statsResult.status === "success" && statsResult.data) {
+            if (statsResult.status === "fulfilled" && statsResult.value.status === "success" && statsResult.value.data) {
                 setStats({
-                    totalUsers: statsResult.data.totalUsers,
-                    newUsersThisMonth: statsResult.data.totalUsers - statsResult.data.activeUsers,
-                    activeUsers: statsResult.data.activeUsers,
-                    totalRevenue: statsResult.data.totalRevenue,
-                    revenueGrowth: statsResult.data.revenueGrowth,
+                    totalUsers: statsResult.value.data.totalUsers,
+                    newUsersThisMonth: statsResult.value.data.totalUsers - statsResult.value.data.activeUsers,
+                    activeUsers: statsResult.value.data.activeUsers,
+                    totalRevenue: statsResult.value.data.totalRevenue,
+                    revenueGrowth: statsResult.value.data.revenueGrowth,
                     totalReports: 0,
                     pendingReports: 0,
                     totalNews: 0,
@@ -79,14 +79,14 @@ export function AdminDashboardPage() {
             }
 
             // Update revenue trends
-            if (revenueResult.status === "success" && revenueResult.data) {
-                setRevenueData(revenueResult.data.map(d => d.revenue));
-                setUserGrowthData(revenueResult.data.map(d => d.subscriptions));
+            if (revenueResult.status === "fulfilled" && revenueResult.value.status === "success" && revenueResult.value.data) {
+                setRevenueData(revenueResult.value.data.map(d => d.revenue));
+                setUserGrowthData(revenueResult.value.data.map(d => d.subscriptions));
             }
 
             // Update recent activities
-            if (recentResult.status === "success" && recentResult.data) {
-                setRecentActivities(recentResult.data.map(activity => ({
+            if (recentResult.status === "fulfilled" && recentResult.value.status === "success" && recentResult.value.data) {
+                setRecentActivities(recentResult.value.data.map(activity => ({
                     id: activity.id,
                     type: activity.type,
                     message: activity.description,
@@ -95,8 +95,8 @@ export function AdminDashboardPage() {
             }
 
             // Update top groups
-            if (groupsResult.status === "success" && groupsResult.data) {
-                setTopGroups(groupsResult.data.map(group => ({
+            if (groupsResult.status === "fulfilled" && groupsResult.value.status === "success" && groupsResult.value.data) {
+                setTopGroups(groupsResult.value.data.map(group => ({
                     id: group.groupId,
                     name: group.groupName,
                     members: group.memberCount,
@@ -105,23 +105,23 @@ export function AdminDashboardPage() {
             }
 
             // Update user distribution
-            if (userDistResult.status === "success" && userDistResult.data) {
-                setUserDistData(userDistResult.data);
+            if (userDistResult.status === "fulfilled" && userDistResult.value.status === "success" && userDistResult.value.data) {
+                setUserDistData(userDistResult.value.data);
             }
 
             // Update subscription distribution
-            if (subDistResult.status === "success" && subDistResult.data) {
-                setSubscriptionDistData(subDistResult.data);
+            if (subDistResult.status === "fulfilled" && subDistResult.value.status === "success" && subDistResult.value.data) {
+                setSubscriptionDistData(subDistResult.value.data);
             }
 
             // Update hourly activity
-            if (hourlyResult.status === "success" && hourlyResult.data) {
-                setHourlyActivityData(hourlyResult.data);
+            if (hourlyResult.status === "fulfilled" && hourlyResult.value.status === "success" && hourlyResult.value.data) {
+                setHourlyActivityData(hourlyResult.value.data);
             }
 
             // Update report status
-            if (reportResult.status === "success" && reportResult.data) {
-                setReportStatusData(reportResult.data);
+            if (reportResult.status === "fulfilled" && reportResult.value.status === "success" && reportResult.value.data) {
+                setReportStatusData(reportResult.value.data);
             }
 
         } catch (error) {
