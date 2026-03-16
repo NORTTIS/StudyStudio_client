@@ -542,6 +542,24 @@
             "progress": "Work Progress"
         }
     },
+    "StudioInviteAccept": {
+        "title": "Studio Invitation",
+        "checking": "Checking invitation...",
+        "notLoggedIn": "You are not logged in",
+        "loginRequired": "Please log in to accept the studio invitation.",
+        "loginButton": "Log in to continue",
+        "acceptButton": "Accept Invitation",
+        "acceptPrompt": "Click \"Accept Invitation\" to join the studio.",
+        "success": "You have successfully joined the studio",
+        "redirecting": "Redirecting...",
+        "alreadyMemberTitle": "Notice",
+        "alreadyMember": "You are already a member of this studio.",
+        "goToStudio": "Go to Studio",
+        "backHome": "Back to Home",
+        "errorMissingToken": "Missing invitation token.",
+        "errorInvalidToken": "Invalid or expired invitation token.",
+        "errorAcceptFailed": "Failed to accept invitation."
+    },
     "LandingGroupPage": {
         "hero": {
             "title": "Shared workspace for",
@@ -884,7 +902,8 @@
             },
             "Member": {
                 "label": "Member",
-                "note": "Can access all public items in your Groups."
+                "note": "Can access all public items in your Groups.",
+                "studioNote": "Can access the your Studio."
             },
             "Commenter": {
                 "label": "Commenter",

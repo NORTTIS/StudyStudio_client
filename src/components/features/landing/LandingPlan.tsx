@@ -21,9 +21,8 @@ export default function LandingPlan() {
                 <div
                     className="absolute inset-0 opacity-[0.035]"
                     style={{
-                        backgroundImage:
-                            "radial-gradient(circle at 1px 1px, rgb(249 115 22) 1px, transparent 0)",
-                        backgroundSize: "28px 28px",
+                        backgroundImage: "radial-gradient(circle at 1px 1px, rgb(249 115 22) 1px, transparent 0)",
+                        backgroundSize: "28px 28px"
                     }}
                 />
             </div>
@@ -44,13 +43,9 @@ export default function LandingPlan() {
                     <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-8 lg:flex-row lg:items-stretch lg:gap-10">
                         {/* ================= FREE PLAN ================= */}
                         <div className="landing-pop w-full max-w-[420px] rounded-2xl border border-orange-300 bg-white/80 px-8 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.06)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(249,115,22,0.18)] md:px-12 md:py-12">
-                            <h2 className="text-2xl font-extrabold text-gray-700">
-                                {t("freePlan.title")}
-                            </h2>
+                            <h2 className="text-2xl font-extrabold text-gray-700">{t("freePlan.title")}</h2>
 
-                            <p className="mt-2 text-lg font-bold text-orange-500">
-                                {t("freePlan.price")}
-                            </p>
+                            <p className="mt-2 text-lg font-bold text-orange-500">{t("freePlan.price")}</p>
 
                             <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-gray-500">
                                 {t("freePlan.description")}
@@ -106,13 +101,9 @@ export default function LandingPlan() {
                                 Most Popular
                             </div>
 
-                            <h2 className="text-2xl font-extrabold text-gray-700">
-                                {t("premiumPlan.title")}
-                            </h2>
+                            <h2 className="text-2xl font-extrabold text-gray-700">{t("premiumPlan.title")}</h2>
 
-                            <p className="mt-2 text-lg font-bold text-orange-500">
-                                {t("premiumPlan.price")}
-                            </p>
+                            <p className="mt-2 text-lg font-bold text-orange-500">{t("premiumPlan.price")}</p>
 
                             <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-gray-500">
                                 {t("premiumPlan.description")}

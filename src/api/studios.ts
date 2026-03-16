@@ -4,6 +4,10 @@
  */
 
 import { apiFetch } from "./api-client";
+import type { components } from "./types";
+
+export type StudioMemberResponse = components["schemas"]["StudioMemberResponse"];
+export type GroupInfoItem = components["schemas"]["GroupInfoItem"];
 
 export type Studio = {
     studioId: string;
@@ -147,6 +151,16 @@ export async function updateStudio(id: string, data: UpdateStudioRequest, locale
 export async function deleteStudio(id: string, locale = "vi") {
     return apiFetch<null>(`/studio/${id}`, {
         method: "DELETE",
+        locale
+    });
+}
+
+/**
+ * Get studio members
+ */
+export async function getStudioMembers(studioId: string, locale = "vi") {
+    return apiFetch<StudioMemberResponse[]>(`/studio/${studioId}/members`, {
+        method: "GET",
         locale
     });
 }

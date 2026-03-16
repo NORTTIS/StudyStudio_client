@@ -24,8 +24,7 @@ export default function LandingManagement() {
 
                     <Link
                         href={`/${locale}/register`}
-                        className="landing-pop landing-delay-2 inline-block cursor-pointer"
-                    >
+                        className="landing-pop landing-delay-2 inline-block cursor-pointer">
                         <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 text-lg font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.createButton")}
                         </Button>
@@ -72,8 +71,7 @@ export default function LandingManagement() {
                     ].map((item, i) => (
                         <div
                             key={i}
-                            className={`landing-pop landing-delay-${i + 1} flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40`}
-                        >
+                            className={`landing-pop landing-delay-${i + 1} flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40`}>
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] text-lg font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                                 {i + 1}
                             </div>
@@ -114,8 +112,7 @@ export default function LandingManagement() {
                     ].map((item, i) => (
                         <div
                             key={i}
-                            className={`landing-pop landing-delay-${i + 1} rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg`}
-                        >
+                            className={`landing-pop landing-delay-${i + 1} rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg`}>
                             <h3 className="text-2xl font-extrabold text-black">{item.title}</h3>
 
                             <div className="my-5 h-px bg-black/20" />
@@ -148,8 +145,7 @@ export default function LandingManagement() {
                     ].map((item, i) => (
                         <div
                             key={i}
-                            className={`landing-pop landing-delay-${i + 2} rounded-3xl bg-[#FAD7A7] px-12 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg`}
-                        >
+                            className={`landing-pop landing-delay-${i + 2} rounded-3xl bg-[#FAD7A7] px-12 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg`}>
                             <h3 className="text-2xl font-extrabold text-black">{item.title}</h3>
 
                             <div className="my-6 h-px bg-black/20" />

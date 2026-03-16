@@ -49,8 +49,7 @@ export default function LandingPage() {
 
                     <Link
                         href={`/${locale}/register`}
-                        className="landing-pop landing-delay-3 inline-block cursor-pointer"
-                    >
+                        className="landing-pop landing-delay-3 inline-block cursor-pointer">
                         <Button className="mt-7 rounded-full bg-orange-500 px-8 py-6 text-lg font-semibold shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.createButton")}
                         </Button>
@@ -65,8 +64,7 @@ export default function LandingPage() {
 
                 <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-x-40 gap-y-20 px-6 md:grid-cols-2">
                     <div
-                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[0]}`}
-                    >
+                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[0]}`}>
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#6D00FF] text-2xl font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                             1
                         </div>
@@ -79,8 +77,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[1]}`}
-                    >
+                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[1]}`}>
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#6D00FF] text-2xl font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                             2
                         </div>
@@ -93,8 +90,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[2]}`}
-                    >
+                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[2]}`}>
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#6D00FF] text-2xl font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                             3
                         </div>
@@ -107,8 +103,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[3]}`}
-                    >
+                        className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[3]}`}>
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#6D00FF] text-2xl font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                             4
                         </div>
@@ -129,8 +124,7 @@ export default function LandingPage() {
 
                 <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-x-20 gap-y-16 px-6 md:grid-cols-2">
                     <div
-                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[0]}`}
-                    >
+                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[0]}`}>
                         <h3 className="text-2xl font-extrabold text-black">{t("features.smartNotes.title")}</h3>
 
                         <div className="my-5 h-px bg-black/15" />
@@ -141,8 +135,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[1]}`}
-                    >
+                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[1]}`}>
                         <h3 className="text-2xl font-extrabold text-black">{t("features.tasks.title")}</h3>
 
                         <div className="my-5 h-px bg-black/15" />
@@ -153,8 +146,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[2]}`}
-                    >
+                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[2]}`}>
                         <h3 className="text-2xl font-extrabold text-black">{t("features.documents.title")}</h3>
 
                         <div className="my-5 h-px bg-black/15" />
@@ -165,8 +157,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[3]}`}
-                    >
+                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[3]}`}>
                         <h3 className="text-2xl font-extrabold text-black">{t("features.aiSupport.title")}</h3>
 
                         <div className="my-5 h-px bg-black/15" />
@@ -177,8 +168,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[4]}`}
-                    >
+                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[4]}`}>
                         <h3 className="text-2xl font-extrabold text-black">{t("features.schedule.title")}</h3>
 
                         <div className="my-5 h-px bg-black/15" />
@@ -189,8 +179,7 @@ export default function LandingPage() {
                     </div>
 
                     <div
-                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[5]}`}
-                    >
+                        className={`landing-pop rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${featureDelayClasses[5]}`}>
                         <h3 className="text-2xl font-extrabold text-black">{t("features.progress.title")}</h3>
 
                         <div className="my-5 h-px bg-black/15" />

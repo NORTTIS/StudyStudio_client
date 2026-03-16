@@ -38,8 +38,7 @@ export default function LandingPage() {
 
                 <div className={`relative z-10 mx-auto -mt-8 max-w-4xl px-6 pt-16 text-center ${fadeUp}`}>
                     <h1
-                        className={`text-5xl leading-tight font-extrabold text-gray-900 ${fadeUp} ${delay1} md:text-6xl`}
-                    >
+                        className={`text-5xl leading-tight font-extrabold text-gray-900 ${fadeUp} ${delay1} md:text-6xl`}>
                         {t("hero.title")} <br />
                         {t("hero.subtitle")}
                     </h1>
@@ -48,10 +47,7 @@ export default function LandingPage() {
                         {t("hero.description")}
                     </p>
 
-                    <Link
-                        href={`/${locale}/register`}
-                        className={`inline-block cursor-pointer ${pop} ${delay3}`}
-                    >
+                    <Link href={`/${locale}/register`} className={`inline-block cursor-pointer ${pop} ${delay3}`}>
                         <Button className="mt-7 rounded-full bg-orange-500 px-8 py-6 text-lg font-semibold shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.registerButton")}
                         </Button>
@@ -95,9 +91,7 @@ export default function LandingPage() {
 
             <section className={`bg-white py-20 text-center ${fadeUp}`}>
                 <div className="px-6">
-                    <h3 className={`text-2xl font-bold text-gray-800 ${fadeUp} md:text-3xl`}>
-                        {t("group.title")}
-                    </h3>
+                    <h3 className={`text-2xl font-bold text-gray-800 ${fadeUp} md:text-3xl`}>{t("group.title")}</h3>
                     <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay1} md:text-lg`}>
                         {t("group.description")}
                     </p>
@@ -122,9 +116,7 @@ export default function LandingPage() {
 
             <section className={`bg-[#FFF7ED] py-20 text-center ${fadeUp}`}>
                 <div className="px-6">
-                    <h3 className={`text-2xl font-bold text-gray-800 ${fadeUp} md:text-3xl`}>
-                        {t("personal.title")}
-                    </h3>
+                    <h3 className={`text-2xl font-bold text-gray-800 ${fadeUp} md:text-3xl`}>{t("personal.title")}</h3>
                     <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay1} md:text-lg`}>
                         {t("personal.description")}
                     </p>
@@ -156,15 +148,13 @@ export default function LandingPage() {
 
                     <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div
-                            className={`rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${pop} ${delay1}`}
-                        >
+                            className={`rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${pop} ${delay1}`}>
                             <h4 className="font-semibold text-gray-800">{t("ai.feature1")}</h4>
                             <div className="mt-6 h-60 rounded-xl border-2 border-gray-300 border-dashed bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
                         </div>
 
                         <div
-                            className={`rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${pop} ${delay2}`}
-                        >
+                            className={`rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${pop} ${delay2}`}>
                             <h4 className="font-semibold text-gray-800">{t("ai.feature2")}</h4>
                             <div className="mt-6 h-60 rounded-xl border-2 border-gray-300 border-dashed bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
                         </div>

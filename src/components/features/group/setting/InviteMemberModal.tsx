@@ -21,7 +21,8 @@ export function InviteMemberModal({
     canManage,
     onCreateLink,
     onSendInvite,
-    hasModerator = false
+    hasModerator = false,
+    variant = "group"
 }: {
     open: boolean;
     onClose: () => void;
@@ -30,6 +31,7 @@ export function InviteMemberModal({
     onCreateLink: (payload: { role: InviteRole }) => Promise<string>;
     onSendInvite: (payload: { email: string; role: InviteRole }) => Promise<void> | void;
     hasModerator?: boolean;
+    variant?: "group" | "studio";
 }) {
     const t = useTranslations("GroupInviteModal");
     const [mounted, setMounted] = useState(false);
@@ -45,10 +47,18 @@ export function InviteMemberModal({
 
     const roleNote: Record<InviteRole, string> = {
         Moderator: t("roles.Moderator.note"),
-        Member: t("roles.Member.note"),
+        Member: variant === "studio" ? t("roles.Member.studioNote") : t("roles.Member.note"),
         Commenter: t("roles.Commenter.note"),
         Viewer: t("roles.Viewer.note")
     };
+
+    // Studio variant: role is always Member, hide selector
+    const isStudioVariant = variant === "studio";
+    const effectiveRole: InviteRole = isStudioVariant
+        ? "Member"
+        : hasModerator && role === "Moderator"
+          ? "Member"
+          : role;
 
     const inviteEmailSchema = z
         .string()
@@ -61,13 +71,9 @@ export function InviteMemberModal({
     const hasLink = useMemo(() => inviteLink.trim().length > 0, [inviteLink]);
 
     const visibleRoleOptions = useMemo(() => {
+        if (isStudioVariant) return ["Member"];
         return hasModerator ? roleOptions.filter((r) => r !== "Moderator") : roleOptions;
-    }, [hasModerator]);
-
-    const effectiveRole: InviteRole = useMemo(() => {
-        if (hasModerator && role === "Moderator") return "Member";
-        return role;
-    }, [hasModerator, role]);
+    }, [hasModerator, isStudioVariant]);
 
     useEffect(() => {
         if (!open) return;
@@ -145,7 +151,11 @@ export function InviteMemberModal({
         const emailToValidate = email.trim();
         if (!validateEmail(emailToValidate)) return;
 
-        const safeRole: InviteRole = hasModerator && effectiveRole === "Moderator" ? "Member" : effectiveRole;
+        const safeRole: InviteRole = isStudioVariant
+            ? "Member"
+            : hasModerator && effectiveRole === "Moderator"
+              ? "Member"
+              : effectiveRole;
 
         setSending(true);
         try {
@@ -192,7 +202,11 @@ export function InviteMemberModal({
 
         if (creatingLink) return;
 
-        const safeRole: InviteRole = hasModerator && effectiveRole === "Moderator" ? "Member" : effectiveRole;
+        const safeRole: InviteRole = isStudioVariant
+            ? "Member"
+            : hasModerator && effectiveRole === "Moderator"
+              ? "Member"
+              : effectiveRole;
 
         setCreatingLink(true);
         try {
@@ -296,39 +310,52 @@ export function InviteMemberModal({
                                     </div>
 
                                     <div className="min-w-0">
-                                        <Select
-                                            value={effectiveRole}
-                                            onValueChange={(v) => {
-                                                const next = v as InviteRole;
-                                                setRole(next);
-                                                setInviteLink("");
-                                                setCopied(false);
-                                            }}
-                                            disabled={!canManage || sending || creatingLink}>
-                                            <SelectTrigger className="inline-flex h-auto w-fit items-center gap-2 border-0 bg-transparent p-0 shadow-none focus:outline-none focus:ring-0 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-[#6B7280]">
+                                        {isStudioVariant ? (
+                                            <>
                                                 <span className="font-semibold text-2xl text-[#111827] leading-none">
-                                                    <SelectValue />
+                                                    {t("roles.Member.label")}
                                                 </span>
-                                            </SelectTrigger>
+                                                <div className="mt-2 max-w-[420px] text-[#6B7280] text-base leading-snug">
+                                                    {roleNote.Member}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Select
+                                                    value={effectiveRole}
+                                                    onValueChange={(v) => {
+                                                        const next = v as InviteRole;
+                                                        setRole(next);
+                                                        setInviteLink("");
+                                                        setCopied(false);
+                                                    }}
+                                                    disabled={!canManage || sending || creatingLink}>
+                                                    <SelectTrigger className="inline-flex h-auto w-fit items-center gap-2 border-0 bg-transparent p-0 shadow-none focus:outline-none focus:ring-0 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-[#6B7280]">
+                                                        <span className="font-semibold text-2xl text-[#111827] leading-none">
+                                                            <SelectValue />
+                                                        </span>
+                                                    </SelectTrigger>
 
-                                            <SelectContent
-                                                position="popper"
-                                                sideOffset={8}
-                                                className="z-[2147483648] min-w-[280px] rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-xl">
-                                                {visibleRoleOptions.map((r) => (
-                                                    <SelectItem
-                                                        key={r}
-                                                        value={r}
-                                                        className="rounded-xl px-3 py-2.5 text-[#111827] text-[15px] focus:bg-[#F3F4F6] data-[state=checked]:bg-[#F3F4F6]">
-                                                        {t(`roles.${r}.label`)}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                                    <SelectContent
+                                                        position="popper"
+                                                        sideOffset={8}
+                                                        className="z-[2147483648] min-w-[280px] rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-xl">
+                                                        {visibleRoleOptions.map((r) => (
+                                                            <SelectItem
+                                                                key={r}
+                                                                value={r}
+                                                                className="rounded-xl px-3 py-2.5 text-[#111827] text-[15px] focus:bg-[#F3F4F6] data-[state=checked]:bg-[#F3F4F6]">
+                                                                {t(`roles.${r}.label`)}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
 
-                                        <div className="mt-2 max-w-[420px] text-[#6B7280] text-base leading-snug">
-                                            {roleNote[effectiveRole]}
-                                        </div>
+                                                <div className="mt-2 max-w-[420px] text-[#6B7280] text-base leading-snug">
+                                                    {roleNote[effectiveRole]}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 

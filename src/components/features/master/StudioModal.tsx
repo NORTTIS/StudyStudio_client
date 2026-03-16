@@ -79,8 +79,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
     const getDuplicateNameError = (value: string) => {
         const normalized = value.toLowerCase().trim();
         const conflict = existingStudios.some(
-            (s) =>
-                s.name.toLowerCase().trim() === normalized && (mode === "create" || s.id !== studio?.id)
+            (s) => s.name.toLowerCase().trim() === normalized && (mode === "create" || s.id !== studio?.id)
         );
         return conflict ? t("modal.duplicateName") || "Tên studio đã tồn tại. Vui lòng chọn tên khác." : "";
     };
@@ -186,8 +185,9 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                         />
                         <div className="mt-1 flex items-center justify-between text-xs">
                             <p
-                                className={`max-w-[70%] overflow-hidden text-ellipsis text-xs ${errors.name && touched.name ? "text-red-500" : "text-transparent"
-                                    }`}
+                                className={`max-w-[70%] overflow-hidden text-ellipsis text-xs ${
+                                    errors.name && touched.name ? "text-red-500" : "text-transparent"
+                                }`}
                                 aria-live="assertive">
                                 {errors.name && touched.name ? errors.name : "\u00A0"}
                             </p>
@@ -207,10 +207,11 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                             onBlur={() => handleBlur("description")}
                             placeholder={t("modal.descriptionPlaceholder")}
                             rows={3}
-                            className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${errors.description && touched.description
-                                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                                : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
-                                }`}
+                            className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${
+                                errors.description && touched.description
+                                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                                    : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
+                            }`}
                             maxLength={STUDIO_DESCRIPTION_MAX_LENGTH}
                         />
                         <p className="mt-1 text-right text-gray-500 text-xs">

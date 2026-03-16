@@ -28,20 +28,10 @@ function progressLabelOf(n?: number | null) {
     return "Done";
 }
 
-export function TaskProgressEditor({
-    value,
-    onChange,
-    disabled = false
-}: TaskProgressEditorProps) {
-    const selectedProgressValue = React.useMemo(
-        () => normalizeProgressValue(Number(value)),
-        [value]
-    );
+export function TaskProgressEditor({ value, onChange, disabled = false }: TaskProgressEditorProps) {
+    const selectedProgressValue = React.useMemo(() => normalizeProgressValue(Number(value)), [value]);
 
-    const selectedProgressLabel = React.useMemo(
-        () => progressLabelOf(selectedProgressValue),
-        [selectedProgressValue]
-    );
+    const selectedProgressLabel = React.useMemo(() => progressLabelOf(selectedProgressValue), [selectedProgressValue]);
 
     const handleProgressInputChange = (nextValue: string) => {
         const digits = nextValue.replace(/\D+/g, "");
@@ -99,9 +89,7 @@ export function TaskProgressEditor({
 
             <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
                 <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-zinc-800">
-                        {selectedProgressLabel}
-                    </span>
+                    <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
 
                     <div className="flex items-center gap-2">
                         <input
@@ -109,9 +97,7 @@ export function TaskProgressEditor({
                             inputMode="numeric"
                             pattern="[0-9]*"
                             value={value}
-                            onChange={(e) =>
-                                handleProgressInputChange(e.target.value)
-                            }
+                            onChange={(e) => handleProgressInputChange(e.target.value)}
                             onBlur={handleProgressInputBlur}
                             disabled={disabled}
                             placeholder="0"
@@ -144,8 +130,7 @@ export function TaskProgressEditor({
                                         ? "border-orange-500 bg-orange-500 text-white"
                                         : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
                                     disabled && "cursor-not-allowed opacity-70"
-                                )}
-                            >
+                                )}>
                                 {item}%
                             </button>
                         );

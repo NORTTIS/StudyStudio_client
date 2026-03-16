@@ -74,7 +74,12 @@ function convertToUser(apiUser: UserListItem): User {
         id: apiUser.userId || "",
         name: apiUser.fullName || "Unknown",
         email: apiUser.email || "",
-        role: convertApiStatus(apiUser.package) === "inactive" && apiUser.package ? "user" : apiUser.package === "Premium" ? "premium" : "user",
+        role:
+            convertApiStatus(apiUser.package) === "inactive" && apiUser.package
+                ? "user"
+                : apiUser.package === "Premium"
+                  ? "premium"
+                  : "user",
         status: convertApiStatus(apiUser.status),
         joinDate: formatDate(apiUser.createdAt),
         lastLogin: formatDate(apiUser.lastLoginAt),
@@ -119,19 +124,21 @@ export function UserManagementPage() {
             const response = await getUsers(params);
 
             if (response.status === "success" && response.data?.userList) {
-                const convertedUsers: User[] = response.data.userList.map((apiUser): User => ({
-                    id: apiUser.userId || "",
-                    name: apiUser.fullName || "Unknown",
-                    email: apiUser.email || "",
-                    role: (apiUser.package === "Premium" ? "premium" : "user") as User["role"],
-                    status: convertApiStatus(apiUser.status),
-                    originalStatus: apiUser.status || undefined,
-                    joinDate: formatDate(apiUser.createdAt),
-                    lastLogin: formatDate(apiUser.lastLoginAt),
-                    groups: apiUser.groupCount || 0,
-                    studios: apiUser.studioCount || 0,
-                    avatarUrl: undefined
-                }));
+                const convertedUsers: User[] = response.data.userList.map(
+                    (apiUser): User => ({
+                        id: apiUser.userId || "",
+                        name: apiUser.fullName || "Unknown",
+                        email: apiUser.email || "",
+                        role: (apiUser.package === "Premium" ? "premium" : "user") as User["role"],
+                        status: convertApiStatus(apiUser.status),
+                        originalStatus: apiUser.status || undefined,
+                        joinDate: formatDate(apiUser.createdAt),
+                        lastLogin: formatDate(apiUser.lastLoginAt),
+                        groups: apiUser.groupCount || 0,
+                        studios: apiUser.studioCount || 0,
+                        avatarUrl: undefined
+                    })
+                );
                 setUsers(convertedUsers);
             } else {
                 messageApi.error(response.message || "Không thể tải danh sách người dùng");
@@ -182,7 +189,9 @@ export function UserManagementPage() {
 
             if (response.status === "success") {
                 // Update local state after successful API call
-                setUsers((prev) => prev.map((u) => (u.id === confirmModal.user!.id ? { ...u, status: newStatusLocal } : u)));
+                setUsers((prev) =>
+                    prev.map((u) => (u.id === confirmModal.user!.id ? { ...u, status: newStatusLocal } : u))
+                );
                 if (selectedUser?.id === confirmModal.user.id) {
                     setSelectedUser((prev) => (prev ? { ...prev, status: newStatusLocal } : null));
                 }
@@ -234,19 +243,14 @@ export function UserManagementPage() {
             render: (_, record) => (
                 <Space>
                     {record.avatarUrl ? (
-                        <Avatar
-                            src={record.avatarUrl}
-                            style={{ flexShrink: 0 }}
-                            size={38}
-                        />
+                        <Avatar src={record.avatarUrl} style={{ flexShrink: 0 }} size={38} />
                     ) : (
                         <Avatar
                             style={{
                                 backgroundColor: record.role === "premium" ? "#FF5F3D" : "#6F6B99",
                                 flexShrink: 0
                             }}
-                            size={38}
-                        >
+                            size={38}>
                             {getInitials(record.name)}
                         </Avatar>
                     )}
@@ -297,13 +301,7 @@ export function UserManagementPage() {
             render: (status: UserDisplayStatus) => (
                 <Badge
                     status={status === "active" ? "success" : status === "deleted" ? "error" : "default"}
-                    text={
-                        status === "active"
-                            ? "Hoạt động"
-                            : status === "deleted"
-                                ? "Đã xóa"
-                                : "Bị vô hiệu"
-                    }
+                    text={status === "active" ? "Hoạt động" : status === "deleted" ? "Đã xóa" : "Bị vô hiệu"}
                 />
             )
         },
@@ -454,8 +452,7 @@ export function UserManagementPage() {
                             <Avatar
                                 style={{
                                     backgroundColor: selectedUser?.role === "premium" ? "#FF5F3D" : "#6F6B99"
-                                }}
-                            >
+                                }}>
                                 {getInitials(selectedUser?.name)}
                             </Avatar>
                         )}
@@ -472,7 +469,8 @@ export function UserManagementPage() {
                 }}
                 width={480}
                 extra={
-                    selectedUser && canChangeUserStatus(selectedUser.originalStatus) && (
+                    selectedUser &&
+                    canChangeUserStatus(selectedUser.originalStatus) && (
                         <Switch
                             checked={selectedUser.status === "active"}
                             onChange={() => {
@@ -489,22 +487,29 @@ export function UserManagementPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                         <div style={{ padding: "16px", background: "#F8F8F8", borderRadius: 10 }}>
                             <Badge
-                                status={selectedUser.status === "active" ? "success" : selectedUser.status === "deleted" ? "error" : "default"}
+                                status={
+                                    selectedUser.status === "active"
+                                        ? "success"
+                                        : selectedUser.status === "deleted"
+                                          ? "error"
+                                          : "default"
+                                }
                                 text={
                                     <Text
                                         strong
                                         style={{
-                                            color: selectedUser.status === "active"
-                                                ? "#52c41a"
-                                                : selectedUser.status === "deleted"
-                                                    ? "#ff4d4f"
-                                                    : "#faad14"
+                                            color:
+                                                selectedUser.status === "active"
+                                                    ? "#52c41a"
+                                                    : selectedUser.status === "deleted"
+                                                      ? "#ff4d4f"
+                                                      : "#faad14"
                                         }}>
                                         {selectedUser.status === "active"
                                             ? "Tài khoản đang hoạt động"
                                             : selectedUser.status === "deleted"
-                                                ? "Tài khoản đã bị xóa"
-                                                : "Tài khoản bị vô hiệu hoá"}
+                                              ? "Tài khoản đã bị xóa"
+                                              : "Tài khoản bị vô hiệu hoá"}
                                     </Text>
                                 }
                             />
@@ -564,9 +569,7 @@ export function UserManagementPage() {
                                         setDrawerOpen(false);
                                         handleToggleStatus(selectedUser);
                                     }}>
-                                    {selectedUser.status === "active"
-                                        ? "Vô hiệu hoá tài khoản"
-                                        : "Kích hoạt tài khoản"}
+                                    {selectedUser.status === "active" ? "Vô hiệu hoá tài khoản" : "Kích hoạt tài khoản"}
                                 </Button>
                             )}
                         </div>

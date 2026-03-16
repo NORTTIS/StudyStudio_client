@@ -479,7 +479,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                             key={plan.planId ?? plan.planName ?? `plan-${index}`}
                                                             fill={
                                                                 ["#FF5F3D", "#7C3AED", "#22C55E", "#F59E0B", "#3B82F6"][
-                                                                index % 5
+                                                                    index % 5
                                                                 ]
                                                             }
                                                         />
@@ -540,7 +540,9 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                             {/* MRR Breakdown - Stacked BarChart */}
                             <div className="rounded-2xl border border-gray-200 bg-white p-6">
                                 <div className="mb-5 flex items-center justify-between">
-                                    <h2 className="font-bold text-[#261E33] text-lg">Phân tích đoanh thu theo chu kỳ</h2>
+                                    <h2 className="font-bold text-[#261E33] text-lg">
+                                        Phân tích đoanh thu theo chu kỳ
+                                    </h2>
                                     <span className="text-[#6F6B99] text-sm">
                                         {mrrBreakdown
                                             ? `MRR hiện tại: ${formatCurrency(mrrBreakdown.currentMRR ?? 0)}`
@@ -576,7 +578,12 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                 />
                                                 <Legend />
                                                 <Bar dataKey="newMRR" stackId="mrr" fill="#22C55E" name="New MRR" />
-                                                <Bar dataKey="expansionMRR" stackId="mrr" fill="#7C3AED" name="Expansion" />
+                                                <Bar
+                                                    dataKey="expansionMRR"
+                                                    stackId="mrr"
+                                                    fill="#7C3AED"
+                                                    name="Expansion"
+                                                />
                                                 <Bar dataKey="churnMRR" stackId="mrr" fill="#EF4444" name="Churn" />
                                                 <Bar
                                                     dataKey="contractionMRR"
@@ -594,9 +601,13 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                     className="rounded-xl border border-gray-100 bg-[#F8F8F8] p-3">
                                                     <div className="mb-1 flex items-center gap-2">
                                                         <span className={`h-2.5 w-2.5 rounded-full ${item.color}`} />
-                                                        <span className="font-semibold text-[#261E33] text-sm">{item.label}</span>
+                                                        <span className="font-semibold text-[#261E33] text-sm">
+                                                            {item.label}
+                                                        </span>
                                                     </div>
-                                                    <p className="text-[#6F6B99] text-xs leading-5">{item.description}</p>
+                                                    <p className="text-[#6F6B99] text-xs leading-5">
+                                                        {item.description}
+                                                    </p>
                                                 </div>
                                             ))}
                                         </div>

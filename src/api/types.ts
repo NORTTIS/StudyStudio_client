@@ -3700,6 +3700,135 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/studio-invite/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["AcceptStudioInviteRequest"];
+                    "application/json": components["schemas"]["AcceptStudioInviteRequest"];
+                    "text/json": components["schemas"]["AcceptStudioInviteRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AcceptStudioInviteResponseApiResponse"];
+                        "text/json": components["schemas"]["AcceptStudioInviteResponseApiResponse"];
+                        "text/plain": components["schemas"]["AcceptStudioInviteResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio-invite/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CreateStudioInviteRequest"];
+                    "application/json": components["schemas"]["CreateStudioInviteRequest"];
+                    "text/json": components["schemas"]["CreateStudioInviteRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateStudioInviteResponseApiResponse"];
+                        "text/json": components["schemas"]["CreateStudioInviteResponseApiResponse"];
+                        "text/plain": components["schemas"]["CreateStudioInviteResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio-invite/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["SendStudioInviteEmailRequest"];
+                    "application/json": components["schemas"]["SendStudioInviteEmailRequest"];
+                    "text/json": components["schemas"]["SendStudioInviteEmailRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/studio/{studioId}": {
         parameters: {
             query?: never;
@@ -3789,6 +3918,45 @@ export interface paths {
                         "application/json": components["schemas"]["StudioGroupListResponseApiResponse"];
                         "text/json": components["schemas"]["StudioGroupListResponseApiResponse"];
                         "text/plain": components["schemas"]["StudioGroupListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioMemberResponseListApiResponse"];
+                        "text/json": components["schemas"]["StudioMemberResponseListApiResponse"];
+                        "text/plain": components["schemas"]["StudioMemberResponseListApiResponse"];
                     };
                 };
             };
@@ -4681,6 +4849,23 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        AcceptStudioInviteRequest: {
+            token: string;
+        };
+        AcceptStudioInviteResponse: {
+            /** Format: date-time */
+            joinedAt?: string;
+            role?: string | null;
+            /** Format: uuid */
+            studioId?: string;
+            studioName?: string | null;
+        };
+        AcceptStudioInviteResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["AcceptStudioInviteResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         AddFavouriteRequest: {
             /** Format: uuid */
             groupId: string;
@@ -4925,6 +5110,26 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        CreateStudioInviteRequest: {
+            role: string;
+            /** Format: uuid */
+            studioId: string;
+        };
+        CreateStudioInviteResponse: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            inviteUrl?: string | null;
+            role?: string | null;
+            token?: string | null;
+        };
+        CreateStudioInviteResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["CreateStudioInviteResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         CreateStudioRequest: {
             /** Format: date-time */
             createdAt?: string;
@@ -5070,6 +5275,12 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        GroupInfoItem: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            groupRole?: components["schemas"]["GroupRole"];
+        };
         GroupListItem: {
             /** Format: date-time */
             createdAt?: string;
@@ -5167,6 +5378,11 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        GroupRole: 0 | 1 | 2 | 3 | 4;
         GroupSections: {
             favorites?: components["schemas"]["GroupCardDto"][] | null;
             independentGroups?: components["schemas"]["GroupCardDto"][] | null;
@@ -5801,6 +6017,13 @@ export interface components {
             groupId: string;
             role: string;
         };
+        SendStudioInviteEmailRequest: {
+            /** Format: email */
+            email: string;
+            role: string;
+            /** Format: uuid */
+            studioId: string;
+        };
         SourceDocument: {
             /** Format: int32 */
             chunkIndex?: number;
@@ -5831,6 +6054,20 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        StudioMemberResponse: {
+            email?: string | null;
+            groupInfo?: components["schemas"]["GroupInfoItem"][] | null;
+            studioRole?: components["schemas"]["StudioRole"];
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
+        StudioMemberResponseListApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioMemberResponse"][] | null;
+            message?: string | null;
+            status?: string | null;
+        };
         StudioResponse: {
             /** Format: date-time */
             createdAt?: string;
@@ -5857,6 +6094,11 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        StudioRole: 0 | 1;
         SubscriptionDistributionItem: {
             /** Format: int32 */
             count?: number;

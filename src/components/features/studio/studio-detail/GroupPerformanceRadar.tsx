@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-    PolarAngleAxis,
-    PolarGrid,
-    PolarRadiusAxis,
-    Radar,
-    RadarChart,
-    ResponsiveContainer,
-    Tooltip
-} from "recharts";
+import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 import { type GroupPerformance } from "./types";
 
 interface GroupPerformanceRadarProps {
@@ -17,9 +9,7 @@ interface GroupPerformanceRadarProps {
 }
 
 export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
-    const [selectedGroups, setSelectedGroups] = useState<Set<string>>(
-        new Set(data.map((d) => d.groupId))
-    );
+    const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set(data.map((d) => d.groupId)));
 
     const colors = ["#FF5F3D", "#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#00BCD4"];
 
@@ -88,15 +78,8 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
                 <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                         <PolarGrid stroke="#E5E7EB" />
-                        <PolarAngleAxis
-                            dataKey="metric"
-                            tick={{ fill: "#6F6B99", fontSize: 12 }}
-                        />
-                        <PolarRadiusAxis
-                            angle={30}
-                            domain={[0, 100]}
-                            tick={{ fill: "#9CA3AF", fontSize: 10 }}
-                        />
+                        <PolarAngleAxis dataKey="metric" tick={{ fill: "#6F6B99", fontSize: 12 }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "#9CA3AF", fontSize: 10 }} />
                         {data.map((group, index) => {
                             if (!selectedGroups.has(group.groupId)) return null;
                             return (

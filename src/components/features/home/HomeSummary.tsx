@@ -111,7 +111,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean) {
             if (typeof window !== "undefined") {
                 try {
                     localStorage.removeItem(storageKey);
-                } catch { }
+                } catch {}
             }
             return;
         }
@@ -120,7 +120,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean) {
             setDelta(null);
             try {
                 localStorage.removeItem(storageKey);
-            } catch { }
+            } catch {}
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -295,9 +295,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-            status?: string;
-            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-        }
+              status?: string;
+              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+          }
         | null
         | undefined;
 
