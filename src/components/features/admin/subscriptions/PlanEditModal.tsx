@@ -326,53 +326,53 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                         formData.maxStorageMb !== plan.maxStorageMb ||
                         formData.maxAiRequestsPerDay !== plan.maxAiRequestsPerDay ||
                         formData.isActive !== plan.isActive) && (
-                            <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-4">
-                                <p className="mb-2 font-medium text-[#FF5F3D] text-sm">Changes Preview:</p>
-                                <div className="space-y-1 text-sm">
-                                    {formData.planName !== plan.planName && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Name:</span>
-                                            <span className="text-[#FF5F3D]">
-                                                {plan.planName} → {formData.planName}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {formData.price !== plan.price && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Price:</span>
-                                            <span className="text-[#FF5F3D]">
-                                                {formatPrice(plan.price)} → {formatPrice(formData.price)} VND
-                                            </span>
-                                        </div>
-                                    )}
-                                    {formData.maxStudios !== plan.maxStudios && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Max Studios:</span>
-                                            <span className="text-[#FF5F3D]">
-                                                {plan.maxStudios} → {formData.maxStudios}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {formData.maxGroups !== plan.maxGroups && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Max Groups:</span>
-                                            <span className="text-[#FF5F3D]">
-                                                {plan.maxGroups} → {formData.maxGroups}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {formData.isActive !== plan.isActive && (
-                                        <div className="flex justify-between">
-                                            <span className="text-[#6F6B99]">Status:</span>
-                                            <span className="text-[#FF5F3D]">
-                                                {plan.isActive ? "Active" : "Inactive"} →{" "}
-                                                {formData.isActive ? "Active" : "Inactive"}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
+                        <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-4">
+                            <p className="mb-2 font-medium text-[#FF5F3D] text-sm">Changes Preview:</p>
+                            <div className="space-y-1 text-sm">
+                                {formData.planName !== plan.planName && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Name:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.planName} → {formData.planName}
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.price !== plan.price && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Price:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {formatPrice(plan.price)} → {formatPrice(formData.price)} VND
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.maxStudios !== plan.maxStudios && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Max Studios:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.maxStudios} → {formData.maxStudios}
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.maxGroups !== plan.maxGroups && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Max Groups:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.maxGroups} → {formData.maxGroups}
+                                        </span>
+                                    </div>
+                                )}
+                                {formData.isActive !== plan.isActive && (
+                                    <div className="flex justify-between">
+                                        <span className="text-[#6F6B99]">Status:</span>
+                                        <span className="text-[#FF5F3D]">
+                                            {plan.isActive ? "Active" : "Inactive"} →{" "}
+                                            {formData.isActive ? "Active" : "Inactive"}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Actions */}

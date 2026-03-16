@@ -25,8 +25,7 @@ export default function LandingGroup() {
 
                     <Link
                         href={`/${locale}/group/create`}
-                        className="landing-pop landing-delay-2 inline-block cursor-pointer"
-                    >
+                        className="landing-pop landing-delay-2 inline-block cursor-pointer">
                         <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 text-lg font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.createButton")}
                         </Button>
@@ -57,8 +56,7 @@ export default function LandingGroup() {
                         (text, i) => (
                             <div
                                 key={i}
-                                className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[i]}`}
-                            >
+                                className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[i]}`}>
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] text-lg font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                                     {i + 1}
                                 </div>

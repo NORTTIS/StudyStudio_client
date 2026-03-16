@@ -117,7 +117,8 @@ export function ActivityHeatmap({ data, groupName }: ActivityHeatmapProps) {
                                 key={i}
                                 className="text-xs text-gray-400"
                                 style={{
-                                    marginLeft: i === 0 ? 0 : `${(label.week - (getMonthLabels[i - 1]?.week || 0)) * 14 - 24}px`
+                                    marginLeft:
+                                        i === 0 ? 0 : `${(label.week - (getMonthLabels[i - 1]?.week || 0)) * 14 - 24}px`
                                 }}>
                                 {label.month}
                             </div>
@@ -148,11 +149,7 @@ export function ActivityHeatmap({ data, groupName }: ActivityHeatmapProps) {
                                             className={`h-3 w-3 rounded-sm transition-colors ${
                                                 day.activity > 0 ? getActivityColor(day.activity) : "bg-transparent"
                                             }`}
-                                            title={
-                                                day.date
-                                                    ? `${day.date}: ${day.activity}% hoạt động`
-                                                    : ""
-                                            }
+                                            title={day.date ? `${day.date}: ${day.activity}% hoạt động` : ""}
                                         />
                                     ))}
                                 </div>
@@ -164,12 +161,8 @@ export function ActivityHeatmap({ data, groupName }: ActivityHeatmapProps) {
 
             {/* Legend */}
             <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
-                <div className="text-xs text-gray-500">
-                    Dữ liệu 28 ngày gần nhất
-                </div>
-                <div className="text-xs text-gray-400">
-                    Cập nhật: {new Date().toLocaleDateString("vi-VN")}
-                </div>
+                <div className="text-xs text-gray-500">Dữ liệu 28 ngày gần nhất</div>
+                <div className="text-xs text-gray-400">Cập nhật: {new Date().toLocaleDateString("vi-VN")}</div>
             </div>
         </div>
     );

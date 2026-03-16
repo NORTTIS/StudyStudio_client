@@ -106,10 +106,10 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
                                 dateInfo.isOverdue
                                     ? "bg-red-500"
                                     : dateInfo.progressPercent > 75
-                                        ? "bg-green-500"
-                                        : dateInfo.progressPercent > 50
-                                            ? "bg-blue-500"
-                                            : "bg-orange-500"
+                                      ? "bg-green-500"
+                                      : dateInfo.progressPercent > 50
+                                        ? "bg-blue-500"
+                                        : "bg-orange-500"
                             }`}
                             style={{ width: `${dateInfo.progressPercent}%` }}
                         />

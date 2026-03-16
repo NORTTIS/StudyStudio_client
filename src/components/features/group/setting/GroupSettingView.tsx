@@ -211,9 +211,7 @@ export function GroupSettingView() {
 
     const extractApiMessage = (text: string, json: unknown) => {
         const msg =
-            json && typeof json === "object"
-                ? String((json as { message?: unknown }).message ?? "").trim()
-                : "";
+            json && typeof json === "object" ? String((json as { message?: unknown }).message ?? "").trim() : "";
         if (msg) return msg;
         const t = (text ?? "").toString().trim();
         return t || "Đã xảy ra lỗi";
@@ -804,7 +802,9 @@ export function GroupSettingView() {
 
                                 {masterStudio ? (
                                     <div>
-                                        <label htmlFor="master-studio-input" className="font-semibold text-gray-700 text-xs">
+                                        <label
+                                            htmlFor="master-studio-input"
+                                            className="font-semibold text-gray-700 text-xs">
                                             Master Studio
                                         </label>
                                         <Input

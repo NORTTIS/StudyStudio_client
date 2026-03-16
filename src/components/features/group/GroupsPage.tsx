@@ -171,14 +171,20 @@ export function GroupsPage() {
                 setLoading(false);
             }
         })();
-        return () => { alive = false; };
+        return () => {
+            alive = false;
+        };
     }, []);
 
     const { usage, favorites, managed, independent } = useMemo(() => data, [data]);
-    const allGroups = useMemo(() => uniqueByIdKeepFirst([...favorites, ...managed, ...independent]), [favorites, managed, independent]);
+    const allGroups = useMemo(
+        () => uniqueByIdKeepFirst([...favorites, ...managed, ...independent]),
+        [favorites, managed, independent]
+    );
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
-    const currentGroupsCount = usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
+    const currentGroupsCount =
+        usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
     const limitReached = currentGroupsCount >= maxGroups;
 
     const onToggleStar = async (groupIdRaw: string) => {
@@ -221,7 +227,6 @@ export function GroupsPage() {
         <Container>
             {/* Page background */}
             <div className="relative min-h-screen space-y-5 py-2">
-
                 {/* ── Hero Header Card ─────────────────────────────────── */}
                 <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white via-orange-50/30 to-violet-50/20 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_32px_-8px_rgba(0,0,0,0.08)] ring-1 ring-slate-900/[0.06]">
                     {/* Ambient orbs */}
@@ -238,7 +243,9 @@ export function GroupsPage() {
                                 </IconBadge>
                                 <div>
                                     <div className="flex items-center gap-2.5">
-                                        <h1 className="text-[1.625rem] font-bold tracking-tight text-slate-900">Nhóm</h1>
+                                        <h1 className="text-[1.625rem] font-bold tracking-tight text-slate-900">
+                                            Nhóm
+                                        </h1>
                                         <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-orange-600">
                                             {currentGroupsCount}/{maxGroups}
                                         </span>
@@ -312,7 +319,6 @@ export function GroupsPage() {
                 </Card>
 
                 <div className="space-y-3.5">
-
                     <GroupsSection
                         icon={Star}
                         iconVariant="yellow"
@@ -368,7 +374,6 @@ export function GroupsPage() {
                         emptyText="Chưa có nhóm độc lập nào."
                         loading={loading}
                     />
-
                 </div>
             </div>
 
@@ -377,7 +382,9 @@ export function GroupsPage() {
                 onClose={() => setOpenCreate(false)}
                 currentGroupCount={currentGroupsCount}
                 maxGroups={maxGroups}
-                onCreate={async () => { await reload(); }}
+                onCreate={async () => {
+                    await reload();
+                }}
             />
         </Container>
     );
@@ -436,7 +443,6 @@ function GroupsSection({
                 "group/section overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_-4px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_-8px_rgba(0,0,0,0.10)]",
                 className
             )}>
-
             {/* Section header */}
             <div className={cn("border-b px-5 py-3.5 transition-colors", headerAccents[iconVariant])}>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
@@ -457,7 +463,12 @@ function GroupsSection({
                             onClick={onToggle}
                             className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-slate-500 transition-all duration-150 hover:bg-white/80 hover:text-slate-700">
                             <span>{expanded ? "Thu gọn" : "Xem tất cả"}</span>
-                            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", expanded && "rotate-180")} />
+                            <ChevronDown
+                                className={cn(
+                                    "h-3.5 w-3.5 transition-transform duration-200",
+                                    expanded && "rotate-180"
+                                )}
+                            />
                         </button>
                     )}
                 </div>

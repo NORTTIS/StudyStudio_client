@@ -553,6 +553,24 @@
             "progress": "Tiến độ công việc"
         }
     },
+    "StudioInviteAccept": {
+        "title": "Lời mời tham gia Studio",
+        "checking": "Đang kiểm tra lời mời...",
+        "notLoggedIn": "Bạn chưa đăng nhập",
+        "loginRequired": "Vui lòng đăng nhập để chấp nhận lời mời vào studio.",
+        "loginButton": "Đăng nhập để tiếp tục",
+        "acceptButton": "Chấp nhận gia nhập",
+        "acceptPrompt": "Nhấn \"Chấp nhận gia nhập\" để tham gia studio.",
+        "success": "Bạn đã tham gia studio thành công",
+        "redirecting": "Đang chuyển hướng...",
+        "alreadyMemberTitle": "Thông báo",
+        "alreadyMember": "Bạn đã là thành viên của studio này rồi.",
+        "goToStudio": "Đi tới Studio",
+        "backHome": "Về trang chủ",
+        "errorMissingToken": "Thiếu mã tham gia.",
+        "errorInvalidToken": "Mã tham gia không hợp lệ hoặc đã hết hạn.",
+        "errorAcceptFailed": "Chấp nhận lời mời thất bại."
+    },
     "LandingGroupPage": {
         "hero": {
             "title": "Không gian làm việc chung cho",
@@ -880,7 +898,8 @@
             },
             "Member": {
                 "label": "Thành viên",
-                "note": "Có thể truy cập tất cả mục công khai trong nhóm."
+                "note": "Có thể truy cập tất cả mục công khai trong nhóm.",
+                "studioNote": "Có thể truy cập không gian quản lý của bạn."
             },
             "Commenter": {
                 "label": "Người bình luận",

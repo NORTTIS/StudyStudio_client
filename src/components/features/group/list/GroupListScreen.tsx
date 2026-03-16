@@ -225,19 +225,16 @@ function DateFilterModal(props: {
             className="fixed inset-0 z-12000 flex items-center justify-center bg-black/40 p-4"
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-xl rounded-2xl border border-zinc-200 bg-white p-5 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
+                onPointerDown={(e) => e.stopPropagation()}>
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-semibold text-lg text-zinc-900">{t("dateFilterTitle")}</h3>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50"
-                    >
+                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50">
                         {t("cancel")}
                     </button>
                 </div>
@@ -288,15 +285,13 @@ function DateFilterModal(props: {
                     <button
                         type="button"
                         onClick={onClear}
-                        className="h-10 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 hover:bg-zinc-50"
-                    >
+                        className="h-10 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
                         {t("clearFilter")}
                     </button>
                     <button
                         type="button"
                         onClick={onSubmit}
-                        className="h-10 rounded-xl bg-zinc-900 px-4 font-semibold text-sm text-white hover:bg-zinc-800"
-                    >
+                        className="h-10 rounded-xl bg-zinc-900 px-4 font-semibold text-sm text-white hover:bg-zinc-800">
                         {t("applyFilter")}
                     </button>
                 </div>
@@ -457,8 +452,7 @@ export function GroupListScreen() {
                                     setStatusFilter(e.target.value);
                                     setPage(1);
                                 }}
-                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
-                            >
+                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
                                 <option value="all">{t("allStatus")}</option>
                                 {statusOptions.map((s) => (
                                     <option key={s.id} value={s.id}>
@@ -476,8 +470,7 @@ export function GroupListScreen() {
                                     setSortByDeadline(e.target.value === "desc" ? "desc" : "asc");
                                     setPage(1);
                                 }}
-                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
-                            >
+                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
                                 <option value="asc">{`${t("sortLabel")}: ${t("sortAsc")}`}</option>
                                 <option value="desc">{`${t("sortLabel")}: ${t("sortDesc")}`}</option>
                             </select>
@@ -487,8 +480,7 @@ export function GroupListScreen() {
                         <button
                             type="button"
                             onClick={() => setFilterOpen(true)}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50"
-                        >
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50">
                             <Filter className="h-4 w-4" />
                             {t("dateFilterButton")}
                         </button>
@@ -522,8 +514,7 @@ export function GroupListScreen() {
                                                 <button
                                                     type="button"
                                                     onClick={() => void refresh()}
-                                                    className="mt-3 rounded-xl border border-zinc-200 px-3 py-2 font-semibold text-xs text-zinc-700 hover:bg-zinc-100"
-                                                >
+                                                    className="mt-3 rounded-xl border border-zinc-200 px-3 py-2 font-semibold text-xs text-zinc-700 hover:bg-zinc-100">
                                                     {t("reload")}
                                                 </button>
                                             </td>
@@ -560,10 +551,18 @@ export function GroupListScreen() {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className={cn("px-3 py-4 font-semibold text-sm", row.severityClass)}>
+                                                <td
+                                                    className={cn(
+                                                        "px-3 py-4 font-semibold text-sm",
+                                                        row.severityClass
+                                                    )}>
                                                     {row.severityLabel}
                                                 </td>
-                                                <td className={cn("px-3 py-4 font-semibold text-sm", row.priorityClass)}>
+                                                <td
+                                                    className={cn(
+                                                        "px-3 py-4 font-semibold text-sm",
+                                                        row.priorityClass
+                                                    )}>
                                                     {row.priorityLabel}
                                                 </td>
                                                 <td className="px-3 py-4">
@@ -592,8 +591,7 @@ export function GroupListScreen() {
                                     type="button"
                                     disabled={page <= 1}
                                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45"
-                                >
+                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
                                     <ChevronLeft className="h-4 w-4" />
                                     {t("previous")}
                                 </button>
@@ -606,8 +604,7 @@ export function GroupListScreen() {
                                     type="button"
                                     disabled={page >= totalPages}
                                     onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45"
-                                >
+                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
                                     {t("next")}
                                     <ChevronRight className="h-4 w-4" />
                                 </button>

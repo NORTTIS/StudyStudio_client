@@ -307,7 +307,9 @@ function getInitials(input?: string | null) {
 }
 
 function normalizeText(input?: string | null) {
-    return String(input ?? "").toLocaleLowerCase("vi-VN").trim();
+    return String(input ?? "")
+        .toLocaleLowerCase("vi-VN")
+        .trim();
 }
 
 function matchDeletedDate(raw?: string | null, filter?: DeletedDateFilter | null) {
@@ -326,14 +328,7 @@ function matchDeletedDate(raw?: string | null, filter?: DeletedDateFilter | null
 
 // ─── Avatar helpers ───────────────────────────────────────────────────────────
 
-const avatarTones = [
-    "bg-blue-500",
-    "bg-violet-500",
-    "bg-amber-500",
-    "bg-emerald-500",
-    "bg-rose-500",
-    "bg-cyan-500"
-];
+const avatarTones = ["bg-blue-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-cyan-500"];
 
 function pickAvatarTone(seed: string) {
     let hash = 0;
@@ -507,169 +502,161 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                <div
-                    ref={rootRef}
-                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                    style={{
-                        top: popupPosition.top,
-                        left: popupPosition.left,
-                        width: popupPosition.width
-                    }}
-                >
-                    {/* Month / Year selects */}
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                value={month.getMonth()}
-                                onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
+                  <div
+                      ref={rootRef}
+                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                      style={{
+                          top: popupPosition.top,
+                          left: popupPosition.left,
+                          width: popupPosition.width
+                      }}>
+                      {/* Month / Year selects */}
+                      <div className="mb-4 flex items-center gap-3">
+                          <div className="relative flex-1">
+                              <select
+                                  value={month.getMonth()}
+                                  onChange={handleMonthChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {monthOptions.map((item) => (
+                                      <option key={item.value} value={item.value}>
+                                          {item.label}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
 
-                        <div className="relative w-[140px]">
-                            <select
-                                value={month.getFullYear()}
-                                onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
-                                {yearOptions.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
-                    </div>
+                          <div className="relative w-[140px]">
+                              <select
+                                  value={month.getFullYear()}
+                                  onChange={handleYearChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {yearOptions.map((year) => (
+                                      <option key={year} value={year}>
+                                          {year}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
+                      </div>
 
-                    {/* Calendar grid */}
-                    <div className="rounded-[20px] border border-zinc-200 p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={goPrevMonth}
-                                disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
+                      {/* Calendar grid */}
+                      <div className="rounded-[20px] border border-zinc-200 p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                              <button
+                                  type="button"
+                                  onClick={goPrevMonth}
+                                  disabled={isPrevDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronLeft className="h-5 w-5" />
+                              </button>
 
-                            <div className="text-[18px] font-bold text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                            </div>
+                              <div className="text-[18px] font-bold text-zinc-900">
+                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                              </div>
 
-                            <button
-                                type="button"
-                                onClick={goNextMonth}
-                                disabled={isNextDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                              <button
+                                  type="button"
+                                  onClick={goNextMonth}
+                                  disabled={isNextDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronRight className="h-5 w-5" />
+                              </button>
+                          </div>
 
-                        <DayPicker
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={selectedDate}
-                            onSelect={pickDate}
-                            disabled={
-                                maxDate && minDate
-                                    ? { before: minDate, after: maxDate }
-                                    : maxDate
+                          <DayPicker
+                              mode="single"
+                              month={month}
+                              onMonthChange={setMonth}
+                              selected={selectedDate}
+                              onSelect={pickDate}
+                              disabled={
+                                  maxDate && minDate
+                                      ? { before: minDate, after: maxDate }
+                                      : maxDate
                                         ? { after: maxDate }
                                         : minDate
-                                            ? { before: minDate }
-                                            : undefined
-                            }
-                            showOutsideDays
-                            className="w-full"
-                            styles={{
-                                day: { outline: "none", boxShadow: "none" },
-                                button: { outline: "none", boxShadow: "none" }
-                            }}
-                            classNames={{
-                                months: "flex w-full flex-col",
-                                month: "w-full space-y-3",
-                                month_caption: "hidden",
-                                caption: "hidden",
-                                caption_label: "hidden",
-                                nav: "hidden",
-                                table: "w-full border-collapse",
-                                month_grid: "w-full border-collapse",
-                                tbody: "w-full",
-                                weekdays: "flex w-full justify-between",
-                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                head_row: "flex w-full justify-between",
-                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                weeks: "w-full",
-                                week: "mt-2 flex w-full justify-between",
-                                row: "mt-2 flex w-full justify-between",
-                                day: "h-10 w-10 p-0 text-center",
-                                cell: "h-10 w-10 p-0 text-center",
-                                day_button: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
-                                selected: "!bg-orange-500 !text-white rounded-xl",
-                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
-                                today: "text-orange-600 font-bold",
-                                day_today: "text-orange-600 font-bold",
-                                outside: "opacity-30",
-                                day_outside: "opacity-30",
-                                disabled: "opacity-30",
-                                day_disabled: "opacity-30 cursor-not-allowed",
-                                hidden: "invisible",
-                                day_hidden: "invisible"
-                            }}
-                        />
-                    </div>
+                                          ? { before: minDate }
+                                          : undefined
+                              }
+                              showOutsideDays
+                              className="w-full"
+                              styles={{
+                                  day: { outline: "none", boxShadow: "none" },
+                                  button: { outline: "none", boxShadow: "none" }
+                              }}
+                              classNames={{
+                                  months: "flex w-full flex-col",
+                                  month: "w-full space-y-3",
+                                  month_caption: "hidden",
+                                  caption: "hidden",
+                                  caption_label: "hidden",
+                                  nav: "hidden",
+                                  table: "w-full border-collapse",
+                                  month_grid: "w-full border-collapse",
+                                  tbody: "w-full",
+                                  weekdays: "flex w-full justify-between",
+                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                  head_row: "flex w-full justify-between",
+                                  head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                  weeks: "w-full",
+                                  week: "mt-2 flex w-full justify-between",
+                                  row: "mt-2 flex w-full justify-between",
+                                  day: "h-10 w-10 p-0 text-center",
+                                  cell: "h-10 w-10 p-0 text-center",
+                                  day_button:
+                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
+                                  selected: "!bg-orange-500 !text-white rounded-xl",
+                                  day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
+                                  today: "text-orange-600 font-bold",
+                                  day_today: "text-orange-600 font-bold",
+                                  outside: "opacity-30",
+                                  day_outside: "opacity-30",
+                                  disabled: "opacity-30",
+                                  day_disabled: "opacity-30 cursor-not-allowed",
+                                  hidden: "invisible",
+                                  day_hidden: "invisible"
+                              }}
+                          />
+                      </div>
 
-                    {/* Quick shortcuts */}
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                            Today
-                        </button>
+                      {/* Quick shortcuts */}
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                              type="button"
+                              onClick={() => pickDate(new Date())}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                              Today
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                            Tomorrow
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 1))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                              Tomorrow
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                            Next week
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 7))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                              Next week
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                        >
-                            No date
-                        </button>
-                    </div>
-                </div>,
-                document.body
-            )
+                          <button
+                              type="button"
+                              onClick={() => {
+                                  onChange("");
+                                  setOpen(false);
+                              }}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
+                              No date
+                          </button>
+                      </div>
+                  </div>,
+                  document.body
+              )
             : null;
 
     return (
@@ -686,24 +673,18 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                         open
                             ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
                             : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
                                 "grid h-7 w-7 shrink-0 place-items-center rounded-md",
                                 open ? "bg-orange-100 text-orange-600" : "bg-zinc-100 text-zinc-500"
-                            )}
-                        >
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
                         <span
-                            className={cn(
-                                "truncate text-left",
-                                value ? "font-medium text-zinc-900" : "text-zinc-400"
-                            )}
-                        >
+                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -786,12 +767,10 @@ function ConfirmModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
-            }}
-        >
+            }}>
             <div
                 className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}
-            >
+                onPointerDown={(e) => e.stopPropagation()}>
                 <h2 className="text-base font-bold text-zinc-900">{title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
 
@@ -799,8 +778,7 @@ function ConfirmModal({
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                    >
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">
                         {cancelLabel}
                     </button>
 
@@ -812,8 +790,7 @@ function ConfirmModal({
                             confirmTone === "orange"
                                 ? "bg-orange-600 hover:bg-orange-700"
                                 : "bg-indigo-600 hover:bg-indigo-700"
-                        )}
-                    >
+                        )}>
                         {confirmLabel}
                     </button>
                 </div>
@@ -857,13 +834,11 @@ function RowMenu({
     return (
         <div
             className="absolute top-10 right-0 z-20 w-56 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl"
-            onPointerDown={(e) => e.stopPropagation()}
-        >
+            onPointerDown={(e) => e.stopPropagation()}>
             <button
                 type="button"
                 onClick={onRestore}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-zinc-800 hover:bg-zinc-100"
-            >
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
                 <RotateCcw className="h-5 w-5" />
                 Khôi phục
             </button>
@@ -871,8 +846,7 @@ function RowMenu({
             <button
                 type="button"
                 onClick={onDelete}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-red-500 hover:bg-red-50"
-            >
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-red-500 hover:bg-red-50">
                 <Trash2 className="h-5 w-5" />
                 Xóa vĩnh viễn
             </button>
@@ -919,8 +893,7 @@ function DeletedByPicker({
                     className={cn(
                         "flex w-full items-center gap-4 px-6 py-5 text-left hover:bg-zinc-50",
                         selectedId === null && "bg-zinc-100"
-                    )}
-                >
+                    )}>
                     <div className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-emerald-500 text-[18px] font-bold text-white">
                         Me
                     </div>
@@ -939,14 +912,12 @@ function DeletedByPicker({
                             className={cn(
                                 "flex w-full items-center gap-4 px-6 py-5 text-left hover:bg-zinc-50",
                                 selectedId === option.id && "bg-zinc-100"
-                            )}
-                        >
+                            )}>
                             <div
                                 className={cn(
                                     "grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full text-[18px] font-bold text-white",
                                     tone
-                                )}
-                            >
+                                )}>
                                 {initials}
                             </div>
                             <div className="text-[20px] font-semibold text-zinc-900">{option.name}</div>
@@ -1002,8 +973,7 @@ function FilterPopover({
     return (
         <div
             className="absolute top-[calc(100%+12px)] right-0 z-30 w-[380px] overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-2xl"
-            onPointerDown={(e) => e.stopPropagation()}
-        >
+            onPointerDown={(e) => e.stopPropagation()}>
             {view === "root" && (
                 <>
                     <div className="border-b border-zinc-200 px-6 py-4 text-[20px] font-medium text-zinc-400">
@@ -1013,8 +983,7 @@ function FilterPopover({
                         <button
                             type="button"
                             onClick={() => onChangeView("deletedBy")}
-                            className="flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-[18px] font-semibold text-zinc-900 hover:bg-zinc-100"
-                        >
+                            className="flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-[18px] font-semibold text-zinc-900 hover:bg-zinc-100">
                             <span>Người xóa</span>
                             <ChevronRight className="h-5 w-5 text-zinc-400" />
                         </button>
@@ -1022,8 +991,7 @@ function FilterPopover({
                         <button
                             type="button"
                             onClick={() => onChangeView("deletedDate")}
-                            className="mt-2 flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-[18px] font-semibold text-zinc-900 hover:bg-zinc-100"
-                        >
+                            className="mt-2 flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-[18px] font-semibold text-zinc-900 hover:bg-zinc-100">
                             <span>Ngày xóa</span>
                             <ChevronRight className="h-5 w-5 text-zinc-400" />
                         </button>
@@ -1037,8 +1005,7 @@ function FilterPopover({
                         <button
                             type="button"
                             onClick={() => onChangeView("root")}
-                            className="rounded-lg px-2 py-1 text-sm font-semibold text-zinc-600 hover:bg-zinc-100"
-                        >
+                            className="rounded-lg px-2 py-1 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">
                             ←
                         </button>
                         <div className="text-[18px] font-semibold text-zinc-900">Chọn người xóa</div>
@@ -1060,8 +1027,7 @@ function FilterPopover({
                         <button
                             type="button"
                             onClick={() => onChangeView("root")}
-                            className="rounded-lg px-2 py-1 text-sm font-semibold text-zinc-600 hover:bg-zinc-100"
-                        >
+                            className="rounded-lg px-2 py-1 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">
                             ←
                         </button>
                         <div className="text-[18px] font-semibold text-zinc-900">Chọn ngày xóa</div>
@@ -1073,15 +1039,13 @@ function FilterPopover({
                         <button
                             type="button"
                             onClick={() => onChangeDeletedDate({ startDate: "", endDate: "" })}
-                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                        >
+                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">
                             Xóa chọn
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
-                        >
+                            className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700">
                             Áp dụng
                         </button>
                     </div>
@@ -1093,11 +1057,7 @@ function FilterPopover({
 
 const ITEMS_PER_PAGE = 10;
 
-export default function Trashed({
-    canManageTrash = false
-}: {
-    canManageTrash?: boolean;
-}) {
+export default function Trashed({ canManageTrash = false }: { canManageTrash?: boolean }) {
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
@@ -1196,7 +1156,7 @@ export default function Trashed({
                 const deletedOnRaw = x.deletedOn ?? "";
                 const deletedBy = x.deletedBy ?? null;
                 const name = String(x.taskName ?? "").trim() || "Untitled task";
-                const deletedByName = deletedBy ? nextMemberNameMap[String(deletedBy)] ?? null : null;
+                const deletedByName = deletedBy ? (nextMemberNameMap[String(deletedBy)] ?? null) : null;
 
                 return {
                     id,
@@ -1277,8 +1237,7 @@ export default function Trashed({
     }, [filteredItems, page]);
 
     const activeFilterCount =
-        (deletedByFilter ? 1 : 0) +
-        (deletedDateFilter.startDate || deletedDateFilter.endDate ? 1 : 0);
+        (deletedByFilter ? 1 : 0) + (deletedDateFilter.startDate || deletedDateFilter.endDate ? 1 : 0);
 
     const selectedDeletedByName =
         deletedByOptions.find((x) => x.id === deletedByFilter)?.name ||
@@ -1375,8 +1334,7 @@ export default function Trashed({
                             <button
                                 type="button"
                                 onClick={() => void refresh()}
-                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
-                            >
+                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100">
                                 Tải lại
                             </button>
                         </div>
@@ -1445,8 +1403,7 @@ export default function Trashed({
                                         setFilterView("root");
                                     }}
                                     className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                                    aria-label="Bộ lọc"
-                                >
+                                    aria-label="Bộ lọc">
                                     <Filter className="h-5 w-5" />
                                     {activeFilterCount > 0 ? (
                                         <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
@@ -1477,8 +1434,7 @@ export default function Trashed({
                                         <button
                                             type="button"
                                             onClick={() => setDeletedByFilter(null)}
-                                            className="rounded-full p-0.5 hover:bg-zinc-200"
-                                        >
+                                            className="rounded-full p-0.5 hover:bg-zinc-200">
                                             <X className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -1490,8 +1446,7 @@ export default function Trashed({
                                         <button
                                             type="button"
                                             onClick={() => setDeletedDateFilter({ startDate: "", endDate: "" })}
-                                            className="rounded-full p-0.5 hover:bg-zinc-200"
-                                        >
+                                            className="rounded-full p-0.5 hover:bg-zinc-200">
                                             <X className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -1503,8 +1458,7 @@ export default function Trashed({
                                         setDeletedByFilter(null);
                                         setDeletedDateFilter({ startDate: "", endDate: "" });
                                     }}
-                                    className="text-sm font-semibold text-zinc-600 hover:text-zinc-900"
-                                >
+                                    className="text-sm font-semibold text-zinc-600 hover:text-zinc-900">
                                     Xóa tất cả bộ lọc
                                 </button>
                             </div>
@@ -1533,10 +1487,7 @@ export default function Trashed({
                                 <tbody>
                                     {paginatedItems.length === 0 ? (
                                         <tr>
-                                            <td
-                                                colSpan={5}
-                                                className="px-6 py-12 text-center text-sm text-zinc-500"
-                                            >
+                                            <td colSpan={5} className="px-6 py-12 text-center text-sm text-zinc-500">
                                                 Không có task nào phù hợp.
                                             </td>
                                         </tr>
@@ -1576,8 +1527,7 @@ export default function Trashed({
                                                                     "grid h-12 w-12 shrink-0 place-items-center rounded-full text-base font-bold text-white",
                                                                     tone
                                                                 )}
-                                                                title={displayDeletedBy}
-                                                            >
+                                                                title={displayDeletedBy}>
                                                                 {initials}
                                                             </div>
                                                             <div className="max-w-[220px] truncate text-base font-medium text-zinc-800">
@@ -1597,8 +1547,7 @@ export default function Trashed({
                                                                     )
                                                                 }
                                                                 className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
-                                                                aria-label="Tùy chọn"
-                                                            >
+                                                                aria-label="Tùy chọn">
                                                                 <MoreHorizontal className="h-5 w-5" />
                                                             </button>
 
@@ -1631,8 +1580,7 @@ export default function Trashed({
                                     type="button"
                                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                                     disabled={page <= 1}
-                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
+                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
                                     Trước
                                 </button>
 
@@ -1640,8 +1588,7 @@ export default function Trashed({
                                     type="button"
                                     onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                                     disabled={page >= totalPages}
-                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
+                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
                                     Sau
                                 </button>
                             </div>

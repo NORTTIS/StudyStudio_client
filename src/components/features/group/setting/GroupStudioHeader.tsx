@@ -62,10 +62,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-        | {
-            role?: string | null;
-        }[]
-        | null;
+            | {
+                  role?: string | null;
+              }[]
+            | null;
     } | null;
 };
 
@@ -180,7 +180,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch { }
+                } catch {}
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
@@ -219,7 +219,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch { }
+                    } catch {}
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -316,7 +316,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
@@ -359,7 +359,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -379,8 +379,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="w-full bg-white"
-            >
+                className="w-full bg-white">
                 <div>
                     <div className="flex items-start justify-between gap-6">
                         <div className="min-w-0">
@@ -392,8 +391,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.22 }}
-                                        className="flex items-center gap-2 text-sm text-[#6F6B99]"
-                                    >
+                                        className="flex items-center gap-2 text-sm text-[#6F6B99]">
                                         <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                         {studioName}
                                     </motion.p>
@@ -404,8 +402,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                 <motion.h1
                                     layout
                                     transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                    className="mt-1 truncate text-3xl font-semibold text-[#261E33]"
-                                >
+                                    className="mt-1 truncate text-3xl font-semibold text-[#261E33]">
                                     {groupName}
                                 </motion.h1>
 
@@ -422,8 +419,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.22 }}
-                                        className="mt-2 text-lg text-[#6F6B99]"
-                                    >
+                                        className="mt-2 text-lg text-[#6F6B99]">
                                         {groupDesc}
                                     </motion.p>
                                 ) : null}
@@ -436,8 +432,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         animate={{ opacity: 1, height: "auto", y: 0 }}
                                         exit={{ opacity: 0, height: 0, y: -6 }}
                                         transition={{ duration: 0.22 }}
-                                        className="mt-3 overflow-hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-                                    >
+                                        className="mt-3 overflow-hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                                         {error}
                                     </motion.p>
                                 ) : null}
@@ -447,14 +442,12 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                         <motion.div
                             layout
                             transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                            className="flex items-center gap-3 text-[#6F6B99]"
-                        >
+                            className="flex items-center gap-3 text-[#6F6B99]">
                             <motion.div
                                 layout
                                 whileHover={{ y: -1 }}
                                 transition={{ duration: 0.18 }}
-                                className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 shadow-sm"
-                            >
+                                className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 shadow-sm">
                                 <Users className="h-4 w-4" />
                                 <span className="text-sm">
                                     <motion.span
@@ -462,8 +455,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         initial={{ opacity: 0.6, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ duration: 0.2 }}
-                                        className="font-semibold text-[#261E33]"
-                                    >
+                                        className="font-semibold text-[#261E33]">
                                         {memberCount}
                                     </motion.span>{" "}
                                     thành viên
@@ -477,8 +469,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                     whileHover={{ scale: 1.02, y: -1 }}
                                     whileTap={{ scale: 0.98 }}
                                     transition={{ duration: 0.16 }}
-                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 text-sm font-semibold text-white shadow-sm"
-                                >
+                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 text-sm font-semibold text-white shadow-sm">
                                     <UserPlus className="h-4 w-4" />
                                     Thêm thành viên
                                 </motion.button>
@@ -491,8 +482,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05, duration: 0.3 }}
-                    className="mt-6"
-                >
+                    className="mt-6">
                     <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
                         <div className="no-scrollbar flex items-center gap-2 overflow-x-auto p-2 scroll-smooth">
                             {visibleTabs.map((tab) => {
@@ -516,8 +506,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                                 active
                                                     ? "text-white"
                                                     : "text-[#6F6B99] hover:bg-zinc-50 hover:text-[#261E33]"
-                                            )}
-                                        >
+                                            )}>
                                             {active ? (
                                                 <motion.div
                                                     layoutId="activeGroupTab"

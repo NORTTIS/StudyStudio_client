@@ -92,7 +92,9 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const [byPlan, setByPlan] = useState<RevenueByPlanData | null>(options.initialByPlan ?? null);
     const [trends, setTrends] = useState<RevenueTrendsData | null>(options.initialTrends ?? null);
     const [topPlans, setTopPlans] = useState<TopPlansData | null>(options.initialTopPlans ?? null);
-    const [transactions, setTransactions] = useState<RevenueTransactionsData | null>(options.initialTransactions ?? null);
+    const [transactions, setTransactions] = useState<RevenueTransactionsData | null>(
+        options.initialTransactions ?? null
+    );
     const [mrr, setMrr] = useState<MRRBreakdownData | null>(options.initialMRR ?? null);
 
     // Loading state
@@ -142,27 +144,30 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
         }
     }, [filters.startDate, filters.endDate]);
 
-    const fetchTransactions = useCallback(async (pageNumber: number = 1) => {
-        setLoading((prev) => ({ ...prev, transactions: true }));
-        try {
-            const response = await getRevenueTransactions({
-                pageNumber,
-                pageSize: 10,
-                startDate: filters.startDate,
-                endDate: filters.endDate,
-                planId: filters.planId,
-                paymentStatus: filters.paymentStatus,
-                searchTerm: filters.searchTerm
-            });
-            if (response.data) {
-                setTransactions(response.data);
+    const fetchTransactions = useCallback(
+        async (pageNumber: number = 1) => {
+            setLoading((prev) => ({ ...prev, transactions: true }));
+            try {
+                const response = await getRevenueTransactions({
+                    pageNumber,
+                    pageSize: 10,
+                    startDate: filters.startDate,
+                    endDate: filters.endDate,
+                    planId: filters.planId,
+                    paymentStatus: filters.paymentStatus,
+                    searchTerm: filters.searchTerm
+                });
+                if (response.data) {
+                    setTransactions(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching transactions:", error);
+            } finally {
+                setLoading((prev) => ({ ...prev, transactions: false }));
             }
-        } catch (error) {
-            console.error("Error fetching transactions:", error);
-        } finally {
-            setLoading((prev) => ({ ...prev, transactions: false }));
-        }
-    }, [filters.startDate, filters.endDate, filters.planId, filters.paymentStatus, filters.searchTerm]);
+        },
+        [filters.startDate, filters.endDate, filters.planId, filters.paymentStatus, filters.searchTerm]
+    );
 
     const fetchTrends = useCallback(async () => {
         setLoading((prev) => ({ ...prev, trends: true }));
@@ -183,24 +188,27 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
         }
     }, [filters.startDate, filters.endDate]);
 
-    const fetchTopPlans = useCallback(async (limit: number = 5) => {
-        setLoading((prev) => ({ ...prev, topPlans: true }));
-        try {
-            const response = await getTopPlans({
-                limit,
-                startDate: filters.startDate,
-                endDate: filters.endDate,
-                sortBy: "revenue"
-            });
-            if (response.data) {
-                setTopPlans(response.data);
+    const fetchTopPlans = useCallback(
+        async (limit: number = 5) => {
+            setLoading((prev) => ({ ...prev, topPlans: true }));
+            try {
+                const response = await getTopPlans({
+                    limit,
+                    startDate: filters.startDate,
+                    endDate: filters.endDate,
+                    sortBy: "revenue"
+                });
+                if (response.data) {
+                    setTopPlans(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching top plans:", error);
+            } finally {
+                setLoading((prev) => ({ ...prev, topPlans: false }));
             }
-        } catch (error) {
-            console.error("Error fetching top plans:", error);
-        } finally {
-            setLoading((prev) => ({ ...prev, topPlans: false }));
-        }
-    }, [filters.startDate, filters.endDate]);
+        },
+        [filters.startDate, filters.endDate]
+    );
 
     const fetchMRR = useCallback(async (year?: number) => {
         setLoading((prev) => ({ ...prev, mrr: true }));
@@ -217,74 +225,77 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     }, []);
 
     // Apply filters - updates filters and fetches all data
-    const applyFilters = useCallback(async (newFilters: Partial<RevenueFilters>) => {
-        const updatedFilters = { ...filters, ...newFilters };
-        setFilters(updatedFilters);
+    const applyFilters = useCallback(
+        async (newFilters: Partial<RevenueFilters>) => {
+            const updatedFilters = { ...filters, ...newFilters };
+            setFilters(updatedFilters);
 
-        // Fetch all data in parallel
-        setLoading({
-            byPeriod: true,
-            byPlan: true,
-            transactions: true,
-            trends: true,
-            topPlans: true,
-            mrr: true
-        });
-
-        try {
-            const [periodRes, planRes, txnRes, trendsRes, topPlansRes, mrrRes] = await Promise.all([
-                getRevenueByPeriod({
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    period: updatedFilters.period,
-                    planId: updatedFilters.planId
-                }),
-                getRevenueByPlan({
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate
-                }),
-                getRevenueTransactions({
-                    pageNumber: 1,
-                    pageSize: 10,
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    planId: updatedFilters.planId,
-                    paymentStatus: updatedFilters.paymentStatus
-                }),
-                getRevenueTrends({
-                    period: "last30days",
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    comparison: true
-                }),
-                getTopPlans({
-                    limit: 5,
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    sortBy: "revenue"
-                }),
-                getMRRBreakdown()
-            ]);
-
-            if (periodRes.data) setByPeriod(periodRes.data);
-            if (planRes.data) setByPlan(planRes.data);
-            if (txnRes.data) setTransactions(txnRes.data);
-            if (trendsRes.data) setTrends(trendsRes.data);
-            if (topPlansRes.data) setTopPlans(topPlansRes.data);
-            if (mrrRes.data) setMrr(mrrRes.data);
-        } catch (error) {
-            console.error("Error applying filters:", error);
-        } finally {
+            // Fetch all data in parallel
             setLoading({
-                byPeriod: false,
-                byPlan: false,
-                transactions: false,
-                trends: false,
-                topPlans: false,
-                mrr: false
+                byPeriod: true,
+                byPlan: true,
+                transactions: true,
+                trends: true,
+                topPlans: true,
+                mrr: true
             });
-        }
-    }, [filters]);
+
+            try {
+                const [periodRes, planRes, txnRes, trendsRes, topPlansRes, mrrRes] = await Promise.all([
+                    getRevenueByPeriod({
+                        startDate: updatedFilters.startDate,
+                        endDate: updatedFilters.endDate,
+                        period: updatedFilters.period,
+                        planId: updatedFilters.planId
+                    }),
+                    getRevenueByPlan({
+                        startDate: updatedFilters.startDate,
+                        endDate: updatedFilters.endDate
+                    }),
+                    getRevenueTransactions({
+                        pageNumber: 1,
+                        pageSize: 10,
+                        startDate: updatedFilters.startDate,
+                        endDate: updatedFilters.endDate,
+                        planId: updatedFilters.planId,
+                        paymentStatus: updatedFilters.paymentStatus
+                    }),
+                    getRevenueTrends({
+                        period: "last30days",
+                        startDate: updatedFilters.startDate,
+                        endDate: updatedFilters.endDate,
+                        comparison: true
+                    }),
+                    getTopPlans({
+                        limit: 5,
+                        startDate: updatedFilters.startDate,
+                        endDate: updatedFilters.endDate,
+                        sortBy: "revenue"
+                    }),
+                    getMRRBreakdown()
+                ]);
+
+                if (periodRes.data) setByPeriod(periodRes.data);
+                if (planRes.data) setByPlan(planRes.data);
+                if (txnRes.data) setTransactions(txnRes.data);
+                if (trendsRes.data) setTrends(trendsRes.data);
+                if (topPlansRes.data) setTopPlans(topPlansRes.data);
+                if (mrrRes.data) setMrr(mrrRes.data);
+            } catch (error) {
+                console.error("Error applying filters:", error);
+            } finally {
+                setLoading({
+                    byPeriod: false,
+                    byPlan: false,
+                    transactions: false,
+                    trends: false,
+                    topPlans: false,
+                    mrr: false
+                });
+            }
+        },
+        [filters]
+    );
 
     return {
         overview,

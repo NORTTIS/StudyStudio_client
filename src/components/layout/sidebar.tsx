@@ -206,8 +206,8 @@ export function DashboardSidebar() {
                                         collapsed
                                             ? "scale-0 opacity-0"
                                             : active
-                                                ? "scale-100 bg-orange-500 opacity-100"
-                                                : "scale-75 bg-transparent opacity-0 group-hover:scale-100 group-hover:bg-orange-300 group-hover:opacity-100"
+                                              ? "scale-100 bg-orange-500 opacity-100"
+                                              : "scale-75 bg-transparent opacity-0 group-hover:scale-100 group-hover:bg-orange-300 group-hover:opacity-100"
                                     )}
                                 />
                             </Link>
