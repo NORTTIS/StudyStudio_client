@@ -27,7 +27,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { Container } from "@/components/common";
@@ -978,7 +978,7 @@ function TaskCard({
         >
             <div className="flex items-start gap-3">
                 <div className="pt-1">
-                    <div className={cn("h-2.5 w-2.5 rounded-full", done ? "bg-emerald-500" : dotClass(task.statusDot))} />
+                    <div className={cn("h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -1151,7 +1151,7 @@ function GhostTaskCard({ task }: { task: Task }) {
     return (
         <div className={cn("rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/70 p-3")}>
             <div className="flex items-start gap-3">
-                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", done ? "bg-emerald-500" : dotClass(task.statusDot))} />
+                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
                 <div className="min-w-0 flex-1">
                     <p className={cn("line-clamp-3 text-sm font-semibold leading-5", done ? "text-zinc-500 line-through" : "text-zinc-800")}>
                         {task.title}
@@ -1787,6 +1787,8 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
 
 export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean }) {
     const params = useParams<{ groupId: string }>();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
     const [columns, setColumns] = React.useState<Column[]>([]);
@@ -1884,6 +1886,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const [topScrollbarWidth, setTopScrollbarWidth] = React.useState(0);
     const [showTopScrollbar, setShowTopScrollbar] = React.useState(false);
 
+    const autoOpenedTaskRef = React.useRef<string | null>(null);
+
     const syncTopScrollbarWidth = React.useCallback(() => {
         const boardEl = boardScrollRef.current;
         const topEl = topScrollRef.current;
@@ -1974,7 +1978,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         try {
             await apiDeleteTask({ groupId, taskId });
-            await refresh();
+            await refreshSilently();
         } catch (e: any) {
             openNoPermissionModal("Bạn không có thẩm quyền xóa công việc này");
         }
@@ -2030,56 +2034,89 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 return base;
             });
         }
+
         setBoard(nextBoard);
     }, []);
 
-    const refresh = React.useCallback(async () => {
-        if (!groupId) {
-            setLoading(false);
-            setLoadError("Thiếu groupId trong route.");
-            return;
-        }
-        if (!isUuidLike(groupId)) {
-            setLoading(false);
-            setLoadError("groupId trong route không hợp lệ (không phải UUID).");
-            return;
-        }
-        if (!getApiBase()) {
-            setLoading(false);
-            setLoadError("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-            return;
-        }
+    const fetchBoardData = React.useCallback(async () => {
+        if (!groupId) throw new Error("Thiếu groupId trong route.");
+        if (!isUuidLike(groupId)) throw new Error("groupId trong route không hợp lệ (không phải UUID).");
+        if (!getApiBase()) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
 
+        const [detail, members] = await Promise.all([
+            apiGetGroupDetail(groupId),
+            apiGetGroupMembers(groupId)
+        ]);
+
+        syncColumnsFromDetail(detail?.data);
+
+        const list = members?.data?.members ?? [];
+        setMembersOptions(
+            list
+                .filter((m) => typeof m?.userId === "string" && !!m.userId)
+                .map((m) => {
+                    const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim();
+                    return {
+                        value: String(m.userId),
+                        label: name || m.email || "Unnamed",
+                        avatarUrl: m.avatarUrl ?? null
+                    };
+                })
+        );
+    }, [groupId, syncColumnsFromDetail]);
+
+    const refresh = React.useCallback(async () => {
         setLoading(true);
         setLoadError(null);
-        try {
-            const [detail, members] = await Promise.all([apiGetGroupDetail(groupId), apiGetGroupMembers(groupId)]);
-            syncColumnsFromDetail(detail?.data);
 
-            const list = members?.data?.members ?? [];
-            setMembersOptions(
-                list
-                    .filter((m) => typeof m?.userId === "string" && !!m.userId)
-                    .map((m) => {
-                        const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim();
-                        return {
-                            value: String(m.userId),
-                            label: name || m.email || "Unnamed",
-                            avatarUrl: m.avatarUrl ?? null
-                        };
-                    })
-            );
+        try {
+            await fetchBoardData();
         } catch (e: any) {
             setLoadError(e?.message ?? "Không tải được dữ liệu group.");
             setMembersOptions([]);
         } finally {
             setLoading(false);
         }
-    }, [groupId, syncColumnsFromDetail]);
+    }, [fetchBoardData]);
+
+    const refreshSilently = React.useCallback(async () => {
+        try {
+            await fetchBoardData();
+            setLoadError(null);
+        } catch (e: any) {
+            console.error("refreshSilently error:", e);
+        }
+    }, [fetchBoardData]);
 
     React.useEffect(() => {
         void refresh();
     }, [refresh]);
+
+    React.useEffect(() => {
+        if (loading) return;
+
+        const taskId = searchParams.get("taskId");
+        const openTaskDetail = searchParams.get("openTaskDetail");
+
+        if (!taskId || openTaskDetail !== "1") return;
+        if (autoOpenedTaskRef.current === taskId) return;
+
+        let found = false;
+        for (const col of columns) {
+            if ((board[col.id] ?? []).some((t) => t.id === taskId)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) return;
+
+        autoOpenedTaskRef.current = taskId;
+        setDetailTaskId(taskId);
+        setDetailOpen(true);
+
+        router.replace(`/group/${groupId}`, { scroll: false });
+    }, [loading, searchParams, columns, board, router, groupId]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -2131,7 +2168,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         setCreatingColumn(true);
         try {
             await apiCreateGroupTaskStatus({ groupId, statusName: title, position: positionToSend });
-            await refresh();
+            await refreshSilently();
         } finally {
             setCreatingColumn(false);
         }
@@ -2168,9 +2205,14 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: next } : c)));
 
         try {
-            await apiRenameGroupTaskStatus({ groupId, statusId: id, statusName: next, position: col.position });
+            await apiRenameGroupTaskStatus({
+                groupId,
+                statusId: id,
+                statusName: next,
+                position: col.position
+            });
             cancelEditColumn();
-            await refresh();
+            await refreshSilently();
         } catch (e: any) {
             setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: prevTitle } : c)));
             setEditingColumn((p) => ({ ...p, error: e?.message ?? "Đã xảy ra lỗi" }));
@@ -2216,7 +2258,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         try {
             await apiDeleteGroupTaskStatus({ groupId, statusId: columnId });
-            await refresh();
+            await refreshSilently();
         } catch (e: any) {
             setColumns(prevCols);
             setBoard(prevBoard);
@@ -2229,17 +2271,20 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         }
     };
 
-    const handleCancelDeleteColumn = () => setConfirmModal({ open: false, columnId: null, columnTitle: "" });
+    const handleCancelDeleteColumn = () =>
+        setConfirmModal({ open: false, columnId: null, columnTitle: "" });
 
     const onTaskStartEdit = (taskId: string, columnId: ColumnId, currentTitle: string) => {
         setEditingTask({ taskId, columnId, draft: currentTitle });
     };
 
-    const onTaskCancelEdit = () => setEditingTask({ taskId: null, columnId: null, draft: "" });
+    const onTaskCancelEdit = () =>
+        setEditingTask({ taskId: null, columnId: null, draft: "" });
 
     const onTaskCommitEdit = () => {
         const { taskId, columnId, draft } = editingTask;
         if (!(taskId && columnId)) return;
+
         const next = draft.trim();
         if (!next) {
             onTaskCancelEdit();
@@ -2248,8 +2293,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         setBoard((prev) => ({
             ...prev,
-            [columnId]: (prev[columnId] ?? []).map((t) => (t.id === taskId ? { ...t, title: next } : t))
+            [columnId]: (prev[columnId] ?? []).map((t) =>
+                t.id === taskId ? { ...t, title: next } : t
+            )
         }));
+
         onTaskCancelEdit();
     };
 
@@ -2287,11 +2335,13 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             [columnId]: (prev[columnId] ?? []).filter((t) => t.id !== taskId)
         }));
 
-        if (editingTask.taskId === taskId && editingTask.columnId === columnId) onTaskCancelEdit();
+        if (editingTask.taskId === taskId && editingTask.columnId === columnId) {
+            onTaskCancelEdit();
+        }
 
         try {
             await apiDeleteTask({ groupId, taskId });
-            await refresh();
+            await refreshSilently();
         } catch (e: any) {
             setBoard(prevBoard);
 
@@ -2327,7 +2377,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const dueSelected = rawDue != null && String(rawDue).trim() !== "";
         const startSelected = rawStart != null && String(rawStart).trim() !== "";
 
-        const assigneeId = (values as any).assigneeId ?? (values as any).assignees ?? (values as any).assignee ?? null;
+        const assigneeId =
+            (values as any).assigneeId ??
+            (values as any).assignees ??
+            (values as any).assignee ??
+            null;
 
         setCreatingTask(true);
         try {
@@ -2342,7 +2396,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 startDateSelected: startSelected
             });
 
-            await refresh();
+            await refreshSilently();
             closeCreateTask();
         } finally {
             setCreatingTask(false);
@@ -2357,7 +2411,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             return closestCenter({ ...args, droppableContainers: onlyColumns });
         }
 
-        const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
+        const allow = filterDroppablesByType(args.droppableContainers, [
+            "task",
+            "column-drop",
+            "column-end"
+        ]);
         return closestCorners({ ...args, droppableContainers: allow });
     }, []);
 
@@ -2395,7 +2453,12 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             const activeId = String(e.active.id);
             const prevBoard = board;
 
-            const dropped = applyTaskDrop({ board, columns, activeTaskId: activeId, overRaw });
+            const dropped = applyTaskDrop({
+                board,
+                columns,
+                activeTaskId: activeId,
+                overRaw
+            });
             if (!dropped) return;
 
             setBoard(dropped.nextBoard);
@@ -2448,7 +2511,12 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
             void (async () => {
                 try {
-                    await apiReorderGroupTaskStatus({ groupId, statusId: activeColId, prevStatusId, nextStatusId });
+                    await apiReorderGroupTaskStatus({
+                        groupId,
+                        statusId: activeColId,
+                        prevStatusId,
+                        nextStatusId
+                    });
                 } catch {
                     setColumns(prevCols);
                 }
@@ -2506,8 +2574,14 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         setEditingColumn((p) => {
             const trimmed = v.trim();
             if (!trimmed) return { ...p, draft: v, error: "Vui lòng nhập tên trạng thái." };
-            const dup = columns.some((c) => c.id !== p.id && c.title.trim().toLowerCase() === trimmed.toLowerCase());
-            return { ...p, draft: v, error: dup ? "Tên trạng thái đã tồn tại. Hãy nhập tên khác." : null };
+            const dup = columns.some(
+                (c) => c.id !== p.id && c.title.trim().toLowerCase() === trimmed.toLowerCase()
+            );
+            return {
+                ...p,
+                draft: v,
+                error: dup ? "Tên trạng thái đã tồn tại. Hãy nhập tên khác." : null
+            };
         });
     };
 
@@ -2521,12 +2595,13 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 statuses={statusesOptions}
                 defaultStatusId={taskFormColumnId}
             />
+
             <TaskDetailModal
                 open={detailOpen}
                 onClose={closeTaskDetail}
                 taskId={detailTaskId}
                 onDelete={handleDeleteFromDetail}
-                onSaved={refresh}
+                onSaved={refreshSilently}
             />
 
             <ConfirmModal

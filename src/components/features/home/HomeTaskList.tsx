@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
+import { useRouter } from "next/navigation";
 import "react-day-picker/dist/style.css";
 
 import { apiFetch } from "@/api/api-client";
@@ -18,8 +19,10 @@ import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 
 type HomeTaskListResponse = components["schemas"]["HomeTaskListResponse"];
-type HomeTaskListResponseApiResponse = components["schemas"]["HomeTaskListResponseApiResponse"];
-type HomeTaskListItemResponse = components["schemas"]["HomeTaskListItemResponse"];
+type HomeTaskListResponseApiResponse =
+    components["schemas"]["HomeTaskListResponseApiResponse"];
+type HomeTaskListItemResponse =
+    components["schemas"]["HomeTaskListItemResponse"];
 type UserGroupDto = components["schemas"]["UserGroupDto"];
 
 const PAGE_SIZE = 20;
@@ -96,7 +99,9 @@ function formatDateDisplay(value?: string) {
 
     const today = startOfDay(new Date());
     const target = startOfDay(date);
-    const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+    const diffDays = Math.round(
+        (target.getTime() - today.getTime()) / 86400000
+    );
 
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Tomorrow";
@@ -119,7 +124,10 @@ function formatFilterDateLabel(value?: string) {
     }).format(date);
 }
 
-function matchDeadlineDate(raw?: string | null, filter?: DeadlineFilter | null) {
+function matchDeadlineDate(
+    raw?: string | null,
+    filter?: DeadlineFilter | null
+) {
     if (!filter) return true;
     const { startDate, endDate } = filter;
 
@@ -146,12 +154,17 @@ function buildTaskListUrl(params: {
     search?: string;
     sortBy?: string;
 }) {
-    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+    const rawBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
+        "";
     const base = rawBase.replace(/\/+$/, "");
 
     if (!base) return "";
 
-    const endpoint = /\/api$/i.test(base) ? `${base}/Home/TaskList` : `${base}/api/Home/TaskList`;
+    const endpoint = /\/api$/i.test(base)
+        ? `${base}/Home/TaskList`
+        : `${base}/api/Home/TaskList`;
 
     const searchParams = new URLSearchParams();
     searchParams.set("page", String(params.page));
@@ -167,7 +180,10 @@ function buildTaskListUrl(params: {
 function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
     const source = payload as
         | HomeTaskListResponseApiResponse
-        | { status?: string; data?: HomeTaskListResponseApiResponse | HomeTaskListResponse | null }
+        | {
+            status?: string;
+            data?: HomeTaskListResponseApiResponse | HomeTaskListResponse | null;
+        }
         | null
         | undefined;
 
@@ -255,7 +271,9 @@ function formatDueDate(value?: string | null) {
     const year = date.getFullYear();
 
     if (year !== currentYear) {
-        return `${year}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+        return `${year}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+            date.getDate()
+        ).padStart(2, "0")}`;
     }
 
     return new Intl.DateTimeFormat("en-US", {
@@ -273,6 +291,21 @@ function getSourceLabel(item: HomeTaskListItemResponse) {
 
 function isPersonalTask(item: HomeTaskListItemResponse) {
     return !item.groupId || item.sourceType?.toLowerCase() === "personal";
+}
+
+function buildTaskDetailHref(item: HomeTaskListItemResponse) {
+    const taskId = item.taskId ?? "";
+    if (!taskId) return "#";
+
+    if (isPersonalTask(item)) {
+        return `/home/personal-task?taskId=${taskId}&openTaskDetail=1`;
+    }
+
+    if (item.groupId) {
+        return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
+    }
+
+    return "#";
 }
 
 function TaskStatusBadge({ label }: { label?: string | null }) {
@@ -296,10 +329,18 @@ function TableSkeleton() {
     );
 }
 
-function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePickerProps) {
+function TrelloDatePicker({
+    label,
+    value,
+    onChange,
+    min,
+    max
+}: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
-    const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
+    const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(
+        null
+    );
 
     const rootRef = React.useRef<HTMLDivElement | null>(null);
     const triggerRef = React.useRef<HTMLButtonElement | null>(null);
@@ -308,7 +349,10 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     const minDate = React.useMemo(() => parseDateString(min), [min]);
     const maxDate = React.useMemo(() => parseDateString(max), [max]);
 
-    const initialMonth = React.useMemo(() => selectedDate ?? minDate ?? new Date(), [selectedDate, minDate]);
+    const initialMonth = React.useMemo(
+        () => selectedDate ?? minDate ?? new Date(),
+        [selectedDate, minDate]
+    );
     const [month, setMonth] = React.useState<Date>(initialMonth);
 
     React.useEffect(() => setMounted(true), []);
@@ -333,7 +377,9 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
         const spaceAbove = rect.top;
         const shouldOpenUp = spaceBelow < popupHeight && spaceAbove > spaceBelow;
 
-        let top = shouldOpenUp ? rect.top - popupHeight - gap : rect.bottom + gap;
+        let top = shouldOpenUp
+            ? rect.top - popupHeight - gap
+            : rect.bottom + gap;
         let left = rect.left;
 
         if (left + popupWidth > window.innerWidth - viewportPadding) {
@@ -342,7 +388,10 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
         if (left < viewportPadding) left = viewportPadding;
         if (top < viewportPadding) top = viewportPadding;
         if (top + popupHeight > window.innerHeight - viewportPadding) {
-            top = Math.max(viewportPadding, window.innerHeight - popupHeight - viewportPadding);
+            top = Math.max(
+                viewportPadding,
+                window.innerHeight - popupHeight - viewportPadding
+            );
         }
 
         setPopupPosition({ top, left, width: popupWidth });
@@ -388,9 +437,15 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
 
     const yearOptions = React.useMemo(() => {
         const currentYear = new Date().getFullYear();
-        const startYear = Math.min(minDate?.getFullYear() ?? currentYear - 5, currentYear - 5);
+        const startYear = Math.min(
+            minDate?.getFullYear() ?? currentYear - 5,
+            currentYear - 5
+        );
         const endYear = currentYear + 10;
-        return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+        return Array.from(
+            { length: endYear - startYear + 1 },
+            (_, i) => startYear + i
+        );
     }, [minDate]);
 
     const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -484,7 +539,8 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             </button>
 
                             <div className="text-[18px] font-bold text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                                {monthOptions[month.getMonth()]?.label}{" "}
+                                {month.getFullYear()}
                             </div>
 
                             <button
@@ -529,7 +585,8 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                                 month_grid: "w-full border-collapse",
                                 tbody: "w-full",
                                 weekdays: "flex w-full justify-between",
-                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                weekday:
+                                    "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
                                 weeks: "w-full",
                                 week: "mt-2 flex w-full justify-between",
                                 day: "h-10 w-10 p-0 text-center",
@@ -537,7 +594,8 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                                 day_button:
                                     "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
                                 selected: "!bg-orange-500 !text-white rounded-xl",
-                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
+                                day_selected:
+                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
                                 today: "text-orange-600 font-bold",
                                 day_today: "text-orange-600 font-bold",
                                 outside: "opacity-30",
@@ -611,7 +669,9 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                         <div
                             className={cn(
                                 "grid h-7 w-7 shrink-0 place-items-center rounded-md",
-                                open ? "bg-orange-100 text-orange-600" : "bg-zinc-100 text-zinc-500"
+                                open
+                                    ? "bg-orange-100 text-orange-600"
+                                    : "bg-zinc-100 text-zinc-500"
                             )}
                         >
                             <CalendarDays className="h-4 w-4" />
@@ -711,11 +771,14 @@ function DeadlineFilterPopover({
 }
 
 export default function HomeTaskList() {
+    const router = useRouter();
+
     const [data, setData] = React.useState<HomeTaskListResponse | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [searchInput, setSearchInput] = React.useState("");
     const [searchValue, setSearchValue] = React.useState("");
-    const [selectedSource, setSelectedSource] = React.useState<SourceFilterValue>("all");
+    const [selectedSource, setSelectedSource] =
+        React.useState<SourceFilterValue>("all");
     const [sortBy, setSortBy] = React.useState<SortValue>("deadline");
     const [sortFilterValue, setSortFilterValue] = React.useState("all");
     const [deadlineFilter, setDeadlineFilter] = React.useState<DeadlineFilter>({
@@ -741,7 +804,10 @@ export default function HomeTaskList() {
             try {
                 setIsLoading(true);
 
-                const groupId = selectedSource !== "all" && selectedSource !== "personal" ? selectedSource : undefined;
+                const groupId =
+                    selectedSource !== "all" && selectedSource !== "personal"
+                        ? selectedSource
+                        : undefined;
 
                 const url = buildTaskListUrl({
                     groupId,
@@ -756,9 +822,12 @@ export default function HomeTaskList() {
                     return;
                 }
 
-                const response = await apiFetch<HomeTaskListResponseApiResponse>(url, {
-                    method: "GET"
-                });
+                const response = await apiFetch<HomeTaskListResponseApiResponse>(
+                    url,
+                    {
+                        method: "GET"
+                    }
+                );
 
                 if (!isMounted) return;
 
@@ -767,7 +836,10 @@ export default function HomeTaskList() {
                 if (nextData) {
                     setData(nextData);
                 } else {
-                    console.error("Home task list response format unexpected:", response);
+                    console.error(
+                        "Home task list response format unexpected:",
+                        response
+                    );
                     setData(null);
                 }
             } catch (error) {
@@ -799,19 +871,27 @@ export default function HomeTaskList() {
         let result = [...sourceFilteredItems];
 
         if (sortBy === "priority" && sortFilterValue !== "all") {
-            result = result.filter((item) => getPriorityLabel(item.taskPriority) === sortFilterValue);
+            result = result.filter(
+                (item) => getPriorityLabel(item.taskPriority) === sortFilterValue
+            );
         }
 
         if (sortBy === "severity" && sortFilterValue !== "all") {
-            result = result.filter((item) => getSeverityLabel(item.taskSeverity) === sortFilterValue);
+            result = result.filter(
+                (item) => getSeverityLabel(item.taskSeverity) === sortFilterValue
+            );
         }
 
         if (sortBy === "status" && sortFilterValue !== "all") {
-            result = result.filter((item) => (item.statusName ?? "") === sortFilterValue);
+            result = result.filter(
+                (item) => (item.statusName ?? "") === sortFilterValue
+            );
         }
 
         if (sortBy === "deadline") {
-            result = result.filter((item) => matchDeadlineDate(item.dueDate, deadlineFilter));
+            result = result.filter((item) =>
+                matchDeadlineDate(item.dueDate, deadlineFilter)
+            );
         }
 
         return result;
@@ -845,7 +925,8 @@ export default function HomeTaskList() {
         }
 
         if (page <= 2) return [1, 2, 3];
-        if (page >= totalPages - 1) return [totalPages - 2, totalPages - 1, totalPages];
+        if (page >= totalPages - 1)
+            return [totalPages - 2, totalPages - 1, totalPages];
 
         return [page - 1, page, page + 1];
     }, [page, totalPages]);
@@ -863,23 +944,37 @@ export default function HomeTaskList() {
         setOpenDeadlineFilter(false);
     };
 
-    const showExtraFilter = sortBy === "priority" || sortBy === "severity" || sortBy === "status";
+    const handleTaskClick = (item: HomeTaskListItemResponse) => {
+        const href = buildTaskDetailHref(item);
+        if (href !== "#") {
+            router.push(href);
+        }
+    };
+
+    const showExtraFilter =
+        sortBy === "priority" || sortBy === "severity" || sortBy === "status";
     const showDeadlineFilter = sortBy === "deadline";
 
     const deadlineFilterLabel = [
-        deadlineFilter.startDate && `Từ ${formatFilterDateLabel(deadlineFilter.startDate)}`,
-        deadlineFilter.endDate && `Đến ${formatFilterDateLabel(deadlineFilter.endDate)}`
+        deadlineFilter.startDate &&
+        `Từ ${formatFilterDateLabel(deadlineFilter.startDate)}`,
+        deadlineFilter.endDate &&
+        `Đến ${formatFilterDateLabel(deadlineFilter.endDate)}`
     ]
         .filter(Boolean)
         .join(" • ");
 
-    const hasDeadlineFilter = !!(deadlineFilter.startDate || deadlineFilter.endDate);
+    const hasDeadlineFilter = !!(
+        deadlineFilter.startDate || deadlineFilter.endDate
+    );
 
     return (
-        <div className="bg-white pb-10">
-            <Container>
+        <div className="bg-[radial-gradient(circle_at_top,#f8fafc_0%,#f8fafc_35%,#f3f4f6_100%)]">
+            <Container className="pt-8 pb-8">
                 <div className="rounded-[32px] border border-[#D9E1EC] bg-white p-6 shadow-sm md:p-8">
-                    <h2 className="mb-6 text-2xl font-bold text-[#261E33]">Công việc từ các nhóm</h2>
+                    <h2 className="mb-6 text-2xl font-bold text-[#261E33]">
+                        Công việc từ các nhóm
+                    </h2>
 
                     <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                         <div className="relative w-full xl:max-w-[820px]">
@@ -931,7 +1026,9 @@ export default function HomeTaskList() {
                                 <div className="relative">
                                     <select
                                         value={sortFilterValue}
-                                        onChange={(event) => setSortFilterValue(event.target.value)}
+                                        onChange={(event) =>
+                                            setSortFilterValue(event.target.value)
+                                        }
                                         className="h-14 min-w-[220px] appearance-none rounded-2xl border border-[#D9E1EC] bg-white px-6 pr-12 text-lg text-[#261E33] outline-none"
                                     >
                                         <option value="all">All</option>
@@ -947,9 +1044,15 @@ export default function HomeTaskList() {
                                         {sortBy === "severity" && (
                                             <>
                                                 <option value="Thấp">Thấp</option>
-                                                <option value="Bình thường">Bình thường</option>
-                                                <option value="Quan trọng">Quan trọng</option>
-                                                <option value="Khẩn cấp">Khẩn cấp</option>
+                                                <option value="Bình thường">
+                                                    Bình thường
+                                                </option>
+                                                <option value="Quan trọng">
+                                                    Quan trọng
+                                                </option>
+                                                <option value="Khẩn cấp">
+                                                    Khẩn cấp
+                                                </option>
                                             </>
                                         )}
 
@@ -968,11 +1071,19 @@ export default function HomeTaskList() {
                                 <div className="relative">
                                     <button
                                         type="button"
-                                        onClick={() => setOpenDeadlineFilter((prev) => !prev)}
+                                        onClick={() =>
+                                            setOpenDeadlineFilter((prev) => !prev)
+                                        }
                                         className="flex h-14 min-w-[240px] items-center justify-between rounded-2xl border border-[#D9E1EC] bg-white px-6 text-lg text-[#261E33]"
                                     >
-                                        <span className={cn(!hasDeadlineFilter && "text-[#64748B]")}>
-                                            {hasDeadlineFilter ? deadlineFilterLabel : "Chọn khoảng ngày"}
+                                        <span
+                                            className={cn(
+                                                !hasDeadlineFilter && "text-[#64748B]"
+                                            )}
+                                        >
+                                            {hasDeadlineFilter
+                                                ? deadlineFilterLabel
+                                                : "Chọn khoảng ngày"}
                                         </span>
                                         <CalendarDays className="h-5 w-5 text-[#64748B]" />
                                     </button>
@@ -994,7 +1105,12 @@ export default function HomeTaskList() {
                                 <span>{deadlineFilterLabel}</span>
                                 <button
                                     type="button"
-                                    onClick={() => setDeadlineFilter({ startDate: "", endDate: "" })}
+                                    onClick={() =>
+                                        setDeadlineFilter({
+                                            startDate: "",
+                                            endDate: ""
+                                        })
+                                    }
                                     className="rounded-full p-0.5 hover:bg-zinc-200"
                                 >
                                     <X className="h-4 w-4" />
@@ -1007,12 +1123,24 @@ export default function HomeTaskList() {
                         <table className="min-w-full border-collapse">
                             <thead>
                                 <tr className="border-b border-[#3F3F46]">
-                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">Công việc</th>
-                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">Nguồn</th>
-                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">Độ khẩn cấp</th>
-                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">Độ ưu tiên</th>
-                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">Trạng thái</th>
-                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">Thời hạn đến</th>
+                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">
+                                        Công việc
+                                    </th>
+                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">
+                                        Nguồn
+                                    </th>
+                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">
+                                        Độ khẩn cấp
+                                    </th>
+                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">
+                                        Độ ưu tiên
+                                    </th>
+                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">
+                                        Trạng thái
+                                    </th>
+                                    <th className="px-6 py-5 text-center text-[18px] font-semibold text-[#71829E]">
+                                        Thời hạn đến
+                                    </th>
                                 </tr>
                             </thead>
 
@@ -1025,15 +1153,31 @@ export default function HomeTaskList() {
                                     </tr>
                                 ) : paginatedItems.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-12 text-center text-lg text-[#71829E]">
+                                        <td
+                                            colSpan={6}
+                                            className="px-6 py-12 text-center text-lg text-[#71829E]"
+                                        >
                                             Không có công việc nào
                                         </td>
                                     </tr>
                                 ) : (
                                     paginatedItems.map((item) => (
-                                        <tr key={item.taskId} className="border-b border-[#3F3F46] last:border-b">
+                                        <tr
+                                            key={item.taskId}
+                                            onClick={() => handleTaskClick(item)}
+                                            className="cursor-pointer border-b border-[#3F3F46] transition hover:bg-[#F8FAFC] last:border-b"
+                                        >
                                             <td className="px-6 py-8 text-center text-[20px] font-semibold text-[#261E33]">
-                                                {item.taskTitle || "-"}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleTaskClick(item);
+                                                    }}
+                                                    className="cursor-pointer hover:underline"
+                                                >
+                                                    {item.taskTitle || "-"}
+                                                </button>
                                             </td>
 
                                             <td className="px-6 py-8 text-center text-[18px] font-medium text-[#261E33]">
@@ -1054,7 +1198,9 @@ export default function HomeTaskList() {
 
                                             <td className="px-6 py-8 text-center">
                                                 <div className="flex justify-center">
-                                                    <TaskStatusBadge label={item.statusName} />
+                                                    <TaskStatusBadge
+                                                        label={item.statusName}
+                                                    />
                                                 </div>
                                             </td>
 
@@ -1072,7 +1218,9 @@ export default function HomeTaskList() {
                         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-[#261E33]">
                             <button
                                 type="button"
-                                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                                onClick={() =>
+                                    setPage((prev) => Math.max(prev - 1, 1))
+                                }
                                 disabled={page === 1}
                                 className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[18px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
                             >
@@ -1089,7 +1237,9 @@ export default function HomeTaskList() {
                                     >
                                         1
                                     </button>
-                                    {pageNumbers[0] > 2 && <span className="px-2 text-[24px]">...</span>}
+                                    {pageNumbers[0] > 2 && (
+                                        <span className="px-2 text-[24px]">...</span>
+                                    )}
                                 </>
                             )}
 
@@ -1115,9 +1265,10 @@ export default function HomeTaskList() {
 
                             {pageNumbers[pageNumbers.length - 1] < totalPages && (
                                 <>
-                                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                                        <span className="px-2 text-[24px]">...</span>
-                                    )}
+                                    {pageNumbers[pageNumbers.length - 1] <
+                                        totalPages - 1 && (
+                                            <span className="px-2 text-[24px]">...</span>
+                                        )}
                                     <button
                                         type="button"
                                         onClick={() => setPage(totalPages)}
@@ -1130,7 +1281,9 @@ export default function HomeTaskList() {
 
                             <button
                                 type="button"
-                                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                                onClick={() =>
+                                    setPage((prev) => Math.min(prev + 1, totalPages))
+                                }
                                 disabled={page === totalPages}
                                 className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[18px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
                             >

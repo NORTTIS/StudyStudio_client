@@ -683,6 +683,249 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/statistics/hourly-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HourlyActivityResponseApiResponse"];
+                        "text/json": components["schemas"]["HourlyActivityResponseApiResponse"];
+                        "text/plain": components["schemas"]["HourlyActivityResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/statistics/recent-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    ItemCount?: number;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecentActivityResponseApiResponse"];
+                        "text/json": components["schemas"]["RecentActivityResponseApiResponse"];
+                        "text/plain": components["schemas"]["RecentActivityResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/statistics/report-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    Period?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["ReportStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["ReportStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/statistics/subscription-distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SubscriptionDistributionResponseApiResponse"];
+                        "text/json": components["schemas"]["SubscriptionDistributionResponseApiResponse"];
+                        "text/plain": components["schemas"]["SubscriptionDistributionResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/statistics/top-active-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    StartDate?: string;
+                    TopCount?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TopActiveGroupsResponseApiResponse"];
+                        "text/json": components["schemas"]["TopActiveGroupsResponseApiResponse"];
+                        "text/plain": components["schemas"]["TopActiveGroupsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/statistics/user-distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EndDate?: string;
+                    StartDate?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserDistributionResponseApiResponse"];
+                        "text/json": components["schemas"]["UserDistributionResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserDistributionResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/subscription-plans": {
         parameters: {
             query?: never;
@@ -5055,6 +5298,28 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        HourlyActivityDataPoint: {
+            dayName?: string | null;
+            /** Format: int32 */
+            dayOfWeek?: number;
+            /** Format: int32 */
+            hour?: number;
+            /** Format: int32 */
+            userCount?: number;
+        };
+        HourlyActivityResponse: {
+            data?: components["schemas"]["HourlyActivityDataPoint"][] | null;
+            /** Format: date-time */
+            endDate?: string;
+            /** Format: date-time */
+            startDate?: string;
+        };
+        HourlyActivityResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["HourlyActivityResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         LoginRequests: {
             /** Format: email */
             email: string;
@@ -5215,6 +5480,30 @@ export interface components {
             transactionCount?: number;
             trend?: string | null;
         };
+        RecentActivityItem: {
+            /** Format: int32 */
+            count?: number;
+            /** Format: int32 */
+            id?: number;
+            message?: string | null;
+            /** Format: date-time */
+            timestamp?: string;
+            title?: string | null;
+            type?: string | null;
+        };
+        RecentActivityResponse: {
+            activities?: components["schemas"]["RecentActivityItem"][] | null;
+            /** Format: date-time */
+            endDate?: string;
+            /** Format: date-time */
+            startDate?: string;
+        };
+        RecentActivityResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RecentActivityResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         RefreshTokenRequest: {
             refreshToken: string;
         };
@@ -5333,6 +5622,35 @@ export interface components {
          * @enum {integer}
          */
         ReportStatus: 0 | 1 | 2 | 3;
+        ReportStatusDataPoint: {
+            /** Format: date-time */
+            date?: string;
+            /** Format: int32 */
+            pending?: number;
+            period?: string | null;
+            /** Format: int32 */
+            processing?: number;
+            /** Format: int32 */
+            rejected?: number;
+            /** Format: int32 */
+            resolved?: number;
+        };
+        ReportStatusResponse: {
+            data?: components["schemas"]["ReportStatusDataPoint"][] | null;
+            /** Format: date-time */
+            endDate?: string;
+            periodType?: string | null;
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: int32 */
+            totalReports?: number;
+        };
+        ReportStatusResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["ReportStatusResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         ReportSummaryResponse: {
             /** Format: int32 */
             totalInProgress?: number;
@@ -5536,6 +5854,30 @@ export interface components {
         StudioResponseListApiResponse: {
             code?: string | null;
             data?: components["schemas"]["StudioResponse"][] | null;
+            message?: string | null;
+            status?: string | null;
+        };
+        SubscriptionDistributionItem: {
+            /** Format: int32 */
+            count?: number;
+            /** Format: double */
+            percentage?: number;
+            planType?: string | null;
+            /** Format: double */
+            totalRevenue?: number;
+        };
+        SubscriptionDistributionResponse: {
+            distribution?: components["schemas"]["SubscriptionDistributionItem"][] | null;
+            /** Format: date-time */
+            endDate?: string;
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: int32 */
+            totalSubscriptions?: number;
+        };
+        SubscriptionDistributionResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["SubscriptionDistributionResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -5801,6 +6143,34 @@ export interface components {
             position: number;
             statusName: string;
         };
+        TopActiveGroupItem: {
+            /** Format: int32 */
+            completedTasks?: number;
+            /** Format: double */
+            completionRate?: number;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: date-time */
+            lastActivityAt?: string;
+            /** Format: int32 */
+            memberCount?: number;
+            /** Format: int32 */
+            totalTasks?: number;
+        };
+        TopActiveGroupsResponse: {
+            /** Format: date-time */
+            endDate?: string;
+            groups?: components["schemas"]["TopActiveGroupItem"][] | null;
+            /** Format: date-time */
+            startDate?: string;
+        };
+        TopActiveGroupsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TopActiveGroupsResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         TopPlanItem: {
             /** Format: int32 */
             activeSubscriptions?: number;
@@ -6039,6 +6409,28 @@ export interface components {
         UserDetailItemApiResponse: {
             code?: string | null;
             data?: components["schemas"]["UserDetailItem"];
+            message?: string | null;
+            status?: string | null;
+        };
+        UserDistributionItem: {
+            /** Format: int32 */
+            count?: number;
+            /** Format: double */
+            percentage?: number;
+            status?: string | null;
+        };
+        UserDistributionResponse: {
+            distribution?: components["schemas"]["UserDistributionItem"][] | null;
+            /** Format: date-time */
+            endDate?: string;
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: int32 */
+            totalUsers?: number;
+        };
+        UserDistributionResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserDistributionResponse"];
             message?: string | null;
             status?: string | null;
         };
