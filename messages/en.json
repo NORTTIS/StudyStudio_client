@@ -4,6 +4,34 @@
         "checkingAuth": "Checking authentication...",
         "aiQATab": "AI Q&A"
     },
+    "Announcements": {
+        "title": "Announcements",
+        "subtitle": "Latest updates from Study Studio",
+        "publicTab": "Public Announcements",
+        "personalTab": "Personal Notifications",
+        "noPublicAnnouncements": "No public announcements yet",
+        "noPersonalAnnouncements": "No personal notifications yet",
+        "markAsRead": "Mark as read",
+        "delete": "Delete",
+        "confirmDelete": "Are you sure you want to delete this notification?",
+        "new": "New",
+        "info": "Info",
+        "warning": "Warning",
+        "critical": "Critical",
+        "other": "Other",
+        "total": "Total",
+        "public": "Public",
+        "personal": "Personal",
+        "searchPlaceholder": "Search announcements content...",
+        "typeAll": "Type: All",
+        "sortNewest": "Sort: Newest",
+        "sortOldest": "Sort: Oldest",
+        "markAsReadSuccess": "Marked as read successfully",
+        "deleteSuccess": "Announcement deleted successfully",
+        "confirmed": "Confirmed",
+        "systemNews": "System News",
+        "newsroom": "Study Studio Newsroom"
+    },
     "GuestNavbar": {
         "personal": "Personal Studio",
         "group": "Group Studio",
@@ -301,6 +329,18 @@
             "comingSoon": "Notification features coming soon"
         },
         "sectionLabel": "Account Settings"
+    },
+    "Sidebar": {
+        "home": "Home",
+        "groups": "Groups",
+        "master": "Master",
+        "announcements": "Announcements",
+        "dashboard": "Dashboard",
+        "users": "Users",
+        "adminGroups": "Groups",
+        "subscriptions": "Subscriptions",
+        "reports": "Reports",
+        "news": "News"
     },
     "Header": {
         "searchPlaceholder": "Search projects, tasks...",

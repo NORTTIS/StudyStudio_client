@@ -136,16 +136,37 @@ export async function apiPost<T = unknown>(
     });
 }
 
-/**
- * Helper for GET requests
- * @param skipAuth - Set to true for public endpoints (verify-email) to skip Authorization header
- */
 export async function apiGet<T = unknown>(url: string, locale?: string, skipAuth?: boolean): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, {
         method: "GET",
         locale,
         skipAuth
     });
+}
+
+/**
+ * Helper for downloading files
+ */
+export async function apiDownload(url: string, locale = "vi"): Promise<Blob> {
+    const fullUrl = url.startsWith("http") ? url : buildUrl(url);
+    const headers = new Headers();
+    headers.set("Accept-Language", locale);
+
+    const token = getAccessToken();
+    if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+    }
+
+    const response = await fetch(fullUrl, {
+        method: "GET",
+        headers
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to download file");
+    }
+
+    return await response.blob();
 }
 /**
  * Helper for PUT requests

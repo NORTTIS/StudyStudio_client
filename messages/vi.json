@@ -4,6 +4,34 @@
         "checkingAuth": "Đang kiểm tra xác thực...",
         "aiQATab": "AI Q&A"
     },
+    "Announcements": {
+        "title": "Thông báo",
+        "subtitle": "Cập nhật thông tin mới nhất từ Study Studio",
+        "publicTab": "Thông báo chung",
+        "personalTab": "Thông báo cá nhân",
+        "noPublicAnnouncements": "Chưa có thông báo chung nào",
+        "noPersonalAnnouncements": "Chưa có thông báo cá nhân nào",
+        "markAsRead": "Đánh dấu đã đọc",
+        "delete": "Xóa",
+        "confirmDelete": "Bạn có chắc chắn muốn xóa thông báo này?",
+        "new": "Mới",
+        "info": "Thông tin",
+        "warning": "Cảnh báo",
+        "critical": "Quan trọng",
+        "other": "Khác",
+        "total": "Tổng số",
+        "public": "Công khai",
+        "personal": "Cá nhân",
+        "searchPlaceholder": "Tìm kiếm nội dung thông báo...",
+        "typeAll": "Loại: Tất cả",
+        "sortNewest": "Sắp xếp: Mới nhất",
+        "sortOldest": "Sắp xếp: Cũ nhất",
+        "markAsReadSuccess": "Đã đánh dấu là đã đọc",
+        "deleteSuccess": "Đã xóa thông báo thành công",
+        "confirmed": "Đã xác nhận",
+        "systemNews": "Thông báo hệ thống",
+        "newsroom": "Study Studio Newsroom"
+    },
     "GuestNavbar": {
         "personal": "Không gian cá nhân",
         "group": "Không gian nhóm",
@@ -312,6 +340,18 @@
             "comingSoon": "Tính năng thông báo sẽ sớm có"
         },
         "sectionLabel": "Cài đặt tài khoản"
+    },
+    "Sidebar": {
+        "home": "Trang chủ",
+        "groups": "Nhóm",
+        "master": "Master",
+        "announcements": "Thông báo",
+        "dashboard": "Bảng điều khiển",
+        "users": "Người dùng",
+        "adminGroups": "Nhóm",
+        "subscriptions": "Gói đăng ký",
+        "reports": "Báo cáo",
+        "news": "Tin tức"
     },
     "Header": {
         "searchPlaceholder": "Tìm kiếm dự án, công việc...",

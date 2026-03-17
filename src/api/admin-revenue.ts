@@ -1,13 +1,17 @@
-import { apiGet, type ApiResponse } from "./api-client";
+import { type ApiResponse, apiDownload, apiGet } from "./api-client";
 
 // Revenue Overview
 export interface RevenueOverview {
     totalRevenue: number;
     monthlyRevenue: number;
     yearlyRevenue: number;
-    revenueGrowth: number;
+    totalTransactions: number;
+    successfulTransactions: number;
+    failedTransactions: number;
+    successRate: number;
     activeSubscriptions: number;
-    averageRevenuePerUser: number;
+    arpu: number;
+    mrr: number;
 }
 
 export async function getRevenueOverview(locale = "vi"): Promise<ApiResponse<RevenueOverview>> {
@@ -24,14 +28,20 @@ export interface RevenueByPeriod {
 }
 
 export async function getRevenueByPeriod(
-    startDate: string,
-    endDate: string,
+    period?: "day" | "week" | "month" | "year",
+    startDate?: string,
+    endDate?: string,
     locale = "vi"
 ): Promise<ApiResponse<RevenueByPeriod[]>> {
-    return apiGet<RevenueByPeriod[]>(
-        `/admin/revenue/by-period?startDate=${startDate}&endDate=${endDate}`,
-        locale
-    );
+    let url = "/admin/revenue/by-period";
+    const params = new URLSearchParams();
+    if (period) params.append("Period", period);
+    if (startDate) params.append("StartDate", startDate);
+    if (endDate) params.append("EndDate", endDate);
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
+    return apiGet<RevenueByPeriod[]>(url, locale);
 }
 
 // Revenue by Plan
@@ -43,22 +53,43 @@ export interface RevenueByPlan {
     percentage: number;
 }
 
-export async function getRevenueByPlan(locale = "vi"): Promise<ApiResponse<RevenueByPlan[]>> {
-    return apiGet<RevenueByPlan[]>("/admin/revenue/by-plan", locale);
+export async function getRevenueByPlan(
+    startDate?: string,
+    endDate?: string,
+    locale = "vi"
+): Promise<ApiResponse<RevenueByPlan[]>> {
+    let url = "/admin/revenue/by-plan";
+    const params = new URLSearchParams();
+    if (startDate) params.append("StartDate", startDate);
+    if (endDate) params.append("EndDate", endDate);
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
+    return apiGet<RevenueByPlan[]>(url, locale);
 }
 
 // Revenue Trends
-export interface RevenueTrend {
-    date: string;
-    revenue: number;
-    subscriptions: number;
+export interface RevenueTrendsData {
+    currentPeriod: {
+        period: string;
+        startDate: string;
+        endDate: string;
+        totalRevenue: number;
+        transactionCount: number;
+        newCustomers: number;
+        churnedCustomers: number;
+        averageOrderValue: number;
+    };
+    previousPeriod: any | null;
+    growthRate: number;
+    trendDirection: string;
 }
 
 export async function getRevenueTrends(
     period: "week" | "month" | "year",
     locale = "vi"
-): Promise<ApiResponse<RevenueTrend[]>> {
-    return apiGet<RevenueTrend[]>(`/admin/revenue/trends?period=${period}`, locale);
+): Promise<ApiResponse<RevenueTrendsData>> {
+    return apiGet<RevenueTrendsData>(`/admin/revenue/trends?period=${period}`, locale);
 }
 
 // Top Plans
@@ -70,8 +101,20 @@ export interface TopPlan {
     growth: number;
 }
 
-export async function getTopPlans(limit = 5, locale = "vi"): Promise<ApiResponse<TopPlan[]>> {
-    return apiGet<TopPlan[]>(`/admin/revenue/top-plans?limit=${limit}`, locale);
+export async function getTopPlans(
+    limit = 5,
+    startDate?: string,
+    endDate?: string,
+    locale = "vi"
+): Promise<ApiResponse<TopPlan[]>> {
+    let url = `/admin/revenue/top-plans?limit=${limit}`;
+    const params = new URLSearchParams();
+    if (startDate) params.append("StartDate", startDate);
+    if (endDate) params.append("EndDate", endDate);
+    if (params.toString()) {
+        url += `&${params.toString()}`;
+    }
+    return apiGet<TopPlan[]>(url, locale);
 }
 
 // Revenue Transactions
@@ -113,12 +156,19 @@ export async function getMRR(locale = "vi"): Promise<ApiResponse<MRRData>> {
 
 // Export Revenue Data
 export async function exportRevenueData(
+    reportType: string,
     startDate: string,
     endDate: string,
+    period: string,
+    includeCharts: boolean,
     locale = "vi"
-): Promise<ApiResponse<Blob>> {
-    return apiGet<Blob>(
-        `/admin/revenue/export?startDate=${startDate}&endDate=${endDate}`,
-        locale
-    );
+): Promise<Blob> {
+    const params = new URLSearchParams();
+    if (reportType) params.append("ReportType", reportType);
+    if (startDate) params.append("StartDate", startDate);
+    if (endDate) params.append("EndDate", endDate);
+    if (period) params.append("Period", period);
+    params.append("IncludeCharts", String(includeCharts));
+
+    return apiDownload(`/admin/revenue/export?${params.toString()}`, locale);
 }
