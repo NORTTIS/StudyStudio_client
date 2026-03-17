@@ -62,10 +62,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-            | {
-                  role?: string | null;
-              }[]
-            | null;
+        | {
+            role?: string | null;
+        }[]
+        | null;
     } | null;
 };
 
@@ -180,7 +180,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch {}
+                } catch { }
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
@@ -219,7 +219,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch {}
+                    } catch { }
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -316,7 +316,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
@@ -359,7 +359,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -380,8 +380,8 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 className="w-full bg-white">
-                <div>
-                    <div className="flex items-start justify-between gap-6">
+                <div className="mb-6 flex flex-col justify-between">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                             <AnimatePresence mode="wait">
                                 {studioName ? (
@@ -398,32 +398,42 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                 ) : null}
                             </AnimatePresence>
 
-                            <div className="flex items-center gap-2">
-                                <motion.h1
-                                    layout
-                                    transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                    className="mt-1 truncate text-3xl font-semibold text-[#261E33]">
-                                    {groupName}
-                                </motion.h1>
+                            <div className="mt-1 flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-red-500">
+                                    <Users className="h-5 w-5 text-white" />
+                                </div>
 
-                                <motion.div layout transition={{ type: "spring", stiffness: 280, damping: 26 }}>
-                                    <RolePill role={userRole} />
-                                </motion.div>
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <motion.h1
+                                            layout
+                                            transition={{ type: "spring", stiffness: 280, damping: 26 }}
+                                            className="truncate font-semibold text-[#261E33] text-2xl lg:text-3xl">
+                                            {groupName}
+                                        </motion.h1>
+
+                                        <motion.div
+                                            layout
+                                            transition={{ type: "spring", stiffness: 280, damping: 26 }}>
+                                            <RolePill role={userRole} />
+                                        </motion.div>
+                                    </div>
+
+                                    <AnimatePresence mode="wait">
+                                        {groupDesc ? (
+                                            <motion.p
+                                                key={groupDesc}
+                                                initial={{ opacity: 0, y: 6 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -6 }}
+                                                transition={{ duration: 0.22 }}
+                                                className="mt-1 text-sm text-gray-500 lg:text-base">
+                                                {groupDesc}
+                                            </motion.p>
+                                        ) : null}
+                                    </AnimatePresence>
+                                </div>
                             </div>
-
-                            <AnimatePresence mode="wait">
-                                {groupDesc ? (
-                                    <motion.p
-                                        key={groupDesc}
-                                        initial={{ opacity: 0, y: 6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -6 }}
-                                        transition={{ duration: 0.22 }}
-                                        className="mt-2 text-lg text-[#6F6B99]">
-                                        {groupDesc}
-                                    </motion.p>
-                                ) : null}
-                            </AnimatePresence>
 
                             <AnimatePresence>
                                 {error ? (
@@ -432,24 +442,21 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         animate={{ opacity: 1, height: "auto", y: 0 }}
                                         exit={{ opacity: 0, height: 0, y: -6 }}
                                         transition={{ duration: 0.22 }}
-                                        className="mt-3 overflow-hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                        className="mt-4 overflow-hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                                         {error}
                                     </motion.p>
                                 ) : null}
                             </AnimatePresence>
                         </div>
 
-                        <motion.div
-                            layout
-                            transition={{ type: "spring", stiffness: 260, damping: 24 }}
-                            className="flex items-center gap-3 text-[#6F6B99]">
+                        <div className="flex shrink-0 items-center gap-3 self-start">
                             <motion.div
                                 layout
                                 whileHover={{ y: -1 }}
                                 transition={{ duration: 0.18 }}
-                                className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 shadow-sm">
+                                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm text-[#6F6B99] shadow-sm">
                                 <Users className="h-4 w-4" />
-                                <span className="text-sm">
+                                <span>
                                     <motion.span
                                         key={memberCount}
                                         initial={{ opacity: 0.6, scale: 0.95 }}
@@ -469,12 +476,12 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                     whileHover={{ scale: 1.02, y: -1 }}
                                     whileTap={{ scale: 0.98 }}
                                     transition={{ duration: 0.16 }}
-                                    className="inline-flex h-11 items-center gap-2 rounded-full bg-orange-600 px-5 text-sm font-semibold text-white shadow-sm">
+                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#FF5F3D] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#ff4620]">
                                     <UserPlus className="h-4 w-4" />
                                     Thêm thành viên
                                 </motion.button>
                             ) : null}
-                        </motion.div>
+                        </div>
                     </div>
                 </div>
 
@@ -483,54 +490,52 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05, duration: 0.3 }}
                     className="mt-6">
-                    <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto p-2 scroll-smooth">
-                            {visibleTabs.map((tab) => {
-                                const Icon = tab.icon;
-                                const href = groupId ? tab.href(locale, groupId) : "#";
-                                const target = stripLocale(href.split("?")[0] || href);
+                    <div className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-xl border border-orange-100/50 bg-white/80 p-1.5 shadow-lg shadow-orange-900/5 backdrop-blur-xl">
+                        {visibleTabs.map((tab) => {
+                            const Icon = tab.icon;
+                            const href = groupId ? tab.href(locale, groupId) : "#";
+                            const target = stripLocale(href.split("?")[0] || href);
 
-                                const active =
-                                    tab.key === "board"
-                                        ? curPath === target
-                                        : curPath === target || curPath.startsWith(target + "/");
+                            const active =
+                                tab.key === "board"
+                                    ? curPath === target
+                                    : curPath === target || curPath.startsWith(target + "/");
 
-                                return (
-                                    <Link key={tab.key} href={href} className="relative shrink-0">
-                                        <motion.div
-                                            whileHover={{ y: -1 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            transition={{ duration: 0.15 }}
-                                            className={twMerge(
-                                                "group relative inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-200",
-                                                active
-                                                    ? "text-white"
-                                                    : "text-[#6F6B99] hover:bg-zinc-50 hover:text-[#261E33]"
-                                            )}>
-                                            {active ? (
-                                                <motion.div
-                                                    layoutId="activeGroupTab"
-                                                    className="absolute inset-0 rounded-xl bg-orange-600 shadow-sm"
-                                                    transition={{
-                                                        type: "spring",
-                                                        stiffness: 380,
-                                                        damping: 30
-                                                    }}
-                                                />
-                                            ) : null}
-
-                                            <Icon
-                                                className={twMerge(
-                                                    "relative z-10 h-4 w-4 transition-colors duration-200",
-                                                    active ? "text-white" : "text-[#6F6B99] group-hover:text-[#261E33]"
-                                                )}
+                            return (
+                                <Link key={tab.key} href={href} className="relative shrink-0">
+                                    <motion.div
+                                        whileHover={{ y: -1 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        transition={{ duration: 0.15 }}
+                                        className={twMerge(
+                                            "group relative inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-300",
+                                            active
+                                                ? "text-white shadow-lg shadow-orange-500/30"
+                                                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                        )}>
+                                        {active ? (
+                                            <motion.div
+                                                layoutId="activeGroupTab"
+                                                className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500 to-red-600"
+                                                transition={{
+                                                    type: "spring",
+                                                    stiffness: 380,
+                                                    damping: 30
+                                                }}
                                             />
-                                            <span className="relative z-10">{tab.label}</span>
-                                        </motion.div>
-                                    </Link>
-                                );
-                            })}
-                        </div>
+                                        ) : null}
+
+                                        <Icon
+                                            className={twMerge(
+                                                "relative z-10 h-4 w-4 transition-colors duration-200",
+                                                active ? "text-white" : "text-slate-600 group-hover:text-orange-600"
+                                            )}
+                                        />
+                                        <span className="relative z-10">{tab.label}</span>
+                                    </motion.div>
+                                </Link>
+                            );
+                        })}
                     </div>
                 </motion.div>
 

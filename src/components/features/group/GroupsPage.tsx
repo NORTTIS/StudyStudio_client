@@ -6,8 +6,6 @@ import { Container } from "@/components/common";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { GroupCard } from "./GroupCard";
 import { addFavourite, fetchGroupsPageData, removeFavourite } from "./group.api";
@@ -58,7 +56,6 @@ function uniqueByIdKeepFirst(list: Group[]) {
     return out;
 }
 
-// ─── Icon Badge ────────────────────────────────────────────────────────────────
 function IconBadge({
     variant,
     children,
@@ -75,15 +72,15 @@ function IconBadge({
         yellow: "from-amber-300 via-yellow-400 to-orange-400",
         blue: "from-sky-400 via-blue-500 to-indigo-500",
         purple: "from-violet-400 via-purple-500 to-fuchsia-500",
-        slate: "from-slate-300 via-slate-400 to-slate-500"
+        slate: "from-slate-400 via-slate-500 to-slate-600"
     };
 
     const shadows: Record<typeof variant, string> = {
-        orange: "shadow-orange-500/30",
-        yellow: "shadow-amber-400/30",
-        blue: "shadow-blue-500/30",
-        purple: "shadow-purple-500/30",
-        slate: "shadow-slate-400/20"
+        orange: "shadow-orange-500/25",
+        yellow: "shadow-amber-400/25",
+        blue: "shadow-blue-500/25",
+        purple: "shadow-purple-500/25",
+        slate: "shadow-slate-500/20"
     };
 
     const sizes = { sm: "h-8 w-8", md: "h-10 w-10", lg: "h-12 w-12" };
@@ -97,36 +94,34 @@ function IconBadge({
                 sizes[size],
                 className
             )}>
-            {/* Glass shine overlay */}
-            <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-white/40 via-white/10 to-transparent" />
-            {/* Inner border shimmer */}
-            <div className="pointer-events-none absolute inset-px rounded-[10px] border border-white/30" />
+            <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-white/35 via-white/10 to-transparent" />
+            <div className="pointer-events-none absolute inset-px rounded-[10px] border border-white/25" />
             <div className="relative z-10">{children}</div>
         </div>
     );
 }
 
-// ─── Count Pill ────────────────────────────────────────────────────────────────
 function CountPill({ count }: { count: number }) {
     return (
-        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100 px-2 text-[11px] font-bold tracking-wide text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-[#E8DDD0] bg-gradient-to-b from-[#FFF9F2] to-[#F6EFE7] px-2 text-[11px] font-bold tracking-wide text-[#7C6652] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
             {count}
         </span>
     );
 }
 
-// ─── Section Skeleton ──────────────────────────────────────────────────────────
 function SectionSkeleton() {
     return (
         <div className="space-y-3 p-1">
             {[...Array(2)].map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-xl bg-gradient-to-r from-slate-100 to-slate-50" />
+                <div
+                    key={i}
+                    className="h-20 animate-pulse rounded-xl bg-gradient-to-r from-[#F4EEE7] via-[#FBF7F2] to-[#F4EEE7]"
+                />
             ))}
         </div>
     );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────────────────────
 export function GroupsPage() {
     const [view, setView] = useState<"grid" | "list">("grid");
     const [data, setData] = useState<GroupsPageData>(emptyData);
@@ -225,74 +220,70 @@ export function GroupsPage() {
 
     return (
         <Container>
-            {/* Page background */}
             <div className="relative min-h-screen space-y-5 py-2">
-                {/* ── Hero Header Card ─────────────────────────────────── */}
-                <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white via-orange-50/30 to-violet-50/20 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_32px_-8px_rgba(0,0,0,0.08)] ring-1 ring-slate-900/[0.06]">
-                    {/* Ambient orbs */}
-                    <div className="pointer-events-none absolute -left-32 -top-32 h-72 w-72 rounded-full bg-orange-400/[0.08] blur-[60px]" />
-                    <div className="pointer-events-none absolute -bottom-20 right-0 h-64 w-64 rounded-full bg-violet-500/[0.08] blur-[60px]" />
-                    <div className="pointer-events-none absolute left-1/2 top-0 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-orange-300/40 to-transparent" />
+                <Card className="relative overflow-hidden border border-[#E7DDD2] bg-gradient-to-br from-[#FBF8F4] via-[#F8F3EC] to-[#F6EFEA] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_10px_30px_-12px_rgba(15,23,42,0.10)] ring-1 ring-[#EDE3D8]">
+                    <div className="pointer-events-none absolute -left-32 -top-32 h-72 w-72 rounded-full bg-orange-300/[0.10] blur-[60px]" />
+                    <div className="pointer-events-none absolute -bottom-20 right-0 h-64 w-64 rounded-full bg-amber-300/[0.08] blur-[60px]" />
+                    <div className="pointer-events-none absolute left-1/2 top-0 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
 
                     <CardHeader className="relative pb-3 pt-6">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            {/* Title block */}
                             <div className="flex items-center gap-4">
                                 <IconBadge variant="orange" size="lg" className="h-13 w-13 rounded-2xl">
                                     <Users className="h-6 w-6 text-white drop-shadow-sm" />
                                 </IconBadge>
                                 <div>
                                     <div className="flex items-center gap-2.5">
-                                        <h1 className="text-[1.625rem] font-bold tracking-tight text-slate-900">
+                                        <h1 className="text-[1.625rem] font-bold tracking-tight text-[#2B241F]">
                                             Nhóm
                                         </h1>
-                                        <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-orange-600">
+                                        <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-orange-700">
                                             {currentGroupsCount}/{maxGroups}
                                         </span>
                                     </div>
-                                    <p className="mt-0.5 text-sm text-slate-500">Quản lý các nhóm học tập của bạn</p>
+                                    <p className="mt-0.5 text-sm text-[#7C6A58]">Quản lý các nhóm học tập của bạn</p>
                                 </div>
                             </div>
 
-                            {/* Controls */}
-                            <div className="flex flex-wrap items-center gap-2.5">
-                                {/* View toggle */}
-                                <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex w-fit items-center gap-2 rounded-xl border border-[#EADFD3] bg-white/75 p-1.5 shadow-md shadow-orange-900/5 backdrop-blur-xl">
                                     <button
+                                        type="button"
                                         onClick={() => setView("grid")}
                                         className={cn(
-                                            "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150",
+                                            "relative inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300",
                                             view === "grid"
-                                                ? "bg-slate-900 text-white shadow-sm"
-                                                : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                                ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25"
+                                                : "text-[#6B5D50] hover:bg-[#FFF3E7] hover:text-orange-700"
                                         )}>
-                                        <LayoutGrid className="h-[15px] w-[15px]" />
+                                        <LayoutGrid className="h-4 w-4" />
+                                        <span>Board</span>
                                     </button>
+
                                     <button
+                                        type="button"
                                         onClick={() => setView("list")}
                                         className={cn(
-                                            "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150",
+                                            "relative inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-300",
                                             view === "list"
-                                                ? "bg-slate-900 text-white shadow-sm"
-                                                : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                                ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25"
+                                                : "text-[#6B5D50] hover:bg-[#FFF3E7] hover:text-orange-700"
                                         )}>
-                                        <List className="h-[15px] w-[15px]" />
+                                        <List className="h-4 w-4" />
+                                        <span>List</span>
                                     </button>
                                 </div>
 
-                                {/* Create button */}
                                 <Button
+                                    type="button"
                                     disabled={limitReached}
                                     onClick={() => setOpenCreate(true)}
                                     className={cn(
-                                        "relative h-9 gap-1.5 overflow-hidden rounded-xl px-4 text-sm font-semibold shadow-lg transition-all duration-200",
+                                        "inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-300",
                                         !limitReached
-                                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-orange-500/25 hover:shadow-orange-500/40 hover:brightness-105 active:scale-[0.98]"
-                                            : "cursor-not-allowed bg-slate-100 text-slate-400 shadow-none"
+                                            ? "bg-[#FF5F3D] text-white shadow-lg shadow-orange-500/20 hover:bg-[#ff4620] hover:shadow-orange-500/30 active:scale-[0.98]"
+                                            : "cursor-not-allowed bg-[#EAE3DB] text-[#A39487] shadow-none"
                                     )}>
-                                    {!limitReached && (
-                                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/15 to-transparent" />
-                                    )}
                                     <Plus className="h-4 w-4" />
                                     <span>Nhóm mới</span>
                                 </Button>
@@ -304,13 +295,13 @@ export function GroupsPage() {
                         <div className="space-y-2.5">
                             <UsageBar current={usage.current} max={usage.max} />
                             {loading && (
-                                <div className="flex items-center gap-2 text-sm text-slate-400">
-                                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-orange-400" />
+                                <div className="flex items-center gap-2 text-sm text-[#8A7868]">
+                                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E4D9CD] border-t-orange-400" />
                                     Đang tải...
                                 </div>
                             )}
                             {!loading && error && (
-                                <p className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 ring-1 ring-red-100">
+                                <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 ring-1 ring-red-100">
                                     {error}
                                 </p>
                             )}
@@ -390,7 +381,6 @@ export function GroupsPage() {
     );
 }
 
-// ─── Groups Section ────────────────────────────────────────────────────────────
 function GroupsSection({
     title,
     count,
@@ -422,28 +412,27 @@ function GroupsSection({
     const visibleItems = expanded || !canToggle ? items : items.slice(0, PREVIEW_COUNT);
 
     const accentColors: Record<typeof iconVariant, string> = {
-        orange: "from-orange-500/[0.04]",
-        yellow: "from-amber-400/[0.05]",
-        blue: "from-blue-500/[0.04]",
-        purple: "from-purple-500/[0.04]",
-        slate: "from-slate-400/[0.03]"
+        orange: "from-[#FFF4EA] via-[#FFF8F2] to-transparent",
+        yellow: "from-[#FFF8E7] via-[#FFFBF2] to-transparent",
+        blue: "from-[#EEF5FF] via-[#F7FAFF] to-transparent",
+        purple: "from-[#F6F0FF] via-[#FBF8FF] to-transparent",
+        slate: "from-[#F3F1EE] via-[#FBFAF8] to-transparent"
     };
 
     const headerAccents: Record<typeof iconVariant, string> = {
-        orange: "border-orange-100 bg-orange-50/60",
-        yellow: "border-amber-100 bg-amber-50/60",
-        blue: "border-blue-100 bg-blue-50/60",
-        purple: "border-purple-100 bg-purple-50/60",
-        slate: "border-slate-100 bg-slate-50/60"
+        orange: "border-orange-100 bg-[#FFF3E8]",
+        yellow: "border-amber-100 bg-[#FFF7E8]",
+        blue: "border-blue-100 bg-[#EEF5FF]",
+        purple: "border-purple-100 bg-[#F4EDFF]",
+        slate: "border-[#E7DED4] bg-[#F6F2ED]"
     };
 
     return (
         <section
             className={cn(
-                "group/section overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_-4px_rgba(0,0,0,0.06)] transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_-8px_rgba(0,0,0,0.10)]",
+                "group/section overflow-hidden rounded-2xl border border-[#E7DED4] bg-gradient-to-br from-[#FFFDFC] via-[#FAF7F3] to-[#F7F2EC] shadow-[0_1px_4px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(15,23,42,0.10)] transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.05),0_12px_28px_-14px_rgba(15,23,42,0.12)]",
                 className
             )}>
-            {/* Section header */}
             <div className={cn("border-b px-5 py-3.5 transition-colors", headerAccents[iconVariant])}>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
@@ -452,7 +441,7 @@ function GroupsSection({
                         </IconBadge>
 
                         <div className="min-w-0 flex items-center gap-2.5">
-                            <h2 className="truncate text-sm font-semibold text-slate-800">{title}</h2>
+                            <h2 className="truncate text-sm font-semibold text-[#2B241F]">{title}</h2>
                             <CountPill count={count} />
                         </div>
                     </div>
@@ -461,7 +450,7 @@ function GroupsSection({
                         <button
                             type="button"
                             onClick={onToggle}
-                            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-slate-500 transition-all duration-150 hover:bg-white/80 hover:text-slate-700">
+                            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-[#7A6B5D] transition-all duration-150 hover:bg-white/80 hover:text-[#4E4238]">
                             <span>{expanded ? "Thu gọn" : "Xem tất cả"}</span>
                             <ChevronDown
                                 className={cn(
@@ -474,16 +463,15 @@ function GroupsSection({
                 </div>
             </div>
 
-            {/* Content */}
-            <div className={cn("bg-gradient-to-b p-5 to-transparent", accentColors[iconVariant])}>
+            <div className={cn("bg-gradient-to-b p-5", accentColors[iconVariant])}>
                 {loading ? (
                     <SectionSkeleton />
                 ) : visibleItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-8 text-center">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
-                            <Icon className="h-4 w-4 text-slate-400" />
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#E7DDD1] bg-white/55 px-6 py-8 text-center">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F3ECE4]">
+                            <Icon className="h-4 w-4 text-[#9A8C7D]" />
                         </div>
-                        <p className="text-sm text-slate-400">{emptyText}</p>
+                        <p className="text-sm text-[#8D7B6A]">{emptyText}</p>
                     </div>
                 ) : (
                     <>
@@ -508,7 +496,7 @@ function GroupsSection({
                         {canToggle && !expanded && items.length > PREVIEW_COUNT && (
                             <button
                                 onClick={onToggle}
-                                className="mt-3.5 w-full rounded-xl border border-dashed border-slate-200 py-2.5 text-[13px] font-medium text-slate-400 transition-all hover:border-slate-300 hover:bg-slate-50/60 hover:text-slate-600">
+                                className="mt-3.5 w-full rounded-xl border border-dashed border-[#E2D8CC] bg-white/45 py-2.5 text-[13px] font-medium text-[#8B7B6D] transition-all hover:border-[#D4C7B7] hover:bg-[#FFF7EF] hover:text-[#5F5145]">
                                 + {items.length - PREVIEW_COUNT} nhóm khác
                             </button>
                         )}
