@@ -88,7 +88,7 @@ export function DashboardSidebar() {
     const renderHeader = () => {
         if (collapsed) {
             return (
-                <div className="flex h-20 items-center justify-center border-[#E5E5E5] border-b px-4">
+                <div className="flex h-20 items-center justify-center border-b border-[#E5E5E5] px-4">
                     <button
                         type="button"
                         onClick={() => setCollapsed(false)}
@@ -107,7 +107,7 @@ export function DashboardSidebar() {
         }
 
         return (
-            <div className="flex h-20 items-center justify-between border-[#E5E5E5] border-b px-5">
+            <div className="flex h-20 items-center justify-between border-b border-[#E5E5E5] px-5">
                 <Link
                     href={homeHref}
                     className="flex min-w-0 items-center overflow-hidden transition-transform duration-300 ease-out hover:scale-[1.01]">
@@ -117,7 +117,7 @@ export function DashboardSidebar() {
                 <button
                     type="button"
                     onClick={() => setCollapsed(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg text-[#6F6B99] transition-all duration-300 ease-out hover:scale-105 hover:bg-[#FFF3E8] hover:text-[#F97316] active:scale-95"
+                    className="group flex h-10 w-10 items-center justify-center rounded-lg text-[#6F6B99] transition-all duration-300 ease-out hover:scale-105 hover:bg-[#FFF3E8] hover:text-[#F97316] active:scale-95"
                     aria-label="Collapse sidebar">
                     <ChevronLeft className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-0.5" />
                 </button>
@@ -129,15 +129,17 @@ export function DashboardSidebar() {
         return (
             <aside
                 className={twMerge(
-                    "hidden h-screen shrink-0 overflow-hidden border-[#E5E5E5] border-r bg-white transition-[width] duration-300 ease-in-out lg:block",
+                    "hidden h-screen shrink-0 overflow-hidden border-r border-[#E5E5E5] bg-[#F8F8F8] transition-[width] duration-300 ease-in-out lg:block",
                     collapsed ? "w-24" : "w-72"
                 )}>
-                {renderHeader()}
+                <div className="flex h-full flex-col rounded-r-[28px] border-r border-orange-100/60 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+                    {renderHeader()}
 
-                <div className="flex items-center justify-center p-8">
-                    <div className="flex items-center gap-2 text-[#6F6B99] text-base">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-                        <span className="transition-all duration-200">{collapsed ? "..." : "Loading..."}</span>
+                    <div className="flex flex-1 items-center justify-center p-8">
+                        <div className="flex items-center gap-2 text-base text-[#6F6B99]">
+                            <span className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
+                            <span className="transition-all duration-200">{collapsed ? "..." : "Loading..."}</span>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -147,74 +149,84 @@ export function DashboardSidebar() {
     return (
         <aside
             className={twMerge(
-                "hidden h-screen shrink-0 overflow-hidden border-[#E5E5E5] border-r bg-white transition-[width] duration-300 ease-in-out lg:block",
+                "hidden h-screen shrink-0 overflow-hidden border-r border-[#E5E5E5] bg-[#F8F8F8] transition-[width] duration-300 ease-in-out lg:block",
                 collapsed ? "w-24" : "w-72"
             )}>
-            {renderHeader()}
+            <div className="flex h-full flex-col rounded-r-[28px] border-r border-orange-100/60 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+                {renderHeader()}
 
-            <nav className="p-4">
-                <div className="space-y-2">
-                    {navigation.map((item) => {
-                        const active = isActivePath(item.href);
-                        const fullHref = `/${locale}${item.href}`;
+                <nav className="flex-1 px-4 py-5">
+                    <div className="space-y-2">
+                        {navigation.map((item) => {
+                            const active = isActivePath(item.href);
+                            const fullHref = `/${locale}${item.href}`;
 
-                        return (
-                            <Link
-                                key={item.name}
-                                href={fullHref}
-                                title={collapsed ? item.name : undefined}
-                                onClick={() => {
-                                    if (collapsed) setCollapsed(false);
-                                }}
-                                className={twMerge(
-                                    "group relative flex overflow-hidden rounded-xl transition-all duration-300 ease-out",
-                                    collapsed ? "justify-center px-3 py-3.5" : "gap-4 px-4 py-3",
-                                    active
-                                        ? "bg-orange-100 text-orange-600 shadow-[inset_0_0_0_1px_rgba(249,115,22,0.08)]"
-                                        : "text-[#6F6B99] hover:bg-[#FFF3E8] hover:text-[#F97316] hover:shadow-sm"
-                                )}>
-                                <span
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={fullHref}
+                                    title={collapsed ? item.name : undefined}
+                                    onClick={() => {
+                                        if (collapsed) setCollapsed(false);
+                                    }}
                                     className={twMerge(
-                                        "absolute top-1/2 left-0 w-1 -translate-y-1/2 rounded-r-full bg-orange-500 transition-all duration-300",
+                                        "group relative flex overflow-hidden rounded-2xl transition-all duration-300 ease-out",
+                                        collapsed ? "justify-center px-3 py-3.5" : "items-center gap-4 px-4 py-3.5",
                                         active
-                                            ? "h-8 opacity-100"
-                                            : "h-0 opacity-0 group-hover:h-6 group-hover:opacity-60"
-                                    )}
-                                />
-
-                                <item.icon
-                                    className={twMerge(
-                                        "relative z-10 shrink-0 transition-all duration-300 ease-out",
-                                        collapsed ? "h-6 w-6" : "h-5 w-5",
-                                        active
-                                            ? "text-orange-600"
-                                            : "text-[#6F6B99] group-hover:scale-110 group-hover:text-[#F97316]"
-                                    )}
-                                />
-
-                                <span
-                                    className={twMerge(
-                                        "relative z-10 overflow-hidden whitespace-nowrap font-medium text-[16px] transition-all duration-300 ease-out",
-                                        collapsed ? "w-0 translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/20"
+                                            : "text-[#6F6B99] hover:bg-orange-50 hover:text-orange-600 hover:shadow-sm"
                                     )}>
-                                    {item.name}
-                                </span>
-
-                                <span
-                                    className={twMerge(
-                                        "mt-auto mb-auto ml-auto h-2 w-2 shrink-0 rounded-full transition-all duration-300 ease-out",
-                                        collapsed
-                                            ? "scale-0 opacity-0"
-                                            : active
-                                              ? "scale-100 bg-orange-500 opacity-100"
-                                              : "scale-75 bg-transparent opacity-0 group-hover:scale-100 group-hover:bg-orange-300 group-hover:opacity-100"
+                                    {!collapsed && (
+                                        <span
+                                            className={twMerge(
+                                                "absolute inset-y-2 left-1 w-1 rounded-full transition-all duration-300",
+                                                active ? "bg-white/80 opacity-100" : "bg-orange-300 opacity-0 group-hover:opacity-100"
+                                            )}
+                                        />
                                     )}
-                                />
-                            </Link>
-                        );
-                    })}
-                </div>
-            </nav>
+
+                                    <div
+                                        className={twMerge(
+                                            "relative z-10 flex shrink-0 items-center justify-center rounded-xl transition-all duration-300 ease-out",
+                                            collapsed ? "h-11 w-11" : "h-10 w-10",
+                                            active
+                                                ? "bg-white/15 text-white"
+                                                : "bg-[#FFF7ED] text-[#F97316] group-hover:bg-white"
+                                        )}>
+                                        <item.icon
+                                            className={twMerge(
+                                                "transition-all duration-300 ease-out",
+                                                collapsed ? "h-6 w-6" : "h-5 w-5",
+                                                active ? "text-white" : "group-hover:scale-110"
+                                            )}
+                                        />
+                                    </div>
+
+                                    <span
+                                        className={twMerge(
+                                            "relative z-10 overflow-hidden whitespace-nowrap font-medium text-[15px] transition-all duration-300 ease-out",
+                                            active ? "text-white" : "",
+                                            collapsed ? "w-0 translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+                                        )}>
+                                        {item.name}
+                                    </span>
+
+                                    <span
+                                        className={twMerge(
+                                            "relative z-10 mt-auto mb-auto ml-auto shrink-0 rounded-full transition-all duration-300 ease-out",
+                                            collapsed
+                                                ? "h-0 w-0 opacity-0"
+                                                : active
+                                                    ? "h-2.5 w-2.5 bg-white opacity-100"
+                                                    : "h-2 w-2 scale-75 bg-orange-300 opacity-0 group-hover:scale-100 group-hover:opacity-100"
+                                        )}
+                                    />
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
+            </div>
         </aside>
     );
 }

@@ -588,8 +588,8 @@ function applyTaskDrop(args: {
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-          ? overRaw.replace(END_PREFIX, "")
-          : overRaw;
+            ? overRaw.replace(END_PREFIX, "")
+            : overRaw;
 
     const fromCol = findColumnOfTask(board, columns, activeTaskId);
     if (!fromCol) return null;
@@ -681,8 +681,8 @@ function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?:
                 done
                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                     : overdue
-                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
@@ -1223,7 +1223,7 @@ function AddColumnInline({
     };
 
     const submit = async () => {
-        const trimmed = title.trim().slice(0, 25);
+        const trimmed = title.trim().slice(0, 30);
 
         if (!trimmed) {
             setError("Vui lòng nhập tên trạng thái.");
@@ -1271,8 +1271,8 @@ function AddColumnInline({
             <input
                 ref={inputRef}
                 value={title}
-                maxLength={25}
-                onChange={(e) => setTitle(e.target.value.slice(0, 25))}
+                maxLength={30}
+                onChange={(e) => setTitle(e.target.value.slice(0, 30))}
                 onKeyDown={onKeyDown}
                 disabled={isSubmitting}
                 placeholder="Nhập tên trạng thái..."
@@ -1283,7 +1283,7 @@ function AddColumnInline({
                 )}
             />
 
-            <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/25</div>
+            <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/30</div>
 
             {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
 
@@ -1437,9 +1437,9 @@ function ColumnView({
                                     <input
                                         ref={colInputRef}
                                         value={columnDraft}
-                                        maxLength={25}
+                                        maxLength={30}
                                         onChange={(e) => {
-                                            const value = e.target.value.slice(0, 25);
+                                            const value = e.target.value.slice(0, 30);
                                             onColumnDraftChange(value);
                                         }}
                                         onPointerDownCapture={(e) => e.stopPropagation()}
@@ -1467,7 +1467,7 @@ function ColumnView({
                                         style={{ maxWidth: 220 }}
                                     />
                                     <div className="flex justify-end text-[11px] text-zinc-500">
-                                        {columnDraft.length}/25
+                                        {columnDraft.length}/30
                                     </div>
 
                                     {columnError ? (
@@ -2136,8 +2136,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-              ? overId.replace(END_PREFIX, "")
-              : overId;
+                ? overId.replace(END_PREFIX, "")
+                : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
