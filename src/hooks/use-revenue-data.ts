@@ -7,14 +7,14 @@ import {
     getRevenueTransactions,
     getRevenueTrends,
     getTopPlans,
-    getMRRBreakdown,
-    type RevenueByPeriodData,
-    type RevenueByPlanData,
-    type RevenueTransactionsData,
+    getMRR,
+    type RevenueByPeriod,
+    type RevenueByPlan,
+    type RevenueTransaction,
     type RevenueTrendsData,
-    type TopPlansData,
-    type MRRBreakdownData,
-    type RevenueOverviewData
+    type TopPlan,
+    type MRRData,
+    type RevenueOverview
 } from "@/api/admin-revenue";
 
 export interface RevenueFilters {
@@ -27,24 +27,24 @@ export interface RevenueFilters {
 }
 
 export interface UseRevenueDataOptions {
-    initialOverview?: RevenueOverviewData | null;
-    initialByPeriod?: RevenueByPeriodData | null;
-    initialByPlan?: RevenueByPlanData | null;
+    initialOverview?: RevenueOverview | null;
+    initialByPeriod?: RevenueByPeriod[] | null;
+    initialByPlan?: RevenueByPlan[] | null;
     initialTrends?: RevenueTrendsData | null;
-    initialTopPlans?: TopPlansData | null;
-    initialTransactions?: RevenueTransactionsData | null;
-    initialMRR?: MRRBreakdownData | null;
+    initialTopPlans?: TopPlan[] | null;
+    initialTransactions?: { transactions: RevenueTransaction[]; total: number } | null;
+    initialMRR?: MRRData | null;
 }
 
 export interface UseRevenueDataReturn {
     // Data
-    overview: RevenueOverviewData | null;
-    byPeriod: RevenueByPeriodData | null;
-    byPlan: RevenueByPlanData | null;
+    overview: RevenueOverview | null;
+    byPeriod: RevenueByPeriod[] | null;
+    byPlan: RevenueByPlan[] | null;
     trends: RevenueTrendsData | null;
-    topPlans: TopPlansData | null;
-    transactions: RevenueTransactionsData | null;
-    mrr: MRRBreakdownData | null;
+    topPlans: TopPlan[] | null;
+    transactions: { transactions: RevenueTransaction[]; total: number } | null;
+    mrr: MRRData | null;
 
     // Filter state
     filters: RevenueFilters;
@@ -64,9 +64,9 @@ export interface UseRevenueDataReturn {
     applyFilters: (newFilters: Partial<RevenueFilters>) => Promise<void>;
     fetchByPeriod: () => Promise<void>;
     fetchByPlan: () => Promise<void>;
-    fetchTransactions: (pageNumber?: number) => Promise<void>;
+    fetchTransactions: (params?: { pageNumber?: number; pageSize?: number }) => Promise<void>;
     fetchTrends: () => Promise<void>;
-    fetchTopPlans: () => Promise<void>;
+    fetchTopPlans: (params?: { limit?: number }) => Promise<void>;
     fetchMRR: (year?: number) => Promise<void>;
 }
 
@@ -87,13 +87,15 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const [filters, setFilters] = useState<RevenueFilters>(getDefaultFilters);
 
     // Data state
-    const [overview, setOverview] = useState<RevenueOverviewData | null>(options.initialOverview ?? null);
-    const [byPeriod, setByPeriod] = useState<RevenueByPeriodData | null>(options.initialByPeriod ?? null);
-    const [byPlan, setByPlan] = useState<RevenueByPlanData | null>(options.initialByPlan ?? null);
+    const [overview, setOverview] = useState<RevenueOverview | null>(options.initialOverview ?? null);
+    const [byPeriod, setByPeriod] = useState<RevenueByPeriod[] | null>(options.initialByPeriod ?? null);
+    const [byPlan, setByPlan] = useState<RevenueByPlan[] | null>(options.initialByPlan ?? null);
     const [trends, setTrends] = useState<RevenueTrendsData | null>(options.initialTrends ?? null);
-    const [topPlans, setTopPlans] = useState<TopPlansData | null>(options.initialTopPlans ?? null);
-    const [transactions, setTransactions] = useState<RevenueTransactionsData | null>(options.initialTransactions ?? null);
-    const [mrr, setMrr] = useState<MRRBreakdownData | null>(options.initialMRR ?? null);
+    const [topPlans, setTopPlans] = useState<TopPlan[] | null>(options.initialTopPlans ?? null);
+    const [transactions, setTransactions] = useState<{ transactions: RevenueTransaction[]; total: number } | null>(
+        options.initialTransactions ?? null
+    );
+    const [mrr, setMrr] = useState<MRRData | null>(options.initialMRR ?? null);
 
     // Loading state
     const [loading, setLoading] = useState({
@@ -109,12 +111,11 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const fetchByPeriod = useCallback(async () => {
         setLoading((prev) => ({ ...prev, byPeriod: true }));
         try {
-            const response = await getRevenueByPeriod({
-                startDate: filters.startDate,
-                endDate: filters.endDate,
-                period: filters.period,
-                planId: filters.planId
-            });
+            const response = await getRevenueByPeriod(
+                filters.period as "day" | "week" | "month" | "year",
+                filters.startDate,
+                filters.endDate
+            );
             if (response.data) {
                 setByPeriod(response.data);
             }
@@ -128,10 +129,10 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const fetchByPlan = useCallback(async () => {
         setLoading((prev) => ({ ...prev, byPlan: true }));
         try {
-            const response = await getRevenueByPlan({
-                startDate: filters.startDate,
-                endDate: filters.endDate
-            });
+            const response = await getRevenueByPlan(
+                filters.startDate,
+                filters.endDate
+            );
             if (response.data) {
                 setByPlan(response.data);
             }
@@ -142,18 +143,13 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
         }
     }, [filters.startDate, filters.endDate]);
 
-    const fetchTransactions = useCallback(async (pageNumber: number = 1) => {
+    const fetchTransactions = useCallback(async (params: { pageNumber?: number; pageSize?: number } = {}) => {
         setLoading((prev) => ({ ...prev, transactions: true }));
         try {
-            const response = await getRevenueTransactions({
-                pageNumber,
-                pageSize: 10,
-                startDate: filters.startDate,
-                endDate: filters.endDate,
-                planId: filters.planId,
-                paymentStatus: filters.paymentStatus,
-                searchTerm: filters.searchTerm
-            });
+            const response = await getRevenueTransactions(
+                params.pageNumber || 1,
+                params.pageSize || 10
+            );
             if (response.data) {
                 setTransactions(response.data);
             }
@@ -167,12 +163,7 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const fetchTrends = useCallback(async () => {
         setLoading((prev) => ({ ...prev, trends: true }));
         try {
-            const response = await getRevenueTrends({
-                period: "last30days",
-                startDate: filters.startDate,
-                endDate: filters.endDate,
-                comparison: true
-            });
+            const response = await getRevenueTrends("month");
             if (response.data) {
                 setTrends(response.data);
             }
@@ -183,15 +174,14 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
         }
     }, [filters.startDate, filters.endDate]);
 
-    const fetchTopPlans = useCallback(async (limit: number = 5) => {
+    const fetchTopPlans = useCallback(async (params: { limit?: number } = {}) => {
         setLoading((prev) => ({ ...prev, topPlans: true }));
         try {
-            const response = await getTopPlans({
-                limit,
-                startDate: filters.startDate,
-                endDate: filters.endDate,
-                sortBy: "revenue"
-            });
+            const response = await getTopPlans(
+                params.limit || 5,
+                filters.startDate,
+                filters.endDate
+            );
             if (response.data) {
                 setTopPlans(response.data);
             }
@@ -205,7 +195,7 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const fetchMRR = useCallback(async (year?: number) => {
         setLoading((prev) => ({ ...prev, mrr: true }));
         try {
-            const response = await getMRRBreakdown(year);
+            const response = await getMRR();
             if (response.data) {
                 setMrr(response.data);
             }
@@ -233,37 +223,19 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
 
         try {
             const [periodRes, planRes, txnRes, trendsRes, topPlansRes, mrrRes] = await Promise.all([
-                getRevenueByPeriod({
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    period: updatedFilters.period,
-                    planId: updatedFilters.planId
-                }),
-                getRevenueByPlan({
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate
-                }),
-                getRevenueTransactions({
-                    pageNumber: 1,
-                    pageSize: 10,
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    planId: updatedFilters.planId,
-                    paymentStatus: updatedFilters.paymentStatus
-                }),
-                getRevenueTrends({
-                    period: "last30days",
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    comparison: true
-                }),
-                getTopPlans({
-                    limit: 5,
-                    startDate: updatedFilters.startDate,
-                    endDate: updatedFilters.endDate,
-                    sortBy: "revenue"
-                }),
-                getMRRBreakdown()
+                getRevenueByPeriod(
+                    updatedFilters.period as "day" | "week" | "month" | "year",
+                    updatedFilters.startDate,
+                    updatedFilters.endDate
+                ),
+                getRevenueByPlan(
+                    updatedFilters.startDate,
+                    updatedFilters.endDate
+                ),
+                getRevenueTransactions(1, 10),
+                getRevenueTrends("month"),
+                getTopPlans(5, updatedFilters.startDate, updatedFilters.endDate),
+                getMRR()
             ]);
 
             if (periodRes.data) setByPeriod(periodRes.data);

@@ -10,8 +10,7 @@ interface RevenuePageProps {
 }
 
 export default async function AdminRevenuePage({ params: _params }: RevenuePageProps) {
-    // Note: locale can be used for i18n if needed in the future
-    // const { locale } = await params;
+    const { locale } = await _params;
 
     // Get current date for default range
     const now = new Date();
@@ -87,10 +86,10 @@ export default async function AdminRevenuePage({ params: _params }: RevenuePageP
         byPeriod: byPeriodResult.data || null,
         byPlan: byPlanResult.data || null,
         trends: trendsResult.data || null,
-        topPlans: topPlansResult.data || null,
+        topPlans: (topPlansResult.data as any)?.topPlans || topPlansResult.data || null,
         transactions: transactionsResult.data || null,
         mrr: mrrResult.data || null
     };
 
-    return <RevenueDashboardPage data={revenueData} />;
+    return <RevenueDashboardPage data={revenueData as any} />;
 }

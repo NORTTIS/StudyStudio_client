@@ -52,6 +52,18 @@ export function NotificationDropdown() {
     const unreadCount = notifications.filter((n) => !n.read).length;
     const hasUnread = unreadCount > 0;
 
+    // Helper function to detect corrupted text
+    const isCorruptedText = (text: string): boolean => {
+        // Check for common corruption patterns
+        const corruptionPatterns = [
+            /[^\x00-\x7F\u00C0-\u017F\u1EA0-\u1EF9]/g, // Non-Latin characters that might be corrupted
+            /\?\?\?/g, // Question marks indicating encoding issues
+            /[A-Z]\d+[a-z]/g // Mixed case with numbers (common in corruption)
+        ];
+
+        return corruptionPatterns.some((pattern) => pattern.test(text));
+    };
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -106,18 +118,6 @@ export function NotificationDropdown() {
             setIsLoading(false);
         }
     }, [locale, isCorruptedText]);
-
-    // Helper function to detect corrupted text
-    const isCorruptedText = (text: string): boolean => {
-        // Check for common corruption patterns
-        const corruptionPatterns = [
-            /[^\x00-\x7F\u00C0-\u017F\u1EA0-\u1EF9]/g, // Non-Latin characters that might be corrupted
-            /\?\?\?/g, // Question marks indicating encoding issues
-            /[A-Z]\d+[a-z]/g // Mixed case with numbers (common in corruption)
-        ];
-
-        return corruptionPatterns.some((pattern) => pattern.test(text));
-    };
 
     useEffect(() => {
         loadNotifications();

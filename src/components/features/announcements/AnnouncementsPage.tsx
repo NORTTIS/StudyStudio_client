@@ -95,7 +95,7 @@ export function AnnouncementsPage() {
             const actualId = isUserAnn ? (localData as UserAnnouncement).announcementId : id;
             const result = await getAnnouncementById(actualId, locale);
             if (result.status === "success" && result.data) {
-                setSelectedDetail((prev) => ({ ...prev, ...result.data }));
+                setSelectedDetail(result.data);
             }
         } catch (error) {
             console.error("Failed to fetch detail:", error);
@@ -398,7 +398,7 @@ export function AnnouncementsPage() {
                     styles={{
                         header: { borderBottom: "none" },
                         footer: { borderTop: "none", padding: "0 40px 40px 40px" },
-                        content: { borderRadius: "24px", padding: 0 }
+                        body: { borderRadius: "24px", padding: 0 }
                     }}>
                     {isDetailLoading ? (
                         <div className="flex justify-center p-20">
@@ -414,8 +414,8 @@ export function AnnouncementsPage() {
                                             selectedDetail.type === "0" || selectedDetail.type === "info"
                                                 ? t("Announcements.info")
                                                 : selectedDetail.type === "1" || selectedDetail.type === "warning"
-                                                  ? t("Announcements.warning")
-                                                  : t("Announcements.critical")
+                                                    ? t("Announcements.warning")
+                                                    : t("Announcements.critical")
                                         }
                                         className={`${getTypeColorClass(selectedDetail.type)} rounded-full px-4 py-1 font-bold text-[10px] uppercase tracking-widest`}
                                     />
