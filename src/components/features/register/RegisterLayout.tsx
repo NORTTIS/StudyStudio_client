@@ -20,7 +20,6 @@ export function RegisterLayout() {
                     <Link href={"/"} className="mb-6 flex items-center justify-center">
                         <Logo className="mb-6" />
                     </Link>
-
                 </div>
 
                 <div className="absolute bottom-50 space-y-3 px-10 text-center">

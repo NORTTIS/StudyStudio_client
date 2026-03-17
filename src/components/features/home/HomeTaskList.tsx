@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-    CalendarDays,
-    ChevronLeft,
-    ChevronRight,
-    ChevronsUpDown,
-    Search,
-    X
-} from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, ChevronsUpDown, Search, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
 import { useRouter } from "next/navigation";
@@ -19,10 +12,8 @@ import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 
 type HomeTaskListResponse = components["schemas"]["HomeTaskListResponse"];
-type HomeTaskListResponseApiResponse =
-    components["schemas"]["HomeTaskListResponseApiResponse"];
-type HomeTaskListItemResponse =
-    components["schemas"]["HomeTaskListItemResponse"];
+type HomeTaskListResponseApiResponse = components["schemas"]["HomeTaskListResponseApiResponse"];
+type HomeTaskListItemResponse = components["schemas"]["HomeTaskListItemResponse"];
 type UserGroupDto = components["schemas"]["UserGroupDto"];
 
 const PAGE_SIZE = 20;
@@ -99,9 +90,7 @@ function formatDateDisplay(value?: string) {
 
     const today = startOfDay(new Date());
     const target = startOfDay(date);
-    const diffDays = Math.round(
-        (target.getTime() - today.getTime()) / 86400000
-    );
+    const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
 
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Tomorrow";
@@ -124,10 +113,7 @@ function formatFilterDateLabel(value?: string) {
     }).format(date);
 }
 
-function matchDeadlineDate(
-    raw?: string | null,
-    filter?: DeadlineFilter | null
-) {
+function matchDeadlineDate(raw?: string | null, filter?: DeadlineFilter | null) {
     if (!filter) return true;
     const { startDate, endDate } = filter;
 
@@ -154,17 +140,12 @@ function buildTaskListUrl(params: {
     search?: string;
     sortBy?: string;
 }) {
-    const rawBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        "";
+    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
     const base = rawBase.replace(/\/+$/, "");
 
     if (!base) return "";
 
-    const endpoint = /\/api$/i.test(base)
-        ? `${base}/Home/TaskList`
-        : `${base}/api/Home/TaskList`;
+    const endpoint = /\/api$/i.test(base) ? `${base}/Home/TaskList` : `${base}/api/Home/TaskList`;
 
     const searchParams = new URLSearchParams();
     searchParams.set("page", String(params.page));
@@ -181,9 +162,9 @@ function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
     const source = payload as
         | HomeTaskListResponseApiResponse
         | {
-            status?: string;
-            data?: HomeTaskListResponseApiResponse | HomeTaskListResponse | null;
-        }
+              status?: string;
+              data?: HomeTaskListResponseApiResponse | HomeTaskListResponse | null;
+          }
         | null
         | undefined;
 
@@ -208,12 +189,7 @@ function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
         return (firstLayer as HomeTaskListResponseApiResponse).data ?? null;
     }
 
-    if (
-        source &&
-        typeof source === "object" &&
-        "data" in source &&
-        (source as HomeTaskListResponseApiResponse).data
-    ) {
+    if (source && typeof source === "object" && "data" in source && (source as HomeTaskListResponseApiResponse).data) {
         return (source as HomeTaskListResponseApiResponse).data ?? null;
     }
 
@@ -271,9 +247,7 @@ function formatDueDate(value?: string | null) {
     const year = date.getFullYear();
 
     if (year !== currentYear) {
-        return `${year}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
-            date.getDate()
-        ).padStart(2, "0")}`;
+        return `${year}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
     }
 
     return new Intl.DateTimeFormat("en-US", {
@@ -320,27 +294,16 @@ function TableSkeleton() {
     return (
         <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, index) => (
-                <div
-                    key={index}
-                    className="h-20 animate-pulse rounded-xl border border-gray-200 bg-white"
-                />
+                <div key={index} className="h-20 animate-pulse rounded-xl border border-gray-200 bg-white" />
             ))}
         </div>
     );
 }
 
-function TrelloDatePicker({
-    label,
-    value,
-    onChange,
-    min,
-    max
-}: TrelloDatePickerProps) {
+function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
-    const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(
-        null
-    );
+    const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
 
     const rootRef = React.useRef<HTMLDivElement | null>(null);
     const triggerRef = React.useRef<HTMLButtonElement | null>(null);
@@ -349,10 +312,7 @@ function TrelloDatePicker({
     const minDate = React.useMemo(() => parseDateString(min), [min]);
     const maxDate = React.useMemo(() => parseDateString(max), [max]);
 
-    const initialMonth = React.useMemo(
-        () => selectedDate ?? minDate ?? new Date(),
-        [selectedDate, minDate]
-    );
+    const initialMonth = React.useMemo(() => selectedDate ?? minDate ?? new Date(), [selectedDate, minDate]);
     const [month, setMonth] = React.useState<Date>(initialMonth);
 
     React.useEffect(() => setMounted(true), []);
@@ -377,9 +337,7 @@ function TrelloDatePicker({
         const spaceAbove = rect.top;
         const shouldOpenUp = spaceBelow < popupHeight && spaceAbove > spaceBelow;
 
-        let top = shouldOpenUp
-            ? rect.top - popupHeight - gap
-            : rect.bottom + gap;
+        let top = shouldOpenUp ? rect.top - popupHeight - gap : rect.bottom + gap;
         let left = rect.left;
 
         if (left + popupWidth > window.innerWidth - viewportPadding) {
@@ -388,10 +346,7 @@ function TrelloDatePicker({
         if (left < viewportPadding) left = viewportPadding;
         if (top < viewportPadding) top = viewportPadding;
         if (top + popupHeight > window.innerHeight - viewportPadding) {
-            top = Math.max(
-                viewportPadding,
-                window.innerHeight - popupHeight - viewportPadding
-            );
+            top = Math.max(viewportPadding, window.innerHeight - popupHeight - viewportPadding);
         }
 
         setPopupPosition({ top, left, width: popupWidth });
@@ -437,15 +392,9 @@ function TrelloDatePicker({
 
     const yearOptions = React.useMemo(() => {
         const currentYear = new Date().getFullYear();
-        const startYear = Math.min(
-            minDate?.getFullYear() ?? currentYear - 5,
-            currentYear - 5
-        );
+        const startYear = Math.min(minDate?.getFullYear() ?? currentYear - 5, currentYear - 5);
         const endYear = currentYear + 10;
-        return Array.from(
-            { length: endYear - startYear + 1 },
-            (_, i) => startYear + i
-        );
+        return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     }, [minDate]);
 
     const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -486,167 +435,155 @@ function TrelloDatePicker({
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                <div
-                    ref={rootRef}
-                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                    style={{
-                        top: popupPosition.top,
-                        left: popupPosition.left,
-                        width: popupPosition.width
-                    }}
-                >
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                value={month.getMonth()}
-                                onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
+                  <div
+                      ref={rootRef}
+                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                      style={{
+                          top: popupPosition.top,
+                          left: popupPosition.left,
+                          width: popupPosition.width
+                      }}>
+                      <div className="mb-4 flex items-center gap-3">
+                          <div className="relative flex-1">
+                              <select
+                                  value={month.getMonth()}
+                                  onChange={handleMonthChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {monthOptions.map((item) => (
+                                      <option key={item.value} value={item.value}>
+                                          {item.label}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
 
-                        <div className="relative w-[140px]">
-                            <select
-                                value={month.getFullYear()}
-                                onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400"
-                            >
-                                {yearOptions.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
-                    </div>
+                          <div className="relative w-[140px]">
+                              <select
+                                  value={month.getFullYear()}
+                                  onChange={handleYearChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {yearOptions.map((year) => (
+                                      <option key={year} value={year}>
+                                          {year}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
+                      </div>
 
-                    <div className="rounded-[20px] border border-zinc-200 p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={goPrevMonth}
-                                disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
+                      <div className="rounded-[20px] border border-zinc-200 p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                              <button
+                                  type="button"
+                                  onClick={goPrevMonth}
+                                  disabled={isPrevDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronLeft className="h-5 w-5" />
+                              </button>
 
-                            <div className="text-[18px] font-bold text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label}{" "}
-                                {month.getFullYear()}
-                            </div>
+                              <div className="text-[18px] font-bold text-zinc-900">
+                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                              </div>
 
-                            <button
-                                type="button"
-                                onClick={goNextMonth}
-                                disabled={isNextDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                              <button
+                                  type="button"
+                                  onClick={goNextMonth}
+                                  disabled={isNextDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronRight className="h-5 w-5" />
+                              </button>
+                          </div>
 
-                        <DayPicker
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={selectedDate}
-                            onSelect={pickDate}
-                            disabled={
-                                maxDate && minDate
-                                    ? { before: minDate, after: maxDate }
-                                    : maxDate
+                          <DayPicker
+                              mode="single"
+                              month={month}
+                              onMonthChange={setMonth}
+                              selected={selectedDate}
+                              onSelect={pickDate}
+                              disabled={
+                                  maxDate && minDate
+                                      ? { before: minDate, after: maxDate }
+                                      : maxDate
                                         ? { after: maxDate }
                                         : minDate
-                                            ? { before: minDate }
-                                            : undefined
-                            }
-                            showOutsideDays
-                            className="w-full"
-                            styles={{
-                                day: { outline: "none", boxShadow: "none" },
-                                button: { outline: "none", boxShadow: "none" }
-                            }}
-                            classNames={{
-                                months: "flex w-full flex-col",
-                                month: "w-full space-y-3",
-                                month_caption: "hidden",
-                                caption: "hidden",
-                                caption_label: "hidden",
-                                nav: "hidden",
-                                table: "w-full border-collapse",
-                                month_grid: "w-full border-collapse",
-                                tbody: "w-full",
-                                weekdays: "flex w-full justify-between",
-                                weekday:
-                                    "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                weeks: "w-full",
-                                week: "mt-2 flex w-full justify-between",
-                                day: "h-10 w-10 p-0 text-center",
-                                cell: "h-10 w-10 p-0 text-center",
-                                day_button:
-                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
-                                selected: "!bg-orange-500 !text-white rounded-xl",
-                                day_selected:
-                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
-                                today: "text-orange-600 font-bold",
-                                day_today: "text-orange-600 font-bold",
-                                outside: "opacity-30",
-                                day_outside: "opacity-30",
-                                disabled: "opacity-30",
-                                day_disabled: "opacity-30 cursor-not-allowed",
-                                hidden: "invisible",
-                                day_hidden: "invisible"
-                            }}
-                        />
-                    </div>
+                                          ? { before: minDate }
+                                          : undefined
+                              }
+                              showOutsideDays
+                              className="w-full"
+                              styles={{
+                                  day: { outline: "none", boxShadow: "none" },
+                                  button: { outline: "none", boxShadow: "none" }
+                              }}
+                              classNames={{
+                                  months: "flex w-full flex-col",
+                                  month: "w-full space-y-3",
+                                  month_caption: "hidden",
+                                  caption: "hidden",
+                                  caption_label: "hidden",
+                                  nav: "hidden",
+                                  table: "w-full border-collapse",
+                                  month_grid: "w-full border-collapse",
+                                  tbody: "w-full",
+                                  weekdays: "flex w-full justify-between",
+                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                  weeks: "w-full",
+                                  week: "mt-2 flex w-full justify-between",
+                                  day: "h-10 w-10 p-0 text-center",
+                                  cell: "h-10 w-10 p-0 text-center",
+                                  day_button:
+                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
+                                  selected: "!bg-orange-500 !text-white rounded-xl",
+                                  day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
+                                  today: "text-orange-600 font-bold",
+                                  day_today: "text-orange-600 font-bold",
+                                  outside: "opacity-30",
+                                  day_outside: "opacity-30",
+                                  disabled: "opacity-30",
+                                  day_disabled: "opacity-30 cursor-not-allowed",
+                                  hidden: "invisible",
+                                  day_hidden: "invisible"
+                              }}
+                          />
+                      </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                            Today
-                        </button>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                              type="button"
+                              onClick={() => pickDate(new Date())}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                              Today
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                            Tomorrow
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 1))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                              Tomorrow
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50"
-                        >
-                            Next week
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 7))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                              Next week
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                        >
-                            No date
-                        </button>
-                    </div>
-                </div>,
-                document.body
-            )
+                          <button
+                              type="button"
+                              onClick={() => {
+                                  onChange("");
+                                  setOpen(false);
+                              }}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
+                              No date
+                          </button>
+                      </div>
+                  </div>,
+                  document.body
+              )
             : null;
 
     return (
@@ -663,26 +600,18 @@ function TrelloDatePicker({
                         open
                             ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
                             : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
                                 "grid h-7 w-7 shrink-0 place-items-center rounded-md",
-                                open
-                                    ? "bg-orange-100 text-orange-600"
-                                    : "bg-zinc-100 text-zinc-500"
-                            )}
-                        >
+                                open ? "bg-orange-100 text-orange-600" : "bg-zinc-100 text-zinc-500"
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
                         <span
-                            className={cn(
-                                "truncate text-left",
-                                value ? "font-medium text-zinc-900" : "text-zinc-400"
-                            )}
-                        >
+                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -694,13 +623,7 @@ function TrelloDatePicker({
     );
 }
 
-function DeadlineRangePicker({
-    value,
-    onChange
-}: {
-    value: DeadlineFilter;
-    onChange: (next: DeadlineFilter) => void;
-}) {
+function DeadlineRangePicker({ value, onChange }: { value: DeadlineFilter; onChange: (next: DeadlineFilter) => void }) {
     return (
         <div className="grid min-w-[360px] grid-cols-1 gap-4 rounded-2xl border border-zinc-200 bg-white p-4">
             <TrelloDatePicker
@@ -720,8 +643,7 @@ function DeadlineRangePicker({
                 <button
                     type="button"
                     onClick={() => onChange({ startDate: "", endDate: "" })}
-                    className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
-                >
+                    className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">
                     Xóa chọn
                 </button>
             </div>
@@ -761,10 +683,7 @@ function DeadlineFilterPopover({
     if (!open) return null;
 
     return (
-        <div
-            className="absolute top-[calc(100%+12px)] right-0 z-30"
-            onPointerDown={(e) => e.stopPropagation()}
-        >
+        <div className="absolute top-[calc(100%+12px)] right-0 z-30" onPointerDown={(e) => e.stopPropagation()}>
             <DeadlineRangePicker value={value} onChange={onChange} />
         </div>
     );
@@ -777,8 +696,7 @@ export default function HomeTaskList() {
     const [isLoading, setIsLoading] = React.useState(true);
     const [searchInput, setSearchInput] = React.useState("");
     const [searchValue, setSearchValue] = React.useState("");
-    const [selectedSource, setSelectedSource] =
-        React.useState<SourceFilterValue>("all");
+    const [selectedSource, setSelectedSource] = React.useState<SourceFilterValue>("all");
     const [sortBy, setSortBy] = React.useState<SortValue>("deadline");
     const [sortFilterValue, setSortFilterValue] = React.useState("all");
     const [deadlineFilter, setDeadlineFilter] = React.useState<DeadlineFilter>({
@@ -804,10 +722,7 @@ export default function HomeTaskList() {
             try {
                 setIsLoading(true);
 
-                const groupId =
-                    selectedSource !== "all" && selectedSource !== "personal"
-                        ? selectedSource
-                        : undefined;
+                const groupId = selectedSource !== "all" && selectedSource !== "personal" ? selectedSource : undefined;
 
                 const url = buildTaskListUrl({
                     groupId,
@@ -822,12 +737,9 @@ export default function HomeTaskList() {
                     return;
                 }
 
-                const response = await apiFetch<HomeTaskListResponseApiResponse>(
-                    url,
-                    {
-                        method: "GET"
-                    }
-                );
+                const response = await apiFetch<HomeTaskListResponseApiResponse>(url, {
+                    method: "GET"
+                });
 
                 if (!isMounted) return;
 
@@ -836,10 +748,7 @@ export default function HomeTaskList() {
                 if (nextData) {
                     setData(nextData);
                 } else {
-                    console.error(
-                        "Home task list response format unexpected:",
-                        response
-                    );
+                    console.error("Home task list response format unexpected:", response);
                     setData(null);
                 }
             } catch (error) {
@@ -871,40 +780,26 @@ export default function HomeTaskList() {
         let result = [...sourceFilteredItems];
 
         if (sortBy === "priority" && sortFilterValue !== "all") {
-            result = result.filter(
-                (item) => getPriorityLabel(item.taskPriority) === sortFilterValue
-            );
+            result = result.filter((item) => getPriorityLabel(item.taskPriority) === sortFilterValue);
         }
 
         if (sortBy === "severity" && sortFilterValue !== "all") {
-            result = result.filter(
-                (item) => getSeverityLabel(item.taskSeverity) === sortFilterValue
-            );
+            result = result.filter((item) => getSeverityLabel(item.taskSeverity) === sortFilterValue);
         }
 
         if (sortBy === "status" && sortFilterValue !== "all") {
-            result = result.filter(
-                (item) => (item.statusName ?? "") === sortFilterValue
-            );
+            result = result.filter((item) => (item.statusName ?? "") === sortFilterValue);
         }
 
         if (sortBy === "deadline") {
-            result = result.filter((item) =>
-                matchDeadlineDate(item.dueDate, deadlineFilter)
-            );
+            result = result.filter((item) => matchDeadlineDate(item.dueDate, deadlineFilter));
         }
 
         return result;
     }, [sourceFilteredItems, sortBy, sortFilterValue, deadlineFilter]);
 
     const statusOptions = React.useMemo(() => {
-        const unique = Array.from(
-            new Set(
-                rawItems
-                    .map((item) => (item.statusName ?? "").trim())
-                    .filter(Boolean)
-            )
-        );
+        const unique = Array.from(new Set(rawItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean)));
         return unique;
     }, [rawItems]);
 
@@ -925,8 +820,7 @@ export default function HomeTaskList() {
         }
 
         if (page <= 2) return [1, 2, 3];
-        if (page >= totalPages - 1)
-            return [totalPages - 2, totalPages - 1, totalPages];
+        if (page >= totalPages - 1) return [totalPages - 2, totalPages - 1, totalPages];
 
         return [page - 1, page, page + 1];
     }, [page, totalPages]);
@@ -951,30 +845,23 @@ export default function HomeTaskList() {
         }
     };
 
-    const showExtraFilter =
-        sortBy === "priority" || sortBy === "severity" || sortBy === "status";
+    const showExtraFilter = sortBy === "priority" || sortBy === "severity" || sortBy === "status";
     const showDeadlineFilter = sortBy === "deadline";
 
     const deadlineFilterLabel = [
-        deadlineFilter.startDate &&
-        `Từ ${formatFilterDateLabel(deadlineFilter.startDate)}`,
-        deadlineFilter.endDate &&
-        `Đến ${formatFilterDateLabel(deadlineFilter.endDate)}`
+        deadlineFilter.startDate && `Từ ${formatFilterDateLabel(deadlineFilter.startDate)}`,
+        deadlineFilter.endDate && `Đến ${formatFilterDateLabel(deadlineFilter.endDate)}`
     ]
         .filter(Boolean)
         .join(" • ");
 
-    const hasDeadlineFilter = !!(
-        deadlineFilter.startDate || deadlineFilter.endDate
-    );
+    const hasDeadlineFilter = !!(deadlineFilter.startDate || deadlineFilter.endDate);
 
     return (
         <div className="bg-[radial-gradient(circle_at_top,#f8fafc_0%,#f8fafc_35%,#f3f4f6_100%)]">
             <Container className="pt-8 pb-8">
                 <div className="rounded-[32px] border border-[#D9E1EC] bg-white p-6 shadow-sm md:p-8">
-                    <h2 className="mb-6 text-2xl font-bold text-[#261E33]">
-                        Công việc từ các nhóm
-                    </h2>
+                    <h2 className="mb-6 text-2xl font-bold text-[#261E33]">Công việc từ các nhóm</h2>
 
                     <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                         <div className="relative w-full xl:max-w-[820px]">
@@ -992,15 +879,11 @@ export default function HomeTaskList() {
                                 <select
                                     value={selectedSource}
                                     onChange={handleSourceChange}
-                                    className="h-14 min-w-[180px] appearance-none rounded-2xl border border-[#D9E1EC] bg-white px-6 pr-12 text-lg text-[#261E33] outline-none"
-                                >
+                                    className="h-14 min-w-[180px] appearance-none rounded-2xl border border-[#D9E1EC] bg-white px-6 pr-12 text-lg text-[#261E33] outline-none">
                                     <option value="all">All</option>
                                     <option value="personal">Personal</option>
                                     {groups.map((group: UserGroupDto) => (
-                                        <option
-                                            key={group.groupId ?? group.groupName}
-                                            value={group.groupId ?? ""}
-                                        >
+                                        <option key={group.groupId ?? group.groupName} value={group.groupId ?? ""}>
                                             {group.groupName}
                                         </option>
                                     ))}
@@ -1012,8 +895,7 @@ export default function HomeTaskList() {
                                 <select
                                     value={sortBy}
                                     onChange={handleSortChange}
-                                    className="h-14 min-w-[240px] appearance-none rounded-2xl border border-[#D9E1EC] bg-white px-6 pr-12 text-lg text-[#261E33] outline-none"
-                                >
+                                    className="h-14 min-w-[240px] appearance-none rounded-2xl border border-[#D9E1EC] bg-white px-6 pr-12 text-lg text-[#261E33] outline-none">
                                     <option value="deadline">Sort by Deadline</option>
                                     <option value="priority">Sort by Priority</option>
                                     <option value="severity">Sort by Severity</option>
@@ -1026,11 +908,8 @@ export default function HomeTaskList() {
                                 <div className="relative">
                                     <select
                                         value={sortFilterValue}
-                                        onChange={(event) =>
-                                            setSortFilterValue(event.target.value)
-                                        }
-                                        className="h-14 min-w-[220px] appearance-none rounded-2xl border border-[#D9E1EC] bg-white px-6 pr-12 text-lg text-[#261E33] outline-none"
-                                    >
+                                        onChange={(event) => setSortFilterValue(event.target.value)}
+                                        className="h-14 min-w-[220px] appearance-none rounded-2xl border border-[#D9E1EC] bg-white px-6 pr-12 text-lg text-[#261E33] outline-none">
                                         <option value="all">All</option>
 
                                         {sortBy === "priority" && (
@@ -1044,15 +923,9 @@ export default function HomeTaskList() {
                                         {sortBy === "severity" && (
                                             <>
                                                 <option value="Thấp">Thấp</option>
-                                                <option value="Bình thường">
-                                                    Bình thường
-                                                </option>
-                                                <option value="Quan trọng">
-                                                    Quan trọng
-                                                </option>
-                                                <option value="Khẩn cấp">
-                                                    Khẩn cấp
-                                                </option>
+                                                <option value="Bình thường">Bình thường</option>
+                                                <option value="Quan trọng">Quan trọng</option>
+                                                <option value="Khẩn cấp">Khẩn cấp</option>
                                             </>
                                         )}
 
@@ -1071,19 +944,10 @@ export default function HomeTaskList() {
                                 <div className="relative">
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            setOpenDeadlineFilter((prev) => !prev)
-                                        }
-                                        className="flex h-14 min-w-[240px] items-center justify-between rounded-2xl border border-[#D9E1EC] bg-white px-6 text-lg text-[#261E33]"
-                                    >
-                                        <span
-                                            className={cn(
-                                                !hasDeadlineFilter && "text-[#64748B]"
-                                            )}
-                                        >
-                                            {hasDeadlineFilter
-                                                ? deadlineFilterLabel
-                                                : "Chọn khoảng ngày"}
+                                        onClick={() => setOpenDeadlineFilter((prev) => !prev)}
+                                        className="flex h-14 min-w-[240px] items-center justify-between rounded-2xl border border-[#D9E1EC] bg-white px-6 text-lg text-[#261E33]">
+                                        <span className={cn(!hasDeadlineFilter && "text-[#64748B]")}>
+                                            {hasDeadlineFilter ? deadlineFilterLabel : "Chọn khoảng ngày"}
                                         </span>
                                         <CalendarDays className="h-5 w-5 text-[#64748B]" />
                                     </button>
@@ -1111,8 +975,7 @@ export default function HomeTaskList() {
                                             endDate: ""
                                         })
                                     }
-                                    className="rounded-full p-0.5 hover:bg-zinc-200"
-                                >
+                                    className="rounded-full p-0.5 hover:bg-zinc-200">
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
@@ -1153,10 +1016,7 @@ export default function HomeTaskList() {
                                     </tr>
                                 ) : paginatedItems.length === 0 ? (
                                     <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-12 text-center text-lg text-[#71829E]"
-                                        >
+                                        <td colSpan={6} className="px-6 py-12 text-center text-lg text-[#71829E]">
                                             Không có công việc nào
                                         </td>
                                     </tr>
@@ -1165,8 +1025,7 @@ export default function HomeTaskList() {
                                         <tr
                                             key={item.taskId}
                                             onClick={() => handleTaskClick(item)}
-                                            className="cursor-pointer border-b border-[#3F3F46] transition hover:bg-[#F8FAFC] last:border-b"
-                                        >
+                                            className="cursor-pointer border-b border-[#3F3F46] transition hover:bg-[#F8FAFC] last:border-b">
                                             <td className="px-6 py-8 text-center text-[20px] font-semibold text-[#261E33]">
                                                 <button
                                                     type="button"
@@ -1174,8 +1033,7 @@ export default function HomeTaskList() {
                                                         e.stopPropagation();
                                                         handleTaskClick(item);
                                                     }}
-                                                    className="cursor-pointer hover:underline"
-                                                >
+                                                    className="cursor-pointer hover:underline">
                                                     {item.taskTitle || "-"}
                                                 </button>
                                             </td>
@@ -1198,9 +1056,7 @@ export default function HomeTaskList() {
 
                                             <td className="px-6 py-8 text-center">
                                                 <div className="flex justify-center">
-                                                    <TaskStatusBadge
-                                                        label={item.statusName}
-                                                    />
+                                                    <TaskStatusBadge label={item.statusName} />
                                                 </div>
                                             </td>
 
@@ -1218,12 +1074,9 @@ export default function HomeTaskList() {
                         <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-[#261E33]">
                             <button
                                 type="button"
-                                onClick={() =>
-                                    setPage((prev) => Math.max(prev - 1, 1))
-                                }
+                                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                                 disabled={page === 1}
-                                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[18px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                            >
+                                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[18px] font-medium disabled:cursor-not-allowed disabled:opacity-50">
                                 <ChevronLeft className="h-5 w-5" />
                                 Previous
                             </button>
@@ -1233,13 +1086,10 @@ export default function HomeTaskList() {
                                     <button
                                         type="button"
                                         onClick={() => setPage(1)}
-                                        className="h-14 min-w-14 rounded-xl px-4 text-[18px] font-medium"
-                                    >
+                                        className="h-14 min-w-14 rounded-xl px-4 text-[18px] font-medium">
                                         1
                                     </button>
-                                    {pageNumbers[0] > 2 && (
-                                        <span className="px-2 text-[24px]">...</span>
-                                    )}
+                                    {pageNumbers[0] > 2 && <span className="px-2 text-[24px]">...</span>}
                                 </>
                             )}
 
@@ -1256,8 +1106,7 @@ export default function HomeTaskList() {
                                             isActive
                                                 ? "border-[#3F3F46] bg-[#F3F4F6] text-[#261E33]"
                                                 : "border-transparent bg-transparent text-[#261E33]"
-                                        ].join(" ")}
-                                    >
+                                        ].join(" ")}>
                                         {pageNumber}
                                     </button>
                                 );
@@ -1265,15 +1114,13 @@ export default function HomeTaskList() {
 
                             {pageNumbers[pageNumbers.length - 1] < totalPages && (
                                 <>
-                                    {pageNumbers[pageNumbers.length - 1] <
-                                        totalPages - 1 && (
-                                            <span className="px-2 text-[24px]">...</span>
-                                        )}
+                                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                                        <span className="px-2 text-[24px]">...</span>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => setPage(totalPages)}
-                                        className="h-14 min-w-14 rounded-xl px-4 text-[18px] font-medium"
-                                    >
+                                        className="h-14 min-w-14 rounded-xl px-4 text-[18px] font-medium">
                                         {totalPages}
                                     </button>
                                 </>
@@ -1281,12 +1128,9 @@ export default function HomeTaskList() {
 
                             <button
                                 type="button"
-                                onClick={() =>
-                                    setPage((prev) => Math.min(prev + 1, totalPages))
-                                }
+                                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                                 disabled={page === totalPages}
-                                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[18px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                            >
+                                className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[18px] font-medium disabled:cursor-not-allowed disabled:opacity-50">
                                 Next
                                 <ChevronRight className="h-5 w-5" />
                             </button>

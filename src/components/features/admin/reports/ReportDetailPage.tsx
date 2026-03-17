@@ -210,20 +210,21 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
 
                                 {/* Status badge */}
                                 <div
-                                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 font-medium text-sm ${status === "pending"
+                                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 font-medium text-sm ${
+                                        status === "pending"
                                             ? "border-amber-200 bg-amber-50 text-amber-600"
                                             : status === "reviewing"
-                                                ? "border-orange-200 bg-orange-50 text-[#FF5F3D]"
-                                                : "border-green-200 bg-green-50 text-green-600"
-                                        }`}>
+                                              ? "border-orange-200 bg-orange-50 text-[#FF5F3D]"
+                                              : "border-green-200 bg-green-50 text-green-600"
+                                    }`}>
                                     {status === "pending" && <Clock className="h-4 w-4" />}
                                     {status === "reviewing" && <Eye className="h-4 w-4" />}
                                     {status === "resolved" && <Shield className="h-4 w-4" />}
                                     {status === "reviewing"
                                         ? "Đang Chờ Xử Lý"
                                         : status === "pending"
-                                            ? "Chờ xử lý"
-                                            : "Đã giải quyết"}
+                                          ? "Chờ xử lý"
+                                          : "Đã giải quyết"}
                                 </div>
                             </div>
 
@@ -238,12 +239,13 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                                 <div key={step.key} className="flex flex-1 items-center">
                                                     <div className="flex flex-col items-center">
                                                         <div
-                                                            className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${isComplete
+                                                            className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
+                                                                isComplete
                                                                     ? "border-green-500 bg-green-500 text-white"
                                                                     : isActive
-                                                                        ? "border-[#FF5F3D] bg-[#FF5F3D] text-white"
-                                                                        : "border-gray-300 bg-white text-gray-400"
-                                                                }`}>
+                                                                      ? "border-[#FF5F3D] bg-[#FF5F3D] text-white"
+                                                                      : "border-gray-300 bg-white text-gray-400"
+                                                            }`}>
                                                             {isComplete ? (
                                                                 <CheckCircle2 className="h-4 w-4" />
                                                             ) : (
@@ -379,10 +381,11 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
                                         <Button
                                             onClick={handleSave}
                                             disabled={isSaving}
-                                            className={`min-w-[90px] transition-all ${saved
+                                            className={`min-w-[90px] transition-all ${
+                                                saved
                                                     ? "bg-green-500 hover:bg-green-600"
                                                     : "bg-[#FF5F3D] hover:bg-[#ff4620]"
-                                                }`}>
+                                            }`}>
                                             {isSaving ? (
                                                 <span className="flex items-center gap-2">
                                                     <svg

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-import { deleteStudio, type StudioUI, updateStudio } from "@/api/studios";
+import { deleteStudio, getStudioMembers, type StudioUI, type StudioMemberResponse, updateStudio } from "@/api/studios";
 import type { components } from "@/api/types";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
-import { InviteMemberModal } from "@/components/features/master/InviteMemberModal";
+import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { StudioModal } from "@/components/features/master/StudioModal";
+import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
@@ -19,14 +20,9 @@ import { ActivityHeatmap } from "./ActivityHeatmap";
 import { GroupPerformanceRadar } from "./GroupPerformanceRadar";
 import { GroupProgressChart } from "./GroupProgressChart";
 import { MemberList } from "./MemberList";
+import { MemberDetailModal } from "./MemberDetailModal";
 import { StudioDateRange } from "./StudioDateRange";
-import {
-    generateActivityHeatmap,
-    mockGroupPerformance,
-    mockGroupProgress,
-    mockStudioDateRange,
-    mockStudioMembers
-} from "./types";
+import { generateActivityHeatmap, mockGroupPerformance, mockGroupProgress, mockStudioDateRange } from "./types";
 
 type StudioResponse = components["schemas"]["StudioResponse"];
 type GroupCardDto = components["schemas"]["GroupCardDto"];
@@ -45,13 +41,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
     const studioId = params.studioId as string;
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [members, setMembers] = useState<StudioMemberResponse[]>([]);
+    const [membersLoading, setMembersLoading] = useState(true);
+    const [selectedMember, setSelectedMember] = useState<StudioMemberResponse | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
-    const [selectedGroupId, setSelectedGroupId] = useState<string>("");
-    const [selectedGroupName, setSelectedGroupName] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"groups" | "analytics">("groups");
     const [analyticsSubTab, setAnalyticsSubTab] = useState<"progress" | "activity" | "group-progress" | "performance">(
@@ -61,16 +57,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     // Convert server data to UI format
     const studio: StudioUI | null = initialStudio
         ? {
-            id: initialStudio.studioId || "",
-            name: initialStudio.studioName || "",
-            description: initialStudio.description || "",
-            type: "group", // Default type
-            memberCount: 0, // Not provided by API
-            groupCount: initialStudio.groupCount || 0,
-            completionProgress: 0, // Calculate later if needed
-            createdAt: initialStudio.createdAt || "",
-            updatedAt: initialStudio.updatedAt || ""
-        }
+              id: initialStudio.studioId || "",
+              name: initialStudio.studioName || "",
+              description: initialStudio.description || "",
+              type: "group", // Default type
+              memberCount: 0, // Not provided by API
+              groupCount: initialStudio.groupCount || 0,
+              completionProgress: 0, // Calculate later if needed
+              createdAt: initialStudio.createdAt || "",
+              updatedAt: initialStudio.updatedAt || ""
+          }
         : null;
 
     // Transform groups to the format expected by UI
@@ -93,19 +89,27 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     );
 
     const loadData = useCallback(async () => {
-        setIsLoading(true);
+        setMembersLoading(true);
         try {
             const profileResult = await getUserProfile(locale);
             if (profileResult.status === "success" && profileResult.data) {
                 setUserProfile(profileResult.data);
             }
+
+            // Fetch studio members
+            if (studioId) {
+                const membersResult = await getStudioMembers(studioId, locale);
+                if (membersResult.status === "success" && membersResult.data) {
+                    setMembers(membersResult.data);
+                }
+            }
         } catch (error) {
             console.error("Load data failed:", error);
             toast({ description: t("loadError"), variant: "destructive" });
         } finally {
-            setIsLoading(false);
+            setMembersLoading(false);
         }
-    }, [locale, toast, t]);
+    }, [locale, toast, t, studioId]);
 
     useEffect(() => {
         loadData();
@@ -157,7 +161,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         }
     };
 
-    if (isLoading) {
+    if (membersLoading) {
         return (
             <div className="min-h-screen bg-[#F8F8F8]">
                 <div className="flex min-h-screen">
@@ -308,10 +312,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab("groups")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "groups"
+                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                        activeTab === "groups"
                                             ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
                                             : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                    }`}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -325,10 +330,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab("analytics")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "analytics"
+                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                        activeTab === "analytics"
                                             ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
                                             : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                    }`}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -357,14 +363,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     {/* Card header: icon + name + badge */}
                                                     <div className="flex items-center gap-3">
                                                         <div
-                                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${index % 4 === 0
+                                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                                                                index % 4 === 0
                                                                     ? "bg-gradient-to-br from-orange-400 to-red-500"
                                                                     : index % 4 === 1
-                                                                        ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                        : index % 4 === 2
-                                                                            ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                            : "bg-gradient-to-br from-purple-400 to-violet-500"
-                                                                }`}>
+                                                                      ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                                      : index % 4 === 2
+                                                                        ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                        : "bg-gradient-to-br from-purple-400 to-violet-500"
+                                                            }`}>
                                                             <svg
                                                                 className="h-5 w-5 text-white"
                                                                 fill="none"
@@ -384,17 +391,18 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     {group.name}
                                                                 </h3>
                                                                 <span
-                                                                    className={`shrink-0 rounded-full px-2 py-0.5 font-medium text-[11px] ${index % 3 === 0
+                                                                    className={`shrink-0 rounded-full px-2 py-0.5 font-medium text-[11px] ${
+                                                                        index % 3 === 0
                                                                             ? "bg-orange-100 text-orange-700"
                                                                             : index % 3 === 1
-                                                                                ? "bg-slate-800 text-white"
-                                                                                : "bg-slate-100 text-slate-600"
-                                                                        }`}>
+                                                                              ? "bg-slate-800 text-white"
+                                                                              : "bg-slate-100 text-slate-600"
+                                                                    }`}>
                                                                     {index % 3 === 0
                                                                         ? "owner"
                                                                         : index % 3 === 1
-                                                                            ? "moderator"
-                                                                            : "member"}
+                                                                          ? "moderator"
+                                                                          : "member"}
                                                                 </span>
                                                             </div>
                                                             <p className="text-slate-400 text-xs">
@@ -471,14 +479,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                 (_, i) => (
                                                                     <div
                                                                         key={`${group.id}-avatar-${i}`}
-                                                                        className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${i % 4 === 0
+                                                                        className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${
+                                                                            i % 4 === 0
                                                                                 ? "bg-gradient-to-br from-orange-400 to-red-500"
                                                                                 : i % 4 === 1
-                                                                                    ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                                    : i % 4 === 2
-                                                                                        ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                        : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                            }`}>
+                                                                                  ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                                                  : i % 4 === 2
+                                                                                    ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                                    : "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                                        }`}>
                                                                         {String.fromCharCode(65 + i)}
                                                                     </div>
                                                                 )
@@ -510,8 +519,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 {/* Right Column: Members + Quick Stats */}
                                 <div className="flex flex-col gap-4 lg:col-span-4">
                                     <MemberList
-                                        members={mockStudioMembers}
+                                        members={members}
+                                        studioOwnerId={initialStudio?.ownerId}
                                         onInviteClick={() => setIsInviteModalOpen(true)}
+                                        onMemberClick={(member) => setSelectedMember(member)}
                                     />
                                     {/* Quick Stats */}
                                     <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -523,19 +534,17 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-slate-500">Members</span>
-                                                <span className="font-semibold text-slate-800">
-                                                    {mockStudioMembers.length}
-                                                </span>
+                                                <span className="font-semibold text-slate-800">{members.length}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-slate-500">Created</span>
                                                 <span className="font-semibold text-slate-800">
                                                     {studio.createdAt
                                                         ? new Date(studio.createdAt).toLocaleDateString("en-US", {
-                                                            month: "numeric",
-                                                            day: "numeric",
-                                                            year: "numeric"
-                                                        })
+                                                              month: "numeric",
+                                                              day: "numeric",
+                                                              year: "numeric"
+                                                          })
                                                         : "—"}
                                                 </span>
                                             </div>
@@ -587,10 +596,21 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             />
 
             <InviteMemberModal
-                isOpen={isInviteModalOpen}
+                open={isInviteModalOpen}
                 onClose={() => setIsInviteModalOpen(false)}
-                groupId={selectedGroupId}
-                groupName={selectedGroupName}
+                groupName={studio?.name || "Studio"}
+                variant="studio"
+                canManage={true}
+                onCreateLink={async ({ role }) => {
+                    const result = await createStudioInviteLink({ studioId: studio?.id, role: role as string }, locale);
+                    if (result.status === "success" && result.data?.inviteUrl) {
+                        return result.data.inviteUrl;
+                    }
+                    throw new Error("Failed to create invite link");
+                }}
+                onSendInvite={async ({ email, role }) => {
+                    await sendStudioInviteEmail({ studioId: studio?.id, role: role as string, email }, locale);
+                }}
             />
 
             <CreateGroupModal
@@ -607,6 +627,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                         variant: "success"
                     });
                 }}
+            />
+
+            <MemberDetailModal
+                member={selectedMember}
+                studioOwnerId={initialStudio?.ownerId}
+                isOpen={!!selectedMember}
+                onClose={() => setSelectedMember(null)}
             />
         </div>
     );

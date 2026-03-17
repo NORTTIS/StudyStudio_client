@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { type AdminSubscriptionPlan, planToUpdateRequest, updateSubscriptionPlan } from "@/api/admin-subscription-plans";
+import {
+    type AdminSubscriptionPlan,
+    planToUpdateRequest,
+    updateSubscriptionPlan
+} from "@/api/admin-subscription-plans";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";

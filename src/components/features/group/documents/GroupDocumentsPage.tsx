@@ -420,8 +420,7 @@ export default function GroupDocumentsPage() {
                         className={twMerge(
                             "flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition",
                             isDragActive ? "border-[#FF5722] bg-[#FFF3EE]" : "border-[#E5E5E5] bg-[#FAFAFA]"
-                        )}
-                    >
+                        )}>
                         <Upload className="mb-2 h-8 w-8 text-[#FF5722]" />
                         <p className="font-semibold text-[#261E33] text-base">{t("dragDropTitle")}</p>
                         <p className="mt-1 text-[#6F6B99] text-sm">{t("dragDropSubtitle")}</p>
@@ -435,7 +434,6 @@ export default function GroupDocumentsPage() {
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-[#6F6B99] text-sm">{t("uploadHint")}</p>
-
                     </div>
                 </div>
             </Modal>

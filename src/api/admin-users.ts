@@ -33,10 +33,7 @@ export interface GetUsersParams {
 /**
  * Get all users with pagination and filters
  */
-export async function getUsers(
-    params?: GetUsersParams,
-    locale: string = "vi"
-): Promise<ApiResponse<UserListResponse>> {
+export async function getUsers(params?: GetUsersParams, locale: string = "vi"): Promise<ApiResponse<UserListResponse>> {
     try {
         // Build query string
         const queryParams = new URLSearchParams();
@@ -83,10 +80,7 @@ export async function getUsers(
 /**
  * Get user details by ID
  */
-export async function getUserById(
-    userId: string,
-    locale: string = "vi"
-): Promise<ApiResponse<UserDetailItem>> {
+export async function getUserById(userId: string, locale: string = "vi"): Promise<ApiResponse<UserDetailItem>> {
     try {
         console.log("Gọi API user details:", `/admin/users/${userId}`);
 
@@ -218,9 +212,7 @@ export function convertApiStatus(status: string | null | undefined): UserDisplay
 /**
  * Convert API package to role
  */
-export function convertApiPackage(
-    pkg: string | null | undefined
-): "user" | "premium" | "admin" {
+export function convertApiPackage(pkg: string | null | undefined): "user" | "premium" | "admin" {
     if (!pkg) return "user";
     const packageLower = pkg.toLowerCase();
     if (packageLower === "premium" || packageLower === "vip") return "premium";

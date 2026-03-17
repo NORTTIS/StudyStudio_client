@@ -57,9 +57,7 @@ export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: G
                     const scheduleStatus = calculateScheduleStatus(group, studioStartDate, studioDueDate);
 
                     return (
-                        <div
-                            key={group.groupId}
-                            className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+                        <div key={group.groupId} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
                             <div className="mb-2 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Layers className="h-4 w-4 text-gray-400" />
@@ -97,11 +95,7 @@ export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: G
                                                     />
                                                 </pattern>
                                             </defs>
-                                            <rect
-                                                width="100%"
-                                                height="100%"
-                                                fill={`url(#stripes-${group.groupId})`}
-                                            />
+                                            <rect width="100%" height="100%" fill={`url(#stripes-${group.groupId})`} />
                                         </svg>
                                     </div>
                                 </div>

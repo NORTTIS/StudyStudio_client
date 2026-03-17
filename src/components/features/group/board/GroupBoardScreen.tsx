@@ -542,7 +542,9 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
     if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ (không phải UUID).");
     if (!(args.statusId && isUuidLike(args.statusId))) throw new Error("statusId không hợp lệ (không phải UUID).");
 
-    const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`);
+    const url = apiUrl(
+        `/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`
+    );
 
     await apiFetchJson<unknown>(url, {
         method: "DELETE",
@@ -586,8 +588,8 @@ function applyTaskDrop(args: {
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-            ? overRaw.replace(END_PREFIX, "")
-            : overRaw;
+          ? overRaw.replace(END_PREFIX, "")
+          : overRaw;
 
     const fromCol = findColumnOfTask(board, columns, activeTaskId);
     if (!fromCol) return null;
@@ -643,8 +645,7 @@ function Pill({ children }: { children: React.ReactNode }) {
                 "inline-flex items-center rounded-full px-2 py-0.5",
                 "border border-zinc-200 bg-white",
                 "font-semibold text-[10.5px] text-zinc-700"
-            )}
-        >
+            )}>
             {children}
         </span>
     );
@@ -680,10 +681,9 @@ function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?:
                 done
                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                     : overdue
-                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
-            )}
-        >
+                      ? "border-rose-200 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
+            )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
                 <div className="whitespace-nowrap text-xs font-semibold">{due}</div>
@@ -736,24 +736,23 @@ function ConfirmModal({
             style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
-            }}
-        >
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onPointerDown={(e) => e.stopPropagation()}>
+            }}>
+            <div
+                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+                onPointerDown={(e) => e.stopPropagation()}>
                 <h2 className="text-base font-bold text-zinc-900">{title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100"
-                    >
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100">
                         {cancelLabel}
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
-                    >
+                        className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700">
                         {confirmLabel}
                     </button>
                 </div>
@@ -835,8 +834,7 @@ function PortalDropdown({
             ref={menuRef}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg"
-        >
+            className="z-[9999] rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
             {children}
         </div>,
         document.body
@@ -861,8 +859,7 @@ function MenuItem({
             className={cn(
                 "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm",
                 danger ? "text-orange-700 hover:bg-orange-50" : "text-zinc-700 hover:bg-zinc-100"
-            )}
-        >
+            )}>
             <span className="grid h-5 w-5 place-items-center">{icon}</span>
             <span className="font-medium">{label}</span>
         </button>
@@ -974,8 +971,7 @@ function TaskCard({
                 done
                     ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
                     : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
-            )}
-        >
+            )}>
             <div className="flex items-start gap-3">
                 <div className="pt-1">
                     <div className={cn("h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
@@ -990,8 +986,7 @@ function TaskCard({
                                         className={cn(
                                             "line-clamp-3 pr-2 text-sm font-semibold leading-5",
                                             done ? "text-zinc-500 line-through" : "text-zinc-900"
-                                        )}
-                                    >
+                                        )}>
                                         {task.title}
                                     </p>
                                 </div>
@@ -999,8 +994,7 @@ function TaskCard({
                                 <div
                                     className="relative shrink-0"
                                     onClick={(e) => e.stopPropagation()}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                >
+                                    onPointerDown={(e) => e.stopPropagation()}>
                                     <button
                                         ref={btnRef}
                                         type="button"
@@ -1014,12 +1008,14 @@ function TaskCard({
                                             e.stopPropagation();
                                         }}
                                         className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                                        aria-label="Menu"
-                                    >
+                                        aria-label="Menu">
                                         <MoreHorizontal className="h-4 w-4" />
                                     </button>
 
-                                    <PortalDropdown open={openMenu} onClose={() => setOpenMenu(false)} anchorRef={btnRef as any}>
+                                    <PortalDropdown
+                                        open={openMenu}
+                                        onClose={() => setOpenMenu(false)}
+                                        anchorRef={btnRef as any}>
                                         <MenuItem
                                             icon={<Pencil className="h-4 w-4" />}
                                             label="Chỉnh sửa tên"
@@ -1049,8 +1045,7 @@ function TaskCard({
                         <div
                             className="space-y-2"
                             onPointerDownCapture={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}
-                        >
+                            onClick={(e) => e.stopPropagation()}>
                             <textarea
                                 ref={taRef}
                                 value={draftTitle}
@@ -1091,8 +1086,7 @@ function TaskCard({
                                         e.stopPropagation();
                                         safeCommit();
                                     }}
-                                    className="rounded-lg bg-[#f54a00] px-3 py-2 text-sm font-semibold text-white hover:bg-[#f54a00]/70"
-                                >
+                                    className="rounded-lg bg-[#f54a00] px-3 py-2 text-sm font-semibold text-white hover:bg-[#f54a00]/70">
                                     Lưu
                                 </button>
 
@@ -1105,8 +1099,7 @@ function TaskCard({
                                         onCancelEdit();
                                     }}
                                     className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label="Hủy"
-                                >
+                                    aria-label="Hủy">
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
@@ -1123,9 +1116,10 @@ function TaskCard({
                                         <span
                                             className={cn(
                                                 "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
-                                                done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severityLabel)
-                                            )}
-                                        >
+                                                done
+                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                                    : severityTone(task.severityLabel)
+                                            )}>
                                             {task.severityLabel}
                                         </span>
                                     ) : null}
@@ -1153,7 +1147,11 @@ function GhostTaskCard({ task }: { task: Task }) {
             <div className="flex items-start gap-3">
                 <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
                 <div className="min-w-0 flex-1">
-                    <p className={cn("line-clamp-3 text-sm font-semibold leading-5", done ? "text-zinc-500 line-through" : "text-zinc-800")}>
+                    <p
+                        className={cn(
+                            "line-clamp-3 text-sm font-semibold leading-5",
+                            done ? "text-zinc-500 line-through" : "text-zinc-800"
+                        )}>
                         {task.title}
                     </p>
 
@@ -1167,9 +1165,10 @@ function GhostTaskCard({ task }: { task: Task }) {
                                         <span
                                             className={cn(
                                                 "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
-                                                done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severityLabel)
-                                            )}
-                                        >
+                                                done
+                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                                    : severityTone(task.severityLabel)
+                                            )}>
                                             {task.severityLabel}
                                         </span>
                                     ) : null}
@@ -1261,8 +1260,7 @@ function AddColumnInline({
                 className={cn(
                     "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left text-sm font-semibold text-white shadow-sm",
                     "transition hover:bg-[#f54a00]/80"
-                )}
-            >
+                )}>
                 + Tạo trạng thái
             </button>
         );
@@ -1285,9 +1283,7 @@ function AddColumnInline({
                 )}
             />
 
-            <div className="mt-1 text-right text-[11px] text-zinc-500">
-                {title.length}/25
-            </div>
+            <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/25</div>
 
             {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
 
@@ -1300,8 +1296,7 @@ function AddColumnInline({
                         "rounded-xl px-3 py-2 text-sm font-semibold text-white",
                         "bg-[#f54a00] transition hover:bg-[#f54a00]/80",
                         isSubmitting && "pointer-events-none opacity-60"
-                    )}
-                >
+                    )}>
                     Thêm trạng thái
                 </button>
 
@@ -1313,8 +1308,7 @@ function AddColumnInline({
                         "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
                         "transition hover:bg-zinc-100",
                         isSubmitting && "pointer-events-none opacity-60"
-                    )}
-                >
+                    )}>
                     ✕
                 </button>
             </div>
@@ -1333,8 +1327,7 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
                 "bg-[#f54a00] text-white",
                 "transition hover:bg-[#f54a00]/80",
                 disabled && "pointer-events-none opacity-60"
-            )}
-        >
+            )}>
             <Plus className="h-4 w-4" />
             Thêm công việc
         </button>
@@ -1433,8 +1426,7 @@ function ColumnView({
                 className={cn(
                     "sticky top-0 z-10 rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2",
                     "cursor-grab select-none active:cursor-grabbing"
-                )}
-            >
+                )}>
                 <div className="flex items-center gap-3">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                         <div className="min-w-0 flex-1">
@@ -1474,7 +1466,9 @@ function ColumnView({
                                         )}
                                         style={{ maxWidth: 220 }}
                                     />
-                                    <div className="flex justify-end text-[11px] text-zinc-500">{columnDraft.length}/25</div>
+                                    <div className="flex justify-end text-[11px] text-zinc-500">
+                                        {columnDraft.length}/25
+                                    </div>
 
                                     {columnError ? (
                                         <div className="text-[11px] font-medium text-rose-600">{columnError}</div>
@@ -1503,16 +1497,14 @@ function ColumnView({
                                     e.stopPropagation();
                                 }}
                                 className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
-                                aria-label="Column menu"
-                            >
+                                aria-label="Column menu">
                                 <MoreHorizontal className="h-5 w-5" />
                             </button>
 
                             <PortalDropdown
                                 open={openColMenu}
                                 onClose={() => setOpenColMenu(false)}
-                                anchorRef={colMenuBtnRef as any}
-                            >
+                                anchorRef={colMenuBtnRef as any}>
                                 <MenuItem
                                     icon={<Pencil className="h-4 w-4" />}
                                     label="Chỉnh sửa tên trạng thái"
@@ -1539,15 +1531,16 @@ function ColumnView({
             <div className="px-2 pb-2">
                 <div
                     ref={setDroppableRef}
-                    className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}
-                >
+                    className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}>
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                             <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
                                 {rendered.map((item) => {
-                                    if (item.kind === "ghost") return <GhostTaskCard key={item.key} task={ghost!.task} />;
+                                    if (item.kind === "ghost")
+                                        return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
-                                    const isEditingThis = taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+                                    const isEditingThis =
+                                        taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
 
                                     return (
                                         <TaskCard
@@ -1569,7 +1562,9 @@ function ColumnView({
                                 {tasks.length === 0 ? (
                                     <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center">
                                         <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
-                                        <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
+                                        <div className="mt-1 text-xs text-zinc-500">
+                                            Bấm “Thêm công việc” để tạo mới
+                                        </div>
                                     </div>
                                 ) : null}
 
@@ -1585,7 +1580,8 @@ function ColumnView({
                     ) : (
                         <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
                             {tasks.map((t) => {
-                                const isEditingThis = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
+                                const isEditingThis =
+                                    taskEditState.taskId === t.id && taskEditState.columnId === col.id;
                                 return (
                                     <TaskCard
                                         key={t.id}
@@ -1736,9 +1732,10 @@ function TaskOverlay({ task }: { task: Task }) {
                                 <span
                                     className={cn(
                                         "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
-                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severityLabel)
-                                    )}
-                                >
+                                        done
+                                            ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                            : severityTone(task.severityLabel)
+                                    )}>
                                     {task.severityLabel}
                                 </span>
                             ) : null}
@@ -1767,7 +1764,11 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
                         {tasks.slice(0, 3).map((t) => (
                             <div key={t.id} className="mb-2 last:mb-0">
                                 <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
-                                    <p className={cn("text-sm font-semibold", isTaskDone(t) ? "text-zinc-500 line-through" : "text-zinc-900")}>
+                                    <p
+                                        className={cn(
+                                            "text-sm font-semibold",
+                                            isTaskDone(t) ? "text-zinc-500 line-through" : "text-zinc-900"
+                                        )}>
                                         {t.title}
                                     </p>
                                 </div>
@@ -2043,10 +2044,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         if (!isUuidLike(groupId)) throw new Error("groupId trong route không hợp lệ (không phải UUID).");
         if (!getApiBase()) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
 
-        const [detail, members] = await Promise.all([
-            apiGetGroupDetail(groupId),
-            apiGetGroupMembers(groupId)
-        ]);
+        const [detail, members] = await Promise.all([apiGetGroupDetail(groupId), apiGetGroupMembers(groupId)]);
 
         syncColumnsFromDetail(detail?.data);
 
@@ -2138,8 +2136,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-                ? overId.replace(END_PREFIX, "")
-                : overId;
+              ? overId.replace(END_PREFIX, "")
+              : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -2271,15 +2269,13 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         }
     };
 
-    const handleCancelDeleteColumn = () =>
-        setConfirmModal({ open: false, columnId: null, columnTitle: "" });
+    const handleCancelDeleteColumn = () => setConfirmModal({ open: false, columnId: null, columnTitle: "" });
 
     const onTaskStartEdit = (taskId: string, columnId: ColumnId, currentTitle: string) => {
         setEditingTask({ taskId, columnId, draft: currentTitle });
     };
 
-    const onTaskCancelEdit = () =>
-        setEditingTask({ taskId: null, columnId: null, draft: "" });
+    const onTaskCancelEdit = () => setEditingTask({ taskId: null, columnId: null, draft: "" });
 
     const onTaskCommitEdit = () => {
         const { taskId, columnId, draft } = editingTask;
@@ -2293,9 +2289,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         setBoard((prev) => ({
             ...prev,
-            [columnId]: (prev[columnId] ?? []).map((t) =>
-                t.id === taskId ? { ...t, title: next } : t
-            )
+            [columnId]: (prev[columnId] ?? []).map((t) => (t.id === taskId ? { ...t, title: next } : t))
         }));
 
         onTaskCancelEdit();
@@ -2377,11 +2371,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const dueSelected = rawDue != null && String(rawDue).trim() !== "";
         const startSelected = rawStart != null && String(rawStart).trim() !== "";
 
-        const assigneeId =
-            (values as any).assigneeId ??
-            (values as any).assignees ??
-            (values as any).assignee ??
-            null;
+        const assigneeId = (values as any).assigneeId ?? (values as any).assignees ?? (values as any).assignee ?? null;
 
         setCreatingTask(true);
         try {
@@ -2411,11 +2401,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             return closestCenter({ ...args, droppableContainers: onlyColumns });
         }
 
-        const allow = filterDroppablesByType(args.droppableContainers, [
-            "task",
-            "column-drop",
-            "column-end"
-        ]);
+        const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
         return closestCorners({ ...args, droppableContainers: allow });
     }, []);
 
@@ -2560,8 +2546,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                         <button
                             type="button"
                             onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
-                        >
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100">
                             Tải lại
                         </button>
                     </div>
@@ -2574,9 +2559,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         setEditingColumn((p) => {
             const trimmed = v.trim();
             if (!trimmed) return { ...p, draft: v, error: "Vui lòng nhập tên trạng thái." };
-            const dup = columns.some(
-                (c) => c.id !== p.id && c.title.trim().toLowerCase() === trimmed.toLowerCase()
-            );
+            const dup = columns.some((c) => c.id !== p.id && c.title.trim().toLowerCase() === trimmed.toLowerCase());
             return {
                 ...p,
                 draft: v,
@@ -2639,8 +2622,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                     <div
                         ref={topScrollRef}
                         onScroll={handleTopScroll}
-                        className="board-top-scrollbar mt-5 mb-2 overflow-x-auto overflow-y-hidden"
-                    >
+                        className="board-top-scrollbar mt-5 mb-2 overflow-x-auto overflow-y-hidden">
                         <div style={{ width: topScrollbarWidth, height: 1 }} />
                     </div>
                 ) : (
@@ -2651,8 +2633,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                     <div
                         ref={boardScrollRef}
                         onScroll={handleBoardScroll}
-                        className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6"
-                    >
+                        className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6">
                         {columns.map((col) => (
                             <ColumnView
                                 key={col.id}
@@ -2693,14 +2674,12 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                         onDragStart={handleDragStart}
                         onDragOver={handleDragOver}
                         onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}
-                    >
+                        onDragEnd={handleDragEnd}>
                         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
                             <div
                                 ref={boardScrollRef}
                                 onScroll={handleBoardScroll}
-                                className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6"
-                            >
+                                className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6">
                                 {columns.map((col) => (
                                     <SortableColumn
                                         key={col.id}
