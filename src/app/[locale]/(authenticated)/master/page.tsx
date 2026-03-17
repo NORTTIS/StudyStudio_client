@@ -1,5 +1,5 @@
 import { serverFetchApi } from "@/api/server-client";
-import type { StudioUI } from "@/api/studios";
+import type { StudioListSubscription, StudioUI } from "@/api/studios";
 import type { components } from "@/api/types";
 import type { UserProfile } from "@/api/user-profile";
 import MasterPageClient from "@/components/features/master/MasterPageClient";
@@ -7,6 +7,11 @@ import { mockStudios } from "@/mocks/studios-data";
 
 type UserProfileResponse = components["schemas"]["UserProfileResponse"];
 type StudioResponse = components["schemas"]["StudioResponse"];
+
+type StudioAPIResponse = {
+    studios: StudioResponse[];
+    subscription?: StudioListSubscription;
+};
 
 const mapUserProfile = (profile: UserProfileResponse): UserProfile => ({
     userId: profile.userId || "",
@@ -43,16 +48,22 @@ const mapStudioToUI = (studio: StudioResponse): StudioUI => ({
 export default async function MasterPage() {
     const [profileResponse, studiosResponse] = await Promise.all([
         serverFetchApi.GET<UserProfileResponse>("/user-profile"),
-        serverFetchApi.GET<StudioResponse[]>("/studio")
+        serverFetchApi.GET<StudioAPIResponse>("/studio")
     ]);
 
     const initialUserProfile =
         profileResponse.status === "success" && profileResponse.data ? mapUserProfile(profileResponse.data) : null;
 
-    const initialStudios =
-        studiosResponse.status === "success" && Array.isArray(studiosResponse.data)
-            ? studiosResponse.data.map(mapStudioToUI)
-            : mockStudios;
+    let initialStudios: StudioUI[] = mockStudios;
+    let initialSubscription: StudioListSubscription | null = null;
 
-    return <MasterPageClient initialUserProfile={initialUserProfile} initialStudios={initialStudios} />;
+    if (studiosResponse.status === "success" && studiosResponse.data) {
+        initialStudios = studiosResponse.data.studios.map(mapStudioToUI);
+        initialSubscription = studiosResponse.data.subscription || {
+            studioCreated: initialStudios.length,
+            studioLimit: 3
+        };
+    }
+
+    return <MasterPageClient initialUserProfile={initialUserProfile} initialStudios={initialStudios} initialSubscription={initialSubscription} />;
 }

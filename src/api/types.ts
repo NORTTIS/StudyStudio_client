@@ -3631,9 +3631,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["StudioResponseListApiResponse"];
-                        "text/json": components["schemas"]["StudioResponseListApiResponse"];
-                        "text/plain": components["schemas"]["StudioResponseListApiResponse"];
+                        "application/json": components["schemas"]["StudioListResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioListResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioListResponseApiResponse"];
                     };
                 };
             };
@@ -4049,6 +4049,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/task-comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["SendTaskCommentRequest"];
+                    "application/json": components["schemas"]["SendTaskCommentRequest"];
+                    "text/json": components["schemas"]["SendTaskCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskCommentDtoApiResponse"];
+                        "text/json": components["schemas"]["TaskCommentDtoApiResponse"];
+                        "text/plain": components["schemas"]["TaskCommentDtoApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/task-comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    commentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/task-comments/{taskId}": {
         parameters: {
             query?: never;
@@ -4085,6 +4167,49 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/task-comments/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ReplyToTaskCommentRequest"];
+                    "application/json": components["schemas"]["ReplyToTaskCommentRequest"];
+                    "text/json": components["schemas"]["ReplyToTaskCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskCommentDtoApiResponse"];
+                        "text/json": components["schemas"]["TaskCommentDtoApiResponse"];
+                        "text/plain": components["schemas"]["TaskCommentDtoApiResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -5782,6 +5907,13 @@ export interface components {
             /** Format: uuid */
             taskId?: string;
         };
+        ReplyToTaskCommentRequest: {
+            content: string;
+            /** Format: uuid */
+            parentCommentId?: string;
+            /** Format: uuid */
+            taskId?: string;
+        };
         ReportItemResponse: {
             adminNote?: string | null;
             content?: string | null;
@@ -6024,6 +6156,11 @@ export interface components {
             /** Format: uuid */
             studioId: string;
         };
+        SendTaskCommentRequest: {
+            content?: string | null;
+            /** Format: uuid */
+            taskId?: string;
+        };
         SourceDocument: {
             /** Format: int32 */
             chunkIndex?: number;
@@ -6054,7 +6191,24 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        StudioListResponse: {
+            studios?: components["schemas"]["StudioResponse"][] | null;
+            subscription?: components["schemas"]["StudioListSubscriptionResponse"];
+        };
+        StudioListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        StudioListSubscriptionResponse: {
+            /** Format: int32 */
+            studioCreated?: number;
+            /** Format: int32 */
+            studioLimit?: number;
+        };
         StudioMemberResponse: {
+            avatarUrl?: string | null;
             email?: string | null;
             groupInfo?: components["schemas"]["GroupInfoItem"][] | null;
             studioRole?: components["schemas"]["StudioRole"];
@@ -6079,18 +6233,13 @@ export interface components {
             /** Format: uuid */
             studioId?: string;
             studioName?: string | null;
+            studioRole?: components["schemas"]["StudioRole"];
             /** Format: date-time */
             updatedAt?: string;
         };
         StudioResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["StudioResponse"];
-            message?: string | null;
-            status?: string | null;
-        };
-        StudioResponseListApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["StudioResponse"][] | null;
             message?: string | null;
             status?: string | null;
         };
@@ -6229,6 +6378,12 @@ export interface components {
             user?: components["schemas"]["UserDto"];
             /** Format: uuid */
             userId?: string;
+        };
+        TaskCommentDtoApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TaskCommentDto"];
+            message?: string | null;
+            status?: string | null;
         };
         TaskCommentListResponse: {
             comments?: components["schemas"]["TaskCommentDto"][] | null;

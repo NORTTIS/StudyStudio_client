@@ -71,6 +71,16 @@ class ServerApiClient {
 
             // Check if response is ok and has content
             if (!response.ok) {
+                // Handle 429 Rate Limit specifically
+                if (response.status === 429) {
+                    console.warn(`Rate limit exceeded for ${endpoint}`);
+                    return {
+                        status: "error",
+                        code: "RATE_LIMIT_EXCEEDED",
+                        message: "Too many requests. Please try again later.",
+                        data: null
+                    };
+                }
                 console.log(`GET ${endpoint} failed with status ${response.status}`);
                 return {
                     status: "error",
@@ -121,6 +131,16 @@ class ServerApiClient {
 
             // Check if response is ok and has content
             if (!response.ok) {
+                // Handle 429 Rate Limit specifically
+                if (response.status === 429) {
+                    console.warn(`Rate limit exceeded for ${endpoint}`);
+                    return {
+                        status: "error",
+                        code: "RATE_LIMIT_EXCEEDED",
+                        message: "Too many requests. Please try again later.",
+                        data: null
+                    };
+                }
                 return {
                     status: "error",
                     code: `HTTP_${response.status}`,
@@ -170,6 +190,16 @@ class ServerApiClient {
 
             // Check if response is ok and has content
             if (!response.ok) {
+                // Handle 429 Rate Limit specifically
+                if (response.status === 429) {
+                    console.warn(`Rate limit exceeded for ${endpoint}`);
+                    return {
+                        status: "error",
+                        code: "RATE_LIMIT_EXCEEDED",
+                        message: "Too many requests. Please try again later.",
+                        data: null
+                    };
+                }
                 return {
                     status: "error",
                     code: `HTTP_${response.status}`,
@@ -218,6 +248,16 @@ class ServerApiClient {
 
             // Check if response is ok and has content
             if (!response.ok) {
+                // Handle 429 Rate Limit specifically
+                if (response.status === 429) {
+                    console.warn(`Rate limit exceeded for ${endpoint}`);
+                    return {
+                        status: "error",
+                        code: "RATE_LIMIT_EXCEEDED",
+                        message: "Too many requests. Please try again later.",
+                        data: null
+                    };
+                }
                 return {
                     status: "error",
                     code: `HTTP_${response.status}`,

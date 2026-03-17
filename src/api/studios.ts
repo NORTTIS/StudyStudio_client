@@ -9,6 +9,18 @@ import type { components } from "./types";
 export type StudioMemberResponse = components["schemas"]["StudioMemberResponse"];
 export type GroupInfoItem = components["schemas"]["GroupInfoItem"];
 
+// Subscription info from /studio API response
+export type StudioListSubscription = {
+    studioCreated: number;
+    studioLimit: number;
+};
+
+// Full response from /studio API
+export type StudioListResponse = {
+    studios: StudioUI[];
+    subscription: StudioListSubscription;
+};
+
 export type Studio = {
     studioId: string;
     studioName: string;
@@ -18,6 +30,7 @@ export type Studio = {
     updatedAt: string;
     groupCount: number;
     completionProgress?: number; // Tiến độ hoàn thiện trung bình (%)
+    studioRole?: 0 | 1; // 0 = Owner, 1 = Member
 };
 
 // Map API response to UI format
@@ -31,6 +44,7 @@ export type StudioUI = {
     completionProgress: number; // Tiến độ hoàn thiện trung bình (%)
     createdAt: string;
     updatedAt: string;
+    studioRole?: 0 | 1; // 0 = Owner, 1 = Member
 };
 
 export type CreateStudioRequest = {
@@ -56,7 +70,8 @@ function mapStudioToUI(studio: Studio): StudioUI {
         groupCount: studio.groupCount,
         completionProgress: studio.completionProgress || 0, // Tiến độ hoàn thiện từ API
         createdAt: studio.createdAt,
-        updatedAt: studio.updatedAt
+        updatedAt: studio.updatedAt,
+        studioRole: studio.studioRole // 0 = Owner, 1 = Member
     };
 }
 
@@ -64,17 +79,23 @@ function mapStudioToUI(studio: Studio): StudioUI {
  * Get list of studios
  */
 export async function getStudios(locale = "vi") {
-    const result = await apiFetch<Studio[]>("/studio", {
+    const result = await apiFetch<{ studios: Studio[]; subscription?: StudioListSubscription }>("/studio", {
         method: "GET",
         locale
     });
 
     // Map API response to UI format
     if (result.status === "success" && result.data) {
-        const mappedData = result.data.map(mapStudioToUI);
+        const mappedStudios = result.data.studios.map(mapStudioToUI);
         return {
             ...result,
-            data: mappedData
+            data: {
+                studios: mappedStudios,
+                subscription: result.data.subscription || {
+                    studioCreated: mappedStudios.length,
+                    studioLimit: 3
+                }
+            } as StudioListResponse
         };
     }
 

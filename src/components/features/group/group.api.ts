@@ -71,7 +71,7 @@ function toShortCode(name: string) {
         .join("");
 }
 
-function mapRole(role?: string | null): GroupRole {
+export function mapRole(role?: string | null): GroupRole {
     const r = (role || "").toLowerCase().trim();
     if (r.includes("owner")) return "owner";
     if (r.includes("moderator")) return "moderator";

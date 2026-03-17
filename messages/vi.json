@@ -502,6 +502,12 @@
         "backToList": "Quay lại danh sách",
         "groupsTitle": "Danh sách nhóm",
         "noGroups": "Chưa có nhóm nào trong studio này",
+        "yourStudios": "Studio của bạn",
+        "joinedStudios": "Studio bạn tham gia",
+        "roles": {
+            "owner": "Chủ sở hữu",
+            "member": "Thành viên"
+        },
         "modal": {
             "createTitle": "Tạo Studio Mới",
             "editTitle": "Chỉnh sửa Studio",
