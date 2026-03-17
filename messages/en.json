@@ -1209,7 +1209,7 @@
         "noNotifications": "No notifications yet",
         "justNow": "Just now",
         "hoursAgo": "{{hours}}h ago",
-        "daysAgo": "{{days}}d ago",
+        "daysAgo": "{{count}}d ago",
         "viewAll": "View all notifications",
         "delete": "Delete notification",
         "confirmDelete": "Are you sure you want to delete this notification?",

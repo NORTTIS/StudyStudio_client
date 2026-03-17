@@ -1205,7 +1205,7 @@
         "noNotifications": "Chưa có thông báo nào",
         "justNow": "Vừa xong",
         "hoursAgo": "{{hours}} giờ trước",
-        "daysAgo": "{{days}} ngày trước",
+        "daysAgo": "{{count}} ngày trước",
         "viewAll": "Xem tất cả thông báo",
         "delete": "Xóa thông báo",
         "confirmDelete": "Bạn có chắc chắn muốn xóa thông báo này?",

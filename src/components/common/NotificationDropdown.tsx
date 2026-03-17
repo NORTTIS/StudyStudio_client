@@ -36,6 +36,18 @@ const BellIcon = ({ hasUnread }: { hasUnread: boolean }) => (
     </div>
 );
 
+// Helper function to detect corrupted text
+function isCorruptedText(text: string): boolean {
+    // Check for common corruption patterns
+    const corruptionPatterns = [
+        /[^\x00-\x7F\u00C0-\u017F\u1EA0-\u1EF9]/g, // Non-Latin characters that might be corrupted
+        /\?\?\?/g, // Question marks indicating encoding issues
+        /[A-Z]\d+[a-z]/g // Mixed case with numbers (common in corruption)
+    ];
+
+    return corruptionPatterns.some((pattern) => pattern.test(text));
+}
+
 export function NotificationDropdown() {
     console.log("🔔 NotificationDropdown: Component mounted/rendered");
     const t = useTranslations("Notifications");
@@ -51,18 +63,6 @@ export function NotificationDropdown() {
 
     const unreadCount = notifications.filter((n) => !n.read).length;
     const hasUnread = unreadCount > 0;
-
-    // Helper function to detect corrupted text
-    const isCorruptedText = (text: string): boolean => {
-        // Check for common corruption patterns
-        const corruptionPatterns = [
-            /[^\x00-\x7F\u00C0-\u017F\u1EA0-\u1EF9]/g, // Non-Latin characters that might be corrupted
-            /\?\?\?/g, // Question marks indicating encoding issues
-            /[A-Z]\d+[a-z]/g // Mixed case with numbers (common in corruption)
-        ];
-
-        return corruptionPatterns.some((pattern) => pattern.test(text));
-    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -117,7 +117,7 @@ export function NotificationDropdown() {
         } finally {
             setIsLoading(false);
         }
-    }, [locale, isCorruptedText]);
+    }, [locale]);
 
     useEffect(() => {
         loadNotifications();
@@ -228,7 +228,7 @@ export function NotificationDropdown() {
             return t("hoursAgo", { hours: diffInHours });
         }
         const diffInDays = Math.floor(diffInHours / 24);
-        return t("daysAgo", { days: diffInDays });
+        return t("daysAgo", { count: diffInDays });
     };
 
     return (
@@ -283,11 +283,13 @@ export function NotificationDropdown() {
                         ) : (
                             <div className="py-2">
                                 {notifications.map((notification) => (
-                                    <button
+                                    <div
                                         key={notification.id}
-                                        type="button"
+                                        role="button"
+                                        tabIndex={0}
                                         onClick={() => handleNotificationClick(notification)}
-                                        className={`w-full px-4 py-3 text-left transition-colors hover:bg-[#F4F5FA] ${!notification.read ? "bg-blue-50" : ""}`}>
+                                        onKeyDown={(e) => e.key === 'Enter' && handleNotificationClick(notification)}
+                                        className={`w-full px-4 py-3 text-left transition-colors hover:bg-[#F4F5FA] cursor-pointer ${!notification.read ? "bg-blue-50" : ""}`}>
                                         <div className="flex items-start gap-3">
                                             <span className="text-lg">{getNotificationIcon(notification.type)}</span>
                                             <div className="min-w-0 flex-1">
@@ -328,7 +330,7 @@ export function NotificationDropdown() {
                                                 </svg>
                                             </button>
                                         </div>
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
                         )}
