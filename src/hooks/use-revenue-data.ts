@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
+    getMRR,
     getRevenueByPeriod,
     getRevenueByPlan,
     getRevenueTransactions,
     getRevenueTrends,
     getTopPlans,
-    getMRR,
+    type MRRData,
     type RevenueByPeriod,
     type RevenueByPlan,
+    type RevenueOverview,
     type RevenueTransaction,
     type RevenueTrendsData,
-    type TopPlan,
-    type MRRData,
-    type RevenueOverview
+    type TopPlan
 } from "@/api/admin-revenue";
 
 export interface RevenueFilters {
@@ -87,7 +87,7 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const [filters, setFilters] = useState<RevenueFilters>(getDefaultFilters);
 
     // Data state
-    const [overview, setOverview] = useState<RevenueOverview | null>(options.initialOverview ?? null);
+    const [overview, _setOverview] = useState<RevenueOverview | null>(options.initialOverview ?? null);
     const [byPeriod, setByPeriod] = useState<RevenueByPeriod[] | null>(options.initialByPeriod ?? null);
     const [byPlan, setByPlan] = useState<RevenueByPlan[] | null>(options.initialByPlan ?? null);
     const [trends, setTrends] = useState<RevenueTrendsData | null>(options.initialTrends ?? null);
@@ -124,15 +124,12 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
         } finally {
             setLoading((prev) => ({ ...prev, byPeriod: false }));
         }
-    }, [filters.startDate, filters.endDate, filters.period, filters.planId]);
+    }, [filters.startDate, filters.endDate, filters.period]);
 
     const fetchByPlan = useCallback(async () => {
         setLoading((prev) => ({ ...prev, byPlan: true }));
         try {
-            const response = await getRevenueByPlan(
-                filters.startDate,
-                filters.endDate
-            );
+            const response = await getRevenueByPlan(filters.startDate, filters.endDate);
             if (response.data) {
                 setByPlan(response.data);
             }
@@ -146,10 +143,7 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     const fetchTransactions = useCallback(async (params: { pageNumber?: number; pageSize?: number } = {}) => {
         setLoading((prev) => ({ ...prev, transactions: true }));
         try {
-            const response = await getRevenueTransactions(
-                params.pageNumber || 1,
-                params.pageSize || 10
-            );
+            const response = await getRevenueTransactions(params.pageNumber || 1, params.pageSize || 10);
             if (response.data) {
                 setTransactions(response.data);
             }
@@ -158,7 +152,7 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
         } finally {
             setLoading((prev) => ({ ...prev, transactions: false }));
         }
-    }, [filters.startDate, filters.endDate, filters.planId, filters.paymentStatus, filters.searchTerm]);
+    }, []);
 
     const fetchTrends = useCallback(async () => {
         setLoading((prev) => ({ ...prev, trends: true }));
@@ -172,27 +166,26 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
         } finally {
             setLoading((prev) => ({ ...prev, trends: false }));
         }
-    }, [filters.startDate, filters.endDate]);
+    }, []);
 
-    const fetchTopPlans = useCallback(async (params: { limit?: number } = {}) => {
-        setLoading((prev) => ({ ...prev, topPlans: true }));
-        try {
-            const response = await getTopPlans(
-                params.limit || 5,
-                filters.startDate,
-                filters.endDate
-            );
-            if (response.data) {
-                setTopPlans(response.data);
+    const fetchTopPlans = useCallback(
+        async (params: { limit?: number } = {}) => {
+            setLoading((prev) => ({ ...prev, topPlans: true }));
+            try {
+                const response = await getTopPlans(params.limit || 5, filters.startDate, filters.endDate);
+                if (response.data) {
+                    setTopPlans(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching top plans:", error);
+            } finally {
+                setLoading((prev) => ({ ...prev, topPlans: false }));
             }
-        } catch (error) {
-            console.error("Error fetching top plans:", error);
-        } finally {
-            setLoading((prev) => ({ ...prev, topPlans: false }));
-        }
-    }, [filters.startDate, filters.endDate]);
+        },
+        [filters.startDate, filters.endDate]
+    );
 
-    const fetchMRR = useCallback(async (year?: number) => {
+    const fetchMRR = useCallback(async (_year?: number) => {
         setLoading((prev) => ({ ...prev, mrr: true }));
         try {
             const response = await getMRR();
@@ -207,56 +200,56 @@ export function useRevenueData(options: UseRevenueDataOptions = {}): UseRevenueD
     }, []);
 
     // Apply filters - updates filters and fetches all data
-    const applyFilters = useCallback(async (newFilters: Partial<RevenueFilters>) => {
-        const updatedFilters = { ...filters, ...newFilters };
-        setFilters(updatedFilters);
+    const applyFilters = useCallback(
+        async (newFilters: Partial<RevenueFilters>) => {
+            const updatedFilters = { ...filters, ...newFilters };
+            setFilters(updatedFilters);
 
-        // Fetch all data in parallel
-        setLoading({
-            byPeriod: true,
-            byPlan: true,
-            transactions: true,
-            trends: true,
-            topPlans: true,
-            mrr: true
-        });
-
-        try {
-            const [periodRes, planRes, txnRes, trendsRes, topPlansRes, mrrRes] = await Promise.all([
-                getRevenueByPeriod(
-                    updatedFilters.period as "day" | "week" | "month" | "year",
-                    updatedFilters.startDate,
-                    updatedFilters.endDate
-                ),
-                getRevenueByPlan(
-                    updatedFilters.startDate,
-                    updatedFilters.endDate
-                ),
-                getRevenueTransactions(1, 10),
-                getRevenueTrends("month"),
-                getTopPlans(5, updatedFilters.startDate, updatedFilters.endDate),
-                getMRR()
-            ]);
-
-            if (periodRes.data) setByPeriod(periodRes.data);
-            if (planRes.data) setByPlan(planRes.data);
-            if (txnRes.data) setTransactions(txnRes.data);
-            if (trendsRes.data) setTrends(trendsRes.data);
-            if (topPlansRes.data) setTopPlans(topPlansRes.data);
-            if (mrrRes.data) setMrr(mrrRes.data);
-        } catch (error) {
-            console.error("Error applying filters:", error);
-        } finally {
+            // Fetch all data in parallel
             setLoading({
-                byPeriod: false,
-                byPlan: false,
-                transactions: false,
-                trends: false,
-                topPlans: false,
-                mrr: false
+                byPeriod: true,
+                byPlan: true,
+                transactions: true,
+                trends: true,
+                topPlans: true,
+                mrr: true
             });
-        }
-    }, [filters]);
+
+            try {
+                const [periodRes, planRes, txnRes, trendsRes, topPlansRes, mrrRes] = await Promise.all([
+                    getRevenueByPeriod(
+                        updatedFilters.period as "day" | "week" | "month" | "year",
+                        updatedFilters.startDate,
+                        updatedFilters.endDate
+                    ),
+                    getRevenueByPlan(updatedFilters.startDate, updatedFilters.endDate),
+                    getRevenueTransactions(1, 10),
+                    getRevenueTrends("month"),
+                    getTopPlans(5, updatedFilters.startDate, updatedFilters.endDate),
+                    getMRR()
+                ]);
+
+                if (periodRes.data) setByPeriod(periodRes.data);
+                if (planRes.data) setByPlan(planRes.data);
+                if (txnRes.data) setTransactions(txnRes.data);
+                if (trendsRes.data) setTrends(trendsRes.data);
+                if (topPlansRes.data) setTopPlans(topPlansRes.data);
+                if (mrrRes.data) setMrr(mrrRes.data);
+            } catch (error) {
+                console.error("Error applying filters:", error);
+            } finally {
+                setLoading({
+                    byPeriod: false,
+                    byPlan: false,
+                    transactions: false,
+                    trends: false,
+                    topPlans: false,
+                    mrr: false
+                });
+            }
+        },
+        [filters]
+    );
 
     return {
         overview,

@@ -473,7 +473,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                             key={plan.planId ?? plan.planName ?? `plan-${index}`}
                                                             fill={
                                                                 ["#FF5F3D", "#7C3AED", "#22C55E", "#F59E0B", "#3B82F6"][
-                                                                index % 5
+                                                                    index % 5
                                                                 ]
                                                             }
                                                         />
@@ -534,7 +534,9 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                             {/* MRR Breakdown - Stacked BarChart */}
                             <div className="rounded-2xl border border-gray-200 bg-white p-6">
                                 <div className="mb-5 flex items-center justify-between">
-                                    <h2 className="font-bold text-[#261E33] text-lg">Phân tích đoanh thu theo chu kỳ</h2>
+                                    <h2 className="font-bold text-[#261E33] text-lg">
+                                        Phân tích đoanh thu theo chu kỳ
+                                    </h2>
                                     <span className="text-[#6F6B99] text-sm">
                                         {mrrBreakdown
                                             ? `MRR hiện tại: ${formatCurrency(mrrBreakdown.currentMRR ?? 0)}`
@@ -546,29 +548,32 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                     <>
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-green-50 p-4 rounded-lg">
-                                                    <div className="text-green-600 text-sm font-medium">MRR Hiện tại</div>
-                                                    <div className="text-green-800 text-xl font-bold">
+                                                <div className="rounded-lg bg-green-50 p-4">
+                                                    <div className="font-medium text-green-600 text-sm">
+                                                        MRR Hiện tại
+                                                    </div>
+                                                    <div className="font-bold text-green-800 text-xl">
                                                         {formatCurrency(mrrBreakdown.currentMRR)}
                                                     </div>
                                                 </div>
-                                                <div className="bg-blue-50 p-4 rounded-lg">
-                                                    <div className="text-blue-600 text-sm font-medium">Tăng trưởng</div>
-                                                    <div className="text-blue-800 text-xl font-bold">
-                                                        {mrrBreakdown.growth > 0 ? '+' : ''}{mrrBreakdown.growth.toFixed(1)}%
+                                                <div className="rounded-lg bg-blue-50 p-4">
+                                                    <div className="font-medium text-blue-600 text-sm">Tăng trưởng</div>
+                                                    <div className="font-bold text-blue-800 text-xl">
+                                                        {mrrBreakdown.growth > 0 ? "+" : ""}
+                                                        {mrrBreakdown.growth.toFixed(1)}%
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-gray-50 p-3 rounded">
+                                                <div className="rounded bg-gray-50 p-3">
                                                     <div className="text-gray-600 text-xs">MRR Mới</div>
-                                                    <div className="text-gray-800 font-semibold">
+                                                    <div className="font-semibold text-gray-800">
                                                         {formatCurrency(mrrBreakdown.newMRR)}
                                                     </div>
                                                 </div>
-                                                <div className="bg-gray-50 p-3 rounded">
+                                                <div className="rounded bg-gray-50 p-3">
                                                     <div className="text-gray-600 text-xs">MRR Mở rộng</div>
-                                                    <div className="text-gray-800 font-semibold">
+                                                    <div className="font-semibold text-gray-800">
                                                         {formatCurrency(mrrBreakdown.expansionMRR)}
                                                     </div>
                                                 </div>
@@ -582,9 +587,13 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                     className="rounded-xl border border-gray-100 bg-[#F8F8F8] p-3">
                                                     <div className="mb-1 flex items-center gap-2">
                                                         <span className={`h-2.5 w-2.5 rounded-full ${item.color}`} />
-                                                        <span className="font-semibold text-[#261E33] text-sm">{item.label}</span>
+                                                        <span className="font-semibold text-[#261E33] text-sm">
+                                                            {item.label}
+                                                        </span>
                                                     </div>
-                                                    <p className="text-[#6F6B99] text-xs leading-5">{item.description}</p>
+                                                    <p className="text-[#6F6B99] text-xs leading-5">
+                                                        {item.description}
+                                                    </p>
                                                 </div>
                                             ))}
                                         </div>
@@ -686,9 +695,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
 
                                                 return (
                                                     <tr
-                                                        key={
-                                                            txn.transactionId || index
-                                                        }
+                                                        key={txn.transactionId || index}
                                                         className="border-gray-100 border-t transition-colors hover:bg-gray-50">
                                                         <td className="px-6 py-4">
                                                             <span className="font-mono font-semibold text-[#261E33] text-xs">

@@ -414,8 +414,8 @@ export function AnnouncementsPage() {
                                             selectedDetail.type === "0" || selectedDetail.type === "info"
                                                 ? t("Announcements.info")
                                                 : selectedDetail.type === "1" || selectedDetail.type === "warning"
-                                                    ? t("Announcements.warning")
-                                                    : t("Announcements.critical")
+                                                  ? t("Announcements.warning")
+                                                  : t("Announcements.critical")
                                         }
                                         className={`${getTypeColorClass(selectedDetail.type)} rounded-full px-4 py-1 font-bold text-[10px] uppercase tracking-widest`}
                                     />

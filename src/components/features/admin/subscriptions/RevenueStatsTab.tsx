@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
+import { exportRevenueData, getMRR, getRevenueOverview, getRevenueTrends, getTopPlans } from "@/api/admin-revenue";
 import { Button } from "@/components/ui/button";
-import { getRevenueOverview, getRevenueTrends, getTopPlans, getMRR, exportRevenueData } from "@/api/admin-revenue";
 
 export function RevenueStatsTab() {
     const locale = useLocale();
     const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month");
-    const [isLoading, setIsLoading] = useState(true);
+    const [_isLoading, setIsLoading] = useState(true);
     const [stats, setStats] = useState({
         totalRevenue: 0,
         monthlyRevenue: 0,
@@ -18,14 +18,10 @@ export function RevenueStatsTab() {
     const [monthlyData, setMonthlyData] = useState<any[]>([]);
     const [topPlans, setTopPlans] = useState<any[]>([]);
 
-    useEffect(() => {
-        loadRevenueData();
-    }, [locale, timeRange]);
-
-    const loadRevenueData = async () => {
+    const loadRevenueData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [overviewResult, trendsResult, plansResult, mrrResult] = await Promise.all([
+            const [overviewResult, trendsResult, plansResult, _mrrResult] = await Promise.all([
                 getRevenueOverview(locale),
                 getRevenueTrends(timeRange, locale),
                 getTopPlans(5, undefined, undefined, locale),
@@ -45,34 +41,41 @@ export function RevenueStatsTab() {
             // Update trends
             if (trendsResult.status === "success" && trendsResult.data) {
                 const current = trendsResult.data.currentPeriod;
-                setMonthlyData([{
-                    month: new Date(current.startDate).toLocaleDateString('en-US', { month: 'short' }),
-                    revenue: current.totalRevenue,
-                    subscriptions: current.transactionCount
-                }]);
+                setMonthlyData([
+                    {
+                        month: new Date(current.startDate).toLocaleDateString("en-US", { month: "short" }),
+                        revenue: current.totalRevenue,
+                        subscriptions: current.transactionCount
+                    }
+                ]);
             }
 
             // Update top plans
             if (plansResult.status === "success" && plansResult.data) {
-                setTopPlans(plansResult.data.map((p: any) => ({
-                    plan: p.planName,
-                    subscribers: p.subscriptions,
-                    revenue: p.revenue,
-                    percentage: p.growth // or calculate
-                })));
+                setTopPlans(
+                    plansResult.data.map((p: any) => ({
+                        plan: p.planName,
+                        subscribers: p.subscriptions,
+                        revenue: p.revenue,
+                        percentage: p.growth // or calculate
+                    }))
+                );
             }
-
         } catch (error) {
             console.error("Failed to load revenue data:", error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [locale, timeRange]);
+
+    useEffect(() => {
+        loadRevenueData();
+    }, [loadRevenueData]);
 
     const handleExportReport = async () => {
         try {
-            const endDate = new Date().toISOString().split('T')[0];
-            const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            const endDate = new Date().toISOString().split("T")[0];
+            const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
             await exportRevenueData("overview", startDate, endDate, "month", false, locale);
             console.log("Revenue report exported successfully");
