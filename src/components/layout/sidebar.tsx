@@ -13,36 +13,37 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { getUserProfile } from "@/api/user-profile";
 import { Logo } from "@/components/common";
 
-const userNavigation = [
-    { name: "Home", href: "/home", icon: LayoutDashboard },
-    { name: "Groups", href: "/group", icon: Users },
-    { name: "Master", href: "/master", icon: BarChart3 },
-    { name: "Announcements", href: "/announcements", icon: Bell }
-];
-
-const adminNavigation = [
-    { name: "Bảng điều khiển", href: "/admin/dashboard", icon: LayoutDashboard },
-    { name: "Người dùng", href: "/admin/users", icon: Users },
-    { name: "Nhóm", href: "/admin/groups", icon: Users },
-    { name: "Gói đăng ký", href: "/admin/subscriptions", icon: CreditCard },
-    { name: "Báo cáo", href: "/admin/reports", icon: FileText },
-    { name: "Tin tức", href: "/admin/news", icon: Newspaper }
-];
-
 export function DashboardSidebar() {
     const pathname = usePathname();
     const locale = useLocale();
+    const t = useTranslations("Sidebar");
 
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [collapsed, setCollapsed] = useState(false);
     const [mounted, setMounted] = useState(false);
+
+    const userNavigation = [
+        { name: t("home"), href: "/home", icon: LayoutDashboard },
+        { name: t("groups"), href: "/group", icon: Users },
+        { name: t("master"), href: "/master", icon: BarChart3 },
+        { name: t("announcements"), href: "/announcements", icon: Bell }
+    ];
+
+    const adminNavigation = [
+        { name: t("dashboard"), href: "/admin/dashboard", icon: LayoutDashboard },
+        { name: t("users"), href: "/admin/users", icon: Users },
+        { name: t("adminGroups"), href: "/admin/groups", icon: Users },
+        { name: t("subscriptions"), href: "/admin/subscriptions", icon: CreditCard },
+        { name: t("reports"), href: "/admin/reports", icon: FileText },
+        { name: t("news"), href: "/admin/news", icon: Newspaper }
+    ];
 
     useEffect(() => {
         setMounted(true);

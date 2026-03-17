@@ -18,15 +18,13 @@ import {
     YAxis
 } from "recharts";
 import type {
-    MRRBreakdownData,
-    PlanRevenueSummary,
-    RevenueByPeriodData,
-    RevenueByPlanData,
-    RevenueOverviewData,
-    RevenueTransactionsData,
+    MRRData,
+    RevenueByPeriod,
+    RevenueByPlan,
+    RevenueOverview,
+    RevenueTransaction,
     RevenueTrendsData,
-    TopPlansData,
-    TransactionDetail
+    TopPlan
 } from "@/api/admin-revenue";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
@@ -35,13 +33,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useRevenueData } from "@/hooks/use-revenue-data";
 
 export interface RevenueDashboardData {
-    overview: RevenueOverviewData | null;
-    byPeriod: RevenueByPeriodData | null;
-    byPlan: RevenueByPlanData | null;
+    overview: RevenueOverview | null;
+    byPeriod: RevenueByPeriod[] | null;
+    byPlan: RevenueByPlan[] | null;
     trends: RevenueTrendsData | null;
-    topPlans: TopPlansData | null;
-    transactions: RevenueTransactionsData | null;
-    mrr: MRRBreakdownData | null;
+    topPlans: TopPlan[] | null;
+    transactions: { transactions: RevenueTransaction[]; total: number } | null;
+    mrr: MRRData | null;
 }
 
 interface RevenueDashboardPageProps {
@@ -65,7 +63,7 @@ const getSafeDate = (value?: string | null): Date | null => {
     return Number.isNaN(date.getTime()) ? null : date;
 };
 
-const normalizePaymentStatus = (status?: TransactionDetail["paymentStatus"]): string => {
+const normalizePaymentStatus = (status?: number | string): string => {
     const statusMap: Record<number, string> = {
         0: "PENDING",
         1: "SUCCESS",
@@ -81,7 +79,7 @@ const normalizePaymentStatus = (status?: TransactionDetail["paymentStatus"]): st
 };
 
 // Helper to convert payment status to Vietnamese
-const getPaymentStatusLabel = (status?: TransactionDetail["paymentStatus"]): string => {
+const getPaymentStatusLabel = (status?: number | string): string => {
     const statusMap: Record<string, string> = {
         SUCCESS: "Thành công",
         PENDING: "Đang xử lý",
@@ -151,15 +149,11 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
 
     // Use API data or fallback to default values
     const overview = data?.overview;
-    const byPeriod = periodData ?? data?.byPeriod;
-    const byPlan = planData ?? data?.byPlan;
+    const byPeriod = (periodData ?? data?.byPeriod) || [];
+    const byPlan = (planData ?? data?.byPlan) || [];
     const transactions = transactionsData ?? data?.transactions;
     const mrrBreakdown = mrrData ?? data?.mrr;
-    const topPlans = topPlansData ?? data?.topPlans;
-    const availablePlans = (byPlan?.plans ?? []).filter((plan): plan is PlanRevenueSummary & { planId: string } =>
-        Boolean(plan.planId)
-    );
-    const chartData = byPeriod?.breakdown ?? [];
+    const topPlans = (topPlansData ?? data?.topPlans) || [];
     const transactionRows = transactions?.transactions ?? [];
 
     // Calculate derived values
@@ -170,7 +164,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
     const isPositive = monthlyRevenue >= prevRevenue;
 
     // Process byPeriod data for chart
-    const maxRevenue = chartData.length > 0 ? Math.max(...chartData.map((point) => point.revenue ?? 0)) : 1;
+    const maxRevenue = byPeriod.length > 0 ? Math.max(...byPeriod.map((point) => point.revenue ?? 0)) : 1;
 
     // Calculate successful transactions for summary
     const successfulTransactions = overview?.successfulTransactions ?? 0;
@@ -303,7 +297,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Tất cả gói</SelectItem>
-                                        {availablePlans.map((plan) => (
+                                        {byPlan.map((plan) => (
                                             <SelectItem key={plan.planId} value={plan.planId}>
                                                 {plan.planName}
                                             </SelectItem>
@@ -371,11 +365,11 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                             <div className="col-span-2 rounded-2xl border border-gray-200 bg-white p-6">
                                 <div className="mb-5 flex items-center justify-between">
                                     <h2 className="font-bold text-[#261E33] text-lg">Xu hướng doanh thu</h2>
-                                    <span className="text-[#6F6B99] text-sm">{chartData.length} kỳ gần nhất</span>
+                                    <span className="text-[#6F6B99] text-sm">{byPeriod.length} kỳ gần nhất</span>
                                 </div>
 
                                 <ResponsiveContainer width="100%" height={320}>
-                                    <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <AreaChart data={byPeriod} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#FF5F3D" stopOpacity={0.3} />
@@ -424,14 +418,14 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
 
                                 {/* Recent months summary */}
                                 <div className="mt-4 space-y-2">
-                                    {chartData.slice(-4).map((d) => {
-                                        const date = getSafeDate(d.date);
+                                    {byPeriod.slice(-4).map((d) => {
+                                        const date = getSafeDate(d.period);
                                         const monthLabel = date ? getVietnameseMonth(date.getMonth() + 1) : "N/A";
                                         const revenue = d.revenue ?? 0;
-                                        const transactionCount = d.transactionCount ?? 0;
+                                        const transactionCount = d.subscriptions ?? 0;
 
                                         return (
-                                            <div key={d.date ?? monthLabel} className="flex items-center gap-3">
+                                            <div key={d.period ?? monthLabel} className="flex items-center gap-3">
                                                 <span className="w-10 text-[#6F6B99] text-xs">{monthLabel}</span>
                                                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
                                                     <div
@@ -445,7 +439,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                     {revenue.toLocaleString("vi-VN")} ₫
                                                 </span>
                                                 <span className="w-20 text-right text-[#6F6B99] text-xs">
-                                                    {transactionCount} giao dịch
+                                                    {transactionCount} đăng ký
                                                 </span>
                                             </div>
                                         );
@@ -457,12 +451,12 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                             <div className="rounded-2xl border border-gray-200 bg-white p-6">
                                 <h2 className="mb-5 font-bold text-[#261E33] text-lg">Doanh thu theo gói</h2>
 
-                                {byPlan?.plans && byPlan.plans.length > 0 ? (
+                                {byPlan && byPlan.length > 0 ? (
                                     <>
                                         <ResponsiveContainer width="100%" height={220}>
                                             <PieChart>
                                                 <Pie
-                                                    data={byPlan.plans}
+                                                    data={byPlan}
                                                     dataKey="totalRevenue"
                                                     nameKey="planName"
                                                     cx="50%"
@@ -474,7 +468,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                         `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
                                                     }
                                                     labelLine={false}>
-                                                    {byPlan.plans.map((plan, index) => (
+                                                    {byPlan.map((plan, index) => (
                                                         <Cell
                                                             key={plan.planId ?? plan.planName ?? `plan-${index}`}
                                                             fill={
@@ -491,7 +485,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
 
                                         {/* Plan Legend */}
                                         <div className="mt-4 space-y-3">
-                                            {byPlan.plans.map((plan, index) => (
+                                            {byPlan.map((plan, index) => (
                                                 <div key={plan.planId} className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <div
@@ -550,49 +544,41 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                     </span>
                                 </div>
 
-                                {mrrBreakdown?.monthlyBreakdown && mrrBreakdown.monthlyBreakdown.length > 0 ? (
+                                {mrrBreakdown ? (
                                     <>
-                                        <ResponsiveContainer width="100%" height={280}>
-                                            <BarChart
-                                                data={mrrBreakdown.monthlyBreakdown}
-                                                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                                <XAxis
-                                                    dataKey="month"
-                                                    tickFormatter={(value) => getVietnameseMonth(Number(value))}
-                                                    stroke="#9CA3AF"
-                                                    fontSize={12}
-                                                />
-                                                <YAxis
-                                                    tickFormatter={(value) => formatCurrency(value)}
-                                                    stroke="#9CA3AF"
-                                                    fontSize={12}
-                                                />
-                                                <Tooltip
-                                                    formatter={(value) => formatCurrency(value as number)}
-                                                    contentStyle={{
-                                                        backgroundColor: "#fff",
-                                                        border: "1px solid #E5E7EB",
-                                                        borderRadius: "8px"
-                                                    }}
-                                                />
-                                                <Legend />
-                                                <Bar dataKey="newMRR" stackId="mrr" fill="#22C55E" name="New MRR" />
-                                                <Bar
-                                                    dataKey="expansionMRR"
-                                                    stackId="mrr"
-                                                    fill="#7C3AED"
-                                                    name="Expansion"
-                                                />
-                                                <Bar dataKey="churnMRR" stackId="mrr" fill="#EF4444" name="Churn" />
-                                                <Bar
-                                                    dataKey="contractionMRR"
-                                                    stackId="mrr"
-                                                    fill="#F59E0B"
-                                                    name="Contraction"
-                                                />
-                                            </BarChart>
-                                        </ResponsiveContainer>
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="rounded-lg bg-green-50 p-4">
+                                                    <div className="font-medium text-green-600 text-sm">
+                                                        MRR Hiện tại
+                                                    </div>
+                                                    <div className="font-bold text-green-800 text-xl">
+                                                        {formatCurrency(mrrBreakdown.currentMRR)}
+                                                    </div>
+                                                </div>
+                                                <div className="rounded-lg bg-blue-50 p-4">
+                                                    <div className="font-medium text-blue-600 text-sm">Tăng trưởng</div>
+                                                    <div className="font-bold text-blue-800 text-xl">
+                                                        {mrrBreakdown.growth > 0 ? "+" : ""}
+                                                        {mrrBreakdown.growth.toFixed(1)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="rounded bg-gray-50 p-3">
+                                                    <div className="text-gray-600 text-xs">MRR Mới</div>
+                                                    <div className="font-semibold text-gray-800">
+                                                        {formatCurrency(mrrBreakdown.newMRR)}
+                                                    </div>
+                                                </div>
+                                                <div className="rounded bg-gray-50 p-3">
+                                                    <div className="text-gray-600 text-xs">MRR Mở rộng</div>
+                                                    <div className="font-semibold text-gray-800">
+                                                        {formatCurrency(mrrBreakdown.expansionMRR)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         <div className="mt-4 grid gap-3 md:grid-cols-2">
                                             {MRR_COLUMN_EXPLANATIONS.map((item) => (
@@ -625,10 +611,10 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                     <h2 className="font-bold text-[#261E33] text-lg">Top gói phổ biến</h2>
                                 </div>
 
-                                {topPlans?.topPlans && topPlans.topPlans.length > 0 ? (
+                                {topPlans && topPlans.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={280}>
                                         <BarChart
-                                            data={topPlans.topPlans}
+                                            data={topPlans}
                                             layout="vertical"
                                             margin={{ top: 10, right: 30, left: 80, bottom: 0 }}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -703,27 +689,24 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                     </thead>
                                     <tbody>
                                         {transactionRows.length > 0 ? (
-                                            transactionRows.map((txn) => {
-                                                const normalizedStatus = normalizePaymentStatus(txn.paymentStatus);
+                                            transactionRows.map((txn, index) => {
+                                                const normalizedStatus = normalizePaymentStatus(txn.status);
                                                 const createdAt = getSafeDate(txn.createdAt);
 
                                                 return (
                                                     <tr
-                                                        key={
-                                                            txn.paymentId ??
-                                                            String(txn.orderCode ?? txn.userId ?? txn.userEmail)
-                                                        }
+                                                        key={txn.transactionId || index}
                                                         className="border-gray-100 border-t transition-colors hover:bg-gray-50">
                                                         <td className="px-6 py-4">
                                                             <span className="font-mono font-semibold text-[#261E33] text-xs">
-                                                                {txn.orderCode}
+                                                                {txn.transactionId}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <p className="font-medium text-[#261E33] text-sm">
                                                                 {txn.userName}
                                                             </p>
-                                                            <p className="text-[#6F6B99] text-xs">{txn.userEmail}</p>
+                                                            <p className="text-[#6F6B99] text-xs">{txn.userId}</p>
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF5F3] px-2.5 py-1 font-medium text-[#FF5F3D] text-xs">
@@ -735,7 +718,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                             {(txn.amount ?? 0).toLocaleString("vi-VN")} ₫
                                                         </td>
                                                         <td className="px-6 py-4 text-[#6F6B99] text-sm">
-                                                            {txn.paymentMethod}
+                                                            {txn.planName}
                                                         </td>
                                                         <td className="px-6 py-4 text-[#6F6B99] text-sm">
                                                             {createdAt ? createdAt.toLocaleDateString("vi-VN") : "N/A"}
@@ -743,7 +726,7 @@ export function RevenueDashboardPage({ data }: RevenueDashboardPageProps) {
                                                         <td className="px-6 py-4">
                                                             <span
                                                                 className={`rounded-full px-3 py-1 font-medium text-xs ${STATUS_COLOR[normalizedStatus] || "bg-gray-100 text-gray-700"}`}>
-                                                                {getPaymentStatusLabel(txn.paymentStatus)}
+                                                                {getPaymentStatusLabel(txn.status)}
                                                             </span>
                                                         </td>
                                                     </tr>

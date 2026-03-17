@@ -1,35 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useLocale } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
+import { exportRevenueData, getMRR, getRevenueOverview, getRevenueTrends, getTopPlans } from "@/api/admin-revenue";
 import { Button } from "@/components/ui/button";
 
 export function RevenueStatsTab() {
+    const locale = useLocale();
     const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month");
+    const [_isLoading, setIsLoading] = useState(true);
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+        averageRevenuePerUser: 0,
+        growth: 0
+    });
+    const [monthlyData, setMonthlyData] = useState<any[]>([]);
+    const [topPlans, setTopPlans] = useState<any[]>([]);
 
-    // Mock data
-    const stats = {
-        totalRevenue: 699717000,
-        monthlyRevenue: 58309750,
-        averageRevenuePerUser: 24900,
-        growth: 12.5
-    };
+    const loadRevenueData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const [overviewResult, trendsResult, plansResult, _mrrResult] = await Promise.all([
+                getRevenueOverview(locale),
+                getRevenueTrends(timeRange, locale),
+                getTopPlans(5, undefined, undefined, locale),
+                getMRR(locale)
+            ]);
 
-    const monthlyData = [
-        { month: "Jan", revenue: 45000000, subscriptions: 150 },
-        { month: "Feb", revenue: 52000000, subscriptions: 174 },
-        { month: "Mar", revenue: 58309750, subscriptions: 195 },
-        { month: "Apr", revenue: 61000000, subscriptions: 204 },
-        { month: "May", revenue: 67000000, subscriptions: 224 },
-        { month: "Jun", revenue: 72000000, subscriptions: 241 }
-    ];
+            // Update stats
+            if (overviewResult.status === "success" && overviewResult.data) {
+                setStats({
+                    totalRevenue: overviewResult.data.totalRevenue,
+                    monthlyRevenue: overviewResult.data.monthlyRevenue,
+                    averageRevenuePerUser: overviewResult.data.arpu, // Changed from averageRevenuePerUser
+                    growth: overviewResult.data.successRate // Fallback or mapping
+                });
+            }
 
-    const topPlans = [
-        { plan: "Premium", subscribers: 2341, revenue: 699717000, percentage: 100 },
-        { plan: "Free", subscribers: 10117, revenue: 0, percentage: 0 }
-    ];
+            // Update trends
+            if (trendsResult.status === "success" && trendsResult.data) {
+                const current = trendsResult.data.currentPeriod;
+                setMonthlyData([
+                    {
+                        month: new Date(current.startDate).toLocaleDateString("en-US", { month: "short" }),
+                        revenue: current.totalRevenue,
+                        subscriptions: current.transactionCount
+                    }
+                ]);
+            }
 
-    const handleExportReport = () => {
-        console.log("Exporting revenue report...");
+            // Update top plans
+            if (plansResult.status === "success" && plansResult.data) {
+                setTopPlans(
+                    plansResult.data.map((p: any) => ({
+                        plan: p.planName,
+                        subscribers: p.subscriptions,
+                        revenue: p.revenue,
+                        percentage: p.growth // or calculate
+                    }))
+                );
+            }
+        } catch (error) {
+            console.error("Failed to load revenue data:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [locale, timeRange]);
+
+    useEffect(() => {
+        loadRevenueData();
+    }, [loadRevenueData]);
+
+    const handleExportReport = async () => {
+        try {
+            const endDate = new Date().toISOString().split("T")[0];
+            const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+            await exportRevenueData("overview", startDate, endDate, "month", false, locale);
+            console.log("Revenue report exported successfully");
+        } catch (error) {
+            console.error("Failed to export revenue report:", error);
+        }
     };
 
     return (
@@ -40,31 +92,28 @@ export function RevenueStatsTab() {
                     <button
                         type="button"
                         onClick={() => setTimeRange("week")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "week"
-                                ? "bg-[#FF5F3D] text-white"
-                                : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "week"
+                            ? "bg-[#FF5F3D] text-white"
+                            : "bg-white text-[#6F6B99] hover:bg-gray-50"
+                            }`}>
                         This Week
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("month")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "month"
-                                ? "bg-[#FF5F3D] text-white"
-                                : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "month"
+                            ? "bg-[#FF5F3D] text-white"
+                            : "bg-white text-[#6F6B99] hover:bg-gray-50"
+                            }`}>
                         This Month
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("year")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "year"
-                                ? "bg-[#FF5F3D] text-white"
-                                : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "year"
+                            ? "bg-[#FF5F3D] text-white"
+                            : "bg-white text-[#6F6B99] hover:bg-gray-50"
+                            }`}>
                         This Year
                     </button>
                 </div>
@@ -147,8 +196,8 @@ export function RevenueStatsTab() {
             <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h3 className="mb-4 font-bold text-[#261E33] text-lg">Monthly Revenue Trend</h3>
                 <div className="space-y-3">
-                    {monthlyData.map((data, index) => {
-                        const maxRevenue = Math.max(...monthlyData.map((d) => d.revenue));
+                    {monthlyData.map((data: any, index: number) => {
+                        const maxRevenue = Math.max(...monthlyData.map((d: any) => d.revenue));
                         const percentage = (data.revenue / maxRevenue) * 100;
 
                         return (
@@ -178,7 +227,7 @@ export function RevenueStatsTab() {
             <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h3 className="mb-4 font-bold text-[#261E33] text-lg">Revenue by Plan</h3>
                 <div className="space-y-4">
-                    {topPlans.map((plan, index) => (
+                    {topPlans.map((plan: any, index: number) => (
                         <div
                             key={index}
                             className="flex items-center justify-between rounded-lg border border-gray-100 p-4">
