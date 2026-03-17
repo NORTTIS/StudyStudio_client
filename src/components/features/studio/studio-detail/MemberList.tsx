@@ -101,18 +101,26 @@ export function MemberList({ members, studioOwnerId, onInviteClick, onMemberClic
                             onClick={() => onMemberClick?.(member)}
                             className="flex cursor-pointer items-center justify-between rounded-xl px-2 py-2.5 transition-colors hover:bg-gray-50">
                             <div className="flex items-center gap-3">
-                                <div
-                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${
-                                        index % 4 === 0
-                                            ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                            : index % 4 === 1
-                                              ? "bg-gradient-to-br from-pink-400 to-rose-500"
-                                              : index % 4 === 2
-                                                ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                : "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                    }`}>
-                                    {getInitials(member.userName)}
-                                </div>
+                                {member.avatarUrl ? (
+                                    <img
+                                        src={member.avatarUrl}
+                                        alt={member.userName || "Avatar"}
+                                        className="h-9 w-9 shrink-0 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div
+                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${
+                                            index % 4 === 0
+                                                ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                : index % 4 === 1
+                                                  ? "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                  : index % 4 === 2
+                                                    ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                    : "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                        }`}>
+                                        {getInitials(member.userName)}
+                                    </div>
+                                )}
                                 <div>
                                     <p className="font-medium text-slate-800 text-sm">{member.userName}</p>
                                     <p className="text-slate-400 text-xs">{member.email}</p>

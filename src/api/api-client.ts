@@ -102,6 +102,20 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
                 window.location.href = `/${locale}/login`;
             }
         }
+
+        // Handle 429 Rate Limit - return error with proper message
+        if (response.status === 429) {
+            console.warn("Rate limit exceeded for:", fullUrl);
+            return {
+                status: "error",
+                code: "RATE_LIMIT_EXCEEDED",
+                message:
+                    locale === "vi"
+                        ? "Quá nhiều yêu cầu. Vui lòng thử lại sau."
+                        : "Too many requests. Please try again later.",
+                data: null
+            };
+        }
         console.log("API Response:", { url: fullUrl, options: fetchOptions, response, data });
         return data;
     } catch {

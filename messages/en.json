@@ -531,6 +531,12 @@
         "backToList": "Back to list",
         "groupsTitle": "Groups List",
         "noGroups": "No groups in this studio yet",
+        "yourStudios": "Your Studios",
+        "joinedStudios": "Studios You Join",
+        "roles": {
+            "owner": "Owner",
+            "member": "Member"
+        },
         "modal": {
             "createTitle": "Create New Studio",
             "editTitle": "Edit Studio",

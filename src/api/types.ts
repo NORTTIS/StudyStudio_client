@@ -3631,9 +3631,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["StudioResponseListApiResponse"];
-                        "text/json": components["schemas"]["StudioResponseListApiResponse"];
-                        "text/plain": components["schemas"]["StudioResponseListApiResponse"];
+                        "application/json": components["schemas"]["StudioListResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioListResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioListResponseApiResponse"];
                     };
                 };
             };
@@ -6191,7 +6191,24 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        StudioListResponse: {
+            studios?: components["schemas"]["StudioResponse"][] | null;
+            subscription?: components["schemas"]["StudioListSubscriptionResponse"];
+        };
+        StudioListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        StudioListSubscriptionResponse: {
+            /** Format: int32 */
+            studioCreated?: number;
+            /** Format: int32 */
+            studioLimit?: number;
+        };
         StudioMemberResponse: {
+            avatarUrl?: string | null;
             email?: string | null;
             groupInfo?: components["schemas"]["GroupInfoItem"][] | null;
             studioRole?: components["schemas"]["StudioRole"];
@@ -6216,18 +6233,13 @@ export interface components {
             /** Format: uuid */
             studioId?: string;
             studioName?: string | null;
+            studioRole?: components["schemas"]["StudioRole"];
             /** Format: date-time */
             updatedAt?: string;
         };
         StudioResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["StudioResponse"];
-            message?: string | null;
-            status?: string | null;
-        };
-        StudioResponseListApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["StudioResponse"][] | null;
             message?: string | null;
             status?: string | null;
         };
