@@ -9,6 +9,7 @@ export interface Notification {
     read: boolean;
     link?: string;
     announcementId?: string; // Original announcementId for detail view
+    isSystem?: boolean; // Flag to distinguish system vs user announcements
 }
 
 // API response interfaces based on the provided schema
@@ -125,36 +126,58 @@ export async function deleteUserAnnouncement(announcementId: string, locale = "v
 }
 
 /**
- * Get all announcements from the system
- * GET /api/announcements
+ * Get all announcements (system + user) merged and sorted by publishedAt descending
+ * GET /api/announcements (system) + GET /api/announcements/user (user)
  */
 export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]> {
     try {
-        console.log("🔔 API: Lấy tất cả announcements...");
-        const response = await apiGet<AnnouncementResponse[]>("/announcements", locale);
-        console.log("🔔 API: Phản hồi từ /announcements:", response);
+        console.log("🔔 API: Lấy tất cả announcements (system + user)...");
 
-        if (response.status === "success" && response.data && Array.isArray(response.data)) {
-            const announcements = response.data.map((announcement: AnnouncementResponse) => ({
+        // Gọi cả 2 APIs song song
+        const [systemResponse, userResponse] = await Promise.all([
+            apiGet<AnnouncementResponse[]>("/announcements", locale),
+            apiGet<UserAnnouncementResponse[]>("/announcements/user", locale)
+        ]);
+
+        const allNotifications: Notification[] = [];
+
+        // Map system announcements
+        if (systemResponse.status === "success" && systemResponse.data) {
+            const systemNotifications = systemResponse.data.map((announcement) => ({
                 id: announcement.announcementId,
                 title: announcement.title,
                 description: announcement.content,
                 type: getNotificationType(announcement.type),
                 date: announcement.publishedAt,
-                read: false, // System announcements don't have read status
+                read: false, // System announcements không có read status
                 link: undefined,
-                announcementId: announcement.announcementId
+                announcementId: announcement.announcementId,
+                isSystem: true // Thêm flag để phân biệt
             }));
-            console.log("🔔 API: Trả về announcements:", announcements);
-            return announcements;
+            allNotifications.push(...systemNotifications);
         }
 
-        // Handle error response
-        if (response.status === "error") {
-            console.log("🔔 API: Lỗi từ server:", response.message);
+        // Map user announcements
+        if (userResponse.status === "success" && userResponse.data) {
+            const userNotifications = userResponse.data.map((userAnnouncement) => ({
+                id: userAnnouncement.userAnnouncementId,
+                title: userAnnouncement.title,
+                description: userAnnouncement.content,
+                type: getNotificationType(userAnnouncement.type),
+                date: userAnnouncement.publishedAt,
+                read: userAnnouncement.isRead,
+                link: undefined,
+                announcementId: userAnnouncement.announcementId,
+                isSystem: false
+            }));
+            allNotifications.push(...userNotifications);
         }
 
-        return [];
+        // Sắp xếp theo publishedAt giảm dần (mới nhất lên trước)
+        allNotifications.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        console.log("🔔 API: Trả về tất cả notifications:", allNotifications.length);
+        return allNotifications;
     } catch (error) {
         console.error("🔔 API: Lỗi khi lấy announcements:", error);
         return [];
