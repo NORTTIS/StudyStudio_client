@@ -1,7 +1,14 @@
 "use client";
 
 import * as signalR from "@microsoft/signalr";
-import { ChevronDown, ChevronUp, MessageCircle, MoreHorizontal, SendHorizontal, Trash2 } from "lucide-react";
+import {
+    ChevronDown,
+    ChevronUp,
+    MessageCircle,
+    MoreHorizontal,
+    SendHorizontal,
+    Trash2
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
@@ -196,7 +203,6 @@ function Avatar({ initials }: { initials: string }) {
     );
 }
 
-/** ✅ Counter: đếm từ + ký tự */
 function countWords(text: string) {
     const t = String(text || "").trim();
     if (!t) return 0;
@@ -218,46 +224,10 @@ function TextCounter({ text, maxChars = MAX_CHARS }: { text: string; maxChars?: 
     );
 }
 
-function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId: string) {
-    const re = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
-
-    const matches = [...text.matchAll(re)];
-    if (matches.length === 0) return text;
-
-    const mentionedIds = new Set<string>();
-    let firstIdx = Number.POSITIVE_INFINITY;
-    let lastEnd = -1;
-
-    for (const m of matches) {
-        const idx = m.index ?? 0;
-        const whole = m[0];
-        const id = (m[1] || "").trim();
-        if (!id) continue;
-
-        mentionedIds.add(id);
-        firstIdx = Math.min(firstIdx, idx);
-        lastEnd = Math.max(lastEnd, idx + whole.length);
-    }
-
-    const allExceptAuthor = Object.keys(membersById).filter((id) => id && id !== authorId);
-    if (allExceptAuthor.length === 0) return text;
-
-    if (mentionedIds.size !== allExceptAuthor.length) return text;
-
-    const allSet = new Set(allExceptAuthor);
-    for (const id of mentionedIds) {
-        if (!allSet.has(id)) return text;
-    }
-
-    if (!Number.isFinite(firstIdx) || lastEnd < 0) return text;
-
-    const before = text.slice(0, firstIdx);
-    const after = text.slice(lastEnd);
-
-    const needsSpaceBefore = before.length > 0 && !/\s$/.test(before);
-    const needsSpaceAfter = after.length > 0 && !/^\s/.test(after);
-
-    return before + (needsSpaceBefore ? " " : "") + "@__all__" + (needsSpaceAfter ? " " : "") + after;
+// Không tự động đổi "mention hết người khác" thành @all nữa.
+// Chỉ hiển thị @all khi backend/content thật sự chứa @__all__.
+function compressAllMentionsForDisplay(text: string) {
+    return text;
 }
 
 function RichTextWithMentions({
@@ -269,10 +239,7 @@ function RichTextWithMentions({
     membersById: Record<string, string>;
     authorId: string;
 }) {
-    const displayText = React.useMemo(
-        () => compressAllMentionsForDisplay(text, membersById, authorId),
-        [text, membersById, authorId]
-    );
+    const displayText = React.useMemo(() => compressAllMentionsForDisplay(text), [text]);
 
     const re = /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
     const parts: React.ReactNode[] = [];
@@ -285,15 +252,23 @@ function RichTextWithMentions({
 
         if (idx > last) parts.push(displayText.slice(last, idx));
 
-        const display = id === "__all__" ? "all" : membersById[id];
-        if (display) {
+        if (id === "__all__") {
             parts.push(
                 <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
-                    @{display}
+                    @all
                 </span>
             );
         } else {
-            parts.push(whole);
+            const display = membersById[id];
+            if (display) {
+                parts.push(
+                    <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
+                        @{display}
+                    </span>
+                );
+            } else {
+                parts.push(whole);
+            }
         }
 
         last = idx + whole.length;
@@ -335,13 +310,22 @@ function renderAllMentions(segment: string) {
     return nodes.length ? nodes : segment;
 }
 
-function expandMentionAll(payloadText: string, membersById: Record<string, string>, meId: string) {
+// @all = tất cả thành viên còn lại, trừ người đang gửi.
+function expandMentionAll(payloadText: string, membersById: Record<string, string>, authorId: string) {
     if (!payloadText.includes("@__all__")) return payloadText;
 
-    const ids = Object.keys(membersById).filter((id) => id && id !== meId);
-    if (ids.length === 0) return payloadText.replace(/@__all__\b/g, "");
+    const normalizedAuthorId = String(authorId || "").trim();
 
-    const mentions = ids.map((id) => `@${id}`).join(" ");
+    const otherMemberIds = Object.keys(membersById).filter((id) => {
+        const normalizedId = String(id || "").trim();
+        return normalizedId && normalizedId !== normalizedAuthorId;
+    });
+
+    if (otherMemberIds.length === 0) {
+        return payloadText.replace(/@__all__\b/g, "").replace(/\s{2,}/g, " ").trim();
+    }
+
+    const mentions = otherMemberIds.map((id) => `@${id}`).join(" ");
     return payloadText.replace(/@__all__\b/g, mentions);
 }
 
@@ -355,8 +339,12 @@ const MentionTextarea = React.forwardRef<
         placeholder?: string;
         className?: string;
         maxChars?: number;
+        disabled?: boolean;
     }
->(function MentionTextareaInner({ value, onChange, members, meId, placeholder, className, maxChars = MAX_CHARS }, ref) {
+>(function MentionTextareaInner(
+    { value, onChange, members, meId, placeholder, className, maxChars = MAX_CHARS, disabled = false },
+    ref
+) {
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
 
     const [open, setOpen] = React.useState(false);
@@ -440,7 +428,6 @@ const MentionTextarea = React.forwardRef<
         const next = e.target.value;
         const caret = e.target.selectionStart ?? next.length;
 
-        // ✅ enforce max chars
         if (next.length > maxChars) {
             onChange(next.slice(0, maxChars));
             return;
@@ -527,13 +514,22 @@ const MentionTextarea = React.forwardRef<
         return nodes.length ? nodes : text;
     }, [value]);
 
+    React.useEffect(() => {
+        if (disabled) {
+            setOpen(false);
+            setAnchor(null);
+            setQuery("");
+        }
+    }, [disabled]);
+
     return (
         <div className="relative">
             <div
                 aria-hidden
                 className={twMerge(
                     "pointer-events-none absolute inset-0 z-0 whitespace-pre-wrap break-words rounded-md px-3 py-2 text-sm leading-6",
-                    "text-[#261E33]"
+                    "text-[#261E33]",
+                    disabled && "opacity-60"
                 )}>
                 {value ? <>{previewNodes}</> : <span className="text-[#9CA3AF]">{placeholder}</span>}
             </div>
@@ -543,15 +539,17 @@ const MentionTextarea = React.forwardRef<
                 value={value}
                 onChange={onTextChange}
                 onKeyDown={onKeyDown}
-                placeholder={""}
+                placeholder=""
+                disabled={disabled}
                 className={twMerge(
                     className,
                     "relative z-10 bg-transparent text-transparent caret-[#261E33]",
-                    "selection:bg-blue-200"
+                    "selection:bg-blue-200",
+                    disabled && "cursor-not-allowed opacity-60"
                 )}
             />
 
-            {open ? (
+            {open && !disabled ? (
                 filtered.length > 0 ? (
                     <div className="absolute left-0 top-full z-[999] mt-2 w-full overflow-hidden rounded-xl border border-[#EDEDED] bg-white shadow-xl">
                         <div className="max-h-56 overflow-auto p-1">
@@ -617,7 +615,6 @@ function ReplyComposer({
                 maxChars={MAX_CHARS}
             />
 
-            {/* ✅ Counter */}
             <TextCounter text={text} maxChars={MAX_CHARS} />
 
             <div className="mt-3 flex items-center justify-end gap-2">
@@ -680,7 +677,6 @@ function ReplyItemView({
                                 </button>
                             </DropdownMenuTrigger>
 
-                            {/* ✅ FIX: menu không trong suốt + z cao */}
                             <DropdownMenuContent
                                 align="end"
                                 sideOffset={6}
@@ -713,7 +709,8 @@ function PostCard({
     membersById,
     mentionUsers,
     meId,
-    isOwnerId
+    isOwnerId,
+    canComment
 }: {
     post: PostItem;
     onDelete: (id: string) => void;
@@ -724,6 +721,7 @@ function PostCard({
     mentionUsers: MentionUser[];
     meId: string;
     isOwnerId: (userId: string) => boolean;
+    canComment: boolean;
 }) {
     const [replyOpen, setReplyOpen] = React.useState(false);
     const [repliesOpen, setRepliesOpen] = React.useState(true);
@@ -766,7 +764,6 @@ function PostCard({
                                 </button>
                             </DropdownMenuTrigger>
 
-                            {/* ✅ FIX: menu không trong suốt + z cao */}
                             <DropdownMenuContent
                                 align="end"
                                 sideOffset={6}
@@ -792,14 +789,21 @@ function PostCard({
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setReplyOpen((v) => !v)}
-                            className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                            aria-label="Trả lời">
-                            <MessageCircle className="h-4 w-4" />
-                            <span>{post.replies.length}</span>
-                        </button>
+                        {canComment ? (
+                            <button
+                                type="button"
+                                onClick={() => setReplyOpen((v) => !v)}
+                                className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
+                                aria-label="Trả lời">
+                                <MessageCircle className="h-4 w-4" />
+                                <span>{post.replies.length}</span>
+                            </button>
+                        ) : (
+                            <div className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#9CA3AF] text-xs">
+                                <MessageCircle className="h-4 w-4" />
+                                <span>{post.replies.length}</span>
+                            </div>
+                        )}
 
                         {post.replies.length > 0 ? (
                             <button
@@ -840,7 +844,7 @@ function PostCard({
                         </div>
                     ) : null}
 
-                    {replyOpen ? (
+                    {replyOpen && canComment ? (
                         <ReplyComposer
                             members={mentionUsers}
                             meId={meId}
@@ -882,13 +886,14 @@ export default function GroupDiscussPage() {
     }, []);
 
     const [composerText, setComposerText] = React.useState("");
-    const isComposerDisabled = !isConnected || composerText.trim().length === 0;
-
     const [posts, setPosts] = React.useState<PostItem[]>([]);
     const [userRole, setUserRole] = React.useState<GroupRole>("member");
 
     const [membersById, setMembersById] = React.useState<Record<string, string>>({});
     const [rolesById, setRolesById] = React.useState<Record<string, GroupRole>>({});
+
+    const canComment = userRole !== "viewer";
+    const isComposerDisabled = !isConnected || !canComment || composerText.trim().length === 0;
 
     const mentionUsers = React.useMemo<MentionUser[]>(
         () => Object.entries(membersById).map(([id, name]) => ({ id, name })),
@@ -905,7 +910,6 @@ export default function GroupDiscussPage() {
 
     const composerMentionRef = React.useRef<MentionTextareaHandle | null>(null);
 
-    // ✅ Confirm delete modal state
     const [deleteOpen, setDeleteOpen] = React.useState(false);
     const [deleteTargetId, setDeleteTargetId] = React.useState<string | null>(null);
     const [isDeleting, setIsDeleting] = React.useState(false);
@@ -980,6 +984,18 @@ export default function GroupDiscussPage() {
             setPosts(buildPostsFromMessages(response.data.messages));
         };
 
+        const toRole = (raw: any): GroupRole => {
+            const s = String(raw || "")
+                .toLowerCase()
+                .trim();
+
+            if (s.includes("owner")) return "owner";
+            if (s.includes("moderator")) return "moderator";
+            if (s.includes("commenter")) return "commenter";
+            if (s.includes("viewer") || s === "view") return "viewer";
+            return "member";
+        };
+
         const loadUserRole = async () => {
             if (!rawBase) return;
 
@@ -993,29 +1009,10 @@ export default function GroupDiscussPage() {
                     (response as any)?.data?.userRole ??
                     (response as any)?.data?.data?.userRole;
 
-                const role = String(roleRaw || "")
-                    .toLowerCase()
-                    .trim();
-
-                if (role.includes("owner")) setUserRole("owner");
-                else if (role.includes("moderator")) setUserRole("moderator");
-                else if (role.includes("commenter")) setUserRole("commenter");
-                else if (role.includes("viewer")) setUserRole("viewer");
-                else setUserRole("member");
+                setUserRole(toRole(roleRaw));
             } catch {
                 setUserRole("member");
             }
-        };
-
-        const toRole = (raw: any): GroupRole => {
-            const s = String(raw || "")
-                .toLowerCase()
-                .trim();
-            if (s.includes("owner")) return "owner";
-            if (s.includes("moderator")) return "moderator";
-            if (s.includes("commenter")) return "commenter";
-            if (s.includes("viewer")) return "viewer";
-            return "member";
         };
 
         const loadMembers = async () => {
@@ -1107,7 +1104,7 @@ export default function GroupDiscussPage() {
             setIsConnected(true);
             try {
                 await connection.invoke("JoinGroup", groupId);
-                await loadHistory();
+                await Promise.all([loadHistory(), loadUserRole(), loadMembers()]);
             } catch {
                 if (isDisposed) return;
                 toast({ variant: "destructive", description: "Không thể tham gia lại phòng thảo luận" });
@@ -1158,6 +1155,11 @@ export default function GroupDiscussPage() {
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
 
+        if (!canComment) {
+            toast({ variant: "destructive", description: "Bạn chỉ có quyền xem thảo luận" });
+            return;
+        }
+
         const v = composerText.trim();
         if (!v) return;
 
@@ -1180,6 +1182,11 @@ export default function GroupDiscussPage() {
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
             toast({ variant: "destructive", description: "Không thể gửi phản hồi khi chưa kết nối" });
+            return;
+        }
+
+        if (!canComment) {
+            toast({ variant: "destructive", description: "Bạn chỉ có quyền xem thảo luận" });
             return;
         }
 
@@ -1206,34 +1213,39 @@ export default function GroupDiscussPage() {
                 </div>
 
                 <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
-                    <div className="flex gap-3">
-                        <Avatar initials={me.initials} />
-                        <div className="min-w-0 flex-1">
-                            <MentionTextarea
-                                ref={composerMentionRef}
-                                value={composerText}
-                                onChange={setComposerText}
-                                members={mentionUsers}
-                                meId={me.id}
-                                placeholder="Viết gì đó để chia sẻ với mọi người... (gõ @ để mention)"
-                                className="min-h-27.5 resize-none border-[#EDEDED] bg-white"
-                                maxChars={MAX_CHARS}
-                            />
+                    {canComment ? (
+                        <div className="flex gap-3">
+                            <Avatar initials={me.initials} />
+                            <div className="min-w-0 flex-1">
+                                <MentionTextarea
+                                    ref={composerMentionRef}
+                                    value={composerText}
+                                    onChange={setComposerText}
+                                    members={mentionUsers}
+                                    meId={me.id}
+                                    placeholder="Viết gì đó để chia sẻ với mọi người... (gõ @ để mention)"
+                                    className="min-h-[110px] resize-none border-[#EDEDED] bg-white"
+                                    maxChars={MAX_CHARS}
+                                />
 
-                            {/* ✅ Counter */}
-                            <TextCounter text={composerText} maxChars={MAX_CHARS} />
+                                <TextCounter text={composerText} maxChars={MAX_CHARS} />
 
-                            <div className="mt-3 flex items-center justify-end">
-                                <Button
-                                    onClick={onPost}
-                                    disabled={isComposerDisabled}
-                                    className="rounded-xl bg-[#FF5722] px-6 text-white hover:bg-[#e24d1e]">
-                                    <SendHorizontal className="mr-2 h-4 w-4" />
-                                    Đăng
-                                </Button>
+                                <div className="mt-3 flex items-center justify-end">
+                                    <Button
+                                        onClick={onPost}
+                                        disabled={isComposerDisabled}
+                                        className="rounded-xl bg-[#FF5722] px-6 text-white hover:bg-[#e24d1e]">
+                                        <SendHorizontal className="mr-2 h-4 w-4" />
+                                        Đăng
+                                    </Button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="text-sm text-[#6F6B99]">
+                            Bạn chỉ có quyền xem thảo luận trong nhóm này.
+                        </div>
+                    )}
                 </div>
 
                 <div className="mt-6 space-y-4">
@@ -1250,6 +1262,7 @@ export default function GroupDiscussPage() {
                                 mentionUsers={mentionUsers}
                                 meId={me.id}
                                 isOwnerId={isOwnerId}
+                                canComment={canComment}
                             />
                         ))
                     ) : (
