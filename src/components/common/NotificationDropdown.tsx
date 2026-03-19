@@ -36,20 +36,7 @@ const BellIcon = ({ hasUnread }: { hasUnread: boolean }) => (
     </div>
 );
 
-// Helper function to detect corrupted text
-function isCorruptedText(text: string): boolean {
-    // Check for common corruption patterns
-    const corruptionPatterns = [
-        /[^\x00-\x7F\u00C0-\u017F\u1EA0-\u1EF9]/g, // Non-Latin characters that might be corrupted
-        /\?\?\?/g, // Question marks indicating encoding issues
-        /[A-Z]\d+[a-z]/g // Mixed case with numbers (common in corruption)
-    ];
-
-    return corruptionPatterns.some((pattern) => pattern.test(text));
-}
-
 export function NotificationDropdown() {
-    console.log("🔔 NotificationDropdown: Component mounted/rendered");
     const t = useTranslations("Notifications");
     const locale = useLocale();
     const [isOpen, setIsOpen] = useState(false);
@@ -79,28 +66,17 @@ export function NotificationDropdown() {
         console.log("🔔 NotificationDropdown: Starting to load notifications...");
         setIsLoading(true);
         try {
-            // Sử dụng getAllAnnouncements thay vì fetchNotifications để lấy tất cả announcements
             const data = await getAllAnnouncements(locale);
-            console.log("🔔 NotificationDropdown: Received notifications:", data);
 
             // Check if data contains corrupted characters and provide fallback
             const cleanedData = data.map((notification) => ({
                 ...notification,
-                title: isCorruptedText(notification.title)
-                    ? locale === "vi"
-                        ? "Thông báo hệ thống"
-                        : "System Notification"
-                    : notification.title,
-                description: isCorruptedText(notification.description)
-                    ? locale === "vi"
-                        ? "Nội dung thông báo không thể hiển thị"
-                        : "Notification content cannot be displayed"
-                    : notification.description
+                title: notification.title,
+                description: notification.description
             }));
 
             setNotifications(cleanedData);
         } catch (error) {
-            console.error("🔔 NotificationDropdown: Failed to load notifications:", error);
             // Provide fallback notifications if API fails
             const fallbackNotifications: Notification[] = [
                 {
@@ -124,8 +100,6 @@ export function NotificationDropdown() {
     }, [loadNotifications]);
 
     const handleNotificationClick = async (notification: Notification) => {
-        console.log("🔔 UI: Click vào thông báo:", notification.id);
-
         // Đánh dấu đã đọc nếu chưa đọc
         if (!notification.read) {
             try {
@@ -263,7 +237,6 @@ export function NotificationDropdown() {
                                 onClick={loadNotifications}
                                 className="text-[#6F6B99] text-xs hover:underline"
                                 title="Reload notifications">
-                                🔄
                             </button>
                         </div>
                     </div>
@@ -288,8 +261,8 @@ export function NotificationDropdown() {
                                         role="button"
                                         tabIndex={0}
                                         onClick={() => handleNotificationClick(notification)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleNotificationClick(notification)}
-                                        className={`w-full px-4 py-3 text-left transition-colors hover:bg-[#F4F5FA] cursor-pointer ${!notification.read ? "bg-blue-50" : ""}`}>
+                                        onKeyDown={(e) => e.key === "Enter" && handleNotificationClick(notification)}
+                                        className={`w-full cursor-pointer px-4 py-3 text-left transition-colors hover:bg-[#F4F5FA] ${!notification.read ? "bg-blue-50" : ""}`}>
                                         <div className="flex items-start gap-3">
                                             <span className="text-lg">{getNotificationIcon(notification.type)}</span>
                                             <div className="min-w-0 flex-1">

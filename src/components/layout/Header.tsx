@@ -134,9 +134,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
     const getUserData = () => {
         if (userProfile) {
-            const avatarUrl = userProfile.avatarUrl
-                ? userProfile.avatarUrl.replace("localhost", "127.0.0.1")
-                : "/images/image-removebg-preview.png";
+            const avatarUrl = userProfile.avatarUrl || "/images/image-removebg-preview.png";
 
             return {
                 name: `${userProfile.firstName} ${userProfile.lastName}`,

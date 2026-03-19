@@ -543,6 +543,34 @@ export default function TaskFormModal({
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [open, onClose]);
 
+    React.useEffect(() => {
+        if (!open) return;
+
+        const scrollY = window.scrollY;
+        const originalBodyStyle = {
+            overflow: document.body.style.overflow,
+            position: document.body.style.position,
+            top: document.body.style.top,
+            width: document.body.style.width
+        };
+        const originalHtmlOverflow = document.documentElement.style.overflow;
+
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = "100%";
+
+        return () => {
+            document.documentElement.style.overflow = originalHtmlOverflow;
+            document.body.style.overflow = originalBodyStyle.overflow;
+            document.body.style.position = originalBodyStyle.position;
+            document.body.style.top = originalBodyStyle.top;
+            document.body.style.width = originalBodyStyle.width;
+            window.scrollTo(0, scrollY);
+        };
+    }, [open]);
+
     const selectedStatusName = React.useMemo(() => {
         return statuses.find((s) => s.value === statusId)?.label ?? "";
     }, [statuses, statusId]);
@@ -607,7 +635,7 @@ export default function TaskFormModal({
                 if (e.target === e.currentTarget) onClose();
             }}>
             <div
-                className="w-full max-w-4xl rounded-2xl border border-zinc-200 bg-white shadow-2xl"
+                className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-200 bg-white shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
                 <div className="relative border-zinc-200 border-b px-7 py-5 pr-24">
                     <input

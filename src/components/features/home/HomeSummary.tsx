@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Layers3, Sparkles, TrendingUp } from "lucide-react";
+import {
+    AlertTriangle,
+    CalendarDays,
+    CheckCircle2,
+    Clock3,
+    Layers3,
+    Sparkles,
+    TrendingUp
+} from "lucide-react";
 import * as React from "react";
 import useSWR from "swr";
 import { apiFetch } from "@/api/api-client";
@@ -40,18 +48,29 @@ function cx(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
 
-function useStatDelta(key: string, currentValue: number, enabled: boolean) {
-    const storageKey = `home-summary-delta:${key}`;
-    const prevValueKey = `home-summary-prev:${key}`;
+function useStatDelta(key: string, currentValue: number, enabled: boolean, accountKey?: string | number | null) {
+    const hasRealAccountKey = accountKey !== null && accountKey !== undefined && String(accountKey).trim() !== "";
+
+    const storageKey = hasRealAccountKey ? `home-summary-delta:${String(accountKey)}:${key}` : null;
+    const prevValueKey = hasRealAccountKey ? `home-summary-prev:${String(accountKey)}:${key}` : null;
+
     const [delta, setDelta] = React.useState<DeltaInfo | null>(null);
 
     React.useEffect(() => {
-        if (!enabled || typeof window === "undefined") return;
+        setDelta(null);
+    }, [accountKey, key]);
+
+    React.useEffect(() => {
+        if (!enabled || typeof window === "undefined" || !hasRealAccountKey || !storageKey || !prevValueKey) {
+            setDelta(null);
+            return;
+        }
 
         const now = Date.now();
 
         try {
             const savedDeltaRaw = localStorage.getItem(storageKey);
+
             if (savedDeltaRaw) {
                 const savedDelta = JSON.parse(savedDeltaRaw) as DeltaInfo;
 
@@ -74,13 +93,30 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean) {
 
             if (prevRaw === null) {
                 localStorage.setItem(prevValueKey, String(currentValue));
+                localStorage.removeItem(storageKey);
+                setDelta(null);
                 return;
             }
 
             const prevValue = Number(prevRaw);
 
-            if (!Number.isNaN(prevValue) && prevValue !== currentValue) {
+            if (Number.isNaN(prevValue)) {
+                localStorage.setItem(prevValueKey, String(currentValue));
+                localStorage.removeItem(storageKey);
+                setDelta(null);
+                return;
+            }
+
+            if (prevValue !== currentValue) {
                 const diff = currentValue - prevValue;
+
+                localStorage.setItem(prevValueKey, String(currentValue));
+
+                if (diff === 0) {
+                    localStorage.removeItem(storageKey);
+                    setDelta(null);
+                    return;
+                }
 
                 const nextDelta: DeltaInfo = {
                     value: diff,
@@ -89,30 +125,26 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean) {
                 };
 
                 localStorage.setItem(storageKey, JSON.stringify(nextDelta));
-                localStorage.setItem(prevValueKey, String(currentValue));
                 setDelta(nextDelta);
                 return;
             }
 
-            if (!Number.isNaN(prevValue)) {
-                localStorage.setItem(prevValueKey, String(currentValue));
-            }
+            localStorage.setItem(prevValueKey, String(currentValue));
         } catch {
             setDelta(null);
         }
-    }, [currentValue, enabled, prevValueKey, storageKey]);
+    }, [accountKey, currentValue, enabled, hasRealAccountKey, prevValueKey, storageKey]);
 
     React.useEffect(() => {
-        if (!(enabled && delta)) return;
+        if (!(enabled && delta) || typeof window === "undefined" || !storageKey) return;
 
         const timeout = delta.expiresAt - Date.now();
+
         if (timeout <= 0) {
             setDelta(null);
-            if (typeof window !== "undefined") {
-                try {
-                    localStorage.removeItem(storageKey);
-                } catch {}
-            }
+            try {
+                localStorage.removeItem(storageKey);
+            } catch { }
             return;
         }
 
@@ -120,7 +152,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean) {
             setDelta(null);
             try {
                 localStorage.removeItem(storageKey);
-            } catch {}
+            } catch { }
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -295,9 +327,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-              status?: string;
-              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-          }
+            status?: string;
+            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+        }
         | null
         | undefined;
 
@@ -343,15 +375,23 @@ const fetchHomeSummary = async (): Promise<HomeSummaryResponse | null> => {
 };
 
 export default function HomeSummary() {
+    const [cacheKey, setCacheKey] = React.useState(0);
+
+    React.useEffect(() => {
+        setCacheKey(prev => prev + 1);
+    }, []);
+
     const {
         data: summary,
         isLoading,
-        error
-    } = useSWR("home-summary", fetchHomeSummary, {
+        error,
+        mutate
+    } = useSWR(["home-summary", cacheKey], fetchHomeSummary, {
         refreshInterval: 3000,
         revalidateOnFocus: true,
         revalidateOnReconnect: true,
-        dedupingInterval: 1000
+        dedupingInterval: 1000,
+        revalidateIfStale: true
     });
 
     const remainingTaskCount = summary?.remainingTaskCount ?? 0;
@@ -361,10 +401,37 @@ export default function HomeSummary() {
 
     const hasSummary = !!summary;
 
-    const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary);
-    const overdueDelta = useStatDelta("overdueTaskCount", overdueTaskCount, hasSummary);
-    const completedDelta = useStatDelta("completedTaskCount", completedTaskCount, hasSummary);
-    const joinedGroupDelta = useStatDelta("totalJoinedGroupCount", totalJoinedGroupCount, hasSummary);
+    const accountKey =
+        (summary as { userId?: string | number; accountId?: string | number; email?: string } | null)?.userId ??
+        (summary as { userId?: string | number; accountId?: string | number; email?: string } | null)?.accountId ??
+        (summary as { userId?: string | number; accountId?: string | number; email?: string } | null)?.email ??
+        null;
+
+    React.useEffect(() => {
+        if (!hasSummary || !accountKey) return;
+
+        try {
+            if (typeof window !== "undefined") {
+                const keys = Object.keys(localStorage);
+                const currentPrefix = `home-summary-delta:${String(accountKey)}:`;
+                const currentPrevPrefix = `home-summary-prev:${String(accountKey)}:`;
+
+                keys.forEach(key => {
+                    if ((key.startsWith("home-summary-delta:") || key.startsWith("home-summary-prev:")) &&
+                        !key.startsWith(currentPrefix) &&
+                        !key.startsWith(currentPrevPrefix)) {
+                        localStorage.removeItem(key);
+                    }
+                });
+            }
+        } catch {
+        }
+    }, [accountKey, hasSummary]);
+
+    const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);
+    const overdueDelta = useStatDelta("overdueTaskCount", overdueTaskCount, hasSummary, accountKey);
+    const completedDelta = useStatDelta("completedTaskCount", completedTaskCount, hasSummary, accountKey);
+    const joinedGroupDelta = useStatDelta("totalJoinedGroupCount", totalJoinedGroupCount, hasSummary, accountKey);
 
     const totalTasks = remainingTaskCount + overdueTaskCount + completedTaskCount;
 

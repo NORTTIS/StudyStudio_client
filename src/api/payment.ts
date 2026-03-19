@@ -53,7 +53,9 @@ export async function createPayment(planId: string, locale: string): Promise<Api
 // Get Payment Status
 export async function getPaymentStatus(paymentId: string, locale: string): Promise<ApiResponse<PaymentStatusResponse>> {
     try {
-        const response = await apiGet<PaymentStatusResponse>(`/payment/${paymentId}/status`, locale);
+        const response = await apiGet<PaymentStatusResponse>(`/payment/${paymentId}/status`, locale, false, {
+            cache: "no-store"
+        });
         return response;
     } catch (error: unknown) {
         return {
@@ -98,7 +100,9 @@ export async function cancelPayment(paymentId: string, locale: string): Promise<
 // Get Payment History
 export async function getPaymentHistory(locale: string): Promise<ApiResponse<PaymentHistoryResponse>> {
     try {
-        const response = await apiGet<PaymentHistoryResponse>("/payment/history", locale);
+        const response = await apiGet<PaymentHistoryResponse>("/payment/history", locale, false, {
+            cache: "no-store"
+        });
         return response;
     } catch (error: unknown) {
         return {

@@ -27,6 +27,7 @@ import {
     markAnnouncementAsRead,
     type UserAnnouncement
 } from "@/api/user-announcements";
+import { type AdminAnnouncement } from "@/api/admin-announcements";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -438,11 +439,19 @@ export function AnnouncementsPage() {
     );
 }
 
-function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getTypeIcon, t }: {
-    item: UserAnnouncement | AdminAnnouncement;
-    isUserAnn: boolean;
-    onClick: (item: UserAnnouncement | AdminAnnouncement) => void;
-    onDelete: (id: string) => void;
+function AnnouncementCard({
+    item,
+    isUserAnn = false,
+    onClick,
+    onDelete,
+    formatDate,
+    getTypeIcon,
+    t
+}: {
+    item: UserAnnouncement | AdminAnnouncement | Announcement;
+    isUserAnn?: boolean;
+    onClick: (item: UserAnnouncement | AdminAnnouncement | Announcement) => void;
+    onDelete?: (e: React.MouseEvent, id: string) => void;
     formatDate: (date: string) => string;
     getTypeIcon: (type: string) => React.ReactNode;
     t: (key: string) => string;
@@ -453,7 +462,7 @@ function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getT
     return (
         <motion.div
             whileHover={{ y: -4 }}
-            onClick={onClick}
+            onClick={() => onClick(item)}
             className={`group relative flex cursor-pointer items-center gap-6 rounded-2xl border border-gray-100 bg-white p-6 transition-all ${isUnread ? "border-l-4 border-l-orange-500 bg-orange-50/30 shadow-sm" : "hover:shadow-md"}`}>
             {/* Icon (Left) */}
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gray-50 transition-colors duration-300 group-hover:bg-white">
@@ -492,7 +501,7 @@ function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getT
                             type="text"
                             danger
                             className="opacity-0 transition-opacity group-hover:opacity-100"
-                            onClick={(e) => onDelete(e, userAnn.userAnnouncementId)}
+                            onClick={(e) => onDelete?.(e, userAnn.userAnnouncementId)}
                         />
                     )}
                 </AnimatePresence>

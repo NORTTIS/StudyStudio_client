@@ -3,6 +3,7 @@
 import { Image as ImageIcon, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/api/api-client";
+import { components } from "@/api/types";
 import { Button } from "@/components/ui/button";
 
 type GroupType = "independent" | "managed";
@@ -12,11 +13,9 @@ type UserProfile = {
     userId?: string;
 };
 
-type StudioResponse = {
-    studioId?: string;
-    studioName?: string | null;
-    ownerId?: string;
-};
+type StudioListResponseApiResponse = components["schemas"]["StudioListResponseApiResponse"];
+
+type StudioResponse = NonNullable<NonNullable<StudioListResponseApiResponse["data"]>["studios"]>[number];
 
 type TemplateResponse = {
     templateId?: string;
@@ -66,7 +65,7 @@ export function CreateGroupModal({
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState("");
 
-    const [ownerStudios, setOwnerStudios] = useState<Array<{ id: string; name: string }>>([]);
+    const [ownerStudios, setOwnerStudios] = useState<StudioResponse[]>([]);
     const [templates, setTemplates] = useState<Array<{ id: string; name: string; desc: string }>>([]);
 
     const limitReached = useMemo(() => currentGroupCount >= maxGroups, [currentGroupCount, maxGroups]);
@@ -157,7 +156,7 @@ export function CreateGroupModal({
 
                 const [profileRes, studiosRes, templatesRes] = await Promise.all([
                     apiGet<UserProfile>(buildApiUrl("/user-profile")),
-                    apiGet<StudioResponse[]>(buildApiUrl("/studio")),
+                    apiGet<StudioListResponseApiResponse["data"]>(buildApiUrl("/studio")),
                     apiGet<TemplateResponse[]>(buildApiUrl("/templates"))
                 ]);
 
@@ -174,16 +173,9 @@ export function CreateGroupModal({
                 }
 
                 const userId = profileRes.data.userId;
-                const studios = Array.isArray(studiosRes.data) ? studiosRes.data : [];
                 const tmps = Array.isArray(templatesRes.data) ? templatesRes.data : [];
-
-                const owner = studios
-                    .filter((s) => !!s.ownerId && !!s.studioId && s.ownerId === userId)
-                    .map((s) => ({
-                        id: s.studioId as string,
-                        name: s.studioName || "Untitled studio"
-                    }));
-
+                const studios = studiosRes.data?.studios ?? [];
+                const owner = studios.filter((s) => s.ownerId === userId);
                 const tlist = tmps
                     .filter((t) => !!t.templateId)
                     .map((t) => ({
@@ -195,7 +187,7 @@ export function CreateGroupModal({
                 setOwnerStudios(owner);
                 setTemplates(tlist);
 
-                if (owner.length > 0) setStudioId(owner[0].id);
+                if (studios.length > 0) setStudioId(studios[0].studioId ?? "");
             } catch (e: unknown) {
                 if (!alive) return;
                 setOwnerStudios([]);
@@ -217,7 +209,7 @@ export function CreateGroupModal({
             setStudioId("");
             return;
         }
-        if (!studioId && ownerStudios.length > 0) setStudioId(ownerStudios[0].id);
+        if (!studioId && ownerStudios.length > 0) setStudioId(ownerStudios[0].studioId ?? "");
     }, [type, ownerStudios, studioId]);
 
     useEffect(() => {
@@ -387,8 +379,8 @@ export function CreateGroupModal({
                                                         <option value="">Bạn chưa có studio nào mà bạn làm chủ</option>
                                                     )}
                                                     {ownerStudios.map((s) => (
-                                                        <option key={s.id} value={s.id}>
-                                                            {s.name}
+                                                        <option key={s.studioId} value={s.studioId}>
+                                                            {s.studioName || "Untitled studio"}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -505,11 +497,10 @@ export function CreateGroupModal({
                                                 type="button"
                                                 onClick={() => setTemplateId((prev) => (prev === t.id ? "" : t.id))}
                                                 disabled={creating}
-                                                className={`overflow-hidden rounded-2xl border text-left transition ${
-                                                    selected
-                                                        ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
-                                                        : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
-                                                }`}
+                                                className={`overflow-hidden rounded-2xl border text-left transition ${selected
+                                                    ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
+                                                    : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
+                                                    }`}
                                                 title={`${t.name}\n\n${t.desc || ""}`}>
                                                 <div className="flex items-center justify-center bg-white py-8">
                                                     <div className="grid h-14 w-14 place-items-center rounded-xl border border-[#E6E6E6] bg-white text-[#6F6B99]">

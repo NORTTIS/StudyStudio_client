@@ -117,6 +117,15 @@ function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
 
+function isInteractiveElement(target: EventTarget | null) {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+
+    return !!el.closest(
+        'button, input, textarea, select, option, a, [role="button"], [data-no-pan="true"]'
+    );
+}
+
 function dotClass(statusDot?: Task["statusDot"]) {
     if (statusDot === "green") return "bg-emerald-500";
     if (statusDot === "yellow") return "bg-amber-500";
@@ -1798,11 +1807,74 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
 
+    const handleBoardPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        if (isInteractiveElement(e.target)) return;
+
+        const el = boardScrollRef.current;
+        if (!el) return;
+
+        dragScrollRef.current = {
+            isDown: true,
+            startX: e.clientX,
+            startY: e.clientY,
+            scrollLeft: el.scrollLeft,
+            scrollTop: el.scrollTop,
+            moved: false
+        };
+
+        el.setPointerCapture?.(e.pointerId);
+    };
+
+    const handleBoardPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+        const state = dragScrollRef.current;
+        const el = boardScrollRef.current;
+        if (!state.isDown || !el) return;
+
+        const dx = e.clientX - state.startX;
+        const dy = e.clientY - state.startY;
+
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            state.moved = true;
+        }
+
+        el.scrollLeft = state.scrollLeft - dx;
+        el.scrollTop = state.scrollTop - dy;
+    };
+
+    const endBoardPointerDrag = () => {
+        dragScrollRef.current.isDown = false;
+    };
+
+    const handleBoardPointerUp: React.PointerEventHandler<HTMLDivElement> = () => {
+        endBoardPointerDrag();
+    };
+
+    const handleBoardPointerCancel: React.PointerEventHandler<HTMLDivElement> = () => {
+        endBoardPointerDrag();
+    };
+
     const [loading, setLoading] = React.useState(true);
     const [loadError, setLoadError] = React.useState<string | null>(null);
 
     const [creatingColumn, setCreatingColumn] = React.useState(false);
     const [creatingTask, setCreatingTask] = React.useState(false);
+
+    const dragScrollRef = React.useRef<{
+        isDown: boolean;
+        startX: number;
+        startY: number;
+        scrollLeft: number;
+        scrollTop: number;
+        moved: boolean;
+    }>({
+        isDown: false,
+        startX: 0,
+        startY: 0,
+        scrollLeft: 0,
+        scrollTop: 0,
+        moved: false
+    });
 
     const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null);
     const [activeColumnId, setActiveColumnId] = React.useState<string | null>(null);
@@ -1883,6 +1955,18 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const [membersOptions, setMembersOptions] = React.useState<TaskFormOption[]>([]);
     const topScrollRef = React.useRef<HTMLDivElement | null>(null);
     const boardScrollRef = React.useRef<HTMLDivElement | null>(null);
+    React.useLayoutEffect(() => {
+        window.scrollTo(0, 0);
+
+        if (boardScrollRef.current) {
+            boardScrollRef.current.scrollTop = 0;
+            boardScrollRef.current.scrollLeft = 0;
+        }
+
+        if (topScrollRef.current) {
+            topScrollRef.current.scrollLeft = 0;
+        }
+    }, [groupId]);
     const syncSourceRef = React.useRef<"top" | "board" | null>(null);
     const [topScrollbarWidth, setTopScrollbarWidth] = React.useState(0);
     const [showTopScrollbar, setShowTopScrollbar] = React.useState(false);
@@ -1910,7 +1994,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         }
     }, []);
 
-    React.useEffect(() => {
+    React.useLayoutEffect(() => {
         if (!mounted || loading) return;
 
         const boardEl = boardScrollRef.current;
@@ -1919,18 +2003,41 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         window.addEventListener("resize", onResize);
 
-        let observer: ResizeObserver | null = null;
-        if (boardEl && typeof ResizeObserver !== "undefined") {
-            observer = new ResizeObserver(() => syncTopScrollbarWidth());
-            observer.observe(boardEl);
+        let resizeObserver: ResizeObserver | null = null;
+        let mutationObserver: MutationObserver | null = null;
+
+        if (boardEl) {
+            if (typeof ResizeObserver !== "undefined") {
+                resizeObserver = new ResizeObserver(() => syncTopScrollbarWidth());
+                resizeObserver.observe(boardEl);
+            }
+
+            if (typeof MutationObserver !== "undefined") {
+                mutationObserver = new MutationObserver(() => syncTopScrollbarWidth());
+                mutationObserver.observe(boardEl, {
+                    childList: true,
+                    subtree: true
+                });
+            }
         }
 
         return () => {
             window.cancelAnimationFrame(frame);
             window.removeEventListener("resize", onResize);
-            observer?.disconnect();
+            resizeObserver?.disconnect();
+            mutationObserver?.disconnect();
         };
-    }, [mounted, loading, syncTopScrollbarWidth]);
+    }, [mounted, loading, columns.length, syncTopScrollbarWidth]);
+
+    React.useLayoutEffect(() => {
+        if (!mounted || loading) return;
+
+        const frame = window.requestAnimationFrame(() => {
+            syncTopScrollbarWidth();
+        });
+
+        return () => window.cancelAnimationFrame(frame);
+    }, [mounted, loading, columns]);
 
     const handleTopScroll: React.UIEventHandler<HTMLDivElement> = (e) => {
         const boardEl = boardScrollRef.current;
@@ -2167,6 +2274,10 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         try {
             await apiCreateGroupTaskStatus({ groupId, statusName: title, position: positionToSend });
             await refreshSilently();
+
+            requestAnimationFrame(() => {
+                syncTopScrollbarWidth();
+            });
         } finally {
             setCreatingColumn(false);
         }
@@ -2619,21 +2730,25 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
             <Container>
                 {showTopScrollbar ? (
-                    <div
-                        ref={topScrollRef}
-                        onScroll={handleTopScroll}
-                        className="board-top-scrollbar mt-5 mb-2 overflow-x-auto overflow-y-hidden">
-                        <div style={{ width: topScrollbarWidth, height: 1 }} />
+                    <div className="sticky bottom-0 z-30 bg-[#fafbfc] pt-2">
+                        <div
+                            ref={topScrollRef}
+                            onScroll={handleTopScroll}
+                            className="board-bottom-scrollbar overflow-x-auto overflow-y-hidden">
+                            <div style={{ width: topScrollbarWidth, height: 1 }} />
+                        </div>
                     </div>
-                ) : (
-                    <div className="mt-5" />
-                )}
+                ) : null}
 
                 {!mounted ? (
                     <div
                         ref={boardScrollRef}
                         onScroll={handleBoardScroll}
-                        className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6">
+                        onPointerDown={handleBoardPointerDown}
+                        onPointerMove={handleBoardPointerMove}
+                        onPointerUp={handleBoardPointerUp}
+                        onPointerCancel={handleBoardPointerCancel}
+                        className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6 cursor-grab active:cursor-grabbing select-none">
                         {columns.map((col) => (
                             <ColumnView
                                 key={col.id}
@@ -2679,7 +2794,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                             <div
                                 ref={boardScrollRef}
                                 onScroll={handleBoardScroll}
-                                className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6">
+                                onPointerDown={handleBoardPointerDown}
+                                onPointerMove={handleBoardPointerMove}
+                                onPointerUp={handleBoardPointerUp}
+                                onPointerCancel={handleBoardPointerCancel}
+                                className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6 cursor-grab active:cursor-grabbing select-none">
                                 {columns.map((col) => (
                                     <SortableColumn
                                         key={col.id}

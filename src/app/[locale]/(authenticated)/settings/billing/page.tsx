@@ -267,20 +267,28 @@ export default function BillingPage() {
                     setAvailablePlans(sortPlansByBillingCycle(plansResult.data.plans));
                 }
 
+                let isPremium = false;
                 if (profileResult.status === "success" && profileResult.data) {
                     const userPlan = profileResult.data.subscriptionPlan;
-                    const isPremium = userPlan && userPlan.billingCycle > 0;
-                    setCurrentPlan(isPremium ? "premium" : "free");
-                    localStorage.setItem("currentPlan", isPremium ? "premium" : "free");
-                } else {
-                    setCurrentPlan("free");
+                    isPremium = !!(userPlan && userPlan.billingCycle > 0);
                 }
 
                 if (historyResult.status === "success" && historyResult.data) {
-                    setPaymentHistoryData(historyResult.data.paymentHistories);
-                    const pending = historyResult.data.paymentHistories.filter(
-                        (p: PaymentHistory) => p.status === 0 // 0 = PENDING
-                    );
+                    const histories = historyResult.data.paymentHistories;
+                    setPaymentHistoryData(histories);
+
+                    // If profile says free but history has success, re-fetch profile after a short delay
+                    // This handles cases where the status is updated but the profile endpoint hasn't synced yet
+                    if (!isPremium && histories.some((p: PaymentHistory) => p.status === 1)) {
+                        await new Promise((resolve) => setTimeout(resolve, 1500));
+                        const retryProfile = await getUserProfile(locale);
+                        if (retryProfile.status === "success" && retryProfile.data) {
+                            const userPlan = retryProfile.data.subscriptionPlan;
+                            isPremium = !!(userPlan && userPlan.billingCycle > 0);
+                        }
+                    }
+
+                    const pending = histories.filter((p: PaymentHistory) => p.status === 0);
                     setPendingPayments(pending);
                     if (pending.length > 0) {
                         messageApi.warning(`Bạn có ${pending.length} thanh toán đang chờ xử lý.`);
@@ -289,6 +297,9 @@ export default function BillingPage() {
                     setPaymentHistoryData([]);
                     setPendingPayments([]);
                 }
+
+                setCurrentPlan(isPremium ? "premium" : "free");
+                localStorage.setItem("currentPlan", isPremium ? "premium" : "free");
             } catch {
                 setCurrentPlan("free");
                 setPaymentHistoryData([]);
