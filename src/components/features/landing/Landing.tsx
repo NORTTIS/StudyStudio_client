@@ -47,7 +47,7 @@ export default function LandingPage() {
                         {t("hero.description")}
                     </p>
 
-                    <Link href={`/${locale}/register`} className={`inline-block cursor-pointer ${pop} ${delay3}`}>
+                    <Link href={`/${locale}/login`} className={`inline-block cursor-pointer ${pop} ${delay3}`}>
                         <Button className="mt-7 rounded-full bg-orange-500 px-8 py-6 text-lg font-semibold shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.registerButton")}
                         </Button>

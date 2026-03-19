@@ -20,6 +20,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * Helper to get local date string for datetime-local input (YYYY-MM-DDTHH:mm)
+ * This ensures the picker displays time correctly in the user's local timezone.
+ */
+const getLocalDatetimeString = (date: Date) => {
+    const tzOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+};
+
 export function AdminAnnouncementsTab() {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
@@ -29,14 +38,19 @@ export function AdminAnnouncementsTab() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<AdminAnnouncement | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [formData, setFormData] = useState({
-        title: "",
-        content: "",
-        type: 0,
-        isActive: true,
-        publishedAt: new Date().toISOString().slice(0, 16), // Format for datetime-local input
-        createdAt: new Date().toISOString().slice(0, 16) // Add createdAt field
+    const [formData, setFormData] = useState(() => {
+        const now = new Date();
+        const futureTime = new Date(now.getTime() + 5 * 60000); // 5 minutes in future
+        return {
+            title: "",
+            content: "",
+            type: 0,
+            isActive: true,
+            publishedAt: getLocalDatetimeString(futureTime),
+            createdAt: getLocalDatetimeString(now)
+        };
     });
 
     const [formErrors, setFormErrors] = useState({
@@ -77,16 +91,19 @@ export function AdminAnnouncementsTab() {
 
     useEffect(() => {
         loadAnnouncements();
-    }, [loadAnnouncements]);
+    }, []); // Empty dependency - chỉ load một lần khi mount
 
     const resetForm = () => {
+        const now = new Date();
+        const futureTime = new Date(now.getTime() + 5 * 60000); // 5 minutes in future
+
         setFormData({
             title: "",
             content: "",
             type: 0,
             isActive: true,
-            publishedAt: new Date().toISOString().slice(0, 16),
-            createdAt: new Date().toISOString().slice(0, 16)
+            publishedAt: getLocalDatetimeString(futureTime),
+            createdAt: getLocalDatetimeString(now)
         });
         setFormErrors({
             title: false,
@@ -111,13 +128,22 @@ export function AdminAnnouncementsTab() {
             content: announcement.content,
             type: typeNumber,
             isActive: announcement.isActive,
-            publishedAt: new Date(announcement.publishedAt).toISOString().slice(0, 16),
-            createdAt: new Date(announcement.createdAt).toISOString().slice(0, 16)
+            publishedAt: getLocalDatetimeString(new Date(announcement.publishedAt)),
+            createdAt: getLocalDatetimeString(new Date(announcement.createdAt))
         });
         setIsEditModalOpen(true);
+        console.log("📝 handleEdit: Form data set and modal opened", {
+            announcementId: announcement.announcementId,
+            title: announcement.title,
+            content: announcement.content,
+            type: typeNumber,
+            publishedAt: getLocalDatetimeString(new Date(announcement.publishedAt)),
+            createdAt: getLocalDatetimeString(new Date(announcement.createdAt))
+        });
     };
 
     const handleSubmitCreate = async () => {
+        console.log("🚀 Submit Create clicked", formData);
         // Reset errors
         setFormErrors({ title: false, content: false });
 
@@ -125,6 +151,7 @@ export function AdminAnnouncementsTab() {
 
         // Kiểm tra tiêu đề
         if (!formData.title.trim()) {
+            console.log("❌ Title is empty");
             setFormErrors((prev) => ({ ...prev, title: true }));
             toast({
                 description: "⚠️ Vui lòng nhập tiêu đề thông báo",
@@ -161,39 +188,34 @@ export function AdminAnnouncementsTab() {
             return;
         }
 
-        // Kiểm tra thời gian tạo không được ở quá khứ
+        // Kiểm tra thời gian xuất bản phải sau thời gian tạo
         const createdTime = new Date(formData.createdAt);
-        const now = new Date();
-        if (createdTime < now) {
-            toast({
-                description: "⚠️ Thời gian tạo không được ở trong quá khứ",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        // Kiểm tra thời gian xuất bản không được trước thời gian tạo
         const publishedTime = new Date(formData.publishedAt);
+
         if (publishedTime < createdTime) {
+            console.log("❌ publishedAt is before createdAt");
             toast({
-                description: "⚠️ Thời gian xuất bản không được trước thời gian tạo",
+                description: "⚠️ Thời gian xuất bản phải sau hoặc bằng thời gian tạo",
                 variant: "destructive"
             });
             return;
         }
 
-        // Kiểm tra trùng lặp tiêu đề
+        // Kiểm tra trùng lặp tiêu đề - chỉ cảnh báo, không chặn
         const duplicateTitle = announcements.find(
             (announcement) => announcement.title.toLowerCase().trim() === formData.title.toLowerCase().trim()
         );
         if (duplicateTitle) {
+            console.log("⚠️ Warning: Duplicate title found in Create mode:", duplicateTitle);
             toast({
-                description: "⚠️ Đã tồn tại thông báo với tiêu đề này",
-                variant: "destructive"
+                description: "Thông báo: Tiêu đề này đã tồn tại",
+                variant: "default"
             });
-            return;
+            // Không chặn hành động tạo mới, cho phép người dùng quyết định
         }
 
+        setIsSubmitting(true);
+        console.log("🔄 Starting create API call...");
         try {
             const request: CreateAnnouncementRequest = {
                 title: formData.title.trim(),
@@ -226,11 +248,15 @@ export function AdminAnnouncementsTab() {
                 description: "Có lỗi xảy ra khi tạo thông báo",
                 variant: "destructive"
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleSubmitEdit = async () => {
+        console.log("🚀 Submit Edit clicked", formData);
         if (!selectedAnnouncement) {
+            console.log("❌ No selected announcement");
             toast({
                 description: "Không tìm thấy thông báo để chỉnh sửa",
                 variant: "destructive"
@@ -245,6 +271,7 @@ export function AdminAnnouncementsTab() {
 
         // Kiểm tra tiêu đề
         if (!formData.title.trim()) {
+            console.log("❌ Validation failed: empty title");
             setFormErrors((prev) => ({ ...prev, title: true }));
             toast({
                 description: "⚠️ Vui lòng nhập tiêu đề thông báo",
@@ -255,6 +282,7 @@ export function AdminAnnouncementsTab() {
 
         // Kiểm tra nội dung
         if (!formData.content.trim()) {
+            console.log("❌ Validation failed: empty content");
             setFormErrors((prev) => ({ ...prev, content: true }));
             toast({
                 description: "⚠️ Vui lòng nhập nội dung thông báo",
@@ -263,9 +291,13 @@ export function AdminAnnouncementsTab() {
             hasError = true;
         }
 
-        if (hasError) return;
+        if (hasError) {
+            console.log("❌ Validation failed: hasError is true");
+            return;
+        }
 
         if (formData.title.trim().length > 50) {
+            console.log("❌ Validation failed: title too long (>50)");
             toast({
                 description: "Tiêu đề không được vượt quá 50 ký tự",
                 variant: "destructive"
@@ -274,6 +306,7 @@ export function AdminAnnouncementsTab() {
         }
 
         if (formData.content.trim().length > 500) {
+            console.log("❌ Validation failed: content too long (>500)");
             toast({
                 description: "Nội dung không được vượt quá 500 ký tự",
                 variant: "destructive"
@@ -281,25 +314,22 @@ export function AdminAnnouncementsTab() {
             return;
         }
 
-        // Kiểm tra thời gian tạo không được ở quá khứ
+        // Khi chỉnh sửa, cho phép sự linh hoạt về thời gian. 
+        // Chỉ lưu log để debug nếu cần, không chặn hành động của người dùng
         const createdTime = new Date(formData.createdAt);
-        const now = new Date();
-        if (createdTime < now) {
-            toast({
-                description: "⚠️ Thời gian tạo không được ở trong quá khứ",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        // Kiểm tra thời gian xuất bản không được trước thời gian tạo
         const publishedTime = new Date(formData.publishedAt);
+
+        console.log("🔍 Edit Submission - Time Info:", {
+            createdAt: formData.createdAt,
+            publishedAt: formData.publishedAt,
+            createdTime: createdTime.toISOString(),
+            publishedTime: publishedTime.toISOString(),
+            isPublishedBeforeCreated: publishedTime < createdTime
+        });
+
+        // Bỏ qua việc chặn (return) ở đây để người dùng có thể thoải mái điều chỉnh
         if (publishedTime < createdTime) {
-            toast({
-                description: "⚠️ Thời gian xuất bản không được trước thời gian tạo",
-                variant: "destructive"
-            });
-            return;
+            console.log("⚠️ Warning: publishedTime is before createdTime, but allowed in Edit mode.");
         }
 
         // Kiểm tra trùng lặp tiêu đề (trừ chính nó)
@@ -309,14 +339,22 @@ export function AdminAnnouncementsTab() {
                 announcement.title.toLowerCase().trim() === formData.title.toLowerCase().trim()
         );
         if (duplicateTitle) {
+            console.log("⚠️ Warning: duplicate title found but allowing edit", duplicateTitle);
             toast({
-                description: "⚠️ Đã tồn tại thông báo khác với tiêu đề này",
-                variant: "destructive"
+                description: "Thông báo: Tiêu đề này đã tồn tại",
+                variant: "default"
             });
-            return;
+            // Bỏ qua việc chặn (return) để người dùng có thể thoải mái lưu
         }
 
+        setIsSubmitting(true);
+        console.log("🔄 Starting update API call...");
         try {
+            console.log("📝 Preparing request object with times:", {
+                publishedAt: formData.publishedAt,
+                createdAt: formData.createdAt
+            });
+
             const request: UpdateAnnouncementRequest = {
                 announcementId: selectedAnnouncement.announcementId,
                 title: formData.title.trim(),
@@ -327,7 +365,12 @@ export function AdminAnnouncementsTab() {
                 createdAt: new Date(formData.createdAt).toISOString()
             };
 
+            console.log("🚀 Calling updateAdminAnnouncement with:", request);
+            console.log("🔄 Type value being sent:", formData.type, typeof formData.type);
+
             const result = await updateAdminAnnouncement(request, "vi");
+
+            console.log("✅ Update result:", result);
 
             if (result.status === "success") {
                 toast({
@@ -350,6 +393,8 @@ export function AdminAnnouncementsTab() {
                 description: "Có lỗi xảy ra khi cập nhật thông báo",
                 variant: "destructive"
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -644,10 +689,9 @@ export function AdminAnnouncementsTab() {
                                     type="datetime-local"
                                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                     value={formData.createdAt}
-                                    min={new Date().toISOString().slice(0, 16)}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, createdAt: e.target.value }))}
                                 />
-                                <p className="mt-1 text-[#6F6B99] text-xs">Thời gian tạo phải từ hiện tại trở đi</p>
+                                <p className="mt-1 text-[#6F6B99] text-xs">Thời gian tạo của thông báo</p>
                             </div>
 
                             <div className="flex items-center space-x-2">
@@ -665,11 +709,11 @@ export function AdminAnnouncementsTab() {
                         </div>
 
                         <div className="mt-6 flex gap-3">
-                            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="flex-1">
+                            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} disabled={isSubmitting} className="flex-1">
                                 Hủy
                             </Button>
-                            <Button onClick={handleSubmitCreate} className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
-                                Tạo thông báo
+                            <Button onClick={handleSubmitCreate} disabled={isSubmitting} className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
+                                {isSubmitting ? "Đang xử lý..." : "Tạo thông báo"}
                             </Button>
                         </div>
                     </div>
@@ -818,10 +862,9 @@ export function AdminAnnouncementsTab() {
                                     type="datetime-local"
                                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                                     value={formData.createdAt}
-                                    min={new Date().toISOString().slice(0, 16)}
                                     onChange={(e) => setFormData((prev) => ({ ...prev, createdAt: e.target.value }))}
                                 />
-                                <p className="mt-1 text-[#6F6B99] text-xs">Thời gian tạo phải từ hiện tại trở đi</p>
+                                <p className="mt-1 text-[#6F6B99] text-xs">Thời gian tạo của thông báo</p>
                             </div>
 
                             <div className="flex items-center space-x-2">
@@ -839,11 +882,11 @@ export function AdminAnnouncementsTab() {
                         </div>
 
                         <div className="mt-6 flex gap-3">
-                            <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1">
+                            <Button variant="outline" onClick={() => setIsEditModalOpen(false)} disabled={isSubmitting} className="flex-1">
                                 Hủy
                             </Button>
-                            <Button onClick={handleSubmitEdit} className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
-                                Cập nhật thông báo
+                            <Button onClick={handleSubmitEdit} disabled={isSubmitting} className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
+                                {isSubmitting ? "Đang xử lý..." : "Cập nhật thông báo"}
                             </Button>
                         </div>
                     </div>

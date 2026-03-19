@@ -74,8 +74,8 @@ export function SubscriptionPlansPage() {
             if (plansResult.status === "success" && plansResult.data && plansResult.data.plans.length > 0) {
                 // Sử dụng plans thật từ API
                 const realPlans = plansResult.data.plans.map((plan) => ({
-                    ...plan,
-                    subscriberCount: plan.billingCycle === 0 ? 10117 : 2341 // Mock subscriber count
+                    ...plan
+                    // Sử dụng subscriberCount thật từ API thay vì mock data
                 }));
                 setPlans(realPlans);
                 console.log("Using real plans from SubscriptionPlan API:", realPlans);
@@ -172,7 +172,7 @@ export function SubscriptionPlansPage() {
 
     useEffect(() => {
         loadData();
-    }, [loadData]); // Empty dependency - chỉ chạy một lần khi mount
+    }, []); // Empty dependency - chỉ chạy một lần khi mount
 
     const handleEditPlan = (planId: string) => {
         const plan = plans.find((p) => p.planId === planId);
@@ -210,11 +210,10 @@ export function SubscriptionPlansPage() {
                                     key={tab.id}
                                     type="button"
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${
-                                        activeTab === tab.id
-                                            ? "border-[#FF5F3D] text-[#FF5F3D]"
-                                            : "border-transparent text-[#6F6B99] hover:text-[#261E33]"
-                                    }`}>
+                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${activeTab === tab.id
+                                        ? "border-[#FF5F3D] text-[#FF5F3D]"
+                                        : "border-transparent text-[#6F6B99] hover:text-[#261E33]"
+                                        }`}>
                                     {tab.label}
                                 </button>
                             ))}

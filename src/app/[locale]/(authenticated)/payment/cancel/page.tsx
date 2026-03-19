@@ -8,14 +8,15 @@ export default function PaymentCancelPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const locale = useLocale();
-    const paymentId = searchParams.get("id");
+    const idFromQuery = searchParams.get("id");
+    const paymentIdFromQuery = searchParams.get("paymentId");
+    const rawId = idFromQuery || paymentIdFromQuery;
+    const paymentId = rawId && rawId !== "undefined" && rawId !== "null" ? rawId : null;
 
     useEffect(() => {
         if (paymentId) {
-            // Redirect to the status page so the user can see it was cancelled
             router.replace(`/${locale}/payment/status/${paymentId}`);
         } else {
-            // Fallback to billing page
             router.replace(`/${locale}/settings/billing`);
         }
     }, [paymentId, router, locale]);

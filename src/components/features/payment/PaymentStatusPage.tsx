@@ -25,6 +25,12 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
     const [isCancelling, setIsCancelling] = useState(false);
 
     useEffect(() => {
+        // Guard against invalid ID
+        if (!paymentId || paymentId === "undefined" || paymentId === "null") {
+            router.replace(`/${locale}/settings/billing`);
+            return;
+        }
+
         const fetchStatus = async () => {
             try {
                 const result = await getPaymentStatus(paymentId, locale);
@@ -43,7 +49,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                                     "Thanh toán thành công! Email xác nhận đã được gửi. Đang chuyển về trang quản lý gói...",
                                 variant: "default"
                             });
-                            window.location.href = `/${locale}/settings/billing`;
+                            window.location.href = `/${locale}/settings/billing?success=true`;
                         }, 2000); // Wait 2 seconds to show success message
                     }
                 }
@@ -64,7 +70,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [paymentId, locale, payment?.paymentStatus, toast]);
+    }, [paymentId, locale, payment?.paymentStatus, toast, router]);
 
     const handleCancel = async () => {
         if (!payment) return;

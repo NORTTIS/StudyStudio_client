@@ -200,7 +200,7 @@ export function AdminDashboardPage() {
 
     useEffect(() => {
         loadDashboardData();
-    }, [loadDashboardData]);
+    }, [locale, revenuePeriod, reportPeriod, activityPeriod, userPeriod, subPeriod, revPeriodFilter]);
 
     const handleExport = async () => {
         try {

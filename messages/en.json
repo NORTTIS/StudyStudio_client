@@ -207,6 +207,7 @@
         "successTitle": "Verification successful",
         "successMessage": "Your account has been successfully verified.",
         "successDescription": "You can now log in to start using the system.",
+        "redirectingToLogin": "You will be automatically redirected to the login page in 5 seconds...",
         "alreadyVerifiedMessage": "Your account has been verified previously.",
         "invalidTokenTitle": "Invalid link",
         "invalidTokenMessage": "The verification link is invalid or has expired.",
@@ -556,7 +557,8 @@
             "editSuccess": "Studio updated successfully!",
             "createError": "Failed to create studio",
             "editError": "Failed to update studio",
-            "limitReached": "You have reached the limit of 3 studios. Please delete an old studio to create a new one.",
+            "limitReached": "You have reached the limit of 3 studios. Please upgrade your subscription plan or delete an old studio to create a new one.",
+            "upgradeButton": "Upgrade Plan",
             "duplicateName": "Studio name already exists. Please choose a different name."
         },
         "detailModal": {

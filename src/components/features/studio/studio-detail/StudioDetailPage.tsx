@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
 import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
 import type { components } from "@/api/types";
@@ -89,32 +89,35 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editLoading, setEditLoading] = useState(false);
 
     // Convert server data to UI format
-    const studio: StudioUI | null = initialStudio
-        ? {
+    const studio: StudioUI | null = useMemo(() => {
+        if (!initialStudio) return null;
+        return {
             id: initialStudio.studioId || "",
             name: initialStudio.studioName || "",
             description: initialStudio.description || "",
-            type: "group", // Default type
-            memberCount: 0, // Not provided by API
+            type: "group",
+            memberCount: 0,
             groupCount: initialStudio.groupCount || 0,
-            completionProgress: 0, // Calculate later if needed
+            completionProgress: 0,
             createdAt: initialStudio.createdAt || "",
             updatedAt: initialStudio.updatedAt || ""
-        }
-        : null;
+        };
+    }, [initialStudio]);
 
     // Transform groups to the format expected by UI
-    const groups: TransformedGroup[] = initialGroups.map((group) => ({
-        id: group.id || "",
-        name: group.name || "",
-        code: "", // Not provided by API, could extract from name
-        members: group.memberCount || 0,
-        tasks: group.taskCount || 0,
-        progress: 0, // Could be calculated from task completion if available
-        description: group.description || "",
-        membersPreview: group.membersPreview || [],
-        role: mapRole(group.role) // Convert API string to GroupRole type
-    }));
+    const groups: TransformedGroup[] = useMemo(() => {
+        return initialGroups.map((group) => ({
+            id: group.id || "",
+            name: group.name || "",
+            code: "",
+            members: group.memberCount || 0,
+            tasks: group.taskCount || 0,
+            progress: 0,
+            description: group.description || "",
+            membersPreview: group.membersPreview || [],
+            role: mapRole(group.role)
+        }));
+    }, [initialGroups]);
 
     // Filter groups based on search query
     const filteredGroups = groups.filter(

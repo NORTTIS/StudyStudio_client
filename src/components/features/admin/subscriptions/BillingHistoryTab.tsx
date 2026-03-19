@@ -238,14 +238,14 @@ export function BillingHistoryTab() {
                     filterStatus === "all"
                         ? undefined
                         : filterStatus === 0
-                            ? "Đang chờ"
-                            : filterStatus === 1
-                                ? "Thành công"
-                                : filterStatus === 2
-                                    ? "Đã hủy"
-                                    : filterStatus === 3
-                                        ? "Thất bại"
-                                        : undefined,
+                          ? "Đang chờ"
+                          : filterStatus === 1
+                            ? "Thành công"
+                            : filterStatus === 2
+                              ? "Đã hủy"
+                              : filterStatus === 3
+                                ? "Thất bại"
+                                : undefined,
                 dateRange:
                     dateRange?.[0] && dateRange[1]
                         ? `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`

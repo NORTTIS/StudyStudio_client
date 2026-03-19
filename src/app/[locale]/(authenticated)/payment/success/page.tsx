@@ -8,7 +8,10 @@ export default function PaymentSuccessPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const locale = useLocale();
-    const paymentId = searchParams.get("id");
+    const idFromQuery = searchParams.get("id");
+    const paymentIdFromQuery = searchParams.get("paymentId");
+    const rawId = idFromQuery || paymentIdFromQuery;
+    const paymentId = rawId && rawId !== "undefined" && rawId !== "null" ? rawId : null;
 
     useEffect(() => {
         if (paymentId) {

@@ -8,6 +8,7 @@ import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { Container } from "@/components/common";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
 import { StudioModal } from "@/components/features/master/StudioModal";
+import { StudioLimitModal } from "@/components/features/master/StudioLimitModal";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
@@ -72,11 +73,10 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                 <div className="absolute bottom-[-24px] right-5">
                     {studio.studioRole !== undefined && (
                         <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white ${
-                                isOwner
-                                    ? "bg-gradient-to-r from-orange-500 to-red-500"
-                                    : "bg-gradient-to-r from-teal-500 to-cyan-500"
-                            }`}>
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white ${isOwner
+                                ? "bg-gradient-to-r from-orange-500 to-red-500"
+                                : "bg-gradient-to-r from-teal-500 to-cyan-500"
+                                }`}>
                             {isOwner ? t("roles.owner") : t("roles.member")}
                         </span>
                     )}
@@ -155,6 +155,7 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
     const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
@@ -224,10 +225,7 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
 
     const handleCreateStudio = async (data: { name: string; description: string; type: string }) => {
         if (totalStudios >= studioLimit) {
-            toast({
-                description: t("modal.limitReached") || `Bạn đã đạt giới hạn ${studioLimit} studio`,
-                variant: "destructive"
-            });
+            setIsLimitModalOpen(true);
             return;
         }
 
@@ -279,12 +277,12 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
                 const updatedStudios = studios.map((s) =>
                     s.id === selectedStudio.id
                         ? {
-                              ...s,
-                              name: data.name,
-                              description: data.description,
-                              type: data.type as "personal" | "group",
-                              updatedAt: new Date().toISOString()
-                          }
+                            ...s,
+                            name: data.name,
+                            description: data.description,
+                            type: data.type as "personal" | "group",
+                            updatedAt: new Date().toISOString()
+                        }
                         : s
                 );
                 setStudios(updatedStudios);
@@ -470,6 +468,11 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDeleteStudio}
                 studioName={selectedStudio?.name || ""}
+            />
+            <StudioLimitModal
+                isOpen={isLimitModalOpen}
+                onClose={() => setIsLimitModalOpen(false)}
+                studioLimit={studioLimit}
             />
         </div>
     );

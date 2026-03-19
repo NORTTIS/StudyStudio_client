@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Pagination } from "antd";
 import {
     CalendarDays,
     ChevronLeft,
@@ -821,27 +822,14 @@ export default function HomeTaskList() {
         return unique;
     }, [rawItems]);
 
-    const totalPages = Math.max(Math.ceil(displayItems.length / 4), 1);
-
     const paginatedItems = React.useMemo(() => {
-        const start = (page - 1) * 4;
-        return displayItems.slice(start, start + 4);
+        const start = (page - 1) * PAGE_SIZE;
+        return displayItems.slice(start, start + PAGE_SIZE);
     }, [displayItems, page]);
 
     React.useEffect(() => {
         setPage(1);
-    }, [sortFilterValue, deadlineFilter.startDate, deadlineFilter.endDate, sortBy]);
-
-    const pageNumbers = React.useMemo(() => {
-        if (totalPages <= 3) {
-            return Array.from({ length: totalPages }, (_, index) => index + 1);
-        }
-
-        if (page <= 2) return [1, 2, 3];
-        if (page >= totalPages - 1) return [totalPages - 2, totalPages - 1, totalPages];
-
-        return [page - 1, page, page + 1];
-    }, [page, totalPages]);
+    }, [sortFilterValue, deadlineFilter.startDate, deadlineFilter.endDate, sortBy, selectedSource, searchValue]);
 
     const handleSourceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setPage(1);
@@ -1102,75 +1090,16 @@ export default function HomeTaskList() {
                         </div>
                     </div>
 
-                    {!isLoading && totalPages > 1 && (
-                        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-[#261E33]">
-                            <button
-                                type="button"
-                                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                                disabled={page === 1}
-                                className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2 text-[16px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                                Previous
-                            </button>
-
-                            {pageNumbers[0] > 1 && (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => setPage(1)}
-                                        className="h-12 min-w-12 rounded-xl border border-[#E2E8F0] bg-white px-4 text-[16px] font-medium"
-                                    >
-                                        1
-                                    </button>
-                                    {pageNumbers[0] > 2 && <span className="px-2 text-[24px]">...</span>}
-                                </>
-                            )}
-
-                            {pageNumbers.map((pageNumber) => {
-                                const isActive = pageNumber === page;
-
-                                return (
-                                    <button
-                                        key={pageNumber}
-                                        type="button"
-                                        onClick={() => setPage(pageNumber)}
-                                        className={cn(
-                                            "h-12 min-w-12 rounded-xl border px-4 text-[16px] font-medium transition",
-                                            isActive
-                                                ? "border-[#0F172A] bg-[#0F172A] text-white"
-                                                : "border-[#E2E8F0] bg-white text-[#261E33] hover:bg-[#F8FAFC]"
-                                        )}
-                                    >
-                                        {pageNumber}
-                                    </button>
-                                );
-                            })}
-
-                            {pageNumbers[pageNumbers.length - 1] < totalPages && (
-                                <>
-                                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                                        <span className="px-2 text-[24px]">...</span>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={() => setPage(totalPages)}
-                                        className="h-12 min-w-12 rounded-xl border border-[#E2E8F0] bg-white px-4 text-[16px] font-medium"
-                                    >
-                                        {totalPages}
-                                    </button>
-                                </>
-                            )}
-
-                            <button
-                                type="button"
-                                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                                disabled={page === totalPages}
-                                className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2 text-[16px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                Next
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
+                    {!isLoading && displayItems.length > PAGE_SIZE && (
+                        <div className="mt-8 flex justify-center">
+                            <Pagination
+                                current={page}
+                                total={displayItems.length}
+                                pageSize={PAGE_SIZE}
+                                onChange={(p) => setPage(p)}
+                                showSizeChanger={false}
+                                className="custom-pagination"
+                            />
                         </div>
                     )}
                 </div>

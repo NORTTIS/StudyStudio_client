@@ -120,7 +120,7 @@ export function AdminReportsTab() {
 
     useEffect(() => {
         loadReports();
-    }, [loadReports]);
+    }, [filters, locale, t]); // Chỉ reload khi filters, locale hoặc t thay đổi
 
     const handleEditReport = (report: AdminReport) => {
         setSelectedReport(report);

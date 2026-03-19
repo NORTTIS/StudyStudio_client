@@ -97,7 +97,7 @@ export function NotificationDropdown() {
 
     useEffect(() => {
         loadNotifications();
-    }, [loadNotifications]);
+    }, [locale]);
 
     const handleNotificationClick = async (notification: Notification) => {
         // Đánh dấu đã đọc nếu chưa đọc
@@ -236,7 +236,8 @@ export function NotificationDropdown() {
                                 type="button"
                                 onClick={loadNotifications}
                                 className="text-[#6F6B99] text-xs hover:underline"
-                                title="Reload notifications"></button>
+                                title="Reload notifications"
+                            />
                         </div>
                     </div>
 

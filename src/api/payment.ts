@@ -52,6 +52,14 @@ export async function createPayment(planId: string, locale: string): Promise<Api
 
 // Get Payment Status
 export async function getPaymentStatus(paymentId: string, locale: string): Promise<ApiResponse<PaymentStatusResponse>> {
+    if (!paymentId || paymentId === "undefined" || paymentId === "null") {
+        return {
+            status: "error",
+            code: "INVALID_ID",
+            message: "Mã thanh toán không hợp lệ",
+            data: null
+        };
+    }
     try {
         const response = await apiGet<PaymentStatusResponse>(`/payment/${paymentId}/status`, locale, false, {
             cache: "no-store"

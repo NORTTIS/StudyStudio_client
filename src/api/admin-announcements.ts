@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut } from "./api-client";
+import { apiDelete, apiGet, apiPost, apiPut } from "./api-client";
 
 export interface AdminAnnouncement {
     announcementId: string;
@@ -146,7 +146,12 @@ export async function updateAdminAnnouncement(
     locale: string
 ): Promise<ApiResponse<AdminAnnouncement>> {
     try {
+        console.log("🌐 API: Sending update request:", request);
+        console.log("🌐 API: Type field:", request.type, typeof request.type);
+        
         const response = await apiPut<AdminAnnouncement>("/admin/announcements", request, locale);
+
+        console.log("🌐 API: Server response:", response);
 
         if (response.status === "success" && response.data) {
             return {
@@ -178,29 +183,20 @@ export async function updateAdminAnnouncement(
  */
 export async function deleteAdminAnnouncement(id: string, locale: string): Promise<ApiResponse<string>> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/announcements/${id}`, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept-Language": locale,
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`
-            }
-        });
-
-        const data = await response.json();
-
-        if (data.status === "success") {
+        const response = await apiDelete<string>(`/admin/announcements/${id}`, locale);
+ 
+        if (response.status === "success") {
             return {
-                status: data.status,
-                code: data.code,
-                message: data.message,
-                data: data.data
+                status: response.status,
+                code: response.code,
+                message: response.message,
+                data: response.data as string
             };
         }
         return {
             status: "error",
-            code: data.code || "API_ERROR",
-            message: data.message || "Không thể xóa thông báo",
+            code: response.code || "API_ERROR",
+            message: response.message || "Không thể xóa thông báo",
             data: null
         };
     } catch (error: unknown) {
