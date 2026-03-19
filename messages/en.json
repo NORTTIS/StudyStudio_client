@@ -1189,7 +1189,9 @@
             "updateError": "An error occurred while updating report"
         },
         "success": {
-            "updateReport": "Report updated successfully!"
+            "updateReport": "Report updated successfully!",
+            "updateReportWithNotification": "Report updated successfully! Notification sent to user via system and email.",
+            "updateReportNotificationFailed": "Report updated successfully! However, unable to send notification to user."
         },
         "modal": {
             "title": "Edit Report",

@@ -33,7 +33,7 @@ export interface GetUsersParams {
 /**
  * Get all users with pagination and filters
  */
-export async function getUsers(params?: GetUsersParams, locale: string = "vi"): Promise<ApiResponse<UserListResponse>> {
+export async function getUsers(params?: GetUsersParams, locale = "vi"): Promise<ApiResponse<UserListResponse>> {
     try {
         // Build query string
         const queryParams = new URLSearchParams();
@@ -80,7 +80,7 @@ export async function getUsers(params?: GetUsersParams, locale: string = "vi"): 
 /**
  * Get user details by ID
  */
-export async function getUserById(userId: string, locale: string = "vi"): Promise<ApiResponse<UserDetailItem>> {
+export async function getUserById(userId: string, locale = "vi"): Promise<ApiResponse<UserDetailItem>> {
     try {
         console.log("Gọi API user details:", `/admin/users/${userId}`);
 
@@ -120,7 +120,7 @@ export async function getUserById(userId: string, locale: string = "vi"): Promis
 export async function updateUserStatus(
     userId: string,
     status: "Active" | "Inactive",
-    locale: string = "vi"
+    locale = "vi"
 ): Promise<ApiResponse<string>> {
     try {
         console.log("Gọi API update user status:", `/admin/users/${userId}/status`, { status });
@@ -249,10 +249,32 @@ export function formatDate(dateString: string | null | undefined): string {
     if (!dateString) return "-";
     try {
         const date = new Date(dateString);
+        // Use UTC methods to avoid timezone conversion
         return date.toLocaleDateString("vi-VN", {
             day: "2-digit",
             month: "2-digit",
-            year: "numeric"
+            year: "numeric",
+            timeZone: "UTC" // Force UTC timezone to match API data
+        });
+    } catch {
+        return dateString;
+    }
+}
+
+/**
+ * Format date with time for display
+ */
+export function formatDateTime(dateString: string | null | undefined): string {
+    if (!dateString) return "-";
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "UTC" // Force UTC timezone to match API data
         });
     } catch {
         return dateString;

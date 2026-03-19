@@ -16,6 +16,7 @@ export interface CreateAnnouncementRequest {
     type: number;
     isActive: boolean;
     publishedAt: string;
+    createdAt?: string; // Optional for backward compatibility
 }
 
 export interface UpdateAnnouncementRequest {
@@ -25,6 +26,7 @@ export interface UpdateAnnouncementRequest {
     type: number;
     isActive: boolean;
     publishedAt: string;
+    createdAt?: string; // Optional for backward compatibility
 }
 
 export interface ApiResponse<T> {
@@ -214,28 +216,59 @@ export async function deleteAdminAnnouncement(id: string, locale: string): Promi
 
 // Helper functions for announcement types
 export const ANNOUNCEMENT_TYPES = {
-    0: "Thông báo chung",
-    1: "Cập nhật tính năng",
+    0: "Thông tin",
+    1: "Cảnh báo",
     2: "Bảo trì hệ thống",
     3: "Khuyến mãi",
-    4: "Khác"
+    4: "Nhắc nhở"
 } as const;
 
-export function getAnnouncementTypeLabel(type: number): string {
-    return ANNOUNCEMENT_TYPES[type as keyof typeof ANNOUNCEMENT_TYPES] || "Khác";
+// Map string types from API to numbers
+export const TYPE_STRING_TO_NUMBER: Record<string, number> = {
+    Info: 0,
+    Warning: 1,
+    Maintenance: 2,
+    Promotion: 3,
+    Mention: 4
+};
+
+// Map numbers to string types for API
+export const TYPE_NUMBER_TO_STRING: Record<number, string> = {
+    0: "Info",
+    1: "Warning",
+    2: "Maintenance",
+    3: "Promotion",
+    4: "Mention"
+};
+
+export function getAnnouncementTypeLabel(type: number | string): string {
+    if (typeof type === "string") {
+        const numType = TYPE_STRING_TO_NUMBER[type];
+        return ANNOUNCEMENT_TYPES[numType as keyof typeof ANNOUNCEMENT_TYPES] || "Nhắc nhở";
+    }
+    return ANNOUNCEMENT_TYPES[type as keyof typeof ANNOUNCEMENT_TYPES] || "Nhắc nhở";
 }
 
-export function getAnnouncementTypeColor(type: number): string {
-    switch (type) {
+export function getAnnouncementTypeColor(type: number | string): string {
+    let numType: number;
+    if (typeof type === "string") {
+        numType = TYPE_STRING_TO_NUMBER[type] || 4;
+    } else {
+        numType = type;
+    }
+
+    switch (numType) {
         case 0:
-            return "bg-blue-100 text-blue-700"; // Thông báo chung
+            return "bg-blue-100 text-blue-700"; // Thông tin
         case 1:
-            return "bg-green-100 text-green-700"; // Cập nhật tính năng
+            return "bg-yellow-100 text-yellow-700"; // Cảnh báo
         case 2:
             return "bg-orange-100 text-orange-700"; // Bảo trì hệ thống
         case 3:
             return "bg-purple-100 text-purple-700"; // Khuyến mãi
+        case 4:
+            return "bg-green-100 text-green-700"; // Nhắc nhở
         default:
-            return "bg-gray-100 text-gray-700";
+            return "bg-gray-100 text-gray-700"; // Default
     }
 }

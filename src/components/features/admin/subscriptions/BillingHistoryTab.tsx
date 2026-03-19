@@ -1,22 +1,41 @@
 "use client";
 
+import { CalendarOutlined, DownloadOutlined, EyeOutlined, SearchOutlined } from "@ant-design/icons";
+import { Button, Card, Col, DatePicker, Empty, Input, Row, Select, Table, Tag, Tooltip, Typography } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { type AdminBillingHistoryItem, getAdminBillingHistory } from "@/api/admin-billing";
-import { Button } from "@/components/ui/button";
+import {
+    type ExcelColumn,
+    exportToExcel,
+    formatCurrencyForExport,
+    formatDateForExport,
+    formatPaymentStatusForExport
+} from "@/utils/export-excel";
 import { getPaymentStatusInfo } from "@/utils/payment-status";
+
+const { Title } = Typography;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 export function BillingHistoryTab() {
     const t = useTranslations("BillingHistoryTab");
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<number | "all">("all");
+    const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
     const [billingRecords, setBillingRecords] = useState<AdminBillingHistoryItem[]>([]);
     const [pagination, setPagination] = useState({
-        pageNumber: 1,
+        current: 1,
         pageSize: 10,
-        totalCount: 0,
-        totalPages: 0
+        total: 0,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} của ${total} bản ghi`,
+        pageSizeOptions: ["10", "20", "50", "100"]
     });
 
     // Load billing history from API
@@ -24,11 +43,22 @@ export function BillingHistoryTab() {
         const loadBillingHistory = async () => {
             setIsLoading(true);
             try {
+                // Prepare date range for API
+                let startDate: string | undefined;
+                let endDate: string | undefined;
+
+                if (dateRange?.[0] && dateRange[1]) {
+                    startDate = dateRange[0].startOf("day").toISOString();
+                    endDate = dateRange[1].endOf("day").toISOString();
+                }
+
                 const result = await getAdminBillingHistory(
                     {
                         searchTerm: searchQuery || undefined,
                         paymentStatus: filterStatus === "all" ? undefined : filterStatus,
-                        pageNumber: pagination.pageNumber,
+                        startDate,
+                        endDate,
+                        pageNumber: pagination.current,
                         pageSize: pagination.pageSize
                     },
                     "vi"
@@ -36,12 +66,10 @@ export function BillingHistoryTab() {
 
                 if (result.status === "success" && result.data) {
                     setBillingRecords(result.data.items);
-                    setPagination({
-                        pageNumber: result.data.pageNumber,
-                        pageSize: result.data.pageSize,
-                        totalCount: result.data.totalCount,
-                        totalPages: result.data.totalPages
-                    });
+                    setPagination((prev) => ({
+                        ...prev,
+                        total: result.data!.totalCount
+                    }));
                 } else {
                     // Fallback to mock data if API fails
                     console.warn("API failed, using mock data:", result.message);
@@ -89,220 +117,355 @@ export function BillingHistoryTab() {
                             planName: "Premium"
                         }
                     ]);
-                    setPagination({
-                        pageNumber: 1,
-                        pageSize: 10,
-                        totalCount: 3,
-                        totalPages: 1
-                    });
+                    setPagination((prev) => ({
+                        ...prev,
+                        total: 3
+                    }));
                 }
             } catch (error) {
                 console.error("Failed to load billing history:", error);
-                // Không gọi toast ở đây để tránh dependency loop
             } finally {
                 setIsLoading(false);
             }
         };
 
         loadBillingHistory();
-    }, [searchQuery, filterStatus, pagination.pageNumber, pagination.pageSize]); // Bỏ toast khỏi dependency
+    }, [searchQuery, filterStatus, dateRange, pagination.current, pagination.pageSize]);
 
     // Handle search with debounce
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (pagination.pageNumber !== 1) {
-                setPagination((prev) => ({ ...prev, pageNumber: 1 }));
-            }
+            // Reset to page 1 when search or filter changes
+            setPagination((prev) => ({ ...prev, current: 1 }));
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [pagination.pageNumber]);
+    }, []);
 
-    const handleExport = () => {
-        // TODO: Implement export functionality
-        console.log("Exporting billing history...");
+    const handleExport = async () => {
+        setIsExporting(true);
+
+        try {
+            // Prepare date range for API
+            let startDate: string | undefined;
+            let endDate: string | undefined;
+
+            if (dateRange?.[0] && dateRange[1]) {
+                startDate = dateRange[0].startOf("day").toISOString();
+                endDate = dateRange[1].endOf("day").toISOString();
+            }
+
+            // Fetch all data for export (without pagination)
+            const result = await getAdminBillingHistory(
+                {
+                    searchTerm: searchQuery || undefined,
+                    paymentStatus: filterStatus === "all" ? undefined : filterStatus,
+                    startDate,
+                    endDate,
+                    pageNumber: 1,
+                    pageSize: 10000 // Get all records
+                },
+                "vi"
+            );
+
+            let exportData: AdminBillingHistoryItem[] = [];
+
+            if (result.status === "success" && result.data) {
+                exportData = result.data.items;
+            } else {
+                // Use current displayed data if API fails
+                exportData = billingRecords;
+            }
+
+            // Define Excel columns
+            const columns: ExcelColumn[] = [
+                {
+                    header: "Mã đơn hàng",
+                    key: "orderCode",
+                    width: 15,
+                    format: (value: number) => `#${value}`
+                },
+                {
+                    header: "Tên người dùng",
+                    key: "userName",
+                    width: 20
+                },
+                {
+                    header: "Email",
+                    key: "userEmail",
+                    width: 25
+                },
+                {
+                    header: "Gói dịch vụ",
+                    key: "planName",
+                    width: 15
+                },
+                {
+                    header: "Số tiền",
+                    key: "amount",
+                    width: 15,
+                    format: formatCurrencyForExport
+                },
+                {
+                    header: "Phương thức thanh toán",
+                    key: "paymentMethod",
+                    width: 20
+                },
+                {
+                    header: "Trạng thái",
+                    key: "paymentStatus",
+                    width: 15,
+                    format: formatPaymentStatusForExport
+                },
+                {
+                    header: "Ngày tạo",
+                    key: "createdAt",
+                    width: 20,
+                    format: formatDateForExport
+                },
+                {
+                    header: "Ngày thanh toán",
+                    key: "paidAt",
+                    width: 20,
+                    format: (value: string | null) => (value ? formatDateForExport(value) : "Chưa thanh toán")
+                }
+            ];
+
+            // Prepare filter info for export
+            const filterInfo = {
+                searchQuery: searchQuery || undefined,
+                status:
+                    filterStatus === "all"
+                        ? undefined
+                        : filterStatus === 0
+                          ? "Đang chờ"
+                          : filterStatus === 1
+                            ? "Thành công"
+                            : filterStatus === 2
+                              ? "Đã hủy"
+                              : filterStatus === 3
+                                ? "Thất bại"
+                                : undefined,
+                dateRange:
+                    dateRange?.[0] && dateRange[1]
+                        ? `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`
+                        : undefined
+            };
+
+            // Generate filename with current date
+            const now = new Date();
+            const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+            const filename = `billing-history-${dateStr}`;
+
+            // Export to Excel
+            await exportToExcel({
+                filename,
+                sheetName: "Lịch sử thanh toán",
+                columns,
+                data: exportData,
+                filterInfo
+            });
+
+            console.log(`Exported ${exportData.length} billing records to ${filename}.xlsx`);
+        } catch (error) {
+            console.error("Export failed:", error);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
-    const handlePageChange = (newPage: number) => {
-        setPagination((prev) => ({ ...prev, pageNumber: newPage }));
+    const handleViewDetails = (record: AdminBillingHistoryItem) => {
+        console.log("View details for:", record.paymentId);
     };
+
+    const columns: ColumnsType<AdminBillingHistoryItem> = [
+        {
+            title: t("table.orderCode"),
+            dataIndex: "orderCode",
+            key: "orderCode",
+            width: 120,
+            render: (orderCode: number) => <Typography.Text strong>#{orderCode}</Typography.Text>
+        },
+        {
+            title: t("table.user"),
+            key: "user",
+            width: 200,
+            render: (_, record) => (
+                <div>
+                    <div className="font-medium text-gray-900">{record.userName}</div>
+                    <div className="text-gray-500 text-sm">{record.userEmail}</div>
+                </div>
+            )
+        },
+        {
+            title: t("table.plan"),
+            dataIndex: "planName",
+            key: "planName",
+            width: 100,
+            render: (planName: string) => <Tag color="blue">{planName}</Tag>
+        },
+        {
+            title: t("table.amount"),
+            dataIndex: "amount",
+            key: "amount",
+            width: 120,
+            align: "right",
+            render: (amount: number) => (
+                <Typography.Text strong className="text-green-600">
+                    {amount.toLocaleString()} VND
+                </Typography.Text>
+            )
+        },
+        {
+            title: t("table.method"),
+            dataIndex: "paymentMethod",
+            key: "paymentMethod",
+            width: 120
+        },
+        {
+            title: t("table.status"),
+            dataIndex: "paymentStatus",
+            key: "paymentStatus",
+            width: 120,
+            render: (status: number) => {
+                const statusInfo = getPaymentStatusInfo(status);
+                let color = "default";
+                switch (status) {
+                    case 0:
+                        color = "processing";
+                        break; // Pending
+                    case 1:
+                        color = "success";
+                        break; // Success
+                    case 2:
+                        color = "warning";
+                        break; // Cancelled
+                    case 3:
+                        color = "error";
+                        break; // Failed
+                }
+                return <Tag color={color}>{statusInfo.label}</Tag>;
+            }
+        },
+        {
+            title: t("table.date"),
+            dataIndex: "createdAt",
+            key: "createdAt",
+            width: 120,
+            render: (date: string) => (
+                <div>
+                    <div>{new Date(date).toLocaleDateString("vi-VN")}</div>
+                    <div className="text-gray-500 text-xs">
+                        {new Date(date).toLocaleTimeString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        })}
+                    </div>
+                </div>
+            )
+        },
+        {
+            title: t("table.actions"),
+            key: "actions",
+            width: 100,
+            fixed: "right",
+            render: (_, record) => (
+                <Tooltip title="Xem chi tiết">
+                    <Button
+                        type="link"
+                        icon={<EyeOutlined />}
+                        onClick={() => handleViewDetails(record)}
+                        className="text-[#FF5F3D] hover:text-[#ff4620]"
+                    />
+                </Tooltip>
+            )
+        }
+    ];
 
     return (
         <div className="space-y-6">
-            {/* Header with Search and Filters */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="relative max-w-md flex-1">
-                    <input
-                        type="text"
-                        placeholder={t("search.placeholder")}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20"
-                    />
-                    <svg
-                        className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            {/* Header */}
+            <div>
+                <Title level={3} className="!mb-2">
+                    Lịch sử thanh toán
+                </Title>
+                <Typography.Text type="secondary">Quản lý và theo dõi tất cả giao dịch thanh toán</Typography.Text>
+            </div>
+
+            {/* Filters Card */}
+            <Card>
+                <Row gutter={[16, 16]}>
+                    <Col xs={24} sm={12} md={8} lg={6}>
+                        <Input
+                            placeholder={t("search.placeholder")}
+                            prefix={<SearchOutlined />}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            allowClear
                         />
-                    </svg>
-                </div>
+                    </Col>
+                    <Col xs={24} sm={12} md={8} lg={6}>
+                        <Select
+                            value={filterStatus}
+                            onChange={setFilterStatus}
+                            style={{ width: "100%" }}
+                            placeholder="Trạng thái">
+                            <Option value="all">{t("filters.allStatus")}</Option>
+                            <Option value={0}>{t("filters.pending")}</Option>
+                            <Option value={1}>{t("filters.success")}</Option>
+                            <Option value={2}>{t("filters.cancelled")}</Option>
+                            <Option value={3}>{t("filters.failed")}</Option>
+                        </Select>
+                    </Col>
+                    <Col xs={24} sm={12} md={8} lg={6}>
+                        <RangePicker
+                            value={dateRange}
+                            onChange={setDateRange}
+                            style={{ width: "100%" }}
+                            placeholder={["Từ ngày", "Đến ngày"]}
+                            format="DD/MM/YYYY"
+                            suffixIcon={<CalendarOutlined />}
+                        />
+                    </Col>
+                    <Col xs={24} sm={12} md={8} lg={6}>
+                        <Button
+                            type="primary"
+                            icon={<DownloadOutlined />}
+                            onClick={handleExport}
+                            loading={isExporting}
+                            className="w-full border-[#FF5F3D] bg-[#FF5F3D] hover:border-[#ff4620] hover:bg-[#ff4620]">
+                            {t("actions.export")}
+                        </Button>
+                    </Col>
+                </Row>
+            </Card>
 
-                <div className="flex gap-2">
-                    <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value === "all" ? "all" : Number(e.target.value))}
-                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
-                        <option value="all">{t("filters.allStatus")}</option>
-                        <option value={0}>{t("filters.pending")}</option>
-                        <option value={1}>{t("filters.success")}</option>
-                        <option value={2}>{t("filters.cancelled")}</option>
-                        <option value={3}>{t("filters.failed")}</option>
-                    </select>
-
-                    <Button onClick={handleExport} className="bg-[#FF5F3D] hover:bg-[#ff4620]">
-                        <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                        </svg>
-                        {t("actions.export")}
-                    </Button>
-                </div>
-            </div>
-
-            {/* Billing Table */}
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                {isLoading ? (
-                    <div className="flex items-center justify-center p-12">
-                        <div className="text-center">
-                            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-[#FF5F3D]" />
-                            <p className="text-[#6F6B99] text-sm">Đang tải dữ liệu...</p>
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-[#F8F8F8]">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.orderCode")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.user")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.plan")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.amount")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.method")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.status")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.date")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left font-semibold text-[#261E33] text-sm">
-                                            {t("table.actions")}
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {billingRecords.map((record) => {
-                                        const statusInfo = getPaymentStatusInfo(record.paymentStatus);
-                                        return (
-                                            <tr
-                                                key={record.paymentId}
-                                                className="border-gray-100 border-t hover:bg-gray-50">
-                                                <td className="px-6 py-4 font-medium text-[#261E33] text-sm">
-                                                    #{record.orderCode}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div>
-                                                        <p className="font-medium text-[#261E33] text-sm">
-                                                            {record.userName}
-                                                        </p>
-                                                        <p className="text-[#6F6B99] text-xs">{record.userEmail}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-[#261E33] text-sm">{record.planName}</td>
-                                                <td className="px-6 py-4 font-semibold text-[#261E33] text-sm">
-                                                    {record.amount.toLocaleString()} VND
-                                                </td>
-                                                <td className="px-6 py-4 text-[#261E33] text-sm">
-                                                    {record.paymentMethod}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span
-                                                        className={`rounded-full px-3 py-1 font-medium text-xs ${statusInfo.color} ${statusInfo.bgColor}`}>
-                                                        {statusInfo.label}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-[#6F6B99] text-sm">
-                                                    {new Date(record.createdAt).toLocaleDateString("vi-VN")}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <button
-                                                        type="button"
-                                                        className="font-medium text-[#FF5F3D] text-sm hover:text-[#ff4620]">
-                                                        View Details
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {billingRecords.length === 0 && (
-                            <div className="py-12 text-center">
-                                <p className="text-[#6F6B99]">No billing records found</p>
-                            </div>
-                        )}
-
-                        {/* Pagination */}
-                        {pagination.totalPages > 1 && (
-                            <div className="flex items-center justify-between border-gray-200 border-t px-6 py-4">
-                                <div className="text-[#6F6B99] text-sm">
-                                    Showing {(pagination.pageNumber - 1) * pagination.pageSize + 1} to{" "}
-                                    {Math.min(pagination.pageNumber * pagination.pageSize, pagination.totalCount)} of{" "}
-                                    {pagination.totalCount} results
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(pagination.pageNumber - 1)}
-                                        disabled={pagination.pageNumber <= 1}>
-                                        Previous
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handlePageChange(pagination.pageNumber + 1)}
-                                        disabled={pagination.pageNumber >= pagination.totalPages}>
-                                        Next
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+            {/* Table Card */}
+            <Card>
+                <Table
+                    columns={columns}
+                    dataSource={billingRecords}
+                    rowKey="paymentId"
+                    loading={isLoading}
+                    pagination={{
+                        ...pagination,
+                        onChange: (page, pageSize) => {
+                            setPagination((prev) => ({
+                                ...prev,
+                                current: page,
+                                pageSize: pageSize || 10
+                            }));
+                        }
+                    }}
+                    locale={{
+                        emptyText: (
+                            <Empty description="Không có dữ liệu thanh toán" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                        )
+                    }}
+                    scroll={{ x: 1000 }}
+                    size="middle"
+                />
+            </Card>
         </div>
     );
 }

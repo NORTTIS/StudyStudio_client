@@ -414,8 +414,8 @@ export function AnnouncementsPage() {
                                             selectedDetail.type === "0" || selectedDetail.type === "info"
                                                 ? t("Announcements.info")
                                                 : selectedDetail.type === "1" || selectedDetail.type === "warning"
-                                                  ? t("Announcements.warning")
-                                                  : t("Announcements.critical")
+                                                    ? t("Announcements.warning")
+                                                    : t("Announcements.critical")
                                         }
                                         className={`${getTypeColorClass(selectedDetail.type)} rounded-full px-4 py-1 font-bold text-[10px] uppercase tracking-widest`}
                                     />
@@ -438,7 +438,15 @@ export function AnnouncementsPage() {
     );
 }
 
-function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getTypeIcon, t }: any) {
+function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getTypeIcon, t }: {
+    item: UserAnnouncement | AdminAnnouncement;
+    isUserAnn: boolean;
+    onClick: (item: UserAnnouncement | AdminAnnouncement) => void;
+    onDelete: (id: string) => void;
+    formatDate: (date: string) => string;
+    getTypeIcon: (type: string) => React.ReactNode;
+    t: (key: string) => string;
+}) {
     const userAnn = item as UserAnnouncement;
     const isUnread = isUserAnn && !userAnn.isRead;
 
@@ -461,7 +469,7 @@ function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getT
                     </Text>
                     {isUnread && <div className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />}
                 </div>
-                <Paragraph className="!m-0 line-clamp-2 text-gray-400 text-sm leading-relaxed">
+                <Paragraph className="!m-0 line-clamp-2 whitespace-pre-wrap text-gray-400 text-sm leading-relaxed">
                     {item.content}
                 </Paragraph>
                 <div className="mt-3 flex items-center gap-4">
@@ -494,7 +502,7 @@ function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getT
     );
 }
 
-function EmptyState({ isSearch, t }: { isSearch: boolean; t: any }) {
+function EmptyState({ isSearch, t }: { isSearch: boolean; t: (key: string) => string }) {
     return (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-gray-200 border-dashed bg-gray-50 py-24">
             <SoundOutlined className="mb-6 text-5xl text-gray-200" />

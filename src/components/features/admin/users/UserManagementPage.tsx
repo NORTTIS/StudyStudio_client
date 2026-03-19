@@ -29,22 +29,23 @@ import {
     Typography
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useState, useEffect, useCallback } from "react";
-import { Header } from "@/components/layout/Header";
-import { DashboardSidebar } from "@/components/layout/sidebar";
+import { useCallback, useEffect, useState } from "react";
 import {
-    getUsers,
-    getUserById,
-    updateUserStatus,
     canChangeUserStatus,
     convertApiStatus,
     formatDate,
-    getInitials,
-    type UserListItem,
-    type UserDetailItem,
+    formatDateTime,
     type GetUsersParams,
-    type UserDisplayStatus
+    getInitials,
+    getUserById,
+    getUsers,
+    type UserDetailItem,
+    type UserDisplayStatus,
+    type UserListItem,
+    updateUserStatus
 } from "@/api/admin-users";
+import { Header } from "@/components/layout/Header";
+import { DashboardSidebar } from "@/components/layout/sidebar";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -69,7 +70,7 @@ export type User = {
 /**
  * Convert UserListItem from API to User type
  */
-function convertToUser(apiUser: UserListItem): User {
+function _convertToUser(apiUser: UserListItem): User {
     return {
         id: apiUser.userId || "",
         name: apiUser.fullName || "Unknown",
@@ -82,7 +83,7 @@ function convertToUser(apiUser: UserListItem): User {
                   : "user",
         status: convertApiStatus(apiUser.status),
         joinDate: formatDate(apiUser.createdAt),
-        lastLogin: formatDate(apiUser.lastLoginAt),
+        lastLogin: formatDateTime(apiUser.lastLoginAt),
         groups: apiUser.groupCount || 0,
         studios: apiUser.studioCount || 0,
         avatarUrl: undefined
@@ -133,7 +134,7 @@ export function UserManagementPage() {
                         status: convertApiStatus(apiUser.status),
                         originalStatus: apiUser.status || undefined,
                         joinDate: formatDate(apiUser.createdAt),
-                        lastLogin: formatDate(apiUser.lastLoginAt),
+                        lastLogin: formatDateTime(apiUser.lastLoginAt),
                         groups: apiUser.groupCount || 0,
                         studios: apiUser.studioCount || 0,
                         avatarUrl: undefined

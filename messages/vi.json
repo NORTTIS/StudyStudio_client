@@ -1185,7 +1185,9 @@
             "updateError": "Có lỗi xảy ra khi cập nhật báo cáo"
         },
         "success": {
-            "updateReport": "Cập nhật báo cáo thành công!"
+            "updateReport": "Cập nhật báo cáo thành công!",
+            "updateReportWithNotification": "Cập nhật báo cáo thành công! Đã gửi thông báo đến người dùng qua hệ thống và email.",
+            "updateReportNotificationFailed": "Cập nhật báo cáo thành công! Tuy nhiên không thể gửi thông báo đến người dùng."
         },
         "modal": {
             "title": "Chỉnh sửa báo cáo",

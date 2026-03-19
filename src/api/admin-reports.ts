@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from "./api-client";
+import { apiGet, apiPost, apiPut } from "./api-client";
 
 export interface AdminReportSummary {
     totalReport: number;
@@ -49,6 +49,13 @@ export interface UpdateReportRequest {
     reportId: string;
     status: number;
     priority: number;
+    adminNote: string;
+}
+
+export interface SendReportNotificationRequest {
+    userId: string;
+    reportId: string;
+    reportTitle: string;
     adminNote: string;
 }
 
@@ -111,8 +118,43 @@ export async function getAdminReports(
 }
 
 /**
- * Update admin report
+ * Send notification to user when report is resolved
  */
+export async function sendReportNotification(
+    request: SendReportNotificationRequest,
+    locale: string
+): Promise<ApiResponse<string>> {
+    try {
+        console.log("Gửi thông báo report resolved:", request);
+
+        const response = await apiPost<string>("/admin/reports/notify", request, locale);
+
+        console.log("Phản hồi API send notification:", response);
+
+        if (response.status === "success") {
+            return {
+                status: response.status,
+                code: response.code,
+                message: response.message,
+                data: response.data
+            };
+        }
+        return {
+            status: "error",
+            code: response.code || "API_ERROR",
+            message: response.message || "Không thể gửi thông báo",
+            data: null
+        };
+    } catch (error: unknown) {
+        console.error("Lỗi khi gửi thông báo report:", error);
+        return {
+            status: "error",
+            code: "NOTIFICATION_ERROR",
+            message: error instanceof Error ? error.message : "Có lỗi không xác định xảy ra",
+            data: null
+        };
+    }
+}
 export async function updateAdminReport(
     request: UpdateReportRequest,
     locale: string

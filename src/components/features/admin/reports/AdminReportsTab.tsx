@@ -17,6 +17,7 @@ import {
     getReportTypeLabel,
     REPORT_PRIORITIES,
     REPORT_STATUSES,
+    sendReportNotification,
     updateAdminReport
 } from "@/api/admin-reports";
 import { Button } from "@/components/ui/button";
@@ -135,6 +136,12 @@ export function AdminReportsTab() {
         if (!selectedReport) return;
 
         try {
+            // Check if we need to send notification (status = resolved AND has admin note)
+            const shouldSendNotification =
+                editForm.status === 2 && // Resolved
+                editForm.adminNote.trim() !== "" && // Has admin note
+                selectedReport.status !== 2; // Was not already resolved
+
             const result = await updateAdminReport(
                 {
                     reportId: selectedReport.reportId,
@@ -146,10 +153,45 @@ export function AdminReportsTab() {
             );
 
             if (result.status === "success") {
-                toast({
-                    description: t("success.updateReport"),
-                    variant: "default"
-                });
+                // Send notification if conditions are met
+                if (shouldSendNotification) {
+                    try {
+                        const notificationResult = await sendReportNotification(
+                            {
+                                userId: selectedReport.userId,
+                                reportId: selectedReport.reportId,
+                                reportTitle: selectedReport.title,
+                                adminNote: editForm.adminNote
+                            },
+                            locale
+                        );
+
+                        if (notificationResult.status === "success") {
+                            toast({
+                                description: t("success.updateReportWithNotification"),
+                                variant: "default"
+                            });
+                        } else {
+                            // Report updated but notification failed
+                            toast({
+                                description: t("success.updateReportNotificationFailed"),
+                                variant: "default"
+                            });
+                        }
+                    } catch (notificationError) {
+                        console.error("Failed to send notification:", notificationError);
+                        toast({
+                            description: t("success.updateReportNotificationFailed"),
+                            variant: "default"
+                        });
+                    }
+                } else {
+                    toast({
+                        description: t("success.updateReport"),
+                        variant: "default"
+                    });
+                }
+
                 setIsEditModalOpen(false);
                 setSelectedReport(null);
                 loadReports(); // Reload data
@@ -516,6 +558,17 @@ export function AdminReportsTab() {
                                     placeholder={t("modal.adminNotePlaceholder")}
                                     rows={3}
                                 />
+                                {editForm.status === 2 && editForm.adminNote.trim() !== "" && (
+                                    <p className="mt-2 text-blue-600 text-xs">
+                                        💌 Thông báo sẽ được gửi tự động đến người dùng qua hệ thống và email khi cập
+                                        nhật
+                                    </p>
+                                )}
+                                {editForm.status === 2 && editForm.adminNote.trim() === "" && (
+                                    <p className="mt-2 text-amber-600 text-xs">
+                                        ⚠️ Cần nhập ghi chú admin để gửi thông báo đến người dùng
+                                    </p>
+                                )}
                             </div>
                         </div>
 
