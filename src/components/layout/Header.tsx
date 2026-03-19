@@ -210,22 +210,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
     return (
         <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
-            <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-                {/* Search - chỉ hiện cho user thường */}
-                {!isAdmin && (
-                    <div className="hidden max-w-md flex-1 md:block">
-                        <div className="relative">
-                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                <SearchIcon />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder={t("searchPlaceholder")}
-                                className="w-full rounded-lg border border-[#E5E5E5] bg-[#F9F9F9] py-2 pr-4 pl-10 text-[#261E33] text-sm placeholder:text-[#9CA3AF] focus:border-[#FF5F3D] focus:outline-none focus:ring-1 focus:ring-[#FF5F3D]"
-                            />
-                        </div>
-                    </div>
-                )}
+            <div className="flex h-16 w-full items-center justify-end gap-4 px-4 sm:px-6 lg:px-8">
 
                 {/* Admin title */}
                 {isAdmin && (

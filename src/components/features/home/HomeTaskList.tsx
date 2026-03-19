@@ -23,7 +23,8 @@ type HomeTaskListResponseApiResponse = components["schemas"]["HomeTaskListRespon
 type HomeTaskListItemResponse = components["schemas"]["HomeTaskListItemResponse"];
 type UserGroupDto = components["schemas"]["UserGroupDto"];
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 5;
+const FETCH_ALL_SIZE = 1000;
 
 type SourceFilterValue = "all" | "personal" | string;
 type SortValue = "none" | "deadline" | "priority" | "severity" | "status";
@@ -300,7 +301,7 @@ function TaskStatusBadge({ label }: { label?: string | null }) {
 function TableSkeleton() {
     return (
         <div className="space-y-3 px-4 py-2">
-            {Array.from({ length: 4 }).map((_, index) => (
+            {Array.from({ length: 5 }).map((_, index) => (
                 <div key={index} className="h-16 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />
             ))}
         </div>
@@ -422,7 +423,12 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     };
 
     const goNextMonth = () => {
-        setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
+        const next = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+        if (maxDate) {
+            const maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+            if (next > maxMonth) return;
+        }
+        setMonth(next);
     };
 
     const isPrevDisabled = React.useMemo(() => {
@@ -726,8 +732,8 @@ export default function HomeTaskList() {
 
     React.useEffect(() => {
         const timer = window.setTimeout(() => {
-            setPage(1);
             setSearchValue(searchInput);
+            setPage(1);
         }, 400);
 
         return () => window.clearTimeout(timer);
@@ -744,14 +750,17 @@ export default function HomeTaskList() {
 
                 const url = buildTaskListUrl({
                     groupId,
-                    page,
-                    pageSize: PAGE_SIZE,
+                    page: 1,
+                    pageSize: FETCH_ALL_SIZE,
                     search: searchValue,
-                    sortBy
+                    sortBy: sortBy === "none" ? undefined : sortBy
                 });
 
                 if (!url) {
-                    setIsLoading(false);
+                    if (isMounted) {
+                        setData(null);
+                        setIsLoading(false);
+                    }
                     return;
                 }
 
@@ -782,17 +791,41 @@ export default function HomeTaskList() {
         return () => {
             isMounted = false;
         };
-    }, [page, searchValue, selectedSource, sortBy]);
+    }, [searchValue, selectedSource, sortBy]);
 
     const groups = data?.userGroups ?? [];
     const rawItems = data?.items ?? [];
 
+    const validGroupIds = React.useMemo(
+        () => new Set(groups.map((group) => group.groupId).filter(Boolean)),
+        [groups]
+    );
+
+    const sanitizedItems = React.useMemo(() => {
+        return rawItems.filter((item) => {
+            if (isPersonalTask(item)) return true;
+            return !!item.groupId && validGroupIds.has(item.groupId);
+        });
+    }, [rawItems, validGroupIds]);
+
+    React.useEffect(() => {
+        if (selectedSource !== "all" && selectedSource !== "personal" && !validGroupIds.has(selectedSource)) {
+            setSelectedSource("all");
+            setPage(1);
+        }
+    }, [selectedSource, validGroupIds]);
+
     const sourceFilteredItems = React.useMemo(() => {
         if (selectedSource === "personal") {
-            return rawItems.filter((item) => isPersonalTask(item));
+            return sanitizedItems.filter((item) => isPersonalTask(item));
         }
-        return rawItems;
-    }, [rawItems, selectedSource]);
+
+        if (selectedSource !== "all") {
+            return sanitizedItems.filter((item) => item.groupId === selectedSource);
+        }
+
+        return sanitizedItems;
+    }, [sanitizedItems, selectedSource]);
 
     const displayItems = React.useMemo(() => {
         let result = [...sourceFilteredItems];
@@ -817,39 +850,51 @@ export default function HomeTaskList() {
     }, [sourceFilteredItems, sortBy, sortFilterValue, deadlineFilter]);
 
     const statusOptions = React.useMemo(() => {
-        const unique = Array.from(new Set(rawItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean)));
+        const unique = Array.from(
+            new Set(sanitizedItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean))
+        );
         return unique;
-    }, [rawItems]);
-
-    const totalPages = Math.max(Math.ceil(displayItems.length / 4), 1);
-
-    const paginatedItems = React.useMemo(() => {
-        const start = (page - 1) * 4;
-        return displayItems.slice(start, start + 4);
-    }, [displayItems, page]);
+    }, [sanitizedItems]);
 
     React.useEffect(() => {
         setPage(1);
-    }, [sortFilterValue, deadlineFilter.startDate, deadlineFilter.endDate, sortBy]);
+    }, [selectedSource, sortBy, sortFilterValue, deadlineFilter.startDate, deadlineFilter.endDate, searchValue]);
 
-    const pageNumbers = React.useMemo(() => {
-        if (totalPages <= 3) {
+    const totalPages = Math.max(Math.ceil(displayItems.length / PAGE_SIZE), 1);
+
+    React.useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
+
+    const paginatedItems = React.useMemo(() => {
+        const start = (page - 1) * PAGE_SIZE;
+        return displayItems.slice(start, start + PAGE_SIZE);
+    }, [displayItems, page]);
+
+    const paginationItems = React.useMemo<(number | "...")[]>(() => {
+        if (totalPages <= 7) {
             return Array.from({ length: totalPages }, (_, index) => index + 1);
         }
 
-        if (page <= 2) return [1, 2, 3];
-        if (page >= totalPages - 1) return [totalPages - 2, totalPages - 1, totalPages];
+        if (page <= 4) {
+            return [1, 2, 3, 4, 5, "...", totalPages];
+        }
 
-        return [page - 1, page, page + 1];
+        if (page >= totalPages - 3) {
+            return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        }
+
+        return [1, "...", page - 1, page, page + 1, "...", totalPages];
     }, [page, totalPages]);
 
     const handleSourceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setPage(1);
         setSelectedSource(event.target.value);
+        setPage(1);
     };
 
     const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setPage(1);
         const nextSort = event.target.value as SortValue;
         setSortBy(nextSort);
         setSortFilterValue("");
@@ -858,6 +903,7 @@ export default function HomeTaskList() {
             endDate: ""
         });
         setOpenDeadlineFilter(false);
+        setPage(1);
     };
 
     const handleTaskClick = (item: HomeTaskListItemResponse) => {
@@ -1108,65 +1154,48 @@ export default function HomeTaskList() {
                                 type="button"
                                 onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                                 disabled={page === 1}
-                                className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2 text-[16px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[16px] font-medium text-[#9A3412] hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <ChevronLeft className="h-5 w-5" />
                                 Previous
                             </button>
 
-                            {pageNumbers[0] > 1 && (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={() => setPage(1)}
-                                        className="h-12 min-w-12 rounded-xl border border-[#E2E8F0] bg-white px-4 text-[16px] font-medium"
-                                    >
-                                        1
-                                    </button>
-                                    {pageNumbers[0] > 2 && <span className="px-2 text-[24px]">...</span>}
-                                </>
-                            )}
+                            {paginationItems.map((item, index) => {
+                                if (item === "...") {
+                                    return (
+                                        <span
+                                            key={`ellipsis-${index}`}
+                                            className="flex h-12 min-w-12 items-center justify-center px-2 text-[16px] font-medium text-[#64748B]"
+                                        >
+                                            ...
+                                        </span>
+                                    );
+                                }
 
-                            {pageNumbers.map((pageNumber) => {
-                                const isActive = pageNumber === page;
+                                const isActive = item === page;
 
                                 return (
                                     <button
-                                        key={pageNumber}
+                                        key={item}
                                         type="button"
-                                        onClick={() => setPage(pageNumber)}
+                                        onClick={() => setPage(item)}
                                         className={cn(
                                             "h-12 min-w-12 rounded-xl border px-4 text-[16px] font-medium transition",
                                             isActive
-                                                ? "border-[#0F172A] bg-[#0F172A] text-white"
-                                                : "border-[#E2E8F0] bg-white text-[#261E33] hover:bg-[#F8FAFC]"
+                                                ? "border-[#F97316] bg-[#F97316] text-white"
+                                                : "border-[#E2E8F0] bg-white text-[#261E33] hover:border-[#FDBA74] hover:bg-[#FFF7ED]"
                                         )}
                                     >
-                                        {pageNumber}
+                                        {item}
                                     </button>
                                 );
                             })}
-
-                            {pageNumbers[pageNumbers.length - 1] < totalPages && (
-                                <>
-                                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                                        <span className="px-2 text-[24px]">...</span>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={() => setPage(totalPages)}
-                                        className="h-12 min-w-12 rounded-xl border border-[#E2E8F0] bg-white px-4 text-[16px] font-medium"
-                                    >
-                                        {totalPages}
-                                    </button>
-                                </>
-                            )}
 
                             <button
                                 type="button"
                                 onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                                 disabled={page === totalPages}
-                                className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2 text-[16px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[16px] font-medium text-[#9A3412] hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Next
                                 <ChevronRight className="h-5 w-5" />

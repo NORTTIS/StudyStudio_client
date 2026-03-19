@@ -35,6 +35,11 @@ type TemplateResponse = {
 const RAW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 const API_BASE = RAW_BASE.replace(/\/$/, "");
 
+const GROUP_NAME_MAX_LENGTH = 30;
+const GROUP_DESCRIPTION_MAX_LENGTH = 200;
+const GROUP_DESCRIPTION_MAX_LINES = 3;
+const GROUP_DESCRIPTION_MAX_BREAKS = GROUP_DESCRIPTION_MAX_LINES - 1;
+
 function buildApiUrl(path: string) {
     if (!API_BASE) return path;
     const p = path.startsWith("/") ? path : `/${path}`;
@@ -45,6 +50,24 @@ function buildApiUrl(path: string) {
 }
 
 type CreateGroupModalVariant = "default" | "studio";
+const countLineBreaks = (value: string) => (value.match(/\n/g) || []).length;
+
+const isShortcutKey = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    e.ctrlKey || e.metaKey || e.altKey;
+
+const isAllowedControlKey = (key: string) =>
+    [
+        "Backspace",
+        "Delete",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Tab",
+        "Home",
+        "End",
+        "Escape"
+    ].includes(key);
 
 export function CreateGroupModal({
     open,
@@ -99,6 +122,7 @@ export function CreateGroupModal({
             setGroupCount(1);
             return;
         }
+
         const next = Number.parseInt(raw, 10);
         if (Number.isNaN(next)) return;
 
@@ -110,6 +134,22 @@ export function CreateGroupModal({
         if (next < 1) setGroupCount(1);
         else if (next > remaining) setGroupCount(remaining);
         else setGroupCount(next);
+    };
+
+    const handleGroupNameChange = (value: string) => {
+        if (value.length > GROUP_NAME_MAX_LENGTH) return;
+        setGroupName(value);
+    };
+
+    const handleGroupPrefixChange = (value: string) => {
+        if (value.length > GROUP_NAME_MAX_LENGTH) return;
+        setGroupPrefix(value);
+    };
+
+    const handleDescriptionChange = (value: string) => {
+        if (value.length > GROUP_DESCRIPTION_MAX_LENGTH) return;
+        if (countLineBreaks(value) > GROUP_DESCRIPTION_MAX_BREAKS) return;
+        setDescription(value);
     };
 
     const canCreate = useMemo(() => {
@@ -443,57 +483,159 @@ export function CreateGroupModal({
                                 </div>
 
                                 {createMode === "single" ? (
-                                    <Field label="Tên nhóm">
-                                        <input
-                                            value={groupName}
-                                            onChange={(e) => setGroupName(e.target.value)}
-                                            className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                                            placeholder="Nhập tên nhóm"
-                                            disabled={loadingOptions || creating}
-                                        />
+                                    <Field label="Tên nhóm" required>
+                                        <div>
+                                            <input
+                                                value={groupName}
+                                                onChange={(e) => handleGroupNameChange(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
+
+                                                    const input = e.currentTarget;
+                                                    const hasSelection = (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
+
+                                                    if (!hasSelection && groupName.length >= GROUP_NAME_MAX_LENGTH) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                onPaste={(e) => {
+                                                    const pastedText = e.clipboardData.getData("text");
+                                                    const input = e.currentTarget;
+                                                    const start = input.selectionStart ?? 0;
+                                                    const end = input.selectionEnd ?? 0;
+                                                    const nextValue =
+                                                        groupName.slice(0, start) + pastedText + groupName.slice(end);
+
+                                                    if (nextValue.length > GROUP_NAME_MAX_LENGTH) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                placeholder="Nhập tên nhóm"
+                                                disabled={loadingOptions || creating}
+                                            />
+                                            <div className="mt-2 text-right text-[#6F6B99] text-xs">
+                                                {groupName.length}/{GROUP_NAME_MAX_LENGTH}
+                                            </div>
+                                        </div>
                                     </Field>
                                 ) : (
                                     <>
-                                        <Field label="Tiền tố nhóm">
-                                            <input
-                                                value={groupPrefix}
-                                                onChange={(e) => setGroupPrefix(e.target.value)}
-                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                                                placeholder="Ví dụ: Nhóm, Team, Class"
-                                                disabled={loadingOptions || creating}
-                                            />
-                                            <p className="mt-2 text-[#6F6B99] text-xs">
-                                                Các nhóm sẽ được đặt tên: {groupPrefix || "[Tiền tố]"} 1,{" "}
-                                                {groupPrefix || "[Tiền tố]"} 2, ...
-                                            </p>
+                                        <Field label="Tiền tố nhóm" required>
+                                            <div>
+                                                <input
+                                                    value={groupPrefix}
+                                                    onChange={(e) => handleGroupPrefixChange(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
+
+                                                        const input = e.currentTarget;
+                                                        const hasSelection = (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
+
+                                                        if (!hasSelection && groupPrefix.length >= GROUP_NAME_MAX_LENGTH) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    onPaste={(e) => {
+                                                        const pastedText = e.clipboardData.getData("text");
+                                                        const input = e.currentTarget;
+                                                        const start = input.selectionStart ?? 0;
+                                                        const end = input.selectionEnd ?? 0;
+                                                        const nextValue =
+                                                            groupPrefix.slice(0, start) + pastedText + groupPrefix.slice(end);
+
+                                                        if (nextValue.length > GROUP_NAME_MAX_LENGTH) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                    placeholder="Ví dụ: Nhóm, Team, Class"
+                                                    disabled={loadingOptions || creating}
+                                                />
+                                                <div className="mt-2 flex items-center justify-between gap-3">
+                                                    <p className="text-[#6F6B99] text-xs">
+                                                        Các nhóm sẽ được đặt tên: {groupPrefix || "[Tiền tố]"} 1,{" "}
+                                                        {groupPrefix || "[Tiền tố]"} 2, ...
+                                                    </p>
+                                                    <div className="shrink-0 text-[#6F6B99] text-xs">
+                                                        {groupPrefix.length}/{GROUP_NAME_MAX_LENGTH}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </Field>
 
-                                        <Field label="Số lượng nhóm">
-                                            <input
-                                                type="number"
-                                                min={1}
-                                                max={remaining}
-                                                value={groupCount}
-                                                onChange={(e) => handleGroupCountChange(e.target.value)}
-                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                                                placeholder="Nhập số lượng"
-                                                disabled={loadingOptions || creating || remaining === 0}
-                                            />
-                                            <p className="mt-2 text-[#6F6B99] text-xs">
-                                                Tối đa: {remaining} nhóm (còn trống)
-                                            </p>
+                                        <Field label="Số lượng nhóm" required>
+                                            <div>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    max={remaining}
+                                                    value={groupCount}
+                                                    onChange={(e) => handleGroupCountChange(e.target.value)}
+                                                    className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                    placeholder="Nhập số lượng"
+                                                    disabled={loadingOptions || creating || remaining === 0}
+                                                />
+                                                <p className="mt-2 text-[#6F6B99] text-xs">
+                                                    Tối đa: {remaining} nhóm (còn trống)
+                                                </p>
+                                            </div>
                                         </Field>
                                     </>
                                 )}
 
                                 <Field label="Mô tả">
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        className="min-h-[140px] w-full resize-none rounded-2xl border border-[#E6E6E6] px-5 py-4 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                                        placeholder="Nhập mô tả nhóm (optional)"
-                                        disabled={loadingOptions || creating}
-                                    />
+                                    <div className="relative">
+                                        <textarea
+                                            value={description}
+                                            onChange={(e) => {
+                                                handleDescriptionChange(e.target.value);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
+
+                                                const textarea = e.currentTarget;
+                                                const hasSelection =
+                                                    (textarea.selectionStart ?? 0) !== (textarea.selectionEnd ?? 0);
+
+                                                if (e.key === "Enter") {
+                                                    const lineBreakCount = countLineBreaks(description);
+                                                    if (!hasSelection && lineBreakCount >= GROUP_DESCRIPTION_MAX_BREAKS) {
+                                                        e.preventDefault();
+                                                    }
+                                                    return;
+                                                }
+
+                                                if (!hasSelection && description.length >= GROUP_DESCRIPTION_MAX_LENGTH) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            onPaste={(e) => {
+                                                const pastedText = e.clipboardData.getData("text");
+                                                const textarea = e.currentTarget;
+                                                const start = textarea.selectionStart ?? 0;
+                                                const end = textarea.selectionEnd ?? 0;
+                                                const nextValue =
+                                                    description.slice(0, start) + pastedText + description.slice(end);
+
+                                                if (nextValue.length > GROUP_DESCRIPTION_MAX_LENGTH) {
+                                                    e.preventDefault();
+                                                    return;
+                                                }
+
+                                                if (countLineBreaks(nextValue) > GROUP_DESCRIPTION_MAX_BREAKS) {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            className="min-h-[140px] w-full resize-none rounded-2xl border border-[#E6E6E6] px-5 py-4 pb-10 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                            placeholder="Nhập mô tả nhóm (optional)"
+                                            disabled={loadingOptions || creating}
+                                        />
+
+                                        <div className="pointer-events-none absolute right-4 bottom-3 text-[#6F6B99] text-xs">
+                                            {description.length}/{GROUP_DESCRIPTION_MAX_LENGTH}
+                                        </div>
+                                    </div>
                                 </Field>
                             </div>
 

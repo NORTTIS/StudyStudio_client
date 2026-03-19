@@ -88,6 +88,7 @@ type TaskStatusDto = {
 
 type GroupDetailResponse = {
     groupId?: string;
+    userRole?: string | null;
     taskStatuses?: TaskStatusDto[] | null;
 };
 
@@ -233,6 +234,39 @@ function getAccessTokenOrNull() {
     if (typeof window === "undefined") return null;
     const t = localStorage.getItem("accessToken");
     return t ? String(t) : null;
+}
+
+function getUserRoleOrNull() {
+    if (typeof window === "undefined") return null;
+
+    const candidates = [
+        localStorage.getItem("role"),
+        localStorage.getItem("userRole"),
+        localStorage.getItem("groupRole")
+    ]
+        .map((v) => normalizeGroupRole(v))
+        .filter(Boolean);
+
+    if (!candidates.length) return null;
+    return candidates[0] ?? null;
+}
+
+function normalizeGroupRole(role: string | null | undefined) {
+    const raw = String(role ?? "").trim().replace(/^['\"]+|['\"]+$/g, "").toLowerCase();
+    if (!raw) return null;
+
+    if (raw.includes("owner") || raw === "admin") return "owner";
+    if (raw.includes("moderator")) return "moderator";
+    if (raw.includes("member")) return "member";
+    if (raw.includes("commenter")) return "commenter";
+    if (raw.includes("viewer")) return "viewer";
+
+    return raw;
+}
+
+function canDeleteByRole(role: string | null | undefined) {
+    const r = normalizeGroupRole(role);
+    return r === "owner" || r === "moderator";
 }
 
 async function apiFetchJson<T>(input: RequestInfo, init: RequestInit): Promise<ApiResponse<T> | null> {
@@ -714,6 +748,7 @@ type ConfirmModalProps = {
     cancelLabel?: string;
     onConfirm: () => void;
     onCancel: () => void;
+    hideCancel?: boolean;
 };
 
 function ConfirmModal({
@@ -723,7 +758,8 @@ function ConfirmModal({
     confirmLabel = "Xác nhận",
     cancelLabel = "Hủy",
     onConfirm,
-    onCancel
+    onCancel,
+    hideCancel = false
 }: ConfirmModalProps) {
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
@@ -751,13 +787,17 @@ function ConfirmModal({
                 onPointerDown={(e) => e.stopPropagation()}>
                 <h2 className="text-base font-bold text-zinc-900">{title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
+
                 <div className="mt-6 flex items-center justify-end gap-3">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100">
-                        {cancelLabel}
-                    </button>
+                    {!hideCancel ? (
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100">
+                            {cancelLabel}
+                        </button>
+                    ) : null}
+
                     <button
                         type="button"
                         onClick={onConfirm}
@@ -1623,6 +1663,15 @@ function ColumnView({
     );
 }
 
+function getErrorMessage(error: unknown, fallback = "Đã xảy ra lỗi") {
+    if (error instanceof Error) {
+        const msg = error.message?.trim();
+        return msg || fallback;
+    }
+    if (typeof error === "string" && error.trim()) return error.trim();
+    return fallback;
+}
+
 function SortableColumn(props: {
     col: Column;
     tasks: Task[];
@@ -1801,6 +1850,9 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const searchParams = useSearchParams();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
+    const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(() => getUserRoleOrNull());
+    const canDeleteTask = canDelete || canDeleteByRole(currentUserRole);
+
     const [columns, setColumns] = React.useState<Column[]>([]);
     const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
 
@@ -1933,6 +1985,13 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         setPermissionModal({
             open: true,
             title: "Không có thẩm quyền",
+            message
+        });
+
+    const openErrorModal = (message: string) =>
+        setPermissionModal({
+            open: true,
+            title: "Thông báo",
             message
         });
 
@@ -2076,7 +2135,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     };
 
     const handleDeleteFromDetail = async (taskId: string) => {
-        if (!canDelete) {
+        if (!canDeleteTask) {
             openNoPermissionModal("Bạn không có thẩm quyền xóa công việc này");
             return;
         }
@@ -2087,8 +2146,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         try {
             await apiDeleteTask({ groupId, taskId });
             await refreshSilently();
-        } catch (e: any) {
-            openNoPermissionModal("Bạn không có thẩm quyền xóa công việc này");
+        } catch (e: unknown) {
+            openErrorModal(getErrorMessage(e, "Xóa công việc thất bại"));
         }
     };
 
@@ -2154,6 +2213,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const [detail, members] = await Promise.all([apiGetGroupDetail(groupId), apiGetGroupMembers(groupId)]);
 
         syncColumnsFromDetail(detail?.data);
+        setCurrentUserRole(normalizeGroupRole(detail?.data?.userRole) ?? getUserRoleOrNull());
 
         const list = members?.data?.members ?? [];
         setMembersOptions(
@@ -2329,7 +2389,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     };
 
     const onDeleteColumn = (columnId: ColumnId) => {
-        if (!canDelete) {
+        if (!canDeleteTask) {
             openNoPermissionModal("Bạn không có thẩm quyền xóa trạng thái này");
             return;
         }
@@ -2368,15 +2428,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         try {
             await apiDeleteGroupTaskStatus({ groupId, statusId: columnId });
             await refreshSilently();
-        } catch (e: any) {
+        } catch (e: unknown) {
             setColumns(prevCols);
             setBoard(prevBoard);
 
-            setPermissionModal({
-                open: true,
-                title: "Không có thẩm quyền",
-                message: "Bạn không có thẩm quyền xóa trạng thái này"
-            });
+            openErrorModal(getErrorMessage(e, "Xóa trạng thái thất bại"));
         }
     };
 
@@ -2407,7 +2463,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     };
 
     const onDeleteTask = (taskId: string, columnId: ColumnId) => {
-        if (!canDelete) {
+        if (!canDeleteTask) {
             openNoPermissionModal("Bạn không có thẩm quyền xóa công việc này");
             return;
         }
@@ -2447,14 +2503,10 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         try {
             await apiDeleteTask({ groupId, taskId });
             await refreshSilently();
-        } catch (e: any) {
+        } catch (e: unknown) {
             setBoard(prevBoard);
 
-            setPermissionModal({
-                open: true,
-                title: "Không có thẩm quyền",
-                message: "Bạn không có thẩm quyền xóa công việc này"
-            });
+            openErrorModal(getErrorMessage(e, "Xóa công việc thất bại"));
         }
     };
 
@@ -2723,9 +2775,9 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 title={permissionModal.title || "Không có thẩm quyền"}
                 description={permissionModal.message}
                 confirmLabel="Đóng"
-                cancelLabel="Đóng"
                 onConfirm={closePermissionModal}
                 onCancel={closePermissionModal}
+                hideCancel
             />
 
             <Container>
