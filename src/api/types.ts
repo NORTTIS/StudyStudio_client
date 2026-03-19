@@ -3930,6 +3930,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/studio/{studioId}/groups/random-assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RandomAssignRequest"];
+                    "application/json": components["schemas"]["RandomAssignRequest"];
+                    "text/json": components["schemas"]["RandomAssignRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RandomAssignResponseApiResponse"];
+                        "text/json": components["schemas"]["RandomAssignResponseApiResponse"];
+                        "text/plain": components["schemas"]["RandomAssignResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/studio/{studioId}/members": {
         parameters: {
             query?: never;
@@ -3958,6 +4003,87 @@ export interface paths {
                         "text/json": components["schemas"]["StudioMemberResponseListApiResponse"];
                         "text/plain": components["schemas"]["StudioMemberResponseListApiResponse"];
                     };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}/members/batch-assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BatchAssignResponseApiResponse"];
+                        "text/json": components["schemas"]["BatchAssignResponseApiResponse"];
+                        "text/plain": components["schemas"]["BatchAssignResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}/members/batch-assign/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
             };
         };
@@ -4642,9 +4768,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["TemplateResponseListApiResponse"];
-                        "text/json": components["schemas"]["TemplateResponseListApiResponse"];
-                        "text/plain": components["schemas"]["TemplateResponseListApiResponse"];
+                        "application/json": components["schemas"]["TemplateListResponseApiResponse"];
+                        "text/json": components["schemas"]["TemplateListResponseApiResponse"];
+                        "text/plain": components["schemas"]["TemplateListResponseApiResponse"];
                     };
                 };
             };
@@ -5095,6 +5221,46 @@ export interface components {
          * Format: int32
          * @enum {integer}
          */
+        AssignScope: 0 | 1;
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
+        AssignStrategy: 0 | 1;
+        BatchAssignmentItem: {
+            action?: string | null;
+            email?: string | null;
+            groupName?: string | null;
+            role?: string | null;
+        };
+        BatchAssignResponse: {
+            assignments?: components["schemas"]["BatchAssignmentItem"][] | null;
+            errors?: components["schemas"]["BatchErrorRow"][] | null;
+            /** Format: int32 */
+            skippedCount?: number;
+            /** Format: int32 */
+            successCount?: number;
+            /** Format: int32 */
+            totalRows?: number;
+        };
+        BatchAssignResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["BatchAssignResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        BatchErrorRow: {
+            email?: string | null;
+            groupName?: string | null;
+            message?: string | null;
+            reason?: string | null;
+            /** Format: int32 */
+            row?: number;
+        };
+        /**
+         * Format: int32
+         * @enum {integer}
+         */
         BillingCycle: 0 | 1;
         BillingHistoryItem: {
             /** Format: double */
@@ -5341,6 +5507,14 @@ export interface components {
         GoogleLoginRequest: {
             idToken: string;
         };
+        GroupAssignmentSummary: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: int32 */
+            memberCount?: number;
+            members?: components["schemas"]["MemberAssignmentDetail"][] | null;
+        };
         GroupCardDto: {
             createdBy?: components["schemas"]["UserDto"];
             description?: string | null;
@@ -5357,6 +5531,12 @@ export interface components {
             studio?: components["schemas"]["StudioDto"];
             /** Format: int32 */
             taskCount?: number;
+        };
+        GroupConflictInfo: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            reason?: string | null;
         };
         GroupDetailResponse: {
             /** Format: date-time */
@@ -5685,6 +5865,12 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        MemberAssignmentDetail: {
+            email?: string | null;
+            role?: string | null;
+            /** Format: uuid */
+            userId?: string;
+        };
         MemberPreviewDto: {
             avatarUrl?: string | null;
             firstName?: string | null;
@@ -5820,6 +6006,27 @@ export interface components {
             /** Format: int32 */
             transactionCount?: number;
             trend?: string | null;
+        };
+        RandomAssignRequest: {
+            clearExisting?: boolean;
+            defaultRole: components["schemas"]["GroupRole"];
+            excludeUserIds?: string[] | null;
+            scope: components["schemas"]["AssignScope"];
+            strategy: components["schemas"]["AssignStrategy"];
+            targetGroupIds?: string[] | null;
+        };
+        RandomAssignResponse: {
+            /** Format: int32 */
+            assignedCount?: number;
+            conflicts?: components["schemas"]["GroupConflictInfo"][] | null;
+            groups?: components["schemas"]["GroupAssignmentSummary"][] | null;
+            success?: boolean;
+        };
+        RandomAssignResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RandomAssignResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         RecentActivityItem: {
             /** Format: int32 */
@@ -6337,6 +6544,14 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        SubscriptionQuota: {
+            /** Format: int32 */
+            groupCreated?: number;
+            /** Format: int32 */
+            groupLimit?: number;
+            /** Format: int32 */
+            memberLimit?: number;
+        };
         SubscriptionStatisticsResponse: {
             plans?: components["schemas"]["SubscriptionPlanDetail"][] | null;
             userStats?: components["schemas"]["UserStatistics"];
@@ -6495,6 +6710,16 @@ export interface components {
             riskFlags?: string[] | null;
             /** Format: int32 */
             totalTasks?: number;
+        };
+        TemplateListResponse: {
+            subscription?: components["schemas"]["SubscriptionQuota"];
+            templates?: components["schemas"]["TemplateResponse"][] | null;
+        };
+        TemplateListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TemplateListResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         TemplateResponse: {
             /** Format: date-time */

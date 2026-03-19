@@ -11,11 +11,6 @@ type GroupSections = NonNullable<GroupListResponse["sections"]>;
 type SubscriptionInfo = NonNullable<GroupListResponse["subscription"]>;
 type GroupCardDto = NonNullable<NonNullable<GroupSections["favorites"]>[number]>;
 
-type DeletedTaskResponseApi =
-    | paths["/api/Task/{groupId}/deleted-task"]["get"]["responses"][200]["content"]["application/json"]
-    | paths["/api/Task/{groupId}/deleted-task"]["get"]["responses"][200]["content"]["text/json"]
-    | paths["/api/Task/{groupId}/deleted-task"]["get"]["responses"][200]["content"]["text/plain"];
-
 type RequestDocumentUploadRequest = components["schemas"]["RequestDocumentUploadRequest"];
 type DocumentItem = components["schemas"]["DocumentItem"];
 type AIQuestionRequest = components["schemas"]["AIQuestionRequest"];
@@ -82,34 +77,9 @@ export function mapRole(role?: string | null): GroupRole {
     return "member";
 }
 
-async function fetchDeletedTaskCount(groupId: string): Promise<number> {
-    const baseUrl = getBaseUrl();
-    const token = getToken();
-
-    if (!groupId) return 0;
-
-    const res = await fetch(`${baseUrl}/Task/${encodeURIComponent(groupId)}/deleted-task`, {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        cache: "no-store"
-    });
-
-    if (!res.ok) {
-        return 0;
-    }
-
-    const json = (await res.json()) as DeletedTaskResponseApi;
-    return Array.isArray(json.data) ? json.data.length : 0;
-}
-
-function mapGroup(item: GroupCardDto, deletedTaskCount: number): Group {
+function mapGroup(item: GroupCardDto): Group {
     const name = item.name || "";
     const preview = item.membersPreview || [];
-    const rawTaskCount = item.taskCount ?? 0;
-    const activeTaskCount = Math.max(0, rawTaskCount - deletedTaskCount);
 
     return {
         id: item.id || "",
@@ -117,25 +87,13 @@ function mapGroup(item: GroupCardDto, deletedTaskCount: number): Group {
         description: item.description || "",
         role: mapRole(item.role),
         membersCount: item.memberCount ?? 0,
-        tasksCount: activeTaskCount,
+        tasksCount: item.taskCount ?? 0,
         createdByInitials: toInitials(item.createdBy?.firstName, item.createdBy?.lastName),
         memberInitials: preview.map((u) => toInitials(u.firstName, u.lastName)),
         isStarred: !!item.isFavorite,
         tag: item.studio?.name || undefined,
         shortCode: toShortCode(name)
     };
-}
-
-async function mapGroupsWithDeletedCount(items: GroupCardDto[]): Promise<Group[]> {
-    const mapped = await Promise.all(
-        items.map(async (item) => {
-            const groupId = item.id || "";
-            const deletedTaskCount = groupId ? await fetchDeletedTaskCount(groupId) : 0;
-            return mapGroup(item, deletedTaskCount);
-        })
-    );
-
-    return mapped;
 }
 
 export async function fetchGroupsPageData(): Promise<GroupsPageData> {
@@ -167,11 +125,9 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     const managedItems = ((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean);
     const independentItems = ((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean);
 
-    const [favorites, managed, independent] = await Promise.all([
-        mapGroupsWithDeletedCount(favoriteItems),
-        mapGroupsWithDeletedCount(managedItems),
-        mapGroupsWithDeletedCount(independentItems)
-    ]);
+    const favorites = favoriteItems.map(mapGroup);
+    const managed = managedItems.map(mapGroup);
+    const independent = independentItems.map(mapGroup);
 
     return {
         usage: {

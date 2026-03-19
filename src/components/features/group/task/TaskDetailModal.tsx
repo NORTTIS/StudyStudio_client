@@ -187,55 +187,25 @@ function renderAllMentions(segment: string) {
     return nodes.length ? nodes : segment;
 }
 
-function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId: string) {
-    const re = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
-
-    const matches = [...text.matchAll(re)];
-    if (matches.length === 0) return text;
-
-    const mentionedIds = new Set<string>();
-    let firstIdx = Number.POSITIVE_INFINITY;
-    let lastEnd = -1;
-
-    for (const m of matches) {
-        const idx = m.index ?? 0;
-        const whole = m[0];
-        const id = (m[1] || "").trim();
-        if (!id) continue;
-
-        mentionedIds.add(id);
-        firstIdx = Math.min(firstIdx, idx);
-        lastEnd = Math.max(lastEnd, idx + whole.length);
-    }
-
-    const allExceptAuthor = Object.keys(membersById).filter((id) => id && id !== authorId);
-    if (allExceptAuthor.length === 0) return text;
-
-    if (mentionedIds.size !== allExceptAuthor.length) return text;
-
-    const allSet = new Set(allExceptAuthor);
-    for (const id of mentionedIds) {
-        if (!allSet.has(id)) return text;
-    }
-
-    if (!Number.isFinite(firstIdx) || lastEnd < 0) return text;
-
-    const before = text.slice(0, firstIdx);
-    const after = text.slice(lastEnd);
-
-    const needsSpaceBefore = before.length > 0 && !/\s$/.test(before);
-    const needsSpaceAfter = after.length > 0 && !/^\s/.test(after);
-
-    return before + (needsSpaceBefore ? " " : "") + "@__all__" + (needsSpaceAfter ? " " : "") + after;
+function compressAllMentionsForDisplay(text: string) {
+    return text;
 }
 
-function expandMentionAll(payloadText: string, membersById: Record<string, string>, meId: string) {
+function expandMentionAll(payloadText: string, membersById: Record<string, string>, authorId: string) {
     if (!payloadText.includes("@__all__")) return payloadText;
 
-    const ids = Object.keys(membersById).filter((id) => id && id !== meId);
-    if (ids.length === 0) return payloadText.replace(/@__all__\b/g, "");
+    const normalizedAuthorId = String(authorId || "").trim();
 
-    const mentions = ids.map((id) => `@${id}`).join(" ");
+    const otherMemberIds = Object.keys(membersById).filter((id) => {
+        const normalizedId = String(id || "").trim();
+        return normalizedId && normalizedId !== normalizedAuthorId;
+    });
+
+    if (otherMemberIds.length === 0) {
+        return payloadText.replace(/@__all__\b/g, "").replace(/\s{2,}/g, " ").trim();
+    }
+
+    const mentions = otherMemberIds.map((id) => `@${id}`).join(" ");
     return payloadText.replace(/@__all__\b/g, mentions);
 }
 
@@ -300,10 +270,7 @@ function RichTextWithMentions({
     membersById: Record<string, string>;
     authorId: string;
 }) {
-    const displayText = React.useMemo(
-        () => compressAllMentionsForDisplay(text, membersById, authorId),
-        [text, membersById, authorId]
-    );
+    const displayText = React.useMemo(() => compressAllMentionsForDisplay(text), [text]);
 
     const re = /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
     const parts: React.ReactNode[] = [];
@@ -316,15 +283,23 @@ function RichTextWithMentions({
 
         if (idx > last) parts.push(displayText.slice(last, idx));
 
-        const display = id === "__all__" ? "all" : membersById[id];
-        if (display) {
+        if (id === "__all__") {
             parts.push(
                 <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
-                    @{display}
+                    @all
                 </span>
             );
         } else {
-            parts.push(whole);
+            const display = membersById[id];
+            if (display) {
+                parts.push(
+                    <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
+                        @{display}
+                    </span>
+                );
+            } else {
+                parts.push(whole);
+            }
         }
 
         last = idx + whole.length;
@@ -345,9 +320,10 @@ const MentionTextarea = React.forwardRef<
         className?: string;
         maxChars?: number;
         onSubmit?: () => void;
+        disabled?: boolean;
     }
 >(function MentionTextareaInner(
-    { value, onChange, members, meId, placeholder, className, maxChars = 500, onSubmit },
+    { value, onChange, members, meId, placeholder, className, maxChars = 500, onSubmit, disabled = false },
     ref
 ) {
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -398,7 +374,7 @@ const MentionTextarea = React.forwardRef<
 
     const insertMention = (user: MentionUser) => {
         const el = taRef.current;
-        if (!el || !anchor) return;
+        if (!el || !anchor || disabled) return;
 
         const before = value.slice(0, anchor.start);
         const after = value.slice(anchor.end);
@@ -430,6 +406,8 @@ const MentionTextarea = React.forwardRef<
     };
 
     const onTextChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
+        if (disabled) return;
+
         const next = e.target.value;
         const caret = e.target.selectionStart ?? next.length;
 
@@ -445,6 +423,8 @@ const MentionTextarea = React.forwardRef<
     };
 
     const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+        if (disabled) return;
+
         if (open) {
             if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -547,13 +527,15 @@ const MentionTextarea = React.forwardRef<
                 onKeyDown={onKeyDown}
                 rows={1}
                 placeholder=""
+                disabled={disabled}
                 className={cn(
                     "relative z-10 block h-6 min-h-[24px] w-full resize-none overflow-hidden bg-transparent text-sm leading-6 text-transparent caret-zinc-900 outline-none selection:bg-blue-200",
+                    "disabled:cursor-not-allowed disabled:caret-transparent",
                     className
                 )}
             />
 
-            {open ? (
+            {open && !disabled ? (
                 filtered.length > 0 ? (
                     <div className="absolute left-0 top-full z-[12000] mt-2 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
                         <div className="max-h-56 overflow-auto p-1">
@@ -1012,7 +994,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             <select
                                 value={month.getMonth()}
                                 onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {monthOptions.map((item) => (
                                     <option key={item.value} value={item.value}>
                                         {item.label}
@@ -1026,7 +1008,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             <select
                                 value={month.getFullYear()}
                                 onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
                                 {yearOptions.map((year) => (
                                     <option key={year} value={year}>
                                         {year}
@@ -1043,18 +1025,18 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 type="button"
                                 onClick={goPrevMonth}
                                 disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
 
-                            <div className="text-[18px] font-bold text-zinc-900">
+                            <div className="text-base font-bold text-zinc-900">
                                 {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                             </div>
 
                             <button
                                 type="button"
                                 onClick={goNextMonth}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
                                 <ChevronRight className="h-5 w-5" />
                             </button>
                         </div>
@@ -1079,7 +1061,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 table: "w-full border-collapse",
                                 tbody: "w-full",
                                 head_row: "flex w-full justify-between",
-                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
                                 row: "mt-2 flex w-full justify-between",
                                 cell: "h-10 w-10 p-0 text-center",
                                 day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
@@ -1104,21 +1086,21 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         <button
                             type="button"
                             onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
                             Today
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
                             Tomorrow
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
                             Next week
                         </button>
 
@@ -1128,7 +1110,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 onChange("");
                                 setOpen(false);
                             }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-rose-500 hover:bg-rose-50">
                             No date
                         </button>
                     </div>
@@ -1150,7 +1132,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         if (!disabled) setOpen((v) => !v);
                     }}
                     className={cn(
-                        "mt-2 flex h-11 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
+                        "mt-2 flex h-10 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
                         disabled
                             ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70"
                             : open
@@ -1172,7 +1154,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
 
                         <span
                             className={cn(
-                                "truncate text-left",
+                                "truncate text-left text-sm",
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
                                 disabled && "text-zinc-500"
                             )}>
@@ -1507,7 +1489,7 @@ function CommentActions({
     canShowMenu,
     canDelete,
     deleting,
-    size = "md"
+    size = "sm"
 }: CommentActionProps) {
     const buttonSize = size === "sm" ? "h-7 w-7" : "h-8 w-8";
     const iconSize = "h-4 w-4";
@@ -1533,9 +1515,7 @@ function CommentActions({
                 <DropdownMenuContent
                     align="end"
                     sideOffset={6}
-                    className={cn(
-                        "z-[11001] w-44 rounded-xl border border-[#EDEDED] bg-white p-1 shadow-xl"
-                    )}>
+                    className={cn("z-[11001] w-44 rounded-xl border border-[#EDEDED] bg-white p-1 shadow-xl")}>
                     <DropdownMenuItem
                         onClick={() => {
                             onReply();
@@ -1657,24 +1637,39 @@ export default function TaskDetailModal(props: {
         };
     }, []);
 
+    const normalizedRole = React.useMemo(() => currentUserRole.trim().toLowerCase(), [currentUserRole]);
+
     const isOwnerOrModerator = React.useMemo(() => {
-        const role = currentUserRole.trim().toLowerCase();
-        return role === "owner" || role === "moderator";
-    }, [currentUserRole]);
+        return normalizedRole === "owner" || normalizedRole === "moderator";
+    }, [normalizedRole]);
+
+    const isViewOnly = React.useMemo(() => {
+        return normalizedRole === "view" || normalizedRole === "viewer";
+    }, [normalizedRole]);
+
+    const canComment = React.useMemo(() => {
+        return !isViewOnly;
+    }, [isViewOnly]);
+
+    const canEditTask = React.useMemo(() => {
+        return !isViewOnly;
+    }, [isViewOnly]);
 
     const canDeleteComment = React.useCallback(
         (comment: TaskCommentDto) => {
+            if (isViewOnly) return false;
+
             const commentUserId = String(comment.userId ?? comment.user?.id ?? "");
             if (!commentUserId || !myUserId) return false;
             if (isOwnerOrModerator) return true;
             return commentUserId === myUserId;
         },
-        [isOwnerOrModerator, myUserId]
+        [isOwnerOrModerator, myUserId, isViewOnly]
     );
 
     const canShowCommentMenu = React.useCallback(() => {
-        return !!myUserId;
-    }, [myUserId]);
+        return !!myUserId && canComment;
+    }, [myUserId, canComment]);
 
     const reloadComments = React.useCallback(async () => {
         if (!taskId) return;
@@ -1684,6 +1679,8 @@ export default function TaskDetailModal(props: {
     }, [taskId]);
 
     const handleReplyComment = (comment: TaskCommentDto) => {
+        if (!canComment) return;
+
         setReplyingTo(comment);
 
         requestAnimationFrame(() => {
@@ -1698,6 +1695,7 @@ export default function TaskDetailModal(props: {
     };
 
     const openDeleteConfirm = (comment: TaskCommentDto) => {
+        if (!canDeleteComment(comment)) return;
         setDeleteTarget(comment);
         setDeleteOpen(true);
     };
@@ -1732,6 +1730,8 @@ export default function TaskDetailModal(props: {
     );
 
     const handleSendComment = async () => {
+        if (!canComment || isViewOnly) return;
+
         const visibleText = commentDraft.trim();
         if (!visibleText || !taskId) return;
 
@@ -1759,6 +1759,8 @@ export default function TaskDetailModal(props: {
     };
 
     const handleConfirmDeleteComment = async () => {
+        if (isViewOnly) return;
+
         const id = String(deleteTarget?.commentId ?? "").trim();
         if (!id || !taskId) return;
 
@@ -1808,6 +1810,12 @@ export default function TaskDetailModal(props: {
         setDeleteOpen(false);
         setDeleteTarget(null);
     }, [open, taskId]);
+
+    React.useEffect(() => {
+        if (isViewOnly && isEditing) {
+            setIsEditing(false);
+        }
+    }, [isViewOnly, isEditing]);
 
     const refreshTaskDetailSilently = React.useCallback(async () => {
         if (!(open && taskId && groupId)) return;
@@ -2004,6 +2012,8 @@ export default function TaskDetailModal(props: {
     const descriptionLength = description.length;
 
     const handleSave = async () => {
+        if (!canEditTask || isViewOnly) return;
+
         setSaveError(null);
 
         const taskNameTrimmed = taskName.trim().slice(0, TASK_TITLE_MAX_LENGTH);
@@ -2093,22 +2103,22 @@ export default function TaskDetailModal(props: {
                 if (e.target === e.currentTarget) onClose();
             }}>
             <div
-                className="relative flex max-h-[88vh] w-full max-w-5xl flex-col overflow-auto rounded-2xl border border-zinc-200 bg-white shadow-2xl"
+                className="relative flex h-[88vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
                 <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
                     <div className="min-w-0 flex-1">
                         {loadingDetail ? (
-                            <h2 className="min-w-0 truncate text-[30px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="min-w-0 truncate text-[26px] font-extrabold leading-none text-zinc-900">
                                 Loading...
                             </h2>
                         ) : isEditing ? (
-                            <div className="max-w-[600px]">
+                            <div className="max-w-[560px]">
                                 <input
                                     value={taskName}
                                     maxLength={TASK_TITLE_MAX_LENGTH}
                                     onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
                                     placeholder="Task name"
-                                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[28px] font-extrabold leading-none text-zinc-900 outline-none"
+                                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[24px] font-extrabold leading-none text-zinc-900 outline-none"
                                 />
                                 <div className="mt-2 text-right text-xs font-medium text-zinc-500">
                                     {taskName.length}/{TASK_TITLE_MAX_LENGTH}
@@ -2116,12 +2126,12 @@ export default function TaskDetailModal(props: {
                             </div>
                         ) : (
                             <div className="flex min-w-0 items-center gap-3">
-                                <h2 className="min-w-0 break-words text-[30px] font-extrabold leading-none text-zinc-900">
+                                <h2 className="min-w-0 break-words text-[26px] font-extrabold leading-none text-zinc-900">
                                     {taskName || "Task"}
                                 </h2>
 
                                 {isRefreshingDetail ? (
-                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-500">
+                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-[11px] font-semibold text-zinc-500">
                                         Syncing...
                                     </div>
                                 ) : null}
@@ -2138,82 +2148,78 @@ export default function TaskDetailModal(props: {
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-7 py-5">
-                    {detailError ? (
-                        <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-                            {detailError}
-                        </div>
-                    ) : null}
+                <div className="flex-1 overflow-hidden px-7 py-5">
+                    <div className="grid h-full grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_560px]">
+                        <div className="min-w-0 overflow-y-auto pr-1">
+                            {detailError ? (
+                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                    {detailError}
+                                </div>
+                            ) : null}
 
-                    {loadingDetail ? (
-                        <div className="mt-4 flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Đang tải…
-                        </div>
-                    ) : null}
+                            {loadingDetail ? (
+                                <div className="mt-4 flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Đang tải…
+                                </div>
+                            ) : null}
 
-                    {membersError ? (
-                        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-                            {membersError}
-                        </div>
-                    ) : null}
+                            {membersError ? (
+                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                    {membersError}
+                                </div>
+                            ) : null}
 
-                    {saveError ? (
-                        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-                            {saveError}
-                        </div>
-                    ) : null}
+                            {saveError ? (
+                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                    {saveError}
+                                </div>
+                            ) : null}
 
-                    <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                        <div>
-                            <div className="text-sm font-semibold text-zinc-600">Assignee</div>
-                            <Select
-                                value={assigneeId || "unassigned"}
-                                onValueChange={(v) => setAssigneeId(v === "unassigned" ? "" : v)}
-                                disabled={!isEditing}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
-                                    <div className="flex min-w-0 items-center gap-2">
-                                        {selectedAssigneeDisplay.avatarUrl ? (
-                                            <Image
-                                                src={selectedAssigneeDisplay.avatarUrl}
-                                                alt={selectedAssigneeDisplay.label}
-                                                width={24}
-                                                height={24}
-                                                unoptimized
-                                                className="h-6 w-6 rounded-full object-cover"
-                                            />
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                                <div>
+                                    <div className="text-lg font-bold text-zinc-900">Task information</div>
+                                    <div className="text-sm text-zinc-500">Chi tiết và trạng thái của task</div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    {canEditTask ? (
+                                        !isEditing ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsEditing(true)}
+                                                disabled={loadingDetail || !!detailError || !task}
+                                                className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                                Edit
+                                            </button>
                                         ) : (
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
-                                                {buildInitials(selectedAssigneeDisplay.label)}
-                                            </div>
-                                        )}
-                                        <span className="truncate">{selectedAssigneeDisplay.label}</span>
-                                    </div>
-                                </SelectTrigger>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    void handleSave();
+                                                }}
+                                                disabled={submitting}
+                                                className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                                {submitting ? "Saving..." : "Save change"}
+                                            </button>
+                                        )
+                                    ) : null}
+                                </div>
+                            </div>
 
-                                <SelectContent
-                                    position="popper"
-                                    side="bottom"
-                                    align="start"
-                                    sideOffset={8}
-                                    avoidCollisions
-                                    className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                    <SelectItem value="unassigned" className={selectItemClassName}>
-                                        <div className="flex items-center gap-2">
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
-                                                U
-                                            </div>
-                                            <span>Unassigned</span>
-                                        </div>
-                                    </SelectItem>
-
-                                    {assigneeOptions.map((m) => (
-                                        <SelectItem key={m.userId} value={m.userId} className={selectItemClassName}>
-                                            <div className="flex items-center gap-2">
-                                                {m.avatarUrl ? (
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
+                                <div>
+                                    <div className="text-sm font-semibold text-zinc-600">Assignee</div>
+                                    <Select
+                                        value={assigneeId || "unassigned"}
+                                        onValueChange={(v) => setAssigneeId(v === "unassigned" ? "" : v)}
+                                        disabled={!isEditing}>
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                {selectedAssigneeDisplay.avatarUrl ? (
                                                     <Image
-                                                        src={m.avatarUrl}
-                                                        alt={m.label}
+                                                        src={selectedAssigneeDisplay.avatarUrl}
+                                                        alt={selectedAssigneeDisplay.label}
                                                         width={24}
                                                         height={24}
                                                         unoptimized
@@ -2221,218 +2227,292 @@ export default function TaskDetailModal(props: {
                                                     />
                                                 ) : (
                                                     <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
-                                                        {buildInitials(m.label)}
+                                                        {buildInitials(selectedAssigneeDisplay.label)}
                                                     </div>
                                                 )}
-                                                <span className="truncate">{m.label}</span>
+                                                <span className="truncate">{selectedAssigneeDisplay.label}</span>
                                             </div>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                        </SelectTrigger>
 
-                        <div>
-                            <div className="text-sm font-semibold text-zinc-600">Status</div>
-                            <Select
-                                value={statusId || "no-status"}
-                                onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}
-                                disabled={!isEditing}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
-                                    <span className="truncate">{selectedStatusName}</span>
-                                </SelectTrigger>
+                                        <SelectContent
+                                            position="popper"
+                                            side="bottom"
+                                            align="start"
+                                            sideOffset={8}
+                                            avoidCollisions
+                                            className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                            <SelectItem value="unassigned" className={selectItemClassName}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                        U
+                                                    </div>
+                                                    <span>Unassigned</span>
+                                                </div>
+                                            </SelectItem>
 
-                                <SelectContent
-                                    position="popper"
-                                    side="bottom"
-                                    align="start"
-                                    sideOffset={8}
-                                    avoidCollisions
-                                    className="z-[10010] min-w-[216px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                    <SelectItem value="no-status" className={selectItemClassName}>
-                                        No status
-                                    </SelectItem>
+                                            {assigneeOptions.map((m) => (
+                                                <SelectItem key={m.userId} value={m.userId} className={selectItemClassName}>
+                                                    <div className="flex items-center gap-2">
+                                                        {m.avatarUrl ? (
+                                                            <Image
+                                                                src={m.avatarUrl}
+                                                                alt={m.label}
+                                                                width={24}
+                                                                height={24}
+                                                                unoptimized
+                                                                className="h-6 w-6 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                                {buildInitials(m.label)}
+                                                            </div>
+                                                        )}
+                                                        <span className="truncate">{m.label}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                                    {statusOptions.map((s) => (
-                                        <SelectItem key={s.statusId} value={s.statusId} className={selectItemClassName}>
-                                            {s.statusName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                <div>
+                                    <div className="text-sm font-semibold text-zinc-600">Status</div>
+                                    <Select
+                                        value={statusId || "no-status"}
+                                        onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}
+                                        disabled={!isEditing}>
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                            <span className="truncate">{selectedStatusName}</span>
+                                        </SelectTrigger>
 
-                        <div>
-                            <div className="text-sm font-semibold text-zinc-600">Priority</div>
-                            <Select value={String(selectedPriorityValue)} onValueChange={setPriority} disabled={!isEditing}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
-                                    <span className={cn("inline-flex items-center gap-2", priorityTone(selectedPriorityLabel))}>
-                                        <span className="h-2 w-2 rounded-full bg-current" />
-                                        {selectedPriorityLabel}
-                                    </span>
-                                </SelectTrigger>
+                                        <SelectContent
+                                            position="popper"
+                                            side="bottom"
+                                            align="start"
+                                            sideOffset={8}
+                                            avoidCollisions
+                                            className="z-[10010] min-w-[216px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                            <SelectItem value="no-status" className={selectItemClassName}>
+                                                No status
+                                            </SelectItem>
 
-                                <SelectContent
-                                    position="popper"
-                                    side="bottom"
-                                    align="end"
-                                    sideOffset={8}
-                                    avoidCollisions
-                                    className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                    <SelectItem value="0" className={selectItemClassName}>
-                                        Low
-                                    </SelectItem>
-                                    <SelectItem value="1" className={selectItemClassName}>
-                                        Medium
-                                    </SelectItem>
-                                    <SelectItem value="2" className={selectItemClassName}>
-                                        High
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                            {statusOptions.map((s) => (
+                                                <SelectItem key={s.statusId} value={s.statusId} className={selectItemClassName}>
+                                                    {s.statusName}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                        <TrelloDatePicker label="Start Date" value={startDate} onChange={setStartDate} disabled={!isEditing} />
+                                <div>
+                                    <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                                    <Select value={String(selectedPriorityValue)} onValueChange={setPriority} disabled={!isEditing}>
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                            <span
+                                                className={cn(
+                                                    "inline-flex items-center gap-2",
+                                                    priorityTone(selectedPriorityLabel)
+                                                )}>
+                                                <span className="h-2 w-2 rounded-full bg-current" />
+                                                {selectedPriorityLabel}
+                                            </span>
+                                        </SelectTrigger>
 
-                        <TrelloDatePicker
-                            label="Due Date"
-                            value={dueDate}
-                            onChange={setDueDate}
-                            min={startDate || undefined}
-                            disabled={!isEditing}
-                        />
+                                        <SelectContent
+                                            position="popper"
+                                            side="bottom"
+                                            align="end"
+                                            sideOffset={8}
+                                            avoidCollisions
+                                            className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                            <SelectItem value="0" className={selectItemClassName}>
+                                                Low
+                                            </SelectItem>
+                                            <SelectItem value="1" className={selectItemClassName}>
+                                                Medium
+                                            </SelectItem>
+                                            <SelectItem value="2" className={selectItemClassName}>
+                                                High
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                        <div>
-                            <div className="text-sm font-semibold text-zinc-600">Severity</div>
-                            <Select value={String(selectedSeverityValue)} onValueChange={setSeverity} disabled={!isEditing}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
-                                    <span className={cn("inline-flex items-center gap-2", severityTone(selectedSeverityLabel))}>
-                                        <span className="h-2 w-2 rounded-full bg-current" />
-                                        {selectedSeverityLabel}
-                                    </span>
-                                </SelectTrigger>
+                                <TrelloDatePicker
+                                    label="Start Date"
+                                    value={startDate}
+                                    onChange={setStartDate}
+                                    disabled={!isEditing}
+                                />
 
-                                <SelectContent
-                                    position="popper"
-                                    side="bottom"
-                                    align="end"
-                                    sideOffset={8}
-                                    avoidCollisions
-                                    className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                    <SelectItem value="0" className={selectItemClassName}>
-                                        Minor
-                                    </SelectItem>
-                                    <SelectItem value="1" className={selectItemClassName}>
-                                        Moderate
-                                    </SelectItem>
-                                    <SelectItem value="2" className={selectItemClassName}>
-                                        Major
-                                    </SelectItem>
-                                    <SelectItem value="3" className={selectItemClassName}>
-                                        Critical
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                <TrelloDatePicker
+                                    label="Due Date"
+                                    value={dueDate}
+                                    onChange={setDueDate}
+                                    min={startDate || undefined}
+                                    disabled={!isEditing}
+                                />
 
-                        <div className="md:col-span-2 xl:col-span-3">
-                            <div className="text-sm font-semibold text-zinc-600">Progress</div>
+                                <div>
+                                    <div className="text-sm font-semibold text-zinc-600">Severity</div>
+                                    <Select value={String(selectedSeverityValue)} onValueChange={setSeverity} disabled={!isEditing}>
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                            <span
+                                                className={cn(
+                                                    "inline-flex items-center gap-2",
+                                                    severityTone(selectedSeverityLabel)
+                                                )}>
+                                                <span className="h-2 w-2 rounded-full bg-current" />
+                                                {selectedSeverityLabel}
+                                            </span>
+                                        </SelectTrigger>
 
-                            <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
-                                <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-                                    <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
+                                        <SelectContent
+                                            position="popper"
+                                            side="bottom"
+                                            align="end"
+                                            sideOffset={8}
+                                            avoidCollisions
+                                            className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                            <SelectItem value="0" className={selectItemClassName}>
+                                                Minor
+                                            </SelectItem>
+                                            <SelectItem value="1" className={selectItemClassName}>
+                                                Moderate
+                                            </SelectItem>
+                                            <SelectItem value="2" className={selectItemClassName}>
+                                                Major
+                                            </SelectItem>
+                                            <SelectItem value="3" className={selectItemClassName}>
+                                                Critical
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            pattern="[0-9]*"
-                                            value={progress}
-                                            onChange={(e) => handleProgressInputChange(e.target.value)}
-                                            onBlur={handleProgressInputBlur}
-                                            disabled={!isEditing}
-                                            placeholder="0"
-                                            className="h-9 w-16 rounded-lg border border-zinc-200 px-0 text-center text-sm font-semibold leading-none text-zinc-900 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
-                                        />
-                                        <span className="font-bold text-zinc-900">%</span>
+                                <div className="md:col-span-2 xl:col-span-2">
+                                    <div className="text-sm font-semibold text-zinc-600">Progress</div>
+
+                                    <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
+                                        <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+                                            <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
+
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    value={progress}
+                                                    onChange={(e) => handleProgressInputChange(e.target.value)}
+                                                    onBlur={handleProgressInputBlur}
+                                                    disabled={!isEditing}
+                                                    placeholder="0"
+                                                    className="h-8 w-14 rounded-lg border border-zinc-200 px-0 text-center text-sm font-semibold leading-none text-zinc-900 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                                                />
+                                                <span className="font-bold text-zinc-900">%</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                                            <div
+                                                className="h-full rounded-full bg-orange-500 transition-all"
+                                                style={{ width: `${selectedProgressValue}%` }}
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {PROGRESS_OPTIONS.map((value) => {
+                                                const active = selectedProgressValue === value;
+                                                return (
+                                                    <button
+                                                        key={value}
+                                                        type="button"
+                                                        disabled={!isEditing}
+                                                        onClick={() => setProgress(String(value))}
+                                                        className={cn(
+                                                            "h-9 rounded-xl border text-sm font-semibold transition",
+                                                            active
+                                                                ? "border-orange-500 bg-orange-500 text-white"
+                                                                : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+                                                            !isEditing && "cursor-not-allowed opacity-70"
+                                                        )}>
+                                                        {value}%
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
-                                    <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${selectedProgressValue}%` }} />
-                                </div>
-
-                                <div className="grid grid-cols-5 gap-2">
-                                    {PROGRESS_OPTIONS.map((value) => {
-                                        const active = selectedProgressValue === value;
-                                        return (
-                                            <button
-                                                key={value}
-                                                type="button"
-                                                disabled={!isEditing}
-                                                onClick={() => setProgress(String(value))}
-                                                className={cn(
-                                                    "h-10 rounded-xl border text-sm font-semibold transition",
-                                                    active
-                                                        ? "border-orange-500 bg-orange-500 text-white"
-                                                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
-                                                    !isEditing && "cursor-not-allowed opacity-70"
-                                                )}>
-                                                {value}%
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6">
-                        <div className="mb-2 flex items-center justify-between">
-                            <div className="text-sm font-semibold text-zinc-600">Description</div>
-                            {isEditing ? (
-                                <div
-                                    className={cn(
-                                        "text-xs font-medium",
-                                        descriptionLength >= TASK_DESCRIPTION_MAX_LENGTH ? "text-rose-500" : "text-zinc-500"
-                                    )}>
-                                    {descriptionLength}/{TASK_DESCRIPTION_MAX_LENGTH}
-                                </div>
-                            ) : null}
-                        </div>
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
-                            placeholder="(No description)"
-                            disabled={!isEditing}
-                            maxLength={TASK_DESCRIPTION_MAX_LENGTH}
-                            className="min-h-[120px] w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-600"
-                        />
-                    </div>
-
-                    {isEditing ? (
-                        <div className="mt-6 border-t border-zinc-200 pt-5">
-                            <div className="flex items-center gap-2">
-                                <MessageSquare className="h-4 w-4 text-zinc-700" />
-                                <div className="text-2xl font-extrabold text-zinc-900">Comments</div>
-                                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-600">
-                                    {loadingComments ? "…" : comments.length}
-                                </span>
                             </div>
 
-                            {commentError ? (
-                                <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-                                    {commentError}
+                            <div className="mt-6">
+                                <div className="mb-2 flex items-center justify-between">
+                                    <div className="text-sm font-semibold text-zinc-600">Description</div>
+                                    {isEditing ? (
+                                        <div
+                                            className={cn(
+                                                "text-xs font-medium",
+                                                descriptionLength >= TASK_DESCRIPTION_MAX_LENGTH
+                                                    ? "text-rose-500"
+                                                    : "text-zinc-500"
+                                            )}>
+                                            {descriptionLength}/{TASK_DESCRIPTION_MAX_LENGTH}
+                                        </div>
+                                    ) : null}
                                 </div>
-                            ) : null}
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
+                                    placeholder="(No description)"
+                                    disabled={!isEditing}
+                                    maxLength={TASK_DESCRIPTION_MAX_LENGTH}
+                                    className="min-h-[110px] w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-600"
+                                />
+                            </div>
+                        </div>
 
-                            {sendCommentError ? (
-                                <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-                                    {sendCommentError}
+                        <div className="min-w-0 overflow-y-auto xl:border-l xl:border-zinc-200 xl:pl-4 xl:pr-0">
+                            <div className="sticky top-0 z-10 bg-white pb-4">
+                                <div className="flex items-center gap-2">
+                                    <MessageSquare className="h-4 w-4 text-zinc-700" />
+                                    <div className="text-xl font-extrabold text-zinc-900">Comments</div>
+                                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-600">
+                                        {loadingComments ? "…" : comments.length}
+                                    </span>
                                 </div>
-                            ) : null}
 
-                            <div className="mt-4 space-y-4">
+                                {replyingTo ? (
+                                    <div className="mt-3 flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm">
+                                        <div className="min-w-0 text-zinc-700">
+                                            Đang trả lời{" "}
+                                            <span className="font-semibold">
+                                                {fullName(replyingTo.user) || "User"}
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={cancelReply}
+                                            className="ml-3 shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100">
+                                            Hủy
+                                        </button>
+                                    </div>
+                                ) : null}
+
+                                {commentError ? (
+                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                        {commentError}
+                                    </div>
+                                ) : null}
+
+                                {sendCommentError ? (
+                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                        {sendCommentError}
+                                    </div>
+                                ) : null}
+                            </div>
+
+                            <div className="space-y-4 pb-4 w-full">
                                 {loadingComments ? (
                                     <div className="text-sm text-zinc-600">(Đang tải comments…)</div>
                                 ) : comments.length === 0 ? (
@@ -2448,7 +2528,7 @@ export default function TaskDetailModal(props: {
                                         return (
                                             <div
                                                 key={c.commentId ?? `${c.userId ?? "u"}-${c.createdAt ?? "t"}`}
-                                                className="space-y-3">
+                                                className="w-full space-y-3 rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4">
                                                 <div className="flex items-start gap-3">
                                                     {safeAvatarUrl(u?.avatarUrl) ? (
                                                         <Image
@@ -2468,12 +2548,12 @@ export default function TaskDetailModal(props: {
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0 flex-1">
-                                                                <div className="flex items-baseline gap-4">
-                                                                    <div className="font-bold text-zinc-900">{name}</div>
-                                                                    <div className="text-sm text-zinc-400">{when}</div>
+                                                                <div className="flex items-baseline gap-3">
+                                                                    <div className="font-bold text-sm text-zinc-900">{name}</div>
+                                                                    <div className="text-xs text-zinc-400">{when}</div>
                                                                 </div>
 
-                                                                <div className="mt-1 whitespace-pre-wrap text-base text-zinc-800">
+                                                                <div className="mt-1 whitespace-pre-wrap text-sm text-zinc-800">
                                                                     <RichTextWithMentions
                                                                         text={String(c.content ?? "")}
                                                                         membersById={membersById}
@@ -2487,7 +2567,7 @@ export default function TaskDetailModal(props: {
                                                                     canShowMenu={canShowCommentMenu()}
                                                                     canDelete={canDeleteComment(c)}
                                                                     deleting={deletingCommentId === c.commentId}
-                                                                    size="md"
+                                                                    size="sm"
                                                                 />
                                                             </div>
                                                         </div>
@@ -2495,7 +2575,7 @@ export default function TaskDetailModal(props: {
                                                 </div>
 
                                                 {replies.length > 0 ? (
-                                                    <div className="mt-4 space-y-4 border-l-2 border-zinc-100 pl-4">
+                                                    <div className="mt-4 w-full space-y-4 border-l-2 border-zinc-200 pl-4">
                                                         {replies.map((r) => {
                                                             const ru = r.user;
                                                             const rname =
@@ -2564,95 +2644,71 @@ export default function TaskDetailModal(props: {
                                 )}
                             </div>
 
-                            <div className="mt-5 flex items-center gap-3">
-                                {myAvatarUrl ? (
-                                    <Image
-                                        src={myAvatarUrl}
-                                        alt={myFullName || "Me"}
-                                        width={36}
-                                        height={36}
-                                        unoptimized
-                                        className="h-9 w-9 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">
-                                        {buildInitials(myFullName || "D")}
-                                    </div>
-                                )}
-
-                                <div className="flex-1 rounded-xl border border-zinc-200 px-3 py-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <MentionTextarea
-                                                ref={commentMentionRef}
-                                                value={commentDraft}
-                                                onChange={setCommentDraft}
-                                                members={mentionUsers}
-                                                meId={myUserId}
-                                                placeholder={replyingTo ? "Write a reply..." : "Write a comment..."}
-                                                maxChars={500}
-                                                onSubmit={() => {
-                                                    void handleSendComment();
-                                                }}
-                                                className="disabled:cursor-not-allowed disabled:opacity-60"
+                            {canComment ? (
+                                <div className="sticky bottom-0 mt-4 bg-white pt-3">
+                                    <div className="flex w-full items-center gap-3">
+                                        {myAvatarUrl ? (
+                                            <Image
+                                                src={myAvatarUrl}
+                                                alt={myFullName || "Me"}
+                                                width={36}
+                                                height={36}
+                                                unoptimized
+                                                className="h-9 w-9 rounded-full object-cover"
                                             />
-                                        </div>
+                                        ) : (
+                                            <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">
+                                                {buildInitials(myFullName || "D")}
+                                            </div>
+                                        )}
 
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                void handleSendComment();
-                                            }}
-                                            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f54a00] text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
-                                            aria-label="Send"
-                                            disabled={!commentDraft.trim() || sendingComment}>
-                                            {sendingComment ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : (
-                                                <SendHorizontal className="h-4 w-4" />
-                                            )}
-                                        </button>
+                                        <div className="flex-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm">
+                                            <div className="flex items-center gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <MentionTextarea
+                                                        ref={commentMentionRef}
+                                                        value={commentDraft}
+                                                        onChange={setCommentDraft}
+                                                        members={mentionUsers}
+                                                        meId={myUserId}
+                                                        placeholder={replyingTo ? "Write a reply..." : "Write a comment..."}
+                                                        maxChars={500}
+                                                        disabled={!canComment || sendingComment}
+                                                        onSubmit={() => {
+                                                            void handleSendComment();
+                                                        }}
+                                                        className="disabled:cursor-not-allowed disabled:opacity-60"
+                                                    />
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        void handleSendComment();
+                                                    }}
+                                                    className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f54a00] text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
+                                                    aria-label="Send"
+                                                    disabled={!commentDraft.trim() || sendingComment || !canComment}>
+                                                    {sendingComment ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <SendHorizontal className="h-4 w-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            ) : null}
                         </div>
-                    ) : null}
-                </div>
-
-                <div className="flex items-center justify-end gap-3 border-t border-zinc-200 bg-zinc-50 px-7 py-4">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="h-11 rounded-xl border border-zinc-300 bg-white px-8 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">
-                        Cancel
-                    </button>
-
-                    {isEditing ? (
-                        <button
-                            type="button"
-                            onClick={() => {
-                                void handleSave();
-                            }}
-                            disabled={submitting}
-                            className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
-                            {submitting ? "Saving..." : "Save change"}
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={() => setIsEditing(true)}
-                            disabled={loadingDetail || !!detailError || !task}
-                            className="h-11 rounded-xl bg-[#f54a00] px-8 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
-                            Edit
-                        </button>
-                    )}
+                    </div>
                 </div>
 
                 <AlertDialog open={deleteOpen} onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
                     <AlertDialogContent className="z-[11000] sm:max-w-2xl rounded-2xl">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl">Xác nhận xóa</AlertDialogTitle>
-                            <AlertDialogDescription className="text-base leading-6 text-[#111827]">
+                            <AlertDialogTitle className="text-lg">Xác nhận xóa</AlertDialogTitle>
+                            <AlertDialogDescription className="text-sm leading-6 text-[#111827]">
                                 Bạn có chắc chắn muốn xóa bình luận này không? Hành động này không thể hoàn tác.
                             </AlertDialogDescription>
                         </AlertDialogHeader>

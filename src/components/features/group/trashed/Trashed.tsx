@@ -18,8 +18,6 @@ import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { Container } from "@/components/common";
 
-// ─── Shared helpers ───────────────────────────────────────────────────────────
-
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
@@ -67,8 +65,6 @@ function formatDateDisplay(value?: string) {
         year: target.getFullYear() !== today.getFullYear() ? "numeric" : undefined
     }).format(target);
 }
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type ApiResponse<T> = {
     status?: string;
@@ -123,8 +119,6 @@ type DeletedDateFilter = {
     startDate: string;
     endDate: string;
 };
-
-// ─── API helpers ──────────────────────────────────────────────────────────────
 
 function isUuidLike(v: string) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
@@ -276,8 +270,6 @@ async function apiRestoreTask(args: { groupId: string; taskId: string }) {
     return true;
 }
 
-// ─── Format helpers ───────────────────────────────────────────────────────────
-
 function formatDeletedOn(input?: string | null) {
     const s = String(input ?? "").trim();
     if (!s) return "--";
@@ -326,8 +318,6 @@ function matchDeletedDate(raw?: string | null, filter?: DeletedDateFilter | null
     return true;
 }
 
-// ─── Avatar helpers ───────────────────────────────────────────────────────────
-
 const avatarTones = ["bg-blue-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-cyan-500"];
 
 function pickAvatarTone(seed: string) {
@@ -335,8 +325,6 @@ function pickAvatarTone(seed: string) {
     for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
     return avatarTones[Math.abs(hash) % avatarTones.length];
 }
-
-// ─── TrelloDatePicker (copied from file 3) ────────────────────────────────────
 
 const monthOptions = [
     { value: "0", label: "January" },
@@ -502,161 +490,158 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                  <div
-                      ref={rootRef}
-                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                      style={{
-                          top: popupPosition.top,
-                          left: popupPosition.left,
-                          width: popupPosition.width
-                      }}>
-                      {/* Month / Year selects */}
-                      <div className="mb-4 flex items-center gap-3">
-                          <div className="relative flex-1">
-                              <select
-                                  value={month.getMonth()}
-                                  onChange={handleMonthChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {monthOptions.map((item) => (
-                                      <option key={item.value} value={item.value}>
-                                          {item.label}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
+                <div
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                    style={{
+                        top: popupPosition.top,
+                        left: popupPosition.left,
+                        width: popupPosition.width
+                    }}>
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <select
+                                value={month.getMonth()}
+                                onChange={handleMonthChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                {monthOptions.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
 
-                          <div className="relative w-[140px]">
-                              <select
-                                  value={month.getFullYear()}
-                                  onChange={handleYearChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {yearOptions.map((year) => (
-                                      <option key={year} value={year}>
-                                          {year}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
-                      </div>
+                        <div className="relative w-[140px]">
+                            <select
+                                value={month.getFullYear()}
+                                onChange={handleYearChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                {yearOptions.map((year) => (
+                                    <option key={year} value={year}>
+                                        {year}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
+                    </div>
 
-                      {/* Calendar grid */}
-                      <div className="rounded-[20px] border border-zinc-200 p-4">
-                          <div className="mb-4 flex items-center justify-between">
-                              <button
-                                  type="button"
-                                  onClick={goPrevMonth}
-                                  disabled={isPrevDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronLeft className="h-5 w-5" />
-                              </button>
+                    <div className="rounded-[20px] border border-zinc-200 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={goPrevMonth}
+                                disabled={isPrevDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
 
-                              <div className="text-[18px] font-bold text-zinc-900">
-                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                              </div>
+                            <div className="text-[18px] font-bold text-zinc-900">
+                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                            </div>
 
-                              <button
-                                  type="button"
-                                  onClick={goNextMonth}
-                                  disabled={isNextDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronRight className="h-5 w-5" />
-                              </button>
-                          </div>
+                            <button
+                                type="button"
+                                onClick={goNextMonth}
+                                disabled={isNextDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                          <DayPicker
-                              mode="single"
-                              month={month}
-                              onMonthChange={setMonth}
-                              selected={selectedDate}
-                              onSelect={pickDate}
-                              disabled={
-                                  maxDate && minDate
-                                      ? { before: minDate, after: maxDate }
-                                      : maxDate
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={
+                                maxDate && minDate
+                                    ? { before: minDate, after: maxDate }
+                                    : maxDate
                                         ? { after: maxDate }
                                         : minDate
-                                          ? { before: minDate }
-                                          : undefined
-                              }
-                              showOutsideDays
-                              className="w-full"
-                              styles={{
-                                  day: { outline: "none", boxShadow: "none" },
-                                  button: { outline: "none", boxShadow: "none" }
-                              }}
-                              classNames={{
-                                  months: "flex w-full flex-col",
-                                  month: "w-full space-y-3",
-                                  month_caption: "hidden",
-                                  caption: "hidden",
-                                  caption_label: "hidden",
-                                  nav: "hidden",
-                                  table: "w-full border-collapse",
-                                  month_grid: "w-full border-collapse",
-                                  tbody: "w-full",
-                                  weekdays: "flex w-full justify-between",
-                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                  head_row: "flex w-full justify-between",
-                                  head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                  weeks: "w-full",
-                                  week: "mt-2 flex w-full justify-between",
-                                  row: "mt-2 flex w-full justify-between",
-                                  day: "h-10 w-10 p-0 text-center",
-                                  cell: "h-10 w-10 p-0 text-center",
-                                  day_button:
-                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
-                                  selected: "!bg-orange-500 !text-white rounded-xl",
-                                  day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
-                                  today: "text-orange-600 font-bold",
-                                  day_today: "text-orange-600 font-bold",
-                                  outside: "opacity-30",
-                                  day_outside: "opacity-30",
-                                  disabled: "opacity-30",
-                                  day_disabled: "opacity-30 cursor-not-allowed",
-                                  hidden: "invisible",
-                                  day_hidden: "invisible"
-                              }}
-                          />
-                      </div>
+                                            ? { before: minDate }
+                                            : undefined
+                            }
+                            showOutsideDays
+                            className="w-full"
+                            styles={{
+                                day: { outline: "none", boxShadow: "none" },
+                                button: { outline: "none", boxShadow: "none" }
+                            }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                month_caption: "hidden",
+                                caption: "hidden",
+                                caption_label: "hidden",
+                                nav: "hidden",
+                                table: "w-full border-collapse",
+                                month_grid: "w-full border-collapse",
+                                tbody: "w-full",
+                                weekdays: "flex w-full justify-between",
+                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                head_row: "flex w-full justify-between",
+                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                weeks: "w-full",
+                                week: "mt-2 flex w-full justify-between",
+                                row: "mt-2 flex w-full justify-between",
+                                day: "h-10 w-10 p-0 text-center",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day_button:
+                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
+                                selected: "!bg-orange-500 !text-white rounded-xl",
+                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
+                                today: "text-orange-600 font-bold",
+                                day_today: "text-orange-600 font-bold",
+                                outside: "opacity-30",
+                                day_outside: "opacity-30",
+                                disabled: "opacity-30",
+                                day_disabled: "opacity-30 cursor-not-allowed",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
 
-                      {/* Quick shortcuts */}
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                          <button
-                              type="button"
-                              onClick={() => pickDate(new Date())}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
-                              Today
-                          </button>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => pickDate(new Date())}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                            Today
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 1))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
-                              Tomorrow
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 1))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                            Tomorrow
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 7))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
-                              Next week
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 7))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
+                            Next week
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => {
-                                  onChange("");
-                                  setOpen(false);
-                              }}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
-                              No date
-                          </button>
-                      </div>
-                  </div>,
-                  document.body
-              )
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
+                            No date
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )
             : null;
 
     return (
@@ -683,8 +668,7 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
-                        <span
-                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
+                        <span className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -695,8 +679,6 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
         </>
     );
 }
-
-// ─── DeletedDateRangePicker ───────────────────────────────────────────────────
 
 function DeletedDateRangePicker({
     value,
@@ -722,8 +704,6 @@ function DeletedDateRangePicker({
         </div>
     );
 }
-
-// ─── ConfirmModal ─────────────────────────────────────────────────────────────
 
 type ConfirmModalProps = {
     open: boolean;
@@ -768,9 +748,7 @@ function ConfirmModal({
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
             }}>
-            <div
-                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}>
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onPointerDown={(e) => e.stopPropagation()}>
                 <h2 className="text-base font-bold text-zinc-900">{title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
 
@@ -787,9 +765,7 @@ function ConfirmModal({
                         onClick={onConfirm}
                         className={cn(
                             "rounded-xl px-4 py-2 text-sm font-semibold text-white",
-                            confirmTone === "orange"
-                                ? "bg-orange-600 hover:bg-orange-700"
-                                : "bg-indigo-600 hover:bg-indigo-700"
+                            confirmTone === "orange" ? "bg-orange-600 hover:bg-orange-700" : "bg-indigo-600 hover:bg-indigo-700"
                         )}>
                         {confirmLabel}
                     </button>
@@ -976,9 +952,7 @@ function FilterPopover({
             onPointerDown={(e) => e.stopPropagation()}>
             {view === "root" && (
                 <>
-                    <div className="border-b border-zinc-200 px-6 py-4 text-[20px] font-medium text-zinc-400">
-                        Filter by
-                    </div>
+                    <div className="border-b border-zinc-200 px-6 py-4 text-[20px] font-medium text-zinc-400">Filter by</div>
                     <div className="p-3">
                         <button
                             type="button"
@@ -1057,7 +1031,7 @@ function FilterPopover({
 
 const ITEMS_PER_PAGE = 10;
 
-export default function Trashed({ canManageTrash = false }: { canManageTrash?: boolean }) {
+export default function Trashed() {
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
@@ -1085,30 +1059,6 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
         taskName: string;
     }>({ open: false, taskId: null, taskName: "" });
 
-    const [permissionModal, setPermissionModal] = React.useState<{
-        open: boolean;
-        title: string;
-        message: string;
-    }>({
-        open: false,
-        title: "",
-        message: ""
-    });
-
-    const closePermissionModal = () =>
-        setPermissionModal({
-            open: false,
-            title: "",
-            message: ""
-        });
-
-    const openNoPermissionModal = (message: string) =>
-        setPermissionModal({
-            open: true,
-            title: "Không có thẩm quyền",
-            message
-        });
-
     const [confirmDelete, setConfirmDelete] = React.useState<{
         open: boolean;
         taskId: string | null;
@@ -1132,10 +1082,7 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
         setError(null);
 
         try {
-            const [trashRes, membersRes] = await Promise.all([
-                apiGetDeletedTasks(groupId),
-                apiGetGroupMembers(groupId).catch(() => null)
-            ]);
+            const [trashRes, membersRes] = await Promise.all([apiGetDeletedTasks(groupId), apiGetGroupMembers(groupId).catch(() => null)]);
 
             const members = membersRes?.data?.members ?? [];
             const nextMemberNameMap: Record<string, string> = {};
@@ -1212,11 +1159,7 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
             );
 
             const matchesText =
-                !q ||
-                nameText.includes(q) ||
-                typeText.includes(q) ||
-                deletedOnText.includes(q) ||
-                deletedByText.includes(q);
+                !q || nameText.includes(q) || typeText.includes(q) || deletedOnText.includes(q) || deletedByText.includes(q);
 
             const matchesDeletedBy = !deletedByFilter || String(item.deletedBy ?? "") === deletedByFilter;
             const matchesDeletedDate = matchDeletedDate(item.deletedOnRaw, deletedDateFilter);
@@ -1236,8 +1179,7 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
         return filteredItems.slice(start, start + ITEMS_PER_PAGE);
     }, [filteredItems, page]);
 
-    const activeFilterCount =
-        (deletedByFilter ? 1 : 0) + (deletedDateFilter.startDate || deletedDateFilter.endDate ? 1 : 0);
+    const activeFilterCount = (deletedByFilter ? 1 : 0) + (deletedDateFilter.startDate || deletedDateFilter.endDate ? 1 : 0);
 
     const selectedDeletedByName =
         deletedByOptions.find((x) => x.id === deletedByFilter)?.name ||
@@ -1252,12 +1194,6 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
 
     const handleAskRestore = (item: TrashItem) => {
         setOpenMenuKey(null);
-
-        if (!canManageTrash) {
-            openNoPermissionModal("Bạn không có thẩm quyền khôi phục task này");
-            return;
-        }
-
         setConfirmRestore({
             open: true,
             taskId: item.id,
@@ -1267,12 +1203,6 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
 
     const handleAskDelete = (item: TrashItem) => {
         setOpenMenuKey(null);
-
-        if (!canManageTrash) {
-            openNoPermissionModal("Bạn không có thẩm quyền xóa vĩnh viễn task này");
-            return;
-        }
-
         setConfirmDelete({
             open: true,
             taskId: item.id,
@@ -1295,7 +1225,7 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
             await refresh();
         } catch (e: any) {
             setItems(prev);
-            openNoPermissionModal("Bạn không có thẩm quyền khôi phục task này");
+            setError(e?.message ?? "Không thể khôi phục task.");
         } finally {
             setProcessingId(null);
         }
@@ -1316,20 +1246,36 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
             await refresh();
         } catch (e: any) {
             setItems(prev);
-            openNoPermissionModal("Bạn không có thẩm quyền xóa vĩnh viễn task này");
+            setError(e?.message ?? "Không thể xóa vĩnh viễn task.");
         } finally {
             setProcessingId(null);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
+                <Container>
+                    <div className="pt-8">
+                        <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-10 w-48 rounded bg-zinc-200" />
+                                <div className="h-11 w-full max-w-[680px] rounded-xl bg-zinc-200" />
+                                <div className="h-64 rounded-2xl bg-zinc-100" />
+                            </div>
+                        </div>
+                    </div>
+                </Container>
+            </div>
+        );
+    }
 
     if (error) {
         return (
             <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
                 <Container>
                     <div className="pt-8">
-                        <div className="rounded-3xl border border-rose-200 bg-white p-6 text-sm text-rose-700 shadow-sm">
-                            {error}
-                        </div>
+                        <div className="rounded-3xl border border-rose-200 bg-white p-6 text-sm text-rose-700 shadow-sm">{error}</div>
                         <div className="mt-4">
                             <button
                                 type="button"
@@ -1352,7 +1298,7 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
                 description={`Bạn có chắc muốn khôi phục "${confirmRestore.taskName}" không?`}
                 confirmLabel="Khôi phục"
                 cancelLabel="Hủy"
-                confirmTone="indigo"
+                confirmTone="orange"
                 onConfirm={() => void handleConfirmRestore()}
                 onCancel={() => setConfirmRestore({ open: false, taskId: null, taskName: "" })}
             />
@@ -1366,17 +1312,6 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
                 confirmTone="orange"
                 onConfirm={() => void handleConfirmDelete()}
                 onCancel={() => setConfirmDelete({ open: false, taskId: null, taskName: "" })}
-            />
-
-            <ConfirmModal
-                open={permissionModal.open}
-                title={permissionModal.title || "Không có thẩm quyền"}
-                description={permissionModal.message}
-                confirmLabel="Đóng"
-                cancelLabel="Đóng"
-                confirmTone="orange"
-                onConfirm={closePermissionModal}
-                onCancel={closePermissionModal}
             />
 
             <Container>
@@ -1494,9 +1429,7 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
                                     ) : (
                                         paginatedItems.map((item) => {
                                             const displayDeletedBy =
-                                                item.deletedByName ||
-                                                memberNameMap[String(item.deletedBy ?? "")] ||
-                                                "Không rõ";
+                                                item.deletedByName || memberNameMap[String(item.deletedBy ?? "")] || "Không rõ";
 
                                             const initials = getInitials(displayDeletedBy);
                                             const tone = pickAvatarTone(displayDeletedBy || item.rowKey);
@@ -1542,9 +1475,7 @@ export default function Trashed({ canManageTrash = false }: { canManageTrash?: b
                                                                 type="button"
                                                                 disabled={processingId === item.id}
                                                                 onClick={() =>
-                                                                    setOpenMenuKey((prev) =>
-                                                                        prev === item.rowKey ? null : item.rowKey
-                                                                    )
+                                                                    setOpenMenuKey((prev) => (prev === item.rowKey ? null : item.rowKey))
                                                                 }
                                                                 className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
                                                                 aria-label="Tùy chọn">

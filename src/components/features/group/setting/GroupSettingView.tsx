@@ -790,8 +790,42 @@ export function GroupSettingView() {
                                         value={description}
                                         maxLength={GROUP_DESCRIPTION_MAX_LENGTH}
                                         onChange={(e) => {
-                                            setDescription(e.target.value);
-                                            if (generalError) setGeneralError("");
+                                            const value = e.target.value;
+                                            const lineBreakCount = (value.match(/\n/g) || []).length;
+
+                                            if (lineBreakCount <= 2) {
+                                                setDescription(value);
+                                                if (generalError) setGeneralError("");
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                const lineBreakCount = (description.match(/\n/g) || []).length;
+                                                if (lineBreakCount >= 2) {
+                                                    e.preventDefault();
+                                                }
+                                            }
+                                        }}
+                                        onPaste={(e) => {
+                                            const pastedText = e.clipboardData.getData("text");
+                                            const currentLineBreakCount = (description.match(/\n/g) || []).length;
+                                            const pastedLineBreakCount = (pastedText.match(/\n/g) || []).length;
+
+                                            if (currentLineBreakCount + pastedLineBreakCount > 2) {
+                                                e.preventDefault();
+
+                                                const allowedBreaks = 2 - currentLineBreakCount;
+                                                const lines = pastedText.split("\n").slice(0, allowedBreaks + 1);
+                                                const trimmedText = lines.join("\n");
+
+                                                const textarea = e.currentTarget;
+                                                const start = textarea.selectionStart;
+                                                const end = textarea.selectionEnd;
+
+                                                const newValue = description.slice(0, start) + trimmedText + description.slice(end);
+                                                setDescription(newValue);
+                                                if (generalError) setGeneralError("");
+                                            }
                                         }}
                                         className="mt-2 min-h-25 rounded-xl border-gray-200 pb-7 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                     />
