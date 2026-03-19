@@ -14,10 +14,9 @@ import {
     SoundOutlined,
     WarningOutlined
 } from "@ant-design/icons";
-import { Badge, Button, ConfigProvider, Input, Modal, message, Select, Spin, Tabs, Typography } from "antd";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     type Announcement,
     deleteUserAnnouncement,
@@ -27,25 +26,36 @@ import {
     markAnnouncementAsRead,
     type UserAnnouncement
 } from "@/api/user-announcements";
-
-const { Title, Text, Paragraph } = Typography;
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 export function AnnouncementsPage() {
     const locale = useLocale();
     const t = useTranslations();
+    const { toast } = useToast();
 
-    // Data State
     const [publicAnnouncements, setPublicAnnouncements] = useState<Announcement[]>([]);
     const [userAnnouncements, setUserAnnouncements] = useState<UserAnnouncement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // UI State
-    const [activeTab, setActiveTab] = useState("public");
+    const [activeTab, setActiveTab] = useState<"public" | "personal">("public");
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("newest");
-    const [filterType, setFilterType] = useState("all");
 
-    // Detail Modal State
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [selectedDetail, setSelectedDetail] = useState<Announcement | UserAnnouncement | null>(null);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -67,11 +77,14 @@ export function AnnouncementsPage() {
             }
         } catch (error) {
             console.error("Failed to load announcements:", error);
-            message.error(t("Common.loadError") || "Failed to load announcements");
+            toast({
+                description: t("Common.loadError") || "Failed to load announcements",
+                variant: "destructive"
+            });
         } finally {
             setIsLoading(false);
         }
-    }, [locale, t]);
+    }, [locale, t, toast]);
 
     useEffect(() => {
         loadAnnouncements();
@@ -80,20 +93,25 @@ export function AnnouncementsPage() {
     const handleViewDetail = async (id: string, isUserAnn: boolean) => {
         setSelectedId(id);
         setIsDetailLoading(true);
+
         try {
             const localData = isUserAnn
                 ? userAnnouncements.find((a) => a.userAnnouncementId === id)
                 : publicAnnouncements.find((a) => a.announcementId === id);
 
             if (localData) {
-                setSelectedDetail(localData as any);
+                setSelectedDetail(localData as Announcement | UserAnnouncement);
+
                 if (isUserAnn && !(localData as UserAnnouncement).isRead) {
                     await handleMarkAsRead(id, false);
                 }
             }
 
-            const actualId = isUserAnn ? (localData as UserAnnouncement).announcementId : id;
+            const actualId = isUserAnn ? (localData as UserAnnouncement)?.announcementId : id;
+            if (!actualId) return;
+
             const result = await getAnnouncementById(actualId, locale);
+
             if (result.status === "success" && result.data) {
                 setSelectedDetail(result.data);
             }
@@ -109,43 +127,54 @@ export function AnnouncementsPage() {
             const result = await markAnnouncementAsRead(userAnnouncementId, locale);
             if (result.status === "success") {
                 setUserAnnouncements((prev) =>
-                    prev.map((ann) => (ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann))
+                    prev.map((ann) =>
+                        ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann
+                    )
                 );
-                if (showMsg) message.success(t("Announcements.markAsReadSuccess"));
+
+                if (showMsg) {
+                    toast({
+                        description: t("Announcements.markAsReadSuccess")
+                    });
+                }
             }
         } catch (error) {
             console.error("Failed to mark as read:", error);
         }
     };
 
-    const handleDeleteAnnouncement = (e: React.MouseEvent, userAnnouncementId: string) => {
+    const handleDeleteAnnouncement = async (e: React.MouseEvent, userAnnouncementId: string) => {
         e.stopPropagation();
 
-        Modal.confirm({
-            title: t("Announcements.confirmDelete"),
-            icon: <ExclamationCircleOutlined className="text-red-500" />,
-            okText: t("Announcements.delete"),
-            okType: "danger",
-            cancelText: t("Announcements.cancel") || "Cancel",
-            async onOk() {
-                try {
-                    const result = await deleteUserAnnouncement(userAnnouncementId, locale);
-                    if (result.status === "success") {
-                        setUserAnnouncements((prev) =>
-                            prev.filter((ann) => ann.userAnnouncementId !== userAnnouncementId)
-                        );
-                        message.success(t("Announcements.deleteSuccess"));
-                    }
-                } catch (_error) {
-                    message.error("Xóa không thành công");
-                }
+        const confirmed = window.confirm(
+            t("Announcements.confirmDelete") || "Bạn có chắc muốn xóa thông báo này không?"
+        );
+        if (!confirmed) return;
+
+        try {
+            const result = await deleteUserAnnouncement(userAnnouncementId, locale);
+            if (result.status === "success") {
+                setUserAnnouncements((prev) =>
+                    prev.filter((ann) => ann.userAnnouncementId !== userAnnouncementId)
+                );
+                toast({
+                    description: t("Announcements.deleteSuccess")
+                });
+            } else {
+                toast({
+                    description: t("Announcements.deleteFailed") || "Xóa không thành công",
+                    variant: "destructive"
+                });
             }
-        });
+        } catch {
+            toast({
+                description: "Xóa không thành công",
+                variant: "destructive"
+            });
+        }
     };
 
-    const filterAndSort = <T extends { title: string; content: string; publishedAt: string; type: string }>(
-        items: T[]
-    ) => {
+    const filterAndSort = <T extends { title: string; content: string; publishedAt: string }>(items: T[]) => {
         let filtered = items;
 
         if (searchQuery.trim()) {
@@ -155,16 +184,6 @@ export function AnnouncementsPage() {
             );
         }
 
-        if (filterType !== "all") {
-            filtered = filtered.filter((item) => {
-                const type = item.type.toLowerCase();
-                if (filterType === "info") return type === "0" || type === "info";
-                if (filterType === "warning") return type === "1" || type === "warning";
-                if (filterType === "critical") return type === "2" || type === "critical";
-                return true;
-            });
-        }
-
         return [...filtered].sort((a, b) => {
             const dateA = new Date(a.publishedAt).getTime();
             const dateB = new Date(b.publishedAt).getTime();
@@ -172,338 +191,551 @@ export function AnnouncementsPage() {
         });
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString(locale, {
+    const formatDate = (dateString: string) =>
+        new Date(dateString).toLocaleDateString(locale, {
             year: "numeric",
             month: "long",
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit"
         });
-    };
 
-    const getTypeColorClass = (type: string) => {
-        switch (type.toLowerCase()) {
-            case "1":
-            case "warning":
-                return "text-amber-500 bg-amber-50";
-            case "2":
-            case "critical":
-                return "text-red-500 bg-red-50";
-            default:
-                return "text-orange-500 bg-orange-50";
-        }
-    };
-
-    const getTypeIcon = (type: string, isLarge = false) => {
-        const size = isLarge ? "text-2xl" : "text-xl";
+    const getTypeMeta = (type: string) => {
         switch (type.toLowerCase()) {
             case "0":
             case "info":
-                return <InfoCircleOutlined className={`${size} text-blue-500`} />;
+                return {
+                    label: t("Announcements.info"),
+                    icon: <InfoCircleOutlined className="text-sky-500" />,
+                    iconLarge: <InfoCircleOutlined className="text-3xl text-sky-500" />,
+                    badgeClass: "border-sky-200 bg-sky-50 text-sky-600",
+                    cardClass: "bg-sky-50",
+                    modalBg: "from-sky-50 to-cyan-50"
+                };
             case "1":
             case "warning":
-                return <WarningOutlined className={`${size} text-amber-500`} />;
+                return {
+                    label: t("Announcements.warning"),
+                    icon: <WarningOutlined className="text-amber-500" />,
+                    iconLarge: <WarningOutlined className="text-3xl text-amber-500" />,
+                    badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
+                    cardClass: "bg-amber-50",
+                    modalBg: "from-amber-50 to-orange-50"
+                };
             case "2":
             case "critical":
-                return <ExclamationCircleOutlined className={`${size} text-red-500`} />;
+                return {
+                    label: t("Announcements.critical"),
+                    icon: <ExclamationCircleOutlined className="text-rose-500" />,
+                    iconLarge: <ExclamationCircleOutlined className="text-3xl text-rose-500" />,
+                    badgeClass: "border-rose-200 bg-rose-50 text-rose-600",
+                    cardClass: "bg-rose-50",
+                    modalBg: "from-rose-50 to-red-50"
+                };
             default:
-                return <BellOutlined className={`${size} text-orange-500`} />;
+                return {
+                    label: "Notice",
+                    icon: <BellOutlined className="text-orange-500" />,
+                    iconLarge: <BellOutlined className="text-3xl text-orange-500" />,
+                    badgeClass: "border-orange-200 bg-orange-50 text-orange-600",
+                    cardClass: "bg-orange-50",
+                    modalBg: "from-orange-50 to-amber-50"
+                };
         }
     };
 
     const unreadCount = userAnnouncements.filter((ann) => !ann.isRead).length;
 
+    const currentItems = useMemo(() => {
+        return activeTab === "public" ? filterAndSort(publicAnnouncements) : filterAndSort(userAnnouncements);
+    }, [activeTab, publicAnnouncements, userAnnouncements, searchQuery, sortBy]);
+
     if (isLoading) {
         return (
-            <div className="flex min-h-[60vh] items-center justify-center">
-                <Spin size="large" tip="Đang tải thông báo..." />
+            <div className="flex min-h-[70vh] items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
+                    <p className="text-sm font-medium text-[#7C6A5A]">Đang tải thông báo...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <ConfigProvider
-            theme={{
-                token: {
-                    colorPrimary: "#f97316", // Orange-500
-                    borderRadius: 8, // 2xl (approx based on brief's 8px)
-                    fontFamily: "inherit"
-                }
-            }}>
-            <div className="mx-auto min-h-screen max-w-full bg-white px-8 py-12">
-                {/* Header Section */}
-                <div className="mb-16 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-                    <Title level={1} className="!m-0 !text-6xl !font-black !tracking-tighter">
-                        {t("Announcements.title")}
-                    </Title>
-                    {unreadCount > 0 && (
-                        <Badge
-                            count={`${unreadCount} ${t("Announcements.new")}`}
-                            color="#f97316"
-                            className="scale-125 font-bold md:ml-4"
-                        />
-                    )}
-                </div>
+        <div className="min-h-screen bg-white">
+            <div className="mx-auto w-full max-w-7xl px-4 py-6 lg:px-6 lg:py-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="w-full rounded-3xl border border-orange-200 bg-white px-4 py-5 shadow-[0_10px_40px_rgba(249,115,22,0.08)] lg:px-6 lg:py-6"
+                >
+                    <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                            <motion.div
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.22 }}
+                                className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700"
+                            >
+                                <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.12)]" />
+                                Learning Hub
+                            </motion.div>
 
-                {/* Stats Cards Grid */}
-                <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {[
-                        {
-                            label: t("Announcements.total"),
-                            value: publicAnnouncements.length + userAnnouncements.length,
-                            icon: <BellOutlined />
-                        },
-                        {
-                            label: t("Announcements.public"),
-                            value: publicAnnouncements.length,
-                            icon: <CheckCircleOutlined />
-                        },
-                        { label: t("Announcements.personal"), value: userAnnouncements.length, icon: <EyeOutlined /> }
-                    ].map((stat) => (
-                        <motion.div
-                            key={stat.label}
-                            whileHover={{ scale: 0.98 }}
-                            className="flex items-center gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-2xl text-orange-500">
-                                {stat.icon}
+                            <div className="mt-4 flex items-start gap-3">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FB923C] via-[#F97316] to-[#EA580C] shadow-md shadow-orange-200">
+                                    <BellOutlined className="text-xl text-white" />
+                                </div>
+
+                                <div className="min-w-0">
+                                    <motion.h1
+                                        layout
+                                        transition={{ type: "spring", stiffness: 280, damping: 26 }}
+                                        className="text-3xl font-extrabold tracking-tight leading-[1.2] text-[#261E33] lg:text-5xl"
+                                    >
+                                        {t("Announcements.title")}
+                                    </motion.h1>
+
+                                    <motion.p
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.22, delay: 0.05 }}
+                                        className="mt-2 max-w-3xl text-sm leading-7 text-[#7C6A5A] lg:text-[15px]"
+                                    >
+                                        Theo dõi cập nhật học tập, thông báo hệ thống và tin nhắn cá nhân trong giao
+                                        diện sáng sủa, hiện đại và tập trung hơn.
+                                    </motion.p>
+                                </div>
                             </div>
-                            <div>
-                                <Text className="mb-1 block font-bold text-gray-400 text-xs uppercase tracking-widest">
-                                    {stat.label}
-                                </Text>
-                                <Title level={2} className="!m-0 !font-black">
-                                    {stat.value}
-                                </Title>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
+                        </div>
 
-                {/* Sticky Control Bar */}
-                <div className="sticky top-4 z-50 mb-10 flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50/90 p-2 shadow-sm backdrop-blur-md lg:flex-row">
-                    <Tabs
-                        activeKey={activeTab}
-                        onChange={setActiveTab}
-                        className="!mb-0 flex-shrink-0"
-                        items={[
-                            { label: t("Announcements.publicTab"), key: "public" },
-                            {
-                                label: (
-                                    <Badge count={unreadCount} offset={[10, 0]} size="small">
-                                        {t("Announcements.personalTab")}
-                                    </Badge>
-                                ),
-                                key: "personal"
-                            }
-                        ]}
-                    />
+                        <div className="flex shrink-0 flex-wrap items-center gap-3 self-start">
+                            <motion.div
+                                layout
+                                whileHover={{ y: -1 }}
+                                transition={{ duration: 0.18 }}
+                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 text-sm text-[#7C6A5A] shadow-sm"
+                            >
+                                <BellOutlined className="text-[#EA580C]" />
+                                <span>
+                                    <motion.span
+                                        key={publicAnnouncements.length + userAnnouncements.length}
+                                        initial={{ opacity: 0.6, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="font-bold text-[#261E33]"
+                                    >
+                                        {publicAnnouncements.length + userAnnouncements.length}
+                                    </motion.span>{" "}
+                                    thông báo
+                                </span>
+                            </motion.div>
 
-                    <div className="flex flex-1 flex-col items-center gap-3 md:flex-row">
-                        <Input
-                            placeholder={t("Announcements.searchPlaceholder")}
-                            prefix={<SearchOutlined className="text-gray-300" />}
-                            variant="filled"
-                            className="h-10 rounded-lg"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <div className="flex w-full gap-2 md:w-auto">
-                            <Select
-                                value={filterType}
-                                onChange={setFilterType}
-                                className="h-10 w-full md:w-40"
-                                variant="filled"
-                                options={[
-                                    { value: "all", label: t("Announcements.typeAll") || "Tất cả loại" },
-                                    { value: "info", label: t("Announcements.info") },
-                                    { value: "warning", label: t("Announcements.warning") },
-                                    { value: "critical", label: t("Announcements.critical") }
-                                ]}
-                            />
-                            <Select
-                                value={sortBy}
-                                onChange={setSortBy}
-                                className="h-10 w-full md:w-40"
-                                variant="filled"
-                                options={[
-                                    { value: "newest", label: t("Announcements.sortNewest") || "Mới nhất" },
-                                    { value: "oldest", label: t("Announcements.sortOldest") || "Cũ nhất" }
-                                ]}
-                            />
+                            <motion.div
+                                layout
+                                whileHover={{ y: -1 }}
+                                transition={{ duration: 0.18 }}
+                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 text-sm text-[#7C6A5A] shadow-sm"
+                            >
+                                <EyeOutlined className="text-[#EA580C]" />
+                                <span>
+                                    <motion.span
+                                        key={unreadCount}
+                                        initial={{ opacity: 0.6, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="font-bold text-[#261E33]"
+                                    >
+                                        {unreadCount}
+                                    </motion.span>{" "}
+                                    chưa đọc
+                                </span>
+                            </motion.div>
                         </div>
                     </div>
+                </motion.div>
+
+                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <StatCard
+                        label={t("Announcements.total")}
+                        value={publicAnnouncements.length + userAnnouncements.length}
+                        icon={<BellOutlined />}
+                        iconClass="bg-orange-50 text-orange-500"
+                    />
+                    <StatCard
+                        label={t("Announcements.public")}
+                        value={publicAnnouncements.length}
+                        icon={<CheckCircleOutlined />}
+                        iconClass="bg-emerald-50 text-emerald-500"
+                    />
+                    <StatCard
+                        label={t("Announcements.personal")}
+                        value={userAnnouncements.length}
+                        icon={<EyeOutlined />}
+                        iconClass="bg-sky-50 text-sky-500"
+                    />
                 </div>
 
-                {/* Content List */}
-                <div className="space-y-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05, duration: 0.3 }}
+                    className="mt-6"
+                >
+                    <div className="rounded-[28px] border border-orange-200 bg-white p-4 shadow-[0_8px_24px_rgba(249,115,22,0.06)]">
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                            <div className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-orange-200 bg-orange-50/40 p-1.5 shadow-sm">
+                                {[
+                                    {
+                                        key: "public" as const,
+                                        icon: <CheckCircleOutlined />,
+                                        label: t("Announcements.publicTab")
+                                    },
+                                    {
+                                        key: "personal" as const,
+                                        icon: <EyeOutlined />,
+                                        label: t("Announcements.personalTab"),
+                                        badge: unreadCount
+                                    }
+                                ].map((tab) => {
+                                    const active = activeTab === tab.key;
+
+                                    return (
+                                        <button
+                                            key={tab.key}
+                                            type="button"
+                                            onClick={() => setActiveTab(tab.key)}
+                                            className="relative shrink-0"
+                                        >
+                                            <motion.div
+                                                whileHover={{ y: -1 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                transition={{ duration: 0.15 }}
+                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${active
+                                                    ? "text-white shadow-md shadow-orange-200"
+                                                    : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                                    }`}
+                                            >
+                                                {active ? (
+                                                    <motion.div
+                                                        layoutId="activeAnnouncementTab"
+                                                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C]"
+                                                        transition={{
+                                                            type: "spring",
+                                                            stiffness: 380,
+                                                            damping: 30
+                                                        }}
+                                                    />
+                                                ) : null}
+
+                                                <span
+                                                    className={`relative z-10 transition-colors duration-200 ${active
+                                                        ? "text-white"
+                                                        : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                        }`}
+                                                >
+                                                    {tab.icon}
+                                                </span>
+
+                                                <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
+
+                                                {"badge" in tab && tab.badge ? (
+                                                    <span
+                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-bold ${active
+                                                            ? "bg-white/20 text-white"
+                                                            : "bg-orange-100 text-orange-700"
+                                                            }`}
+                                                    >
+                                                        {tab.badge}
+                                                    </span>
+                                                ) : null}
+                                            </motion.div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="flex flex-1 flex-col gap-3 xl:max-w-xl xl:flex-row xl:justify-end">
+                                <div className="relative">
+                                    <SearchOutlined className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <Input
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder={t("Announcements.searchPlaceholder")}
+                                        className="h-11 rounded-xl border-orange-200 bg-white pl-10"
+                                    />
+                                </div>
+
+                                <Select value={sortBy} onValueChange={setSortBy}>
+                                    <SelectTrigger className="h-11 min-w-[150px] rounded-xl border-orange-200 bg-white">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="newest">
+                                            {t("Announcements.sortNewest") || "Mới nhất"}
+                                        </SelectItem>
+                                        <SelectItem value="oldest">
+                                            {t("Announcements.sortOldest") || "Cũ nhất"}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                <div className="mt-6">
                     <AnimatePresence mode="wait">
                         <motion.div
-                            key={activeTab}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}>
-                            {activeTab === "public" ? (
-                                filterAndSort(publicAnnouncements).length === 0 ? (
-                                    <EmptyState isSearch={!!searchQuery} t={t} />
-                                ) : (
-                                    filterAndSort(publicAnnouncements).map((ann) => (
-                                        <AnnouncementCard
-                                            key={ann.announcementId}
-                                            item={ann}
-                                            onClick={() => handleViewDetail(ann.announcementId, false)}
-                                            formatDate={formatDate}
-                                            getTypeIcon={getTypeIcon}
-                                            t={t}
-                                        />
-                                    ))
-                                )
-                            ) : filterAndSort(userAnnouncements).length === 0 ? (
-                                <EmptyState isSearch={!!searchQuery} t={t} />
+                            key={`${activeTab}-${searchQuery}-${sortBy}`}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {currentItems.length === 0 ? (
+                                <EmptyState isSearch={!!searchQuery} />
                             ) : (
-                                filterAndSort(userAnnouncements).map((ann) => (
-                                    <AnnouncementCard
-                                        key={ann.userAnnouncementId}
-                                        item={ann}
-                                        isUserAnn
-                                        onClick={() => handleViewDetail(ann.userAnnouncementId, true)}
-                                        onDelete={handleDeleteAnnouncement}
-                                        formatDate={formatDate}
-                                        getTypeIcon={getTypeIcon}
-                                        t={t}
-                                    />
-                                ))
+                                <div className="grid gap-4">
+                                    {currentItems.map((ann: Announcement | UserAnnouncement) => (
+                                        <AnnouncementCard
+                                            key={
+                                                activeTab === "public"
+                                                    ? (ann as Announcement).announcementId
+                                                    : (ann as UserAnnouncement).userAnnouncementId
+                                            }
+                                            item={ann}
+                                            isUserAnn={activeTab === "personal"}
+                                            onClick={() =>
+                                                handleViewDetail(
+                                                    activeTab === "public"
+                                                        ? (ann as Announcement).announcementId
+                                                        : (ann as UserAnnouncement).userAnnouncementId,
+                                                    activeTab === "personal"
+                                                )
+                                            }
+                                            onDelete={handleDeleteAnnouncement}
+                                            formatDate={formatDate}
+                                            getTypeMeta={getTypeMeta}
+                                        />
+                                    ))}
+                                </div>
                             )}
                         </motion.div>
                     </AnimatePresence>
                 </div>
+            </div>
 
-                {/* Detail Modal */}
-                <Modal
-                    open={!!selectedId}
-                    onCancel={() => setSelectedId(null)}
-                    footer={[
-                        <Button
-                            key="ok"
-                            type="primary"
-                            size="large"
-                            onClick={() => setSelectedId(null)}
-                            className="rounded-xl px-10 font-bold">
-                            {t("Announcements.confirmed") || "Đã hiểu"}
-                        </Button>
-                    ]}
-                    width={700}
-                    className="announcement-modal"
-                    closeIcon={<CloseOutlined className="text-gray-400" />}
-                    styles={{
-                        header: { borderBottom: "none" },
-                        footer: { borderTop: "none", padding: "0 40px 40px 40px" },
-                        body: { borderRadius: "24px", padding: 0 }
-                    }}>
+            <Dialog
+                open={!!selectedId}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setSelectedId(null);
+                        setSelectedDetail(null);
+                    }
+                }}
+            >
+                <DialogContent className="max-h-[90vh] overflow-hidden rounded-[28px] border border-orange-100 bg-white p-0 sm:max-w-[760px]">
                     {isDetailLoading ? (
                         <div className="flex justify-center p-20">
-                            <Spin />
+                            <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
                         </div>
                     ) : (
                         selectedDetail && (
-                            <div className="p-10 pb-0">
-                                <div className="mb-6 flex items-center gap-4">
-                                    {getTypeIcon(selectedDetail.type, true)}
-                                    <Badge
-                                        text={
-                                            selectedDetail.type === "0" || selectedDetail.type === "info"
-                                                ? t("Announcements.info")
-                                                : selectedDetail.type === "1" || selectedDetail.type === "warning"
-                                                  ? t("Announcements.warning")
-                                                  : t("Announcements.critical")
-                                        }
-                                        className={`${getTypeColorClass(selectedDetail.type)} rounded-full px-4 py-1 font-bold text-[10px] uppercase tracking-widest`}
-                                    />
+                            <div>
+                                <div
+                                    className={`bg-gradient-to-br ${getTypeMeta(selectedDetail.type).modalBg} border-b border-orange-100 px-6 py-6`}
+                                >
+                                    <div className="mb-4 flex items-center gap-4">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
+                                            {getTypeMeta(selectedDetail.type).iconLarge}
+                                        </div>
+                                        <div>
+                                            <div
+                                                className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] ${getTypeMeta(selectedDetail.type).badgeClass}`}
+                                            >
+                                                {getTypeMeta(selectedDetail.type).label}
+                                            </div>
+                                            <p className="mt-2 block text-sm text-slate-500">
+                                                <ClockCircleOutlined className="mr-2" />
+                                                {formatDate(selectedDetail.publishedAt)}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <h3 className="text-3xl font-extrabold leading-[1.2] text-slate-900">
+                                        {selectedDetail.title}
+                                    </h3>
                                 </div>
-                                <Title level={3} className="!font-black !text-4xl !mb-4 leading-tight">
-                                    {selectedDetail.title}
-                                </Title>
-                                <Text className="mb-10 flex items-center gap-2 font-bold text-gray-400 text-xs">
-                                    <ClockCircleOutlined /> {formatDate(selectedDetail.publishedAt)}
-                                </Text>
-                                <Paragraph className="whitespace-pre-wrap text-gray-700 text-lg leading-relaxed">
-                                    {selectedDetail.content}
-                                </Paragraph>
+
+                                <div className="max-h-[50vh] overflow-y-auto px-6 py-6">
+                                    <p className="whitespace-pre-wrap text-[15px] leading-8 text-slate-600">
+                                        {selectedDetail.content}
+                                    </p>
+                                </div>
+
+                                <DialogFooter className="border-t border-orange-100 px-6 py-5">
+                                    <Button
+                                        onClick={() => setSelectedId(null)}
+                                        className="h-11 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] px-8 font-semibold text-white hover:from-[#EA580C] hover:to-[#DC2626]"
+                                    >
+                                        {t("Announcements.confirmed") || "Đã hiểu"}
+                                    </Button>
+                                </DialogFooter>
                             </div>
                         )
                     )}
-                </Modal>
-            </div>
-        </ConfigProvider>
+
+                    <button
+                        type="button"
+                        onClick={() => setSelectedId(null)}
+                        className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-slate-400 transition hover:bg-white hover:text-slate-700"
+                    >
+                        <CloseOutlined />
+                    </button>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
 
-function AnnouncementCard({ item, isUserAnn, onClick, onDelete, formatDate, getTypeIcon, t }: any) {
-    const userAnn = item as UserAnnouncement;
-    const isUnread = isUserAnn && !userAnn.isRead;
-
+function StatCard({
+    label,
+    value,
+    icon,
+    iconClass
+}: {
+    label: string;
+    value: number;
+    icon: React.ReactNode;
+    iconClass: string;
+}) {
     return (
         <motion.div
-            whileHover={{ y: -4 }}
-            onClick={onClick}
-            className={`group relative flex cursor-pointer items-center gap-6 rounded-2xl border border-gray-100 bg-white p-6 transition-all ${isUnread ? "border-l-4 border-l-orange-500 bg-orange-50/30 shadow-sm" : "hover:shadow-md"}`}>
-            {/* Icon (Left) */}
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gray-50 transition-colors duration-300 group-hover:bg-white">
-                {getTypeIcon(item.type)}
-            </div>
-
-            {/* Content (Middle) */}
-            <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center gap-3">
-                    <Text
-                        className={`block truncate font-bold text-lg ${isUnread ? "font-black text-black" : "text-gray-800"}`}>
-                        {item.title}
-                    </Text>
-                    {isUnread && <div className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />}
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.2 }}
+            className="rounded-3xl border border-orange-200 bg-white p-5 shadow-[0_10px_30px_rgba(249,115,22,0.06)]"
+        >
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <p className="block text-sm font-bold text-[#7C6A5A]">{label}</p>
+                    <h2 className="mt-2 text-4xl font-extrabold tracking-tight text-[#261E33]">{value}</h2>
                 </div>
-                <Paragraph className="!m-0 line-clamp-2 text-gray-400 text-sm leading-relaxed">
-                    {item.content}
-                </Paragraph>
-                <div className="mt-3 flex items-center gap-4">
-                    <Text className="font-bold text-[10px] text-gray-300 uppercase tracking-widest">
-                        {formatDate(item.publishedAt)}
-                    </Text>
-                    <div className="h-1 w-1 rounded-full bg-gray-200" />
-                    <Text className="font-bold text-[10px] text-gray-300 uppercase tracking-widest">
-                        {item.type === "0" || item.type === "info" ? "System" : "Update"}
-                    </Text>
+                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconClass}`}>
+                    <span className="text-xl">{icon}</span>
                 </div>
-            </div>
-
-            {/* Actions (Right) */}
-            <div className="ml-4 flex items-center gap-2">
-                <AnimatePresence>
-                    {isUserAnn && (
-                        <Button
-                            icon={<DeleteOutlined />}
-                            type="text"
-                            danger
-                            className="opacity-0 transition-opacity group-hover:opacity-100"
-                            onClick={(e) => onDelete(e, userAnn.userAnnouncementId)}
-                        />
-                    )}
-                </AnimatePresence>
-                <RightOutlined className="text-gray-200 transition-all group-hover:translate-x-1 group-hover:text-orange-400" />
             </div>
         </motion.div>
     );
 }
 
-function EmptyState({ isSearch, t }: { isSearch: boolean; t: any }) {
+function AnnouncementCard({
+    item,
+    isUserAnn,
+    onClick,
+    onDelete,
+    formatDate,
+    getTypeMeta
+}: {
+    item: Announcement | UserAnnouncement;
+    isUserAnn?: boolean;
+    onClick: () => void;
+    onDelete?: (e: React.MouseEvent, userAnnouncementId: string) => void;
+    formatDate: (value: string) => string;
+    getTypeMeta: (type: string) => {
+        label: string;
+        icon: React.ReactNode;
+        iconLarge: React.ReactNode;
+        badgeClass: string;
+        cardClass: string;
+        modalBg: string;
+    };
+}) {
+    const userAnn = item as UserAnnouncement;
+    const isUnread = !!isUserAnn && !userAnn.isRead;
+    const meta = getTypeMeta(item.type);
+
     return (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-gray-200 border-dashed bg-gray-50 py-24">
-            <SoundOutlined className="mb-6 text-5xl text-gray-200" />
-            <Title level={4} className="!m-0 !font-black text-gray-800">
-                {isSearch ? "Không có kết quả" : "Mọi thứ đều cập nhật!"}
-            </Title>
-            <Text className="mt-2 font-medium text-gray-400">
-                {isSearch ? "Thử tìm kiếm với từ khóa khác xem sao." : "Bạn đã đọc hết tất cả thông báo rồi."}
-            </Text>
+        <motion.div
+            whileHover={{ y: -2 }}
+            transition={{ duration: 0.18 }}
+            onClick={onClick}
+            className="group cursor-pointer rounded-3xl border border-orange-200 bg-white p-5 shadow-[0_10px_30px_rgba(249,115,22,0.06)] transition-all hover:shadow-[0_14px_36px_rgba(249,115,22,0.12)]"
+        >
+            <div className="flex items-start gap-4">
+                <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${meta.cardClass}`}>
+                    {meta.icon}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <div
+                            className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] ${meta.badgeClass}`}
+                        >
+                            {meta.label}
+                        </div>
+
+                        {isUnread && (
+                            <Badge className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-[11px] font-bold text-orange-700 hover:bg-orange-100">
+                                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                                Chưa đọc
+                            </Badge>
+                        )}
+                    </div>
+
+                    <h4
+                        className={`mb-2 text-lg leading-7 ${isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
+                            }`}
+                    >
+                        {item.title}
+                    </h4>
+
+                    <p className="mb-4 line-clamp-2 text-sm leading-7 text-[#7C6A5A]">{item.content}</p>
+
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <p className="text-xs font-medium text-slate-400">
+                            <ClockCircleOutlined className="mr-2" />
+                            {formatDate(item.publishedAt)}
+                        </p>
+                        <p className="text-xs font-medium text-slate-400">
+                            {item.type === "0" || item.type === "info" ? "Hệ thống" : "Cập nhật"}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="ml-auto flex items-center gap-2">
+                    {isUserAnn && onDelete ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100"
+                            onClick={(e) => onDelete(e, userAnn.userAnnouncementId)}
+                        >
+                            <DeleteOutlined />
+                        </Button>
+                    ) : null}
+
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50 text-orange-400 transition-all group-hover:translate-x-0.5 group-hover:bg-orange-100 group-hover:text-orange-600">
+                        <RightOutlined />
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+function EmptyState({ isSearch }: { isSearch: boolean }) {
+    return (
+        <div className="rounded-[32px] border border-dashed border-orange-200 bg-white px-6 py-20 text-center shadow-sm">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-orange-50">
+                <SoundOutlined className="text-4xl text-orange-300" />
+            </div>
+            <h4 className="mb-2 text-xl font-extrabold text-[#261E33]">
+                {isSearch ? "Không có kết quả" : "Mọi thứ đều đã cập nhật"}
+            </h4>
+            <p className="text-[#7C6A5A]">
+                {isSearch ? "Thử lại với từ khóa khác." : "Bạn đã xem hết các thông báo hiện có."}
+            </p>
         </div>
     );
 }

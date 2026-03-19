@@ -1403,7 +1403,7 @@ export default function Trashed() {
                             <table className="min-w-full table-fixed border-separate border-spacing-0">
                                 <thead>
                                     <tr>
-                                        <th className="w-[20%] border-b border-zinc-200 px-8 py-4 text-left text-xs font-bold uppercase tracking-wide text-zinc-500">
+                                        <th className="w-[20%] border-b border-zinc-200 px-8 py-4 text-center text-xs font-bold uppercase tracking-wide text-zinc-500">
                                             Tên
                                         </th>
                                         <th className="w-[10%] border-b border-zinc-200 px-4 py-4 text-center text-xs font-bold uppercase tracking-wide text-zinc-500">
@@ -1412,7 +1412,7 @@ export default function Trashed() {
                                         <th className="w-[28%] border-b border-zinc-200 px-4 py-4 text-center text-xs font-bold uppercase tracking-wide text-zinc-500">
                                             Thời gian xóa
                                         </th>
-                                        <th className="w-[34%] border-b border-zinc-200 px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-zinc-500">
+                                        <th className="w-[34%] border-b border-zinc-200 px-4 py-4 text-center text-xs font-bold uppercase tracking-wide text-zinc-500">
                                             Người xóa
                                         </th>
                                         <th className="w-[8%] border-b border-zinc-200 px-4 py-4" />
@@ -1436,8 +1436,8 @@ export default function Trashed() {
 
                                             return (
                                                 <tr key={item.rowKey}>
-                                                    <td className="border-b border-zinc-100 px-8 py-8 align-middle">
-                                                        <div className="max-w-[150px] truncate text-base font-semibold text-zinc-900">
+                                                    <td className="border-b border-zinc-100 px-8 py-8 align-middle text-center">
+                                                        <div className="mx-auto max-w-[150px] truncate text-base font-semibold text-zinc-900">
                                                             {item.name}
                                                         </div>
                                                     </td>
@@ -1454,7 +1454,7 @@ export default function Trashed() {
                                                     </td>
 
                                                     <td className="border-b border-zinc-100 px-4 py-8 align-middle">
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex items-center justify-center gap-3">
                                                             <div
                                                                 className={cn(
                                                                     "grid h-12 w-12 shrink-0 place-items-center rounded-full text-base font-bold text-white",
@@ -1468,7 +1468,6 @@ export default function Trashed() {
                                                             </div>
                                                         </div>
                                                     </td>
-
                                                     <td className="border-b border-zinc-100 px-4 py-8 align-middle text-center">
                                                         <div className="relative flex justify-center">
                                                             <button
