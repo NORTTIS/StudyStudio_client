@@ -8,6 +8,7 @@ import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invi
 import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
 import type { components } from "@/api/types";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
+import { getStudioGroupAnalytics, getStudioGroupHeatmap } from "@/api/analytics";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { mapRole } from "@/components/features/group/group.api";
 import { RolePill } from "@/components/features/group/RolePill";
@@ -37,7 +38,13 @@ import { MemberDetailModal } from "./MemberDetailModal";
 import { MemberList } from "./MemberList";
 import { QuickAssignModal } from "./QuickAssignModal";
 import { StudioDateRange } from "./StudioDateRange";
-import { generateActivityHeatmap, mockGroupPerformance, mockGroupProgress, mockStudioDateRange } from "./types";
+import {
+    mockGroupPerformance,
+    transformGroupComparisonToProgress,
+    transformStudioHeatmapToComparison,
+    type GroupHeatmapComparisonData,
+    type GroupProgress
+} from "./types";
 
 type StudioResponse = components["schemas"]["StudioResponse"];
 type GroupCardDto = components["schemas"]["GroupCardDto"];
@@ -81,6 +88,14 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         "progress" | "activity" | "group-progress" | "performance"
     >("progress");
 
+    // Heatmap state — loading starts true so spinner shows until data arrives
+    const [heatmapData, setHeatmapData] = useState<GroupHeatmapComparisonData[]>([]);
+    const [heatmapLoading, setHeatmapLoading] = useState(true);
+
+    // Group progress state for GroupProgressChart
+    const [groupProgress, setGroupProgress] = useState<GroupProgress[]>([]);
+    const [groupsLoading, setGroupsLoading] = useState(true);
+
     // Check if current user is studio owner
     const isStudioOwner = initialStudio?.studioRole === 0;
 
@@ -88,7 +103,12 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState("");
     const [editDescription, setEditDescription] = useState("");
+    const [editStartDate, setEditStartDate] = useState("");
+    const [editEndDate, setEditEndDate] = useState("");
     const [editLoading, setEditLoading] = useState(false);
+
+    // Helper to format ISO date string → YYYY-MM-DD for <input type="date">
+    const formatDateForInput = (iso: string) => (iso ? new Date(iso).toISOString().split("T")[0] : "");
 
     // Convert server data to UI format
     const studio: StudioUI | null = useMemo(() => {
@@ -102,7 +122,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             groupCount: initialStudio.groupCount || 0,
             completionProgress: 0,
             createdAt: initialStudio.createdAt || "",
-            updatedAt: initialStudio.updatedAt || ""
+            updatedAt: initialStudio.updatedAt || "",
+            startDate: initialStudio.startDate,
+            endDate: initialStudio.endDate
         };
     }, [initialStudio]);
 
@@ -149,6 +171,49 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         } finally {
             setMembersLoading(false);
         }
+
+        // Fetch heatmap data independently (non-blocking)
+        if (studioId) {
+            setHeatmapLoading(true);
+            try {
+                const heatmapResult = await getStudioGroupHeatmap(studioId, { locale });
+                // apiGet wraps with ApiResponse{status,code,message,data}, so data.data === actual payload
+                // OpenAPI type double-wraps; correct path: result.data.groupHeatmap
+                const heatmapPayload = heatmapResult.data as { groupHeatmap?: unknown } | null;
+                const hasData = heatmapPayload?.groupHeatmap != null;
+                if (hasData) {
+                    setHeatmapData(
+                        transformStudioHeatmapToComparison(
+                            (heatmapPayload as { groupHeatmap: components["schemas"]["StudioHeatmapData"][] })
+                                .groupHeatmap
+                        )
+                    );
+                } else {
+                    console.warn("[ActivityHeatmap] Unexpected response shape:", heatmapResult);
+                }
+            } catch (error) {
+                console.error("[ActivityHeatmap] Failed to load heatmap data:", error);
+            } finally {
+                setHeatmapLoading(false);
+            }
+        }
+
+        // Fetch group progress analytics independently (non-blocking)
+        if (studioId) {
+            setGroupsLoading(true);
+            try {
+                const result = await getStudioGroupAnalytics(studioId, locale);
+                if (result.status === "success" && Array.isArray(result.data)) {
+                    setGroupProgress(transformGroupComparisonToProgress(result.data));
+                } else {
+                    console.warn("[GroupProgressChart] Unexpected response shape:", result);
+                }
+            } catch (error) {
+                console.error("[GroupProgressChart] Failed to load group analytics:", error);
+            } finally {
+                setGroupsLoading(false);
+            }
+        }
     }, [locale, toast, t, studioId]);
 
     useEffect(() => {
@@ -185,6 +250,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         if (studio) {
             setEditName(studio.name);
             setEditDescription(studio.description);
+            setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
+            setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
         }
     }, [studio]);
 
@@ -192,6 +259,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         if (studio) {
             setEditName(studio.name);
             setEditDescription(studio.description);
+            setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
+            setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
         }
         setIsEditing(true);
     };
@@ -200,12 +269,19 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         if (studio) {
             setEditName(studio.name);
             setEditDescription(studio.description);
+            setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
+            setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
         }
         setIsEditing(false);
     };
 
     const handleSaveEdit = async () => {
         if (!studio) return;
+
+        if (editStartDate && editEndDate && editStartDate > editEndDate) {
+            toast({ description: "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc", variant: "destructive" });
+            return;
+        }
 
         setEditLoading(true);
         try {
@@ -214,7 +290,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                 {
                     name: editName,
                     description: editDescription,
-                    type: "group"
+                    type: "group",
+                    startDate: editStartDate || null,
+                    endDate: editEndDate || null
                 },
                 locale
             );
@@ -629,17 +707,17 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 {/* Row 1: StudioDateRange + Activity Heatmap */}
                                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                     <StudioDateRange
-                                        startDate={mockStudioDateRange.startDate}
-                                        dueDate={mockStudioDateRange.dueDate}
+                                        startDate={studio.startDate ? formatDateForInput(studio.startDate) : ""}
+                                        dueDate={studio.endDate ? formatDateForInput(studio.endDate) : ""}
                                     />
-                                    <ActivityHeatmap data={generateActivityHeatmap()} />
+                                    <ActivityHeatmap data={heatmapData} loading={heatmapLoading} />
                                 </div>
                                 {/* Row 2: Group Progress + Performance Radar */}
                                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                     <GroupProgressChart
-                                        groups={mockGroupProgress}
-                                        studioStartDate={mockStudioDateRange.startDate}
-                                        studioDueDate={mockStudioDateRange.dueDate}
+                                        groups={groupsLoading ? [] : groupProgress}
+                                        studioStartDate={studio.startDate ? formatDateForInput(studio.startDate) : ""}
+                                        studioDueDate={studio.endDate ? formatDateForInput(studio.endDate) : ""}
                                     />
                                     <GroupPerformanceRadar data={mockGroupPerformance} />
                                 </div>
@@ -730,6 +808,63 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     className="mt-2 min-h-24 rounded-xl border-gray-200 pb-7 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                                     placeholder="Nhập mô tả cho Studio..."
                                                 />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label
+                                                        htmlFor="studio-start-date"
+                                                        className="font-semibold text-gray-700 text-xs">
+                                                        Ngày bắt đầu
+                                                    </label>
+                                                    {isEditing ? (
+                                                        <Input
+                                                            id="studio-start-date"
+                                                            type="date"
+                                                            value={editStartDate}
+                                                            onChange={(e) => setEditStartDate(e.target.value)}
+                                                            className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500"
+                                                        />
+                                                    ) : (
+                                                        <Input
+                                                            id="studio-start-date"
+                                                            value={editStartDate || "—"}
+                                                            readOnly
+                                                            tabIndex={-1}
+                                                            aria-readonly="true"
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            onFocus={(e) => e.currentTarget.blur()}
+                                                            className="mt-2 h-10 cursor-default rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        htmlFor="studio-end-date"
+                                                        className="font-semibold text-gray-700 text-xs">
+                                                        Ngày kết thúc
+                                                    </label>
+                                                    {isEditing ? (
+                                                        <Input
+                                                            id="studio-end-date"
+                                                            type="date"
+                                                            value={editEndDate}
+                                                            onChange={(e) => setEditEndDate(e.target.value)}
+                                                            className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500"
+                                                        />
+                                                    ) : (
+                                                        <Input
+                                                            id="studio-end-date"
+                                                            value={editEndDate || "—"}
+                                                            readOnly
+                                                            tabIndex={-1}
+                                                            aria-readonly="true"
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            onFocus={(e) => e.currentTarget.blur()}
+                                                            className="mt-2 h-10 cursor-default rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
+                                                        />
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <div>

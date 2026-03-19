@@ -50,7 +50,7 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
                         key={group.groupId}
                         type="button"
                         onClick={() => toggleGroup(group.groupId)}
-                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs transition-all ${
                             selectedGroups.has(group.groupId)
                                 ? "text-white"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -118,7 +118,7 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
             </div>
 
             {/* Legend / Summary */}
-            <div className="mt-4 border-t border-gray-100 pt-4">
+            <div className="mt-4 border-gray-100 border-t pt-4">
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                     {data
                         .filter((g) => selectedGroups.has(g.groupId))
@@ -131,7 +131,7 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
                                     />
                                     <span className="font-medium text-[#261E33] text-sm">{group.groupName}</span>
                                 </div>
-                                <div className="space-y-1 text-xs text-gray-500">
+                                <div className="space-y-1 text-gray-500 text-xs">
                                     <div className="flex justify-between">
                                         <span>Task:</span>
                                         <span className="font-medium text-[#261E33]">{group.completedTasks}%</span>
@@ -144,7 +144,7 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
                                         <span>Hợp tác:</span>
                                         <span className="font-medium text-[#261E33]">{group.collaboration}%</span>
                                     </div>
-                                    <div className="mt-1 border-t border-gray-200 pt-1">
+                                    <div className="mt-1 border-gray-200 border-t pt-1">
                                         <div className="flex justify-between font-medium">
                                             <span>TB:</span>
                                             <span style={{ color: colors[index % colors.length] }}>

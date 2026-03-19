@@ -31,20 +31,20 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useState } from "react";
-import { Header } from "@/components/layout/Header";
-import { DashboardSidebar } from "@/components/layout/sidebar";
 import {
     convertGroupStatus,
     formatDate,
-    getGroupType,
-    getGroupTypeLabel,
-    getGroups,
-    getMemberPercent,
     GroupDisplayStatus,
     type GroupListItem,
     type GroupListSummary,
+    getGroups,
+    getGroupType,
+    getGroupTypeLabel,
+    getMemberPercent,
     updateGroupStatus
 } from "@/api/admin-groups";
+import { Header } from "@/components/layout/Header";
+import { DashboardSidebar } from "@/components/layout/sidebar";
 
 const { Title, Text } = Typography;
 const { Search } = Input;

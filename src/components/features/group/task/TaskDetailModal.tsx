@@ -18,13 +18,6 @@ import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import type { components } from "@/api/types";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -35,6 +28,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
@@ -159,7 +159,7 @@ function safeInitialsFromName(name?: string | null) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const a = parts[0]?.[0] ?? "";
-    const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
     return `${a}${b}`.toUpperCase() || "U";
 }
 
@@ -202,7 +202,10 @@ function expandMentionAll(payloadText: string, membersById: Record<string, strin
     });
 
     if (otherMemberIds.length === 0) {
-        return payloadText.replace(/@__all__\b/g, "").replace(/\s{2,}/g, " ").trim();
+        return payloadText
+            .replace(/@__all__\b/g, "")
+            .replace(/\s{2,}/g, " ")
+            .trim();
     }
 
     const mentions = otherMemberIds.map((id) => `@${id}`).join(" ");
@@ -374,7 +377,7 @@ const MentionTextarea = React.forwardRef<
 
     const insertMention = (user: MentionUser) => {
         const el = taRef.current;
-        if (!el || !anchor || disabled) return;
+        if (!(el && anchor) || disabled) return;
 
         const before = value.slice(0, anchor.start);
         const after = value.slice(anchor.end);
@@ -515,7 +518,7 @@ const MentionTextarea = React.forwardRef<
         <div className="relative w-full min-w-0">
             <div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 z-0 overflow-hidden whitespace-pre-wrap break-words text-sm leading-6 text-zinc-900">
+                className="pointer-events-none absolute inset-0 z-0 overflow-hidden whitespace-pre-wrap break-words text-sm text-zinc-900 leading-6">
                 {value ? <>{previewNodes}</> : <span className="text-zinc-400">{placeholder}</span>}
             </div>
 
@@ -529,7 +532,7 @@ const MentionTextarea = React.forwardRef<
                 placeholder=""
                 disabled={disabled}
                 className={cn(
-                    "relative z-10 block h-6 min-h-[24px] w-full resize-none overflow-hidden bg-transparent text-sm leading-6 text-transparent caret-zinc-900 outline-none selection:bg-blue-200",
+                    "relative z-10 block h-6 min-h-[24px] w-full resize-none overflow-hidden bg-transparent text-sm text-transparent leading-6 caret-zinc-900 outline-none selection:bg-blue-200",
                     "disabled:cursor-not-allowed disabled:caret-transparent",
                     className
                 )}
@@ -537,7 +540,7 @@ const MentionTextarea = React.forwardRef<
 
             {open && !disabled ? (
                 filtered.length > 0 ? (
-                    <div className="absolute left-0 top-full z-[12000] mt-2 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
+                    <div className="absolute top-full left-0 z-[12000] mt-2 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
                         <div className="max-h-56 overflow-auto p-1">
                             {filtered.map((u, idx) => (
                                 <button
@@ -551,7 +554,7 @@ const MentionTextarea = React.forwardRef<
                                         "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-zinc-50",
                                         idx === activeIndex && "bg-zinc-50"
                                     )}>
-                                    <div className="grid h-8 w-8 place-items-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-800">
+                                    <div className="grid h-8 w-8 place-items-center rounded-full bg-zinc-100 font-semibold text-xs text-zinc-800">
                                         {u.id === "__all__" ? "ALL" : safeInitialsFromName(u.name)}
                                     </div>
 
@@ -566,7 +569,7 @@ const MentionTextarea = React.forwardRef<
                         </div>
                     </div>
                 ) : (
-                    <div className="absolute left-0 top-full z-[12000] mt-2 w-full rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-500 shadow-xl">
+                    <div className="absolute top-full left-0 z-[12000] mt-2 w-full rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-500 shadow-xl">
                         Không có thành viên để mention.
                     </div>
                 )
@@ -784,7 +787,7 @@ function buildInitials(name?: string | null) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const a = parts[0]?.[0] ?? "";
-    const b = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
     return `${a}${b}`.toUpperCase() || "U";
 }
 
@@ -979,150 +982,150 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
     const popup =
         mounted && open && popupPosition && portalTarget
             ? createPortal(
-                <div
-                    ref={rootRef}
-                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                    style={{
-                        top: popupPosition.top,
-                        left: popupPosition.left,
-                        width: popupPosition.width,
-                        maxHeight: "calc(100vh - 40px)",
-                        overflowY: "auto"
-                    }}>
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                value={month.getMonth()}
-                                onChange={handleMonthChange}
-                                className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
+                  <div
+                      ref={rootRef}
+                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                      style={{
+                          top: popupPosition.top,
+                          left: popupPosition.left,
+                          width: popupPosition.width,
+                          maxHeight: "calc(100vh - 40px)",
+                          overflowY: "auto"
+                      }}>
+                      <div className="mb-4 flex items-center gap-3">
+                          <div className="relative flex-1">
+                              <select
+                                  value={month.getMonth()}
+                                  onChange={handleMonthChange}
+                                  className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {monthOptions.map((item) => (
+                                      <option key={item.value} value={item.value}>
+                                          {item.label}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
 
-                        <div className="relative w-[140px]">
-                            <select
-                                value={month.getFullYear()}
-                                onChange={handleYearChange}
-                                className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {yearOptions.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
-                    </div>
+                          <div className="relative w-[140px]">
+                              <select
+                                  value={month.getFullYear()}
+                                  onChange={handleYearChange}
+                                  className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {yearOptions.map((year) => (
+                                      <option key={year} value={year}>
+                                          {year}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
+                      </div>
 
-                    <div className="rounded-[20px] border border-zinc-200 p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={goPrevMonth}
-                                disabled={isPrevDisabled}
-                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
+                      <div className="rounded-[20px] border border-zinc-200 p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                              <button
+                                  type="button"
+                                  onClick={goPrevMonth}
+                                  disabled={isPrevDisabled}
+                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronLeft className="h-5 w-5" />
+                              </button>
 
-                            <div className="text-base font-bold text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                            </div>
+                              <div className="font-bold text-base text-zinc-900">
+                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                              </div>
 
-                            <button
-                                type="button"
-                                onClick={goNextMonth}
-                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                              <button
+                                  type="button"
+                                  onClick={goNextMonth}
+                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                  <ChevronRight className="h-5 w-5" />
+                              </button>
+                          </div>
 
-                        <DayPicker
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={selectedDate}
-                            onSelect={pickDate}
-                            disabled={minDate ? { before: minDate } : undefined}
-                            showOutsideDays
-                            className="w-full"
-                            styles={{
-                                day: { outline: "none", boxShadow: "none" },
-                                button: { outline: "none", boxShadow: "none" }
-                            }}
-                            classNames={{
-                                months: "flex w-full flex-col",
-                                month: "w-full space-y-3",
-                                caption: "hidden",
-                                table: "w-full border-collapse",
-                                tbody: "w-full",
-                                head_row: "flex w-full justify-between",
-                                head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
-                                row: "mt-2 flex w-full justify-between",
-                                cell: "h-10 w-10 p-0 text-center",
-                                day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                day_button:
-                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                selected: "!bg-orange-500 !text-white",
-                                day_selected:
-                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
-                                today: "text-orange-600 font-bold",
-                                day_today: "text-orange-600 font-bold",
-                                outside: "text-zinc-300",
-                                day_outside: "text-zinc-300",
-                                disabled: "text-zinc-300 opacity-40",
-                                day_disabled: "text-zinc-300 opacity-40",
-                                hidden: "invisible",
-                                day_hidden: "invisible"
-                            }}
-                        />
-                    </div>
+                          <DayPicker
+                              mode="single"
+                              month={month}
+                              onMonthChange={setMonth}
+                              selected={selectedDate}
+                              onSelect={pickDate}
+                              disabled={minDate ? { before: minDate } : undefined}
+                              showOutsideDays
+                              className="w-full"
+                              styles={{
+                                  day: { outline: "none", boxShadow: "none" },
+                                  button: { outline: "none", boxShadow: "none" }
+                              }}
+                              classNames={{
+                                  months: "flex w-full flex-col",
+                                  month: "w-full space-y-3",
+                                  caption: "hidden",
+                                  table: "w-full border-collapse",
+                                  tbody: "w-full",
+                                  head_row: "flex w-full justify-between",
+                                  head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
+                                  row: "mt-2 flex w-full justify-between",
+                                  cell: "h-10 w-10 p-0 text-center",
+                                  day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                  day_button:
+                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                  selected: "!bg-orange-500 !text-white",
+                                  day_selected:
+                                      "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                  today: "text-orange-600 font-bold",
+                                  day_today: "text-orange-600 font-bold",
+                                  outside: "text-zinc-300",
+                                  day_outside: "text-zinc-300",
+                                  disabled: "text-zinc-300 opacity-40",
+                                  day_disabled: "text-zinc-300 opacity-40",
+                                  hidden: "invisible",
+                                  day_hidden: "invisible"
+                              }}
+                          />
+                      </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Today
-                        </button>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                              type="button"
+                              onClick={() => pickDate(new Date())}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                              Today
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Tomorrow
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 1))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                              Tomorrow
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Next week
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 7))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                              Next week
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-rose-500 hover:bg-rose-50">
-                            No date
-                        </button>
-                    </div>
-                </div>,
-                portalTarget
-            )
+                          <button
+                              type="button"
+                              onClick={() => {
+                                  onChange("");
+                                  setOpen(false);
+                              }}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-rose-500 text-sm hover:bg-rose-50">
+                              No date
+                          </button>
+                      </div>
+                  </div>,
+                  portalTarget
+              )
             : null;
 
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -1136,8 +1139,8 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                         disabled
                             ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70"
                             : open
-                                ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
-                                : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
+                              ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
+                              : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
                     )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
@@ -1146,8 +1149,8 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 disabled
                                     ? "bg-zinc-100 text-zinc-400"
                                     : open
-                                        ? "bg-orange-100 text-orange-600"
-                                        : "bg-zinc-100 text-zinc-500"
+                                      ? "bg-orange-100 text-orange-600"
+                                      : "bg-zinc-100 text-zinc-500"
                             )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
@@ -1483,14 +1486,7 @@ type CommentActionProps = {
     size?: "sm" | "md";
 };
 
-function CommentActions({
-    onReply,
-    onDelete,
-    canShowMenu,
-    canDelete,
-    deleting,
-    size = "sm"
-}: CommentActionProps) {
+function CommentActions({ onReply, onDelete, canShowMenu, canDelete, deleting, size = "sm" }: CommentActionProps) {
     const buttonSize = size === "sm" ? "h-7 w-7" : "h-8 w-8";
     const iconSize = "h-4 w-4";
     const textSize = size === "sm" ? "text-xs" : "text-sm";
@@ -1660,7 +1656,7 @@ export default function TaskDetailModal(props: {
             if (isViewOnly) return false;
 
             const commentUserId = String(comment.userId ?? comment.user?.id ?? "");
-            if (!commentUserId || !myUserId) return false;
+            if (!(commentUserId && myUserId)) return false;
             if (isOwnerOrModerator) return true;
             return commentUserId === myUserId;
         },
@@ -1733,7 +1729,7 @@ export default function TaskDetailModal(props: {
         if (!canComment || isViewOnly) return;
 
         const visibleText = commentDraft.trim();
-        if (!visibleText || !taskId) return;
+        if (!(visibleText && taskId)) return;
 
         const rawPayload = commentMentionRef.current?.getPayloadText() ?? visibleText;
         const content = expandMentionAll(rawPayload, membersById, myUserId);
@@ -1762,7 +1758,7 @@ export default function TaskDetailModal(props: {
         if (isViewOnly) return;
 
         const id = String(deleteTarget?.commentId ?? "").trim();
-        if (!id || !taskId) return;
+        if (!(id && taskId)) return;
 
         try {
             setDeletingCommentId(id);
@@ -2093,7 +2089,7 @@ export default function TaskDetailModal(props: {
         }
     };
 
-    if (!open || !mounted) return null;
+    if (!(open && mounted)) return null;
 
     return createPortal(
         <div
@@ -2105,10 +2101,10 @@ export default function TaskDetailModal(props: {
             <div
                 className="relative flex h-[88vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
                         {loadingDetail ? (
-                            <h2 className="min-w-0 truncate text-[26px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="min-w-0 truncate font-extrabold text-[26px] text-zinc-900 leading-none">
                                 Loading...
                             </h2>
                         ) : isEditing ? (
@@ -2118,20 +2114,20 @@ export default function TaskDetailModal(props: {
                                     maxLength={TASK_TITLE_MAX_LENGTH}
                                     onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
                                     placeholder="Task name"
-                                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[24px] font-extrabold leading-none text-zinc-900 outline-none"
+                                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[24px] text-zinc-900 leading-none outline-none"
                                 />
-                                <div className="mt-2 text-right text-xs font-medium text-zinc-500">
+                                <div className="mt-2 text-right font-medium text-xs text-zinc-500">
                                     {taskName.length}/{TASK_TITLE_MAX_LENGTH}
                                 </div>
                             </div>
                         ) : (
                             <div className="flex min-w-0 items-center gap-3">
-                                <h2 className="min-w-0 break-words text-[26px] font-extrabold leading-none text-zinc-900">
+                                <h2 className="min-w-0 break-words font-extrabold text-[26px] text-zinc-900 leading-none">
                                     {taskName || "Task"}
                                 </h2>
 
                                 {isRefreshingDetail ? (
-                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-[11px] font-semibold text-zinc-500">
+                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 font-semibold text-[11px] text-zinc-500">
                                         Syncing...
                                     </div>
                                 ) : null}
@@ -2152,7 +2148,7 @@ export default function TaskDetailModal(props: {
                     <div className="grid h-full grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_560px]">
                         <div className="min-w-0 overflow-y-auto pr-1">
                             {detailError ? (
-                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                     {detailError}
                                 </div>
                             ) : null}
@@ -2165,20 +2161,20 @@ export default function TaskDetailModal(props: {
                             ) : null}
 
                             {membersError ? (
-                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                     {membersError}
                                 </div>
                             ) : null}
 
                             {saveError ? (
-                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                     {saveError}
                                 </div>
                             ) : null}
 
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                    <div className="text-lg font-bold text-zinc-900">Task information</div>
+                                    <div className="font-bold text-lg text-zinc-900">Task information</div>
                                     <div className="text-sm text-zinc-500">Chi tiết và trạng thái của task</div>
                                 </div>
 
@@ -2189,7 +2185,7 @@ export default function TaskDetailModal(props: {
                                                 type="button"
                                                 onClick={() => setIsEditing(true)}
                                                 disabled={loadingDetail || !!detailError || !task}
-                                                className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                                className="h-10 rounded-xl bg-[#f54a00] px-5 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                                                 Edit
                                             </button>
                                         ) : (
@@ -2199,7 +2195,7 @@ export default function TaskDetailModal(props: {
                                                     void handleSave();
                                                 }}
                                                 disabled={submitting}
-                                                className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                                className="h-10 rounded-xl bg-[#f54a00] px-5 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                                                 {submitting ? "Saving..." : "Save change"}
                                             </button>
                                         )
@@ -2209,12 +2205,12 @@ export default function TaskDetailModal(props: {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Assignee</div>
+                                    <div className="font-semibold text-sm text-zinc-600">Assignee</div>
                                     <Select
                                         value={assigneeId || "unassigned"}
                                         onValueChange={(v) => setAssigneeId(v === "unassigned" ? "" : v)}
                                         disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                             <div className="flex min-w-0 items-center gap-2">
                                                 {selectedAssigneeDisplay.avatarUrl ? (
                                                     <Image
@@ -2226,7 +2222,7 @@ export default function TaskDetailModal(props: {
                                                         className="h-6 w-6 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                         {buildInitials(selectedAssigneeDisplay.label)}
                                                     </div>
                                                 )}
@@ -2243,7 +2239,7 @@ export default function TaskDetailModal(props: {
                                             className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                             <SelectItem value="unassigned" className={selectItemClassName}>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                         U
                                                     </div>
                                                     <span>Unassigned</span>
@@ -2251,7 +2247,10 @@ export default function TaskDetailModal(props: {
                                             </SelectItem>
 
                                             {assigneeOptions.map((m) => (
-                                                <SelectItem key={m.userId} value={m.userId} className={selectItemClassName}>
+                                                <SelectItem
+                                                    key={m.userId}
+                                                    value={m.userId}
+                                                    className={selectItemClassName}>
                                                     <div className="flex items-center gap-2">
                                                         {m.avatarUrl ? (
                                                             <Image
@@ -2263,7 +2262,7 @@ export default function TaskDetailModal(props: {
                                                                 className="h-6 w-6 rounded-full object-cover"
                                                             />
                                                         ) : (
-                                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
+                                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                                 {buildInitials(m.label)}
                                                             </div>
                                                         )}
@@ -2276,12 +2275,12 @@ export default function TaskDetailModal(props: {
                                 </div>
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Status</div>
+                                    <div className="font-semibold text-sm text-zinc-600">Status</div>
                                     <Select
                                         value={statusId || "no-status"}
                                         onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}
                                         disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                             <span className="truncate">{selectedStatusName}</span>
                                         </SelectTrigger>
 
@@ -2297,7 +2296,10 @@ export default function TaskDetailModal(props: {
                                             </SelectItem>
 
                                             {statusOptions.map((s) => (
-                                                <SelectItem key={s.statusId} value={s.statusId} className={selectItemClassName}>
+                                                <SelectItem
+                                                    key={s.statusId}
+                                                    value={s.statusId}
+                                                    className={selectItemClassName}>
                                                     {s.statusName}
                                                 </SelectItem>
                                             ))}
@@ -2306,9 +2308,12 @@ export default function TaskDetailModal(props: {
                                 </div>
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Priority</div>
-                                    <Select value={String(selectedPriorityValue)} onValueChange={setPriority} disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                    <div className="font-semibold text-sm text-zinc-600">Priority</div>
+                                    <Select
+                                        value={String(selectedPriorityValue)}
+                                        onValueChange={setPriority}
+                                        disabled={!isEditing}>
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                             <span
                                                 className={cn(
                                                     "inline-flex items-center gap-2",
@@ -2355,9 +2360,12 @@ export default function TaskDetailModal(props: {
                                 />
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Severity</div>
-                                    <Select value={String(selectedSeverityValue)} onValueChange={setSeverity} disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                    <div className="font-semibold text-sm text-zinc-600">Severity</div>
+                                    <Select
+                                        value={String(selectedSeverityValue)}
+                                        onValueChange={setSeverity}
+                                        disabled={!isEditing}>
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                             <span
                                                 className={cn(
                                                     "inline-flex items-center gap-2",
@@ -2392,7 +2400,7 @@ export default function TaskDetailModal(props: {
                                 </div>
 
                                 <div className="md:col-span-2 xl:col-span-2">
-                                    <div className="text-sm font-semibold text-zinc-600">Progress</div>
+                                    <div className="font-semibold text-sm text-zinc-600">Progress</div>
 
                                     <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
                                         <div className="mb-3 flex items-center justify-between gap-3 text-sm">
@@ -2408,7 +2416,7 @@ export default function TaskDetailModal(props: {
                                                     onBlur={handleProgressInputBlur}
                                                     disabled={!isEditing}
                                                     placeholder="0"
-                                                    className="h-8 w-14 rounded-lg border border-zinc-200 px-0 text-center text-sm font-semibold leading-none text-zinc-900 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                                                    className="h-8 w-14 rounded-lg border border-zinc-200 px-0 text-center font-semibold text-sm text-zinc-900 leading-none outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
                                                 />
                                                 <span className="font-bold text-zinc-900">%</span>
                                             </div>
@@ -2431,7 +2439,7 @@ export default function TaskDetailModal(props: {
                                                         disabled={!isEditing}
                                                         onClick={() => setProgress(String(value))}
                                                         className={cn(
-                                                            "h-9 rounded-xl border text-sm font-semibold transition",
+                                                            "h-9 rounded-xl border font-semibold text-sm transition",
                                                             active
                                                                 ? "border-orange-500 bg-orange-500 text-white"
                                                                 : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
@@ -2448,11 +2456,11 @@ export default function TaskDetailModal(props: {
 
                             <div className="mt-6">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <div className="text-sm font-semibold text-zinc-600">Description</div>
+                                    <div className="font-semibold text-sm text-zinc-600">Description</div>
                                     {isEditing ? (
                                         <div
                                             className={cn(
-                                                "text-xs font-medium",
+                                                "font-medium text-xs",
                                                 descriptionLength >= TASK_DESCRIPTION_MAX_LENGTH
                                                     ? "text-rose-500"
                                                     : "text-zinc-500"
@@ -2463,7 +2471,9 @@ export default function TaskDetailModal(props: {
                                 </div>
                                 <textarea
                                     value={description}
-                                    onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
+                                    onChange={(e) =>
+                                        setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))
+                                    }
                                     placeholder="(No description)"
                                     disabled={!isEditing}
                                     maxLength={TASK_DESCRIPTION_MAX_LENGTH}
@@ -2472,12 +2482,12 @@ export default function TaskDetailModal(props: {
                             </div>
                         </div>
 
-                        <div className="min-w-0 overflow-y-auto xl:border-l xl:border-zinc-200 xl:pl-4 xl:pr-0">
+                        <div className="min-w-0 overflow-y-auto xl:border-zinc-200 xl:border-l xl:pr-0 xl:pl-4">
                             <div className="sticky top-0 z-10 bg-white pb-4">
                                 <div className="flex items-center gap-2">
                                     <MessageSquare className="h-4 w-4 text-zinc-700" />
-                                    <div className="text-xl font-extrabold text-zinc-900">Comments</div>
-                                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-600">
+                                    <div className="font-extrabold text-xl text-zinc-900">Comments</div>
+                                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-bold text-xs text-zinc-600">
                                         {loadingComments ? "…" : comments.length}
                                     </span>
                                 </div>
@@ -2486,33 +2496,31 @@ export default function TaskDetailModal(props: {
                                     <div className="mt-3 flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm">
                                         <div className="min-w-0 text-zinc-700">
                                             Đang trả lời{" "}
-                                            <span className="font-semibold">
-                                                {fullName(replyingTo.user) || "User"}
-                                            </span>
+                                            <span className="font-semibold">{fullName(replyingTo.user) || "User"}</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={cancelReply}
-                                            className="ml-3 shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100">
+                                            className="ml-3 shrink-0 rounded-lg px-2 py-1 font-semibold text-orange-700 text-xs hover:bg-orange-100">
                                             Hủy
                                         </button>
                                     </div>
                                 ) : null}
 
                                 {commentError ? (
-                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                         {commentError}
                                     </div>
                                 ) : null}
 
                                 {sendCommentError ? (
-                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                         {sendCommentError}
                                     </div>
                                 ) : null}
                             </div>
 
-                            <div className="space-y-4 pb-4 w-full">
+                            <div className="w-full space-y-4 pb-4">
                                 {loadingComments ? (
                                     <div className="text-sm text-zinc-600">(Đang tải comments…)</div>
                                 ) : comments.length === 0 ? (
@@ -2521,7 +2529,8 @@ export default function TaskDetailModal(props: {
                                     comments.map((c) => {
                                         const u = c.user;
                                         const name =
-                                            `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() || "User";
+                                            `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() ||
+                                            "User";
                                         const when = c.createdAt ? relativeTimeOf(c.createdAt) : "";
                                         const replies = (c.replies ?? []).filter((r) => !r?.isDeleted);
 
@@ -2540,7 +2549,7 @@ export default function TaskDetailModal(props: {
                                                             className="h-9 w-9 rounded-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 text-xs font-extrabold text-white">
+                                                        <div className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 font-extrabold text-white text-xs">
                                                             {initials(u)}
                                                         </div>
                                                     )}
@@ -2549,7 +2558,9 @@ export default function TaskDetailModal(props: {
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="flex items-baseline gap-3">
-                                                                    <div className="font-bold text-sm text-zinc-900">{name}</div>
+                                                                    <div className="font-bold text-sm text-zinc-900">
+                                                                        {name}
+                                                                    </div>
                                                                     <div className="text-xs text-zinc-400">{when}</div>
                                                                 </div>
 
@@ -2575,17 +2586,22 @@ export default function TaskDetailModal(props: {
                                                 </div>
 
                                                 {replies.length > 0 ? (
-                                                    <div className="mt-4 w-full space-y-4 border-l-2 border-zinc-200 pl-4">
+                                                    <div className="mt-4 w-full space-y-4 border-zinc-200 border-l-2 pl-4">
                                                         {replies.map((r) => {
                                                             const ru = r.user;
                                                             const rname =
                                                                 `${(ru?.firstName ?? "").trim()} ${(ru?.lastName ?? "").trim()}`.trim() ||
                                                                 "User";
-                                                            const rwhen = r.createdAt ? relativeTimeOf(r.createdAt) : "";
+                                                            const rwhen = r.createdAt
+                                                                ? relativeTimeOf(r.createdAt)
+                                                                : "";
 
                                                             return (
                                                                 <div
-                                                                    key={r.commentId ?? `${r.userId ?? "u"}-${r.createdAt ?? "t"}`}
+                                                                    key={
+                                                                        r.commentId ??
+                                                                        `${r.userId ?? "u"}-${r.createdAt ?? "t"}`
+                                                                    }
                                                                     className="flex gap-3">
                                                                     {safeAvatarUrl(ru?.avatarUrl) ? (
                                                                         <Image
@@ -2597,7 +2613,7 @@ export default function TaskDetailModal(props: {
                                                                             className="h-8 w-8 rounded-full object-cover"
                                                                         />
                                                                     ) : (
-                                                                        <div className="grid h-8 w-8 place-items-center rounded-full bg-indigo-500 text-[11px] font-extrabold text-white">
+                                                                        <div className="grid h-8 w-8 place-items-center rounded-full bg-indigo-500 font-extrabold text-[11px] text-white">
                                                                             {initials(ru)}
                                                                         </div>
                                                                     )}
@@ -2606,7 +2622,7 @@ export default function TaskDetailModal(props: {
                                                                         <div className="flex items-start justify-between gap-3">
                                                                             <div className="min-w-0">
                                                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                                                    <p className="text-sm font-semibold text-zinc-900">
+                                                                                    <p className="font-semibold text-sm text-zinc-900">
                                                                                         {rname}
                                                                                     </p>
                                                                                     <span className="text-xs text-zinc-400">
@@ -2618,16 +2634,25 @@ export default function TaskDetailModal(props: {
                                                                                     <RichTextWithMentions
                                                                                         text={String(r.content ?? "")}
                                                                                         membersById={membersById}
-                                                                                        authorId={String(r.userId ?? r.user?.id ?? "")}
+                                                                                        authorId={String(
+                                                                                            r.userId ?? r.user?.id ?? ""
+                                                                                        )}
                                                                                     />
                                                                                 </p>
 
                                                                                 <CommentActions
-                                                                                    onReply={() => handleReplyComment(r)}
-                                                                                    onDelete={() => openDeleteConfirm(r)}
+                                                                                    onReply={() =>
+                                                                                        handleReplyComment(r)
+                                                                                    }
+                                                                                    onDelete={() =>
+                                                                                        openDeleteConfirm(r)
+                                                                                    }
                                                                                     canShowMenu={canShowCommentMenu()}
                                                                                     canDelete={canDeleteComment(r)}
-                                                                                    deleting={deletingCommentId === r.commentId}
+                                                                                    deleting={
+                                                                                        deletingCommentId ===
+                                                                                        r.commentId
+                                                                                    }
                                                                                     size="sm"
                                                                                 />
                                                                             </div>
@@ -2657,12 +2682,12 @@ export default function TaskDetailModal(props: {
                                                 className="h-9 w-9 rounded-full object-cover"
                                             />
                                         ) : (
-                                            <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">
+                                            <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 font-bold text-sm text-white">
                                                 {buildInitials(myFullName || "D")}
                                             </div>
                                         )}
 
-                                        <div className="flex-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm">
+                                        <div className="w-full flex-1 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm">
                                             <div className="flex items-center gap-2">
                                                 <div className="min-w-0 flex-1">
                                                     <MentionTextarea
@@ -2671,7 +2696,9 @@ export default function TaskDetailModal(props: {
                                                         onChange={setCommentDraft}
                                                         members={mentionUsers}
                                                         meId={myUserId}
-                                                        placeholder={replyingTo ? "Write a reply..." : "Write a comment..."}
+                                                        placeholder={
+                                                            replyingTo ? "Write a reply..." : "Write a comment..."
+                                                        }
                                                         maxChars={500}
                                                         disabled={!canComment || sendingComment}
                                                         onSubmit={() => {
@@ -2705,10 +2732,10 @@ export default function TaskDetailModal(props: {
                 </div>
 
                 <AlertDialog open={deleteOpen} onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
-                    <AlertDialogContent className="z-[11000] sm:max-w-2xl rounded-2xl">
+                    <AlertDialogContent className="z-[11000] rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-lg">Xác nhận xóa</AlertDialogTitle>
-                            <AlertDialogDescription className="text-sm leading-6 text-[#111827]">
+                            <AlertDialogDescription className="text-[#111827] text-sm leading-6">
                                 Bạn có chắc chắn muốn xóa bình luận này không? Hành động này không thể hoàn tác.
                             </AlertDialogDescription>
                         </AlertDialogHeader>

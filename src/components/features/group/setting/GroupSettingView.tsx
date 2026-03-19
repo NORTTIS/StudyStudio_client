@@ -822,7 +822,8 @@ export function GroupSettingView() {
                                                 const start = textarea.selectionStart;
                                                 const end = textarea.selectionEnd;
 
-                                                const newValue = description.slice(0, start) + trimmedText + description.slice(end);
+                                                const newValue =
+                                                    description.slice(0, start) + trimmedText + description.slice(end);
                                                 setDescription(newValue);
                                                 if (generalError) setGeneralError("");
                                             }

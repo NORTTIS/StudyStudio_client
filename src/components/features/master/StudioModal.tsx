@@ -14,29 +14,47 @@ type StudioFormData = {
     name: string;
     description: string;
     type: "personal" | "group";
+    startDate: string;
+    endDate: string;
 };
 
-const studioSchema = z.object({
-    name: z
-        .string()
-        .trim()
-        .min(1, "Tên studio là bắt buộc")
-        .max(STUDIO_NAME_MAX_LENGTH, `Tên studio tối đa ${STUDIO_NAME_MAX_LENGTH} ký tự`),
-    description: z
-        .string()
-        .max(STUDIO_DESCRIPTION_MAX_LENGTH, `Mô tả không được vượt quá ${STUDIO_DESCRIPTION_MAX_LENGTH} ký tự`)
-});
+const studioSchema = z
+    .object({
+        name: z
+            .string()
+            .trim()
+            .min(1, "Tên studio là bắt buộc")
+            .max(STUDIO_NAME_MAX_LENGTH, `Tên studio tối đa ${STUDIO_NAME_MAX_LENGTH} ký tự`),
+        description: z
+            .string()
+            .max(STUDIO_DESCRIPTION_MAX_LENGTH, `Mô tả không được vượt quá ${STUDIO_DESCRIPTION_MAX_LENGTH} ký tự`),
+        startDate: z.string(),
+        endDate: z.string()
+    })
+    .refine(
+        (data) => {
+            if (!data.startDate || !data.endDate) return true;
+            return new Date(data.startDate) <= new Date(data.endDate);
+        },
+        { message: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu", path: ["endDate"] }
+    );
 
-const applyFieldData = <T extends { name: string; description: string }>(
+const applyFieldData = <T extends { name: string; description: string; startDate: string; endDate: string }>(
     data: T,
-    field: "name" | "description",
+    field: "name" | "description" | "startDate" | "endDate",
     value: string
 ) => ({ ...data, [field]: value }) as T;
 
 interface StudioModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: { name: string; description: string; type: "personal" | "group" }) => void;
+    onSubmit: (data: {
+        name: string;
+        description: string;
+        type: "personal" | "group";
+        startDate?: string | null;
+        endDate?: string | null;
+    }) => void;
     studio?: StudioUI | null;
     mode: "create" | "edit";
     existingStudios?: StudioUI[];
@@ -47,20 +65,26 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
     const [formData, setFormData] = useState<StudioFormData>({
         name: "",
         description: "",
-        type: "group"
+        type: "group",
+        startDate: "",
+        endDate: ""
     });
     const [errors, setErrors] = useState({
         name: "",
-        description: ""
+        description: "",
+        startDate: "",
+        endDate: ""
     });
     const [touched, setTouched] = useState({
         name: false,
-        description: false
+        description: false,
+        startDate: false,
+        endDate: false
     });
 
-    const getSchemaErrors = (data: { name: string; description: string }) => {
+    const getSchemaErrors = (data: StudioFormData) => {
         const result = studioSchema.safeParse(data);
-        const out = { name: "", description: "" };
+        const out = { name: "", description: "", startDate: "", endDate: "" };
         if (result.success) {
             return out;
         }
@@ -71,6 +95,12 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
             }
             if (path === "description" && !out.description) {
                 out.description = issue.message;
+            }
+            if (path === "startDate" && !out.startDate) {
+                out.startDate = issue.message;
+            }
+            if (path === "endDate" && !out.endDate) {
+                out.endDate = issue.message;
             }
         }
         return out;
@@ -90,38 +120,54 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                 setFormData({
                     name: studio.name,
                     description: studio.description,
-                    type: studio.type
+                    type: studio.type,
+                    startDate: studio.startDate ?? "",
+                    endDate: studio.endDate ?? ""
                 });
             } else {
                 setFormData({
                     name: "",
                     description: "",
-                    type: "group"
+                    type: "group",
+                    startDate: "",
+                    endDate: ""
                 });
             }
-            setErrors({ name: "", description: "" });
-            setTouched({ name: false, description: false });
+            setErrors({ name: "", description: "", startDate: "", endDate: "" });
+            setTouched({ name: false, description: false, startDate: false, endDate: false });
         }
     }, [isOpen, studio, mode]);
 
-    const validateField = (field: "name" | "description", value: string, data: StudioFormData) => {
+    const validateField = (
+        field: "name" | "description" | "startDate" | "endDate",
+        value: string,
+        data: StudioFormData
+    ) => {
         const schemaErrors = getSchemaErrors(applyFieldData(data, field, value));
         if (field === "name") {
             return schemaErrors.name || getDuplicateNameError(value);
         }
-        return schemaErrors.description;
+        if (field === "description") return schemaErrors.description;
+        if (field === "startDate") return schemaErrors.startDate;
+        if (field === "endDate") return schemaErrors.endDate;
+        return "";
     };
 
-    const handleBlur = (field: "name" | "description") => {
+    const handleBlur = (field: "name" | "description" | "startDate" | "endDate") => {
         setTouched((prev) => ({ ...prev, [field]: true }));
         const nextData = applyFieldData(formData, field, formData[field]);
         const error = validateField(field, formData[field], nextData);
         setErrors((prev) => ({ ...prev, [field]: error }));
     };
 
-    const handleChange = (field: "name" | "description", value: string) => {
-        const maxLength = field === "name" ? STUDIO_NAME_MAX_LENGTH : STUDIO_DESCRIPTION_MAX_LENGTH;
-        const boundedValue = value.slice(0, maxLength);
+    const handleChange = (field: "name" | "description" | "startDate" | "endDate", value: string) => {
+        const maxLength =
+            field === "name"
+                ? STUDIO_NAME_MAX_LENGTH
+                : field === "description"
+                  ? STUDIO_DESCRIPTION_MAX_LENGTH
+                  : undefined;
+        const boundedValue = maxLength ? value.slice(0, maxLength) : value;
         const nextData = applyFieldData(formData, field, boundedValue);
         setFormData(nextData);
         if (touched[field]) {
@@ -137,26 +183,36 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         const schemaErrors = getSchemaErrors(currentData);
         const nameError = schemaErrors.name || getDuplicateNameError(formData.name);
         const descriptionError = schemaErrors.description;
+        const startDateError = schemaErrors.startDate;
+        const endDateError = schemaErrors.endDate;
 
         setErrors({
             name: nameError,
-            description: descriptionError
+            description: descriptionError,
+            startDate: startDateError,
+            endDate: endDateError
         });
 
         setTouched({
             name: true,
-            description: true
+            description: true,
+            startDate: true,
+            endDate: true
         });
 
-        if (!(nameError || descriptionError)) {
-            onSubmit(formData);
+        if (!(nameError || descriptionError || startDateError || endDateError)) {
+            onSubmit({
+                ...formData,
+                startDate: formData.startDate || null,
+                endDate: formData.endDate || null
+            });
         }
     };
 
     const handleClose = () => {
-        setFormData({ name: "", description: "", type: "group" });
-        setErrors({ name: "", description: "" });
-        setTouched({ name: false, description: false });
+        setFormData({ name: "", description: "", type: "group", startDate: "", endDate: "" });
+        setErrors({ name: "", description: "", startDate: "", endDate: "" });
+        setTouched({ name: false, description: false, startDate: false, endDate: false });
         onClose();
     };
 
@@ -217,6 +273,50 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                         <p className="mt-1 text-right text-gray-500 text-xs">
                             {formData.description.length}/{STUDIO_DESCRIPTION_MAX_LENGTH}
                         </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="studio-startDate" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                Ngày bắt đầu
+                            </label>
+                            <Input
+                                type="date"
+                                id="studio-startDate"
+                                value={formData.startDate}
+                                onChange={(e) => handleChange("startDate", e.target.value)}
+                                onBlur={() => handleBlur("startDate")}
+                                className={errors.startDate && touched.startDate ? "border-red-500" : ""}
+                            />
+                            <p
+                                className={`mt-1 text-xs ${
+                                    errors.startDate && touched.startDate ? "text-red-500" : "text-transparent"
+                                }`}
+                                aria-live="assertive">
+                                {errors.startDate && touched.startDate ? errors.startDate : "\u00A0"}
+                            </p>
+                        </div>
+
+                        <div>
+                            <label htmlFor="studio-endDate" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                Ngày kết thúc
+                            </label>
+                            <Input
+                                type="date"
+                                id="studio-endDate"
+                                value={formData.endDate}
+                                onChange={(e) => handleChange("endDate", e.target.value)}
+                                onBlur={() => handleBlur("endDate")}
+                                className={errors.endDate && touched.endDate ? "border-red-500" : ""}
+                            />
+                            <p
+                                className={`mt-1 text-xs ${
+                                    errors.endDate && touched.endDate ? "text-red-500" : "text-transparent"
+                                }`}
+                                aria-live="assertive">
+                                {errors.endDate && touched.endDate ? errors.endDate : "\u00A0"}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">

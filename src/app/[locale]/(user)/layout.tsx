@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/Header";
+import { DashboardSidebar } from "@/components/layout/sidebar";
 
 export default function UserLayout({ children }: { children: ReactNode }) {
     return (
@@ -14,7 +14,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
 
                 <div className="flex min-w-0 flex-1 flex-col">
                     <div className="sticky top-0 z-50 bg-white">
-                        <div className="h-16 border-b border-[#E5E5E5]">
+                        <div className="h-16 border-[#E5E5E5] border-b">
                             <Header />
                         </div>
                     </div>

@@ -209,7 +209,6 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     return (
         <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
             <div className="flex h-16 w-full items-center justify-end gap-4 px-4 sm:px-6 lg:px-8">
-
                 {/* Admin title */}
                 {isAdmin && (
                     <div className="flex-1">

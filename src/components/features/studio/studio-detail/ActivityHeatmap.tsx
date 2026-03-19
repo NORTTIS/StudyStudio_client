@@ -1,169 +1,311 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { type GroupActivity } from "./types";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { components } from "@/api/types";
+import type { GroupHeatmapComparisonData } from "./types";
+
+type GroupActivityItem = components["schemas"]["StudioGroupActivityItem"];
 
 interface ActivityHeatmapProps {
-    data: GroupActivity[];
-    groupName?: string;
+    data: GroupHeatmapComparisonData[];
+    loading?: boolean;
+    onDateRangeChange?: (start: Date, end: Date) => void;
 }
 
-const DAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-const MONTHS = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+// 5-level green color scale: empty → low → mid-low → mid → high
+function getActivityColor(activityCount: number | undefined): string {
+    const val = activityCount ?? 0;
+    if (val === 0) return "bg-[#f0fdf4]";
+    if (val <= 20) return "bg-[#bbf7d0]";
+    if (val <= 40) return "bg-[#86efac]";
+    if (val <= 60) return "bg-[#22c55e]";
+    if (val <= 80) return "bg-[#15803d]";
+    return "bg-[#14532d]";
+}
 
-export function ActivityHeatmap({ data, groupName }: ActivityHeatmapProps) {
-    const [selectedGroup, setSelectedGroup] = useState<string>(groupName || "all");
+function formatDateShort(date: Date): string {
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+}
 
-    const getActivityColor = (activity: number) => {
-        if (activity === 0) return "bg-gray-100";
-        if (activity <= 20) return "bg-green-100";
-        if (activity <= 40) return "bg-green-300";
-        if (activity <= 60) return "bg-green-500";
-        if (activity <= 80) return "bg-green-600";
-        return "bg-green-700";
-    };
+export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: ActivityHeatmapProps) {
+    const today = useMemo(() => new Date(), []);
+    const [offset, setOffset] = useState(0);
+    const [tooltip, setTooltip] = useState<{
+        x: number;
+        y: number;
+        groupName: string;
+        activityCount: number;
+        tasksCompleted: number;
+        date: string;
+    } | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Group data by weeks for display
-    const weeks = useMemo(() => {
-        const result: GroupActivity[][] = [];
-        let currentWeek: GroupActivity[] = [];
+    const DAY_COUNT = 30;
 
-        data.forEach((day, index) => {
-            currentWeek.push(day);
-            if (day.dayOfWeek === 6 || index === data.length - 1) {
-                // Pad the first week if it doesn't start on Sunday
-                if (result.length === 0 && currentWeek.length < 7) {
-                    const padding = 7 - currentWeek.length;
-                    for (let i = 0; i < padding; i++) {
-                        currentWeek.unshift({ date: "", dayOfWeek: -1, activity: 0 });
-                    }
+    const windowData = useMemo(() => {
+        return data.slice(offset, offset + DAY_COUNT);
+    }, [data, offset]);
+
+    const windowDates = useMemo((): Date[] => {
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+        const start = new Date(todayDate);
+        start.setDate(start.getDate() - (DAY_COUNT - 1) - offset * DAY_COUNT);
+        const dates: Date[] = [];
+        for (let i = 0; i < DAY_COUNT; i++) {
+            const d = new Date(start);
+            d.setDate(d.getDate() + i);
+            dates.push(d);
+        }
+        return dates;
+    }, [offset]);
+
+    // Collect all unique groups across every day in the data (dedup by groupId)
+    const groups = useMemo((): GroupActivityItem[] => {
+        if (!data.length) return [];
+        const seen = new Set<string>();
+        const result: GroupActivityItem[] = [];
+        for (const day of data) {
+            for (const g of day.groups ?? []) {
+                if (g.groupId && !seen.has(g.groupId)) {
+                    seen.add(g.groupId);
+                    result.push(g);
                 }
-                result.push(currentWeek);
-                currentWeek = [];
             }
-        });
-
+        }
         return result;
     }, [data]);
 
-    const getMonthLabels = useMemo(() => {
-        const labels: { month: string; week: number }[] = [];
-        let currentMonth = -1;
+    function shiftWindow(direction: 1 | -1) {
+        const newOffset = offset + direction;
+        if (newOffset < 0) return;
+        const endDate = new Date(today);
+        endDate.setDate(endDate.getDate() - newOffset * DAY_COUNT);
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - (DAY_COUNT - 1));
+        setOffset(newOffset);
+        onDateRangeChange?.(startDate, endDate);
+    }
 
-        weeks.forEach((week, weekIndex) => {
-            const firstValidDay = week.find((d) => d.dayOfWeek >= 0);
-            if (firstValidDay) {
-                const month = new Date(firstValidDay.date).getMonth();
-                if (month !== currentMonth) {
-                    labels.push({ month: MONTHS[month], week: weekIndex });
-                    currentMonth = month;
-                }
-            }
-        });
+    function formatDateRange(dates: Date[]): string {
+        if (!dates.length) return "";
+        const first = dates[0];
+        const last = dates[dates.length - 1];
+        return `${formatDateShort(first)} - ${formatDateShort(last)}/${last.getFullYear()}`;
+    }
 
-        return labels;
-    }, [weeks]);
+    const showTooltip = useCallback(
+        (
+            e: React.MouseEvent<HTMLDivElement>,
+            groupName: string,
+            activityCount: number,
+            tasksCompleted: number,
+            date: Date
+        ) => {
+            setTooltip({
+                x: e.clientX,
+                y: e.clientY,
+                groupName,
+                activityCount,
+                tasksCompleted,
+                date: date.toLocaleDateString("vi-VN")
+            });
+        },
+        []
+    );
 
-    // Calculate summary stats
-    const stats = useMemo(() => {
-        const totalActivity = data.reduce((sum, d) => sum + d.activity, 0);
-        const avgActivity = Math.round(totalActivity / data.length);
-        const activeDays = data.filter((d) => d.activity > 0).length;
-        const maxActivity = Math.max(...data.map((d) => d.activity));
-
-        return { avgActivity, activeDays, maxActivity };
-    }, [data]);
+    const hideTooltip = useCallback(() => setTooltip(null), []);
 
     return (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div ref={containerRef} className="relative rounded-xl border border-gray-200 bg-white p-5">
+            {/* Header */}
             <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-semibold text-[#261E33]">Hoạt động nhóm</h3>
-                <div className="flex items-center gap-2 text-xs">
-                    <span className="text-gray-500">Ít</span>
-                    <div className="flex gap-0.5">
-                        <div className="h-3 w-3 rounded-sm bg-gray-100" />
-                        <div className="h-3 w-3 rounded-sm bg-green-100" />
-                        <div className="h-3 w-3 rounded-sm bg-green-300" />
-                        <div className="h-3 w-3 rounded-sm bg-green-500" />
-                        <div className="h-3 w-3 rounded-sm bg-green-700" />
+
+                {/* Date range picker — hidden while loading */}
+                {!loading && (
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5">
+                        <button
+                            onClick={() => shiftWindow(-1)}
+                            disabled={offset === 0}
+                            className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-200 hover:text-[#261E33] disabled:cursor-not-allowed disabled:opacity-30"
+                            aria-label="Previous period">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                <path
+                                    d="M7.5 9.5L4 6L7.5 2.5"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </button>
+                        <span className="min-w-[110px] text-center font-medium text-[#261E33] text-sm">
+                            {formatDateRange(windowDates)}
+                        </span>
+                        <button
+                            onClick={() => shiftWindow(1)}
+                            className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-200 hover:text-[#261E33]"
+                            aria-label="Next period">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                <path
+                                    d="M4.5 9.5L8 6L4.5 2.5"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </button>
                     </div>
-                    <span className="text-gray-500">Nhiều</span>
-                </div>
+                )}
             </div>
 
-            {/* Summary Stats */}
-            <div className="mb-4 grid grid-cols-3 gap-4">
-                <div className="rounded-lg bg-gray-50 p-3 text-center">
-                    <p className="text-lg font-semibold text-[#261E33]">{stats.avgActivity}%</p>
-                    <p className="text-xs text-gray-500">Trung bình</p>
+            {/* Loading spinner */}
+            {loading && (
+                <div className="flex h-48 items-center justify-center">
+                    <div className="h-6 w-6 animate-spin rounded-full border-4 border-gray-200 border-t-[#FF5F3D]" />
                 </div>
-                <div className="rounded-lg bg-gray-50 p-3 text-center">
-                    <p className="text-lg font-semibold text-[#261E33]">{stats.activeDays}/28</p>
-                    <p className="text-xs text-gray-500">Ngày hoạt động</p>
-                </div>
-                <div className="rounded-lg bg-gray-50 p-3 text-center">
-                    <p className="text-lg font-semibold text-[#261E33]">{stats.maxActivity}%</p>
-                    <p className="text-xs text-gray-500">Cao nhất</p>
-                </div>
-            </div>
+            )}
 
-            {/* Heatmap Grid */}
-            <div className="overflow-x-auto">
-                <div className="min-w-[400px]">
-                    {/* Month labels */}
-                    <div className="mb-1 flex pl-8">
-                        {getMonthLabels.map((label, i) => (
-                            <div
-                                key={i}
-                                className="text-xs text-gray-400"
-                                style={{
-                                    marginLeft:
-                                        i === 0 ? 0 : `${(label.week - (getMonthLabels[i - 1]?.week || 0)) * 14 - 24}px`
-                                }}>
-                                {label.month}
-                            </div>
-                        ))}
-                    </div>
+            {/* Empty state */}
+            {!loading && data.length === 0 && (
+                <div className="flex h-48 flex-col items-center justify-center gap-2 text-gray-400 text-sm">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                        <rect x="4" y="8" width="6" height="6" rx="1" fill="currentColor" opacity="0.2" />
+                        <rect x="12" y="8" width="6" height="6" rx="1" fill="currentColor" opacity="0.3" />
+                        <rect x="20" y="8" width="6" height="6" rx="1" fill="currentColor" opacity="0.5" />
+                        <rect x="28" y="8" width="6" height="6" rx="1" fill="currentColor" opacity="0.2" />
+                        <rect x="4" y="16" width="6" height="6" rx="1" fill="currentColor" opacity="0.3" />
+                        <rect x="12" y="16" width="6" height="6" rx="1" fill="currentColor" opacity="0.1" />
+                        <rect x="20" y="16" width="6" height="6" rx="1" fill="currentColor" opacity="0.4" />
+                        <rect x="28" y="16" width="6" height="6" rx="1" fill="currentColor" opacity="0.2" />
+                        <rect x="4" y="24" width="6" height="6" rx="1" fill="currentColor" opacity="0.1" />
+                        <rect x="12" y="24" width="6" height="6" rx="1" fill="currentColor" opacity="0.3" />
+                        <rect x="20" y="24" width="6" height="6" rx="1" fill="currentColor" opacity="0.2" />
+                        <rect x="28" y="24" width="6" height="6" rx="1" fill="currentColor" opacity="0.4" />
+                    </svg>
+                    <span>Không có dữ liệu hoạt động nhóm</span>
+                </div>
+            )}
 
-                    {/* Day labels and grid */}
-                    <div className="flex">
-                        {/* Day labels */}
-                        <div className="flex flex-col gap-0.5 pr-1">
-                            {DAYS.map((day, i) => (
+            {/* Heatmap grid */}
+            {!loading && data.length > 0 && (
+                <>
+                    <div className="flex gap-2 overflow-hidden">
+                        {/* Fixed group label column */}
+                        <div className="flex w-16 shrink-0 flex-col">
+                            <div className="h-4" />
+                            <div className="h-px" />
+                            {groups.map((group) => (
                                 <div
-                                    key={day}
-                                    className="flex h-3 items-center justify-end pr-1 text-xs text-gray-400"
-                                    style={{ visibility: i % 2 === 1 ? "visible" : "hidden" }}>
-                                    {day}
+                                    key={group.groupId ?? ""}
+                                    className="flex h-4 items-center truncate pr-1 text-right font-medium text-[#261E33] text-xs">
+                                    {group.groupName}
                                 </div>
                             ))}
                         </div>
 
-                        {/* Heatmap cells */}
-                        <div className="flex gap-0.5">
-                            {weeks.map((week, weekIndex) => (
-                                <div key={weekIndex} className="flex flex-col gap-0.5">
-                                    {week.map((day, dayIndex) => (
-                                        <div
-                                            key={`${weekIndex}-${dayIndex}`}
-                                            className={`h-3 w-3 rounded-sm transition-colors ${
-                                                day.activity > 0 ? getActivityColor(day.activity) : "bg-transparent"
-                                            }`}
-                                            title={day.date ? `${day.date}: ${day.activity}% hoạt động` : ""}
-                                        />
-                                    ))}
+                        {/* Grid cells */}
+                        <div className="grid flex-1 grid-cols-[repeat(30,1fr)] gap-px">
+                            {/* Date header */}
+                            {windowDates.map((date, i) => (
+                                <div
+                                    key={i}
+                                    className="flex h-4 items-center justify-center text-[9px] text-gray-400 leading-none">
+                                    {date.getDate()}
+                                </div>
+                            ))}
+
+                            {/* Divider spans full width */}
+                            <div className="col-span-30 h-px bg-gray-100" />
+
+                            {/* Group rows */}
+                            {groups.map((group) => (
+                                <div key={group.groupId ?? ""} className="contents">
+                                    {windowDates.map((date, i) => {
+                                        const dayEntry = windowData[i];
+                                        const groupItem = dayEntry?.groups?.find((g) => g.groupId === group.groupId);
+                                        const activityCount = groupItem?.activityCount ?? 0;
+                                        const tasksCompleted = groupItem?.tasksCompleted ?? 0;
+
+                                        return (
+                                            <div
+                                                key={i}
+                                                onMouseEnter={(e) =>
+                                                    showTooltip(
+                                                        e,
+                                                        group.groupName ?? "",
+                                                        activityCount,
+                                                        tasksCompleted,
+                                                        date
+                                                    )
+                                                }
+                                                onMouseMove={(e) => {
+                                                    setTooltip((prev) =>
+                                                        prev
+                                                            ? {
+                                                                ...prev,
+                                                                x: e.clientX,
+                                                                y: e.clientY
+                                                            }
+                                                            : prev
+                                                    );
+                                                }}
+                                                onMouseLeave={hideTooltip}
+                                                className={`h-4 cursor-pointer rounded-sm transition-opacity hover:opacity-80 ${getActivityColor(activityCount)}`}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             ))}
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Legend */}
-            <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
-                <div className="text-xs text-gray-500">Dữ liệu 28 ngày gần nhất</div>
-                <div className="text-xs text-gray-400">Cập nhật: {new Date().toLocaleDateString("vi-VN")}</div>
-            </div>
+                    {/* Tooltip */}
+                    {tooltip && (
+                        <div
+                            className="pointer-events-none fixed z-[9999] min-w-[160px] rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-lg"
+                            style={{
+                                left: tooltip.x,
+                                top: tooltip.y,
+                                transform: "translate(-100%, -100%)"
+                            }}>
+                            <div className="mb-1.5 font-semibold text-[#261E33] text-sm">{tooltip.groupName}</div>
+                            <div className="flex items-center justify-between text-gray-500 text-xs">
+                                <span>Hoạt động</span>
+                                <span className="font-medium text-[#261E33]">{tooltip.activityCount}</span>
+                            </div>
+                            <div className="mt-1 flex items-center justify-between text-gray-500 text-xs">
+                                <span>Hoàn thành</span>
+                                <span className="font-medium text-[#261E33]">
+                                    {tooltip.tasksCompleted} task{tooltip.tasksCompleted !== 1 ? "s" : ""}
+                                </span>
+                            </div>
+                            <div className="mt-1.5 border-gray-100 border-t pt-1.5 text-gray-400 text-xs">
+                                {tooltip.date}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Legend + footer */}
+                    <div className="mt-4 flex items-center justify-between border-gray-100 border-t pt-4">
+                        <div className="flex items-center gap-2 text-gray-500 text-xs">
+                            <span>Ít</span>
+                            <div className="flex gap-0.5">
+                                <div className="h-3 w-3 rounded-sm bg-[#f0fdf4]" />
+                                <div className="h-3 w-3 rounded-sm bg-[#bbf7d0]" />
+                                <div className="h-3 w-3 rounded-sm bg-[#86efac]" />
+                                <div className="h-3 w-3 rounded-sm bg-[#22c55e]" />
+                                <div className="h-3 w-3 rounded-sm bg-[#15803d]" />
+                                <div className="h-3 w-3 rounded-sm bg-[#14532d]" />
+                            </div>
+                            <span>Nhiều</span>
+                        </div>
+                        <div className="text-gray-400 text-xs">Cập nhật: {today.toLocaleDateString("vi-VN")}</div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

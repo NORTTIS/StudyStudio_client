@@ -351,7 +351,6 @@ export function QuickAssignModal({
                                 Những thành viên này sẽ không được phân phối
                             </p>
 
-
                             {/* Member multi-select */}
                             {excludeableMembers.filter((m) => m.userId).length > 0 ? (
                                 <div className="max-h-[180px] space-y-2 overflow-y-auto rounded-xl border border-gray-200 p-3">

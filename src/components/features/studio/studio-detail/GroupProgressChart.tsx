@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Clock3, Layers } from "lucide-react";
-import { type GroupProgress, calculateScheduleStatus } from "./types";
+import { calculateScheduleStatus, type GroupProgress } from "./types";
 
 interface GroupProgressChartProps {
     groups: GroupProgress[];
@@ -63,7 +63,7 @@ export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: G
                                     <Layers className="h-4 w-4 text-gray-400" />
                                     <span className="font-medium text-[#261E33]">{group.groupName}</span>
                                 </div>
-                                <span className={`text-xs font-medium ${getStatusTextColor(scheduleStatus.status)}`}>
+                                <span className={`font-medium text-xs ${getStatusTextColor(scheduleStatus.status)}`}>
                                     {scheduleStatus.message}
                                 </span>
                             </div>
@@ -105,7 +105,7 @@ export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: G
                             </div>
 
                             {/* Task info */}
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-4 text-gray-500 text-xs">
                                 <div className="flex items-center gap-1">
                                     <Layers className="h-3.5 w-3.5" />
                                     <span>

@@ -259,7 +259,13 @@ export default function MasterPageClient({
         loadData();
     }, [loadData]);
 
-    const handleCreateStudio = async (data: { name: string; description: string; type: string }) => {
+    const handleCreateStudio = async (data: {
+        name: string;
+        description: string;
+        type: string;
+        startDate?: string | null;
+        endDate?: string | null;
+    }) => {
         if (totalStudios >= studioLimit) {
             setIsLimitModalOpen(true);
             return;
@@ -269,7 +275,9 @@ export default function MasterPageClient({
             const studioData = {
                 name: data.name.trim(),
                 description: data.description.trim(),
-                type: data.type as "personal" | "group"
+                type: data.type as "personal" | "group",
+                startDate: data.startDate ?? null,
+                endDate: data.endDate ?? null
             };
 
             const result = await createStudio(studioData, locale);
@@ -290,7 +298,13 @@ export default function MasterPageClient({
         }
     };
 
-    const handleEditStudio = async (data: { name: string; description: string; type: string }) => {
+    const handleEditStudio = async (data: {
+        name: string;
+        description: string;
+        type: string;
+        startDate?: string | null;
+        endDate?: string | null;
+    }) => {
         if (!selectedStudio) return;
 
         try {
@@ -299,7 +313,9 @@ export default function MasterPageClient({
                 {
                     name: data.name,
                     description: data.description,
-                    type: data.type as "personal" | "group"
+                    type: data.type as "personal" | "group",
+                    startDate: data.startDate ?? null,
+                    endDate: data.endDate ?? null
                 },
                 locale
             );

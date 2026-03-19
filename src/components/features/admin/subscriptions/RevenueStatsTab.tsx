@@ -92,28 +92,31 @@ export function RevenueStatsTab() {
                     <button
                         type="button"
                         onClick={() => setTimeRange("week")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "week"
-                            ? "bg-[#FF5F3D] text-white"
-                            : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                            }`}>
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
+                            timeRange === "week"
+                                ? "bg-[#FF5F3D] text-white"
+                                : "bg-white text-[#6F6B99] hover:bg-gray-50"
+                        }`}>
                         This Week
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("month")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "month"
-                            ? "bg-[#FF5F3D] text-white"
-                            : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                            }`}>
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
+                            timeRange === "month"
+                                ? "bg-[#FF5F3D] text-white"
+                                : "bg-white text-[#6F6B99] hover:bg-gray-50"
+                        }`}>
                         This Month
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("year")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "year"
-                            ? "bg-[#FF5F3D] text-white"
-                            : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                            }`}>
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
+                            timeRange === "year"
+                                ? "bg-[#FF5F3D] text-white"
+                                : "bg-white text-[#6F6B99] hover:bg-gray-50"
+                        }`}>
                         This Year
                     </button>
                 </div>

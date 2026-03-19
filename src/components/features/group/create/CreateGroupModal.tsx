@@ -58,18 +58,9 @@ const isShortcutKey = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaEle
     e.ctrlKey || e.metaKey || e.altKey;
 
 const isAllowedControlKey = (key: string) =>
-    [
-        "Backspace",
-        "Delete",
-        "ArrowLeft",
-        "ArrowRight",
-        "ArrowUp",
-        "ArrowDown",
-        "Tab",
-        "Home",
-        "End",
-        "Escape"
-    ].includes(key);
+    ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "Home", "End", "Escape"].includes(
+        key
+    );
 
 export function CreateGroupModal({
     open,
@@ -109,10 +100,7 @@ export function CreateGroupModal({
     const [downloadingTemplate, setDownloadingTemplate] = useState(false);
     const [batchUploadOpen, setBatchUploadOpen] = useState(false);
 
-    const limitReached = useMemo(
-        () => currentGroupCount >= groupLimit,
-        [currentGroupCount, groupLimit]
-    );
+    const limitReached = useMemo(() => currentGroupCount >= groupLimit, [currentGroupCount, groupLimit]);
 
     const remaining = useMemo(() => {
         const r = groupLimit - groupCreated;
@@ -177,7 +165,18 @@ export function CreateGroupModal({
         }
 
         return true;
-    }, [limitReached, createMode, variant, groupName, groupPrefix, groupCount, studioId, needStudio, hasOwnerStudio, remaining]);
+    }, [
+        limitReached,
+        createMode,
+        variant,
+        groupName,
+        groupPrefix,
+        groupCount,
+        studioId,
+        needStudio,
+        hasOwnerStudio,
+        remaining
+    ]);
 
     useEffect(() => {
         if (!open) return;
@@ -515,7 +514,8 @@ export function CreateGroupModal({
                                                     if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
 
                                                     const input = e.currentTarget;
-                                                    const hasSelection = (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
+                                                    const hasSelection =
+                                                        (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
 
                                                     if (!hasSelection && groupName.length >= GROUP_NAME_MAX_LENGTH) {
                                                         e.preventDefault();
@@ -553,9 +553,13 @@ export function CreateGroupModal({
                                                         if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
 
                                                         const input = e.currentTarget;
-                                                        const hasSelection = (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
+                                                        const hasSelection =
+                                                            (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
 
-                                                        if (!hasSelection && groupPrefix.length >= GROUP_NAME_MAX_LENGTH) {
+                                                        if (
+                                                            !hasSelection &&
+                                                            groupPrefix.length >= GROUP_NAME_MAX_LENGTH
+                                                        ) {
                                                             e.preventDefault();
                                                         }
                                                     }}
@@ -565,7 +569,9 @@ export function CreateGroupModal({
                                                         const start = input.selectionStart ?? 0;
                                                         const end = input.selectionEnd ?? 0;
                                                         const nextValue =
-                                                            groupPrefix.slice(0, start) + pastedText + groupPrefix.slice(end);
+                                                            groupPrefix.slice(0, start) +
+                                                            pastedText +
+                                                            groupPrefix.slice(end);
 
                                                         if (nextValue.length > GROUP_NAME_MAX_LENGTH) {
                                                             e.preventDefault();
@@ -623,13 +629,19 @@ export function CreateGroupModal({
 
                                                 if (e.key === "Enter") {
                                                     const lineBreakCount = countLineBreaks(description);
-                                                    if (!hasSelection && lineBreakCount >= GROUP_DESCRIPTION_MAX_BREAKS) {
+                                                    if (
+                                                        !hasSelection &&
+                                                        lineBreakCount >= GROUP_DESCRIPTION_MAX_BREAKS
+                                                    ) {
                                                         e.preventDefault();
                                                     }
                                                     return;
                                                 }
 
-                                                if (!hasSelection && description.length >= GROUP_DESCRIPTION_MAX_LENGTH) {
+                                                if (
+                                                    !hasSelection &&
+                                                    description.length >= GROUP_DESCRIPTION_MAX_LENGTH
+                                                ) {
                                                     e.preventDefault();
                                                 }
                                             }}
@@ -663,7 +675,7 @@ export function CreateGroupModal({
 
                                 {/* Batch upload section - studio variant only, batch mode only */}
                                 {variant === "studio" && createMode === "batch" && (
-                                    <div className="rounded-2xl border border-dashed border-[#E6E6E6] bg-[#FAFAFF] p-5">
+                                    <div className="rounded-2xl border border-[#E6E6E6] border-dashed bg-[#FAFAFF] p-5">
                                         <div className="flex items-center justify-between gap-4">
                                             <div>
                                                 <div className="font-semibold text-[#2A2438] text-sm">
@@ -679,7 +691,7 @@ export function CreateGroupModal({
                                                     size="sm"
                                                     onClick={handleDownloadTemplate}
                                                     isLoading={downloadingTemplate}
-                                                    className="h-9 gap-1.5 rounded-xl border-[#E6E6E6] px-3 text-xs font-medium text-[#2A2438] hover:bg-gray-50">
+                                                    className="h-9 gap-1.5 rounded-xl border-[#E6E6E6] px-3 font-medium text-[#2A2438] text-xs hover:bg-gray-50">
                                                     <Download className="h-4 w-4" />
                                                     Tải mẫu
                                                 </Button>
@@ -687,7 +699,7 @@ export function CreateGroupModal({
                                                     variant="secondary"
                                                     size="sm"
                                                     onClick={() => setBatchUploadOpen(true)}
-                                                    className="h-9 gap-1.5 rounded-xl border-2 border-[#FF5722] bg-white px-3 text-xs font-semibold text-[#FF5722] hover:bg-[#FFF3E0]">
+                                                    className="h-9 gap-1.5 rounded-xl border-2 border-[#FF5722] bg-white px-3 font-semibold text-[#FF5722] text-xs hover:bg-[#FFF3E0]">
                                                     <Upload className="h-4 w-4" />
                                                     Tải lên
                                                 </Button>

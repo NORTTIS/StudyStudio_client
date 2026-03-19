@@ -205,10 +205,11 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${dragOver
-                                        ? "border-orange-400 bg-orange-50"
-                                        : "border-[#E6E6E6] bg-[#FAFAFF] hover:border-[#CFCFCF]"
-                                        }`}>
+                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${
+                                        dragOver
+                                            ? "border-orange-400 bg-orange-50"
+                                            : "border-[#E6E6E6] bg-[#FAFAFF] hover:border-[#CFCFCF]"
+                                    }`}>
                                     <input
                                         ref={fileInputRef}
                                         type="file"

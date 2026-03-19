@@ -387,10 +387,11 @@ export function AnnouncementsPage() {
                                                 whileHover={{ y: -1 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 transition={{ duration: 0.15 }}
-                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${active
+                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${
+                                                    active
                                                         ? "text-white shadow-md shadow-orange-200"
                                                         : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
-                                                    }`}>
+                                                }`}>
                                                 {active ? (
                                                     <motion.div
                                                         layoutId="activeAnnouncementTab"
@@ -404,10 +405,11 @@ export function AnnouncementsPage() {
                                                 ) : null}
 
                                                 <span
-                                                    className={`relative z-10 transition-colors duration-200 ${active
+                                                    className={`relative z-10 transition-colors duration-200 ${
+                                                        active
                                                             ? "text-white"
                                                             : "text-[#8C8C8C] group-hover:text-[#EA580C]"
-                                                        }`}>
+                                                    }`}>
                                                     {tab.icon}
                                                 </span>
 
@@ -415,10 +417,11 @@ export function AnnouncementsPage() {
 
                                                 {"badge" in tab && tab.badge ? (
                                                     <span
-                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${active
+                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${
+                                                            active
                                                                 ? "bg-white/20 text-white"
                                                                 : "bg-orange-100 text-orange-700"
-                                                            }`}>
+                                                        }`}>
                                                         {tab.badge}
                                                     </span>
                                                 ) : null}
@@ -649,8 +652,9 @@ function AnnouncementCard({
                     </div>
 
                     <h4
-                        className={`mb-2 text-lg leading-7 ${isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
-                            }`}>
+                        className={`mb-2 text-lg leading-7 ${
+                            isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
+                        }`}>
                         {item.title}
                     </h4>
 

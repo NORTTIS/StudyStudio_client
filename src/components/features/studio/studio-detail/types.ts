@@ -3,6 +3,54 @@
  * This will be replaced with actual API calls when available
  */
 
+import type { StudioHeatmapData, GroupComparisonData } from "@/api/analytics";
+import type { components } from "@/api/types";
+import { formatRelativeTime } from "@/lib/utils";
+
+export type { StudioHeatmapData };
+
+// ActivityHeatmap-compatible format (same as GroupHeatmapComparisonData)
+export type GroupHeatmapComparisonData = components["schemas"]["StudioHeatmapData"];
+
+/**
+ * Transform API `/analytics/studio/{studioId}/groups` response
+ * → `GroupProgress[]` consumed by GroupProgressChart
+ */
+export function transformGroupComparisonToProgress(data: GroupComparisonData[]): GroupProgress[] {
+    return data.map((g) => ({
+        groupId: g.groupId ?? "",
+        groupName: g.groupName ?? "",
+        completedTasks: g.completedTasks ?? 0,
+        totalTasks: g.totalTasks ?? 0,
+        progress: Math.round((g.completionRate ?? 0) * 100),
+        isOverdue: (g.overdueTasksCount ?? 0) > 0,
+        lastActivity: g.lastActivityDateTime ? formatRelativeTime(g.lastActivityDateTime) : "N/A",
+        overdueCount: g.overdueTasksCount ?? 0
+    }));
+}
+
+/**
+ * Transform API `/analytics/studio/{studioId}/heatmap` response
+ * → `GroupHeatmapComparisonData[]` consumed by ActivityHeatmap
+ */
+export function transformStudioHeatmapToComparison(
+    groupHeatmap: StudioHeatmapData[] | null | undefined
+): GroupHeatmapComparisonData[] {
+    if (!groupHeatmap) return [];
+    return groupHeatmap.map((item) => ({
+        date: item.date,
+        groups: (item.groups ?? []).map((g) => ({
+            groupId: g.groupId,
+            groupName: g.groupName,
+            activityCount: g.activityCount,
+            // StudioGroupActivityItem doesn't have commentsCount / messagesCount
+            commentsCount: undefined,
+            messagesCount: undefined,
+            tasksCompleted: g.tasksCompleted
+        }))
+    }));
+}
+
 export interface StudioMember {
     id: string;
     name: string;
@@ -22,12 +70,6 @@ export interface GroupProgress {
     isOverdue: boolean;
     lastActivity: string;
     overdueCount: number;
-}
-
-export interface GroupActivity {
-    date: string; // ISO date
-    dayOfWeek: number; // 0-6
-    activity: number; // 0-100
 }
 
 export interface GroupPerformance {
@@ -127,35 +169,6 @@ export const mockGroupProgress: GroupProgress[] = [
     }
 ];
 
-// Generate activity heatmap data for last 4 weeks
-export function generateActivityHeatmap(): GroupActivity[] {
-    const data: GroupActivity[] = [];
-    const today = new Date();
-
-    // Generate 28 days of activity data
-    for (let i = 27; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dayOfWeek = date.getDay();
-
-        // Simulate activity patterns - higher during weekdays
-        let baseActivity = 20;
-        if (dayOfWeek === 0 || dayOfWeek === 6) {
-            baseActivity = 10; // Lower on weekends
-        } else {
-            baseActivity = 40 + Math.random() * 60;
-        }
-
-        data.push({
-            date: date.toISOString().split("T")[0],
-            dayOfWeek,
-            activity: Math.round(baseActivity)
-        });
-    }
-
-    return data;
-}
-
 // Mock group performance data for radar chart
 export const mockGroupPerformance: GroupPerformance[] = [
     {
@@ -214,11 +227,11 @@ export function calculateScheduleStatus(
 
     if (difference >= -10) {
         return { status: "on-track", message: "Đúng tiến độ" };
-    } else if (difference >= -25) {
-        return { status: "at-risk", message: "Cần chú ý" };
-    } else {
-        return { status: "behind", message: "Chậm tiến độ" };
     }
+    if (difference >= -25) {
+        return { status: "at-risk", message: "Cần chú ý" };
+    }
+    return { status: "behind", message: "Chậm tiến độ" };
 }
 
 // Get studio date range (mock)

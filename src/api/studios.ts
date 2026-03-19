@@ -32,6 +32,8 @@ export type Studio = {
     groupCount: number;
     completionProgress?: number; // Tiến độ hoàn thiện trung bình (%)
     studioRole?: 0 | 1; // 0 = Owner, 1 = Member
+    startDate?: string | null; // NEW
+    endDate?: string | null; // NEW
 };
 
 // Map API response to UI format
@@ -46,19 +48,33 @@ export type StudioUI = {
     createdAt: string;
     updatedAt: string;
     studioRole?: 0 | 1; // 0 = Owner, 1 = Member
+    startDate?: string | null; // NEW
+    endDate?: string | null; // NEW
 };
 
 export type CreateStudioRequest = {
     name: string;
     description: string;
     type: "personal" | "group";
+    startDate?: string | null;
+    endDate?: string | null;
 };
 
 export type UpdateStudioRequest = {
     name?: string;
     description?: string;
     type?: "personal" | "group";
+    startDate?: string | null; // NEW
+    endDate?: string | null; // NEW
 };
+
+// Helper: convert ISO datetime string to YYYY-MM-DD for <input type="date">
+function toDateInputValue(dateStr: string | null | undefined): string {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
 
 // Helper function to map API Studio to UI Studio
 function mapStudioToUI(studio: Studio): StudioUI {
@@ -72,7 +88,9 @@ function mapStudioToUI(studio: Studio): StudioUI {
         completionProgress: studio.completionProgress || 0, // Tiến độ hoàn thiện từ API
         createdAt: studio.createdAt,
         updatedAt: studio.updatedAt,
-        studioRole: studio.studioRole // 0 = Owner, 1 = Member
+        studioRole: studio.studioRole, // 0 = Owner, 1 = Member
+        startDate: toDateInputValue(studio.startDate), // NEW — YYYY-MM-DD for <input type="date">
+        endDate: toDateInputValue(studio.endDate) // NEW — YYYY-MM-DD for <input type="date">
     };
 }
 
@@ -133,7 +151,9 @@ export async function createStudio(data: CreateStudioRequest, locale = "vi") {
         method: "POST",
         body: JSON.stringify({
             studioName: data.name,
-            description: data.description
+            description: data.description,
+            startDate: data.startDate ?? null,
+            endDate: data.endDate ?? null
         }),
         locale
     });
@@ -159,7 +179,9 @@ export async function updateStudio(id: string, data: UpdateStudioRequest, locale
         body: JSON.stringify({
             id: id,
             studioName: data.name,
-            description: data.description
+            description: data.description,
+            startDate: data.startDate ?? null,
+            endDate: data.endDate ?? null
         }),
         locale
     });

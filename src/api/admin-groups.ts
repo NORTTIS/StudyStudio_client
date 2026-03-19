@@ -30,10 +30,7 @@ export interface GetGroupsParams {
 /**
  * Get all groups with pagination and filters
  */
-export async function getGroups(
-    params?: GetGroupsParams,
-    locale: string = "vi"
-): Promise<ApiResponse<AdminGroupListResponse>> {
+export async function getGroups(params?: GetGroupsParams, locale = "vi"): Promise<ApiResponse<AdminGroupListResponse>> {
     try {
         // Build query string
         const queryParams = new URLSearchParams();
@@ -82,7 +79,7 @@ export async function getGroups(
 export async function updateGroupStatus(
     groupId: string,
     isActive: boolean,
-    locale: string = "vi"
+    locale = "vi"
 ): Promise<ApiResponse<string>> {
     try {
         console.log("Gọi API update group status:", `/admin/groups/${groupId}/status`, { isActive });
@@ -174,7 +171,7 @@ export function formatDate(dateString: string | null | undefined): string {
 /**
  * Get member count display
  */
-export function getMemberDisplay(memberCount: number | null | undefined, maxMembers: number = 50): string {
+export function getMemberDisplay(memberCount: number | null | undefined, maxMembers = 50): string {
     const count = memberCount ?? 0;
     return `${count} / ${maxMembers}`;
 }
@@ -182,7 +179,7 @@ export function getMemberDisplay(memberCount: number | null | undefined, maxMemb
 /**
  * Calculate member percentage
  */
-export function getMemberPercent(memberCount: number | null | undefined, maxMembers: number = 50): number {
+export function getMemberPercent(memberCount: number | null | undefined, maxMembers = 50): number {
     const count = memberCount ?? 0;
     return Math.round((count / maxMembers) * 100);
 }

@@ -1,14 +1,7 @@
 "use client";
 
 import * as signalR from "@microsoft/signalr";
-import {
-    ChevronDown,
-    ChevronUp,
-    MessageCircle,
-    MoreHorizontal,
-    SendHorizontal,
-    Trash2
-} from "lucide-react";
+import { ChevronDown, ChevronUp, MessageCircle, MoreHorizontal, SendHorizontal, Trash2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
@@ -16,15 +9,6 @@ import { apiFetch } from "@/api/api-client";
 import { getAccessToken, getUserData } from "@/api/auth";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
-import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -35,6 +19,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
 
 type UserLite = {
     id: string;
@@ -322,7 +315,10 @@ function expandMentionAll(payloadText: string, membersById: Record<string, strin
     });
 
     if (otherMemberIds.length === 0) {
-        return payloadText.replace(/@__all__\b/g, "").replace(/\s{2,}/g, " ").trim();
+        return payloadText
+            .replace(/@__all__\b/g, "")
+            .replace(/\s{2,}/g, " ")
+            .trim();
     }
 
     const mentions = otherMemberIds.map((id) => `@${id}`).join(" ");
@@ -393,7 +389,7 @@ const MentionTextarea = React.forwardRef<
 
     const insertMention = (user: MentionUser) => {
         const el = taRef.current;
-        if (!el || !anchor) return;
+        if (!(el && anchor)) return;
 
         const before = value.slice(0, anchor.start);
         const after = value.slice(anchor.end);
@@ -551,7 +547,7 @@ const MentionTextarea = React.forwardRef<
 
             {open && !disabled ? (
                 filtered.length > 0 ? (
-                    <div className="absolute left-0 top-full z-[999] mt-2 w-full overflow-hidden rounded-xl border border-[#EDEDED] bg-white shadow-xl">
+                    <div className="absolute top-full left-0 z-[999] mt-2 w-full overflow-hidden rounded-xl border border-[#EDEDED] bg-white shadow-xl">
                         <div className="max-h-56 overflow-auto p-1">
                             {filtered.map((u, idx) => (
                                 <button
@@ -565,21 +561,21 @@ const MentionTextarea = React.forwardRef<
                                         "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-[#FAFAFA]",
                                         idx === activeIndex && "bg-[#FAFAFA]"
                                     )}>
-                                    <div className="grid h-8 w-8 place-items-center rounded-full bg-[#F3F4F6] text-xs font-semibold text-[#261E33]">
+                                    <div className="grid h-8 w-8 place-items-center rounded-full bg-[#F3F4F6] font-semibold text-[#261E33] text-xs">
                                         {u.id === "__all__" ? "ALL" : safeInitials(u.name)}
                                     </div>
                                     <div className="min-w-0">
                                         <div className="truncate font-semibold text-[#261E33]">
                                             {u.id === "__all__" ? "@all" : u.name}
                                         </div>
-                                        <div className="text-xs text-[#6F6B99]">Enter để chọn</div>
+                                        <div className="text-[#6F6B99] text-xs">Enter để chọn</div>
                                     </div>
                                 </button>
                             ))}
                         </div>
                     </div>
                 ) : (
-                    <div className="absolute left-0 top-full z-[999] mt-2 w-full rounded-xl border border-[#EDEDED] bg-white p-3 text-sm text-[#6F6B99] shadow-xl">
+                    <div className="absolute top-full left-0 z-[999] mt-2 w-full rounded-xl border border-[#EDEDED] bg-white p-3 text-[#6F6B99] text-sm shadow-xl">
                         Không có thành viên để mention.
                     </div>
                 )
@@ -893,7 +889,7 @@ export default function GroupDiscussPage() {
     const [rolesById, setRolesById] = React.useState<Record<string, GroupRole>>({});
 
     const canComment = userRole !== "viewer";
-    const isComposerDisabled = !isConnected || !canComment || composerText.trim().length === 0;
+    const isComposerDisabled = !(isConnected && canComment) || composerText.trim().length === 0;
 
     const mentionUsers = React.useMemo<MentionUser[]>(
         () => Object.entries(membersById).map(([id, name]) => ({ id, name })),
@@ -1242,9 +1238,7 @@ export default function GroupDiscussPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="text-sm text-[#6F6B99]">
-                            Bạn chỉ có quyền xem thảo luận trong nhóm này.
-                        </div>
+                        <div className="text-[#6F6B99] text-sm">Bạn chỉ có quyền xem thảo luận trong nhóm này.</div>
                     )}
                 </div>
 
@@ -1275,10 +1269,10 @@ export default function GroupDiscussPage() {
                 <div className="h-10" />
 
                 <AlertDialog open={deleteOpen} onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
-                    <AlertDialogContent className="sm:max-w-2xl rounded-2xl">
+                    <AlertDialogContent className="rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl">Xác nhận xóa</AlertDialogTitle>
-                            <AlertDialogDescription className="text-base leading-6 text-[#111827]">
+                            <AlertDialogDescription className="text-[#111827] text-base leading-6">
                                 Bạn có chắc chắn muốn xóa tin nhắn này không? Hành động này không thể hoàn tác.
                             </AlertDialogDescription>
                         </AlertDialogHeader>

@@ -85,7 +85,7 @@ export function TaskProgressEditor({ value, onChange, disabled = false }: TaskPr
 
     return (
         <div className="sm:col-span-2 xl:col-span-3">
-            <div className="text-sm font-semibold text-zinc-600">Progress</div>
+            <div className="font-semibold text-sm text-zinc-600">Progress</div>
 
             <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
                 <div className="mb-3 flex items-center justify-between gap-3 text-sm">
@@ -101,7 +101,7 @@ export function TaskProgressEditor({ value, onChange, disabled = false }: TaskPr
                             onBlur={handleProgressInputBlur}
                             disabled={disabled}
                             placeholder="0"
-                            className="h-9 w-16 rounded-lg border border-zinc-200 px-0 text-center text-sm font-semibold leading-none text-zinc-900 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                            className="h-9 w-16 rounded-lg border border-zinc-200 px-0 text-center font-semibold text-sm text-zinc-900 leading-none outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
                         />
                         <span className="font-bold text-zinc-900">%</span>
                     </div>
@@ -125,7 +125,7 @@ export function TaskProgressEditor({ value, onChange, disabled = false }: TaskPr
                                 disabled={disabled}
                                 onClick={() => onChange(String(item))}
                                 className={cn(
-                                    "h-10 rounded-xl border text-sm font-semibold transition",
+                                    "h-10 rounded-xl border font-semibold text-sm transition",
                                     active
                                         ? "border-orange-500 bg-orange-500 text-white"
                                         : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",

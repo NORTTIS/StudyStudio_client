@@ -65,5 +65,11 @@ export default async function MasterPage() {
         };
     }
 
-    return <MasterPageClient initialUserProfile={initialUserProfile} initialStudios={initialStudios} initialSubscription={initialSubscription} />;
+    return (
+        <MasterPageClient
+            initialUserProfile={initialUserProfile}
+            initialStudios={initialStudios}
+            initialSubscription={initialSubscription}
+        />
+    );
 }

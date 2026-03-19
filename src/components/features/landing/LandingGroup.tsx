@@ -13,12 +13,12 @@ export default function LandingGroup() {
     const stepDelayClasses = ["landing-delay-1", "landing-delay-2", "landing-delay-3", "landing-delay-4"];
 
     return (
-        <div className="flex min-h-screen scroll-smooth flex-col bg-[#FFF7ED] text-gray-800">
+        <div className="flex min-h-screen flex-col scroll-smooth bg-[#FFF7ED] text-gray-800">
             <GuestNavbar />
 
             <section className="landing-fade-in bg-white py-20">
                 <div className="landing-fade-up mx-auto max-w-5xl px-6 text-center">
-                    <h1 className="landing-fade-up landing-delay-1 text-5xl leading-tight font-extrabold text-gray-700 md:text-6xl">
+                    <h1 className="landing-fade-up landing-delay-1 font-extrabold text-5xl text-gray-700 leading-tight md:text-6xl">
                         {t("hero.title")} <br />
                         {t("hero.titleHighlight")}
                     </h1>
@@ -26,7 +26,7 @@ export default function LandingGroup() {
                     <Link
                         href={`/${locale}/group/create`}
                         className="landing-pop landing-delay-2 inline-block cursor-pointer">
-                        <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 text-lg font-semibold text-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
+                        <Button className="mt-8 rounded-full bg-orange-500 px-20 py-7 font-semibold text-lg text-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.createButton")}
                         </Button>
                     </Link>
@@ -47,7 +47,7 @@ export default function LandingGroup() {
             </section>
 
             <section className="landing-fade-up bg-[#FFF3E6] py-24">
-                <h2 className="landing-fade-up px-6 text-center text-5xl font-extrabold text-gray-700">
+                <h2 className="landing-fade-up px-6 text-center font-extrabold text-5xl text-gray-700">
                     {t("howToUse.title")}
                 </h2>
 
@@ -57,11 +57,11 @@ export default function LandingGroup() {
                             <div
                                 key={i}
                                 className={`landing-pop flex flex-col items-center rounded-2xl px-4 py-5 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/40 ${stepDelayClasses[i]}`}>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] text-lg font-bold text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#6D00FF] font-bold text-lg text-white shadow-sm transition-transform duration-300 ease-out hover:scale-105">
                                     {i + 1}
                                 </div>
 
-                                <p className="mt-4 text-base leading-snug font-semibold text-black">{text}</p>
+                                <p className="mt-4 font-semibold text-base text-black leading-snug">{text}</p>
                             </div>
                         )
                     )}
@@ -71,47 +71,47 @@ export default function LandingGroup() {
             </section>
 
             <section className="landing-fade-up bg-white py-24">
-                <h2 className="landing-fade-up px-6 text-center text-5xl font-extrabold text-gray-700">
+                <h2 className="landing-fade-up px-6 text-center font-extrabold text-5xl text-gray-700">
                     {t("features.title")}
                 </h2>
 
                 <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-x-16 gap-y-14 px-6 md:grid-cols-2">
                     <div className="landing-pop landing-delay-1 rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
-                        <h3 className="text-2xl font-extrabold text-black">{t("features.manageGroup.title")}</h3>
+                        <h3 className="font-extrabold text-2xl text-black">{t("features.manageGroup.title")}</h3>
 
                         <div className="my-5 h-px bg-black/20" />
 
-                        <p className="whitespace-pre-line text-lg leading-relaxed text-black">
+                        <p className="whitespace-pre-line text-black text-lg leading-relaxed">
                             {t("features.manageGroup.description")}
                         </p>
                     </div>
 
                     <div className="landing-pop landing-delay-2 rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
-                        <h3 className="text-2xl font-extrabold text-black">{t("features.trackWork.title")}</h3>
+                        <h3 className="font-extrabold text-2xl text-black">{t("features.trackWork.title")}</h3>
 
                         <div className="my-5 h-px bg-black/20" />
 
-                        <p className="whitespace-pre-line text-lg leading-relaxed text-black">
+                        <p className="whitespace-pre-line text-black text-lg leading-relaxed">
                             {t("features.trackWork.description")}
                         </p>
                     </div>
 
                     <div className="landing-pop landing-delay-3 rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
-                        <h3 className="text-2xl font-extrabold text-black">{t("features.permissions.title")}</h3>
+                        <h3 className="font-extrabold text-2xl text-black">{t("features.permissions.title")}</h3>
 
                         <div className="my-5 h-px bg-black/20" />
 
-                        <p className="whitespace-pre-line text-lg leading-relaxed text-black">
+                        <p className="whitespace-pre-line text-black text-lg leading-relaxed">
                             {t("features.permissions.description")}
                         </p>
                     </div>
 
                     <div className="landing-pop landing-delay-4 rounded-3xl bg-[#FFD9D2] px-10 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
-                        <h3 className="text-2xl font-extrabold text-black">{t("features.aiSupport.title")}</h3>
+                        <h3 className="font-extrabold text-2xl text-black">{t("features.aiSupport.title")}</h3>
 
                         <div className="my-5 h-px bg-black/20" />
 
-                        <p className="whitespace-pre-line text-lg leading-relaxed text-black">
+                        <p className="whitespace-pre-line text-black text-lg leading-relaxed">
                             {t("features.aiSupport.description")}
                         </p>
                     </div>
@@ -119,31 +119,31 @@ export default function LandingGroup() {
             </section>
 
             <section className="landing-fade-up bg-[#FFF3E6] py-24">
-                <h2 className="landing-fade-up px-6 text-center text-4xl font-extrabold text-gray-700">
+                <h2 className="landing-fade-up px-6 text-center font-extrabold text-4xl text-gray-700">
                     {t("users.title")}
                 </h2>
 
-                <p className="landing-fade-up landing-delay-1 mt-3 px-6 text-center text-lg text-gray-500">
+                <p className="landing-fade-up landing-delay-1 mt-3 px-6 text-center text-gray-500 text-lg">
                     {t("users.subtitle")}
                 </p>
 
                 <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-16 px-6 md:grid-cols-2">
                     <div className="landing-pop landing-delay-2 rounded-3xl bg-[#FAD7A7] px-12 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
-                        <h3 className="text-2xl font-extrabold text-black">{t("users.personal.title")}</h3>
+                        <h3 className="font-extrabold text-2xl text-black">{t("users.personal.title")}</h3>
 
                         <div className="my-6 h-px bg-black/20" />
 
-                        <p className="whitespace-pre-line text-center text-lg leading-relaxed text-black">
+                        <p className="whitespace-pre-line text-center text-black text-lg leading-relaxed">
                             {t("users.personal.description")}
                         </p>
                     </div>
 
                     <div className="landing-pop landing-delay-3 rounded-3xl bg-[#FAD7A7] px-12 py-10 text-center shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
-                        <h3 className="text-2xl font-extrabold text-black">{t("users.education.title")}</h3>
+                        <h3 className="font-extrabold text-2xl text-black">{t("users.education.title")}</h3>
 
                         <div className="my-6 h-px bg-black/20" />
 
-                        <p className="whitespace-pre-line text-center text-lg leading-relaxed text-black">
+                        <p className="whitespace-pre-line text-center text-black text-lg leading-relaxed">
                             {t("users.education.description")}
                         </p>
                     </div>
@@ -152,7 +152,7 @@ export default function LandingGroup() {
 
             <section className="landing-fade-up bg-white py-20">
                 <div className="mx-auto w-[90%] max-w-6xl">
-                    <h3 className="landing-fade-up text-center text-2xl font-bold text-gray-800 md:text-3xl">
+                    <h3 className="landing-fade-up text-center font-bold text-2xl text-gray-800 md:text-3xl">
                         {t("ai.title")} <br />
                         {t("ai.subtitle")}
                     </h3>
@@ -160,12 +160,12 @@ export default function LandingGroup() {
                     <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="landing-pop landing-delay-1 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
                             <h4 className="font-semibold text-gray-800">{t("ai.feature1")}</h4>
-                            <div className="mt-6 h-60 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
+                            <div className="mt-6 h-60 rounded-xl border-2 border-gray-300 border-dashed bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
                         </div>
 
                         <div className="landing-pop landing-delay-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg">
                             <h4 className="font-semibold text-gray-800">{t("ai.feature2")}</h4>
-                            <div className="mt-6 h-60 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
+                            <div className="mt-6 h-60 rounded-xl border-2 border-gray-300 border-dashed bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
                         </div>
                     </div>
                 </div>

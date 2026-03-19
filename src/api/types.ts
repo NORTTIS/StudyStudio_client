@@ -1451,48 +1451,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/studio/{studioId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    endDate?: string;
-                    startDate?: string;
-                };
-                header?: never;
-                path: {
-                    studioId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StudioAnalyticsResponseApiResponse"];
-                        "text/json": components["schemas"]["StudioAnalyticsResponseApiResponse"];
-                        "text/plain": components["schemas"]["StudioAnalyticsResponseApiResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/analytics/studio/{studioId}/groups": {
         parameters: {
             query?: never;
@@ -1520,6 +1478,48 @@ export interface paths {
                         "application/json": components["schemas"]["GroupComparisonDataListApiResponse"];
                         "text/json": components["schemas"]["GroupComparisonDataListApiResponse"];
                         "text/plain": components["schemas"]["GroupComparisonDataListApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/studio/{studioId}/heatmap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    endDate?: string;
+                    startDate?: string;
+                };
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioGroupHeatmapResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioGroupHeatmapResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioGroupHeatmapResponseApiResponse"];
                     };
                 };
             };
@@ -5749,8 +5749,12 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             description?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
             /** Format: uuid */
             ownerId?: string;
+            /** Format: date-time */
+            startDate?: string | null;
             studioName?: string | null;
             /** Format: date-time */
             updatedAt?: string;
@@ -5851,19 +5855,6 @@ export interface components {
             /** Format: date */
             date?: string;
         };
-        GroupActivityItem: {
-            /** Format: int32 */
-            activityCount?: number;
-            /** Format: int32 */
-            commentsCount?: number;
-            /** Format: uuid */
-            groupId?: string;
-            groupName?: string | null;
-            /** Format: int32 */
-            messagesCount?: number;
-            /** Format: int32 */
-            tasksCompleted?: number;
-        };
         GroupAnalyticsResponse: {
             activityHeatmap?: components["schemas"]["GroupActivityHeatmapData"][] | null;
             /** Format: double */
@@ -5913,6 +5904,10 @@ export interface components {
             /** Format: uuid */
             groupId?: string;
             groupName?: string | null;
+            /** Format: date-time */
+            lastActivityDateTime?: string | null;
+            /** Format: int32 */
+            overdueTasksCount?: number;
             /** Format: int32 */
             totalTasks?: number;
         };
@@ -5969,11 +5964,6 @@ export interface components {
             data?: components["schemas"]["GroupDocumentsResponse"];
             message?: string | null;
             status?: string | null;
-        };
-        GroupHeatmapComparisonData: {
-            /** Format: date */
-            date?: string;
-            groups?: components["schemas"]["GroupActivityItem"][] | null;
         };
         GroupInfoItem: {
             /** Format: uuid */
@@ -6809,27 +6799,28 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        StudioAnalyticsResponse: {
-            /** Format: int32 */
-            activeUsers?: number;
-            /** Format: double */
-            completionRate?: number;
-            completionRateHistory?: components["schemas"]["StudioProgressData"][] | null;
-            /** Format: double */
-            engagementScore?: number;
-            groupComparison?: components["schemas"]["GroupComparisonData"][] | null;
-            groupHeatmapComparison?: components["schemas"]["GroupHeatmapComparisonData"][] | null;
-        };
-        StudioAnalyticsResponseApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["StudioAnalyticsResponse"];
-            message?: string | null;
-            status?: string | null;
-        };
         StudioDto: {
             /** Format: uuid */
             id?: string;
             name?: string | null;
+        };
+        StudioGroupActivityItem: {
+            /** Format: int32 */
+            activityCount?: number;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: int32 */
+            tasksCompleted?: number;
+        };
+        StudioGroupHeatmapResponse: {
+            groupHeatmap?: components["schemas"]["StudioHeatmapData"][] | null;
+        };
+        StudioGroupHeatmapResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioGroupHeatmapResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         StudioGroupListResponse: {
             studioGroups?: components["schemas"]["GroupCardDto"][] | null;
@@ -6841,6 +6832,11 @@ export interface components {
             data?: components["schemas"]["StudioGroupListResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        StudioHeatmapData: {
+            /** Format: date */
+            date?: string;
+            groups?: components["schemas"]["StudioGroupActivityItem"][] | null;
         };
         StudioListResponse: {
             studios?: components["schemas"]["StudioResponse"][] | null;
@@ -6873,22 +6869,18 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        StudioProgressData: {
-            /** Format: int32 */
-            activeUsers?: number;
-            /** Format: double */
-            completionRate?: number;
-            /** Format: date */
-            date?: string;
-        };
         StudioResponse: {
             /** Format: date-time */
             createdAt?: string;
             description?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
             /** Format: int32 */
             groupCount?: number;
             /** Format: uuid */
             ownerId?: string;
+            /** Format: date-time */
+            startDate?: string | null;
             /** Format: uuid */
             studioId?: string;
             studioName?: string | null;
@@ -7386,12 +7378,20 @@ export interface components {
         };
         UpdateStudioRequest: {
             description?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
             /** Format: uuid */
             id?: string;
+            /** Format: date-time */
+            startDate?: string | null;
             studioName?: string | null;
         };
         UpdateStudioResponse: {
             description?: string | null;
+            /** Format: date-time */
+            endDate?: string | null;
+            /** Format: date-time */
+            startDate?: string | null;
             studioName?: string | null;
             /** Format: date-time */
             updatedAt?: string;
