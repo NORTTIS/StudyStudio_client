@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     deleteUserAnnouncement,
     getAllAnnouncements,
@@ -10,86 +10,240 @@ import {
 } from "@/api/notifications";
 import { NotificationDetailModal } from "./NotificationDetailModal";
 
-const BellIcon = ({ hasUnread }: { hasUnread: boolean }) => (
-    <div className="relative">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-                d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            <path
-                d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-        {hasUnread && (
-            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500">
-                <div className="h-full w-full animate-ping rounded-full bg-red-400" />
+import {
+    Bell,
+    CheckCheck,
+    Info,
+    RefreshCw,
+    Trash2,
+    AlertTriangle,
+    CheckCircle2
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+
+const READ_NOTIFICATIONS_STORAGE_KEY = "study_studio_read_notifications";
+
+function getReadNotificationIds(): string[] {
+    if (typeof window === "undefined") return [];
+
+    try {
+        const raw = localStorage.getItem(READ_NOTIFICATIONS_STORAGE_KEY);
+        if (!raw) return [];
+
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveReadNotificationId(id: string) {
+    if (typeof window === "undefined") return;
+
+    try {
+        const currentIds = getReadNotificationIds();
+
+        if (!currentIds.includes(id)) {
+            localStorage.setItem(
+                READ_NOTIFICATIONS_STORAGE_KEY,
+                JSON.stringify([...currentIds, id])
+            );
+        }
+    } catch (error) {
+        console.error("Save read notification error:", error);
+    }
+}
+
+function saveManyReadNotificationIds(ids: string[]) {
+    if (typeof window === "undefined") return;
+
+    try {
+        const currentIds = getReadNotificationIds();
+        const mergedIds = Array.from(new Set([...currentIds, ...ids]));
+
+        localStorage.setItem(
+            READ_NOTIFICATIONS_STORAGE_KEY,
+            JSON.stringify(mergedIds)
+        );
+    } catch (error) {
+        console.error("Save many read notifications error:", error);
+    }
+}
+
+function BellButton({ unreadCount }: { unreadCount: number }) {
+    const hasUnread = unreadCount > 0;
+
+    return (
+        <div className="relative flex h-6 w-6 items-center justify-center">
+            <Bell className="h-6 w-6 shrink-0 text-foreground" />
+
+            {hasUnread && (
+                <span className="absolute -right-2 -top-2 z-10 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white shadow ring-2 ring-background">
+                    {unreadCount > 99 ? "99+" : unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+            )}
+        </div>
+    );
+}
+
+function NotificationItem({
+    notification,
+    onClick,
+    onDelete,
+    formatDate,
+    getNotificationIcon
+}: {
+    notification: Notification;
+    onClick: () => void;
+    onDelete: () => void;
+    formatDate: (date: string) => string;
+    getNotificationIcon: (type: Notification["type"]) => React.ReactNode;
+}) {
+    return (
+        <div
+            role="button"
+            tabIndex={0}
+            onClick={onClick}
+            onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onClick();
+                }
+            }}
+            className={cn(
+                "group relative flex cursor-pointer gap-3 rounded-2xl border p-4 transition-all",
+                "hover:bg-accent/60 hover:shadow-sm",
+                !notification.read
+                    ? "border-blue-200 bg-blue-50/60"
+                    : "border-border bg-background"
+            )}
+        >
+            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted shadow-sm">
+                {getNotificationIcon(notification.type)}
             </div>
-        )}
-    </div>
-);
+
+            <div className="min-w-0 flex-1 pr-8">
+                <div className="flex items-start gap-2">
+                    <p
+                        className={cn(
+                            "line-clamp-2 text-sm leading-5 text-foreground",
+                            !notification.read && "font-semibold"
+                        )}
+                    >
+                        {notification.title}
+                    </p>
+
+                    {!notification.read && (
+                        <span className="mt-1 inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-orange-500" />
+                    )}
+                </div>
+
+                <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    {notification.description}
+                </p>
+
+                <p className="mt-3 text-xs text-muted-foreground">
+                    {formatDate(notification.date)}
+                </p>
+            </div>
+
+            <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                }}
+                className="absolute top-3 right-3 h-8 w-8 rounded-lg text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
+                aria-label="Delete notification"
+            >
+                <Trash2 className="h-4 w-4" />
+            </Button>
+        </div>
+    );
+}
 
 export function NotificationDropdown() {
     const t = useTranslations("Notifications");
     const locale = useLocale();
-    const [isOpen, setIsOpen] = useState(false);
+
+    const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [selectedNotificationId, setSelectedNotificationId] = useState<string>("");
+    const [selectedNotificationId, setSelectedNotificationId] = useState("");
+
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [notificationToDelete, setNotificationToDelete] = useState<string>("");
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [notificationToDelete, setNotificationToDelete] = useState("");
 
-    const unreadCount = notifications.filter((n) => !n.read).length;
-    const hasUnread = unreadCount > 0;
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    const unreadCount = useMemo(
+        () => notifications.filter((n) => !n.read).length,
+        [notifications]
+    );
 
     const loadNotifications = useCallback(async () => {
-        console.log("🔔 NotificationDropdown: Starting to load notifications...");
         setIsLoading(true);
         try {
             const data = await getAllAnnouncements(locale);
+            const readIds = getReadNotificationIds();
 
-            // Check if data contains corrupted characters and provide fallback
             const cleanedData = data.map((notification) => ({
                 ...notification,
                 title: notification.title,
-                description: notification.description
+                description: notification.description,
+                read: Boolean(notification.read || readIds.includes(notification.id))
             }));
 
             setNotifications(cleanedData);
         } catch (error) {
-            // Provide fallback notifications if API fails
+            console.error("Load notifications error:", error);
+
             const fallbackNotifications: Notification[] = [
                 {
                     id: "fallback-1",
-                    title: locale === "vi" ? "Chào mừng đến Study Studio" : "Welcome to Study Studio",
+                    title:
+                        locale === "vi"
+                            ? "Chào mừng đến Study Studio"
+                            : "Welcome to Study Studio",
                     description:
-                        locale === "vi" ? "Cảm ơn bạn đã sử dụng Study Studio!" : "Thank you for using Study Studio!",
+                        locale === "vi"
+                            ? "Cảm ơn bạn đã sử dụng Study Studio!"
+                            : "Thank you for using Study Studio!",
                     type: "info",
                     date: new Date().toISOString(),
                     read: false
                 }
             ];
-            setNotifications(fallbackNotifications);
+
+            const readIds = getReadNotificationIds();
+
+            setNotifications(
+                fallbackNotifications.map((notification) => ({
+                    ...notification,
+                    read: Boolean(notification.read || readIds.includes(notification.id))
+                }))
+            );
         } finally {
             setIsLoading(false);
         }
@@ -99,78 +253,125 @@ export function NotificationDropdown() {
         loadNotifications();
     }, [loadNotifications]);
 
+    const formatDate = useCallback(
+        (dateString: string) => {
+            const date = new Date(dateString);
+            const now = new Date();
+
+            if (Number.isNaN(date.getTime())) {
+                return locale === "vi" ? "Không xác định" : "Invalid date";
+            }
+
+            const diffMs = date.getTime() - now.getTime();
+            const diffMinutes = Math.round(diffMs / (1000 * 60));
+            const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+            const rtf = new Intl.RelativeTimeFormat(
+                locale === "vi" ? "vi" : "en",
+                { numeric: "auto" }
+            );
+
+            if (Math.abs(diffMinutes) < 1) {
+                return locale === "vi" ? "Vừa xong" : "Just now";
+            }
+
+            if (Math.abs(diffMinutes) < 60) {
+                return rtf.format(diffMinutes, "minute");
+            }
+
+            if (Math.abs(diffHours) < 24) {
+                return rtf.format(diffHours, "hour");
+            }
+
+            if (Math.abs(diffDays) < 7) {
+                return rtf.format(diffDays, "day");
+            }
+
+            return new Intl.DateTimeFormat(
+                locale === "vi" ? "vi-VN" : "en-US",
+                {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            ).format(date);
+        },
+        [locale]
+    );
+
     const handleNotificationClick = async (notification: Notification) => {
-        // Đánh dấu đã đọc nếu chưa đọc
         if (!notification.read) {
+            saveReadNotificationId(notification.id);
+
+            setNotifications((prev) =>
+                prev.map((n) =>
+                    n.id === notification.id ? { ...n, read: true } : n
+                )
+            );
+
             try {
-                const result = await markUserAnnouncementAsRead(notification.id, locale);
-                if (result.status === "success") {
-                    // Cập nhật local state
-                    setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+                const result = await markUserAnnouncementAsRead(
+                    notification.id,
+                    locale
+                );
+
+                if (result.status !== "success") {
+                    console.error("Mark as read API error:", result.message);
                 }
             } catch (error) {
-                console.error("🔔 UI: Lỗi khi đánh dấu đã đọc:", error);
-                // Vẫn cập nhật local state nếu API thất bại
-                setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+                console.error("Mark as read error:", error);
             }
         }
 
-        // Mở modal chi tiết sử dụng announcementId
-        setSelectedNotificationId(notification.id); // Bây giờ id chính là announcementId
+        setSelectedNotificationId(notification.id);
         setIsDetailModalOpen(true);
-        setIsOpen(false); // Đóng dropdown
+        setOpen(false);
     };
 
     const handleMarkAllAsRead = async () => {
         try {
-            console.log("🔔 UI: Đánh dấu tất cả đã đọc");
-
-            // Lấy danh sách thông báo chưa đọc
             const unreadNotifications = notifications.filter((n) => !n.read);
+            const unreadIds = unreadNotifications.map((n) => n.id);
 
-            // Đánh dấu từng thông báo đã đọc
-            const promises = unreadNotifications.map((notification) =>
-                markUserAnnouncementAsRead(notification.id, locale)
-            );
+            saveManyReadNotificationIds(unreadIds);
 
-            await Promise.all(promises);
-
-            // Cập nhật local state
             setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+            await Promise.all(
+                unreadNotifications.map((notification) =>
+                    markUserAnnouncementAsRead(notification.id, locale)
+                )
+            );
         } catch (error) {
-            console.error("🔔 UI: Lỗi khi đánh dấu tất cả đã đọc:", error);
-            // Vẫn cập nhật local state nếu API thất bại
+            console.error("Mark all as read error:", error);
             setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
         }
     };
 
-    const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent triggering the notification click
-
-        // Show confirmation dialog
+    const handleDeleteNotification = (notificationId: string) => {
         setNotificationToDelete(notificationId);
         setShowDeleteConfirm(true);
     };
 
     const confirmDeleteNotification = async () => {
         try {
-            console.log("🔔 UI: Xóa thông báo ID:", notificationToDelete);
-
-            const result = await deleteUserAnnouncement(notificationToDelete, locale);
+            const result = await deleteUserAnnouncement(
+                notificationToDelete,
+                locale
+            );
 
             if (result.status === "success") {
-                // Xóa khỏi local state
-                setNotifications((prev) => prev.filter((n) => n.id !== notificationToDelete));
+                setNotifications((prev) =>
+                    prev.filter((n) => n.id !== notificationToDelete)
+                );
             } else {
-                console.error("🔔 UI: Lỗi API khi xóa thông báo:", result.message);
-                // Show error message to user
-                alert(result.message || (locale === "vi" ? "Không thể xóa thông báo" : "Cannot delete notification"));
+                console.error("Delete notification API error:", result.message);
             }
         } catch (error) {
-            console.error("🔔 UI: Lỗi khi xóa thông báo:", error);
-            alert(
-                locale === "vi" ? "Có lỗi xảy ra khi xóa thông báo" : "An error occurred while deleting notification"
-            );
+            console.error("Delete notification error:", error);
         } finally {
             setShowDeleteConfirm(false);
             setNotificationToDelete("");
@@ -180,149 +381,129 @@ export function NotificationDropdown() {
     const getNotificationIcon = (type: Notification["type"]) => {
         switch (type) {
             case "success":
-                return "✅";
+                return <CheckCircle2 className="h-4 w-4 text-green-600" />;
             case "warning":
-                return "⚠️";
+                return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
             case "info":
-                return "ℹ️";
+                return <Info className="h-4 w-4 text-blue-600" />;
             default:
-                return "🔔";
+                return <Bell className="h-4 w-4 text-muted-foreground" />;
         }
-    };
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-
-        if (diffInHours < 1) {
-            return t("justNow");
-        }
-        if (diffInHours < 24) {
-            return t("hoursAgo", { hours: diffInHours });
-        }
-        const diffInDays = Math.floor(diffInHours / 24);
-        return t("daysAgo", { count: diffInDays });
     };
 
     return (
-        <div className="relative" ref={dropdownRef}>
-            <button
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className="relative rounded-lg p-2 text-[#6F6B99] transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
-                <BellIcon hasUnread={hasUnread} />
-                {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 font-medium text-white text-xs">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                )}
-            </button>
+        <>
+            <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative h-11 w-11 rounded-full border border-transparent hover:border-border hover:bg-accent"
+                    >
+                        <BellButton unreadCount={unreadCount} />
+                    </Button>
+                </DropdownMenuTrigger>
 
-            {isOpen && (
-                <div className="absolute top-full right-0 z-50 mt-2 w-80 rounded-xl border border-[#E5E5E5] bg-white shadow-xl">
-                    <div className="flex items-center justify-between border-[#E5E5E5] border-b px-4 py-3">
-                        <h3 className="font-semibold text-[#261E33] text-sm">{t("title")}</h3>
-                        <div className="flex items-center gap-2">
-                            {hasUnread && (
-                                <button
+                <DropdownMenuContent
+                    align="end"
+                    sideOffset={12}
+                    className="w-[420px] overflow-hidden rounded-3xl border bg-background p-0 shadow-2xl"
+                >
+                    <div className="flex items-center justify-between border-b px-4 py-4">
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-semibold text-foreground">
+                                {t("title")}
+                            </h3>
+
+                            <Badge
+                                variant="secondary"
+                                className="rounded-full px-2.5 py-0.5 text-xs"
+                            >
+                                {notifications.length}
+                            </Badge>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                            {unreadCount > 0 && (
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={handleMarkAllAsRead}
-                                    className="text-[#FF5F3D] text-xs hover:underline">
+                                    className="h-8 gap-1.5 rounded-lg px-2.5 text-sm"
+                                >
+                                    <CheckCheck className="h-4 w-4" />
                                     {t("markAllRead")}
-                                </button>
+                                </Button>
                             )}
-                            <button
+
+                            <Button
                                 type="button"
+                                variant="ghost"
+                                size="icon"
                                 onClick={loadNotifications}
-                                className="text-[#6F6B99] text-xs hover:underline"
-                                title="Reload notifications">
-                            </button>
+                                disabled={isLoading}
+                                className="h-8 w-8 rounded-lg"
+                            >
+                                <RefreshCw
+                                    className={cn(
+                                        "h-4 w-4",
+                                        isLoading && "animate-spin"
+                                    )}
+                                />
+                            </Button>
                         </div>
                     </div>
 
-                    <div className="max-h-96 overflow-y-auto">
-                        {isLoading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#FF5F3D] border-t-transparent" />
-                            </div>
-                        ) : notifications.length === 0 ? (
-                            <div className="py-8 text-center">
-                                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                                    <BellIcon hasUnread={false} />
+                    <ScrollArea className="h-[420px]">
+                        <div className="space-y-3 p-3">
+                            {isLoading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
                                 </div>
-                                <p className="text-[#6F6B99] text-sm">{t("noNotifications")}</p>
-                            </div>
-                        ) : (
-                            <div className="py-2">
-                                {notifications.map((notification) => (
-                                    <div
-                                        key={notification.id}
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => handleNotificationClick(notification)}
-                                        onKeyDown={(e) => e.key === "Enter" && handleNotificationClick(notification)}
-                                        className={`w-full cursor-pointer px-4 py-3 text-left transition-colors hover:bg-[#F4F5FA] ${!notification.read ? "bg-blue-50" : ""}`}>
-                                        <div className="flex items-start gap-3">
-                                            <span className="text-lg">{getNotificationIcon(notification.type)}</span>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <p
-                                                        className={`text-sm ${!notification.read ? "font-semibold text-[#261E33]" : "text-[#261E33]"}`}>
-                                                        {notification.title}
-                                                    </p>
-                                                    {!notification.read && (
-                                                        <div className="h-2 w-2 rounded-full bg-[#FF5F3D]" />
-                                                    )}
-                                                </div>
-                                                <p className="mt-1 text-[#6F6B99] text-xs">
-                                                    {notification.description.length > 100
-                                                        ? `${notification.description.substring(0, 100)}...`
-                                                        : notification.description}
-                                                </p>
-                                                <p className="mt-1 text-[#9CA3AF] text-xs">
-                                                    {formatDate(notification.date)}
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => handleDeleteNotification(notification.id, e)}
-                                                className="ml-2 rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                                                title={t("delete")}>
-                                                <svg
-                                                    className="h-4 w-4"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M6 18L18 6M6 6l12 12"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
+                            ) : notifications.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-center">
+                                    <div className="mb-3 rounded-full bg-muted p-3">
+                                        <Bell className="h-5 w-5 text-muted-foreground" />
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t("noNotifications")}
+                                    </p>
+                                </div>
+                            ) : (
+                                notifications.map((notification) => (
+                                    <NotificationItem
+                                        key={notification.id}
+                                        notification={notification}
+                                        onClick={() =>
+                                            handleNotificationClick(notification)
+                                        }
+                                        onDelete={() =>
+                                            handleDeleteNotification(notification.id)
+                                        }
+                                        formatDate={formatDate}
+                                        getNotificationIcon={getNotificationIcon}
+                                    />
+                                ))
+                            )}
+                        </div>
+                    </ScrollArea>
 
                     {notifications.length > 0 && (
-                        <div className="border-[#E5E5E5] border-t px-4 py-3">
-                            <button
+                        <div className="border-t p-2">
+                            <Button
                                 type="button"
-                                onClick={() => setIsOpen(false)}
-                                className="w-full text-center text-[#FF5F3D] text-sm hover:underline">
+                                variant="ghost"
+                                className="h-11 w-full rounded-2xl font-medium text-primary hover:bg-accent"
+                                onClick={() => setOpen(false)}
+                            >
                                 {t("viewAll")}
-                            </button>
+                            </Button>
                         </div>
                     )}
-                </div>
-            )}
+                </DropdownMenuContent>
+            </DropdownMenu>
 
-            {/* Modal chi tiết thông báo */}
             <NotificationDetailModal
                 isOpen={isDetailModalOpen}
                 onClose={() => setIsDetailModalOpen(false)}
@@ -330,32 +511,36 @@ export function NotificationDropdown() {
                 locale={locale}
             />
 
-            {/* Confirmation Dialog for Delete */}
-            {showDeleteConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="mx-4 max-w-sm rounded-lg bg-white p-6 shadow-xl">
-                        <h3 className="mb-2 font-semibold text-gray-900 text-lg">{t("confirmDeleteTitle")}</h3>
-                        <p className="mb-4 text-gray-600">{t("confirmDelete")}</p>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowDeleteConfirm(false);
-                                    setNotificationToDelete("");
-                                }}
-                                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-600 transition-colors hover:bg-gray-50">
-                                {t("cancel")}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={confirmDeleteNotification}
-                                className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600">
-                                {t("confirm")}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+            <AlertDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+            >
+                <AlertDialogContent className="rounded-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {t("confirmDeleteTitle")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t("confirmDelete")}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => setNotificationToDelete("")}
+                        >
+                            {t("cancel")}
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                            onClick={confirmDeleteNotification}
+                            className="bg-red-500 text-white hover:bg-red-600"
+                        >
+                            {t("confirm")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }
