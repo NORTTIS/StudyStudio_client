@@ -2,14 +2,28 @@
 
 import type { StudioMemberResponse } from "@/api/studios";
 
+interface GroupBasic {
+    id: string;
+    name: string;
+}
+
 interface MemberListProps {
     members: StudioMemberResponse[];
     studioOwnerId?: string;
+    groups?: GroupBasic[];
     onInviteClick?: () => void;
+    onQuickAssignClick?: () => void;
     onMemberClick?: (member: StudioMemberResponse) => void;
 }
 
-export function MemberList({ members, studioOwnerId, onInviteClick, onMemberClick }: MemberListProps) {
+export function MemberList({
+    members,
+    studioOwnerId,
+    groups,
+    onInviteClick,
+    onQuickAssignClick,
+    onMemberClick
+}: MemberListProps) {
     // Sort members: Studio Owner first, then by group role (Moderator -> Member -> Commenter -> Viewer)
     const sortedMembers = [...members].sort((a, b) => {
         // Check if user is studio owner
@@ -85,12 +99,22 @@ export function MemberList({ members, studioOwnerId, onInviteClick, onMemberClic
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-semibold text-base text-slate-800">Danh sách thành viên</h3>
-                <button
-                    type="button"
-                    onClick={onInviteClick}
-                    className="rounded-lg border border-[#FF5722] px-3 py-1.5 font-medium text-[#FF5722] text-xs transition-colors hover:bg-[#FF5722] hover:text-white">
-                    + Mời
-                </button>
+                <div className="flex gap-2">
+                    {groups && groups.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={onQuickAssignClick}
+                            className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-600 text-xs transition-colors hover:bg-slate-100">
+                            Phân phối nhanh
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={onInviteClick}
+                        className="rounded-lg border border-[#FF5722] px-3 py-1.5 font-medium text-[#FF5722] text-xs transition-colors hover:bg-[#FF5722] hover:text-white">
+                        + Mời
+                    </button>
+                </div>
             </div>
 
             {sortedMembers.length > 0 ? (
@@ -109,15 +133,14 @@ export function MemberList({ members, studioOwnerId, onInviteClick, onMemberClic
                                     />
                                 ) : (
                                     <div
-                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${
-                                            index % 4 === 0
+                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${index % 4 === 0
                                                 ? "bg-gradient-to-br from-orange-400 to-red-500"
                                                 : index % 4 === 1
-                                                  ? "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                  : index % 4 === 2
-                                                    ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                    : "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                        }`}>
+                                                    ? "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                    : index % 4 === 2
+                                                        ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                        : "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                            }`}>
                                         {getInitials(member.userName)}
                                     </div>
                                 )}
@@ -129,7 +152,7 @@ export function MemberList({ members, studioOwnerId, onInviteClick, onMemberClic
                             <div className="flex flex-col items-end gap-1">
                                 {/* Only show Studio Owner badge for studio owner */}
                                 {member.userId === studioOwnerId && (
-                                    <span className="rounded-full px-2.5 py-0.5 font-medium text-xs border border-slate-300 text-slate-700">
+                                    <span className="rounded-full border border-slate-300 px-2.5 py-0.5 font-medium text-slate-700 text-xs">
                                         Chủ sở hữu
                                     </span>
                                 )}

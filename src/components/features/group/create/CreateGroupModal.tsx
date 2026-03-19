@@ -1,10 +1,12 @@
 "use client";
 
-import { Image as ImageIcon, X } from "lucide-react";
+import { Download, Image as ImageIcon, Upload, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/api/api-client";
+import { downloadBatchAssignTemplate } from "@/api/studios";
 import type { components } from "@/api/types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/common/Button";
+import { BatchUploadModal } from "./BatchUploadModal";
 
 type GroupType = "independent" | "managed";
 type CreateMode = "single" | "batch";
@@ -103,6 +105,9 @@ export function CreateGroupModal({
     const [groupCreated, setGroupCreated] = useState<number>(0);
     const [ownerStudios, setOwnerStudios] = useState<StudioResponse[]>([]);
     const [templates, setTemplates] = useState<Array<{ id: string; name: string; desc: string }>>([]);
+
+    const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+    const [batchUploadOpen, setBatchUploadOpen] = useState(false);
 
     const limitReached = useMemo(
         () => currentGroupCount >= groupLimit,
@@ -337,6 +342,24 @@ export function CreateGroupModal({
             setCreateError(e instanceof Error ? e.message : "Tạo nhóm thất bại");
         } finally {
             setCreating(false);
+        }
+    };
+
+    const handleDownloadTemplate = async () => {
+        if (!defaultStudioId) return;
+        setDownloadingTemplate(true);
+        try {
+            const blob = await downloadBatchAssignTemplate(defaultStudioId);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "mau-thanh-vien.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Failed to download template", e);
+        } finally {
+            setDownloadingTemplate(false);
         }
     };
 
@@ -637,6 +660,41 @@ export function CreateGroupModal({
                                         </div>
                                     </div>
                                 </Field>
+
+                                {/* Batch upload section - studio variant only, batch mode only */}
+                                {variant === "studio" && createMode === "batch" && (
+                                    <div className="rounded-2xl border border-dashed border-[#E6E6E6] bg-[#FAFAFF] p-5">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <div className="font-semibold text-[#2A2438] text-sm">
+                                                    Tạo nhóm từ file
+                                                </div>
+                                                <div className="mt-1 text-[#6F6B99] text-xs">
+                                                    Tải mẫu, điền thông tin và tải lên để tạo nhóm nhanh
+                                                </div>
+                                            </div>
+                                            <div className="flex shrink-0 gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={handleDownloadTemplate}
+                                                    isLoading={downloadingTemplate}
+                                                    className="h-9 gap-1.5 rounded-xl border-[#E6E6E6] px-3 text-xs font-medium text-[#2A2438] hover:bg-gray-50">
+                                                    <Download className="h-4 w-4" />
+                                                    Tải mẫu
+                                                </Button>
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    onClick={() => setBatchUploadOpen(true)}
+                                                    className="h-9 gap-1.5 rounded-xl border-2 border-[#FF5722] bg-white px-3 text-xs font-semibold text-[#FF5722] hover:bg-[#FFF3E0]">
+                                                    <Upload className="h-4 w-4" />
+                                                    Tải lên
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="min-h-0 min-w-0 overflow-y-auto pr-2">
@@ -728,6 +786,16 @@ export function CreateGroupModal({
                             </Button>
                         </div>
                     </div>
+
+                    {/* Batch Upload Modal */}
+                    {batchUploadOpen && defaultStudioId && (
+                        <BatchUploadModal
+                            open={batchUploadOpen}
+                            onClose={() => setBatchUploadOpen(false)}
+                            studioId={defaultStudioId}
+                            onSuccess={onCreate}
+                        />
+                    )}
                 </div>
             </div>
         </div>

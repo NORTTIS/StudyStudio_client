@@ -35,6 +35,7 @@ import { GroupPerformanceRadar } from "./GroupPerformanceRadar";
 import { GroupProgressChart } from "./GroupProgressChart";
 import { MemberDetailModal } from "./MemberDetailModal";
 import { MemberList } from "./MemberList";
+import { QuickAssignModal } from "./QuickAssignModal";
 import { StudioDateRange } from "./StudioDateRange";
 import { generateActivityHeatmap, mockGroupPerformance, mockGroupProgress, mockStudioDateRange } from "./types";
 
@@ -73,6 +74,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [selectedMember, setSelectedMember] = useState<StudioMemberResponse | null>(null);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
+    const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"groups" | "analytics" | "settings">("groups");
     const [_analyticsSubTab, _setAnalyticsSubTab] = useState<
@@ -570,8 +572,26 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     <MemberList
                                         members={members}
                                         studioOwnerId={initialStudio?.ownerId}
+                                        groups={initialGroups.map((g) => ({ id: g.id || "", name: g.name || "" }))}
                                         onInviteClick={() => setIsInviteModalOpen(true)}
+                                        onQuickAssignClick={() => setIsQuickAssignOpen(true)}
                                         onMemberClick={(member) => setSelectedMember(member)}
+                                    />
+                                    <QuickAssignModal
+                                        open={isQuickAssignOpen}
+                                        onClose={() => setIsQuickAssignOpen(false)}
+                                        studioId={studioId}
+                                        groups={initialGroups.map((g) => ({
+                                            id: g.id || "",
+                                            name: g.name || "",
+                                            memberCount: g.memberCount ?? 0
+                                        }))}
+                                        studioOwnerId={initialStudio?.ownerId}
+                                        members={members}
+                                        onSuccess={(count) => {
+                                            // Refresh members after successful assign
+                                            loadData();
+                                        }}
                                     />
                                     {/* Quick Stats */}
                                     <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
