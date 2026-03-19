@@ -118,8 +118,8 @@ function DocumentCard({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-semibold text-[#261E33]">{item.name}</p>
-                    <p className="mt-1 text-sm text-[#6F6B99]">{item.updatedText}</p>
+                    <p className="truncate font-semibold text-[#261E33] text-[15px]">{item.name}</p>
+                    <p className="mt-1 text-[#6F6B99] text-sm">{item.updatedText}</p>
                 </div>
 
                 <DropdownMenu>
@@ -347,7 +347,7 @@ export default function GroupDocumentsPage() {
             <Container className="bg-white px-6 py-4">
                 <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
-                        <p className="text-sm font-medium text-[#6F6B99]">{t("sharedProjectDocuments")}</p>
+                        <p className="font-medium text-[#6F6B99] text-sm">{t("sharedProjectDocuments")}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -368,10 +368,10 @@ export default function GroupDocumentsPage() {
                     </div>
                 </div>
 
-                {isLoading ? <p className="mb-4 text-sm text-[#6F6B99]">{t("loadingDocuments")}</p> : null}
+                {isLoading ? <p className="mb-4 text-[#6F6B99] text-sm">{t("loadingDocuments")}</p> : null}
 
                 {!isLoading && docs.length === 0 ? (
-                    <p className="mb-4 text-sm text-[#6F6B99]">{t("noDocuments")}</p>
+                    <p className="mb-4 text-[#6F6B99] text-sm">{t("noDocuments")}</p>
                 ) : null}
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -422,8 +422,8 @@ export default function GroupDocumentsPage() {
                             isDragActive ? "border-[#FF5722] bg-[#FFF3EE]" : "border-[#E5E5E5] bg-white"
                         )}>
                         <Upload className="mb-2 h-8 w-8 text-[#FF5722]" />
-                        <p className="text-base font-semibold text-[#261E33]">{t("dragDropTitle")}</p>
-                        <p className="mt-1 text-sm text-[#6F6B99]">{t("dragDropSubtitle")}</p>
+                        <p className="font-semibold text-[#261E33] text-base">{t("dragDropTitle")}</p>
+                        <p className="mt-1 text-[#6F6B99] text-sm">{t("dragDropSubtitle")}</p>
                         <Button
                             type="button"
                             disabled={isUploading}
@@ -433,7 +433,7 @@ export default function GroupDocumentsPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <p className="text-sm text-[#6F6B99]">{t("uploadHint")}</p>
+                        <p className="text-[#6F6B99] text-sm">{t("uploadHint")}</p>
                     </div>
                 </div>
             </Modal>

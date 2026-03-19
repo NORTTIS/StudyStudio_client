@@ -76,7 +76,7 @@ export function NotificationDropdown() {
             }));
 
             setNotifications(cleanedData);
-        } catch (error) {
+        } catch (_error) {
             // Provide fallback notifications if API fails
             const fallbackNotifications: Notification[] = [
                 {
@@ -236,8 +236,7 @@ export function NotificationDropdown() {
                                 type="button"
                                 onClick={loadNotifications}
                                 className="text-[#6F6B99] text-xs hover:underline"
-                                title="Reload notifications">
-                            </button>
+                                title="Reload notifications"></button>
                         </div>
                     </div>
 

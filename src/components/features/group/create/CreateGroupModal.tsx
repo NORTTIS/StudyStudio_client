@@ -497,10 +497,11 @@ export function CreateGroupModal({
                                                 type="button"
                                                 onClick={() => setTemplateId((prev) => (prev === t.id ? "" : t.id))}
                                                 disabled={creating}
-                                                className={`overflow-hidden rounded-2xl border text-left transition ${selected
-                                                    ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
-                                                    : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
-                                                    }`}
+                                                className={`overflow-hidden rounded-2xl border text-left transition ${
+                                                    selected
+                                                        ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
+                                                        : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
+                                                }`}
                                                 title={`${t.name}\n\n${t.desc || ""}`}>
                                                 <div className="flex items-center justify-center bg-white py-8">
                                                     <div className="grid h-14 w-14 place-items-center rounded-xl border border-[#E6E6E6] bg-white text-[#6F6B99]">

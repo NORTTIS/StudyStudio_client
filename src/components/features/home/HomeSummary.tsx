@@ -1,14 +1,6 @@
 "use client";
 
-import {
-    AlertTriangle,
-    CalendarDays,
-    CheckCircle2,
-    Clock3,
-    Layers3,
-    Sparkles,
-    TrendingUp
-} from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Layers3, Sparkles, TrendingUp } from "lucide-react";
 import * as React from "react";
 import useSWR from "swr";
 import { apiFetch } from "@/api/api-client";
@@ -58,7 +50,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
 
     React.useEffect(() => {
         setDelta(null);
-    }, [accountKey, key]);
+    }, []);
 
     React.useEffect(() => {
         if (!enabled || typeof window === "undefined" || !hasRealAccountKey || !storageKey || !prevValueKey) {
@@ -133,7 +125,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
         } catch {
             setDelta(null);
         }
-    }, [accountKey, currentValue, enabled, hasRealAccountKey, prevValueKey, storageKey]);
+    }, [currentValue, enabled, hasRealAccountKey, prevValueKey, storageKey]);
 
     React.useEffect(() => {
         if (!(enabled && delta) || typeof window === "undefined" || !storageKey) return;
@@ -144,7 +136,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             setDelta(null);
             try {
                 localStorage.removeItem(storageKey);
-            } catch { }
+            } catch {}
             return;
         }
 
@@ -152,7 +144,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             setDelta(null);
             try {
                 localStorage.removeItem(storageKey);
-            } catch { }
+            } catch {}
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -327,9 +319,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-            status?: string;
-            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-        }
+              status?: string;
+              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+          }
         | null
         | undefined;
 
@@ -378,7 +370,7 @@ export default function HomeSummary() {
     const [cacheKey, setCacheKey] = React.useState(0);
 
     React.useEffect(() => {
-        setCacheKey(prev => prev + 1);
+        setCacheKey((prev) => prev + 1);
     }, []);
 
     const {
@@ -408,7 +400,7 @@ export default function HomeSummary() {
         null;
 
     React.useEffect(() => {
-        if (!hasSummary || !accountKey) return;
+        if (!(hasSummary && accountKey)) return;
 
         try {
             if (typeof window !== "undefined") {
@@ -416,16 +408,17 @@ export default function HomeSummary() {
                 const currentPrefix = `home-summary-delta:${String(accountKey)}:`;
                 const currentPrevPrefix = `home-summary-prev:${String(accountKey)}:`;
 
-                keys.forEach(key => {
-                    if ((key.startsWith("home-summary-delta:") || key.startsWith("home-summary-prev:")) &&
+                keys.forEach((key) => {
+                    if (
+                        (key.startsWith("home-summary-delta:") || key.startsWith("home-summary-prev:")) &&
                         !key.startsWith(currentPrefix) &&
-                        !key.startsWith(currentPrevPrefix)) {
+                        !key.startsWith(currentPrevPrefix)
+                    ) {
                         localStorage.removeItem(key);
                     }
                 });
             }
-        } catch {
-        }
+        } catch {}
     }, [accountKey, hasSummary]);
 
     const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);

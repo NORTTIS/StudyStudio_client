@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
     ArrowLeft,
     BarChart3,
@@ -8,8 +9,8 @@ import {
     LayoutGrid,
     List,
     MessageSquare,
-    Sparkles,
     Settings,
+    Sparkles,
     Trash2,
     UserPlus,
     Users
@@ -19,7 +20,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
-import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { useToast } from "@/components/ui/use-toast";
@@ -63,10 +63,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-        | {
-            role?: string | null;
-        }[]
-        | null;
+            | {
+                  role?: string | null;
+              }[]
+            | null;
     } | null;
 };
 
@@ -181,7 +181,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch { }
+                } catch {}
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
@@ -220,7 +220,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch { }
+                    } catch {}
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -285,7 +285,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             if (tab.key === "trashed" && !canSeeTrashed) return false;
             return true;
         });
-    }, [userRole, t]);
+    }, [userRole, tabs.filter]);
 
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
@@ -317,7 +317,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
@@ -360,7 +360,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -380,14 +380,12 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="w-full rounded-3xl border border-[#F3E4D7] bg-gradient-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6"
-            >
+                className="w-full rounded-3xl border border-[#F3E4D7] bg-gradient-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6">
                 <div className="mb-6 flex flex-col justify-between gap-4">
                     <div>
                         <Link
                             href={`/${locale}/group`}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-gradient-to-r hover:from-[#F97316] hover:to-[#EA580C] hover:text-white hover:shadow-md hover:shadow-orange-200"
-                        >
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-gradient-to-r hover:from-[#F97316] hover:to-[#EA580C] hover:text-white hover:shadow-md hover:shadow-orange-200">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </div>
@@ -402,8 +400,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.22 }}
-                                        className="flex items-center gap-2 text-sm font-medium text-[#8B6B4A]"
-                                    >
+                                        className="flex items-center gap-2 font-medium text-[#8B6B4A] text-sm">
                                         <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
                                         {studioName}
                                     </motion.p>
@@ -420,15 +417,11 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         <motion.h1
                                             layout
                                             transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                            className="truncate text-2xl font-bold tracking-tight text-[#261E33] lg:text-3xl"
-                                        >
+                                            className="truncate font-bold text-2xl text-[#261E33] tracking-tight lg:text-3xl">
                                             {groupName}
                                         </motion.h1>
 
-                                        <motion.div
-                                            layout
-                                            transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                        >
+                                        <motion.div layout transition={{ type: "spring", stiffness: 280, damping: 26 }}>
                                             <RolePill role={userRole} />
                                         </motion.div>
                                     </div>
@@ -441,8 +434,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -6 }}
                                                 transition={{ duration: 0.22 }}
-                                                className="mt-1.5 max-w-3xl text-sm leading-6 text-[#7C6A5A] lg:text-[15px]"
-                                            >
+                                                className="mt-1.5 max-w-3xl text-[#7C6A5A] text-sm leading-6 lg:text-[15px]">
                                                 {groupDesc}
                                             </motion.p>
                                         ) : null}
@@ -457,8 +449,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         animate={{ opacity: 1, height: "auto", y: 0 }}
                                         exit={{ opacity: 0, height: 0, y: -6 }}
                                         transition={{ duration: 0.22 }}
-                                        className="mt-4 overflow-hidden rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                                    >
+                                        className="mt-4 overflow-hidden rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
                                         {error}
                                     </motion.p>
                                 ) : null}
@@ -470,8 +461,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                 layout
                                 whileHover={{ y: -1 }}
                                 transition={{ duration: 0.18 }}
-                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] px-4 text-sm text-[#7C6A5A] shadow-sm"
-                            >
+                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] px-4 text-[#7C6A5A] text-sm shadow-sm">
                                 <Users className="h-4 w-4 text-[#EA580C]" />
                                 <span>
                                     <motion.span
@@ -479,8 +469,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         initial={{ opacity: 0.6, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ duration: 0.2 }}
-                                        className="font-semibold text-[#261E33]"
-                                    >
+                                        className="font-semibold text-[#261E33]">
                                         {memberCount}
                                     </motion.span>{" "}
                                     thành viên
@@ -494,8 +483,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                     whileHover={{ y: -2 }}
                                     whileTap={{ scale: 0.98 }}
                                     transition={{ duration: 0.18 }}
-                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] px-5 text-sm font-semibold text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-[#EA580C] hover:to-[#DC2626] hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300"
-                                >
+                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-[#EA580C] hover:to-[#DC2626] hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
                                     <UserPlus className="h-4 w-4" />
                                     Thêm thành viên
                                 </motion.button>
@@ -508,8 +496,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05, duration: 0.3 }}
-                    className="mt-2"
-                >
+                    className="mt-2">
                     <div className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-[#F3E4D7] bg-[#FFFCF8] p-1.5 shadow-sm">
                         {visibleTabs.map((tab) => {
                             const Icon = tab.icon;
@@ -519,7 +506,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                             const active =
                                 tab.key === "board"
                                     ? curPath === target
-                                    : curPath === target || curPath.startsWith(target + "/");
+                                    : curPath === target || curPath.startsWith(`${target}/`);
 
                             return (
                                 <Link key={tab.key} href={href} className="relative shrink-0">
@@ -528,12 +515,11 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         whileTap={{ scale: 0.98 }}
                                         transition={{ duration: 0.15 }}
                                         className={twMerge(
-                                            "group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                                            "group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200",
                                             active
                                                 ? "text-white shadow-md shadow-orange-200"
                                                 : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
-                                        )}
-                                    >
+                                        )}>
                                         {active ? (
                                             <motion.div
                                                 layoutId="activeGroupTab"
@@ -549,9 +535,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         <Icon
                                             className={twMerge(
                                                 "relative z-10 h-4 w-4 transition-colors duration-200",
-                                                active
-                                                    ? "text-white"
-                                                    : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                active ? "text-white" : "text-[#8C8C8C] group-hover:text-[#EA580C]"
                                             )}
                                         />
                                         <span className="relative z-10 whitespace-nowrap">{tab.label}</span>

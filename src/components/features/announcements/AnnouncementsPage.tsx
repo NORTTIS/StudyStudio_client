@@ -18,6 +18,7 @@ import { Badge, Button, ConfigProvider, Input, Modal, message, Select, Spin, Tab
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import { type AdminAnnouncement } from "@/api/admin-announcements";
 import {
     type Announcement,
     deleteUserAnnouncement,
@@ -27,7 +28,6 @@ import {
     markAnnouncementAsRead,
     type UserAnnouncement
 } from "@/api/user-announcements";
-import { type AdminAnnouncement } from "@/api/admin-announcements";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -415,8 +415,8 @@ export function AnnouncementsPage() {
                                             selectedDetail.type === "0" || selectedDetail.type === "info"
                                                 ? t("Announcements.info")
                                                 : selectedDetail.type === "1" || selectedDetail.type === "warning"
-                                                    ? t("Announcements.warning")
-                                                    : t("Announcements.critical")
+                                                  ? t("Announcements.warning")
+                                                  : t("Announcements.critical")
                                         }
                                         className={`${getTypeColorClass(selectedDetail.type)} rounded-full px-4 py-1 font-bold text-[10px] uppercase tracking-widest`}
                                     />

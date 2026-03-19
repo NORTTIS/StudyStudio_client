@@ -64,7 +64,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [paymentId, locale, payment?.paymentStatus, router, toast]);
+    }, [paymentId, locale, payment?.paymentStatus, toast]);
 
     const handleCancel = async () => {
         if (!payment) return;
@@ -154,8 +154,12 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                             <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white p-12 shadow-sm">
                                 <div className="text-center">
                                     <XCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
-                                    <h3 className="mb-2 font-semibold text-[#261E33] text-lg">Không tìm thấy thanh toán</h3>
-                                    <p className="mb-6 text-[#6F6B99] text-sm">Mã thanh toán không hợp lệ hoặc đã bị xóa khỏi hệ thống</p>
+                                    <h3 className="mb-2 font-semibold text-[#261E33] text-lg">
+                                        Không tìm thấy thanh toán
+                                    </h3>
+                                    <p className="mb-6 text-[#6F6B99] text-sm">
+                                        Mã thanh toán không hợp lệ hoặc đã bị xóa khỏi hệ thống
+                                    </p>
                                     <Link href={`/${locale}/settings/billing`}>
                                         <Button className="bg-[#FF5F3D] font-bold hover:bg-[#FF5F3D]/90">
                                             Quay lại trang quản lý gói

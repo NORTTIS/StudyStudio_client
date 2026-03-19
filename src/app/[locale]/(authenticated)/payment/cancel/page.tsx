@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
+import { useEffect } from "react";
 
 export default function PaymentCancelPage() {
     const router = useRouter();

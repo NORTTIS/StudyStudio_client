@@ -183,7 +183,7 @@ export function BillingHistoryTab() {
                     header: "Mã đơn hàng",
                     key: "orderCode",
                     width: 15,
-                    format: (value: number) => `#${value}`
+                    format: (value: unknown) => `#${value}`
                 },
                 {
                     header: "Tên người dùng",
@@ -204,7 +204,7 @@ export function BillingHistoryTab() {
                     header: "Số tiền",
                     key: "amount",
                     width: 15,
-                    format: formatCurrencyForExport
+                    format: (value: unknown) => formatCurrencyForExport(value as number)
                 },
                 {
                     header: "Phương thức thanh toán",
@@ -215,19 +215,19 @@ export function BillingHistoryTab() {
                     header: "Trạng thái",
                     key: "paymentStatus",
                     width: 15,
-                    format: formatPaymentStatusForExport
+                    format: (value: unknown) => formatPaymentStatusForExport(value as number)
                 },
                 {
                     header: "Ngày tạo",
                     key: "createdAt",
                     width: 20,
-                    format: formatDateForExport
+                    format: (value: unknown) => formatDateForExport(value as string)
                 },
                 {
                     header: "Ngày thanh toán",
                     key: "paidAt",
                     width: 20,
-                    format: (value: string | null) => (value ? formatDateForExport(value) : "Chưa thanh toán")
+                    format: (value: unknown) => (value ? formatDateForExport(value as string) : "Chưa thanh toán")
                 }
             ];
 
@@ -238,14 +238,14 @@ export function BillingHistoryTab() {
                     filterStatus === "all"
                         ? undefined
                         : filterStatus === 0
-                          ? "Đang chờ"
-                          : filterStatus === 1
-                            ? "Thành công"
-                            : filterStatus === 2
-                              ? "Đã hủy"
-                              : filterStatus === 3
-                                ? "Thất bại"
-                                : undefined,
+                            ? "Đang chờ"
+                            : filterStatus === 1
+                                ? "Thành công"
+                                : filterStatus === 2
+                                    ? "Đã hủy"
+                                    : filterStatus === 3
+                                        ? "Thất bại"
+                                        : undefined,
                 dateRange:
                     dateRange?.[0] && dateRange[1]
                         ? `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`
