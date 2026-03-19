@@ -3,7 +3,8 @@
  * Handles studio/workspace operations
  */
 
-import { apiFetch } from "./api-client";
+import { apiDownload, apiFetch } from "./api-client";
+import { getAccessToken } from "./auth";
 import type { components } from "./types";
 
 export type StudioMemberResponse = components["schemas"]["StudioMemberResponse"];
@@ -184,4 +185,74 @@ export async function getStudioMembers(studioId: string, locale = "vi") {
         method: "GET",
         locale
     });
+}
+
+// Batch assign types
+export type BatchAssignResponse = components["schemas"]["BatchAssignResponse"];
+export type BatchErrorRow = components["schemas"]["BatchErrorRow"];
+
+// Build API URL helper
+function buildStudioApiUrl(path: string) {
+    const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+    return `${baseUrl}${path}`;
+}
+
+/**
+ * Download CSV template for batch assign
+ */
+export async function downloadBatchAssignTemplate(studioId: string): Promise<Blob> {
+    return apiDownload(buildStudioApiUrl(`/studio/${studioId}/members/batch-assign/template`));
+}
+
+/**
+ * Upload batch-assign CSV file
+ */
+export async function uploadBatchAssignCsv(
+    studioId: string,
+    file: File
+): Promise<components["schemas"]["BatchAssignResponseApiResponse"]> {
+    const fullUrl = buildStudioApiUrl(`/studio/${studioId}/members/batch-assign`);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = getAccessToken();
+    const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+            // NOTE: no Content-Type header — browser auto-sets multipart boundary for FormData
+        },
+        body: formData
+    });
+
+    return response.json();
+}
+
+// Random assign types
+export type RandomAssignRequest = components["schemas"]["RandomAssignRequest"];
+export type RandomAssignResponseApiResponse = components["schemas"]["RandomAssignResponseApiResponse"];
+
+/**
+ * Randomly assign studio members to groups
+ */
+export async function randomAssignMembers(
+    studioId: string,
+    body: RandomAssignRequest,
+    locale = "vi"
+): Promise<RandomAssignResponseApiResponse> {
+    const fullUrl = buildStudioApiUrl(`/studio/${studioId}/groups/random-assign`);
+
+    const token = getAccessToken();
+    const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept-Language": locale,
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+
+    return response.json();
 }
