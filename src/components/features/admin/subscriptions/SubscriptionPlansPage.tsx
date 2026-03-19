@@ -74,8 +74,8 @@ export function SubscriptionPlansPage() {
             if (plansResult.status === "success" && plansResult.data && plansResult.data.plans.length > 0) {
                 // Sử dụng plans thật từ API
                 const realPlans = plansResult.data.plans.map((plan) => ({
-                    ...plan,
-                    subscriberCount: plan.billingCycle === 0 ? 10117 : 2341 // Mock subscriber count
+                    ...plan
+                    // Sử dụng subscriberCount thật từ API thay vì mock data
                 }));
                 setPlans(realPlans);
                 console.log("Using real plans from SubscriptionPlan API:", realPlans);

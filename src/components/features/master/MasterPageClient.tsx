@@ -3,10 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createStudio, deleteStudio, getStudios, type StudioListSubscription, type StudioUI, updateStudio } from "@/api/studios";
+import {
+    createStudio,
+    deleteStudio,
+    getStudios,
+    type StudioListSubscription,
+    type StudioUI,
+    updateStudio
+} from "@/api/studios";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { Container } from "@/components/common";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
+import { StudioLimitModal } from "@/components/features/master/StudioLimitModal";
 import { StudioModal } from "@/components/features/master/StudioModal";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
@@ -30,10 +38,10 @@ const gradientBackgrounds = [
     "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
     "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
     "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
-    "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+    "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"
 ];
 
-function getGradientBackground(name: string, index: number): string {
+function getGradientBackground(name: string, _index: number): string {
     // Generate a consistent gradient based on studio name
     const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return gradientBackgrounds[hash % gradientBackgrounds.length];
@@ -61,18 +69,16 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
             className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white text-left transition-all hover:border-[#FF5F3D] hover:shadow-lg"
             onClick={onClick}>
             {/* Gradient Header */}
-            <div
-                className="relative h-24 p-5"
-                style={{ background: gradient }}>
+            <div className="relative h-24 p-5" style={{ background: gradient }}>
                 {/* First Letter Avatar */}
-                <div className="absolute bottom-[-24px] left-5 flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl font-bold text-gray-700 shadow-md">
+                <div className="absolute bottom-[-24px] left-5 flex h-12 w-12 items-center justify-center rounded-full bg-white font-bold text-gray-700 text-xl shadow-md">
                     {firstLetter}
                 </div>
                 {/* Role Badge */}
-                <div className="absolute bottom-[-24px] right-5">
+                <div className="absolute right-5 bottom-[-24px]">
                     {studio.studioRole !== undefined && (
                         <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium text-white ${
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-white text-xs ${
                                 isOwner
                                     ? "bg-gradient-to-r from-orange-500 to-red-500"
                                     : "bg-gradient-to-r from-teal-500 to-cyan-500"
@@ -85,9 +91,7 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
             {/* Content */}
             <div className="mt-8 p-5 pt-4">
                 <div className="mb-3 flex items-start justify-between">
-                    <h3 className="font-semibold text-[#261E33] text-lg group-hover:text-[#FF5F3D]">
-                        {studio.name}
-                    </h3>
+                    <h3 className="font-semibold text-[#261E33] text-lg group-hover:text-[#FF5F3D]">{studio.name}</h3>
                     {canEdit && (
                         <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                             <button
@@ -98,8 +102,17 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                                 }}
                                 className="rounded p-1 hover:bg-gray-100"
                                 title="Edit">
-                                <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <svg
+                                    className="h-4 w-4 text-gray-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
                                 </svg>
                             </button>
                             <button
@@ -110,8 +123,17 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                                 }}
                                 className="rounded p-1 hover:bg-gray-100"
                                 title="Delete">
-                                <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                <svg
+                                    className="h-4 w-4 text-red-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
                                 </svg>
                             </button>
                         </div>
@@ -121,7 +143,12 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                 <div className="flex items-center gap-4 border-gray-100 border-t pt-4 text-[#6F6B99] text-sm">
                     <div className="flex items-center gap-1.5">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                            />
                         </svg>
                         <span>
                             {studio.groupCount} {t("groups")}
@@ -129,7 +156,12 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                     </div>
                     <div className="flex items-center gap-1.5">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
                         </svg>
                         <span>
                             {studio.memberCount} {t("members")}
@@ -141,7 +173,11 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
     );
 }
 
-export default function MasterPageClient({ initialUserProfile, initialStudios, initialSubscription }: MasterPageClientProps) {
+export default function MasterPageClient({
+    initialUserProfile,
+    initialStudios,
+    initialSubscription
+}: MasterPageClientProps) {
     const t = useTranslations("MasterPage");
     const locale = useLocale();
     const router = useRouter();
@@ -155,6 +191,7 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
     const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
@@ -186,7 +223,7 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
 
         return {
             filteredOwnedStudios: ownedStudios.filter(filterFn),
-            filteredJoinedStudios: joinedStudios.filter(filterFn),
+            filteredJoinedStudios: joinedStudios.filter(filterFn)
         };
     }, [searchQuery, ownedStudios, joinedStudios]);
 
@@ -224,10 +261,7 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
 
     const handleCreateStudio = async (data: { name: string; description: string; type: string }) => {
         if (totalStudios >= studioLimit) {
-            toast({
-                description: t("modal.limitReached") || `Bạn đã đạt giới hạn ${studioLimit} studio`,
-                variant: "destructive"
-            });
+            setIsLimitModalOpen(true);
             return;
         }
 
@@ -344,16 +378,12 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
     };
 
     // Render studio grid section
-    const renderStudioSection = (
-        title: string,
-        studioList: StudioUI[],
-        emptyMessage: string
-    ) => {
+    const renderStudioSection = (title: string, studioList: StudioUI[], _emptyMessage: string) => {
         if (studioList.length === 0) return null;
 
         return (
             <div className="mb-8">
-                <h2 className="mb-4 font-semibold text-xl text-[#261E33]">{title}</h2>
+                <h2 className="mb-4 font-semibold text-[#261E33] text-xl">{title}</h2>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {studioList.map((studio, index) => (
                         <StudioCard
@@ -373,7 +403,7 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
 
     const hasOwnedStudios = filteredOwnedStudios.length > 0;
     const hasJoinedStudios = filteredJoinedStudios.length > 0;
-    const hasNoResults = !hasOwnedStudios && !hasJoinedStudios;
+    const hasNoResults = !(hasOwnedStudios || hasJoinedStudios);
 
     return (
         <div className="min-h-screen bg-[#F8F8F8] text-[#261E33]">
@@ -470,6 +500,11 @@ export default function MasterPageClient({ initialUserProfile, initialStudios, i
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDeleteStudio}
                 studioName={selectedStudio?.name || ""}
+            />
+            <StudioLimitModal
+                isOpen={isLimitModalOpen}
+                onClose={() => setIsLimitModalOpen(false)}
+                studioLimit={studioLimit}
             />
         </div>
     );

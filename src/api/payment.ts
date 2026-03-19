@@ -41,10 +41,11 @@ export async function createPayment(planId: string, locale: string): Promise<Api
         const response = await apiPost<CreatePaymentResponse>("/payment/create", { planId }, locale);
         return response;
     } catch (error: unknown) {
+        const errorResponse = error as { response?: { data?: { code?: string; message?: string } } };
         return {
             status: "error",
-            code: (error as any)?.response?.data?.code || "PAYMENT_ERROR",
-            message: (error as any)?.response?.data?.message || "Failed to create payment",
+            code: errorResponse?.response?.data?.code || "PAYMENT_ERROR",
+            message: errorResponse?.response?.data?.message || "Failed to create payment",
             data: null
         };
     }
@@ -52,14 +53,25 @@ export async function createPayment(planId: string, locale: string): Promise<Api
 
 // Get Payment Status
 export async function getPaymentStatus(paymentId: string, locale: string): Promise<ApiResponse<PaymentStatusResponse>> {
-    try {
-        const response = await apiGet<PaymentStatusResponse>(`/payment/${paymentId}/status`, locale);
-        return response;
-    } catch (error: unknown) {
+    if (!paymentId || paymentId === "undefined" || paymentId === "null") {
         return {
             status: "error",
-            code: (error as any)?.response?.data?.code || "PAYMENT_ERROR",
-            message: (error as any)?.response?.data?.message || "Failed to get payment status",
+            code: "INVALID_ID",
+            message: "Mã thanh toán không hợp lệ",
+            data: null
+        };
+    }
+    try {
+        const response = await apiGet<PaymentStatusResponse>(`/payment/${paymentId}/status`, locale, false, {
+            cache: "no-store"
+        });
+        return response;
+    } catch (error: unknown) {
+        const errorResponse = error as { response?: { data?: { code?: string; message?: string } } };
+        return {
+            status: "error",
+            code: errorResponse?.response?.data?.code || "PAYMENT_ERROR",
+            message: errorResponse?.response?.data?.message || "Failed to get payment status",
             data: null
         };
     }
@@ -71,10 +83,11 @@ export async function retryPayment(paymentId: string, locale: string): Promise<A
         const response = await apiPost<CreatePaymentResponse>(`/payment/${paymentId}/retry`, {}, locale);
         return response;
     } catch (error: unknown) {
+        const errorResponse = error as { response?: { data?: { code?: string; message?: string } } };
         return {
             status: "error",
-            code: (error as any)?.response?.data?.code || "PAYMENT_ERROR",
-            message: (error as any)?.response?.data?.message || "Failed to retry payment",
+            code: errorResponse?.response?.data?.code || "PAYMENT_ERROR",
+            message: errorResponse?.response?.data?.message || "Failed to retry payment",
             data: null
         };
     }
@@ -98,7 +111,9 @@ export async function cancelPayment(paymentId: string, locale: string): Promise<
 // Get Payment History
 export async function getPaymentHistory(locale: string): Promise<ApiResponse<PaymentHistoryResponse>> {
     try {
-        const response = await apiGet<PaymentHistoryResponse>("/payment/history", locale);
+        const response = await apiGet<PaymentHistoryResponse>("/payment/history", locale, false, {
+            cache: "no-store"
+        });
         return response;
     } catch (error: unknown) {
         return {

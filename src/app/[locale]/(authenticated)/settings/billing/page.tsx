@@ -253,43 +253,84 @@ export default function BillingPage() {
     const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const [paymentToCancel, setPaymentToCancel] = useState<string | null>(null);
 
+    // Check for success query param
+    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const isReturningFromSuccess = searchParams?.get("success") === "true";
+
     /* Load data */
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [plansResult, profileResult, historyResult] = await Promise.all([
-                    getSubscriptionPlans(locale),
-                    getUserProfile(locale),
-                    getPaymentHistory(locale)
-                ]);
+                // If returning from success, wait a bit for backend to process
+                if (isReturningFromSuccess) {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+
+                const plansResult = await getSubscriptionPlans(locale);
+                let profileResult = await getUserProfile(locale);
+                let historyResult = await getPaymentHistory(locale);
 
                 if (plansResult.status === "success" && plansResult.data) {
                     setAvailablePlans(sortPlansByBillingCycle(plansResult.data.plans));
                 }
 
+                let isPremium = false;
                 if (profileResult.status === "success" && profileResult.data) {
                     const userPlan = profileResult.data.subscriptionPlan;
-                    const isPremium = userPlan && userPlan.billingCycle > 0;
-                    setCurrentPlan(isPremium ? "premium" : "free");
-                    localStorage.setItem("currentPlan", isPremium ? "premium" : "free");
-                } else {
-                    setCurrentPlan("free");
+                    isPremium = !!(userPlan && userPlan.billingCycle > 0);
                 }
 
-                if (historyResult.status === "success" && historyResult.data) {
-                    setPaymentHistoryData(historyResult.data.paymentHistories);
-                    const pending = historyResult.data.paymentHistories.filter(
-                        (p: PaymentHistory) => p.status === 0 // 0 = PENDING
-                    );
-                    setPendingPayments(pending);
-                    if (pending.length > 0) {
-                        messageApi.warning(`Bạn có ${pending.length} thanh toán đang chờ xử lý.`);
+                // Initial history processing
+                let histories =
+                    historyResult.status === "success" && historyResult.data ? historyResult.data.paymentHistories : [];
+
+                // AGGRESSIVE RETRY LOGIC for eventual consistency
+                const needsRetry =
+                    isReturningFromSuccess && !(isPremium && histories.some((p: PaymentHistory) => p.status === 1));
+
+                if (needsRetry) {
+                    setIsLoadingPlan(true); // Keep loading spinner
+                    setIsLoadingHistory(true);
+
+                    // Retry up to 3 times
+                    for (let attempt = 1; attempt <= 3; attempt++) {
+                        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt)); // wait 2s, 4s, 6s
+
+                        profileResult = await getUserProfile(locale);
+                        historyResult = await getPaymentHistory(locale);
+
+                        if (profileResult.status === "success" && profileResult.data) {
+                            const userPlan = profileResult.data.subscriptionPlan;
+                            isPremium = !!(userPlan && userPlan.billingCycle > 0);
+                        }
+
+                        if (historyResult.status === "success" && historyResult.data) {
+                            histories = historyResult.data.paymentHistories;
+                        }
+
+                        // If it became premium or success payment found, stop retrying
+                        if (isPremium || histories.some((p: PaymentHistory) => p.status === 1)) {
+                            if (isReturningFromSuccess) {
+                                messageApi.success("Đã đồng bộ thông tin thanh toán!");
+                            }
+                            break;
+                        }
                     }
-                } else {
-                    setPaymentHistoryData([]);
-                    setPendingPayments([]);
                 }
-            } catch {
+
+                // Final state update
+                setPaymentHistoryData(histories);
+                setCurrentPlan(isPremium ? "premium" : "free");
+                localStorage.setItem("currentPlan", isPremium ? "premium" : "free");
+
+                const pending = histories.filter((p: PaymentHistory) => p.status === 0);
+                setPendingPayments(pending);
+
+                if (pending.length > 0 && !isPremium) {
+                    messageApi.warning(`Bạn có ${pending.length} thanh toán đang chờ xử lý.`);
+                }
+            } catch (err) {
+                console.error("Load billing data failed:", err);
                 setCurrentPlan("free");
                 setPaymentHistoryData([]);
                 setPendingPayments([]);
@@ -299,7 +340,7 @@ export default function BillingPage() {
             }
         };
         loadData();
-    }, [locale, messageApi.warning]);
+    }, [locale, messageApi, isReturningFromSuccess]);
 
     const subscriptionPlans = availablePlans.map((plan) => ({
         id: plan.billingCycle === 0 ? "free" : "premium",

@@ -42,5 +42,5 @@ export interface UserProfile {
  * @param locale - Current locale for API response messages
  */
 export async function getUserProfile(locale: string): Promise<ApiResponse<UserProfile>> {
-    return apiGet<UserProfile>("/user-profile", locale);
+    return apiGet<UserProfile>("/user-profile", locale, false, { cache: "no-store" });
 }

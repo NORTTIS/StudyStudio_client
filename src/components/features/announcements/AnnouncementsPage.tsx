@@ -28,19 +28,9 @@ import {
 } from "@/api/user-announcements";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 
 export function AnnouncementsPage() {
@@ -127,9 +117,7 @@ export function AnnouncementsPage() {
             const result = await markAnnouncementAsRead(userAnnouncementId, locale);
             if (result.status === "success") {
                 setUserAnnouncements((prev) =>
-                    prev.map((ann) =>
-                        ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann
-                    )
+                    prev.map((ann) => (ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann))
                 );
 
                 if (showMsg) {
@@ -154,9 +142,7 @@ export function AnnouncementsPage() {
         try {
             const result = await deleteUserAnnouncement(userAnnouncementId, locale);
             if (result.status === "success") {
-                setUserAnnouncements((prev) =>
-                    prev.filter((ann) => ann.userAnnouncementId !== userAnnouncementId)
-                );
+                setUserAnnouncements((prev) => prev.filter((ann) => ann.userAnnouncementId !== userAnnouncementId));
                 toast({
                     description: t("Announcements.deleteSuccess")
                 });
@@ -255,7 +241,7 @@ export function AnnouncementsPage() {
             <div className="flex min-h-[70vh] items-center justify-center bg-white">
                 <div className="flex flex-col items-center gap-4">
                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
-                    <p className="text-sm font-medium text-[#7C6A5A]">Đang tải thông báo...</p>
+                    <p className="font-medium text-[#7C6A5A] text-sm">Đang tải thông báo...</p>
                 </div>
             </div>
         );
@@ -268,31 +254,28 @@ export function AnnouncementsPage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, ease: "easeOut" }}
-                    className="w-full rounded-3xl border border-orange-200 bg-white px-4 py-5 shadow-[0_10px_40px_rgba(249,115,22,0.08)] lg:px-6 lg:py-6"
-                >
+                    className="w-full rounded-3xl border border-orange-200 bg-white px-4 py-5 shadow-[0_10px_40px_rgba(249,115,22,0.08)] lg:px-6 lg:py-6">
                     <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                             <motion.div
                                 initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.22 }}
-                                className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700"
-                            >
+                                className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-700 text-sm">
                                 <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.12)]" />
                                 Learning Hub
                             </motion.div>
 
                             <div className="mt-4 flex items-start gap-3">
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FB923C] via-[#F97316] to-[#EA580C] shadow-md shadow-orange-200">
-                                    <BellOutlined className="text-xl text-white" />
+                                    <BellOutlined className="text-white text-xl" />
                                 </div>
 
                                 <div className="min-w-0">
                                     <motion.h1
                                         layout
                                         transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                        className="text-3xl font-extrabold tracking-tight leading-[1.2] text-[#261E33] lg:text-5xl"
-                                    >
+                                        className="font-extrabold text-3xl text-[#261E33] leading-[1.2] tracking-tight lg:text-5xl">
                                         {t("Announcements.title")}
                                     </motion.h1>
 
@@ -300,8 +283,7 @@ export function AnnouncementsPage() {
                                         initial={{ opacity: 0, y: 6 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.22, delay: 0.05 }}
-                                        className="mt-2 max-w-3xl text-sm leading-7 text-[#7C6A5A] lg:text-[15px]"
-                                    >
+                                        className="mt-2 max-w-3xl text-[#7C6A5A] text-sm leading-7 lg:text-[15px]">
                                         Theo dõi cập nhật học tập, thông báo hệ thống và tin nhắn cá nhân trong giao
                                         diện sáng sủa, hiện đại và tập trung hơn.
                                     </motion.p>
@@ -314,8 +296,7 @@ export function AnnouncementsPage() {
                                 layout
                                 whileHover={{ y: -1 }}
                                 transition={{ duration: 0.18 }}
-                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 text-sm text-[#7C6A5A] shadow-sm"
-                            >
+                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 text-[#7C6A5A] text-sm shadow-sm">
                                 <BellOutlined className="text-[#EA580C]" />
                                 <span>
                                     <motion.span
@@ -323,8 +304,7 @@ export function AnnouncementsPage() {
                                         initial={{ opacity: 0.6, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ duration: 0.2 }}
-                                        className="font-bold text-[#261E33]"
-                                    >
+                                        className="font-bold text-[#261E33]">
                                         {publicAnnouncements.length + userAnnouncements.length}
                                     </motion.span>{" "}
                                     thông báo
@@ -335,8 +315,7 @@ export function AnnouncementsPage() {
                                 layout
                                 whileHover={{ y: -1 }}
                                 transition={{ duration: 0.18 }}
-                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 text-sm text-[#7C6A5A] shadow-sm"
-                            >
+                                className="inline-flex h-11 items-center gap-2 rounded-xl border border-orange-200 bg-white px-4 text-[#7C6A5A] text-sm shadow-sm">
                                 <EyeOutlined className="text-[#EA580C]" />
                                 <span>
                                     <motion.span
@@ -344,8 +323,7 @@ export function AnnouncementsPage() {
                                         initial={{ opacity: 0.6, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ duration: 0.2 }}
-                                        className="font-bold text-[#261E33]"
-                                    >
+                                        className="font-bold text-[#261E33]">
                                         {unreadCount}
                                     </motion.span>{" "}
                                     chưa đọc
@@ -380,8 +358,7 @@ export function AnnouncementsPage() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05, duration: 0.3 }}
-                    className="mt-6"
-                >
+                    className="mt-6">
                     <div className="rounded-[28px] border border-orange-200 bg-white p-4 shadow-[0_8px_24px_rgba(249,115,22,0.06)]">
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                             <div className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-orange-200 bg-orange-50/40 p-1.5 shadow-sm">
@@ -405,17 +382,15 @@ export function AnnouncementsPage() {
                                             key={tab.key}
                                             type="button"
                                             onClick={() => setActiveTab(tab.key)}
-                                            className="relative shrink-0"
-                                        >
+                                            className="relative shrink-0">
                                             <motion.div
                                                 whileHover={{ y: -1 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 transition={{ duration: 0.15 }}
-                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${active
-                                                    ? "text-white shadow-md shadow-orange-200"
-                                                    : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
-                                                    }`}
-                                            >
+                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${active
+                                                        ? "text-white shadow-md shadow-orange-200"
+                                                        : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                                    }`}>
                                                 {active ? (
                                                     <motion.div
                                                         layoutId="activeAnnouncementTab"
@@ -430,10 +405,9 @@ export function AnnouncementsPage() {
 
                                                 <span
                                                     className={`relative z-10 transition-colors duration-200 ${active
-                                                        ? "text-white"
-                                                        : "text-[#8C8C8C] group-hover:text-[#EA580C]"
-                                                        }`}
-                                                >
+                                                            ? "text-white"
+                                                            : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                        }`}>
                                                     {tab.icon}
                                                 </span>
 
@@ -441,11 +415,10 @@ export function AnnouncementsPage() {
 
                                                 {"badge" in tab && tab.badge ? (
                                                     <span
-                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-bold ${active
-                                                            ? "bg-white/20 text-white"
-                                                            : "bg-orange-100 text-orange-700"
-                                                            }`}
-                                                    >
+                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${active
+                                                                ? "bg-white/20 text-white"
+                                                                : "bg-orange-100 text-orange-700"
+                                                            }`}>
                                                         {tab.badge}
                                                     </span>
                                                 ) : null}
@@ -457,7 +430,7 @@ export function AnnouncementsPage() {
 
                             <div className="flex flex-1 flex-col gap-3 xl:max-w-xl xl:flex-row xl:justify-end">
                                 <div className="relative">
-                                    <SearchOutlined className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <SearchOutlined className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400" />
                                     <Input
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -491,8 +464,7 @@ export function AnnouncementsPage() {
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.2 }}
-                        >
+                            transition={{ duration: 0.2 }}>
                             {currentItems.length === 0 ? (
                                 <EmptyState isSearch={!!searchQuery} />
                             ) : (
@@ -533,8 +505,7 @@ export function AnnouncementsPage() {
                         setSelectedId(null);
                         setSelectedDetail(null);
                     }
-                }}
-            >
+                }}>
                 <DialogContent className="max-h-[90vh] overflow-hidden rounded-[28px] border border-orange-100 bg-white p-0 sm:max-w-[760px]">
                     {isDetailLoading ? (
                         <div className="flex justify-center p-20">
@@ -544,41 +515,38 @@ export function AnnouncementsPage() {
                         selectedDetail && (
                             <div>
                                 <div
-                                    className={`bg-gradient-to-br ${getTypeMeta(selectedDetail.type).modalBg} border-b border-orange-100 px-6 py-6`}
-                                >
+                                    className={`bg-gradient-to-br ${getTypeMeta(selectedDetail.type).modalBg} border-orange-100 border-b px-6 py-6`}>
                                     <div className="mb-4 flex items-center gap-4">
                                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm">
                                             {getTypeMeta(selectedDetail.type).iconLarge}
                                         </div>
                                         <div>
                                             <div
-                                                className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] ${getTypeMeta(selectedDetail.type).badgeClass}`}
-                                            >
+                                                className={`inline-flex rounded-full border px-3 py-1 font-bold text-xs uppercase tracking-[0.16em] ${getTypeMeta(selectedDetail.type).badgeClass}`}>
                                                 {getTypeMeta(selectedDetail.type).label}
                                             </div>
-                                            <p className="mt-2 block text-sm text-slate-500">
+                                            <p className="mt-2 block text-slate-500 text-sm">
                                                 <ClockCircleOutlined className="mr-2" />
                                                 {formatDate(selectedDetail.publishedAt)}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <h3 className="text-3xl font-extrabold leading-[1.2] text-slate-900">
+                                    <h3 className="font-extrabold text-3xl text-slate-900 leading-[1.2]">
                                         {selectedDetail.title}
                                     </h3>
                                 </div>
 
                                 <div className="max-h-[50vh] overflow-y-auto px-6 py-6">
-                                    <p className="whitespace-pre-wrap text-[15px] leading-8 text-slate-600">
+                                    <p className="whitespace-pre-wrap text-[15px] text-slate-600 leading-8">
                                         {selectedDetail.content}
                                     </p>
                                 </div>
 
-                                <DialogFooter className="border-t border-orange-100 px-6 py-5">
+                                <DialogFooter className="border-orange-100 border-t px-6 py-5">
                                     <Button
                                         onClick={() => setSelectedId(null)}
-                                        className="h-11 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] px-8 font-semibold text-white hover:from-[#EA580C] hover:to-[#DC2626]"
-                                    >
+                                        className="h-11 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] px-8 font-semibold text-white hover:from-[#EA580C] hover:to-[#DC2626]">
                                         {t("Announcements.confirmed") || "Đã hiểu"}
                                     </Button>
                                 </DialogFooter>
@@ -589,8 +557,7 @@ export function AnnouncementsPage() {
                     <button
                         type="button"
                         onClick={() => setSelectedId(null)}
-                        className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-slate-400 transition hover:bg-white hover:text-slate-700"
-                    >
+                        className="absolute top-4 right-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-slate-400 transition hover:bg-white hover:text-slate-700">
                         <CloseOutlined />
                     </button>
                 </DialogContent>
@@ -614,12 +581,11 @@ function StatCard({
         <motion.div
             whileHover={{ y: -3 }}
             transition={{ duration: 0.2 }}
-            className="rounded-3xl border border-orange-200 bg-white p-5 shadow-[0_10px_30px_rgba(249,115,22,0.06)]"
-        >
+            className="rounded-3xl border border-orange-200 bg-white p-5 shadow-[0_10px_30px_rgba(249,115,22,0.06)]">
             <div className="flex items-start justify-between gap-4">
                 <div>
-                    <p className="block text-sm font-bold text-[#7C6A5A]">{label}</p>
-                    <h2 className="mt-2 text-4xl font-extrabold tracking-tight text-[#261E33]">{value}</h2>
+                    <p className="block font-bold text-[#7C6A5A] text-sm">{label}</p>
+                    <h2 className="mt-2 font-extrabold text-4xl text-[#261E33] tracking-tight">{value}</h2>
                 </div>
                 <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconClass}`}>
                     <span className="text-xl">{icon}</span>
@@ -660,23 +626,22 @@ function AnnouncementCard({
             whileHover={{ y: -2 }}
             transition={{ duration: 0.18 }}
             onClick={onClick}
-            className="group cursor-pointer rounded-3xl border border-orange-200 bg-white p-5 shadow-[0_10px_30px_rgba(249,115,22,0.06)] transition-all hover:shadow-[0_14px_36px_rgba(249,115,22,0.12)]"
-        >
+            className="group cursor-pointer rounded-3xl border border-orange-200 bg-white p-5 shadow-[0_10px_30px_rgba(249,115,22,0.06)] transition-all hover:shadow-[0_14px_36px_rgba(249,115,22,0.12)]">
             <div className="flex items-start gap-4">
-                <div className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${meta.cardClass}`}>
+                <div
+                    className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl ${meta.cardClass}`}>
                     {meta.icon}
                 </div>
 
                 <div className="min-w-0 flex-1">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                         <div
-                            className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] ${meta.badgeClass}`}
-                        >
+                            className={`inline-flex rounded-full border px-3 py-1 font-bold text-[11px] uppercase tracking-[0.16em] ${meta.badgeClass}`}>
                             {meta.label}
                         </div>
 
                         {isUnread && (
-                            <Badge className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-[11px] font-bold text-orange-700 hover:bg-orange-100">
+                            <Badge className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 font-bold text-[11px] text-orange-700 hover:bg-orange-100">
                                 <span className="h-2 w-2 rounded-full bg-orange-500" />
                                 Chưa đọc
                             </Badge>
@@ -685,19 +650,18 @@ function AnnouncementCard({
 
                     <h4
                         className={`mb-2 text-lg leading-7 ${isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
-                            }`}
-                    >
+                            }`}>
                         {item.title}
                     </h4>
 
-                    <p className="mb-4 line-clamp-2 text-sm leading-7 text-[#7C6A5A]">{item.content}</p>
+                    <p className="mb-4 line-clamp-2 text-[#7C6A5A] text-sm leading-7">{item.content}</p>
 
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                        <p className="text-xs font-medium text-slate-400">
+                        <p className="font-medium text-slate-400 text-xs">
                             <ClockCircleOutlined className="mr-2" />
                             {formatDate(item.publishedAt)}
                         </p>
-                        <p className="text-xs font-medium text-slate-400">
+                        <p className="font-medium text-slate-400 text-xs">
                             {item.type === "0" || item.type === "info" ? "Hệ thống" : "Cập nhật"}
                         </p>
                     </div>
@@ -709,8 +673,7 @@ function AnnouncementCard({
                             variant="ghost"
                             size="icon"
                             className="text-red-500 opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100"
-                            onClick={(e) => onDelete(e, userAnn.userAnnouncementId)}
-                        >
+                            onClick={(e) => onDelete(e, userAnn.userAnnouncementId)}>
                             <DeleteOutlined />
                         </Button>
                     ) : null}
@@ -726,11 +689,11 @@ function AnnouncementCard({
 
 function EmptyState({ isSearch }: { isSearch: boolean }) {
     return (
-        <div className="rounded-[32px] border border-dashed border-orange-200 bg-white px-6 py-20 text-center shadow-sm">
+        <div className="rounded-[32px] border border-orange-200 border-dashed bg-white px-6 py-20 text-center shadow-sm">
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-orange-50">
                 <SoundOutlined className="text-4xl text-orange-300" />
             </div>
-            <h4 className="mb-2 text-xl font-extrabold text-[#261E33]">
+            <h4 className="mb-2 font-extrabold text-[#261E33] text-xl">
                 {isSearch ? "Không có kết quả" : "Mọi thứ đều đã cập nhật"}
             </h4>
             <p className="text-[#7C6A5A]">

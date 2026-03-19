@@ -4,13 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { verifyEmailToken } from "@/api/auth-verify";
-import {
-    VerifyEmailAlreadyVerified,
-    VerifyEmailError,
-    VerifyEmailInvalidToken,
-    VerifyEmailLoading,
-    VerifyEmailSuccess
-} from "./VerifyEmailStates";
+import { VerifyEmailError, VerifyEmailInvalidToken, VerifyEmailLoading, VerifyEmailSuccess } from "./VerifyEmailStates";
 
 export default function VerifyEmailClient() {
     const locale = useLocale();
@@ -19,12 +13,13 @@ export default function VerifyEmailClient() {
     const token = params.get("token");
 
     const [loading, setLoading] = useState(true);
-    const [status, setStatus] = useState<"success" | "invalid" | "already" | "error">("error");
+    const [status, setStatus] = useState<"success" | "invalid" | "error">("error");
     const [message, setMessage] = useState("");
 
     // ================= VERIFY EMAIL =================
     useEffect(() => {
         let ignore = false;
+        let redirectTimer: NodeJS.Timeout;
 
         const verifyEmail = async () => {
             setLoading(true);
@@ -41,24 +36,28 @@ export default function VerifyEmailClient() {
 
                 if (ignore) return;
 
-                // Verify success
-                if (result.status === "success") {
+                const msg = (result.message || "").toLowerCase();
+                const isAlreadyVerified =
+                    msg.includes("đã xác thực") || msg.includes("already verified") || msg.includes("token used");
+
+                // Verify success or already verified
+                if (result.status === "success" || isAlreadyVerified) {
                     setStatus("success");
                     setMessage(result.message);
                     setLoading(false);
+
+                    // Auto redirect after 5 seconds
+                    redirectTimer = setTimeout(() => {
+                        if (!ignore) {
+                            window.location.href = `/${locale}/login`;
+                        }
+                    }, 5000);
+
                     return;
                 }
 
-                //parse message to determine type
-                const msg = result.message.toLowerCase();
-
-                // Case: Already verified
-                if (msg.includes("đã xác thực") || msg.includes("already verified") || msg.includes("token used")) {
-                    setStatus("already");
-                    setMessage(result.message);
-                }
                 // Case: Invalid or expired token
-                else if (
+                if (
                     msg.includes("hết hạn") ||
                     msg.includes("expired") ||
                     msg.includes("invalid") ||
@@ -66,16 +65,12 @@ export default function VerifyEmailClient() {
                 ) {
                     setStatus("invalid");
                     setMessage(result.message);
-                }
-                // Case: Other errors
-                else {
+                } else {
                     setStatus("error");
                     setMessage(result.message);
                 }
             } catch {
-                // ✅ Nếu đã bị ignore, bỏ qua
                 if (ignore) return;
-
                 setStatus("error");
                 setMessage("");
             } finally {
@@ -87,9 +82,9 @@ export default function VerifyEmailClient() {
 
         verifyEmail();
 
-        // Cleanup: set ignore = true khi component unmount hoặc useEffect re-run
         return () => {
             ignore = true;
+            if (redirectTimer) clearTimeout(redirectTimer);
         };
     }, [token, locale]);
 
@@ -100,10 +95,6 @@ export default function VerifyEmailClient() {
 
     if (status === "success") {
         return <VerifyEmailSuccess message={message} locale={locale} />;
-    }
-
-    if (status === "already") {
-        return <VerifyEmailAlreadyVerified message={message} locale={locale} />;
     }
 
     if (status === "invalid") {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, FolderKanban, LayoutGrid, Layers, List, Plus, Star, Users } from "lucide-react";
+import { ChevronDown, FolderKanban, Layers, LayoutGrid, List, Plus, Star, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Container } from "@/components/common";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
@@ -104,7 +104,7 @@ function IconBadge({
 
 function CountPill({ count }: { count: number }) {
     return (
-        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-[#F0E2D6] bg-[#FFFDFB] px-2 text-[11px] font-bold tracking-wide text-[#7C6A5A] shadow-sm">
+        <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-[#F0E2D6] bg-[#FFFDFB] px-2 font-bold text-[#7C6A5A] text-[11px] tracking-wide shadow-sm">
             {count}
         </span>
     );
@@ -228,10 +228,10 @@ export function GroupsPage() {
         <Container>
             <div className="relative min-h-screen space-y-5 py-2">
                 <Card className="relative overflow-hidden rounded-3xl border border-[#F3E4D7] bg-gradient-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] shadow-[0_10px_40px_rgba(234,88,12,0.06)]">
-                    <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-orange-200/20 blur-[60px]" />
-                    <div className="pointer-events-none absolute -bottom-20 right-0 h-60 w-60 rounded-full bg-amber-200/20 blur-[60px]" />
+                    <div className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-orange-200/20 blur-[60px]" />
+                    <div className="pointer-events-none absolute right-0 -bottom-20 h-60 w-60 rounded-full bg-amber-200/20 blur-[60px]" />
 
-                    <CardHeader className="relative pb-3 pt-6">
+                    <CardHeader className="relative pt-6 pb-3">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div className="flex items-center gap-4">
                                 <IconBadge variant="orange" size="lg" className="h-13 w-13 rounded-2xl">
@@ -240,16 +240,14 @@ export function GroupsPage() {
 
                                 <div>
                                     <div className="flex items-center gap-2.5">
-                                        <h1 className="text-[1.625rem] font-bold tracking-tight text-[#261E33]">
+                                        <h1 className="font-bold text-[#261E33] text-[1.625rem] tracking-tight">
                                             Nhóm
                                         </h1>
-                                        <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-orange-700">
+                                        <span className="rounded-full bg-orange-100 px-2.5 py-0.5 font-semibold text-[11px] text-orange-700 uppercase tracking-widest">
                                             {currentGroupsCount}/{maxGroups}
                                         </span>
                                     </div>
-                                    <p className="mt-0.5 text-sm text-[#7C6A58]">
-                                        Quản lý các nhóm học tập của bạn
-                                    </p>
+                                    <p className="mt-0.5 text-[#7C6A58] text-sm">Quản lý các nhóm học tập của bạn</p>
                                 </div>
                             </div>
 
@@ -259,7 +257,7 @@ export function GroupsPage() {
                                         type="button"
                                         onClick={() => setView("grid")}
                                         className={cn(
-                                            "relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                                            "relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200",
                                             view === "grid"
                                                 ? "bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white shadow-md shadow-orange-200"
                                                 : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
@@ -272,7 +270,7 @@ export function GroupsPage() {
                                         type="button"
                                         onClick={() => setView("list")}
                                         className={cn(
-                                            "relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                                            "relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200",
                                             view === "list"
                                                 ? "bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white shadow-md shadow-orange-200"
                                                 : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
@@ -287,7 +285,7 @@ export function GroupsPage() {
                                     disabled={limitReached}
                                     onClick={() => setOpenCreate(true)}
                                     className={cn(
-                                        "inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-semibold transition-all duration-200",
+                                        "inline-flex h-11 items-center gap-2 rounded-xl px-5 font-semibold text-sm transition-all duration-200",
                                         !limitReached
                                             ? "bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white shadow-md shadow-orange-200 hover:from-[#EA580C] hover:to-[#DC2626]"
                                             : "cursor-not-allowed bg-[#EAE3DB] text-[#A39487] shadow-none"
@@ -299,19 +297,19 @@ export function GroupsPage() {
                         </div>
                     </CardHeader>
 
-                    <CardContent className="relative pb-5 pt-1">
+                    <CardContent className="relative pt-1 pb-5">
                         <div className="space-y-2.5">
                             <UsageBar current={usage.current} max={usage.max} />
 
                             {loading && (
-                                <div className="flex items-center gap-2 text-sm text-[#8A7868]">
+                                <div className="flex items-center gap-2 text-[#8A7868] text-sm">
                                     <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E4D9CD] border-t-orange-400" />
                                     Đang tải...
                                 </div>
                             )}
 
                             {!loading && error && (
-                                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600">
+                                <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 font-medium text-red-600 text-sm">
                                     {error}
                                 </p>
                             )}
@@ -442,19 +440,15 @@ function GroupsSection({
                 "group/section overflow-hidden rounded-3xl border border-[#F3E4D7] bg-gradient-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] shadow-[0_10px_30px_rgba(234,88,12,0.05)] transition-all duration-300 hover:-translate-y-[1px] hover:shadow-[0_14px_38px_rgba(234,88,12,0.10)]",
                 className
             )}>
-            <div
-                className={cn(
-                    "border-b px-5 py-4 transition-colors backdrop-blur-sm",
-                    headerAccents[iconVariant]
-                )}>
+            <div className={cn("border-b px-5 py-4 backdrop-blur-sm transition-colors", headerAccents[iconVariant])}>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex min-w-0 items-center gap-3">
                         <IconBadge variant={iconVariant} size="sm" className="rounded-xl">
                             <Icon className="h-4 w-4 text-white drop-shadow-sm" />
                         </IconBadge>
 
-                        <div className="min-w-0 flex items-center gap-2.5">
-                            <h2 className="truncate text-sm font-semibold text-[#261E33]">{title}</h2>
+                        <div className="flex min-w-0 items-center gap-2.5">
+                            <h2 className="truncate font-semibold text-[#261E33] text-sm">{title}</h2>
                             <CountPill count={count} />
                         </div>
                     </div>
@@ -463,7 +457,7 @@ function GroupsSection({
                         <button
                             type="button"
                             onClick={onToggle}
-                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#7A6B5D] transition-all duration-200 hover:bg-[#FFF1E6] hover:text-[#EA580C]">
+                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium text-[#7A6B5D] text-[13px] transition-all duration-200 hover:bg-[#FFF1E6] hover:text-[#EA580C]">
                             <span>{expanded ? "Thu gọn" : "Xem tất cả"}</span>
                             <ChevronDown
                                 className={cn(
@@ -480,25 +474,25 @@ function GroupsSection({
                 {loading ? (
                     <SectionSkeleton />
                 ) : visibleItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#EEDCCB] bg-white/65 px-6 py-10 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#EEDCCB] border-dashed bg-white/65 px-6 py-10 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F8EDE3] shadow-sm">
                             <Icon className="h-4 w-4 text-[#9A7B5B]" />
                         </div>
-                        <p className="text-sm text-[#8D7B6A]">{emptyText}</p>
+                        <p className="text-[#8D7B6A] text-sm">{emptyText}</p>
                     </div>
                 ) : (
                     <>
                         <div
                             className={cn(
                                 view === "grid"
-                                    ? "grid items-start grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-3"
+                                    ? "grid grid-cols-1 items-start gap-3.5 sm:grid-cols-2 xl:grid-cols-3"
                                     : "flex flex-col gap-2.5"
                             )}>
                             {visibleItems.map((g) => (
                                 <div
                                     key={getGroupId(g)}
                                     className={cn(
-                                        "rounded-xl self-start transition-all duration-200",
+                                        "self-start rounded-xl transition-all duration-200",
                                         view === "grid" && "hover:-translate-y-0.5 hover:shadow-md"
                                     )}>
                                     <GroupCard group={g} onToggleStar={() => onToggleStar(getGroupId(g))} />
@@ -509,7 +503,7 @@ function GroupsSection({
                         {canToggle && !expanded && items.length > PREVIEW_COUNT && (
                             <button
                                 onClick={onToggle}
-                                className="mt-3.5 w-full rounded-xl border border-dashed border-[#EBD7C5] bg-white/60 py-2.5 text-[13px] font-medium text-[#8B7B6D] transition-all duration-200 hover:border-[#F0C7A8] hover:bg-[#FFF1E6] hover:text-[#EA580C]">
+                                className="mt-3.5 w-full rounded-xl border border-[#EBD7C5] border-dashed bg-white/60 py-2.5 font-medium text-[#8B7B6D] text-[13px] transition-all duration-200 hover:border-[#F0C7A8] hover:bg-[#FFF1E6] hover:text-[#EA580C]">
                                 + {items.length - PREVIEW_COUNT} nhóm khác
                             </button>
                         )}

@@ -218,6 +218,7 @@
         "successTitle": "Xác thực thành công",
         "successMessage": "Tài khoản của bạn đã được xác thực thành công.",
         "successDescription": "Bạn có thể đăng nhập để bắt đầu sử dụng hệ thống.",
+        "redirectingToLogin": "Hệ thống sẽ tự động chuyển hướng về trang đăng nhập sau 5 giây...",
         "alreadyVerifiedMessage": "Tài khoản của bạn đã được xác thực trước đó.",
         "invalidTokenTitle": "Liên kết không hợp lệ",
         "invalidTokenMessage": "Liên kết xác thực không hợp lệ hoặc đã hết hạn.",
@@ -567,7 +568,8 @@
             "editSuccess": "Cập nhật studio thành công!",
             "createError": "Không thể tạo studio",
             "editError": "Không thể cập nhật studio",
-            "limitReached": "Bạn đã đạt giới hạn 3 studio. Vui lòng xóa studio cũ để tạo mới.",
+            "limitReached": "Bạn đã đạt giới hạn 3 studio. Vui lòng nâng cấp gói đăng ký hoặc xóa studio cũ để tạo mới.",
+            "upgradeButton": "Nâng cấp gói",
             "duplicateName": "Tên studio đã tồn tại. Vui lòng chọn tên khác."
         },
         "detailModal": {
@@ -1185,7 +1187,9 @@
             "updateError": "Có lỗi xảy ra khi cập nhật báo cáo"
         },
         "success": {
-            "updateReport": "Cập nhật báo cáo thành công!"
+            "updateReport": "Cập nhật báo cáo thành công!",
+            "updateReportWithNotification": "Cập nhật báo cáo thành công! Đã gửi thông báo đến người dùng qua hệ thống và email.",
+            "updateReportNotificationFailed": "Cập nhật báo cáo thành công! Tuy nhiên không thể gửi thông báo đến người dùng."
         },
         "modal": {
             "title": "Chỉnh sửa báo cáo",

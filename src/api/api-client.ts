@@ -150,11 +150,17 @@ export async function apiPost<T = unknown>(
     });
 }
 
-export async function apiGet<T = unknown>(url: string, locale?: string, skipAuth?: boolean): Promise<ApiResponse<T>> {
+export async function apiGet<T = unknown>(
+    url: string,
+    locale?: string,
+    skipAuth?: boolean,
+    options: RequestInit = {}
+): Promise<ApiResponse<T>> {
     return apiFetch<T>(url, {
         method: "GET",
         locale,
-        skipAuth
+        skipAuth,
+        ...options
     });
 }
 

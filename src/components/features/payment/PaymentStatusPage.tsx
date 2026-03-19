@@ -25,6 +25,12 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
     const [isCancelling, setIsCancelling] = useState(false);
 
     useEffect(() => {
+        // Guard against invalid ID
+        if (!paymentId || paymentId === "undefined" || paymentId === "null") {
+            router.replace(`/${locale}/settings/billing`);
+            return;
+        }
+
         const fetchStatus = async () => {
             try {
                 const result = await getPaymentStatus(paymentId, locale);
@@ -43,7 +49,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                                     "Thanh toán thành công! Email xác nhận đã được gửi. Đang chuyển về trang quản lý gói...",
                                 variant: "default"
                             });
-                            router.push(`/${locale}/settings/billing`);
+                            window.location.href = `/${locale}/settings/billing?success=true`;
                         }, 2000); // Wait 2 seconds to show success message
                     }
                 }
@@ -64,7 +70,7 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [paymentId, locale, payment?.paymentStatus, router, toast]);
+    }, [paymentId, locale, payment?.paymentStatus, toast, router]);
 
     const handleCancel = async () => {
         if (!payment) return;
@@ -131,10 +137,10 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                     <div className="px-6 py-6">
                         {/* Header */}
                         <div className="mb-6 flex items-center gap-4">
-                            <Link href={`/${locale}/payment/history`}>
-                                <Button variant="ghost" size="sm" className="gap-2">
+                            <Link href={`/${locale}/settings/billing`}>
+                                <Button variant="ghost" size="sm" className="gap-2 text-[#6F6B99] hover:text-[#261E33]">
                                     <ArrowLeft className="h-4 w-4" />
-                                    Quay lại
+                                    Quay lại gói dịch vụ
                                 </Button>
                             </Link>
                             <div>
@@ -151,11 +157,20 @@ export function PaymentStatusPage({ paymentId }: PaymentStatusPageProps) {
                                 </div>
                             </div>
                         ) : !payment ? (
-                            <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white p-12">
+                            <div className="flex items-center justify-center rounded-xl border border-gray-200 bg-white p-12 shadow-sm">
                                 <div className="text-center">
                                     <XCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
-                                    <h3 className="mb-2 font-semibold text-[#261E33]">Không tìm thấy thanh toán</h3>
-                                    <p className="text-[#6F6B99] text-sm">Mã thanh toán không hợp lệ hoặc đã bị xóa</p>
+                                    <h3 className="mb-2 font-semibold text-[#261E33] text-lg">
+                                        Không tìm thấy thanh toán
+                                    </h3>
+                                    <p className="mb-6 text-[#6F6B99] text-sm">
+                                        Mã thanh toán không hợp lệ hoặc đã bị xóa khỏi hệ thống
+                                    </p>
+                                    <Link href={`/${locale}/settings/billing`}>
+                                        <Button className="bg-[#FF5F3D] font-bold hover:bg-[#FF5F3D]/90">
+                                            Quay lại trang quản lý gói
+                                        </Button>
+                                    </Link>
                                 </div>
                             </div>
                         ) : (

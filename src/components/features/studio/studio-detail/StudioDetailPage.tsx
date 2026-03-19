@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
 import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
 import type { components } from "@/api/types";
@@ -77,9 +77,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"groups" | "analytics" | "settings">("groups");
-    const [analyticsSubTab, setAnalyticsSubTab] = useState<"progress" | "activity" | "group-progress" | "performance">(
-        "progress"
-    );
+    const [_analyticsSubTab, _setAnalyticsSubTab] = useState<
+        "progress" | "activity" | "group-progress" | "performance"
+    >("progress");
 
     // Check if current user is studio owner
     const isStudioOwner = initialStudio?.studioRole === 0;
@@ -91,32 +91,35 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editLoading, setEditLoading] = useState(false);
 
     // Convert server data to UI format
-    const studio: StudioUI | null = initialStudio
-        ? {
+    const studio: StudioUI | null = useMemo(() => {
+        if (!initialStudio) return null;
+        return {
             id: initialStudio.studioId || "",
             name: initialStudio.studioName || "",
             description: initialStudio.description || "",
-            type: "group", // Default type
-            memberCount: 0, // Not provided by API
+            type: "group",
+            memberCount: 0,
             groupCount: initialStudio.groupCount || 0,
-            completionProgress: 0, // Calculate later if needed
+            completionProgress: 0,
             createdAt: initialStudio.createdAt || "",
             updatedAt: initialStudio.updatedAt || ""
-        }
-        : null;
+        };
+    }, [initialStudio]);
 
     // Transform groups to the format expected by UI
-    const groups: TransformedGroup[] = initialGroups.map((group) => ({
-        id: group.id || "",
-        name: group.name || "",
-        code: "", // Not provided by API, could extract from name
-        members: group.memberCount || 0,
-        tasks: group.taskCount || 0,
-        progress: 0, // Could be calculated from task completion if available
-        description: group.description || "",
-        membersPreview: group.membersPreview || [],
-        role: mapRole(group.role) // Convert API string to GroupRole type
-    }));
+    const groups: TransformedGroup[] = useMemo(() => {
+        return initialGroups.map((group) => ({
+            id: group.id || "",
+            name: group.name || "",
+            code: "",
+            members: group.memberCount || 0,
+            tasks: group.taskCount || 0,
+            progress: 0,
+            description: group.description || "",
+            membersPreview: group.membersPreview || [],
+            role: mapRole(group.role)
+        }));
+    }, [initialGroups]);
 
     // Filter groups based on search query
     const filteredGroups = groups.filter(
@@ -320,10 +323,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab("groups")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "groups"
+                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                        activeTab === "groups"
                                             ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
                                             : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                    }`}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -338,10 +342,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab("analytics")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "analytics"
+                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                            activeTab === "analytics"
                                                 ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
                                                 : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                            }`}>
+                                        }`}>
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
@@ -357,10 +362,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab("settings")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "settings"
+                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                            activeTab === "settings"
                                                 ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
                                                 : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                            }`}>
+                                        }`}>
                                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
@@ -433,14 +439,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     {/* Card header: icon + name + badge */}
                                                     <div className="flex items-center gap-3">
                                                         <div
-                                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${index % 4 === 0
+                                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                                                                index % 4 === 0
                                                                     ? "bg-gradient-to-br from-orange-400 to-red-500"
                                                                     : index % 4 === 1
-                                                                        ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                        : index % 4 === 2
-                                                                            ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                            : "bg-gradient-to-br from-purple-400 to-violet-500"
-                                                                }`}>
+                                                                      ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                                      : index % 4 === 2
+                                                                        ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                        : "bg-gradient-to-br from-purple-400 to-violet-500"
+                                                            }`}>
                                                             <svg
                                                                 className="h-5 w-5 text-white"
                                                                 fill="none"
@@ -512,16 +519,17 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     return (
                                                                         <div
                                                                             key={`${group.id}-avatar-${i}`}
-                                                                            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${member?.avatarUrl
+                                                                            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${
+                                                                                member?.avatarUrl
                                                                                     ? ""
                                                                                     : i % 4 === 0
-                                                                                        ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                                        : i % 4 === 1
-                                                                                            ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                                            : i % 4 === 2
-                                                                                                ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                                : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                                }`}>
+                                                                                      ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                                                      : i % 4 === 1
+                                                                                        ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                                                        : i % 4 === 2
+                                                                                          ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                                          : "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                                            }`}>
                                                                             {member?.avatarUrl ? (
                                                                                 <img
                                                                                     src={member.avatarUrl}
@@ -602,10 +610,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 <span className="font-semibold text-slate-800">
                                                     {studio.createdAt
                                                         ? new Date(studio.createdAt).toLocaleDateString("en-US", {
-                                                            month: "numeric",
-                                                            day: "numeric",
-                                                            year: "numeric"
-                                                        })
+                                                              month: "numeric",
+                                                              day: "numeric",
+                                                              year: "numeric"
+                                                          })
                                                         : "—"}
                                                 </span>
                                             </div>
@@ -735,10 +743,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     value={
                                                         studio.createdAt
                                                             ? new Date(studio.createdAt).toLocaleDateString("vi-VN", {
-                                                                day: "numeric",
-                                                                month: "long",
-                                                                year: "numeric"
-                                                            })
+                                                                  day: "numeric",
+                                                                  month: "long",
+                                                                  year: "numeric"
+                                                              })
                                                             : "—"
                                                     }
                                                     readOnly

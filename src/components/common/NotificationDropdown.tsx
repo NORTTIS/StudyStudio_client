@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle, Bell, CheckCheck, CheckCircle2, Info, RefreshCw, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -8,26 +9,6 @@ import {
     markUserAnnouncementAsRead,
     type Notification
 } from "@/api/notifications";
-import { NotificationDetailModal } from "./NotificationDetailModal";
-
-import {
-    Bell,
-    CheckCheck,
-    Info,
-    RefreshCw,
-    Trash2,
-    AlertTriangle,
-    CheckCircle2
-} from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -38,7 +19,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { NotificationDetailModal } from "./NotificationDetailModal";
 
 const READ_NOTIFICATIONS_STORAGE_KEY = "study_studio_read_notifications";
 
@@ -63,10 +49,7 @@ function saveReadNotificationId(id: string) {
         const currentIds = getReadNotificationIds();
 
         if (!currentIds.includes(id)) {
-            localStorage.setItem(
-                READ_NOTIFICATIONS_STORAGE_KEY,
-                JSON.stringify([...currentIds, id])
-            );
+            localStorage.setItem(READ_NOTIFICATIONS_STORAGE_KEY, JSON.stringify([...currentIds, id]));
         }
     } catch (error) {
         console.error("Save read notification error:", error);
@@ -80,10 +63,7 @@ function saveManyReadNotificationIds(ids: string[]) {
         const currentIds = getReadNotificationIds();
         const mergedIds = Array.from(new Set([...currentIds, ...ids]));
 
-        localStorage.setItem(
-            READ_NOTIFICATIONS_STORAGE_KEY,
-            JSON.stringify(mergedIds)
-        );
+        localStorage.setItem(READ_NOTIFICATIONS_STORAGE_KEY, JSON.stringify(mergedIds));
     } catch (error) {
         console.error("Save many read notifications error:", error);
     }
@@ -97,7 +77,7 @@ function BellButton({ unreadCount }: { unreadCount: number }) {
             <Bell className="h-6 w-6 shrink-0 text-foreground" />
 
             {hasUnread && (
-                <span className="absolute -right-2 -top-2 z-10 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white shadow ring-2 ring-background">
+                <span className="absolute -top-2 -right-2 z-10 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 font-semibold text-[10px] text-white leading-none shadow ring-2 ring-background">
                     {unreadCount > 99 ? "99+" : unreadCount > 9 ? "9+" : unreadCount}
                 </span>
             )}
@@ -132,11 +112,8 @@ function NotificationItem({
             className={cn(
                 "group relative flex cursor-pointer gap-3 rounded-2xl border p-4 transition-all",
                 "hover:bg-accent/60 hover:shadow-sm",
-                !notification.read
-                    ? "border-blue-200 bg-blue-50/60"
-                    : "border-border bg-background"
-            )}
-        >
+                !notification.read ? "border-blue-200 bg-blue-50/60" : "border-border bg-background"
+            )}>
             <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted shadow-sm">
                 {getNotificationIcon(notification.type)}
             </div>
@@ -145,10 +122,9 @@ function NotificationItem({
                 <div className="flex items-start gap-2">
                     <p
                         className={cn(
-                            "line-clamp-2 text-sm leading-5 text-foreground",
+                            "line-clamp-2 text-foreground text-sm leading-5",
                             !notification.read && "font-semibold"
-                        )}
-                    >
+                        )}>
                         {notification.title}
                     </p>
 
@@ -157,13 +133,11 @@ function NotificationItem({
                     )}
                 </div>
 
-                <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                <p className="mt-1.5 line-clamp-2 text-muted-foreground text-sm leading-6">
                     {notification.description}
                 </p>
 
-                <p className="mt-3 text-xs text-muted-foreground">
-                    {formatDate(notification.date)}
-                </p>
+                <p className="mt-3 text-muted-foreground text-xs">{formatDate(notification.date)}</p>
             </div>
 
             <Button
@@ -174,9 +148,8 @@ function NotificationItem({
                     e.stopPropagation();
                     onDelete();
                 }}
-                className="absolute top-3 right-3 h-8 w-8 rounded-lg text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
-                aria-label="Delete notification"
-            >
+                className="absolute top-3 right-3 h-8 w-8 rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                aria-label="Delete notification">
                 <Trash2 className="h-4 w-4" />
             </Button>
         </div>
@@ -197,10 +170,7 @@ export function NotificationDropdown() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [notificationToDelete, setNotificationToDelete] = useState("");
 
-    const unreadCount = useMemo(
-        () => notifications.filter((n) => !n.read).length,
-        [notifications]
-    );
+    const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
     const loadNotifications = useCallback(async () => {
         setIsLoading(true);
@@ -222,14 +192,9 @@ export function NotificationDropdown() {
             const fallbackNotifications: Notification[] = [
                 {
                     id: "fallback-1",
-                    title:
-                        locale === "vi"
-                            ? "Chào mừng đến Study Studio"
-                            : "Welcome to Study Studio",
+                    title: locale === "vi" ? "Chào mừng đến Study Studio" : "Welcome to Study Studio",
                     description:
-                        locale === "vi"
-                            ? "Cảm ơn bạn đã sử dụng Study Studio!"
-                            : "Thank you for using Study Studio!",
+                        locale === "vi" ? "Cảm ơn bạn đã sử dụng Study Studio!" : "Thank you for using Study Studio!",
                     type: "info",
                     date: new Date().toISOString(),
                     read: false
@@ -267,10 +232,7 @@ export function NotificationDropdown() {
             const diffHours = Math.round(diffMs / (1000 * 60 * 60));
             const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-            const rtf = new Intl.RelativeTimeFormat(
-                locale === "vi" ? "vi" : "en",
-                { numeric: "auto" }
-            );
+            const rtf = new Intl.RelativeTimeFormat(locale === "vi" ? "vi" : "en", { numeric: "auto" });
 
             if (Math.abs(diffMinutes) < 1) {
                 return locale === "vi" ? "Vừa xong" : "Just now";
@@ -288,16 +250,13 @@ export function NotificationDropdown() {
                 return rtf.format(diffDays, "day");
             }
 
-            return new Intl.DateTimeFormat(
-                locale === "vi" ? "vi-VN" : "en-US",
-                {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                }
-            ).format(date);
+            return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).format(date);
         },
         [locale]
     );
@@ -306,17 +265,10 @@ export function NotificationDropdown() {
         if (!notification.read) {
             saveReadNotificationId(notification.id);
 
-            setNotifications((prev) =>
-                prev.map((n) =>
-                    n.id === notification.id ? { ...n, read: true } : n
-                )
-            );
+            setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
 
             try {
-                const result = await markUserAnnouncementAsRead(
-                    notification.id,
-                    locale
-                );
+                const result = await markUserAnnouncementAsRead(notification.id, locale);
 
                 if (result.status !== "success") {
                     console.error("Mark as read API error:", result.message);
@@ -341,9 +293,7 @@ export function NotificationDropdown() {
             setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
             await Promise.all(
-                unreadNotifications.map((notification) =>
-                    markUserAnnouncementAsRead(notification.id, locale)
-                )
+                unreadNotifications.map((notification) => markUserAnnouncementAsRead(notification.id, locale))
             );
         } catch (error) {
             console.error("Mark all as read error:", error);
@@ -358,15 +308,10 @@ export function NotificationDropdown() {
 
     const confirmDeleteNotification = async () => {
         try {
-            const result = await deleteUserAnnouncement(
-                notificationToDelete,
-                locale
-            );
+            const result = await deleteUserAnnouncement(notificationToDelete, locale);
 
             if (result.status === "success") {
-                setNotifications((prev) =>
-                    prev.filter((n) => n.id !== notificationToDelete)
-                );
+                setNotifications((prev) => prev.filter((n) => n.id !== notificationToDelete));
             } else {
                 console.error("Delete notification API error:", result.message);
             }
@@ -398,8 +343,7 @@ export function NotificationDropdown() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="relative h-11 w-11 rounded-full border border-transparent hover:border-border hover:bg-accent"
-                    >
+                        className="relative h-11 w-11 rounded-full border border-transparent hover:border-border hover:bg-accent">
                         <BellButton unreadCount={unreadCount} />
                     </Button>
                 </DropdownMenuTrigger>
@@ -407,18 +351,12 @@ export function NotificationDropdown() {
                 <DropdownMenuContent
                     align="end"
                     sideOffset={12}
-                    className="w-[420px] overflow-hidden rounded-3xl border bg-background p-0 shadow-2xl"
-                >
+                    className="w-[420px] overflow-hidden rounded-3xl border bg-background p-0 shadow-2xl">
                     <div className="flex items-center justify-between border-b px-4 py-4">
                         <div className="flex items-center gap-3">
-                            <h3 className="text-lg font-semibold text-foreground">
-                                {t("title")}
-                            </h3>
+                            <h3 className="font-semibold text-foreground text-lg">{t("title")}</h3>
 
-                            <Badge
-                                variant="secondary"
-                                className="rounded-full px-2.5 py-0.5 text-xs"
-                            >
+                            <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs">
                                 {notifications.length}
                             </Badge>
                         </div>
@@ -430,8 +368,7 @@ export function NotificationDropdown() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleMarkAllAsRead}
-                                    className="h-8 gap-1.5 rounded-lg px-2.5 text-sm"
-                                >
+                                    className="h-8 gap-1.5 rounded-lg px-2.5 text-sm">
                                     <CheckCheck className="h-4 w-4" />
                                     {t("markAllRead")}
                                 </Button>
@@ -443,14 +380,8 @@ export function NotificationDropdown() {
                                 size="icon"
                                 onClick={loadNotifications}
                                 disabled={isLoading}
-                                className="h-8 w-8 rounded-lg"
-                            >
-                                <RefreshCw
-                                    className={cn(
-                                        "h-4 w-4",
-                                        isLoading && "animate-spin"
-                                    )}
-                                />
+                                className="h-8 w-8 rounded-lg">
+                                <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
                             </Button>
                         </div>
                     </div>
@@ -466,21 +397,15 @@ export function NotificationDropdown() {
                                     <div className="mb-3 rounded-full bg-muted p-3">
                                         <Bell className="h-5 w-5 text-muted-foreground" />
                                     </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t("noNotifications")}
-                                    </p>
+                                    <p className="text-muted-foreground text-sm">{t("noNotifications")}</p>
                                 </div>
                             ) : (
                                 notifications.map((notification) => (
                                     <NotificationItem
                                         key={notification.id}
                                         notification={notification}
-                                        onClick={() =>
-                                            handleNotificationClick(notification)
-                                        }
-                                        onDelete={() =>
-                                            handleDeleteNotification(notification.id)
-                                        }
+                                        onClick={() => handleNotificationClick(notification)}
+                                        onDelete={() => handleDeleteNotification(notification.id)}
                                         formatDate={formatDate}
                                         getNotificationIcon={getNotificationIcon}
                                     />
@@ -495,8 +420,7 @@ export function NotificationDropdown() {
                                 type="button"
                                 variant="ghost"
                                 className="h-11 w-full rounded-2xl font-medium text-primary hover:bg-accent"
-                                onClick={() => setOpen(false)}
-                            >
+                                onClick={() => setOpen(false)}>
                                 {t("viewAll")}
                             </Button>
                         </div>
@@ -511,31 +435,19 @@ export function NotificationDropdown() {
                 locale={locale}
             />
 
-            <AlertDialog
-                open={showDeleteConfirm}
-                onOpenChange={setShowDeleteConfirm}
-            >
+            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
                 <AlertDialogContent className="rounded-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            {t("confirmDeleteTitle")}
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {t("confirmDelete")}
-                        </AlertDialogDescription>
+                        <AlertDialogTitle>{t("confirmDeleteTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("confirmDelete")}</AlertDialogDescription>
                     </AlertDialogHeader>
 
                     <AlertDialogFooter>
-                        <AlertDialogCancel
-                            onClick={() => setNotificationToDelete("")}
-                        >
-                            {t("cancel")}
-                        </AlertDialogCancel>
+                        <AlertDialogCancel onClick={() => setNotificationToDelete("")}>{t("cancel")}</AlertDialogCancel>
 
                         <AlertDialogAction
                             onClick={confirmDeleteNotification}
-                            className="bg-red-500 text-white hover:bg-red-600"
-                        >
+                            className="bg-red-500 text-white hover:bg-red-600">
                             {t("confirm")}
                         </AlertDialogAction>
                     </AlertDialogFooter>

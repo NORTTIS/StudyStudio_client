@@ -43,6 +43,10 @@ export function VerifyEmailSuccess({ message, locale }: { message?: string; loca
                     {t("successDescription")}
                 </p>
 
+                <p className="mb-6 animate-pulse text-center font-medium text-orange-600 text-xs">
+                    {t("redirectingToLogin")}
+                </p>
+
                 <Link
                     href={`/${locale}/login`}
                     className="block w-full rounded-lg bg-orange-500 py-3 text-center font-semibold text-white transition hover:bg-orange-600">

@@ -33,6 +33,8 @@ export interface ApiResponse<T> {
 export interface AdminBillingHistoryParams {
     searchTerm?: string;
     paymentStatus?: number; // 0, 1, 2, 3
+    startDate?: string;
+    endDate?: string;
     pageNumber?: number;
     pageSize?: number;
 }
@@ -53,6 +55,12 @@ export async function getAdminBillingHistory(
         }
         if (params.paymentStatus !== undefined) {
             queryParams.append("PaymentStatus", params.paymentStatus.toString());
+        }
+        if (params.startDate) {
+            queryParams.append("StartDate", params.startDate);
+        }
+        if (params.endDate) {
+            queryParams.append("EndDate", params.endDate);
         }
         if (params.pageNumber !== undefined) {
             queryParams.append("PageNumber", params.pageNumber.toString());
