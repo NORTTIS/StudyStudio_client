@@ -21,7 +21,7 @@ export default function LandingPage() {
     const delay5 = "landing-delay-5";
 
     return (
-        <div className="flex min-h-screen scroll-smooth flex-col bg-[#FFF7ED] text-gray-800">
+        <div className="flex min-h-screen flex-col scroll-smooth bg-[#FFF7ED] text-gray-800">
             <GuestNavbar />
 
             <section className={`relative min-h-[80vh] overflow-hidden bg-white ${fadeIn}`}>
@@ -38,17 +38,17 @@ export default function LandingPage() {
 
                 <div className={`relative z-10 mx-auto -mt-8 max-w-4xl px-6 pt-16 text-center ${fadeUp}`}>
                     <h1
-                        className={`text-5xl leading-tight font-extrabold text-gray-900 ${fadeUp} ${delay1} md:text-6xl`}>
+                        className={`font-extrabold text-5xl text-gray-900 leading-tight ${fadeUp} ${delay1} md:text-6xl`}>
                         {t("hero.title")} <br />
                         {t("hero.subtitle")}
                     </h1>
 
-                    <p className={`mx-auto mt-5 max-w-3xl text-lg text-gray-600 ${fadeUp} ${delay2} md:text-xl`}>
+                    <p className={`mx-auto mt-5 max-w-3xl text-gray-600 text-lg ${fadeUp} ${delay2} md:text-xl`}>
                         {t("hero.description")}
                     </p>
 
                     <Link href={`/${locale}/login`} className={`inline-block cursor-pointer ${pop} ${delay3}`}>
-                        <Button className="mt-7 rounded-full bg-orange-500 px-8 py-6 text-lg font-semibold shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
+                        <Button className="mt-7 rounded-full bg-orange-500 px-8 py-6 font-semibold text-lg shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
                             {t("hero.registerButton")}
                         </Button>
                     </Link>
@@ -56,15 +56,15 @@ export default function LandingPage() {
             </section>
 
             <section className={`bg-[#FFF7ED] py-20 text-center ${fadeUp}`}>
-                <h2 className={`text-3xl font-extrabold text-gray-800 ${fadeUp} md:text-4xl`}>
+                <h2 className={`font-extrabold text-3xl text-gray-800 ${fadeUp} md:text-4xl`}>
                     {t("architecture.title")}
                 </h2>
-                <p className={`mt-2 text-lg text-gray-600 ${fadeUp} ${delay1} md:text-xl`}>
+                <p className={`mt-2 text-gray-600 text-lg ${fadeUp} ${delay1} md:text-xl`}>
                     {t("architecture.subtitle")}
                 </p>
 
                 <div className="mt-14 px-6">
-                    <h3 className={`text-2xl font-bold text-gray-800 ${fadeUp} ${delay2} md:text-3xl`}>
+                    <h3 className={`font-bold text-2xl text-gray-800 ${fadeUp} ${delay2} md:text-3xl`}>
                         {t("management.title")}
                     </h3>
                     <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay3} md:text-lg`}>
@@ -91,7 +91,7 @@ export default function LandingPage() {
 
             <section className={`bg-white py-20 text-center ${fadeUp}`}>
                 <div className="px-6">
-                    <h3 className={`text-2xl font-bold text-gray-800 ${fadeUp} md:text-3xl`}>{t("group.title")}</h3>
+                    <h3 className={`font-bold text-2xl text-gray-800 ${fadeUp} md:text-3xl`}>{t("group.title")}</h3>
                     <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay1} md:text-lg`}>
                         {t("group.description")}
                     </p>
@@ -116,7 +116,7 @@ export default function LandingPage() {
 
             <section className={`bg-[#FFF7ED] py-20 text-center ${fadeUp}`}>
                 <div className="px-6">
-                    <h3 className={`text-2xl font-bold text-gray-800 ${fadeUp} md:text-3xl`}>{t("personal.title")}</h3>
+                    <h3 className={`font-bold text-2xl text-gray-800 ${fadeUp} md:text-3xl`}>{t("personal.title")}</h3>
                     <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay1} md:text-lg`}>
                         {t("personal.description")}
                     </p>
@@ -141,7 +141,7 @@ export default function LandingPage() {
 
             <section className={`bg-white py-20 ${fadeUp}`}>
                 <div className="mx-auto w-[90%] max-w-6xl">
-                    <h3 className={`text-center text-2xl font-bold text-gray-800 ${fadeUp} md:text-3xl`}>
+                    <h3 className={`text-center font-bold text-2xl text-gray-800 ${fadeUp} md:text-3xl`}>
                         {t("ai.title")} <br />
                         {t("ai.subtitle")}
                     </h3>

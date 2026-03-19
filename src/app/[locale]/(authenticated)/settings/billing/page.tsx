@@ -266,7 +266,7 @@ export default function BillingPage() {
                     await new Promise((resolve) => setTimeout(resolve, 1000));
                 }
 
-                let plansResult = await getSubscriptionPlans(locale);
+                const plansResult = await getSubscriptionPlans(locale);
                 let profileResult = await getUserProfile(locale);
                 let historyResult = await getPaymentHistory(locale);
 
@@ -286,7 +286,7 @@ export default function BillingPage() {
 
                 // AGGRESSIVE RETRY LOGIC for eventual consistency
                 const needsRetry =
-                    isReturningFromSuccess && (!isPremium || !histories.some((p: PaymentHistory) => p.status === 1));
+                    isReturningFromSuccess && !(isPremium && histories.some((p: PaymentHistory) => p.status === 1));
 
                 if (needsRetry) {
                     setIsLoadingPlan(true); // Keep loading spinner

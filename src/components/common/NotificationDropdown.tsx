@@ -97,7 +97,7 @@ export function NotificationDropdown() {
 
     useEffect(() => {
         loadNotifications();
-    }, [locale]);
+    }, [loadNotifications]);
 
     const handleNotificationClick = async (notification: Notification) => {
         // Đánh dấu đã đọc nếu chưa đọc

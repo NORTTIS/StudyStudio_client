@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 interface StudioLimitModalProps {
@@ -26,12 +26,7 @@ export function StudioLimitModal({ isOpen, onClose, studioLimit }: StudioLimitMo
             <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
                 <div className="mb-4 text-center">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-                        <svg
-                            className="h-6 w-6 text-amber-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
+                        <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
@@ -40,25 +35,15 @@ export function StudioLimitModal({ isOpen, onClose, studioLimit }: StudioLimitMo
                             />
                         </svg>
                     </div>
-                    <h2 className="mb-2 font-bold text-xl text-[#261E33]">
-                        Đã đạt giới hạn studio
-                    </h2>
-                    <p className="text-gray-600 text-sm">
-                        {t("modal.limitReached")}
-                    </p>
+                    <h2 className="mb-2 font-bold text-[#261E33] text-xl">Đã đạt giới hạn studio</h2>
+                    <p className="text-gray-600 text-sm">{t("modal.limitReached")}</p>
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <Button
-                        onClick={handleUpgrade}
-                        className="bg-[#FF5F3D] hover:bg-[#ff4620] text-white"
-                    >
+                    <Button onClick={handleUpgrade} className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]">
                         {t("modal.upgradeButton")}
                     </Button>
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                    >
+                    <Button variant="outline" onClick={onClose}>
                         Đóng
                     </Button>
                 </div>

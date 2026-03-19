@@ -41,10 +41,11 @@ export async function createPayment(planId: string, locale: string): Promise<Api
         const response = await apiPost<CreatePaymentResponse>("/payment/create", { planId }, locale);
         return response;
     } catch (error: unknown) {
+        const errorResponse = error as { response?: { data?: { code?: string; message?: string } } };
         return {
             status: "error",
-            code: (error as any)?.response?.data?.code || "PAYMENT_ERROR",
-            message: (error as any)?.response?.data?.message || "Failed to create payment",
+            code: errorResponse?.response?.data?.code || "PAYMENT_ERROR",
+            message: errorResponse?.response?.data?.message || "Failed to create payment",
             data: null
         };
     }
@@ -66,10 +67,11 @@ export async function getPaymentStatus(paymentId: string, locale: string): Promi
         });
         return response;
     } catch (error: unknown) {
+        const errorResponse = error as { response?: { data?: { code?: string; message?: string } } };
         return {
             status: "error",
-            code: (error as any)?.response?.data?.code || "PAYMENT_ERROR",
-            message: (error as any)?.response?.data?.message || "Failed to get payment status",
+            code: errorResponse?.response?.data?.code || "PAYMENT_ERROR",
+            message: errorResponse?.response?.data?.message || "Failed to get payment status",
             data: null
         };
     }
@@ -81,10 +83,11 @@ export async function retryPayment(paymentId: string, locale: string): Promise<A
         const response = await apiPost<CreatePaymentResponse>(`/payment/${paymentId}/retry`, {}, locale);
         return response;
     } catch (error: unknown) {
+        const errorResponse = error as { response?: { data?: { code?: string; message?: string } } };
         return {
             status: "error",
-            code: (error as any)?.response?.data?.code || "PAYMENT_ERROR",
-            message: (error as any)?.response?.data?.message || "Failed to retry payment",
+            code: errorResponse?.response?.data?.code || "PAYMENT_ERROR",
+            message: errorResponse?.response?.data?.message || "Failed to retry payment",
             data: null
         };
     }

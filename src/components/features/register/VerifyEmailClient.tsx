@@ -4,12 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { verifyEmailToken } from "@/api/auth-verify";
-import {
-    VerifyEmailError,
-    VerifyEmailInvalidToken,
-    VerifyEmailLoading,
-    VerifyEmailSuccess
-} from "./VerifyEmailStates";
+import { VerifyEmailError, VerifyEmailInvalidToken, VerifyEmailLoading, VerifyEmailSuccess } from "./VerifyEmailStates";
 
 export default function VerifyEmailClient() {
     const locale = useLocale();
@@ -43,9 +38,7 @@ export default function VerifyEmailClient() {
 
                 const msg = (result.message || "").toLowerCase();
                 const isAlreadyVerified =
-                    msg.includes("đã xác thực") ||
-                    msg.includes("already verified") ||
-                    msg.includes("token used");
+                    msg.includes("đã xác thực") || msg.includes("already verified") || msg.includes("token used");
 
                 // Verify success or already verified
                 if (result.status === "success" || isAlreadyVerified) {

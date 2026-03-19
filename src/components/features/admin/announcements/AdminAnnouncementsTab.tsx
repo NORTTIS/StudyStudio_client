@@ -91,7 +91,7 @@ export function AdminAnnouncementsTab() {
 
     useEffect(() => {
         loadAnnouncements();
-    }, []); // Empty dependency - chỉ load một lần khi mount
+    }, [loadAnnouncements]); // Empty dependency - chỉ load một lần khi mount
 
     const resetForm = () => {
         const now = new Date();
@@ -314,7 +314,7 @@ export function AdminAnnouncementsTab() {
             return;
         }
 
-        // Khi chỉnh sửa, cho phép sự linh hoạt về thời gian. 
+        // Khi chỉnh sửa, cho phép sự linh hoạt về thời gian.
         // Chỉ lưu log để debug nếu cần, không chặn hành động của người dùng
         const createdTime = new Date(formData.createdAt);
         const publishedTime = new Date(formData.publishedAt);
@@ -709,10 +709,17 @@ export function AdminAnnouncementsTab() {
                         </div>
 
                         <div className="mt-6 flex gap-3">
-                            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} disabled={isSubmitting} className="flex-1">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsCreateModalOpen(false)}
+                                disabled={isSubmitting}
+                                className="flex-1">
                                 Hủy
                             </Button>
-                            <Button onClick={handleSubmitCreate} disabled={isSubmitting} className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
+                            <Button
+                                onClick={handleSubmitCreate}
+                                disabled={isSubmitting}
+                                className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
                                 {isSubmitting ? "Đang xử lý..." : "Tạo thông báo"}
                             </Button>
                         </div>
@@ -882,10 +889,17 @@ export function AdminAnnouncementsTab() {
                         </div>
 
                         <div className="mt-6 flex gap-3">
-                            <Button variant="outline" onClick={() => setIsEditModalOpen(false)} disabled={isSubmitting} className="flex-1">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsEditModalOpen(false)}
+                                disabled={isSubmitting}
+                                className="flex-1">
                                 Hủy
                             </Button>
-                            <Button onClick={handleSubmitEdit} disabled={isSubmitting} className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
+                            <Button
+                                onClick={handleSubmitEdit}
+                                disabled={isSubmitting}
+                                className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]">
                                 {isSubmitting ? "Đang xử lý..." : "Cập nhật thông báo"}
                             </Button>
                         </div>

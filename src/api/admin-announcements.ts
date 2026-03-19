@@ -148,7 +148,7 @@ export async function updateAdminAnnouncement(
     try {
         console.log("🌐 API: Sending update request:", request);
         console.log("🌐 API: Type field:", request.type, typeof request.type);
-        
+
         const response = await apiPut<AdminAnnouncement>("/admin/announcements", request, locale);
 
         console.log("🌐 API: Server response:", response);
@@ -184,7 +184,7 @@ export async function updateAdminAnnouncement(
 export async function deleteAdminAnnouncement(id: string, locale: string): Promise<ApiResponse<string>> {
     try {
         const response = await apiDelete<string>(`/admin/announcements/${id}`, locale);
- 
+
         if (response.status === "success") {
             return {
                 status: response.status,

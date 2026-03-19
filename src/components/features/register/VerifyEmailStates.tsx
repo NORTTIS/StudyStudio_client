@@ -43,7 +43,7 @@ export function VerifyEmailSuccess({ message, locale }: { message?: string; loca
                     {t("successDescription")}
                 </p>
 
-                <p className="mb-6 text-center text-orange-600 text-xs font-medium animate-pulse">
+                <p className="mb-6 animate-pulse text-center font-medium text-orange-600 text-xs">
                     {t("redirectingToLogin")}
                 </p>
 
