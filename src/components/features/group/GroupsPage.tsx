@@ -382,7 +382,6 @@ export function GroupsPage() {
                 open={openCreate}
                 onClose={() => setOpenCreate(false)}
                 currentGroupCount={currentGroupsCount}
-                maxGroups={maxGroups}
                 onCreate={async () => {
                     await reload();
                 }}

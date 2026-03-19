@@ -844,8 +844,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                 open={isCreateGroupModalOpen}
                 onClose={() => setIsCreateGroupModalOpen(false)}
                 currentGroupCount={groups.length}
-                maxGroups={5}
                 defaultStudioId={studio?.id}
+                variant="studio"
                 onCreate={async () => {
                     // Refresh the page to show the new group
                     router.refresh();

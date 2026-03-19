@@ -3,7 +3,7 @@
 import { Image as ImageIcon, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/api/api-client";
-import { components } from "@/api/types";
+import type { components } from "@/api/types";
 import { Button } from "@/components/ui/button";
 
 type GroupType = "independent" | "managed";
@@ -16,6 +16,15 @@ type UserProfile = {
 type StudioListResponseApiResponse = components["schemas"]["StudioListResponseApiResponse"];
 
 type StudioResponse = NonNullable<NonNullable<StudioListResponseApiResponse["data"]>["studios"]>[number];
+
+type TemplateListDataResponse = {
+    subscription?: {
+        groupCreated?: number;
+        groupLimit?: number;
+        memberLimit?: number;
+    };
+    templates?: TemplateResponse[];
+};
 
 type TemplateResponse = {
     templateId?: string;
@@ -35,20 +44,22 @@ function buildApiUrl(path: string) {
     return `${API_BASE}${p}`;
 }
 
+type CreateGroupModalVariant = "default" | "studio";
+
 export function CreateGroupModal({
     open,
     onClose,
     currentGroupCount,
-    maxGroups = 5,
     onCreate,
-    defaultStudioId
+    defaultStudioId,
+    variant = "default"
 }: {
     open: boolean;
     onClose: () => void;
     currentGroupCount: number;
-    maxGroups?: number;
     onCreate: () => void | Promise<void>;
     defaultStudioId?: string;
+    variant?: CreateGroupModalVariant;
 }) {
     const [createMode, setCreateMode] = useState<CreateMode>("single");
     const [type, setType] = useState<GroupType>("independent");
@@ -65,15 +76,20 @@ export function CreateGroupModal({
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState("");
 
+    const [groupLimit, setGroupLimit] = useState<number>(5);
+    const [groupCreated, setGroupCreated] = useState<number>(0);
     const [ownerStudios, setOwnerStudios] = useState<StudioResponse[]>([]);
     const [templates, setTemplates] = useState<Array<{ id: string; name: string; desc: string }>>([]);
 
-    const limitReached = useMemo(() => currentGroupCount >= maxGroups, [currentGroupCount, maxGroups]);
+    const limitReached = useMemo(
+        () => currentGroupCount >= groupLimit,
+        [currentGroupCount, groupLimit]
+    );
 
     const remaining = useMemo(() => {
-        const r = maxGroups - currentGroupCount;
+        const r = groupLimit - groupCreated;
         return r > 0 ? r : 0;
-    }, [maxGroups, currentGroupCount]);
+    }, [groupLimit, groupCreated]);
 
     const needStudio = type === "managed";
     const hasOwnerStudio = ownerStudios.length > 0;
@@ -102,17 +118,21 @@ export function CreateGroupModal({
         if (createMode === "single") {
             if (!groupName.trim()) return false;
         } else {
-            if (needStudio && !studioId) return false;
+            // In studio variant, studioId is always set via defaultStudioId
+            if (variant !== "studio" && needStudio && !studioId) return false;
             if (!groupPrefix.trim()) return false;
             if (!groupCount || groupCount < 1) return false;
             if (groupCount > remaining) return false;
         }
 
-        if (needStudio && !hasOwnerStudio) return false;
-        if (needStudio && !studioId) return false;
+        // In studio variant, needStudio is always true and studioId is pre-set
+        if (variant !== "studio") {
+            if (needStudio && !hasOwnerStudio) return false;
+            if (needStudio && !studioId) return false;
+        }
 
         return true;
-    }, [limitReached, createMode, groupName, groupPrefix, groupCount, studioId, needStudio, hasOwnerStudio, remaining]);
+    }, [limitReached, createMode, variant, groupName, groupPrefix, groupCount, studioId, needStudio, hasOwnerStudio, remaining]);
 
     useEffect(() => {
         if (!open) return;
@@ -135,7 +155,8 @@ export function CreateGroupModal({
         if (!open) return;
 
         setCreateMode("single");
-        setType(defaultStudioId ? "managed" : "independent");
+        // In studio variant, type is always "managed"
+        setType(variant === "studio" ? "managed" : defaultStudioId ? "managed" : "independent");
         setStudioId(defaultStudioId || "");
         setGroupName("");
         setGroupPrefix("");
@@ -154,28 +175,44 @@ export function CreateGroupModal({
                 setLoadingOptions(true);
                 setOptionsError("");
 
-                const [profileRes, studiosRes, templatesRes] = await Promise.all([
-                    apiGet<UserProfile>(buildApiUrl("/user-profile")),
-                    apiGet<StudioListResponseApiResponse["data"]>(buildApiUrl("/studio")),
-                    apiGet<TemplateResponse[]>(buildApiUrl("/templates"))
-                ]);
+                let userId: string | undefined;
+                let owner: StudioResponse[] = [];
 
+                if (variant !== "studio") {
+                    const [profileRes, studiosRes] = await Promise.all([
+                        apiGet<UserProfile>(buildApiUrl("/user-profile")),
+                        apiGet<StudioListResponseApiResponse["data"]>(buildApiUrl("/studio"))
+                    ]);
+
+                    if (!alive) return;
+
+                    if (profileRes.status !== "success" || !profileRes.data?.userId) {
+                        throw new Error(profileRes.message || "Không lấy được thông tin người dùng");
+                    }
+                    if (studiosRes.status !== "success") {
+                        throw new Error(studiosRes.message || "Không tải được danh sách studio");
+                    }
+
+                    userId = profileRes.data.userId;
+                    const studios = studiosRes.data?.studios ?? [];
+                    owner = studios.filter((s) => s.ownerId === userId);
+                }
+
+                // Always fetch templates (includes subscription info)
+                const templatesRes = await apiGet<TemplateListDataResponse>(buildApiUrl("/templates"));
                 if (!alive) return;
-
-                if (profileRes.status !== "success" || !profileRes.data?.userId) {
-                    throw new Error(profileRes.message || "Không lấy được thông tin người dùng");
-                }
-                if (studiosRes.status !== "success") {
-                    throw new Error(studiosRes.message || "Không tải được danh sách studio");
-                }
                 if (templatesRes.status !== "success") {
                     throw new Error(templatesRes.message || "Không tải được danh sách template");
                 }
 
-                const userId = profileRes.data.userId;
-                const tmps = Array.isArray(templatesRes.data) ? templatesRes.data : [];
-                const studios = studiosRes.data?.studios ?? [];
-                const owner = studios.filter((s) => s.ownerId === userId);
+                // Parse subscription for user plan limits
+                const subscription = templatesRes.data?.subscription;
+                const groupLimitVal = subscription?.groupLimit ?? 5;
+                const groupCreatedVal = subscription?.groupCreated ?? 0;
+                setGroupLimit(groupLimitVal);
+                setGroupCreated(groupCreatedVal);
+
+                const tmps = templatesRes.data?.templates ?? [];
                 const tlist = tmps
                     .filter((t) => !!t.templateId)
                     .map((t) => ({
@@ -187,7 +224,9 @@ export function CreateGroupModal({
                 setOwnerStudios(owner);
                 setTemplates(tlist);
 
-                if (studios.length > 0) setStudioId(studios[0].studioId ?? "");
+                if (variant !== "studio" && owner.length > 0) {
+                    setStudioId(owner[0].studioId ?? "");
+                }
             } catch (e: unknown) {
                 if (!alive) return;
                 setOwnerStudios([]);
@@ -202,7 +241,7 @@ export function CreateGroupModal({
         return () => {
             alive = false;
         };
-    }, [open, defaultStudioId]);
+    }, [open, defaultStudioId, variant]);
 
     useEffect(() => {
         if (type !== "managed") {
@@ -304,7 +343,7 @@ export function CreateGroupModal({
 
                                 {limitReached ? (
                                     <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700 text-sm">
-                                        Bạn chỉ được tạo tối đa {maxGroups} nhóm.
+                                        Bạn đã tạo đủ {groupLimit} nhóm theo gói của bạn.
                                     </div>
                                 ) : null}
                             </div>
@@ -338,32 +377,34 @@ export function CreateGroupModal({
                                         </div>
                                     </div>
 
-                                    <div className="sm:col-span-2">
-                                        <div className="font-semibold text-[#2A2438] text-base">Loại nhóm</div>
-                                        <div className="relative mt-3">
-                                            <select
-                                                value={type}
-                                                onChange={(e) => setType(e.target.value as GroupType)}
-                                                className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                                                <option value="independent">Nhóm độc lập</option>
-                                                <option value="managed">Nhóm thuộc không gian quản lý</option>
-                                            </select>
+                                    {variant !== "studio" ? (
+                                        <div className="sm:col-span-2">
+                                            <div className="font-semibold text-[#2A2438] text-base">Loại nhóm</div>
+                                            <div className="relative mt-3">
+                                                <select
+                                                    value={type}
+                                                    onChange={(e) => setType(e.target.value as GroupType)}
+                                                    className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+                                                    <option value="independent">Nhóm độc lập</option>
+                                                    <option value="managed">Nhóm thuộc không gian quản lý</option>
+                                                </select>
 
-                                            <div className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-[#6F6B99]">
-                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                                    <path
-                                                        d="M6 8l4 4 4-4"
-                                                        stroke="currentColor"
-                                                        strokeWidth="1.5"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    />
-                                                </svg>
+                                                <div className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-[#6F6B99]">
+                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                                        <path
+                                                            d="M6 8l4 4 4-4"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.5"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        />
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    ) : null}
 
-                                    {type === "managed" ? (
+                                    {type === "managed" && variant !== "studio" ? (
                                         <div className="sm:col-span-2">
                                             <div className="flex items-center gap-2 font-semibold text-[#2A2438] text-base">
                                                 Studio bạn làm chủ
