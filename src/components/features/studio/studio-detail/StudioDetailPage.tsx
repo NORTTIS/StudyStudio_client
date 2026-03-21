@@ -5,7 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
-import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
+import {
+    deleteStudio,
+    getStudioMembers,
+    type StudioMemberResponse,
+    type StudioUI,
+    updateStudio
+} from "@/api/studios";
 import type { components } from "@/api/types";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { getStudioGroupAnalytics, getStudioGroupHeatmap } from "@/api/analytics";
@@ -49,7 +55,6 @@ import {
 type StudioResponse = components["schemas"]["StudioResponse"];
 type GroupCardDto = components["schemas"]["GroupCardDto"];
 
-// Transformed group type for UI display
 interface TransformedGroup {
     id: string;
     name: string;
@@ -87,19 +92,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [_analyticsSubTab, _setAnalyticsSubTab] = useState<
         "progress" | "activity" | "group-progress" | "performance"
     >("progress");
-
-    // Heatmap state — loading starts true so spinner shows until data arrives
     const [heatmapData, setHeatmapData] = useState<GroupHeatmapComparisonData[]>([]);
     const [heatmapLoading, setHeatmapLoading] = useState(true);
-
-    // Group progress state for GroupProgressChart
     const [groupProgress, setGroupProgress] = useState<GroupProgress[]>([]);
     const [groupsLoading, setGroupsLoading] = useState(true);
-
-    // Check if current user is studio owner
     const isStudioOwner = initialStudio?.studioRole === 0;
-
-    // Inline editing state
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState("");
     const [editDescription, setEditDescription] = useState("");
@@ -107,10 +104,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editEndDate, setEditEndDate] = useState("");
     const [editLoading, setEditLoading] = useState(false);
 
-    // Helper to format ISO date string → YYYY-MM-DD for <input type="date">
     const formatDateForInput = (iso: string) => (iso ? new Date(iso).toISOString().split("T")[0] : "");
 
-    // Convert server data to UI format
     const studio: StudioUI | null = useMemo(() => {
         if (!initialStudio) return null;
         return {
@@ -128,7 +123,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         };
     }, [initialStudio]);
 
-    // Transform groups to the format expected by UI
     const groups: TransformedGroup[] = useMemo(() => {
         return initialGroups.map((group) => ({
             id: group.id || "",
@@ -143,7 +137,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         }));
     }, [initialGroups]);
 
-    // Filter groups based on search query
     const filteredGroups = groups.filter(
         (group) =>
             (group.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
@@ -158,7 +151,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                 setUserProfile(profileResult.data);
             }
 
-            // Fetch studio members
             if (studioId) {
                 const membersResult = await getStudioMembers(studioId, locale);
                 if (membersResult.status === "success" && membersResult.data) {
@@ -172,13 +164,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             setMembersLoading(false);
         }
 
-        // Fetch heatmap data independently (non-blocking)
         if (studioId) {
             setHeatmapLoading(true);
             try {
                 const heatmapResult = await getStudioGroupHeatmap(studioId, { locale });
-                // apiGet wraps with ApiResponse{status,code,message,data}, so data.data === actual payload
-                // OpenAPI type double-wraps; correct path: result.data.groupHeatmap
                 const heatmapPayload = heatmapResult.data as { groupHeatmap?: unknown } | null;
                 const hasData = heatmapPayload?.groupHeatmap != null;
                 if (hasData) {
@@ -198,7 +187,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             }
         }
 
-        // Fetch group progress analytics independently (non-blocking)
         if (studioId) {
             setGroupsLoading(true);
             try {
@@ -220,12 +208,20 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         loadData();
     }, [loadData]);
 
-    // Redirect to "groups" tab if user doesn't have owner permissions but is on analytics or settings tab
     useEffect(() => {
         if (!isStudioOwner && (activeTab === "analytics" || activeTab === "settings")) {
             setActiveTab("groups");
         }
     }, [isStudioOwner, activeTab]);
+
+    useEffect(() => {
+        if (studio) {
+            setEditName(studio.name);
+            setEditDescription(studio.description);
+            setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
+            setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
+        }
+    }, [studio]);
 
     const handleDeleteStudio = async () => {
         if (!studio) return;
@@ -244,16 +240,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             toast({ description: t("deleteModal.error"), variant: "destructive" });
         }
     };
-
-    // Initialize edit values when studio is loaded
-    useEffect(() => {
-        if (studio) {
-            setEditName(studio.name);
-            setEditDescription(studio.description);
-            setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
-            setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
-        }
-    }, [studio]);
 
     const handleStartEdit = () => {
         if (studio) {
@@ -351,7 +337,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                 <main className="flex-1">
                     <Header userProfile={userProfile} />
                     <div className="px-6 py-6">
-                        {/* Back button + Studio Info */}
                         <div className="mb-6">
                             <div className="flex items-start gap-4">
                                 <button
@@ -395,17 +380,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             </div>
                         </div>
 
-                        {/* Tabs Navigation */}
                         <div className="mb-6 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 rounded-xl border border-orange-100/50 bg-white/80 p-1.5 shadow-lg shadow-orange-900/5 backdrop-blur-xl">
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab("groups")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
-                                        activeTab === "groups"
-                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                    }`}>
+                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "groups"
+                                        ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                        }`}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -416,15 +399,30 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </svg>
                                     Nhóm
                                 </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => router.push(`/${locale}/ai-master`)}
+                                    className="flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm text-slate-600 transition-all duration-300 hover:bg-violet-50 hover:text-violet-600">
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M9.75 3v2.25m4.5-2.25v2.25M4.5 9.75H3m18 0h-1.5M6.364 6.364l-1.06-1.06m13.392 13.392-1.06-1.06M12 7.5a4.5 4.5 0 00-4.5 4.5v1.25a2.25 2.25 0 01-.659 1.591L6 15.682V18h12v-2.318l-.841-.841A2.25 2.25 0 0116.5 13.25V12A4.5 4.5 0 0012 7.5zM9.75 21h4.5"
+                                        />
+                                    </svg>
+                                    AI
+                                </button>
+
                                 {isStudioOwner && (
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab("analytics")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
-                                            activeTab === "analytics"
-                                                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "analytics"
+                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                            }`}>
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
@@ -436,21 +434,21 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         Phân tích
                                     </button>
                                 )}
+
                                 {isStudioOwner && (
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab("settings")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
-                                            activeTab === "settings"
-                                                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "settings"
+                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                            }`}>
                                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
                                                 strokeLinejoin="round"
                                                 strokeWidth={2}
-                                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826-3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
                                             />
                                             <path
                                                 strokeLinecap="round"
@@ -463,7 +461,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </button>
                                 )}
                             </div>
-                            {/* Search and Add Group */}
+
                             <div className="flex flex-1 items-center justify-between gap-4">
                                 <div className="relative flex-1">
                                     <input
@@ -487,6 +485,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </svg>
                                 </div>
                                 <Button
+                                    type="button"
                                     className="bg-[#FF5F3D] hover:bg-[#ff4620]"
                                     onClick={() => setIsCreateGroupModalOpen(true)}>
                                     <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -502,10 +501,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             </div>
                         </div>
 
-                        {/* Tab Content */}
                         {activeTab === "groups" && (
                             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                                {/* Left Column: Groups 2-col grid */}
                                 <div className="lg:col-span-8">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         {filteredGroups.length > 0 ? (
@@ -514,18 +511,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     href={`/${locale}/group/${group.id}`}
                                                     key={group.id}
                                                     className="flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
-                                                    {/* Card header: icon + name + badge */}
                                                     <div className="flex items-center gap-3">
                                                         <div
-                                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                                                                index % 4 === 0
-                                                                    ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                    : index % 4 === 1
-                                                                      ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                      : index % 4 === 2
+                                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${index % 4 === 0
+                                                                ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                                : index % 4 === 1
+                                                                    ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                                    : index % 4 === 2
                                                                         ? "bg-gradient-to-br from-teal-400 to-cyan-500"
                                                                         : "bg-gradient-to-br from-purple-400 to-violet-500"
-                                                            }`}>
+                                                                }`}>
                                                             <svg
                                                                 className="h-5 w-5 text-white"
                                                                 fill="none"
@@ -549,14 +544,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         </div>
                                                     </div>
 
-                                                    {/* Description */}
                                                     <p className="mt-3 line-clamp-2 text-[#FF5722] text-sm">
                                                         {group.description || "Chưa có mô tả cho nhóm này"}
                                                     </p>
 
-                                                    {/* Subject tag */}
-
-                                                    {/* Stats + Avatars */}
                                                     <div className="mt-4 flex items-center justify-between">
                                                         <div className="flex items-center gap-3 text-slate-500 text-xs">
                                                             <span className="inline-flex items-center gap-1">
@@ -597,17 +588,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     return (
                                                                         <div
                                                                             key={`${group.id}-avatar-${i}`}
-                                                                            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${
-                                                                                member?.avatarUrl
-                                                                                    ? ""
-                                                                                    : i % 4 === 0
-                                                                                      ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                                      : i % 4 === 1
+                                                                            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${member?.avatarUrl
+                                                                                ? ""
+                                                                                : i % 4 === 0
+                                                                                    ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                                                    : i % 4 === 1
                                                                                         ? "bg-gradient-to-br from-blue-400 to-indigo-500"
                                                                                         : i % 4 === 2
-                                                                                          ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                          : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                            }`}>
+                                                                                            ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                                            : "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                                                }`}>
                                                                             {member?.avatarUrl ? (
                                                                                 <img
                                                                                     src={member.avatarUrl}
@@ -645,7 +635,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </div>
                                 </div>
 
-                                {/* Right Column: Members + Quick Stats */}
                                 <div className="flex flex-col gap-4 lg:col-span-4">
                                     <MemberList
                                         members={members}
@@ -666,12 +655,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         }))}
                                         studioOwnerId={initialStudio?.ownerId}
                                         members={members}
-                                        onSuccess={(count) => {
-                                            // Refresh members after successful assign
+                                        onSuccess={() => {
                                             loadData();
                                         }}
                                     />
-                                    {/* Quick Stats */}
                                     <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                                         <h3 className="mb-4 font-semibold text-base text-slate-800">Quick Stats</h3>
                                         <div className="space-y-3">
@@ -688,10 +675,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 <span className="font-semibold text-slate-800">
                                                     {studio.createdAt
                                                         ? new Date(studio.createdAt).toLocaleDateString("en-US", {
-                                                              month: "numeric",
-                                                              day: "numeric",
-                                                              year: "numeric"
-                                                          })
+                                                            month: "numeric",
+                                                            day: "numeric",
+                                                            year: "numeric"
+                                                        })
                                                         : "—"}
                                                 </span>
                                             </div>
@@ -701,10 +688,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             </div>
                         )}
 
-                        {/* Tab 2: Analytics - Show all 4 charts */}
                         {activeTab === "analytics" && (
                             <div className="space-y-6">
-                                {/* Row 1: StudioDateRange + Activity Heatmap */}
                                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                     <StudioDateRange
                                         startDate={studio.startDate ? formatDateForInput(studio.startDate) : ""}
@@ -712,7 +697,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     />
                                     <ActivityHeatmap data={heatmapData} loading={heatmapLoading} />
                                 </div>
-                                {/* Row 2: Group Progress + Performance Radar */}
                                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                                     <GroupProgressChart
                                         groups={groupsLoading ? [] : groupProgress}
@@ -724,10 +708,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             </div>
                         )}
 
-                        {/* Tab 3: Settings */}
                         {activeTab === "settings" && (
                             <div className="space-y-6">
-                                {/* Section 1: Cài đặt chung */}
                                 <section className="rounded-2xl border bg-white shadow-sm">
                                     <div className="flex items-start justify-between border-b px-6 py-5">
                                         <div className="flex items-start gap-3">
@@ -762,6 +744,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         <div className="flex items-center gap-2">
                                             {isEditing ? (
                                                 <Button
+                                                    type="button"
                                                     variant="outline"
                                                     onClick={handleCancelEdit}
                                                     className="h-10 rounded-xl border-gray-300 px-4 font-semibold text-gray-700 text-sm hover:bg-gray-100">
@@ -769,6 +752,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 </Button>
                                             ) : null}
                                             <Button
+                                                type="button"
                                                 onClick={isEditing ? handleSaveEdit : handleStartEdit}
                                                 disabled={editLoading}
                                                 className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700 disabled:opacity-50">
@@ -878,10 +862,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     value={
                                                         studio.createdAt
                                                             ? new Date(studio.createdAt).toLocaleDateString("vi-VN", {
-                                                                  day: "numeric",
-                                                                  month: "long",
-                                                                  year: "numeric"
-                                                              })
+                                                                day: "numeric",
+                                                                month: "long",
+                                                                year: "numeric"
+                                                            })
                                                             : "—"
                                                     }
                                                     readOnly
@@ -914,7 +898,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </div>
                                 </section>
 
-                                {/* Section 2: Vùng nguy hiểm */}
                                 <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
                                     <div className="border-red-200 border-b px-6 py-5">
                                         <h2 className="font-bold text-red-700 text-sm">Vùng nguy hiểm</h2>
@@ -934,7 +917,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700">
+                                                        <Button
+                                                            type="button"
+                                                            className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700">
                                                             <svg
                                                                 className="mr-2 h-4 w-4"
                                                                 fill="none"
@@ -1010,7 +995,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                 defaultStudioId={studio?.id}
                 variant="studio"
                 onCreate={async () => {
-                    // Refresh the page to show the new group
                     router.refresh();
                     toast({
                         description: "Nhóm đã được tạo thành công!",

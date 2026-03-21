@@ -78,9 +78,26 @@ export function DashboardSidebar() {
     const stripLocale = (path: string) => path.replace(/^\/[a-z]{2}(?=\/)/i, "");
     const currentPath = stripLocale(pathname || "");
 
+    const activeGroups: Record<string, string[]> = {
+        "/home": ["/home", "/ai"],
+        "/group": ["/group"],
+        "/master": ["/master"],
+        "/announcements": ["/announcements"],
+        "/admin/dashboard": ["/admin/dashboard"],
+        "/admin/users": ["/admin/users"],
+        "/admin/groups": ["/admin/groups"],
+        "/admin/subscriptions": ["/admin/subscriptions"],
+        "/admin/reports": ["/admin/reports"],
+        "/admin/news": ["/admin/news"]
+    };
+
     const isActivePath = (href: string) => {
         if (href === "/") return currentPath === "/";
-        return currentPath === href || currentPath.startsWith(`${href}/`);
+
+        const paths = activeGroups[href] || [href];
+        return paths.some(
+            (path) => currentPath === path || currentPath.startsWith(`${path}/`)
+        );
     };
 
     const navigation = isAdmin ? adminNavigation : userNavigation;
@@ -222,8 +239,8 @@ export function DashboardSidebar() {
                                             collapsed
                                                 ? "h-0 w-0 opacity-0"
                                                 : active
-                                                  ? "h-2.5 w-2.5 bg-white opacity-100"
-                                                  : "h-2 w-2 scale-75 bg-orange-300 opacity-0 group-hover:scale-100 group-hover:opacity-100"
+                                                    ? "h-2.5 w-2.5 bg-white opacity-100"
+                                                    : "h-2 w-2 scale-75 bg-orange-300 opacity-0 group-hover:scale-100 group-hover:opacity-100"
                                         )}
                                     />
                                 </Link>
