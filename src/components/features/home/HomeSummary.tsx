@@ -521,14 +521,6 @@ export default function HomeSummary() {
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    <div className="hidden rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur md:block">
-                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">trạng thái</p>
-                                        <div className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-700">
-                                            <Activity className="h-4 w-4 text-emerald-500" />
-                                            Dữ liệu đang đồng bộ
-                                        </div>
-                                    </div>
-
                                     <Button
                                         variant="outline"
                                         className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur hover:bg-white"

@@ -1,6 +1,14 @@
 "use client";
 
-import { ChevronDown, ChevronLeft, ChevronRight, Filter, Search } from "lucide-react";
+import {
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Filter,
+    Search,
+    AlertTriangle,
+    ListTodo
+} from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -143,7 +151,7 @@ function buildInitials(name: string) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
     return `${first}${last}`.toUpperCase() || "U";
 }
 
@@ -209,6 +217,19 @@ async function apiGetGroupTasks(args: {
     return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
 }
 
+function TableSkeleton() {
+    return (
+        <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                    key={i}
+                    className="h-20 animate-pulse rounded-2xl border border-zinc-200/80 bg-white/70"
+                />
+            ))}
+        </div>
+    );
+}
+
 function DateFilterModal(props: {
     open: boolean;
     values: DateFilterValues;
@@ -223,19 +244,19 @@ function DateFilterModal(props: {
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[12000] flex items-center justify-center bg-black/40 p-4"
+            className="fixed inset-0 z-[12000] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
             }}>
             <div
-                className="w-full max-w-xl rounded-2xl border border-zinc-200 bg-white p-5 shadow-2xl"
+                className="w-full max-w-xl rounded-[28px] border border-zinc-200 bg-white p-5 shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-5 flex items-center justify-between">
                     <h3 className="font-semibold text-lg text-zinc-900">{t("dateFilterTitle")}</h3>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50">
+                        className="rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50">
                         {t("cancel")}
                     </button>
                 </div>
@@ -440,219 +461,210 @@ export function GroupListScreen() {
     };
 
     return (
-        <div className="min-h-screen bg-zinc-50 pb-8">
+        <div className="bg-white pb-8">
             <TaskDetailModal open={detailOpen} onClose={closeTaskDetail} taskId={detailTaskId} onSaved={refresh} />
 
             <Container>
-                <section className="mt-6 rounded-[34px] border border-zinc-200 bg-white px-6 py-6 shadow-sm sm:px-10 sm:py-8">
-                    <h1 className="font-bold text-2xl text-zinc-900 sm:text-3xl">{t("pageTitle")}</h1>
+                <section className="mt-6 space-y-5">
+                    <div className="rounded-[30px] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
+                        <div className="grid gap-3 lg:grid-cols-[1.5fr_0.75fr_0.8fr_auto]">
+                            <label className="relative block">
+                                <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    value={searchInput}
+                                    onChange={(e) => {
+                                        setSearchInput(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    placeholder={t("searchPlaceholder")}
+                                    className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50/70 pr-4 pl-11 text-sm text-zinc-800 outline-none transition focus:border-zinc-300 focus:bg-white"
+                                />
+                            </label>
 
-                    <div className="mt-6 grid gap-3 lg:grid-cols-[1.4fr_0.7fr_0.7fr_auto]">
-                        <label className="relative block">
-                            <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                            <input
-                                value={searchInput}
-                                onChange={(e) => {
-                                    setSearchInput(e.target.value);
-                                    setPage(1);
-                                }}
-                                placeholder={t("searchPlaceholder")}
-                                className="h-12 w-full rounded-xl border border-zinc-200 bg-white pr-4 pl-11 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
-                            />
-                        </label>
+                            <label className="relative block">
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => {
+                                        setStatusFilter(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300 focus:bg-white">
+                                    <option value="all">{t("allStatus")}</option>
+                                    {statusOptions.map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                            </label>
 
-                        <label className="relative block">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => {
-                                    setStatusFilter(e.target.value);
-                                    setPage(1);
-                                }}
-                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
-                                <option value="all">{t("allStatus")}</option>
-                                {statusOptions.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                        </label>
+                            <label className="relative block">
+                                <select
+                                    value={sortByDeadline}
+                                    onChange={(e) => {
+                                        setSortByDeadline(e.target.value === "desc" ? "desc" : "asc");
+                                        setPage(1);
+                                    }}
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300 focus:bg-white">
+                                    <option value="asc">{`${t("sortLabel")}: ${t("sortAsc")}`}</option>
+                                    <option value="desc">{`${t("sortLabel")}: ${t("sortDesc")}`}</option>
+                                </select>
+                                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                            </label>
 
-                        <label className="relative block">
-                            <select
-                                value={sortByDeadline}
-                                onChange={(e) => {
-                                    setSortByDeadline(e.target.value === "desc" ? "desc" : "asc");
-                                    setPage(1);
-                                }}
-                                className="h-12 w-full appearance-none rounded-xl border border-zinc-200 bg-white px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300">
-                                <option value="asc">{`${t("sortLabel")}: ${t("sortAsc")}`}</option>
-                                <option value="desc">{`${t("sortLabel")}: ${t("sortDesc")}`}</option>
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                        </label>
-
-                        <button
-                            type="button"
-                            onClick={() => setFilterOpen(true)}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50">
-                            <Filter className="h-4 w-4" />
-                            {t("dateFilterButton")}
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => setFilterOpen(true)}
+                                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50">
+                                <Filter className="h-4 w-4" />
+                                {t("dateFilterButton")}
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="mt-8 overflow-x-auto">
-                        <div className="min-w-full align-middle">
-                            <table className="min-w-full border-collapse">
-                                <thead>
-                                    <tr className="text-slate-500">
-                                        <th className="px-6 py-3 text-center font-semibold text-sm">{t("taskName")}</th>
-                                        <th className="px-6 py-3 text-center font-semibold text-sm">{t("assignee")}</th>
-                                        <th className="px-6 py-3 text-center font-semibold text-sm">{t("severity")}</th>
-                                        <th className="px-6 py-3 text-center font-semibold text-sm">{t("priority")}</th>
-                                        <th className="px-6 py-3 text-center font-semibold text-sm">{t("status")}</th>
-                                        <th className="px-6 py-3 text-center font-semibold text-sm">
-                                            {t("startDate")}
-                                        </th>
-                                        <th className="px-6 py-3 text-center font-semibold text-sm">{t("dueDate")}</th>
-                                    </tr>
-                                </thead>
+                    <div className="overflow-hidden rounded-[30px] border border-zinc-200 bg-white shadow-sm">
+                        <div className="border-b border-zinc-200 px-5 py-4">
+                            <div className="grid grid-cols-7 gap-4 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                                <div>{t("taskName")}</div>
+                                <div>{t("assignee")}</div>
+                                <div>{t("severity")}</div>
+                                <div>{t("priority")}</div>
+                                <div>{t("status")}</div>
+                                <div>{t("startDate")}</div>
+                                <div>{t("dueDate")}</div>
+                            </div>
+                        </div>
 
-                                <tbody>
-                                    {loading ? (
-                                        <tr>
-                                            <td colSpan={7} className="px-4 py-10 text-center text-sm text-zinc-500">
-                                                {t("loading")}
-                                            </td>
-                                        </tr>
-                                    ) : loadError ? (
-                                        <tr>
-                                            <td colSpan={7} className="px-4 py-10 text-center text-rose-600 text-sm">
-                                                <div>{loadError}</div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void refresh()}
-                                                    className="mt-3 rounded-xl border border-zinc-200 px-3 py-2 font-semibold text-xs text-zinc-700 hover:bg-zinc-100">
-                                                    {t("reload")}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ) : rows.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="px-4 py-12 text-center text-sm text-zinc-400">
-                                                {t("noData")}
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        rows.map((row) => (
-                                            <tr
-                                                key={row.id}
-                                                onClick={() => openTaskDetail(row.id)}
-                                                className="cursor-pointer border-zinc-200 border-b transition hover:bg-zinc-50">
-                                                <td className="px-6 py-7 text-center font-bold text-[18px] text-zinc-900">
+                        <div className="p-4">
+                            {loading ? (
+                                <TableSkeleton />
+                            ) : loadError ? (
+                                <div className="rounded-[24px] border border-rose-200 bg-rose-50/80 px-6 py-10 text-center">
+                                    <AlertTriangle className="mx-auto h-8 w-8 text-rose-500" />
+                                    <p className="mt-3 text-sm text-rose-700">{loadError}</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => void refresh()}
+                                        className="mt-4 rounded-xl border border-rose-200 bg-white px-4 py-2 font-semibold text-xs text-rose-700 hover:bg-rose-50">
+                                        {t("reload")}
+                                    </button>
+                                </div>
+                            ) : rows.length === 0 ? (
+                                <div className="rounded-[24px] border border-dashed border-zinc-200 bg-zinc-50/60 px-6 py-14 text-center">
+                                    <ListTodo className="mx-auto h-9 w-9 text-zinc-400" />
+                                    <p className="mt-4 font-medium text-zinc-600">{t("noData")}</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {rows.map((row) => (
+                                        <button
+                                            key={row.id}
+                                            type="button"
+                                            onClick={() => openTaskDetail(row.id)}
+                                            className="grid w-full grid-cols-7 gap-4 rounded-[24px] border border-zinc-200/80 bg-zinc-50/45 px-5 py-5 text-center transition hover:border-zinc-300 hover:bg-zinc-50">
+                                            <div className="flex items-center justify-center">
+                                                <p className="line-clamp-2 font-semibold text-[15px] text-zinc-900">
                                                     {row.title}
-                                                </td>
+                                                </p>
+                                            </div>
 
-                                                <td className="px-6 py-7 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        {row.assigneeAvatarUrl ? (
-                                                            <Image
-                                                                src={row.assigneeAvatarUrl}
-                                                                alt={row.assigneeName}
-                                                                width={28}
-                                                                height={28}
-                                                                className="h-7 w-7 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <span className="grid h-7 w-7 place-items-center rounded-full bg-zinc-200 font-bold text-[11px] text-zinc-700">
-                                                                {row.assigneeInitials}
-                                                            </span>
-                                                        )}
-                                                        <span className="font-semibold text-sm text-zinc-800">
-                                                            {row.assigneeName}
+                                            <div className="flex items-center justify-center">
+                                                <div className="flex items-center gap-2">
+                                                    {row.assigneeAvatarUrl ? (
+                                                        <Image
+                                                            src={row.assigneeAvatarUrl}
+                                                            alt={row.assigneeName}
+                                                            width={32}
+                                                            height={32}
+                                                            className="h-8 w-8 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span className="grid h-8 w-8 place-items-center rounded-full bg-zinc-200 font-bold text-[11px] text-zinc-700">
+                                                            {row.assigneeInitials}
                                                         </span>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-6 py-7 text-center">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
-                                                            row.severityClass === "text-red-600" &&
-                                                                "border-red-200 bg-red-50 text-red-600",
-                                                            row.severityClass === "text-orange-600" &&
-                                                                "border-orange-200 bg-orange-50 text-orange-600",
-                                                            row.severityClass === "text-amber-600" &&
-                                                                "border-amber-200 bg-amber-50 text-amber-600",
-                                                            row.severityClass === "text-sky-600" &&
-                                                                "border-sky-200 bg-sky-50 text-sky-600"
-                                                        )}>
-                                                        {row.severityLabel}
+                                                    )}
+                                                    <span className="font-medium text-sm text-zinc-800">
+                                                        {row.assigneeName}
                                                     </span>
-                                                </td>
+                                                </div>
+                                            </div>
 
-                                                <td className="px-6 py-7 text-center">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
-                                                            row.priorityClass === "text-rose-600" &&
-                                                                "border-rose-200 bg-rose-50 text-rose-600",
-                                                            row.priorityClass === "text-amber-700" &&
-                                                                "border-amber-200 bg-amber-50 text-amber-700",
-                                                            row.priorityClass === "text-emerald-700" &&
-                                                                "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                                        )}>
-                                                        {row.priorityLabel}
-                                                    </span>
-                                                </td>
+                                            <div className="flex items-center justify-center">
+                                                <span
+                                                    className={cn(
+                                                        "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
+                                                        row.severityClass === "text-red-600" &&
+                                                        "border-red-200 bg-red-50 text-red-600",
+                                                        row.severityClass === "text-orange-600" &&
+                                                        "border-orange-200 bg-orange-50 text-orange-600",
+                                                        row.severityClass === "text-amber-600" &&
+                                                        "border-amber-200 bg-amber-50 text-amber-600",
+                                                        row.severityClass === "text-sky-600" &&
+                                                        "border-sky-200 bg-sky-50 text-sky-600"
+                                                    )}>
+                                                    {row.severityLabel}
+                                                </span>
+                                            </div>
 
-                                                <td className="px-6 py-7 text-center">
-                                                    <span className="inline-flex min-h-11 items-center justify-center rounded-full border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm">
-                                                        {row.statusName}
-                                                    </span>
-                                                </td>
+                                            <div className="flex items-center justify-center">
+                                                <span
+                                                    className={cn(
+                                                        "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
+                                                        row.priorityClass === "text-rose-600" &&
+                                                        "border-rose-200 bg-rose-50 text-rose-600",
+                                                        row.priorityClass === "text-amber-700" &&
+                                                        "border-amber-200 bg-amber-50 text-amber-700",
+                                                        row.priorityClass === "text-emerald-700" &&
+                                                        "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                    )}>
+                                                    {row.priorityLabel}
+                                                </span>
+                                            </div>
 
-                                                <td className="px-6 py-7 text-center font-semibold text-slate-500 text-sm">
-                                                    {row.startLabel}
-                                                </td>
+                                            <div className="flex items-center justify-center">
+                                                <span className="inline-flex min-h-11 items-center justify-center rounded-full border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm">
+                                                    {row.statusName}
+                                                </span>
+                                            </div>
 
-                                                <td className="px-6 py-7 text-center font-semibold text-slate-500 text-sm">
-                                                    {row.dueLabel}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                            <div className="flex items-center justify-center font-medium text-sm text-slate-600">
+                                                {row.startLabel}
+                                            </div>
+
+                                            <div className="flex items-center justify-center font-medium text-sm text-slate-600">
+                                                {row.dueLabel}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {showPagination ? (
-                        <div className="mt-8 w-full">
-                            <div className="mx-auto flex w-fit items-center justify-center gap-3 text-zinc-900">
-                                <button
-                                    type="button"
-                                    disabled={page <= 1}
-                                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 font-medium text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
-                                    <ChevronLeft className="h-4 w-4" />
-                                    {t("previous")}
-                                </button>
+                        <div className="flex items-center justify-center gap-3">
+                            <button
+                                type="button"
+                                disabled={page <= 1}
+                                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                <ChevronLeft className="h-4 w-4" />
+                                {t("previous")}
+                            </button>
 
-                                <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-center font-medium text-sm text-zinc-700">
-                                    {t("pageInfo", { page, totalPages, totalCount })}
-                                </div>
-
-                                <button
-                                    type="button"
-                                    disabled={page >= totalPages}
-                                    onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                                    className="inline-flex h-10 items-center gap-2 rounded-xl px-3 py-2 font-medium text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
-                                    {t("next")}
-                                    <ChevronRight className="h-4 w-4" />
-                                </button>
+                            <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-center font-medium text-sm text-zinc-700 shadow-sm">
+                                {t("pageInfo", { page, totalPages, totalCount })}
                             </div>
+
+                            <button
+                                type="button"
+                                disabled={page >= totalPages}
+                                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                {t("next")}
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
                         </div>
                     ) : null}
                 </section>

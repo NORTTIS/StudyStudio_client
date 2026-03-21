@@ -7,6 +7,66 @@ import { GuestFooter } from "@/components/layout/GuestFooter";
 import { GuestNavbar } from "@/components/layout/GuestNavbar";
 import { Button } from "@/components/ui/button";
 
+function FloatingOrb({ className }: { className: string }) {
+    return <div className={`pointer-events-none absolute rounded-full blur-3xl ${className}`} />;
+}
+
+function PreviewFrame({
+    src,
+    alt,
+    tone = "light"
+}: {
+    src: string;
+    alt: string;
+    tone?: "light" | "warm" | "glass";
+}) {
+    const tones = {
+        light: "bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] border-gray-200",
+        warm: "bg-[linear-gradient(180deg,#FFF9F2_0%,#FFF2E8_100%)] border-orange-200/70",
+        glass: "bg-white/55 border-white/70 backdrop-blur-xl"
+    };
+
+    return (
+        <div
+            className={`group relative overflow-hidden rounded-[30px] border shadow-[0_18px_40px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_50px_rgba(15,23,42,0.08)] ${tones[tone]}`}>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.65),transparent_35%)]" />
+            <div className="relative h-[320px] w-full p-6 md:h-[420px]">
+                <Image src={src} alt={alt} fill className="object-contain object-center p-2" />
+            </div>
+        </div>
+    );
+}
+
+function AICard({
+    title,
+    description,
+    delay = ""
+}: {
+    title: string;
+    description: string;
+    delay?: string;
+}) {
+    return (
+        <div
+            className={`rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)] landing-pop ${delay}`}>
+            <h4 className="font-semibold text-[18px] text-gray-800">{title}</h4>
+            <p className="mt-2 text-[15px] leading-7 text-gray-600">{description}</p>
+
+            <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5">
+                <div className="space-y-3">
+                    <div className="h-4 w-2/3 rounded-full bg-gray-200" />
+                    <div className="h-4 w-full rounded-full bg-gray-100" />
+                    <div className="h-4 w-5/6 rounded-full bg-gray-100" />
+                    <div className="mt-6 grid grid-cols-2 gap-3">
+                        <div className="h-24 rounded-2xl bg-white shadow-sm" />
+                        <div className="h-24 rounded-2xl bg-white shadow-sm" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function LandingPage() {
     const t = useTranslations("LandingPage");
     const locale = useLocale();
@@ -21,143 +81,221 @@ export default function LandingPage() {
     const delay5 = "landing-delay-5";
 
     return (
-        <div className="flex min-h-screen flex-col scroll-smooth bg-[#FFF7ED] text-gray-800">
+        <div className="flex min-h-screen flex-col scroll-smooth bg-[linear-gradient(180deg,#FFF8F1_0%,#FFFDFB_35%,#FFF7ED_68%,#FFFFFF_100%)] text-gray-800">
             <GuestNavbar />
 
-            <section className={`relative min-h-[80vh] overflow-hidden bg-white ${fadeIn}`}>
-                <div className="absolute inset-0 z-0 overflow-hidden">
-                    <Image
-                        src="/images/2.png"
-                        alt="Hero background"
-                        fill
-                        priority
-                        className="object-cover transition-transform duration-[1600ms] ease-out hover:scale-[1.02]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-white/5" />
-                </div>
+            <section className={`relative overflow-hidden py-20 ${fadeIn}`}>
+                <FloatingOrb className="left-[-120px] top-[120px] h-72 w-72 bg-orange-200/30" />
+                <FloatingOrb className="right-[-100px] top-[220px] h-80 w-80 bg-violet-200/25" />
+                <FloatingOrb className="left-[20%] bottom-[-120px] h-96 w-96 bg-sky-200/20" />
 
-                <div className={`relative z-10 mx-auto -mt-8 max-w-4xl px-6 pt-16 text-center ${fadeUp}`}>
-                    <h1
-                        className={`font-extrabold text-5xl text-gray-900 leading-tight ${fadeUp} ${delay1} md:text-6xl`}>
-                        {t("hero.title")} <br />
-                        {t("hero.subtitle")}
-                    </h1>
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="grid items-center gap-12 lg:grid-cols-2">
+                        <div className="relative z-10">
+                            <div
+                                className={`inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm backdrop-blur ${fadeUp}`}>
+                                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                                Productivity Ecosystem
+                            </div>
 
-                    <p className={`mx-auto mt-5 max-w-3xl text-gray-600 text-lg ${fadeUp} ${delay2} md:text-xl`}>
-                        {t("hero.description")}
-                    </p>
+                            <h1
+                                className={`mt-6 font-extrabold text-5xl leading-[1.05] tracking-tight text-gray-900 ${fadeUp} ${delay1} md:text-6xl xl:text-7xl`}>
+                                {t("hero.title")}
+                                <br />
+                                <span className="bg-[linear-gradient(135deg,#EA580C_0%,#F97316_35%,#7C3AED_100%)] bg-clip-text text-transparent">
+                                    {t("hero.subtitle")}
+                                </span>
+                            </h1>
 
-                    <Link href={`/${locale}/login`} className={`inline-block cursor-pointer ${pop} ${delay3}`}>
-                        <Button className="mt-7 rounded-full bg-orange-500 px-8 py-6 font-semibold text-lg shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
-                            {t("hero.registerButton")}
-                        </Button>
-                    </Link>
-                </div>
-            </section>
+                            <p
+                                className={`mt-6 max-w-2xl text-lg leading-8 text-gray-600 ${fadeUp} ${delay2} md:text-xl`}>
+                                {t("hero.description")}
+                            </p>
 
-            <section className={`bg-[#FFF7ED] py-20 text-center ${fadeUp}`}>
-                <h2 className={`font-extrabold text-3xl text-gray-800 ${fadeUp} md:text-4xl`}>
-                    {t("architecture.title")}
-                </h2>
-                <p className={`mt-2 text-gray-600 text-lg ${fadeUp} ${delay1} md:text-xl`}>
-                    {t("architecture.subtitle")}
-                </p>
+                            <div className={`mt-8 flex flex-wrap items-center gap-4 ${pop} ${delay3}`}>
+                                <Link href={`/${locale}/login`} className="inline-block cursor-pointer">
+                                    <Button className="h-14 rounded-full bg-[linear-gradient(135deg,#F97316_0%,#EA580C_45%,#DC2626_100%)] px-8 font-semibold text-base shadow-[0_16px_32px_rgba(249,115,22,0.24)] transition-all duration-300 hover:scale-[1.03] hover:brightness-105 active:scale-[0.98]">
+                                        {t("hero.registerButton")}
+                                    </Button>
+                                </Link>
 
-                <div className="mt-14 px-6">
-                    <h3 className={`font-bold text-2xl text-gray-800 ${fadeUp} ${delay2} md:text-3xl`}>
-                        {t("management.title")}
-                    </h3>
-                    <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay3} md:text-lg`}>
-                        {t("management.description")}
-                    </p>
+                                <Button
+                                    variant="outline"
+                                    className="h-14 rounded-full border-white/80 bg-white/75 px-8 font-semibold text-base text-gray-700 shadow-sm backdrop-blur transition-all duration-300 hover:scale-[1.03] hover:bg-white active:scale-[0.98]">
+                                    {t("management.learnMore")}
+                                </Button>
+                            </div>
 
-                    <div
-                        className={`mx-auto mt-8 flex h-85 w-[85%] items-center justify-center rounded-2xl border-2 border-orange-300 bg-white/30 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md ${fadeUp} ${delay4}`}
-                    />
+                            <div className={`mt-10 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3 ${fadeUp} ${delay4}`}>
+                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
+                                    <p className="text-xs text-gray-500">Workspace</p>
+                                    <p className="mt-2 text-2xl font-semibold text-gray-900">All-in-one</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
+                                    <p className="text-xs text-gray-500">Collaboration</p>
+                                    <p className="mt-2 text-2xl font-semibold text-gray-900">Teams</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
+                                    <p className="text-xs text-gray-500">AI</p>
+                                    <p className="mt-2 text-2xl font-semibold text-gray-900">Smart Flow</p>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div className={`mt-8 flex justify-center gap-4 ${pop} ${delay5}`}>
-                        <Link href={`/${locale}/login`} className="cursor-pointer">
-                            <Button className="rounded-full bg-orange-500 px-7 py-5 font-semibold shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
-                                {t("management.createButton")}
-                            </Button>
-                        </Link>
+                        <div className={`relative ${fadeUp} ${delay5}`}>
+                            <div className="relative overflow-hidden rounded-[36px] border border-white/70 bg-white/70 p-4 shadow-[0_30px_90px_rgba(15,23,42,0.10)] backdrop-blur-2xl">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.18),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.18),transparent_34%)]" />
 
-                        <Button className="cursor-pointer rounded-full bg-gray-200 px-7 py-5 font-semibold text-gray-700 shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-gray-300 hover:shadow-md active:scale-[0.98]">
-                            {t("management.learnMore")}
-                        </Button>
+                                <div className="relative h-[340px] w-full rounded-[28px] bg-[linear-gradient(180deg,#FFF8F3_0%,#FFFFFF_100%)] p-4 md:h-[460px]">
+                                    <Image
+                                        src="/images/2.png"
+                                        alt="Hero preview"
+                                        fill
+                                        priority
+                                        className="object-contain object-center p-2"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section className={`bg-white py-20 text-center ${fadeUp}`}>
-                <div className="px-6">
-                    <h3 className={`font-bold text-2xl text-gray-800 ${fadeUp} md:text-3xl`}>{t("group.title")}</h3>
-                    <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay1} md:text-lg`}>
-                        {t("group.description")}
+            <section className={`relative py-24 text-center ${fadeUp}`}>
+                <div className="mx-auto max-w-6xl px-6">
+                    <h2 className={`font-extrabold text-3xl tracking-tight text-gray-800 ${fadeUp} md:text-5xl`}>
+                        {t("architecture.title")}
+                    </h2>
+                    <p className={`mt-4 text-lg text-gray-600 ${fadeUp} ${delay1} md:text-xl`}>
+                        {t("architecture.subtitle")}
                     </p>
+                </div>
+            </section>
 
-                    <div
-                        className={`mx-auto mt-8 flex h-85 w-[85%] items-center justify-center rounded-2xl border-2 border-orange-300 bg-[#FFF7ED] shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md ${fadeUp} ${delay2}`}
-                    />
+            <section className={`relative py-10 ${fadeUp}`}>
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+                        <div className={`${fadeUp} ${delay2}`}>
+                            <div className="inline-flex rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
+                                Management
+                            </div>
+                            <h3 className="mt-5 text-3xl font-bold tracking-tight text-gray-800 md:text-4xl">
+                                {t("management.title")}
+                            </h3>
+                            <p className="mt-4 text-base leading-8 text-gray-600 md:text-lg">
+                                {t("management.description")}
+                            </p>
 
-                    <div className={`mt-8 flex justify-center gap-4 ${pop} ${delay3}`}>
-                        <Link href={`/${locale}/login`} className="cursor-pointer">
-                            <Button className="rounded-full bg-orange-500 px-7 py-5 font-semibold shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
-                                {t("group.createButton")}
-                            </Button>
-                        </Link>
+                            <div className={`mt-8 flex flex-wrap gap-4 ${pop} ${delay3}`}>
+                                <Link href={`/${locale}/login`} className="cursor-pointer">
+                                    <Button className="h-13 rounded-full bg-orange-500 px-7 font-semibold shadow-[0_14px_28px_rgba(249,115,22,0.22)] transition-all duration-300 hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
+                                        {t("management.createButton")}
+                                    </Button>
+                                </Link>
 
-                        <Button className="cursor-pointer rounded-full bg-[#EDEDED] px-7 py-5 font-semibold text-gray-700 shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
-                            {t("group.learnMore")}
-                        </Button>
+                                <Button className="h-13 cursor-pointer rounded-full bg-gray-200 px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-gray-300 hover:shadow-md active:scale-[0.98]">
+                                    {t("management.learnMore")}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className={`${fadeUp} ${delay4}`}>
+                            <PreviewFrame src="/images/2.png" alt="Management preview" tone="glass" />
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section className={`bg-[#FFF7ED] py-20 text-center ${fadeUp}`}>
-                <div className="px-6">
-                    <h3 className={`font-bold text-2xl text-gray-800 ${fadeUp} md:text-3xl`}>{t("personal.title")}</h3>
-                    <p className={`mt-2 text-base text-gray-600 ${fadeUp} ${delay1} md:text-lg`}>
-                        {t("personal.description")}
-                    </p>
+            <section className={`relative py-24 ${fadeUp}`}>
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+                        <div className={`${fadeUp} ${delay2} order-2 lg:order-1`}>
+                            <PreviewFrame src="/images/2.png" alt="Group preview" tone="warm" />
+                        </div>
 
-                    <div
-                        className={`mx-auto mt-8 flex h-85 w-[85%] items-center justify-center rounded-2xl border-2 border-orange-300 bg-transparent shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md ${fadeUp} ${delay2}`}
-                    />
+                        <div className={`${fadeUp} ${delay1} order-1 lg:order-2`}>
+                            <div className="inline-flex rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
+                                Group
+                            </div>
+                            <h3 className="mt-5 text-3xl font-bold tracking-tight text-gray-800 md:text-4xl">
+                                {t("group.title")}
+                            </h3>
+                            <p className="mt-4 text-base leading-8 text-gray-600 md:text-lg">
+                                {t("group.description")}
+                            </p>
 
-                    <div className={`mt-8 flex justify-center gap-4 ${pop} ${delay3}`}>
-                        <Link href={`/${locale}/login`} className="cursor-pointer">
-                            <Button className="rounded-full bg-orange-500 px-7 py-5 font-semibold shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
-                                {t("personal.createButton")}
-                            </Button>
-                        </Link>
+                            <div className={`mt-8 flex flex-wrap gap-4 ${pop} ${delay3}`}>
+                                <Link href={`/${locale}/login`} className="cursor-pointer">
+                                    <Button className="h-13 rounded-full bg-orange-500 px-7 font-semibold shadow-[0_14px_28px_rgba(249,115,22,0.22)] transition-all duration-300 hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
+                                        {t("group.createButton")}
+                                    </Button>
+                                </Link>
 
-                        <Button className="cursor-pointer rounded-full bg-[#EDEDED] px-7 py-5 font-semibold text-gray-700 shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
-                            {t("personal.learnMore")}
-                        </Button>
+                                <Button className="h-13 cursor-pointer rounded-full bg-[#EDEDED] px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
+                                    {t("group.learnMore")}
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section className={`bg-white py-20 ${fadeUp}`}>
+            <section className={`relative py-24 ${fadeUp}`}>
+                <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+                        <div className={`${fadeUp} ${delay1}`}>
+                            <div className="inline-flex rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
+                                Personal
+                            </div>
+                            <h3 className="mt-5 text-3xl font-bold tracking-tight text-gray-800 md:text-4xl">
+                                {t("personal.title")}
+                            </h3>
+                            <p className="mt-4 text-base leading-8 text-gray-600 md:text-lg">
+                                {t("personal.description")}
+                            </p>
+
+                            <div className={`mt-8 flex flex-wrap gap-4 ${pop} ${delay3}`}>
+                                <Link href={`/${locale}/login`} className="cursor-pointer">
+                                    <Button className="h-13 rounded-full bg-orange-500 px-7 font-semibold shadow-[0_14px_28px_rgba(249,115,22,0.22)] transition-all duration-300 hover:scale-[1.03] hover:bg-orange-600 hover:shadow-lg active:scale-[0.98]">
+                                        {t("personal.createButton")}
+                                    </Button>
+                                </Link>
+
+                                <Button className="h-13 cursor-pointer rounded-full bg-[#EDEDED] px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
+                                    {t("personal.learnMore")}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className={`${fadeUp} ${delay2}`}>
+                            <PreviewFrame src="/images/2.png" alt="Personal preview" tone="light" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className={`relative bg-white py-24 ${fadeUp}`}>
                 <div className="mx-auto w-[90%] max-w-6xl">
-                    <h3 className={`text-center font-bold text-2xl text-gray-800 ${fadeUp} md:text-3xl`}>
-                        {t("ai.title")} <br />
-                        {t("ai.subtitle")}
+                    <h3 className={`text-center text-3xl font-bold tracking-tight text-gray-800 ${fadeUp} md:text-5xl`}>
+                        {t("ai.title")}
+                        <br />
+                        <span className="bg-[linear-gradient(135deg,#EA580C_0%,#F97316_35%,#7C3AED_100%)] bg-clip-text text-transparent">
+                            {t("ai.subtitle")}
+                        </span>
                     </h3>
 
-                    <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div
-                            className={`rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${pop} ${delay1}`}>
-                            <h4 className="font-semibold text-gray-800">{t("ai.feature1")}</h4>
-                            <div className="mt-6 h-60 rounded-xl border-2 border-gray-300 border-dashed bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
-                        </div>
+                    <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <AICard
+                            title={t("ai.feature1")}
+                            description="AI hỗ trợ bạn tóm tắt, phân tích và đưa ra gợi ý hành động nhanh hơn trong từng không gian làm việc."
+                            delay={delay1}
+                        />
 
-                        <div
-                            className={`rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg ${pop} ${delay2}`}>
-                            <h4 className="font-semibold text-gray-800">{t("ai.feature2")}</h4>
-                            <div className="mt-6 h-60 rounded-xl border-2 border-gray-300 border-dashed bg-gray-50 transition-all duration-300 hover:bg-gray-100" />
-                        </div>
+                        <AICard
+                            title={t("ai.feature2")}
+                            description="Tương tác thông minh hơn với dữ liệu, task, nhóm và lịch trình để tăng tốc ra quyết định hằng ngày."
+                            delay={delay2}
+                        />
                     </div>
                 </div>
             </section>
