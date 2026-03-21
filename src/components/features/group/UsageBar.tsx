@@ -1,3 +1,6 @@
+import { ArrowUpRight, Infinity, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+
 export function UsageBar({ current, max }: { current: number; max: number }) {
     const isUnlimited = max <= 0;
     const safeMax = isUnlimited ? 1 : Math.max(1, max);
@@ -12,157 +15,210 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
     const tone =
         status === "full"
             ? {
-                  wrapper: "border-orange-200 bg-gradient-to-br from-[#FFF7F1] via-[#FFF4EC] to-[#FFF9F5]",
-                  badge: "bg-orange-100 text-orange-700 ring-orange-200",
-                  barBg: "bg-orange-100",
-                  barFg: "bg-gradient-to-r from-orange-500 to-rose-500",
-                  title: "Đã đạt giới hạn nhóm",
-                  hint: `Bạn đang sử dụng ${current}/${max} nhóm. Hãy nâng cấp để tạo thêm nhóm mới.`,
-                  cta: "bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 focus:ring-orange-300",
-                  box: "border-orange-200 bg-white/80"
-              }
+                shell: "from-[#FFF6EF] via-[#FFF8F4] to-[#FFF3EC]",
+                border: "border-orange-200/80",
+                badge: "bg-orange-100 text-orange-700 ring-orange-200/80",
+                glowA: "bg-orange-200/40",
+                glowB: "bg-rose-200/30",
+                progressWrap: "bg-orange-100/80",
+                progressBar: "from-orange-500 via-orange-500 to-rose-500",
+                progressGlow: "shadow-[0_0_24px_rgba(249,115,22,0.35)]",
+                statBox: "border-orange-200/70 bg-white/78",
+                title: "Đã đạt giới hạn nhóm",
+                hint: `Bạn đang sử dụng ${current}/${max} nhóm. Hãy nâng cấp để tạo thêm nhóm mới.`,
+                cta: "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
+                soft: "bg-orange-50/90 text-orange-700"
+            }
             : status === "near"
-              ? {
-                    wrapper: "border-amber-200 bg-gradient-to-br from-[#FFF9ED] via-[#FFF6E8] to-[#FFFDF8]",
-                    badge: "bg-amber-100 text-amber-700 ring-amber-200",
-                    barBg: "bg-amber-100",
-                    barFg: "bg-gradient-to-r from-amber-400 to-orange-500",
+                ? {
+                    shell: "from-[#FFF9ED] via-[#FFF8F1] to-[#FFFDF8]",
+                    border: "border-amber-200/80",
+                    badge: "bg-amber-100 text-amber-700 ring-amber-200/80",
+                    glowA: "bg-amber-200/40",
+                    glowB: "bg-orange-200/25",
+                    progressWrap: "bg-amber-100/80",
+                    progressBar: "from-amber-400 via-orange-400 to-orange-500",
+                    progressGlow: "shadow-[0_0_24px_rgba(245,158,11,0.30)]",
+                    statBox: "border-amber-200/70 bg-white/78",
                     title: "Sắp chạm giới hạn nhóm",
                     hint: `Bạn đang sử dụng ${current}/${max} nhóm. Có thể cần nâng cấp sớm để tránh bị giới hạn.`,
-                    cta: "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 focus:ring-amber-300",
-                    box: "border-amber-200 bg-white/80"
+                    cta: "from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600",
+                    soft: "bg-amber-50/90 text-amber-700"
                 }
-              : status === "unlimited"
-                ? {
-                      wrapper: "border-emerald-200 bg-gradient-to-br from-[#F1FFF8] via-[#ECFFF7] to-[#F8FFFC]",
-                      badge: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-                      barBg: "bg-emerald-100",
-                      barFg: "bg-gradient-to-r from-emerald-400 to-teal-500",
-                      title: "Không giới hạn nhóm",
-                      hint: "Gói hiện tại cho phép bạn tạo nhóm không giới hạn.",
-                      cta: "",
-                      box: "border-emerald-200 bg-white/80"
-                  }
-                : {
-                      wrapper: "border-[#E9DED2] bg-gradient-to-br from-[#FAF7F2] via-[#F7F3EE] to-[#FFF7F0]",
-                      badge: "bg-orange-100 text-orange-700 ring-orange-200",
-                      barBg: "bg-[#E9E2DA]",
-                      barFg: "bg-gradient-to-r from-orange-400 to-rose-500",
-                      title: "Tình trạng sử dụng",
-                      hint: `Bạn đang sử dụng ${current}/${max} nhóm. Bạn có thể nâng cấp để tăng giới hạn.`,
-                      cta: "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-300",
-                      box: "border-[#E7DED4] bg-white/85"
-                  };
+                : status === "unlimited"
+                    ? {
+                        shell: "from-[#F1FFF8] via-[#F5FFFB] to-[#F8FFFC]",
+                        border: "border-emerald-200/80",
+                        badge: "bg-emerald-100 text-emerald-700 ring-emerald-200/80",
+                        glowA: "bg-emerald-200/35",
+                        glowB: "bg-teal-200/25",
+                        progressWrap: "bg-emerald-100/80",
+                        progressBar: "from-emerald-400 via-emerald-500 to-teal-500",
+                        progressGlow: "shadow-[0_0_24px_rgba(16,185,129,0.28)]",
+                        statBox: "border-emerald-200/70 bg-white/78",
+                        title: "Không giới hạn nhóm",
+                        hint: "Gói hiện tại cho phép bạn tạo nhóm không giới hạn.",
+                        cta: "",
+                        soft: "bg-emerald-50/90 text-emerald-700"
+                    }
+                    : {
+                        shell: "from-[#FAF7F2] via-[#FBF8F5] to-[#FFF8F1]",
+                        border: "border-[#E9DED2]",
+                        badge: "bg-orange-100 text-orange-700 ring-orange-200/80",
+                        glowA: "bg-orange-100/35",
+                        glowB: "bg-rose-100/20",
+                        progressWrap: "bg-[#E9E2DA]",
+                        progressBar: "from-orange-400 via-orange-400 to-rose-500",
+                        progressGlow: "shadow-[0_0_20px_rgba(251,146,60,0.22)]",
+                        statBox: "border-[#E7DED4] bg-white/82",
+                        title: "Tình trạng sử dụng",
+                        hint: `Bạn đang sử dụng ${current}/${max} nhóm. Bạn có thể nâng cấp để tăng giới hạn.`,
+                        cta: "from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700",
+                        soft: "bg-orange-50/90 text-orange-700"
+                    };
 
     const badgeText =
         status === "full" ? "Đã đầy" : status === "near" ? "Gần đầy" : status === "unlimited" ? "PRO" : "Đang dùng";
 
     const remaining = !isUnlimited ? Math.max(0, max - current) : null;
 
+    const stats = [
+        { label: "Hiện có", value: current },
+        { label: "Tối đa", value: isUnlimited ? "∞" : max },
+        ...(isUnlimited ? [] : [{ label: "Còn trống", value: remaining }])
+    ];
+
     return (
-        <div
+        <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className={[
-                "mt-4 w-full rounded-3xl border p-5 shadow-[0_10px_30px_-14px_rgba(15,23,42,0.15)]",
-                "transition-colors duration-200",
-                tone.wrapper
+                "relative mt-4 w-full overflow-hidden rounded-[30px] border p-5 md:p-6",
+                "bg-gradient-to-br shadow-[0_20px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl",
+                tone.shell,
+                tone.border
             ].join(" ")}>
-            <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-slate-900 text-sm">{tone.title}</p>
+            <div className={["pointer-events-none absolute -left-8 top-0 h-28 w-28 rounded-full blur-3xl", tone.glowA].join(" ")} />
+            <div className={["pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full blur-3xl", tone.glowB].join(" ")} />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/90" />
 
-                        <span
-                            className={[
-                                "inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-[11px] ring-1 ring-inset",
-                                tone.badge
-                            ].join(" ")}>
-                            {badgeText}
-                        </span>
+            <div className="relative flex flex-col gap-5">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70 bg-white/75 shadow-sm backdrop-blur">
+                                {isUnlimited ? (
+                                    <Infinity className="h-4.5 w-4.5 text-emerald-600" />
+                                ) : (
+                                    <Sparkles className="h-4.5 w-4.5 text-orange-500" />
+                                )}
+                            </div>
+
+                            <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-semibold text-[#1F2937] text-[15px] md:text-base">{tone.title}</p>
+                                    <span
+                                        className={[
+                                            "inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-[11px] ring-1 ring-inset shadow-sm",
+                                            tone.badge
+                                        ].join(" ")}>
+                                        {badgeText}
+                                    </span>
+                                </div>
+                                <p className="mt-1 text-[#667085] text-sm leading-6">{tone.hint}</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <p className="mt-1 text-slate-600 text-sm">{tone.hint}</p>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                        <span
-                            className={[
-                                "inline-flex items-center rounded-xl border px-3 py-1.5 text-slate-800 shadow-sm",
-                                tone.box
-                            ].join(" ")}>
-                            Hiện có: <span className="ml-1 font-semibold">{current}</span>
-                        </span>
-
-                        <span
-                            className={[
-                                "inline-flex items-center rounded-xl border px-3 py-1.5 text-slate-800 shadow-sm",
-                                tone.box
-                            ].join(" ")}>
-                            Tối đa: <span className="ml-1 font-semibold">{isUnlimited ? "∞" : max}</span>
-                        </span>
-
-                        {!isUnlimited ? (
-                            <span
-                                className={[
-                                    "inline-flex items-center rounded-xl border px-3 py-1.5 text-slate-800 shadow-sm",
-                                    tone.box
-                                ].join(" ")}>
-                                Còn trống: <span className="ml-1 font-semibold">{remaining}</span>
-                            </span>
-                        ) : null}
-                    </div>
-                </div>
-            </div>
-
-            <div className="mt-4">
-                <div className={["h-3 w-full overflow-hidden rounded-full", tone.barBg].join(" ")}>
-                    <div
-                        className={[
-                            "relative h-full rounded-full transition-[width] duration-300 ease-out",
-                            tone.barFg
-                        ].join(" ")}
-                        style={{ width: `${pct}%` }}>
-                        <span className="pointer-events-none absolute inset-0 opacity-25 [background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent)]" />
+                    <div className="shrink-0">
+                        <div className="inline-flex items-center rounded-full border border-white/80 bg-white/80 px-3 py-1.5 font-semibold text-[#5B4A3E] text-xs shadow-sm backdrop-blur">
+                            {isUnlimited ? "∞ không giới hạn" : `${pct}% đã dùng`}
+                        </div>
                     </div>
                 </div>
 
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-slate-600 text-sm">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                    {stats.map((item, index) => (
+                        <motion.div
+                            key={item.label}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.28, delay: index * 0.05 }}
+                            whileHover={{ y: -2 }}
+                            className={[
+                                "rounded-2xl border px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur transition-all",
+                                tone.statBox
+                            ].join(" ")}>
+                            <p className="text-[#8A7A6D] text-xs">{item.label}</p>
+                            <p className="mt-1 font-semibold text-[#1F2937] text-lg">{item.value}</p>
+                        </motion.div>
+                    ))}
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs text-[#8A7A6D]">
+                        <span>Mức sử dụng</span>
+                        <span>{isUnlimited ? "Không giới hạn" : `${current}/${max} nhóm`}</span>
+                    </div>
+
+                    <div className={["relative h-4 w-full overflow-hidden rounded-full", tone.progressWrap].join(" ")}>
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                            className={[
+                                "relative h-full rounded-full bg-gradient-to-r",
+                                tone.progressBar,
+                                tone.progressGlow
+                            ].join(" ")}>
+                            <span className="pointer-events-none absolute inset-0 opacity-40 [background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent)]" />
+                        </motion.div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="rounded-2xl border border-white/70 bg-white/60 px-4 py-3 text-sm text-[#5F6C7B] shadow-sm backdrop-blur">
                         {isUnlimited ? (
                             <>Bạn có thể tạo thêm nhóm bất kỳ lúc nào.</>
                         ) : isFull ? (
                             <>
-                                Bạn đã dùng hết <span className="font-semibold text-slate-900">{max}</span> nhóm trong
-                                gói hiện tại.
+                                Bạn đã dùng hết <span className="font-semibold text-[#111827]">{max}</span> nhóm trong gói hiện tại.
                             </>
                         ) : (
                             <>
-                                Bạn còn <span className="font-semibold text-slate-900">{remaining}</span> nhóm có thể
-                                tạo.
+                                Bạn còn <span className="font-semibold text-[#111827]">{remaining}</span> nhóm có thể tạo.
                             </>
                         )}
-                    </p>
+                    </div>
 
                     {!isUnlimited && (isNear || isFull) ? (
-                        <button
+                        <motion.button
+                            whileHover={{ y: -1, scale: 1.01 }}
+                            whileTap={{ scale: 0.985 }}
                             type="button"
                             className={[
-                                "inline-flex items-center justify-center rounded-2xl px-4 py-2.5 font-semibold text-sm",
-                                "shadow-sm transition focus:outline-none focus:ring-4",
+                                "inline-flex items-center justify-center rounded-2xl bg-gradient-to-r px-4 py-2.5 font-semibold text-sm text-white",
+                                "shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition focus:outline-none focus:ring-4",
                                 tone.cta
                             ].join(" ")}>
                             Nâng cấp gói
-                            <span className="ml-2 text-white/80">→</span>
-                        </button>
+                            <ArrowUpRight className="ml-2 h-4 w-4" />
+                        </motion.button>
                     ) : null}
                 </div>
 
                 {!isUnlimited && isFull ? (
-                    <div className="mt-4 rounded-2xl border border-orange-200/80 bg-white/70 p-4">
-                        <p className="text-slate-700 text-sm">
+                    <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-[22px] border border-orange-200/70 bg-white/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur">
+                        <p className="text-[#5F6C7B] text-sm leading-6">
                             Nâng cấp để tăng giới hạn nhóm và mở rộng thêm không gian học tập mới.
                         </p>
-                    </div>
+                    </motion.div>
                 ) : null}
             </div>
-        </div>
+        </motion.div>
     );
 }
