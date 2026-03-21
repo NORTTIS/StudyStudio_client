@@ -4,6 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import { AlertTriangle, Clock3 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -87,10 +88,10 @@ const extractApiMessage = (text: string, json: unknown) => {
 };
 
 function severityColorOf(v?: TaskSeverity): string {
-    if (v === 3) return "#dc2626"; // red-600 - Critical
-    if (v === 2) return "#ea580c"; // orange-600 - Major
-    if (v === 1) return "#f59e0b"; // amber-600 - Moderate
-    return "#0284c7"; // sky-600 - Minor
+    if (v === 3) return "#dc2626";
+    if (v === 2) return "#ea580c";
+    if (v === 1) return "#f59e0b";
+    return "#0284c7";
 }
 
 async function apiGetGroupTasks(args: { groupId: string }) {
@@ -100,7 +101,7 @@ async function apiGetGroupTasks(args: { groupId: string }) {
 
     const query = new URLSearchParams();
     query.set("page", "1");
-    query.set("pageSize", "1000"); // Get all tasks for calendar view
+    query.set("pageSize", "1000");
 
     const suffix = query.toString();
     const url = apiUrl(`/group/${encodeURIComponent(args.groupId)}/tasks${suffix ? `?${suffix}` : ""}`);
@@ -117,6 +118,7 @@ async function apiGetGroupTasks(args: { groupId: string }) {
 
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
+
     if (!res.ok || (json && !okByJsonStatus(json))) {
         throw new Error(extractApiMessage(raw, json));
     }
@@ -141,11 +143,13 @@ export default function GroupCalendar() {
                 setLoading(false);
                 return;
             }
+
             if (!isUuidLike(groupId)) {
                 setLoadError(t("invalidGroupId"));
                 setLoading(false);
                 return;
             }
+
             if (!getApiBase()) {
                 setLoadError(t("missingApiBase"));
                 setLoading(false);
@@ -161,7 +165,7 @@ export default function GroupCalendar() {
                 const tasks = data?.items ?? [];
 
                 const calEvents: CalEvent[] = tasks
-                    .filter((task) => task.startDate && task.dueDate) // Only tasks with both dates
+                    .filter((task) => task.startDate && task.dueDate)
                     .map((task, index) => {
                         const id = String(task.taskId ?? "").trim() || `task_${index}`;
                         const title = String(task.taskTitle ?? "").trim() || t("untitledTask");
@@ -202,109 +206,192 @@ export default function GroupCalendar() {
             height: "auto",
             showNonCurrentDates: false,
             fixedWeekCount: false,
-
             headerToolbar: {
                 left: "prev,next title",
                 right: "today dayGridMonth,timeGridWeek,timeGridDay"
             },
-
             buttonText: {
                 today: locale === "vi" ? "Hôm nay" : "Today",
                 month: locale === "vi" ? "Tháng" : "Month",
                 week: locale === "vi" ? "Tuần" : "Week",
                 day: locale === "vi" ? "Ngày" : "Day"
             },
-
             selectable: false,
             editable: false,
-            dayMaxEvents: true,
-
+            dayMaxEvents: 3,
             events
         }),
         [events, locale]
     );
 
     return (
-        <div className="w-full">
-            <Container className="px-6">
-                <div className="rounded-xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
-                    {loading ? (
-                        <div className="flex min-h-100 items-center justify-center">
-                            <p className="text-sm text-zinc-500">{t("loading")}</p>
-                        </div>
-                    ) : loadError ? (
-                        <div className="flex min-h-100 flex-col items-center justify-center gap-3">
-                            <p className="text-rose-600 text-sm">{loadError}</p>
-                            <button
-                                type="button"
-                                onClick={() => window.location.reload()}
-                                className="rounded-xl border border-zinc-200 px-4 py-2 font-semibold text-xs text-zinc-700 hover:bg-zinc-100">
-                                {t("reload")}
-                            </button>
-                        </div>
-                    ) : (
-                        <FullCalendar {...options} />
-                    )}
-                </div>
+        <div className="min-h-screen w-full bg-white">
+            <Container className="px-4 pt-0 pb-6 md:px-6">
+                <section className="pt-0">
+                    <div className="overflow-hidden rounded-[30px] border border-white/70 bg-white/70 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-6">
+                        {loading ? (
+                            <div className="flex min-h-[620px] flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-zinc-200 bg-zinc-50/60">
+                                <Clock3 className="h-8 w-8 animate-pulse text-zinc-400" />
+                                <p className="text-sm text-zinc-500">{t("loading")}</p>
+                            </div>
+                        ) : loadError ? (
+                            <div className="flex min-h-[620px] flex-col items-center justify-center gap-3 rounded-[24px] border border-rose-200 bg-rose-50/60 px-6 text-center">
+                                <AlertTriangle className="h-8 w-8 text-rose-500" />
+                                <p className="max-w-lg text-sm text-rose-700">{loadError}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => window.location.reload()}
+                                    className="rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50">
+                                    {t("reload")}
+                                </button>
+                            </div>
+                        ) : (
+                            <FullCalendar {...options} />
+                        )}
+                    </div>
+                </section>
             </Container>
 
             <style jsx global>{`
+                html,
+                body {
+                    margin: 0;
+                    padding: 0;
+                    background: white;
+                }
+
                 .fc {
                     font-family: inherit;
+                    color: #261e33;
+                }
+
+                .fc .fc-toolbar {
+                    gap: 12px;
+                    margin-bottom: 20px !important;
+                    flex-wrap: wrap;
                 }
 
                 .fc .fc-toolbar-title {
-                    font-size: 20px;
-                    font-weight: 600;
+                    font-size: 24px;
+                    font-weight: 700;
+                    letter-spacing: -0.02em;
                     color: #261e33;
                 }
 
                 .fc .fc-button {
-                    background: #ffffff !important;
-                    border: 1px solid #e5e5e5 !important;
+                    background: rgba(255, 255, 255, 0.92) !important;
+                    border: 1px solid #e7e5e4 !important;
                     color: #261e33 !important;
-                    box-shadow: none !important;
+                    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
                     text-transform: none !important;
-                    font-weight: 500 !important;
-                    border-radius: 8px !important;
-                    padding: 6px 10px !important;
+                    font-weight: 600 !important;
+                    border-radius: 14px !important;
+                    padding: 8px 14px !important;
+                    transition: all 0.2s ease !important;
                 }
 
                 .fc .fc-button:hover {
-                    background: #fafafa !important;
+                    background: #fff7f1 !important;
+                    border-color: #fed7aa !important;
+                    color: #ea580c !important;
                 }
 
                 .fc .fc-button-primary:not(:disabled).fc-button-active,
                 .fc .fc-button-primary:not(:disabled):active {
-                    background: #f3f4f6 !important;
+                    background: linear-gradient(135deg, #f97316 0%, #ea580c 45%, #dc2626 100%) !important;
+                    border-color: transparent !important;
+                    color: white !important;
+                    box-shadow: 0 12px 24px rgba(249, 115, 22, 0.22) !important;
                 }
 
-                .fc .fc-scrollgrid,
+                .fc .fc-scrollgrid {
+                    border: 1px solid #ece7e2 !important;
+                    border-radius: 20px !important;
+                    overflow: hidden !important;
+                    background: rgba(255, 255, 255, 0.78);
+                }
+
                 .fc .fc-scrollgrid-section > td,
                 .fc .fc-scrollgrid-section > th {
-                    border-color: #ededed !important;
+                    border-color: #f0ece7 !important;
+                }
+
+                .fc .fc-col-header-cell {
+                    background: rgba(250, 250, 250, 0.8);
+                    padding: 6px 0;
                 }
 
                 .fc .fc-col-header-cell-cushion {
-                    color: #6f6b99;
-                    font-weight: 500;
+                    color: #7a6c61;
+                    font-weight: 600;
                     text-decoration: none;
+                    padding: 10px 4px !important;
+                }
+
+                .fc .fc-daygrid-day {
+                    background: rgba(255, 255, 255, 0.72);
+                    transition: background 0.2s ease;
+                }
+
+                .fc .fc-daygrid-day:hover {
+                    background: rgba(255, 247, 241, 0.55);
                 }
 
                 .fc .fc-daygrid-day-number {
                     color: #6f6b99;
                     font-size: 13px;
+                    font-weight: 600;
+                    padding: 10px !important;
+                }
+
+                .fc .fc-day-today {
+                    background: rgba(249, 115, 22, 0.06) !important;
                 }
 
                 .fc .fc-event {
                     border: none !important;
-                    border-radius: 6px !important;
-                    padding: 2px 6px !important;
+                    border-radius: 10px !important;
+                    padding: 4px 8px !important;
                     font-size: 12px !important;
+                    line-height: 1.35 !important;
+                    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
                 }
 
                 .fc .fc-event-title {
-                    font-weight: 500;
+                    font-weight: 600;
+                }
+
+                .fc .fc-timegrid-slot,
+                .fc .fc-timegrid-axis,
+                .fc .fc-timegrid-col {
+                    border-color: #f0ece7 !important;
+                }
+
+                .fc .fc-timegrid-now-indicator-line {
+                    border-color: #f97316 !important;
+                }
+
+                .fc .fc-more-link {
+                    color: #ea580c !important;
+                    font-weight: 600;
+                }
+
+                @media (max-width: 768px) {
+                    .fc .fc-toolbar-title {
+                        font-size: 20px;
+                    }
+
+                    .fc .fc-toolbar {
+                        flex-direction: column;
+                        align-items: flex-start;
+                    }
+
+                    .fc .fc-toolbar-chunk {
+                        width: 100%;
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    }
                 }
             `}</style>
         </div>

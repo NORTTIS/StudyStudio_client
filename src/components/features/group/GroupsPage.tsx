@@ -308,7 +308,7 @@ export function GroupsPage() {
 
     return (
         <>
-            <div className="relative -mt-px min-h-screen overflow-hidden bg-white pt-0 pb-4">
+            <div className="relative -mt-px min-h-screen overflow-hidden bg-white px-3 pt-0 pb-4 md:px-4 xl:px-5">
                 <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,#FFF8F2_0%,#FFF6F0_28%,#FAF5FF_64%,#F8FAFC_100%)]" />
                 <AmbientOrb className="left-[-90px] top-[-60px] h-72 w-72 bg-orange-200/35" />
                 <AmbientOrb className="right-[-80px] top-[10%] h-80 w-80 bg-amber-200/30" />
