@@ -1,7 +1,14 @@
 "use client";
 
 import * as signalR from "@microsoft/signalr";
-import { ChevronDown, ChevronUp, MessageCircle, MoreHorizontal, SendHorizontal, Trash2 } from "lucide-react";
+import {
+    ChevronDown,
+    ChevronUp,
+    MessageCircle,
+    MoreHorizontal,
+    SendHorizontal,
+    Trash2
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
@@ -107,13 +114,15 @@ function normalizeBaseUrl(raw: string) {
 }
 
 function buildHubUrl() {
-    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+    const rawBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
     const base = normalizeBaseUrl(rawBase);
     return base ? `${base}/hubs/group-discuss` : "";
 }
 
 function dtoToUserLite(userId?: string, user?: HubUserDto | null): UserLite {
-    const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || "Ẩn danh";
+    const name =
+        [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || "Ẩn danh";
     return {
         id: user?.id || userId || "unknown-user",
         name,
@@ -144,7 +153,9 @@ function dtoToPostItem(dto: GroupMessageDto): PostItem | null {
         author: dtoToUserLite(dto.userId, dto.user),
         content: dto.content,
         createdAtText: timeAgoText(new Date(dto.createdAt)),
-        replies: (dto.replies || []).map(dtoToReplyItem).filter((reply): reply is ReplyItem => reply !== null)
+        replies: (dto.replies || [])
+            .map(dtoToReplyItem)
+            .filter((reply): reply is ReplyItem => reply !== null)
     };
 }
 
@@ -202,7 +213,13 @@ function countWords(text: string) {
     return t.split(/\s+/).filter(Boolean).length;
 }
 
-function TextCounter({ text, maxChars = MAX_CHARS }: { text: string; maxChars?: number }) {
+function TextCounter({
+    text,
+    maxChars = MAX_CHARS
+}: {
+    text: string;
+    maxChars?: number;
+}) {
     const chars = (text || "").length;
     const words = countWords(text || "");
     const over = chars > maxChars;
@@ -217,33 +234,25 @@ function TextCounter({ text, maxChars = MAX_CHARS }: { text: string; maxChars?: 
     );
 }
 
-// Không tự động đổi "mention hết người khác" thành @all nữa.
-// Chỉ hiển thị @all khi backend/content thật sự chứa @__all__.
-function compressAllMentionsForDisplay(text: string) {
-    return text;
-}
-
 function RichTextWithMentions({
     text,
-    membersById,
-    authorId
+    membersById
 }: {
     text: string;
     membersById: Record<string, string>;
-    authorId: string;
 }) {
-    const displayText = React.useMemo(() => compressAllMentionsForDisplay(text), [text]);
+    const re =
+        /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
 
-    const re = /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
     const parts: React.ReactNode[] = [];
     let last = 0;
 
-    for (const m of displayText.matchAll(re)) {
+    for (const m of text.matchAll(re)) {
         const idx = m.index ?? 0;
         const whole = m[0];
         const id = (m[1] || "").trim();
 
-        if (idx > last) parts.push(displayText.slice(last, idx));
+        if (idx > last) parts.push(text.slice(last, idx));
 
         if (id === "__all__") {
             parts.push(
@@ -267,7 +276,7 @@ function RichTextWithMentions({
         last = idx + whole.length;
     }
 
-    if (last < displayText.length) parts.push(displayText.slice(last));
+    if (last < text.length) parts.push(text.slice(last));
     return <>{parts}</>;
 }
 
@@ -303,28 +312,6 @@ function renderAllMentions(segment: string) {
     return nodes.length ? nodes : segment;
 }
 
-// @all = tất cả thành viên còn lại, trừ người đang gửi.
-function expandMentionAll(payloadText: string, membersById: Record<string, string>, authorId: string) {
-    if (!payloadText.includes("@__all__")) return payloadText;
-
-    const normalizedAuthorId = String(authorId || "").trim();
-
-    const otherMemberIds = Object.keys(membersById).filter((id) => {
-        const normalizedId = String(id || "").trim();
-        return normalizedId && normalizedId !== normalizedAuthorId;
-    });
-
-    if (otherMemberIds.length === 0) {
-        return payloadText
-            .replace(/@__all__\b/g, "")
-            .replace(/\s{2,}/g, " ")
-            .trim();
-    }
-
-    const mentions = otherMemberIds.map((id) => `@${id}`).join(" ");
-    return payloadText.replace(/@__all__\b/g, mentions);
-}
-
 const MentionTextarea = React.forwardRef<
     MentionTextareaHandle,
     {
@@ -338,7 +325,16 @@ const MentionTextarea = React.forwardRef<
         disabled?: boolean;
     }
 >(function MentionTextareaInner(
-    { value, onChange, members, meId, placeholder, className, maxChars = MAX_CHARS, disabled = false },
+    {
+        value,
+        onChange,
+        members,
+        meId,
+        placeholder,
+        className,
+        maxChars = MAX_CHARS,
+        disabled = false
+    },
     ref
 ) {
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -348,7 +344,9 @@ const MentionTextarea = React.forwardRef<
     const [query, setQuery] = React.useState("");
     const [anchor, setAnchor] = React.useState<{ start: number; end: number } | null>(null);
 
-    const mentionsRef = React.useRef<{ id: string; name: string; start: number; end: number }[]>([]);
+    const mentionsRef = React.useRef<{ id: string; name: string; start: number; end: number }[]>(
+        []
+    );
 
     const filtered = React.useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -403,7 +401,9 @@ const MentionTextarea = React.forwardRef<
         const start = before.length;
         const end = start + tokenVisible.length;
 
-        mentionsRef.current = mentionsRef.current.filter((m) => !(m.start < end && m.end > start));
+        mentionsRef.current = mentionsRef.current.filter(
+            (m) => !(m.start < end && m.end > start)
+        );
 
         if (user.id !== "__all__") {
             mentionsRef.current.push({ id: user.id, name: user.name, start, end });
@@ -431,7 +431,9 @@ const MentionTextarea = React.forwardRef<
 
         onChange(next);
 
-        mentionsRef.current = mentionsRef.current.filter((m) => next.slice(m.start, m.end) === `@${m.name}`);
+        mentionsRef.current = mentionsRef.current.filter(
+            (m) => next.slice(m.start, m.end) === `@${m.name}`
+        );
         detectFromText(next, caret);
     };
 
@@ -658,7 +660,7 @@ function ReplyItemView({
                         </div>
 
                         <p className="mt-1 whitespace-pre-wrap text-[#261E33] text-sm">
-                            <RichTextWithMentions text={r.content} membersById={membersById} authorId={r.author.id} />
+                            <RichTextWithMentions text={r.content} membersById={membersById} />
                         </p>
                     </div>
 
@@ -726,7 +728,9 @@ function PostCard({
     const isMeModerator = userRole === "moderator";
 
     const canDeletePost =
-        post.author.id === currentUserId || isMeOwner || (isMeModerator && !isOwnerId(post.author.id));
+        post.author.id === currentUserId ||
+        isMeOwner ||
+        (isMeModerator && !isOwnerId(post.author.id));
 
     return (
         <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
@@ -737,16 +741,16 @@ function PostCard({
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <p className="truncate font-semibold text-[#261E33] text-sm">{post.author.name}</p>
-                                <span className="text-[#9CA3AF] text-xs">• {post.createdAtText}</span>
+                                <p className="truncate font-semibold text-[#261E33] text-sm">
+                                    {post.author.name}
+                                </p>
+                                <span className="text-[#9CA3AF] text-xs">
+                                    • {post.createdAtText}
+                                </span>
                             </div>
 
                             <p className="mt-2 whitespace-pre-wrap text-[#261E33] text-[15px] leading-relaxed">
-                                <RichTextWithMentions
-                                    text={post.content}
-                                    membersById={membersById}
-                                    authorId={post.author.id}
-                                />
+                                <RichTextWithMentions text={post.content} membersById={membersById} />
                             </p>
                         </div>
 
@@ -954,7 +958,8 @@ export default function GroupDiscussPage() {
         if (!hubUrl) {
             toast({
                 variant: "destructive",
-                description: "Không tìm thấy biến môi trường NEXT_PUBLIC_API_BASE_URL hoặc NEXT_PUBLIC_API_URL"
+                description:
+                    "Không tìm thấy biến môi trường NEXT_PUBLIC_API_BASE_URL hoặc NEXT_PUBLIC_API_URL"
             });
             return;
         }
@@ -966,14 +971,18 @@ export default function GroupDiscussPage() {
 
         connectionRef.current = connection;
 
-        const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+        const rawBase =
+            process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
 
         const loadHistory = async () => {
             if (!rawBase) return;
 
-            const response = await apiFetch<GroupMessageListResponse>(`${rawBase}/group-messages/${groupId}`, {
-                method: "GET"
-            });
+            const response = await apiFetch<GroupMessageListResponse>(
+                `${rawBase}/group-messages/${groupId}`,
+                {
+                    method: "GET"
+                }
+            );
 
             if (response.status !== "success" || !response.data) return;
 
@@ -1015,7 +1024,9 @@ export default function GroupDiscussPage() {
             if (!rawBase) return;
 
             try {
-                const res = await apiFetch<any>(`${rawBase}/group/${groupId}/members`, { method: "GET" });
+                const res = await apiFetch<any>(`${rawBase}/group/${groupId}/members`, {
+                    method: "GET"
+                });
 
                 const list: any[] = res?.data?.data?.members || res?.data?.members || res?.data || [];
                 const map: Record<string, string> = {};
@@ -1034,7 +1045,12 @@ export default function GroupDiscussPage() {
                     map[id] = username;
 
                     const rawRole =
-                        m?.role ?? m?.groupRole ?? m?.userRole ?? m?.memberRole ?? m?.groupMemberRole ?? m?.roles?.[0];
+                        m?.role ??
+                        m?.groupRole ??
+                        m?.userRole ??
+                        m?.memberRole ??
+                        m?.groupMemberRole ??
+                        m?.roles?.[0];
 
                     roleMap[id] = toRole(rawRole);
                 }
@@ -1083,7 +1099,10 @@ export default function GroupDiscussPage() {
             setPosts((prev) =>
                 prev
                     .filter((p) => p.id !== data.messageId)
-                    .map((p) => ({ ...p, replies: p.replies.filter((r) => r.id !== data.messageId) }))
+                    .map((p) => ({
+                        ...p,
+                        replies: p.replies.filter((r) => r.id !== data.messageId)
+                    }))
             );
         });
 
@@ -1121,7 +1140,10 @@ export default function GroupDiscussPage() {
                 if (isDisposed) return;
 
                 setIsConnected(false);
-                toast({ variant: "destructive", description: "Vui lòng thử tải lại trang hoặc đăng nhập lại" });
+                toast({
+                    variant: "destructive",
+                    description: "Vui lòng thử tải lại trang hoặc đăng nhập lại"
+                });
             }
         };
 
@@ -1160,10 +1182,9 @@ export default function GroupDiscussPage() {
         if (!v) return;
 
         const rawPayload = composerMentionRef.current?.getPayloadText() ?? v;
-        const payloadText = expandMentionAll(rawPayload, membersById, me.id);
 
         try {
-            await connection.invoke("SendMessage", { groupId, content: payloadText });
+            await connection.invoke("SendMessage", { groupId, content: rawPayload });
             setComposerText("");
         } catch {
             toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
@@ -1187,8 +1208,7 @@ export default function GroupDiscussPage() {
         }
 
         try {
-            const content = expandMentionAll(payloadText, membersById, me.id);
-            const payload = { groupId, parentMessageId: postId, content };
+            const payload = { groupId, parentMessageId: postId, content: payloadText };
 
             try {
                 await connection.invoke("ReplyToMessage", payload);
@@ -1205,7 +1225,9 @@ export default function GroupDiscussPage() {
             <Container className="px-6">
                 <div className="mb-5">
                     <p className="font-semibold text-[#261E33] text-sm">Thảo luận nhóm</p>
-                    <p className="mt-1 text-[#6F6B99] text-sm">Chia sẻ cập nhật, ý tưởng và trao đổi</p>
+                    <p className="mt-1 text-[#6F6B99] text-sm">
+                        Chia sẻ cập nhật, ý tưởng và trao đổi
+                    </p>
                 </div>
 
                 <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
@@ -1238,7 +1260,9 @@ export default function GroupDiscussPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="text-[#6F6B99] text-sm">Bạn chỉ có quyền xem thảo luận trong nhóm này.</div>
+                        <div className="text-[#6F6B99] text-sm">
+                            Bạn chỉ có quyền xem thảo luận trong nhóm này.
+                        </div>
                     )}
                 </div>
 
@@ -1268,12 +1292,15 @@ export default function GroupDiscussPage() {
 
                 <div className="h-10" />
 
-                <AlertDialog open={deleteOpen} onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
+                <AlertDialog
+                    open={deleteOpen}
+                    onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
                     <AlertDialogContent className="rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl">Xác nhận xóa</AlertDialogTitle>
                             <AlertDialogDescription className="text-[#111827] text-base leading-6">
-                                Bạn có chắc chắn muốn xóa tin nhắn này không? Hành động này không thể hoàn tác.
+                                Bạn có chắc chắn muốn xóa tin nhắn này không? Hành động này không thể
+                                hoàn tác.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
 

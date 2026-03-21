@@ -1,5 +1,11 @@
 import { type ApiResponse, apiDelete, apiGet, apiPut } from "./api-client";
 
+export type NotificationSourceType =
+    | "announcement"
+    | "mention_chat"
+    | "mention_comment"
+    | "chat_message";
+
 export interface Notification {
     id: string; // userAnnouncementId for user announcements
     title: string;
@@ -10,6 +16,17 @@ export interface Notification {
     link?: string;
     announcementId?: string; // Original announcementId for detail view
     isSystem?: boolean; // Flag to distinguish system vs user announcements
+
+    // Thêm metadata để support mention/chat bằng các API có sẵn
+    sourceType?: NotificationSourceType;
+    groupId?: string;
+    taskId?: string;
+    messageId?: string;
+    commentId?: string;
+
+    // Nội dung chi tiết bổ sung
+    originalMessage?: string;
+    senderName?: string;
 }
 
 // API response interfaces based on the provided schema
@@ -34,6 +51,46 @@ interface UserAnnouncementResponse {
     publishedAt: string;
 }
 
+// Dựa trên spec: GET /api/group-messages/{groupId}
+interface GroupMessageSender {
+    userId?: string;
+    fullName?: string | null;
+    name?: string | null;
+}
+
+interface GroupMessageItem {
+    messageId?: string;
+    content?: string | null;
+    createdAt?: string;
+    sender?: GroupMessageSender | null;
+    senderName?: string | null;
+}
+
+interface GroupMessageListPayload {
+    items?: GroupMessageItem[] | null;
+    messages?: GroupMessageItem[] | null;
+}
+
+// Dựa trên spec: GET /api/task-comments/{taskId}
+interface TaskCommentUser {
+    userId?: string;
+    fullName?: string | null;
+    name?: string | null;
+}
+
+interface TaskCommentItem {
+    commentId?: string;
+    content?: string | null;
+    createdAt?: string;
+    createdBy?: TaskCommentUser | null;
+    userName?: string | null;
+}
+
+interface TaskCommentListPayload {
+    items?: TaskCommentItem[] | null;
+    comments?: TaskCommentItem[] | null;
+}
+
 /**
  * Fetch user notifications from user announcements API
  */
@@ -41,38 +98,35 @@ export async function fetchNotifications(locale = "vi"): Promise<Notification[]>
     console.log("🔔 API: fetchNotifications được gọi với locale:", locale);
 
     try {
-        // Gọi API user announcements để lấy thông báo của user với userAnnouncementId
         console.log("🔔 API: Đang gọi /announcements/user...");
         const response = await apiGet<UserAnnouncementResponse[]>("/announcements/user", locale);
         console.log("🔔 API: Phản hồi từ /announcements/user:", response);
 
         if (response.status === "success" && response.data && Array.isArray(response.data)) {
             const notifications = response.data.map((userAnnouncement: UserAnnouncementResponse) => ({
-                id: userAnnouncement.userAnnouncementId, // Sử dụng userAnnouncementId để có thể mark as read/delete
+                id: userAnnouncement.userAnnouncementId,
                 title: userAnnouncement.title,
                 description: userAnnouncement.content,
                 type: getNotificationType(userAnnouncement.type),
                 date: userAnnouncement.publishedAt,
                 read: userAnnouncement.isRead,
                 link: undefined,
-                announcementId: userAnnouncement.announcementId // Lưu announcementId để xem chi tiết
+                announcementId: userAnnouncement.announcementId,
+                sourceType: "announcement" as NotificationSourceType
             }));
             console.log("🔔 API: Trả về thông báo user:", notifications);
             return notifications;
         }
 
-        // Handle specific error cases
         if (response.status === "error") {
             console.log("🔔 API: Lỗi từ server:", response.message);
 
-            // If it's "Không tìm thấy thông báo" (no notifications found), return empty array
             if (response.code === "ANNOUNCEMENT001") {
                 console.log("🔔 API: Không có thông báo nào - trả về mảng rỗng");
                 return [];
             }
         }
 
-        // Return empty array for other cases
         console.log("🔔 API: Không có dữ liệu hợp lệ - trả về mảng rỗng");
         return [];
     } catch (error) {
@@ -82,14 +136,20 @@ export async function fetchNotifications(locale = "vi"): Promise<Notification[]>
 }
 
 /**
- * Mark a notification as read using announcementId
+ * Mark a notification as read using userAnnouncementId
  * PUT /api/announcements/user/{userAnnouncementId}/read
- * Note: We use announcementId as userAnnouncementId since we don't have user-specific mapping
  */
-export async function markUserAnnouncementAsRead(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+export async function markUserAnnouncementAsRead(
+    announcementId: string,
+    locale = "vi"
+): Promise<ApiResponse<string>> {
     try {
         console.log("🔔 API: Đánh dấu thông báo đã đọc ID:", announcementId);
-        const response = await apiPut<string>(`/announcements/user/${announcementId}/read`, {}, locale);
+        const response = await apiPut<string>(
+            `/announcements/user/${announcementId}/read`,
+            {},
+            locale
+        );
         console.log("🔔 API: Phản hồi đánh dấu đã đọc:", response);
         return response;
     } catch (error) {
@@ -104,11 +164,13 @@ export async function markUserAnnouncementAsRead(announcementId: string, locale 
 }
 
 /**
- * Delete a notification using announcementId
+ * Delete a notification using userAnnouncementId
  * DELETE /api/announcements/user/{userAnnouncementId}
- * Note: We use announcementId as userAnnouncementId since we don't have user-specific mapping
  */
-export async function deleteUserAnnouncement(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+export async function deleteUserAnnouncement(
+    announcementId: string,
+    locale = "vi"
+): Promise<ApiResponse<string>> {
     try {
         console.log("🔔 API: Xóa thông báo ID:", announcementId);
         const response = await apiDelete<string>(`/announcements/user/${announcementId}`, locale);
@@ -133,7 +195,6 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
     try {
         console.log("🔔 API: Lấy tất cả announcements (system + user)...");
 
-        // Gọi cả 2 APIs song song
         const [systemResponse, userResponse] = await Promise.all([
             apiGet<AnnouncementResponse[]>("/announcements", locale),
             apiGet<UserAnnouncementResponse[]>("/announcements/user", locale)
@@ -141,7 +202,6 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
 
         const allNotifications: Notification[] = [];
 
-        // Map system announcements
         if (systemResponse.status === "success" && systemResponse.data) {
             const systemNotifications = systemResponse.data.map((announcement) => ({
                 id: announcement.announcementId,
@@ -149,15 +209,15 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
                 description: announcement.content,
                 type: getNotificationType(announcement.type),
                 date: announcement.publishedAt,
-                read: false, // System announcements không có read status
+                read: false,
                 link: undefined,
                 announcementId: announcement.announcementId,
-                isSystem: true // Thêm flag để phân biệt
+                isSystem: true,
+                sourceType: "announcement" as NotificationSourceType
             }));
             allNotifications.push(...systemNotifications);
         }
 
-        // Map user announcements
         if (userResponse.status === "success" && userResponse.data) {
             const userNotifications = userResponse.data.map((userAnnouncement) => ({
                 id: userAnnouncement.userAnnouncementId,
@@ -168,12 +228,12 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
                 read: userAnnouncement.isRead,
                 link: undefined,
                 announcementId: userAnnouncement.announcementId,
-                isSystem: false
+                isSystem: false,
+                sourceType: "announcement" as NotificationSourceType
             }));
             allNotifications.push(...userNotifications);
         }
 
-        // Sắp xếp theo publishedAt giảm dần (mới nhất lên trước)
         allNotifications.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         console.log("🔔 API: Trả về tất cả notifications:", allNotifications.length);
@@ -192,8 +252,8 @@ export async function getNotificationCount(locale = "vi"): Promise<number> {
         const response = await apiGet<AnnouncementResponse[]>("/announcements", locale);
 
         if (response.status === "success" && response.data && Array.isArray(response.data)) {
-            // Đếm số thông báo đang hoạt động
-            return response.data.filter((announcement: AnnouncementResponse) => announcement.isActive).length;
+            return response.data.filter((announcement: AnnouncementResponse) => announcement.isActive)
+                .length;
         }
 
         return 0;
@@ -206,10 +266,12 @@ export async function getNotificationCount(locale = "vi"): Promise<number> {
 /**
  * Get announcement detail by ID
  */
-export async function getAnnouncementDetail(announcementId: string, locale = "vi"): Promise<Notification | null> {
+export async function getAnnouncementDetail(
+    announcementId: string,
+    locale = "vi"
+): Promise<Notification | null> {
     try {
         console.log("🔔 API: Lấy chi tiết thông báo ID:", announcementId);
-        // apiGet trả về ApiResponse<AnnouncementResponse>, không cần wrap thêm
         const response = await apiGet<AnnouncementResponse>(`/announcements/${announcementId}`, locale);
         console.log("🔔 API: Phản hồi chi tiết thông báo:", response);
 
@@ -223,11 +285,11 @@ export async function getAnnouncementDetail(announcementId: string, locale = "vi
                 date: announcement.publishedAt,
                 read: false,
                 link: undefined,
-                announcementId: announcement.announcementId
+                announcementId: announcement.announcementId,
+                sourceType: "announcement"
             };
         }
 
-        // Handle error response from API
         if (response.status === "error") {
             console.log("🔔 API: Không tìm thấy thông báo:", response.message);
         }
@@ -235,6 +297,127 @@ export async function getAnnouncementDetail(announcementId: string, locale = "vi
         return null;
     } catch (error) {
         console.error("🔔 API: Lỗi khi lấy chi tiết thông báo:", error);
+        return null;
+    }
+}
+
+/**
+ * Lấy danh sách message trong group
+ * GET /group-messages/{groupId}
+ */
+export async function getGroupMessages(
+    groupId: string,
+    locale = "vi"
+): Promise<GroupMessageItem[]> {
+    try {
+        console.log("🔔 API: Lấy group messages, groupId:", groupId);
+        const response = await apiGet<GroupMessageListPayload>(
+            `/group-messages/${groupId}`,
+            locale
+        );
+        console.log("🔔 API: Phản hồi group messages:", response);
+
+        if (response.status === "success" && response.data) {
+            return response.data.items ?? response.data.messages ?? [];
+        }
+
+        return [];
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi lấy group messages:", error);
+        return [];
+    }
+}
+
+/**
+ * Lấy danh sách comment của task
+ * GET /task-comments/{taskId}
+ */
+export async function getTaskComments(
+    taskId: string,
+    locale = "vi"
+): Promise<TaskCommentItem[]> {
+    try {
+        console.log("🔔 API: Lấy task comments, taskId:", taskId);
+        const response = await apiGet<TaskCommentListPayload>(
+            `/task-comments/${taskId}`,
+            locale
+        );
+        console.log("🔔 API: Phản hồi task comments:", response);
+
+        if (response.status === "success" && response.data) {
+            return response.data.items ?? response.data.comments ?? [];
+        }
+
+        return [];
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi lấy task comments:", error);
+        return [];
+    }
+}
+
+/**
+ * Hàm detail tổng quát:
+ * - announcement => gọi /announcements/{id}
+ * - mention_chat/chat_message => gọi /group-messages/{groupId}
+ * - mention_comment => gọi /task-comments/{taskId}
+ *
+ * Không tạo endpoint mới.
+ */
+export async function getNotificationDetail(
+    notification: Notification,
+    locale = "vi"
+): Promise<Notification | null> {
+    try {
+        if (notification.sourceType === "announcement" || notification.announcementId) {
+            return await getAnnouncementDetail(
+                notification.announcementId ?? notification.id,
+                locale
+            );
+        }
+
+        if (
+            (notification.sourceType === "mention_chat" ||
+                notification.sourceType === "chat_message") &&
+            notification.groupId
+        ) {
+            const messages = await getGroupMessages(notification.groupId, locale);
+            const matchedMessage = messages.find(
+                (item) => item.messageId === notification.messageId
+            );
+
+            return {
+                ...notification,
+                originalMessage: matchedMessage?.content ?? "",
+                senderName:
+                    matchedMessage?.sender?.fullName ??
+                    matchedMessage?.sender?.name ??
+                    matchedMessage?.senderName ??
+                    "",
+                date: matchedMessage?.createdAt ?? notification.date
+            };
+        }
+
+        if (notification.sourceType === "mention_comment" && notification.taskId) {
+            const comments = await getTaskComments(notification.taskId, locale);
+            const matchedComment = comments.find(
+                (item) => item.commentId === notification.commentId
+            );
+
+            return {
+                ...notification,
+                originalMessage: matchedComment?.content ?? "",
+                senderName:
+                    matchedComment?.createdBy?.fullName ??
+                    matchedComment?.createdBy?.name ??
+                    matchedComment?.userName ??
+                    "",
+                date: matchedComment?.createdAt ?? notification.date
+            };
+        }
+
+        return notification;
+    } catch (error) {
+        console.error("🔔 API: Lỗi khi lấy notification detail:", error);
         return null;
     }
 }

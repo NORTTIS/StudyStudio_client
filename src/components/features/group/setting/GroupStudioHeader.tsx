@@ -63,10 +63,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-            | {
-                  role?: string | null;
-              }[]
-            | null;
+        | {
+            role?: string | null;
+        }[]
+        | null;
     } | null;
 };
 
@@ -181,7 +181,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch {}
+                } catch { }
 
                 if (!res.ok) {
                     const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
@@ -220,7 +220,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch {}
+                    } catch { }
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -317,7 +317,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
@@ -360,7 +360,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch {}
+            } catch { }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -385,7 +385,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     <div>
                         <Link
                             href={`/${locale}/group`}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-gradient-to-r hover:from-[#F97316] hover:to-[#EA580C] hover:text-white hover:shadow-md hover:shadow-orange-200">
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-gradient-to-r hover:from-orange-500 hover:to-red-600 hover:text-white hover:shadow-md hover:shadow-orange-200">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </div>
@@ -408,7 +408,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                             </AnimatePresence>
 
                             <div className="mt-2 flex items-start gap-3">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FB923C] via-[#F97316] to-[#EA580C] shadow-md shadow-orange-200">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 via-orange-500 to-red-600 shadow-md shadow-orange-200">
                                     <Users className="h-6 w-6 text-white" />
                                 </div>
 
@@ -483,7 +483,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                     whileHover={{ y: -2 }}
                                     whileTap={{ scale: 0.98 }}
                                     transition={{ duration: 0.18 }}
-                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-[#EA580C] hover:to-[#DC2626] hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
+                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-orange-500 hover:to-red-700 hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
                                     <UserPlus className="h-4 w-4" />
                                     Thêm thành viên
                                 </motion.button>
@@ -523,7 +523,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         {active ? (
                                             <motion.div
                                                 layoutId="activeGroupTab"
-                                                className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C]"
+                                                className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500 to-red-600"
                                                 transition={{
                                                     type: "spring",
                                                     stiffness: 380,

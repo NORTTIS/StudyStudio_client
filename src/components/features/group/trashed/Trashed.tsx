@@ -318,6 +318,34 @@ function matchDeletedDate(raw?: string | null, filter?: DeletedDateFilter | null
     return true;
 }
 
+function dedupeTrashItems(items: TrashItem[]) {
+    const latestById = new Map<string, TrashItem>();
+
+    for (const item of items) {
+        const id = String(item.id ?? "").trim();
+        if (!id) continue;
+
+        const existing = latestById.get(id);
+        if (!existing) {
+            latestById.set(id, item);
+            continue;
+        }
+
+        const currentTime = new Date(item.deletedOnRaw || 0).getTime();
+        const existingTime = new Date(existing.deletedOnRaw || 0).getTime();
+
+        if (Number.isNaN(existingTime) || currentTime >= existingTime) {
+            latestById.set(id, item);
+        }
+    }
+
+    return Array.from(latestById.values()).sort((a, b) => {
+        const aTime = new Date(a.deletedOnRaw || 0).getTime();
+        const bTime = new Date(b.deletedOnRaw || 0).getTime();
+        return bTime - aTime;
+    });
+}
+
 const avatarTones = ["bg-blue-500", "bg-violet-500", "bg-amber-500", "bg-emerald-500", "bg-rose-500", "bg-cyan-500"];
 
 function pickAvatarTone(seed: string) {
@@ -490,158 +518,158 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                  <div
-                      ref={rootRef}
-                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                      style={{
-                          top: popupPosition.top,
-                          left: popupPosition.left,
-                          width: popupPosition.width
-                      }}>
-                      <div className="mb-4 flex items-center gap-3">
-                          <div className="relative flex-1">
-                              <select
-                                  value={month.getMonth()}
-                                  onChange={handleMonthChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {monthOptions.map((item) => (
-                                      <option key={item.value} value={item.value}>
-                                          {item.label}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
+                <div
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                    style={{
+                        top: popupPosition.top,
+                        left: popupPosition.left,
+                        width: popupPosition.width
+                    }}>
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <select
+                                value={month.getMonth()}
+                                onChange={handleMonthChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                {monthOptions.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
 
-                          <div className="relative w-[140px]">
-                              <select
-                                  value={month.getFullYear()}
-                                  onChange={handleYearChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {yearOptions.map((year) => (
-                                      <option key={year} value={year}>
-                                          {year}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
-                      </div>
+                        <div className="relative w-[140px]">
+                            <select
+                                value={month.getFullYear()}
+                                onChange={handleYearChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                {yearOptions.map((year) => (
+                                    <option key={year} value={year}>
+                                        {year}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
+                    </div>
 
-                      <div className="rounded-[20px] border border-zinc-200 p-4">
-                          <div className="mb-4 flex items-center justify-between">
-                              <button
-                                  type="button"
-                                  onClick={goPrevMonth}
-                                  disabled={isPrevDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronLeft className="h-5 w-5" />
-                              </button>
+                    <div className="rounded-[20px] border border-zinc-200 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={goPrevMonth}
+                                disabled={isPrevDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
 
-                              <div className="font-bold text-[18px] text-zinc-900">
-                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                              </div>
+                            <div className="font-bold text-[18px] text-zinc-900">
+                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                            </div>
 
-                              <button
-                                  type="button"
-                                  onClick={goNextMonth}
-                                  disabled={isNextDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronRight className="h-5 w-5" />
-                              </button>
-                          </div>
+                            <button
+                                type="button"
+                                onClick={goNextMonth}
+                                disabled={isNextDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                          <DayPicker
-                              mode="single"
-                              month={month}
-                              onMonthChange={setMonth}
-                              selected={selectedDate}
-                              onSelect={pickDate}
-                              disabled={
-                                  maxDate && minDate
-                                      ? { before: minDate, after: maxDate }
-                                      : maxDate
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={
+                                maxDate && minDate
+                                    ? { before: minDate, after: maxDate }
+                                    : maxDate
                                         ? { after: maxDate }
                                         : minDate
-                                          ? { before: minDate }
-                                          : undefined
-                              }
-                              showOutsideDays
-                              className="w-full"
-                              styles={{
-                                  day: { outline: "none", boxShadow: "none" },
-                                  button: { outline: "none", boxShadow: "none" }
-                              }}
-                              classNames={{
-                                  months: "flex w-full flex-col",
-                                  month: "w-full space-y-3",
-                                  month_caption: "hidden",
-                                  caption: "hidden",
-                                  caption_label: "hidden",
-                                  nav: "hidden",
-                                  table: "w-full border-collapse",
-                                  month_grid: "w-full border-collapse",
-                                  tbody: "w-full",
-                                  weekdays: "flex w-full justify-between",
-                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                  head_row: "flex w-full justify-between",
-                                  head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                  weeks: "w-full",
-                                  week: "mt-2 flex w-full justify-between",
-                                  row: "mt-2 flex w-full justify-between",
-                                  day: "h-10 w-10 p-0 text-center",
-                                  cell: "h-10 w-10 p-0 text-center",
-                                  day_button:
-                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
-                                  selected: "!bg-orange-500 !text-white rounded-xl",
-                                  day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
-                                  today: "text-orange-600 font-bold",
-                                  day_today: "text-orange-600 font-bold",
-                                  outside: "opacity-30",
-                                  day_outside: "opacity-30",
-                                  disabled: "opacity-30",
-                                  day_disabled: "opacity-30 cursor-not-allowed",
-                                  hidden: "invisible",
-                                  day_hidden: "invisible"
-                              }}
-                          />
-                      </div>
+                                            ? { before: minDate }
+                                            : undefined
+                            }
+                            showOutsideDays
+                            className="w-full"
+                            styles={{
+                                day: { outline: "none", boxShadow: "none" },
+                                button: { outline: "none", boxShadow: "none" }
+                            }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                month_caption: "hidden",
+                                caption: "hidden",
+                                caption_label: "hidden",
+                                nav: "hidden",
+                                table: "w-full border-collapse",
+                                month_grid: "w-full border-collapse",
+                                tbody: "w-full",
+                                weekdays: "flex w-full justify-between",
+                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                head_row: "flex w-full justify-between",
+                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                weeks: "w-full",
+                                week: "mt-2 flex w-full justify-between",
+                                row: "mt-2 flex w-full justify-between",
+                                day: "h-10 w-10 p-0 text-center",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day_button:
+                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
+                                selected: "!bg-orange-500 !text-white rounded-xl",
+                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
+                                today: "text-orange-600 font-bold",
+                                day_today: "text-orange-600 font-bold",
+                                outside: "opacity-30",
+                                day_outside: "opacity-30",
+                                disabled: "opacity-30",
+                                day_disabled: "opacity-30 cursor-not-allowed",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                          <button
-                              type="button"
-                              onClick={() => pickDate(new Date())}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Today
-                          </button>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => pickDate(new Date())}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            Today
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 1))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Tomorrow
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 1))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            Tomorrow
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 7))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Next week
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 7))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            Next week
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => {
-                                  onChange("");
-                                  setOpen(false);
-                              }}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                              No date
-                          </button>
-                      </div>
-                  </div>,
-                  document.body
-              )
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
+                            No date
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )
             : null;
 
     return (
@@ -780,8 +808,6 @@ function ConfirmModal({
     );
 }
 
-// ─── RowMenu ──────────────────────────────────────────────────────────────────
-
 function RowMenu({
     open,
     onClose,
@@ -834,8 +860,6 @@ function RowMenu({
         </div>
     );
 }
-
-// ─── DeletedByPicker ──────────────────────────────────────────────────────────
 
 function DeletedByPicker({
     options,
@@ -909,8 +933,6 @@ function DeletedByPicker({
         </div>
     );
 }
-
-// ─── FilterPopover ────────────────────────────────────────────────────────────
 
 function FilterPopover({
     open,
@@ -1117,7 +1139,7 @@ export default function Trashed() {
 
                 return {
                     id,
-                    rowKey: `${id || "empty"}-${deletedOnRaw || "no-date"}-${index}`,
+                    rowKey: `${id || "empty"}-${deletedOnRaw || index}`,
                     name,
                     type: "Task",
                     deletedOn: formatDeletedOn(x.deletedOn),
@@ -1127,7 +1149,7 @@ export default function Trashed() {
                 };
             });
 
-            setItems(mapped.filter((x) => x.id));
+            setItems(dedupeTrashItems(mapped.filter((x) => x.id)));
         } catch (e: any) {
             setError(e?.message ?? "Không tải được danh sách thùng rác.");
             setItems([]);

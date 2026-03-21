@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertTriangle, Bell, CheckCheck, CheckCircle2, Info, RefreshCw, Trash2 } from "lucide-react";
+import {
+    AlertTriangle,
+    Bell,
+    CheckCheck,
+    CheckCircle2,
+    Info,
+    RefreshCw,
+    Trash2
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -27,14 +35,25 @@ import { cn } from "@/lib/utils";
 import { NotificationDetailModal } from "./NotificationDetailModal";
 
 const READ_NOTIFICATIONS_STORAGE_KEY = "study_studio_read_notifications";
+const DELETED_NOTIFICATIONS_STORAGE_KEY = "study_studio_deleted_notifications";
 
-function getReadNotificationIds(): string[] {
+type RawNotification = Notification & {
+    userAnnouncementId?: string;
+    announcementId?: string;
+    _id?: string;
+};
+
+type ExtendedNotification = Notification & {
+    isFallback?: boolean;
+    actionId: string;
+};
+
+function getStoredIds(key: string): string[] {
     if (typeof window === "undefined") return [];
 
     try {
-        const raw = localStorage.getItem(READ_NOTIFICATIONS_STORAGE_KEY);
+        const raw = localStorage.getItem(key);
         if (!raw) return [];
-
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) ? parsed : [];
     } catch {
@@ -42,31 +61,85 @@ function getReadNotificationIds(): string[] {
     }
 }
 
-function saveReadNotificationId(id: string) {
+function saveStoredId(key: string, id: string) {
     if (typeof window === "undefined") return;
 
     try {
-        const currentIds = getReadNotificationIds();
-
+        const currentIds = getStoredIds(key);
         if (!currentIds.includes(id)) {
-            localStorage.setItem(READ_NOTIFICATIONS_STORAGE_KEY, JSON.stringify([...currentIds, id]));
+            localStorage.setItem(key, JSON.stringify([...currentIds, id]));
         }
     } catch (error) {
-        console.error("Save read notification error:", error);
+        console.error(`Save storage id error [${key}]:`, error);
     }
 }
 
-function saveManyReadNotificationIds(ids: string[]) {
+function saveManyStoredIds(key: string, ids: string[]) {
     if (typeof window === "undefined") return;
 
     try {
-        const currentIds = getReadNotificationIds();
+        const currentIds = getStoredIds(key);
         const mergedIds = Array.from(new Set([...currentIds, ...ids]));
-
-        localStorage.setItem(READ_NOTIFICATIONS_STORAGE_KEY, JSON.stringify(mergedIds));
+        localStorage.setItem(key, JSON.stringify(mergedIds));
     } catch (error) {
-        console.error("Save many read notifications error:", error);
+        console.error(`Save many storage ids error [${key}]:`, error);
     }
+}
+
+function removeStoredId(key: string, id: string) {
+    if (typeof window === "undefined") return;
+
+    try {
+        const currentIds = getStoredIds(key);
+        localStorage.setItem(key, JSON.stringify(currentIds.filter((item) => item !== id)));
+    } catch (error) {
+        console.error(`Remove storage id error [${key}]:`, error);
+    }
+}
+
+function getReadNotificationIds(): string[] {
+    return getStoredIds(READ_NOTIFICATIONS_STORAGE_KEY);
+}
+
+function saveReadNotificationId(id: string) {
+    saveStoredId(READ_NOTIFICATIONS_STORAGE_KEY, id);
+}
+
+function saveManyReadNotificationIds(ids: string[]) {
+    saveManyStoredIds(READ_NOTIFICATIONS_STORAGE_KEY, ids);
+}
+
+function getDeletedNotificationIds(): string[] {
+    return getStoredIds(DELETED_NOTIFICATIONS_STORAGE_KEY);
+}
+
+function saveDeletedNotificationId(id: string) {
+    saveStoredId(DELETED_NOTIFICATIONS_STORAGE_KEY, id);
+}
+
+function removeDeletedNotificationId(id: string) {
+    removeStoredId(DELETED_NOTIFICATIONS_STORAGE_KEY, id);
+}
+
+function isNotificationNotFoundMessage(message?: string) {
+    if (!message) return false;
+
+    const normalized = message.toLowerCase().trim();
+
+    return (
+        normalized.includes("không tìm thấy thông báo") ||
+        normalized.includes("notification not found") ||
+        normalized.includes("not found")
+    );
+}
+
+function resolveNotificationActionId(notification: RawNotification): string {
+    return (
+        notification.userAnnouncementId ||
+        notification.announcementId ||
+        notification._id ||
+        notification.id
+    );
 }
 
 function BellButton({ unreadCount }: { unreadCount: number }) {
@@ -92,7 +165,7 @@ function NotificationItem({
     formatDate,
     getNotificationIcon
 }: {
-    notification: Notification;
+    notification: ExtendedNotification;
     onClick: () => void;
     onDelete: () => void;
     formatDate: (date: string) => string;
@@ -161,43 +234,56 @@ export function NotificationDropdown() {
     const locale = useLocale();
 
     const [open, setOpen] = useState(false);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifications, setNotifications] = useState<ExtendedNotification[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [selectedNotificationId, setSelectedNotificationId] = useState("");
+    const [selectedNotification, setSelectedNotification] = useState<ExtendedNotification | null>(null);
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [notificationToDelete, setNotificationToDelete] = useState("");
+    const [notificationToDelete, setNotificationToDelete] = useState<ExtendedNotification | null>(null);
 
     const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
     const loadNotifications = useCallback(async () => {
         setIsLoading(true);
-        try {
-            const data = await getAllAnnouncements(locale);
-            const readIds = getReadNotificationIds();
 
-            const cleanedData = data.map((notification) => ({
-                ...notification,
-                title: notification.title,
-                description: notification.description,
-                read: Boolean(notification.read || readIds.includes(notification.id))
-            }));
+        try {
+            const data = (await getAllAnnouncements(locale)) as RawNotification[];
+            const readIds = getReadNotificationIds();
+            const deletedIds = getDeletedNotificationIds();
+
+            const cleanedData: ExtendedNotification[] = data
+                .map((notification) => {
+                    const actionId = resolveNotificationActionId(notification);
+
+                    return {
+                        ...notification,
+                        id: notification.id,
+                        actionId,
+                        title: notification.title,
+                        description: notification.description,
+                        read: Boolean(notification.read || readIds.includes(actionId)),
+                        isFallback: false
+                    };
+                })
+                .filter((notification) => !deletedIds.includes(notification.actionId));
 
             setNotifications(cleanedData);
         } catch (error) {
             console.error("Load notifications error:", error);
 
-            const fallbackNotifications: Notification[] = [
+            const fallbackNotifications: ExtendedNotification[] = [
                 {
                     id: "fallback-1",
+                    actionId: "fallback-1",
                     title: locale === "vi" ? "Chào mừng đến Study Studio" : "Welcome to Study Studio",
                     description:
                         locale === "vi" ? "Cảm ơn bạn đã sử dụng Study Studio!" : "Thank you for using Study Studio!",
                     type: "info",
                     date: new Date().toISOString(),
-                    read: false
+                    read: false,
+                    isFallback: true
                 }
             ];
 
@@ -206,7 +292,7 @@ export function NotificationDropdown() {
             setNotifications(
                 fallbackNotifications.map((notification) => ({
                     ...notification,
-                    read: Boolean(notification.read || readIds.includes(notification.id))
+                    read: Boolean(notification.read || readIds.includes(notification.actionId))
                 }))
             );
         } finally {
@@ -261,65 +347,93 @@ export function NotificationDropdown() {
         [locale]
     );
 
-    const handleNotificationClick = async (notification: Notification) => {
+    const handleNotificationClick = async (notification: ExtendedNotification) => {
         if (!notification.read) {
-            saveReadNotificationId(notification.id);
+            saveReadNotificationId(notification.actionId);
 
-            setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+            );
 
-            try {
-                const result = await markUserAnnouncementAsRead(notification.id, locale);
+            if (!notification.isFallback) {
+                try {
+                    const result = await markUserAnnouncementAsRead(notification.actionId, locale);
 
-                if (result.status !== "success") {
-                    console.error("Mark as read API error:", result.message);
+                    if (result.status !== "success" && !isNotificationNotFoundMessage(result.message)) {
+                        console.error("Mark as read API error:", result.message);
+                    }
+                } catch (error) {
+                    console.error("Mark as read error:", error);
                 }
-            } catch (error) {
-                console.error("Mark as read error:", error);
             }
         }
 
-        setSelectedNotificationId(notification.id);
+        setSelectedNotification(notification);
         setIsDetailModalOpen(true);
         setOpen(false);
     };
 
     const handleMarkAllAsRead = async () => {
+        const unreadNotifications = notifications.filter((n) => !n.read);
+        const unreadActionIds = unreadNotifications.map((n) => n.actionId);
+
+        saveManyReadNotificationIds(unreadActionIds);
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
         try {
-            const unreadNotifications = notifications.filter((n) => !n.read);
-            const unreadIds = unreadNotifications.map((n) => n.id);
-
-            saveManyReadNotificationIds(unreadIds);
-
-            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-
             await Promise.all(
-                unreadNotifications.map((notification) => markUserAnnouncementAsRead(notification.id, locale))
+                unreadNotifications
+                    .filter((notification) => !notification.isFallback)
+                    .map((notification) => markUserAnnouncementAsRead(notification.actionId, locale))
             );
         } catch (error) {
             console.error("Mark all as read error:", error);
-            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
         }
     };
 
-    const handleDeleteNotification = (notificationId: string) => {
-        setNotificationToDelete(notificationId);
+    const handleDeleteNotification = (notification: ExtendedNotification) => {
+        if (notification.isFallback) {
+            setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+            return;
+        }
+
+        setNotificationToDelete(notification);
         setShowDeleteConfirm(true);
     };
 
     const confirmDeleteNotification = async () => {
-        try {
-            const result = await deleteUserAnnouncement(notificationToDelete, locale);
+        if (!notificationToDelete) return;
 
-            if (result.status === "success") {
-                setNotifications((prev) => prev.filter((n) => n.id !== notificationToDelete));
-            } else {
-                console.error("Delete notification API error:", result.message);
+        const deletingNotification = notificationToDelete;
+        const deletingActionId = deletingNotification.actionId;
+
+        setNotifications((prev) => prev.filter((n) => n.id !== deletingNotification.id));
+        setShowDeleteConfirm(false);
+        setNotificationToDelete(null);
+
+        try {
+            const result = await deleteUserAnnouncement(deletingActionId, locale);
+
+            if (result.status === "success" || isNotificationNotFoundMessage(result.message)) {
+                saveDeletedNotificationId(deletingActionId);
+                return;
             }
+
+            console.error("Delete notification API error:", result.message);
+
+            setNotifications((prev) => {
+                const alreadyExists = prev.some((n) => n.id === deletingNotification.id);
+                if (alreadyExists) return prev;
+                return [deletingNotification, ...prev];
+            });
         } catch (error) {
             console.error("Delete notification error:", error);
-        } finally {
-            setShowDeleteConfirm(false);
-            setNotificationToDelete("");
+
+            setNotifications((prev) => {
+                const alreadyExists = prev.some((n) => n.id === deletingNotification.id);
+                if (alreadyExists) return prev;
+                return [deletingNotification, ...prev];
+            });
         }
     };
 
@@ -368,7 +482,7 @@ export function NotificationDropdown() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleMarkAllAsRead}
-                                    className="h-8 gap-1.5 rounded-lg px-2.5 text-sm">
+                                    className="h-8 gap-1.5 rounded-lg px-2.5 text-sm transition-all duration-200 hover:bg-orange-50 hover:text-orange-600 hover:shadow-sm active:scale-[0.98]">
                                     <CheckCheck className="h-4 w-4" />
                                     {t("markAllRead")}
                                 </Button>
@@ -380,8 +494,14 @@ export function NotificationDropdown() {
                                 size="icon"
                                 onClick={loadNotifications}
                                 disabled={isLoading}
-                                className="h-8 w-8 rounded-lg">
-                                <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                                className="group h-8 w-8 rounded-lg transition-all duration-200 hover:bg-orange-50 hover:text-orange-600 hover:shadow-sm active:scale-[0.95]">
+                                <RefreshCw
+                                    className={cn(
+                                        "h-4 w-4 transition-transform duration-300",
+                                        isLoading && "animate-spin",
+                                        "group-hover:rotate-180"
+                                    )}
+                                />
                             </Button>
                         </div>
                     </div>
@@ -405,7 +525,7 @@ export function NotificationDropdown() {
                                         key={notification.id}
                                         notification={notification}
                                         onClick={() => handleNotificationClick(notification)}
-                                        onDelete={() => handleDeleteNotification(notification.id)}
+                                        onDelete={() => handleDeleteNotification(notification)}
                                         formatDate={formatDate}
                                         getNotificationIcon={getNotificationIcon}
                                     />
@@ -430,12 +550,22 @@ export function NotificationDropdown() {
 
             <NotificationDetailModal
                 isOpen={isDetailModalOpen}
-                onClose={() => setIsDetailModalOpen(false)}
-                notificationId={selectedNotificationId}
+                onClose={() => {
+                    setIsDetailModalOpen(false);
+                    setSelectedNotification(null);
+                }}
+                notification={selectedNotification}
                 locale={locale}
             />
 
-            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <AlertDialog
+                open={showDeleteConfirm}
+                onOpenChange={(value) => {
+                    setShowDeleteConfirm(value);
+                    if (!value) {
+                        setNotificationToDelete(null);
+                    }
+                }}>
                 <AlertDialogContent className="rounded-2xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle>{t("confirmDeleteTitle")}</AlertDialogTitle>
@@ -443,7 +573,9 @@ export function NotificationDropdown() {
                     </AlertDialogHeader>
 
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setNotificationToDelete("")}>{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogCancel onClick={() => setNotificationToDelete(null)}>
+                            {t("cancel")}
+                        </AlertDialogCancel>
 
                         <AlertDialogAction
                             onClick={confirmDeleteNotification}
