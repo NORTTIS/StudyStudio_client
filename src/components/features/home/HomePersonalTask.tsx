@@ -227,9 +227,9 @@ function extractBoardData(payload: unknown): PersonalTaskBoardResponse | null {
     const source = payload as
         | PersonalTaskBoardResponseApiResponse
         | {
-              status?: string;
-              data?: PersonalTaskBoardResponseApiResponse | PersonalTaskBoardResponse | null;
-          }
+            status?: string;
+            data?: PersonalTaskBoardResponseApiResponse | PersonalTaskBoardResponse | null;
+        }
         | null
         | undefined;
 
@@ -402,8 +402,8 @@ function applyTaskDrop(args: { statuses: PersonalTaskStatusDto[]; activeTaskId: 
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-          ? overRaw.replace(END_PREFIX, "")
-          : overRaw;
+            ? overRaw.replace(END_PREFIX, "")
+            : overRaw;
 
     const fromCol = findColumnOfTask(statuses, activeTaskId);
     if (!fromCol) return null;
@@ -493,8 +493,8 @@ function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?:
                 done
                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                     : overdue
-                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
@@ -1064,12 +1064,12 @@ function PersonalTaskCard({
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                                     : severity === "critical"
-                                                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                                                      : severity === "major"
-                                                        ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                        : severity === "moderate"
-                                                          ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                          : "border-sky-200 bg-sky-50 text-sky-700"
+                                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                        : severity === "major"
+                                                            ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                            : severity === "moderate"
+                                                                ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                                : "border-sky-200 bg-sky-50 text-sky-700"
                                             )}>
                                             {severityLabel(severity)}
                                         </span>
@@ -1122,12 +1122,12 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                                     : severity === "critical"
-                                                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                                                      : severity === "major"
-                                                        ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                        : severity === "moderate"
-                                                          ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                          : "border-sky-200 bg-sky-50 text-sky-700"
+                                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                        : severity === "major"
+                                                            ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                            : severity === "moderate"
+                                                                ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                                : "border-sky-200 bg-sky-50 text-sky-700"
                                             )}>
                                             {severityLabel(severity)}
                                         </span>
@@ -1172,12 +1172,12 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
                                         done
                                             ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                             : severity === "critical"
-                                              ? "border-rose-200 bg-rose-50 text-rose-700"
-                                              : severity === "major"
-                                                ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                : severity === "moderate"
-                                                  ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                  : "border-sky-200 bg-sky-50 text-sky-700"
+                                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                : severity === "major"
+                                                    ? "border-orange-200 bg-orange-50 text-orange-700"
+                                                    : severity === "moderate"
+                                                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                                                        : "border-sky-200 bg-sky-50 text-sky-700"
                                     )}>
                                     {severityLabel(severity)}
                                 </span>
@@ -1650,8 +1650,8 @@ function InlineDatePicker({
                         disabled
                             ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70"
                             : open
-                              ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
-                              : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
+                                ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
+                                : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
                     )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
@@ -1660,8 +1660,8 @@ function InlineDatePicker({
                                 disabled
                                     ? "bg-zinc-100 text-zinc-400"
                                     : open
-                                      ? "bg-orange-100 text-orange-600"
-                                      : "bg-zinc-100 text-zinc-500"
+                                        ? "bg-orange-100 text-orange-600"
+                                        : "bg-zinc-100 text-zinc-500"
                             )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
@@ -1680,144 +1680,144 @@ function InlineDatePicker({
 
             {mounted && open && popupPosition
                 ? createPortal(
-                      <div
-                          ref={rootRef}
-                          className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                          style={{
-                              top: popupPosition.top,
-                              left: popupPosition.left,
-                              width: popupPosition.width,
-                              maxHeight: "calc(100vh - 40px)",
-                              overflowY: "auto"
-                          }}>
-                          <div className="mb-4 flex items-center gap-3">
-                              <div className="relative flex-1">
-                                  <select
-                                      value={month.getMonth()}
-                                      onChange={handleMonthChange}
-                                      className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                      {monthOptions.map((item) => (
-                                          <option key={item.value} value={item.value}>
-                                              {item.label}
-                                          </option>
-                                      ))}
-                                  </select>
-                                  <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                              </div>
+                    <div
+                        ref={rootRef}
+                        className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                        style={{
+                            top: popupPosition.top,
+                            left: popupPosition.left,
+                            width: popupPosition.width,
+                            maxHeight: "calc(100vh - 40px)",
+                            overflowY: "auto"
+                        }}>
+                        <div className="mb-4 flex items-center gap-3">
+                            <div className="relative flex-1">
+                                <select
+                                    value={month.getMonth()}
+                                    onChange={handleMonthChange}
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                    {monthOptions.map((item) => (
+                                        <option key={item.value} value={item.value}>
+                                            {item.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            </div>
 
-                              <div className="relative w-[140px]">
-                                  <select
-                                      value={month.getFullYear()}
-                                      onChange={handleYearChange}
-                                      className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                      {yearOptions.map((year) => (
-                                          <option key={year} value={year}>
-                                              {year}
-                                          </option>
-                                      ))}
-                                  </select>
-                                  <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                              </div>
-                          </div>
+                            <div className="relative w-[140px]">
+                                <select
+                                    value={month.getFullYear()}
+                                    onChange={handleYearChange}
+                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                    {yearOptions.map((year) => (
+                                        <option key={year} value={year}>
+                                            {year}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            </div>
+                        </div>
 
-                          <div className="rounded-[20px] border border-zinc-200 p-4">
-                              <div className="mb-4 flex items-center justify-between">
-                                  <button
-                                      type="button"
-                                      onClick={goPrevMonth}
-                                      disabled={isPrevDisabled}
-                                      className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                      <ChevronLeft className="h-5 w-5" />
-                                  </button>
+                        <div className="rounded-[20px] border border-zinc-200 p-4">
+                            <div className="mb-4 flex items-center justify-between">
+                                <button
+                                    type="button"
+                                    onClick={goPrevMonth}
+                                    disabled={isPrevDisabled}
+                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                    <ChevronLeft className="h-5 w-5" />
+                                </button>
 
-                                  <div className="font-bold text-[18px] text-zinc-900">
-                                      {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                                  </div>
+                                <div className="font-bold text-[18px] text-zinc-900">
+                                    {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                                </div>
 
-                                  <button
-                                      type="button"
-                                      onClick={goNextMonth}
-                                      className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
-                                      <ChevronRight className="h-5 w-5" />
-                                  </button>
-                              </div>
+                                <button
+                                    type="button"
+                                    onClick={goNextMonth}
+                                    className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                    <ChevronRight className="h-5 w-5" />
+                                </button>
+                            </div>
 
-                              <DayPicker
-                                  mode="single"
-                                  month={month}
-                                  onMonthChange={setMonth}
-                                  selected={selectedDate}
-                                  onSelect={pickDate}
-                                  disabled={minDate ? { before: minDate } : undefined}
-                                  showOutsideDays
-                                  className="w-full"
-                                  styles={{
-                                      day: { outline: "none", boxShadow: "none" },
-                                      button: { outline: "none", boxShadow: "none" }
-                                  }}
-                                  classNames={{
-                                      months: "flex w-full flex-col",
-                                      month: "w-full space-y-3",
-                                      caption: "hidden",
-                                      table: "w-full border-collapse",
-                                      tbody: "w-full",
-                                      head_row: "flex w-full justify-between",
-                                      head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                      row: "mt-2 flex w-full justify-between",
-                                      cell: "h-10 w-10 p-0 text-center",
-                                      day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                      day_button:
-                                          "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                      selected: "!bg-orange-500 !text-white",
-                                      day_selected:
-                                          "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
-                                      today: "text-orange-600 font-bold",
-                                      day_today: "text-orange-600 font-bold",
-                                      outside: "text-zinc-300",
-                                      day_outside: "text-zinc-300",
-                                      disabled: "text-zinc-300 opacity-40",
-                                      day_disabled: "text-zinc-300 opacity-40",
-                                      hidden: "invisible",
-                                      day_hidden: "invisible"
-                                  }}
-                              />
-                          </div>
+                            <DayPicker
+                                mode="single"
+                                month={month}
+                                onMonthChange={setMonth}
+                                selected={selectedDate}
+                                onSelect={pickDate}
+                                disabled={minDate ? { before: minDate } : undefined}
+                                showOutsideDays
+                                className="w-full"
+                                styles={{
+                                    day: { outline: "none", boxShadow: "none" },
+                                    button: { outline: "none", boxShadow: "none" }
+                                }}
+                                classNames={{
+                                    months: "flex w-full flex-col",
+                                    month: "w-full space-y-3",
+                                    caption: "hidden",
+                                    table: "w-full border-collapse",
+                                    tbody: "w-full",
+                                    head_row: "flex w-full justify-between",
+                                    head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                    row: "mt-2 flex w-full justify-between",
+                                    cell: "h-10 w-10 p-0 text-center",
+                                    day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                    day_button:
+                                        "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                    selected: "!bg-orange-500 !text-white",
+                                    day_selected:
+                                        "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                    today: "text-orange-600 font-bold",
+                                    day_today: "text-orange-600 font-bold",
+                                    outside: "text-zinc-300",
+                                    day_outside: "text-zinc-300",
+                                    disabled: "text-zinc-300 opacity-40",
+                                    day_disabled: "text-zinc-300 opacity-40",
+                                    hidden: "invisible",
+                                    day_hidden: "invisible"
+                                }}
+                            />
+                        </div>
 
-                          <div className="mt-4 grid grid-cols-2 gap-3">
-                              <button
-                                  type="button"
-                                  onClick={() => pickDate(new Date())}
-                                  className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                                  Today
-                              </button>
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => pickDate(new Date())}
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                                Today
+                            </button>
 
-                              <button
-                                  type="button"
-                                  onClick={() => pickDate(addDays(new Date(), 1))}
-                                  className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                                  Tomorrow
-                              </button>
+                            <button
+                                type="button"
+                                onClick={() => pickDate(addDays(new Date(), 1))}
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                                Tomorrow
+                            </button>
 
-                              <button
-                                  type="button"
-                                  onClick={() => pickDate(addDays(new Date(), 7))}
-                                  className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                                  Next week
-                              </button>
+                            <button
+                                type="button"
+                                onClick={() => pickDate(addDays(new Date(), 7))}
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                                Next week
+                            </button>
 
-                              <button
-                                  type="button"
-                                  onClick={() => {
-                                      onChange("");
-                                      setOpen(false);
-                                  }}
-                                  className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                                  No date
-                              </button>
-                          </div>
-                      </div>,
-                      document.body
-                  )
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    onChange("");
+                                    setOpen(false);
+                                }}
+                                className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
+                                No date
+                            </button>
+                        </div>
+                    </div>,
+                    document.body
+                )
                 : null}
         </>
     );
@@ -2579,8 +2579,8 @@ export default function HomePersonalTaskScreen() {
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-              ? overId.replace(END_PREFIX, "")
-              : overId;
+                ? overId.replace(END_PREFIX, "")
+                : overId;
 
         let toCol: ColumnId | null = null;
         if (statuses.some((s) => String(s.statusId ?? "") === overKey)) toCol = overKey;
@@ -2802,10 +2802,10 @@ export default function HomePersonalTaskScreen() {
                         values.severity === "critical"
                             ? 3
                             : values.severity === "major"
-                              ? 2
-                              : values.severity === "moderate"
-                                ? 1
-                                : 0
+                                ? 2
+                                : values.severity === "moderate"
+                                    ? 1
+                                    : 0
                 };
 
                 console.log("create-personal-task payload:", payload);
@@ -2902,10 +2902,10 @@ export default function HomePersonalTaskScreen() {
                             values.severity === "critical"
                                 ? 3
                                 : values.severity === "major"
-                                  ? 2
-                                  : values.severity === "moderate"
-                                    ? 1
-                                    : 0
+                                    ? 2
+                                    : values.severity === "moderate"
+                                        ? 1
+                                        : 0
                     }),
                     headers: {
                         "Content-Type": "application/json"
@@ -2936,10 +2936,10 @@ export default function HomePersonalTaskScreen() {
                             values.severity === "critical"
                                 ? 3
                                 : values.severity === "major"
-                                  ? 2
-                                  : values.severity === "moderate"
-                                    ? 1
-                                    : 0
+                                    ? 2
+                                    : values.severity === "moderate"
+                                        ? 1
+                                        : 0
                     };
                 });
             } catch (error) {
@@ -3131,7 +3131,7 @@ export default function HomePersonalTaskScreen() {
 
     if (isLoading) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-white">
+            <div className="min-h-[calc(100vh-0px)] bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
                         Đang tải board…
@@ -3143,7 +3143,7 @@ export default function HomePersonalTaskScreen() {
 
     if (loadError) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-white">
+            <div className="min-h-[calc(100vh-0px)] bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
                         {loadError}
@@ -3167,7 +3167,7 @@ export default function HomePersonalTaskScreen() {
     );
 
     return (
-        <div className="min-h-[calc(100vh-0px)] bg-white">
+        <div className="min-h-[calc(100vh-0px)] bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]">
             <InlineTaskFormModal
                 open={taskFormOpen}
                 onClose={handleCloseCreateTask}
@@ -3210,9 +3210,15 @@ export default function HomePersonalTaskScreen() {
             />
 
             <Container>
-                <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-                    <div className="mb-4">
-                        <h2 className="font-bold text-xl text-zinc-900">Quản lý công việc cá nhân</h2>
+                <div className="mt-5 rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,250,252,0.76))] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+                    <div className="mb-6 overflow-hidden rounded-[28px] border border-white/70 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.06),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.78))] px-5 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                        <h2 className="font-bold text-[30px] text-slate-900 leading-tight tracking-[-0.02em] md:text-[36px]">
+                            Quản lý công việc cá nhân
+                        </h2>
+
+                        <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
+                            Theo dõi và sắp xếp các công việc cá nhân của bạn theo từng trạng thái.
+                        </p>
                     </div>
 
                     {!mounted ? (

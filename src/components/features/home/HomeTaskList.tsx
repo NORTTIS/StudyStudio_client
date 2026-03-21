@@ -1,8 +1,23 @@
 "use client";
 
-import { CalendarDays, ChevronLeft, ChevronRight, ChevronsUpDown, Search, X } from "lucide-react";
+import {
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsUpDown,
+    Search,
+    SlidersHorizontal,
+    Sparkles,
+    X,
+    FolderKanban,
+    Clock3,
+    ArrowUpRight,
+    Filter,
+    LayoutGrid
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
@@ -117,7 +132,6 @@ function formatFilterDateLabel(value?: string) {
 function matchDeadlineDate(raw?: string | null, filter?: DeadlineFilter | null) {
     if (!filter) return true;
     const { startDate, endDate } = filter;
-
     if (!(startDate || endDate)) return true;
 
     const s = String(raw ?? "").trim();
@@ -127,27 +141,17 @@ function matchDeadlineDate(raw?: string | null, filter?: DeadlineFilter | null) 
     if (Number.isNaN(d.getTime())) return false;
 
     const dateOnly = formatDateToInputValue(startOfDay(d));
-
     if (startDate && dateOnly < startDate) return false;
     if (endDate && dateOnly > endDate) return false;
-
     return true;
 }
 
-function buildTaskListUrl(params: {
-    groupId?: string;
-    page: number;
-    pageSize: number;
-    search?: string;
-    sortBy?: string;
-}) {
+function buildTaskListUrl(params: { groupId?: string; page: number; pageSize: number; search?: string; sortBy?: string }) {
     const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
     const base = rawBase.replace(/\/+$/, "");
-
     if (!base) return "";
 
     const endpoint = /\/api$/i.test(base) ? `${base}/Home/TaskList` : `${base}/api/Home/TaskList`;
-
     const searchParams = new URLSearchParams();
     searchParams.set("page", String(params.page));
     searchParams.set("pageSize", String(params.pageSize));
@@ -162,31 +166,17 @@ function buildTaskListUrl(params: {
 function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
     const source = payload as
         | HomeTaskListResponseApiResponse
-        | {
-              status?: string;
-              data?: HomeTaskListResponseApiResponse | HomeTaskListResponse | null;
-          }
+        | { status?: string; data?: HomeTaskListResponseApiResponse | HomeTaskListResponse | null }
         | null
         | undefined;
 
     const firstLayer = source?.data;
 
-    if (
-        firstLayer &&
-        typeof firstLayer === "object" &&
-        "items" in firstLayer &&
-        "page" in firstLayer &&
-        "pageSize" in firstLayer
-    ) {
+    if (firstLayer && typeof firstLayer === "object" && "items" in firstLayer && "page" in firstLayer && "pageSize" in firstLayer) {
         return firstLayer as HomeTaskListResponse;
     }
 
-    if (
-        firstLayer &&
-        typeof firstLayer === "object" &&
-        "data" in firstLayer &&
-        (firstLayer as HomeTaskListResponseApiResponse).data
-    ) {
+    if (firstLayer && typeof firstLayer === "object" && "data" in firstLayer && (firstLayer as HomeTaskListResponseApiResponse).data) {
         return (firstLayer as HomeTaskListResponseApiResponse).data ?? null;
     }
 
@@ -226,35 +216,30 @@ function getPriorityLabel(value?: components["schemas"]["TaskPriority"]) {
 }
 
 function priorityTone(value?: components["schemas"]["TaskPriority"]) {
-    if (value === 2) return "bg-rose-50 text-rose-700 border-rose-200";
-    if (value === 1) return "bg-amber-50 text-amber-700 border-amber-200";
-    return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (value === 2) return "border-rose-200 bg-rose-50 text-rose-700";
+    if (value === 1) return "border-amber-200 bg-amber-50 text-amber-700";
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
 function severityTone(value?: components["schemas"]["TaskSeverity"]) {
-    if (value === 3) return "bg-red-50 text-red-700 border-red-200";
-    if (value === 2) return "bg-orange-50 text-orange-700 border-orange-200";
-    if (value === 1) return "bg-yellow-50 text-yellow-700 border-yellow-200";
-    return "bg-sky-50 text-sky-700 border-sky-200";
+    if (value === 3) return "border-red-200 bg-red-50 text-red-700";
+    if (value === 2) return "border-orange-200 bg-orange-50 text-orange-700";
+    if (value === 1) return "border-yellow-200 bg-yellow-50 text-yellow-700";
+    return "border-sky-200 bg-sky-50 text-sky-700";
 }
 
 function formatDueDate(value?: string | null) {
     if (!value) return "-";
-
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
 
     const currentYear = new Date().getFullYear();
     const year = date.getFullYear();
-
     if (year !== currentYear) {
         return `${year}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
     }
 
-    return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric"
-    }).format(date);
+    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
 }
 
 function getSourceLabel(item: HomeTaskListItemResponse) {
@@ -272,30 +257,33 @@ function buildTaskDetailHref(item: HomeTaskListItemResponse) {
     const taskId = item.taskId ?? "";
     if (!taskId) return "#";
 
-    if (isPersonalTask(item)) {
-        return `/home/personal-task?taskId=${taskId}&openTaskDetail=1`;
-    }
-
-    if (item.groupId) {
-        return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
-    }
-
+    if (isPersonalTask(item)) return `/home/personal-task?taskId=${taskId}&openTaskDetail=1`;
+    if (item.groupId) return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
     return "#";
 }
 
 function TaskStatusBadge({ label }: { label?: string | null }) {
     return (
-        <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 text-sm shadow-sm">
+        <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm backdrop-blur">
             {label || "-"}
         </span>
     );
 }
 
+function FilterField({ children, className }: { children: React.ReactNode; className?: string }) {
+    return (
+        <div className={cn("relative overflow-hidden rounded-[24px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.90),rgba(248,250,252,0.82))] shadow-[0_10px_28px_rgba(15,23,42,0.05)] backdrop-blur-xl", className)}>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_32%)]" />
+            <div className="relative">{children}</div>
+        </div>
+    );
+}
+
 function TableSkeleton() {
     return (
-        <div className="space-y-3 px-4 py-2">
+        <div className="space-y-3 px-4 py-4">
             {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="h-16 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />
+                <div key={index} className="h-20 animate-pulse rounded-[22px] border border-slate-200/70 bg-[linear-gradient(180deg,#F8FAFC_0%,#F1F5F9_100%)]" />
             ))}
         </div>
     );
@@ -312,16 +300,12 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     const selectedDate = React.useMemo(() => parseDateString(value), [value]);
     const minDate = React.useMemo(() => parseDateString(min), [min]);
     const maxDate = React.useMemo(() => parseDateString(max), [max]);
-
     const initialMonth = React.useMemo(() => selectedDate ?? minDate ?? new Date(), [selectedDate, minDate]);
     const [month, setMonth] = React.useState<Date>(initialMonth);
 
     React.useEffect(() => setMounted(true), []);
-
     React.useEffect(() => {
-        if (open) {
-            setMonth(selectedDate ?? minDate ?? new Date());
-        }
+        if (open) setMonth(selectedDate ?? minDate ?? new Date());
     }, [open, selectedDate, minDate]);
 
     const updatePopupPosition = React.useCallback(() => {
@@ -333,7 +317,6 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
         const popupHeight = 560;
         const gap = 8;
         const viewportPadding = 12;
-
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
         const shouldOpenUp = spaceBelow < popupHeight && spaceAbove > spaceBelow;
@@ -341,21 +324,16 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
         let top = shouldOpenUp ? rect.top - popupHeight - gap : rect.bottom + gap;
         let left = rect.left;
 
-        if (left + popupWidth > window.innerWidth - viewportPadding) {
-            left = window.innerWidth - popupWidth - viewportPadding;
-        }
+        if (left + popupWidth > window.innerWidth - viewportPadding) left = window.innerWidth - popupWidth - viewportPadding;
         if (left < viewportPadding) left = viewportPadding;
         if (top < viewportPadding) top = viewportPadding;
-        if (top + popupHeight > window.innerHeight - viewportPadding) {
-            top = Math.max(viewportPadding, window.innerHeight - popupHeight - viewportPadding);
-        }
+        if (top + popupHeight > window.innerHeight - viewportPadding) top = Math.max(viewportPadding, window.innerHeight - popupHeight - viewportPadding);
 
         setPopupPosition({ top, left, width: popupWidth });
     }, []);
 
     React.useEffect(() => {
         if (!open) return;
-
         updatePopupPosition();
 
         const handleClickOutside = (e: MouseEvent) => {
@@ -398,13 +376,8 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
         return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     }, [minDate]);
 
-    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setMonth(new Date(month.getFullYear(), Number(e.target.value), 1));
-    };
-
-    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setMonth(new Date(Number(e.target.value), month.getMonth(), 1));
-    };
+    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => setMonth(new Date(month.getFullYear(), Number(e.target.value), 1));
+    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => setMonth(new Date(Number(e.target.value), month.getMonth(), 1));
 
     const goPrevMonth = () => {
         const next = new Date(month.getFullYear(), month.getMonth() - 1, 1);
@@ -441,189 +414,117 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                  <div
-                      ref={rootRef}
-                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                      style={{
-                          top: popupPosition.top,
-                          left: popupPosition.left,
-                          width: popupPosition.width
-                      }}>
-                      <div className="mb-4 flex items-center gap-3">
-                          <div className="relative flex-1">
-                              <select
-                                  value={month.getMonth()}
-                                  onChange={handleMonthChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {monthOptions.map((item) => (
-                                      <option key={item.value} value={item.value}>
-                                          {item.label}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
+                <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl"
+                    style={{ top: popupPosition.top, left: popupPosition.left, width: popupPosition.width }}
+                >
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <select value={month.getMonth()} onChange={handleMonthChange} className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400">
+                                {monthOptions.map((item) => (
+                                    <option key={item.value} value={item.value}>{item.label}</option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
+                        </div>
 
-                          <div className="relative w-[140px]">
-                              <select
-                                  value={month.getFullYear()}
-                                  onChange={handleYearChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {yearOptions.map((year) => (
-                                      <option key={year} value={year}>
-                                          {year}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
-                      </div>
+                        <div className="relative w-[140px]">
+                            <select value={month.getFullYear()} onChange={handleYearChange} className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400">
+                                {yearOptions.map((year) => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
+                        </div>
+                    </div>
 
-                      <div className="rounded-[20px] border border-zinc-200 p-4">
-                          <div className="mb-4 flex items-center justify-between">
-                              <button
-                                  type="button"
-                                  onClick={goPrevMonth}
-                                  disabled={isPrevDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronLeft className="h-5 w-5" />
-                              </button>
+                    <div className="rounded-[22px] border border-slate-200 bg-white/80 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button type="button" onClick={goPrevMonth} disabled={isPrevDisabled} className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
 
-                              <div className="font-bold text-[18px] text-zinc-900">
-                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                              </div>
+                            <div className="text-[18px] font-bold text-slate-900">{monthOptions[month.getMonth()]?.label} {month.getFullYear()}</div>
 
-                              <button
-                                  type="button"
-                                  onClick={goNextMonth}
-                                  disabled={isNextDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronRight className="h-5 w-5" />
-                              </button>
-                          </div>
+                            <button type="button" onClick={goNextMonth} disabled={isNextDisabled} className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                          <DayPicker
-                              mode="single"
-                              month={month}
-                              onMonthChange={setMonth}
-                              selected={selectedDate}
-                              onSelect={pickDate}
-                              disabled={
-                                  maxDate && minDate
-                                      ? { before: minDate, after: maxDate }
-                                      : maxDate
-                                        ? { after: maxDate }
-                                        : minDate
-                                          ? { before: minDate }
-                                          : undefined
-                              }
-                              showOutsideDays
-                              className="w-full"
-                              styles={{
-                                  day: { outline: "none", boxShadow: "none" },
-                                  button: { outline: "none", boxShadow: "none" }
-                              }}
-                              classNames={{
-                                  months: "flex w-full flex-col",
-                                  month: "w-full space-y-3",
-                                  month_caption: "hidden",
-                                  caption: "hidden",
-                                  caption_label: "hidden",
-                                  nav: "hidden",
-                                  table: "w-full border-collapse",
-                                  month_grid: "w-full border-collapse",
-                                  tbody: "w-full",
-                                  weekdays: "flex w-full justify-between",
-                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                  weeks: "w-full",
-                                  week: "mt-2 flex w-full justify-between",
-                                  day: "h-10 w-10 p-0 text-center",
-                                  cell: "h-10 w-10 p-0 text-center",
-                                  day_button:
-                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
-                                  selected: "!bg-orange-500 !text-white rounded-xl",
-                                  day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
-                                  today: "text-orange-600 font-bold",
-                                  day_today: "text-orange-600 font-bold",
-                                  outside: "opacity-30",
-                                  day_outside: "opacity-30",
-                                  disabled: "opacity-30",
-                                  day_disabled: "opacity-30 cursor-not-allowed",
-                                  hidden: "invisible",
-                                  day_hidden: "invisible"
-                              }}
-                          />
-                      </div>
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={maxDate && minDate ? { before: minDate, after: maxDate } : maxDate ? { after: maxDate } : minDate ? { before: minDate } : undefined}
+                            showOutsideDays
+                            className="w-full"
+                            styles={{ day: { outline: "none", boxShadow: "none" }, button: { outline: "none", boxShadow: "none" } }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                month_caption: "hidden",
+                                caption: "hidden",
+                                caption_label: "hidden",
+                                nav: "hidden",
+                                table: "w-full border-collapse",
+                                month_grid: "w-full border-collapse",
+                                tbody: "w-full",
+                                weekdays: "flex w-full justify-between",
+                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-slate-500",
+                                weeks: "w-full",
+                                week: "mt-2 flex w-full justify-between",
+                                day: "h-10 w-10 p-0 text-center",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day_button: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-slate-800 shadow-none outline-none ring-0 transition hover:bg-violet-50 focus:outline-none focus:ring-0",
+                                selected: "!rounded-xl !bg-violet-500 !text-white",
+                                day_selected: "!rounded-xl !bg-violet-500 !text-white hover:!bg-violet-500",
+                                today: "font-bold text-violet-600",
+                                day_today: "font-bold text-violet-600",
+                                outside: "opacity-30",
+                                day_outside: "opacity-30",
+                                disabled: "cursor-not-allowed opacity-30",
+                                day_disabled: "cursor-not-allowed opacity-30",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                          <button
-                              type="button"
-                              onClick={() => pickDate(new Date())}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Today
-                          </button>
-
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 1))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Tomorrow
-                          </button>
-
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 7))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Next week
-                          </button>
-
-                          <button
-                              type="button"
-                              onClick={() => {
-                                  onChange("");
-                                  setOpen(false);
-                              }}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                              No date
-                          </button>
-                      </div>
-                  </div>,
-                  document.body
-              )
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button type="button" onClick={() => pickDate(new Date())} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">Today</button>
+                        <button type="button" onClick={() => pickDate(addDays(new Date(), 1))} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">Tomorrow</button>
+                        <button type="button" onClick={() => pickDate(addDays(new Date(), 7))} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">Next week</button>
+                        <button type="button" onClick={() => { onChange(""); setOpen(false); }} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">No date</button>
+                    </div>
+                </motion.div>,
+                document.body
+            )
             : null;
 
     return (
         <>
             <div className="relative">
-                <div className="font-semibold text-sm text-zinc-600">{label}</div>
-
+                <div className="text-sm font-semibold text-slate-600">{label}</div>
                 <button
                     ref={triggerRef}
                     type="button"
                     onClick={() => setOpen((v) => !v)}
                     className={cn(
                         "mt-2 flex h-11 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
-                        open
-                            ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
-                            : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}>
+                        open ? "border-violet-400 bg-violet-50 text-slate-900 ring-2 ring-violet-100" : "border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50"
+                    )}
+                >
                     <div className="flex min-w-0 items-center gap-2">
-                        <div
-                            className={cn(
-                                "grid h-7 w-7 shrink-0 place-items-center rounded-md",
-                                open ? "bg-orange-100 text-orange-600" : "bg-zinc-100 text-zinc-500"
-                            )}>
-                            <CalendarDays className="h-4 w-4" />
-                        </div>
-
-                        <span
-                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
-                            {formatDateDisplay(value)}
-                        </span>
+                        <div className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-md", open ? "bg-violet-100 text-violet-600" : "bg-slate-100 text-slate-500")}> <CalendarDays className="h-4 w-4" /> </div>
+                        <span className={cn("truncate text-left", value ? "font-medium text-slate-900" : "text-slate-400")}>{formatDateDisplay(value)}</span>
                     </div>
                 </button>
             </div>
-
             {popup}
         </>
     );
@@ -631,55 +532,23 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
 
 function DeadlineRangePicker({ value, onChange }: { value: DeadlineFilter; onChange: (next: DeadlineFilter) => void }) {
     return (
-        <div className="grid min-w-[360px] grid-cols-1 gap-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl">
-            <TrelloDatePicker
-                label="Từ ngày"
-                value={value.startDate}
-                onChange={(v) => onChange({ ...value, startDate: v })}
-                max={value.endDate || undefined}
-            />
-            <TrelloDatePicker
-                label="Đến ngày"
-                value={value.endDate}
-                onChange={(v) => onChange({ ...value, endDate: v })}
-                min={value.startDate || undefined}
-            />
-
+        <div className="grid min-w-[360px] grid-cols-1 gap-4 rounded-[24px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl">
+            <TrelloDatePicker label="Từ ngày" value={value.startDate} onChange={(v) => onChange({ ...value, startDate: v })} max={value.endDate || undefined} />
+            <TrelloDatePicker label="Đến ngày" value={value.endDate} onChange={(v) => onChange({ ...value, endDate: v })} min={value.startDate || undefined} />
             <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                    type="button"
-                    onClick={() => onChange({ startDate: "", endDate: "" })}
-                    className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
-                    Xóa chọn
-                </button>
+                <button type="button" onClick={() => onChange({ startDate: "", endDate: "" })} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">Xóa chọn</button>
             </div>
         </div>
     );
 }
 
-function DeadlineFilterPopover({
-    open,
-    value,
-    onChange,
-    onClose
-}: {
-    open: boolean;
-    value: DeadlineFilter;
-    onChange: (next: DeadlineFilter) => void;
-    onClose: () => void;
-}) {
+function DeadlineFilterPopover({ open, value, onChange, onClose }: { open: boolean; value: DeadlineFilter; onChange: (next: DeadlineFilter) => void; onClose: () => void }) {
     React.useEffect(() => {
         if (!open) return;
-
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-
+        const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
         const onPointerDown = () => onClose();
-
         window.addEventListener("keydown", onKeyDown);
         window.addEventListener("pointerdown", onPointerDown);
-
         return () => {
             window.removeEventListener("keydown", onKeyDown);
             window.removeEventListener("pointerdown", onPointerDown);
@@ -689,15 +558,14 @@ function DeadlineFilterPopover({
     if (!open) return null;
 
     return (
-        <div className="absolute top-[calc(100%+12px)] right-0 z-30" onPointerDown={(e) => e.stopPropagation()}>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="absolute right-0 top-[calc(100%+12px)] z-30" onPointerDown={(e) => e.stopPropagation()}>
             <DeadlineRangePicker value={value} onChange={onChange} />
-        </div>
+        </motion.div>
     );
 }
 
 export default function HomeTaskList() {
     const router = useRouter();
-
     const [data, setData] = React.useState<HomeTaskListResponse | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [searchInput, setSearchInput] = React.useState("");
@@ -705,10 +573,7 @@ export default function HomeTaskList() {
     const [selectedSource, setSelectedSource] = React.useState<SourceFilterValue>("all");
     const [sortBy, setSortBy] = React.useState<SortValue>("none");
     const [sortFilterValue, setSortFilterValue] = React.useState("");
-    const [deadlineFilter, setDeadlineFilter] = React.useState<DeadlineFilter>({
-        startDate: "",
-        endDate: ""
-    });
+    const [deadlineFilter, setDeadlineFilter] = React.useState<DeadlineFilter>({ startDate: "", endDate: "" });
     const [openDeadlineFilter, setOpenDeadlineFilter] = React.useState(false);
     const [page, setPage] = React.useState(1);
 
@@ -717,26 +582,16 @@ export default function HomeTaskList() {
             setSearchValue(searchInput);
             setPage(1);
         }, 400);
-
         return () => window.clearTimeout(timer);
     }, [searchInput]);
 
     React.useEffect(() => {
         let isMounted = true;
-
         const fetchTaskList = async () => {
             try {
                 setIsLoading(true);
-
                 const groupId = selectedSource !== "all" && selectedSource !== "personal" ? selectedSource : undefined;
-
-                const url = buildTaskListUrl({
-                    groupId,
-                    page: 1,
-                    pageSize: FETCH_ALL_SIZE,
-                    search: searchValue,
-                    sortBy: sortBy === "none" ? undefined : sortBy
-                });
+                const url = buildTaskListUrl({ groupId, page: 1, pageSize: FETCH_ALL_SIZE, search: searchValue, sortBy: sortBy === "none" ? undefined : sortBy });
 
                 if (!url) {
                     if (isMounted) {
@@ -746,17 +601,11 @@ export default function HomeTaskList() {
                     return;
                 }
 
-                const response = await apiFetch<HomeTaskListResponseApiResponse>(url, {
-                    method: "GET"
-                });
-
+                const response = await apiFetch<HomeTaskListResponseApiResponse>(url, { method: "GET" });
                 if (!isMounted) return;
-
                 const nextData = extractTaskListData(response);
-
-                if (nextData) {
-                    setData(nextData);
-                } else {
+                if (nextData) setData(nextData);
+                else {
                     console.error("Home task list response format unexpected:", response);
                     setData(null);
                 }
@@ -769,23 +618,14 @@ export default function HomeTaskList() {
         };
 
         void fetchTaskList();
-
-        return () => {
-            isMounted = false;
-        };
+        return () => { isMounted = false; };
     }, [searchValue, selectedSource, sortBy]);
 
     const groups = data?.userGroups ?? [];
     const rawItems = data?.items ?? [];
 
     const validGroupIds = React.useMemo(() => new Set(groups.map((group) => group.groupId).filter(Boolean)), [groups]);
-
-    const sanitizedItems = React.useMemo(() => {
-        return rawItems.filter((item) => {
-            if (isPersonalTask(item)) return true;
-            return !!item.groupId && validGroupIds.has(item.groupId);
-        });
-    }, [rawItems, validGroupIds]);
+    const sanitizedItems = React.useMemo(() => rawItems.filter((item) => (isPersonalTask(item) ? true : !!item.groupId && validGroupIds.has(item.groupId))), [rawItems, validGroupIds]);
 
     React.useEffect(() => {
         if (selectedSource !== "all" && selectedSource !== "personal" && !validGroupIds.has(selectedSource)) {
@@ -795,57 +635,28 @@ export default function HomeTaskList() {
     }, [selectedSource, validGroupIds]);
 
     const sourceFilteredItems = React.useMemo(() => {
-        if (selectedSource === "personal") {
-            return sanitizedItems.filter((item) => isPersonalTask(item));
-        }
-
-        if (selectedSource !== "all") {
-            return sanitizedItems.filter((item) => item.groupId === selectedSource);
-        }
-
+        if (selectedSource === "personal") return sanitizedItems.filter((item) => isPersonalTask(item));
+        if (selectedSource !== "all") return sanitizedItems.filter((item) => item.groupId === selectedSource);
         return sanitizedItems;
     }, [sanitizedItems, selectedSource]);
 
     const displayItems = React.useMemo(() => {
         let result = [...sourceFilteredItems];
 
-        if (sortBy === "priority" && sortFilterValue) {
-            result = result.filter((item) => getPriorityLabel(item.taskPriority) === sortFilterValue);
-        }
-
-        if (sortBy === "severity" && sortFilterValue) {
-            result = result.filter((item) => getSeverityLabel(item.taskSeverity) === sortFilterValue);
-        }
-
-        if (sortBy === "status" && sortFilterValue) {
-            result = result.filter((item) => (item.statusName ?? "") === sortFilterValue);
-        }
-
-        if (sortBy === "deadline") {
-            result = result.filter((item) => matchDeadlineDate(item.dueDate, deadlineFilter));
-        }
+        if (sortBy === "priority" && sortFilterValue) result = result.filter((item) => getPriorityLabel(item.taskPriority) === sortFilterValue);
+        if (sortBy === "severity" && sortFilterValue) result = result.filter((item) => getSeverityLabel(item.taskSeverity) === sortFilterValue);
+        if (sortBy === "status" && sortFilterValue) result = result.filter((item) => (item.statusName ?? "") === sortFilterValue);
+        if (sortBy === "deadline") result = result.filter((item) => matchDeadlineDate(item.dueDate, deadlineFilter));
 
         return result;
     }, [sourceFilteredItems, sortBy, sortFilterValue, deadlineFilter]);
 
-    const statusOptions = React.useMemo(() => {
-        const unique = Array.from(
-            new Set(sanitizedItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean))
-        );
-        return unique;
-    }, [sanitizedItems]);
+    const statusOptions = React.useMemo(() => Array.from(new Set(sanitizedItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean))), [sanitizedItems]);
 
-    React.useEffect(() => {
-        setPage(1);
-    }, [selectedSource, sortBy, sortFilterValue, deadlineFilter.startDate, deadlineFilter.endDate, searchValue]);
+    React.useEffect(() => { setPage(1); }, [selectedSource, sortBy, sortFilterValue, deadlineFilter.startDate, deadlineFilter.endDate, searchValue]);
 
     const totalPages = Math.max(Math.ceil(displayItems.length / PAGE_SIZE), 1);
-
-    React.useEffect(() => {
-        if (page > totalPages) {
-            setPage(totalPages);
-        }
-    }, [page, totalPages]);
+    React.useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
     const paginatedItems = React.useMemo(() => {
         const start = (page - 1) * PAGE_SIZE;
@@ -853,43 +664,15 @@ export default function HomeTaskList() {
     }, [displayItems, page]);
 
     const paginationItems = React.useMemo<(number | "...")[]>(() => {
-        if (totalPages <= 7) {
-            return Array.from({ length: totalPages }, (_, index) => index + 1);
-        }
-
-        if (page <= 4) {
-            return [1, 2, 3, 4, 5, "...", totalPages];
-        }
-
-        if (page >= totalPages - 3) {
-            return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-        }
-
+        if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+        if (page <= 4) return [1, 2, 3, 4, 5, "...", totalPages];
+        if (page >= totalPages - 3) return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
         return [1, "...", page - 1, page, page + 1, "...", totalPages];
     }, [page, totalPages]);
 
-    const handleSourceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedSource(event.target.value);
-        setPage(1);
-    };
-
-    const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const nextSort = event.target.value as SortValue;
-        setSortBy(nextSort);
-        setSortFilterValue("");
-        setDeadlineFilter({
-            startDate: "",
-            endDate: ""
-        });
-        setOpenDeadlineFilter(false);
-        setPage(1);
-    };
-
     const handleTaskClick = (item: HomeTaskListItemResponse) => {
         const href = buildTaskDetailHref(item);
-        if (href !== "#") {
-            router.push(href);
-        }
+        if (href !== "#") router.push(href);
     };
 
     const showExtraFilter = sortBy === "priority" || sortBy === "severity" || sortBy === "status";
@@ -898,289 +681,248 @@ export default function HomeTaskList() {
     const deadlineFilterLabel = [
         deadlineFilter.startDate && `Từ ${formatFilterDateLabel(deadlineFilter.startDate)}`,
         deadlineFilter.endDate && `Đến ${formatFilterDateLabel(deadlineFilter.endDate)}`
-    ]
-        .filter(Boolean)
-        .join(" • ");
+    ].filter(Boolean).join(" • ");
 
     const hasDeadlineFilter = !!(deadlineFilter.startDate || deadlineFilter.endDate);
 
     return (
-        <div className="bg-[#F8FAFC]">
-            <Container className="py-8">
-                <div className="rounded-[32px] border border-[#D9E1EC] bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.06)] md:p-8">
-                    <h2 className="mb-8 font-bold text-[#0F172A] text-[40px] leading-tight tracking-[-0.02em]">
-                        Công việc từ các nhóm
-                    </h2>
+        <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_36%,#F3F7FB_100%)]">
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute left-[-80px] top-[-30px] h-72 w-72 rounded-full bg-violet-200/20 blur-3xl" />
+                <div className="absolute right-[-60px] top-[20%] h-80 w-80 rounded-full bg-sky-200/18 blur-3xl" />
+                <div className="absolute bottom-[-100px] left-[20%] h-96 w-96 rounded-full bg-orange-100/16 blur-3xl" />
+            </div>
 
-                    <div className="mb-8 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-                        <div className="relative w-full xl:max-w-[680px]">
-                            <Search className="pointer-events-none absolute top-1/2 left-6 h-5 w-5 -translate-y-1/2 text-[#94A3B8]" />
-                            <input
-                                value={searchInput}
-                                onChange={(event) => setSearchInput(event.target.value)}
-                                placeholder="Tìm kiếm công việc"
-                                className="h-[70px] w-full rounded-[24px] border border-[#D9E1EC] bg-white pr-5 pl-14 text-[#0F172A] text-[18px] outline-none transition placeholder:text-[#94A3B8] focus:border-[#94A3B8] focus:ring-4 focus:ring-[#EFF6FF]"
-                            />
+            <Container className="py-8">
+                <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.68))] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:p-8">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.10),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(251,146,60,0.08),transparent_30%)]" />
+
+                    <div className="relative">
+                        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                            <div>
+                                <h2 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-[34px] font-bold leading-tight tracking-[-0.02em] text-transparent md:text-[42px]">
+                                    Công việc từ các nhóm
+                                </h2>
+
+                                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
+                                    Tìm kiếm, lọc và theo dõi các công việc quan trọng trong một giao diện trực quan và hiện đại hơn.
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3">
+                                <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+                                    <p className="text-[11px] uppercase tracking-wide text-slate-400">Tổng công việc</p>
+                                    <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
+                                        <FolderKanban className="h-4 w-4 text-violet-600" />
+                                        {displayItems.length}
+                                    </div>
+                                </div>
+                                <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
+                                    <p className="text-[11px] uppercase tracking-wide text-slate-400">Nhóm khả dụng</p>
+                                    <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
+                                        <LayoutGrid className="h-4 w-4 text-sky-600" />
+                                        {groups.length}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:w-[548px]">
-                            <div className="relative">
-                                <select
-                                    value={selectedSource}
-                                    onChange={handleSourceChange}
-                                    className="h-[70px] w-full appearance-none rounded-[24px] border border-[#D9E1EC] bg-white px-7 pr-14 text-[#0F172A] text-[18px] outline-none transition focus:border-[#94A3B8] focus:ring-4 focus:ring-[#EFF6FF]">
-                                    <option value="all">Tất cả</option>
-                                    <option value="personal">Cá nhân</option>
-                                    {groups.map((group: UserGroupDto) => (
-                                        <option key={group.groupId ?? group.groupName} value={group.groupId ?? ""}>
-                                            {group.groupName}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronsUpDown className="pointer-events-none absolute top-1/2 right-5 h-5 w-5 -translate-y-1/2 text-[#64748B]" />
-                            </div>
-
-                            <div className="relative">
-                                <select
-                                    value={sortBy}
-                                    onChange={handleSortChange}
-                                    className="h-[70px] w-full appearance-none rounded-[24px] border border-[#D9E1EC] bg-white px-7 pr-14 text-[#0F172A] text-[18px] outline-none transition focus:border-[#94A3B8] focus:ring-4 focus:ring-[#EFF6FF]">
-                                    <option value="none">Không sắp xếp</option>
-                                    <option value="deadline">Sắp xếp theo hạn chót</option>
-                                    <option value="priority">Sắp xếp theo độ ưu tiên</option>
-                                    <option value="severity">Sắp xếp theo độ khẩn cấp</option>
-                                    <option value="status">Sắp xếp theo trạng thái</option>
-                                </select>
-                                <ChevronsUpDown className="pointer-events-none absolute top-1/2 right-5 h-5 w-5 -translate-y-1/2 text-[#64748B]" />
-                            </div>
-
-                            {showExtraFilter && (
-                                <div className="relative sm:col-span-2">
-                                    <select
-                                        value={sortFilterValue}
-                                        onChange={(event) => setSortFilterValue(event.target.value)}
-                                        className="h-[70px] w-full appearance-none rounded-[24px] border border-[#D9E1EC] bg-white px-7 pr-14 text-[#0F172A] text-[18px] outline-none transition focus:border-[#94A3B8] focus:ring-4 focus:ring-[#EFF6FF]">
-                                        <option value="">Chọn bộ lọc</option>
-
-                                        {sortBy === "priority" && (
-                                            <>
-                                                <option value="Low">Low</option>
-                                                <option value="Medium">Medium</option>
-                                                <option value="High">High</option>
-                                            </>
-                                        )}
-
-                                        {sortBy === "severity" && (
-                                            <>
-                                                <option value="Thấp">Thấp</option>
-                                                <option value="Bình thường">Bình thường</option>
-                                                <option value="Quan trọng">Quan trọng</option>
-                                                <option value="Khẩn cấp">Khẩn cấp</option>
-                                            </>
-                                        )}
-
-                                        {sortBy === "status" &&
-                                            statusOptions.map((status) => (
-                                                <option key={status} value={status}>
-                                                    {status}
-                                                </option>
-                                            ))}
-                                    </select>
-                                    <ChevronsUpDown className="pointer-events-none absolute top-1/2 right-5 h-5 w-5 -translate-y-1/2 text-[#64748B]" />
-                                </div>
-                            )}
-
-                            {showDeadlineFilter && (
-                                <div className="relative sm:col-span-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setOpenDeadlineFilter((prev) => !prev)}
-                                        className="flex h-[70px] w-full items-center justify-between rounded-[24px] border border-[#D9E1EC] bg-white px-7 text-[#0F172A] text-[18px] transition hover:border-[#94A3B8] focus:ring-4 focus:ring-[#EFF6FF]">
-                                        <span className={cn("truncate", !hasDeadlineFilter && "text-[#64748B]")}>
-                                            {hasDeadlineFilter ? deadlineFilterLabel : "Chọn khoảng ngày"}
-                                        </span>
-                                        <CalendarDays className="h-5 w-5 text-[#64748B]" />
-                                    </button>
-
-                                    <DeadlineFilterPopover
-                                        open={openDeadlineFilter}
-                                        value={deadlineFilter}
-                                        onChange={setDeadlineFilter}
-                                        onClose={() => setOpenDeadlineFilter(false)}
+                        <div className="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+                            <FilterField className="w-full xl:max-w-[720px]">
+                                <div className="relative">
+                                    <Search className="pointer-events-none absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                    <input
+                                        value={searchInput}
+                                        onChange={(event) => setSearchInput(event.target.value)}
+                                        placeholder="Tìm kiếm công việc"
+                                        className="h-[72px] w-full rounded-[24px] border-0 bg-transparent pl-14 pr-5 text-[18px] text-slate-900 outline-none placeholder:text-slate-400"
                                     />
                                 </div>
-                            )}
-                        </div>
-                    </div>
+                            </FilterField>
 
-                    {showDeadlineFilter && hasDeadlineFilter && (
-                        <div className="mb-4 flex flex-wrap items-center gap-2">
-                            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-slate-700 text-sm">
-                                <span>{deadlineFilterLabel}</span>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setDeadlineFilter({
-                                            startDate: "",
-                                            endDate: ""
-                                        })
-                                    }
-                                    className="rounded-full p-0.5 hover:bg-slate-200">
-                                    <X className="h-4 w-4" />
-                                </button>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:w-[560px]">
+                                <FilterField>
+                                    <div className="relative">
+                                        <select value={selectedSource} onChange={(event) => { setSelectedSource(event.target.value); setPage(1); }} className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
+                                            <option value="all">Tất cả</option>
+                                            <option value="personal">Cá nhân</option>
+                                            {groups.map((group: UserGroupDto) => (
+                                                <option key={group.groupId ?? group.groupName} value={group.groupId ?? ""}>{group.groupName}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronsUpDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                                    </div>
+                                </FilterField>
+
+                                <FilterField>
+                                    <div className="relative">
+                                        <select value={sortBy} onChange={(event) => {
+                                            const nextSort = event.target.value as SortValue;
+                                            setSortBy(nextSort);
+                                            setSortFilterValue("");
+                                            setDeadlineFilter({ startDate: "", endDate: "" });
+                                            setOpenDeadlineFilter(false);
+                                            setPage(1);
+                                        }} className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
+                                            <option value="none">Không sắp xếp</option>
+                                            <option value="deadline">Sắp xếp theo hạn chót</option>
+                                            <option value="priority">Sắp xếp theo độ ưu tiên</option>
+                                            <option value="severity">Sắp xếp theo độ khẩn cấp</option>
+                                            <option value="status">Sắp xếp theo trạng thái</option>
+                                        </select>
+                                        <ChevronsUpDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                                    </div>
+                                </FilterField>
+
+                                <AnimatePresence initial={false}>
+                                    {showExtraFilter && (
+                                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="sm:col-span-2">
+                                            <FilterField>
+                                                <div className="relative">
+                                                    <select value={sortFilterValue} onChange={(event) => setSortFilterValue(event.target.value)} className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
+                                                        <option value="">Chọn bộ lọc</option>
+                                                        {sortBy === "priority" && <><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option></>}
+                                                        {sortBy === "severity" && <><option value="Thấp">Thấp</option><option value="Bình thường">Bình thường</option><option value="Quan trọng">Quan trọng</option><option value="Khẩn cấp">Khẩn cấp</option></>}
+                                                        {sortBy === "status" && statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}
+                                                    </select>
+                                                    <ChevronsUpDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                                                </div>
+                                            </FilterField>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <AnimatePresence initial={false}>
+                                    {showDeadlineFilter && (
+                                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="relative sm:col-span-2">
+                                            <FilterField>
+                                                <button type="button" onClick={() => setOpenDeadlineFilter((prev) => !prev)} className="flex h-[72px] w-full items-center justify-between rounded-[24px] px-7 text-[18px] text-slate-900 transition">
+                                                    <span className={cn("truncate", !hasDeadlineFilter && "text-slate-400")}>{hasDeadlineFilter ? deadlineFilterLabel : "Chọn khoảng ngày"}</span>
+                                                    <CalendarDays className="h-5 w-5 text-slate-500" />
+                                                </button>
+                                            </FilterField>
+
+                                            <DeadlineFilterPopover open={openDeadlineFilter} value={deadlineFilter} onChange={setDeadlineFilter} onClose={() => setOpenDeadlineFilter(false)} />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
-                    )}
 
-                    <div className="overflow-hidden rounded-3xl border border-[#E2E8F0] bg-white">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full border-collapse">
-                                <thead>
-                                    <tr className="border-[#E2E8F0] border-b bg-[#F8FAFC]">
-                                        <th className="px-6 py-5 text-center font-semibold text-[#64748B] text-[18px]">
-                                            Công việc
-                                        </th>
-                                        <th className="px-6 py-5 text-center font-semibold text-[#64748B] text-[18px]">
-                                            Nguồn
-                                        </th>
-                                        <th className="px-6 py-5 text-center font-semibold text-[#64748B] text-[18px]">
-                                            Độ khẩn cấp
-                                        </th>
-                                        <th className="px-6 py-5 text-center font-semibold text-[#64748B] text-[18px]">
-                                            Độ ưu tiên
-                                        </th>
-                                        <th className="px-6 py-5 text-center font-semibold text-[#64748B] text-[18px]">
-                                            Trạng thái
-                                        </th>
-                                        <th className="px-6 py-5 text-center font-semibold text-[#64748B] text-[18px]">
-                                            Thời hạn đến
-                                        </th>
-                                    </tr>
-                                </thead>
+                        <div className="mt-5 flex flex-wrap items-center gap-3">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm">
+                                <Filter className="h-4 w-4 text-violet-600" />
+                                <span>Nguồn: {selectedSource === "all" ? "Tất cả" : selectedSource === "personal" ? "Cá nhân" : groups.find((g) => g.groupId === selectedSource)?.groupName ?? "Nhóm"}</span>
+                            </div>
 
-                                <tbody>
-                                    {isLoading ? (
-                                        <tr>
-                                            <td colSpan={6} className="px-0 py-4">
-                                                <TableSkeleton />
-                                            </td>
+                            {sortBy !== "none" && (
+                                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm">
+                                    <SlidersHorizontal className="h-4 w-4 text-sky-600" />
+                                    <span>Sắp xếp: {sortBy}</span>
+                                </div>
+                            )}
+
+                            {showDeadlineFilter && hasDeadlineFilter && (
+                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-700 shadow-sm">
+                                    <Clock3 className="h-4 w-4" />
+                                    <span>{deadlineFilterLabel}</span>
+                                    <button type="button" onClick={() => setDeadlineFilter({ startDate: "", endDate: "" })} className="rounded-full p-0.5 hover:bg-violet-100">
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-8 overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(248,250,252,0.88))] shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-slate-200/80 bg-[linear-gradient(180deg,#F8FAFC_0%,#F1F5F9_100%)]">
+                                            <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Công việc</th>
+                                            <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Nguồn</th>
+                                            <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Độ khẩn cấp</th>
+                                            <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Độ ưu tiên</th>
+                                            <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Trạng thái</th>
+                                            <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Thời hạn đến</th>
                                         </tr>
-                                    ) : paginatedItems.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} className="px-6 py-12 text-center text-[#71829E] text-lg">
-                                                Không có công việc nào
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedItems.map((item) => (
-                                            <tr
-                                                key={item.taskId}
-                                                onClick={() => handleTaskClick(item)}
-                                                className="cursor-pointer border-[#E2E8F0] border-b transition last:border-b-0 hover:bg-[#F8FAFC]">
-                                                <td className="px-6 py-6 text-center font-semibold text-[#0F172A] text-[20px]">
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleTaskClick(item);
-                                                        }}
-                                                        className="cursor-pointer hover:underline">
-                                                        {item.taskTitle || "-"}
-                                                    </button>
-                                                </td>
+                                    </thead>
 
-                                                <td className="px-6 py-6 text-center font-medium text-[#334155] text-[18px]">
-                                                    {getSourceLabel(item)}
-                                                </td>
-
-                                                <td className="px-6 py-6 text-center">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex rounded-full border px-3 py-1.5 font-semibold text-[16px]",
-                                                            severityTone(item.taskSeverity)
-                                                        )}>
-                                                        {getSeverityLabel(item.taskSeverity)}
-                                                    </span>
-                                                </td>
-
-                                                <td className="px-6 py-6 text-center">
-                                                    <span
-                                                        className={cn(
-                                                            "inline-flex rounded-full border px-3 py-1.5 font-semibold text-[16px]",
-                                                            priorityTone(item.taskPriority)
-                                                        )}>
-                                                        {getPriorityLabel(item.taskPriority)}
-                                                    </span>
-                                                </td>
-
-                                                <td className="px-6 py-6 text-center">
-                                                    <div className="flex justify-center">
-                                                        <TaskStatusBadge label={item.statusName} />
+                                    <tbody>
+                                        {isLoading ? (
+                                            <tr><td colSpan={6} className="px-0 py-4"><TableSkeleton /></td></tr>
+                                        ) : paginatedItems.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="px-6 py-16 text-center">
+                                                    <div className="mx-auto flex max-w-md flex-col items-center">
+                                                        <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-violet-50 text-violet-600 shadow-sm">
+                                                            <FolderKanban className="h-8 w-8" />
+                                                        </div>
+                                                        <p className="mt-4 text-lg font-semibold text-slate-800">Không có công việc nào</p>
+                                                        <p className="mt-1 text-sm text-slate-500">Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để xem thêm kết quả.</p>
                                                     </div>
                                                 </td>
-
-                                                <td className="px-6 py-6 text-center font-medium text-[#64748B] text-[18px]">
-                                                    {formatDueDate(item.dueDate)}
-                                                </td>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                        ) : (
+                                            paginatedItems.map((item, index) => (
+                                                <motion.tr
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ duration: 0.25, delay: index * 0.03 }}
+                                                    key={item.taskId}
+                                                    onClick={() => handleTaskClick(item)}
+                                                    className="group cursor-pointer border-b border-slate-200/70 transition last:border-b-0 hover:bg-[linear-gradient(180deg,#FCFCFF_0%,#F8FAFC_100%)]"
+                                                >
+                                                    <td className="px-6 py-6 text-center text-[18px] font-semibold text-slate-900">
+                                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleTaskClick(item); }} className="inline-flex items-center gap-2 hover:text-violet-700">
+                                                            <span className="hover:underline">{item.taskTitle || "-"}</span>
+                                                            <ArrowUpRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
+                                                        </button>
+                                                    </td>
+
+                                                    <td className="px-6 py-6 text-center text-[16px] font-medium text-slate-600">{getSourceLabel(item)}</td>
+
+                                                    <td className="px-6 py-6 text-center">
+                                                        <span className={cn("inline-flex rounded-full border px-3 py-1.5 text-[14px] font-semibold shadow-sm", severityTone(item.taskSeverity))}>{getSeverityLabel(item.taskSeverity)}</span>
+                                                    </td>
+
+                                                    <td className="px-6 py-6 text-center">
+                                                        <span className={cn("inline-flex rounded-full border px-3 py-1.5 text-[14px] font-semibold shadow-sm", priorityTone(item.taskPriority))}>{getPriorityLabel(item.taskPriority)}</span>
+                                                    </td>
+
+                                                    <td className="px-6 py-6 text-center"><div className="flex justify-center"><TaskStatusBadge label={item.statusName} /></div></td>
+                                                    <td className="px-6 py-6 text-center text-[16px] font-medium text-slate-500">{formatDueDate(item.dueDate)}</td>
+                                                </motion.tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
-                    {!isLoading && totalPages > 1 && (
-                        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-[#261E33]">
-                            <button
-                                type="button"
-                                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                                disabled={page === 1}
-                                className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 font-medium text-[#9A3412] text-[16px] hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50">
-                                <ChevronLeft className="h-5 w-5" />
-                                Previous
-                            </button>
+                        {!isLoading && totalPages > 1 && (
+                            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-slate-800">
+                                <button type="button" onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1} className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50">
+                                    <ChevronLeft className="h-5 w-5" /> Previous
+                                </button>
 
-                            {paginationItems.map((item, index) => {
-                                if (item === "...") {
+                                {paginationItems.map((item, index) => {
+                                    if (item === "...") {
+                                        return <span key={`ellipsis-${index}`} className="flex h-12 min-w-12 items-center justify-center px-2 text-[16px] font-medium text-slate-400">...</span>;
+                                    }
+
+                                    const isActive = item === page;
                                     return (
-                                        <span
-                                            key={`ellipsis-${index}`}
-                                            className="flex h-12 min-w-12 items-center justify-center px-2 font-medium text-[#64748B] text-[16px]">
-                                            ...
-                                        </span>
+                                        <button key={item} type="button" onClick={() => setPage(item)} className={cn("h-12 min-w-12 rounded-xl border px-4 text-[15px] font-medium transition", isActive ? "border-[#F97316] bg-[#F97316] text-white shadow-[0_10px_20px_rgba(249,115,22,0.22)]" : "border-[#E2E8F0] bg-white/80 text-[#261E33] hover:border-[#FDBA74] hover:bg-[#FFF7ED]")}>{item}</button>
                                     );
-                                }
+                                })}
 
-                                const isActive = item === page;
-
-                                return (
-                                    <button
-                                        key={item}
-                                        type="button"
-                                        onClick={() => setPage(item)}
-                                        className={cn(
-                                            "h-12 min-w-12 rounded-xl border px-4 font-medium text-[16px] transition",
-                                            isActive
-                                                ? "border-[#F97316] bg-[#F97316] text-white"
-                                                : "border-[#E2E8F0] bg-white text-[#261E33] hover:border-[#FDBA74] hover:bg-[#FFF7ED]"
-                                        )}>
-                                        {item}
-                                    </button>
-                                );
-                            })}
-
-                            <button
-                                type="button"
-                                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                                disabled={page === totalPages}
-                                className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 font-medium text-[#9A3412] text-[16px] hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50">
-                                Next
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
-                    )}
-                </div>
+                                <button type="button" onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))} disabled={page === totalPages} className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50">
+                                    Next <ChevronRight className="h-5 w-5" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
             </Container>
         </div>
     );

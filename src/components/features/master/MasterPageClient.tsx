@@ -29,7 +29,6 @@ interface MasterPageClientProps {
     initialSubscription: StudioListSubscription | null;
 }
 
-// Gradient backgrounds for studio cards
 const gradientBackgrounds = [
     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
@@ -42,12 +41,10 @@ const gradientBackgrounds = [
 ];
 
 function getGradientBackground(name: string, _index: number): string {
-    // Generate a consistent gradient based on studio name
     const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return gradientBackgrounds[hash % gradientBackgrounds.length];
 }
 
-// Studio Card Component
 interface StudioCardProps {
     studio: StudioUI;
     index: number;
@@ -64,31 +61,33 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
     const isOwner = studio.studioRole === 0;
 
     return (
-        <button
-            type="button"
-            className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white text-left transition-all hover:border-[#FF5F3D] hover:shadow-lg"
-            onClick={onClick}>
-            {/* Gradient Header */}
+        <div
+            role="button"
+            tabIndex={0}
+            className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white text-left transition-all hover:border-[#FF5F3D] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]"
+            onClick={onClick}
+            onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onClick();
+                }
+            }}>
             <div className="relative h-24 p-5" style={{ background: gradient }}>
-                {/* First Letter Avatar */}
                 <div className="absolute bottom-[-24px] left-5 flex h-12 w-12 items-center justify-center rounded-full bg-white font-bold text-gray-700 text-xl shadow-md">
                     {firstLetter}
                 </div>
-                {/* Role Badge */}
                 <div className="absolute right-5 bottom-[-24px]">
                     {studio.studioRole !== undefined && (
                         <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-white text-xs ${
-                                isOwner
-                                    ? "bg-gradient-to-r from-orange-500 to-red-500"
-                                    : "bg-gradient-to-r from-teal-500 to-cyan-500"
-                            }`}>
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-white text-xs ${isOwner
+                                ? "bg-gradient-to-r from-orange-500 to-red-500"
+                                : "bg-gradient-to-r from-teal-500 to-cyan-500"
+                                }`}>
                             {isOwner ? t("roles.owner") : t("roles.member")}
                         </span>
                     )}
                 </div>
             </div>
-            {/* Content */}
             <div className="mt-8 p-5 pt-4">
                 <div className="mb-3 flex items-start justify-between">
                     <h3 className="font-semibold text-[#261E33] text-lg group-hover:text-[#FF5F3D]">{studio.name}</h3>
@@ -169,7 +168,7 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                     </div>
                 </div>
             </div>
-        </button>
+        </div>
     );
 }
 
@@ -195,7 +194,6 @@ export default function MasterPageClient({
     const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
-    // Separate studios by role
     const { ownedStudios, joinedStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
         const joined: StudioUI[] = [];
@@ -211,7 +209,6 @@ export default function MasterPageClient({
         return { ownedStudios: owned, joinedStudios: joined };
     }, [studios]);
 
-    // Filtered studios based on search
     const { filteredOwnedStudios, filteredJoinedStudios } = useMemo(() => {
         if (!searchQuery.trim()) {
             return { filteredOwnedStudios: ownedStudios, filteredJoinedStudios: joinedStudios };
@@ -227,7 +224,6 @@ export default function MasterPageClient({
         };
     }, [searchQuery, ownedStudios, joinedStudios]);
 
-    // Total studios count (owned only for limit) - use subscription data if available
     const studioLimit = subscriptionInfo?.studioLimit ?? 3;
     const studioCreated = subscriptionInfo?.studioCreated ?? studios.length;
     const totalStudios = studioCreated;
@@ -329,12 +325,12 @@ export default function MasterPageClient({
                 const updatedStudios = studios.map((s) =>
                     s.id === selectedStudio.id
                         ? {
-                              ...s,
-                              name: data.name,
-                              description: data.description,
-                              type: data.type as "personal" | "group",
-                              updatedAt: new Date().toISOString()
-                          }
+                            ...s,
+                            name: data.name,
+                            description: data.description,
+                            type: data.type as "personal" | "group",
+                            updatedAt: new Date().toISOString()
+                        }
                         : s
                 );
                 setStudios(updatedStudios);
@@ -393,7 +389,6 @@ export default function MasterPageClient({
         setIsDeleteModalOpen(true);
     };
 
-    // Render studio grid section
     const renderStudioSection = (title: string, studioList: StudioUI[], _emptyMessage: string) => {
         if (studioList.length === 0) return null;
 

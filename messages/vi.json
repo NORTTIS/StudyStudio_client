@@ -1227,7 +1227,16 @@
         "notFound": "Không tìm thấy thông báo",
         "notFoundDescription": "Thông báo này có thể đã bị xóa hoặc không tồn tại.",
         "close": "Đóng",
-        "loading": "Đang tải..."
+        "loading": "Đang tải...",
+        "announcement": "Thông báo",
+"mentionedInChat": "Bạn được nhắc trong chat",
+"mentionedInComment": "Bạn được nhắc trong bình luận",
+"chatMessage": "Tin nhắn gửi đến bạn",
+"notificationContent": "Nội dung thông báo",
+"messageContent": "Nội dung tin nhắn",
+"commentContent": "Nội dung bình luận",
+"from": "Từ",
+"noContent": "Không có nội dung"
     },
     "BillingHistoryTab": {
         "search": {

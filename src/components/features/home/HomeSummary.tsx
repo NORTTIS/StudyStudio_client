@@ -1,12 +1,26 @@
 "use client";
 
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Layers3, Sparkles, TrendingUp } from "lucide-react";
+import {
+    AlertTriangle,
+    CalendarDays,
+    CheckCircle2,
+    Clock3,
+    Layers3,
+    Sparkles,
+    TrendingUp,
+    ArrowUpRight,
+    Activity,
+    Flame,
+    CircleDashed
+} from "lucide-react";
 import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import useSWR from "swr";
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import HomeTopTabs from "./HomeTopTabs";
 
 type HomeSummaryResponse = components["schemas"]["HomeSummaryResponse"];
 type HomeSummaryResponseApiResponse = components["schemas"]["HomeSummaryResponseApiResponse"];
@@ -22,9 +36,10 @@ type StatCardProps = {
     label: string;
     value: number;
     icon: React.ReactNode;
-    tone?: "neutral" | "danger" | "success";
+    tone?: "neutral" | "danger" | "success" | "violet";
     note?: string;
     delta?: number;
+    index?: number;
 };
 
 type OverviewCardProps = {
@@ -33,6 +48,7 @@ type OverviewCardProps = {
     total: number;
     description: string;
     tone?: "neutral" | "danger" | "success";
+    index?: number;
 };
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -45,9 +61,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
     const safeAccountKey = String(accountKey ?? "default").trim() || "default";
 
     const storageKey = React.useMemo(() => `home-summary-delta:${safeAccountKey}:${key}`, [safeAccountKey, key]);
-
     const baselineKey = React.useMemo(() => `home-summary-baseline:${safeAccountKey}:${key}`, [safeAccountKey, key]);
-
     const [delta, setDelta] = React.useState<DeltaInfo | null>(null);
 
     React.useEffect(() => {
@@ -128,7 +142,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch {}
+            } catch { }
             return;
         }
 
@@ -137,7 +151,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch {}
+            } catch { }
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -146,31 +160,55 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
     return delta;
 }
 
-function StatCard({ label, value, icon, tone = "neutral", note, delta }: StatCardProps) {
+function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+        >
+            {children}
+        </motion.div>
+    );
+}
+
+function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0 }: StatCardProps) {
     const styles = {
         neutral: {
-            card: "border-gray-200/80 bg-white hover:border-gray-300",
-            ring: "from-gray-100/80 to-white",
-            iconWrap: "bg-gray-100 text-gray-700",
-            label: "text-gray-500",
-            value: "text-gray-900",
-            note: "text-gray-400"
+            card: "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,250,252,0.92))]",
+            glow: "from-slate-100/70 via-white to-transparent",
+            iconWrap: "bg-slate-100 text-slate-700",
+            label: "text-slate-500",
+            value: "text-slate-900",
+            note: "text-slate-400",
+            chip: "bg-slate-50 text-slate-600"
         },
         danger: {
-            card: "border-red-200/80 bg-white hover:border-red-300",
-            ring: "from-red-50 to-white",
+            card: "border-red-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.92))]",
+            glow: "from-red-100/70 via-white to-transparent",
             iconWrap: "bg-red-50 text-red-500",
             label: "text-red-500",
             value: "text-red-600",
-            note: "text-red-400"
+            note: "text-red-400",
+            chip: "bg-red-50 text-red-600"
         },
         success: {
-            card: "border-green-200/80 bg-white hover:border-green-300",
-            ring: "from-green-50 to-white",
-            iconWrap: "bg-green-50 text-green-600",
-            label: "text-green-600",
-            value: "text-green-600",
-            note: "text-green-500"
+            card: "border-emerald-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(236,253,245,0.92))]",
+            glow: "from-emerald-100/70 via-white to-transparent",
+            iconWrap: "bg-emerald-50 text-emerald-600",
+            label: "text-emerald-600",
+            value: "text-emerald-600",
+            note: "text-emerald-500",
+            chip: "bg-emerald-50 text-emerald-600"
+        },
+        violet: {
+            card: "border-violet-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(245,243,255,0.94))]",
+            glow: "from-violet-100/70 via-white to-transparent",
+            iconWrap: "bg-violet-50 text-violet-600",
+            label: "text-violet-600",
+            value: "text-violet-700",
+            note: "text-violet-500",
+            chip: "bg-violet-50 text-violet-600"
         }
     };
 
@@ -179,98 +217,110 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta }: StatCar
     const isPositive = (delta ?? 0) > 0;
 
     return (
-        <div
+        <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.06 * index }}
+            whileHover={{ y: -6 }}
             className={cx(
-                "group relative overflow-hidden rounded-3xl border p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]",
+                "group relative overflow-hidden rounded-[28px] border p-5 shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]",
                 s.card
-            )}>
-            <div className={cx("absolute inset-x-0 top-0 h-24 bg-gradient-to-b opacity-80", s.ring)} />
+            )}
+        >
+            <div className={cx("absolute inset-x-0 top-0 h-24 bg-gradient-to-b opacity-90", s.glow)} />
+            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/60 blur-3xl opacity-70" />
 
             <div className="relative flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                    <p className={cx("font-medium text-sm", s.label)}>{label}</p>
-
-                    <div className="mt-3 flex items-end gap-2">
-                        <p className={cx("font-bold text-3xl tracking-tight", s.value)}>{value}</p>
-
+                    <div className="flex items-center gap-2">
+                        <p className={cx("font-medium text-sm", s.label)}>{label}</p>
                         {hasDelta ? (
                             <span
                                 className={cx(
-                                    "mb-1 font-semibold text-sm",
-                                    isPositive ? "text-green-600" : "text-red-500"
-                                )}>
+                                    "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                                    isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+                                )}
+                            >
                                 {isPositive ? `+${delta}` : `${delta}`}
                             </span>
                         ) : null}
                     </div>
 
+                    <p className={cx("mt-3 font-bold text-3xl tracking-tight", s.value)}>{value}</p>
                     {note ? <p className={cx("mt-2 text-xs", s.note)}>{note}</p> : null}
                 </div>
 
-                <div
+                <motion.div
+                    whileHover={{ rotate: 8, scale: 1.05 }}
                     className={cx(
-                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm",
+                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
                         s.iconWrap
-                    )}>
+                    )}
+                >
                     {icon}
-                </div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
-function OverviewCard({ title, value, total, description, tone = "neutral" }: OverviewCardProps) {
+function OverviewCard({ title, value, total, description, tone = "neutral", index = 0 }: OverviewCardProps) {
     const percent = total > 0 ? Math.round((value / total) * 100) : 0;
 
     const styles = {
         neutral: {
-            card: "border-gray-200/80 bg-white",
+            card: "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.95))]",
             badge: "bg-violet-50 text-violet-600",
-            percent: "text-gray-900",
-            desc: "text-gray-500",
-            track: "bg-gray-100",
-            bar: "bg-violet-500",
-            glow: "from-violet-50/80 to-white"
+            percent: "text-slate-900",
+            desc: "text-slate-500",
+            track: "bg-slate-100",
+            bar: "bg-[linear-gradient(90deg,#8B5CF6_0%,#6366F1_100%)]",
+            glow: "from-violet-50/80 via-white to-transparent"
         },
         danger: {
-            card: "border-red-200/80 bg-white",
+            card: "border-red-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.94))]",
             badge: "bg-red-50 text-red-500",
             percent: "text-red-600",
             desc: "text-red-400",
             track: "bg-red-50",
-            bar: "bg-red-500",
-            glow: "from-red-50/80 to-white"
+            bar: "bg-[linear-gradient(90deg,#F97316_0%,#EF4444_100%)]",
+            glow: "from-red-50/80 via-white to-transparent"
         },
         success: {
-            card: "border-green-200/80 bg-white",
-            badge: "bg-green-50 text-green-600",
-            percent: "text-green-600",
-            desc: "text-green-500",
-            track: "bg-green-50",
-            bar: "bg-green-500",
-            glow: "from-green-50/80 to-white"
+            card: "border-emerald-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(236,253,245,0.94))]",
+            badge: "bg-emerald-50 text-emerald-600",
+            percent: "text-emerald-600",
+            desc: "text-emerald-500",
+            track: "bg-emerald-50",
+            bar: "bg-[linear-gradient(90deg,#10B981_0%,#22C55E_100%)]",
+            glow: "from-emerald-50/80 via-white to-transparent"
         }
     };
 
     const s = styles[tone];
 
     return (
-        <div
+        <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.08 * index }}
+            whileHover={{ y: -6 }}
             className={cx(
-                "relative overflow-hidden rounded-3xl border p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)]",
+                "relative overflow-hidden rounded-[30px] border p-6 shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]",
                 s.card
-            )}>
+            )}
+        >
             <div className={cx("absolute inset-x-0 top-0 h-28 bg-gradient-to-b opacity-90", s.glow)} />
 
             <div className="relative">
                 <div className="flex items-center gap-3">
-                    <div className={cx("rounded-2xl p-2.5", s.badge)}>
+                    <div className={cx("rounded-2xl p-2.5 shadow-sm", s.badge)}>
                         <TrendingUp className="h-4 w-4" />
                     </div>
 
                     <div>
-                        <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
-                        <p className="text-gray-400 text-xs">Tổng quan hiện tại</p>
+                        <h3 className="font-semibold text-slate-900 text-sm">{title}</h3>
+                        <p className="text-slate-400 text-xs">Tổng quan hiện tại</p>
                     </div>
                 </div>
 
@@ -280,20 +330,35 @@ function OverviewCard({ title, value, total, description, tone = "neutral" }: Ov
                         <p className={cx("mt-3 text-sm leading-6", s.desc)}>{description}</p>
                     </div>
 
-                    <div className="rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2 text-right">
-                        <p className="text-[11px] text-gray-400 uppercase tracking-wide">số lượng</p>
-                        <p className="mt-1 font-semibold text-gray-700 text-sm">
+                    <div className="rounded-2xl border border-white/70 bg-white/70 px-3 py-2 text-right shadow-sm backdrop-blur">
+                        <p className="text-[11px] uppercase tracking-wide text-slate-400">số lượng</p>
+                        <p className="mt-1 font-semibold text-slate-700 text-sm">
                             {value}/{total}
                         </p>
                     </div>
                 </div>
 
-                <div className={cx("mt-6 h-2.5 w-full overflow-hidden rounded-full", s.track)}>
-                    <div
-                        className={cx("h-full rounded-full transition-all duration-500", s.bar)}
-                        style={{ width: `${percent}%` }}
+                <div className={cx("mt-6 h-3 w-full overflow-hidden rounded-full", s.track)}>
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percent}%` }}
+                        transition={{ duration: 0.8, delay: 0.12 + 0.08 * index, ease: "easeOut" }}
+                        className={cx("h-full rounded-full", s.bar)}
                     />
                 </div>
+            </div>
+        </motion.div>
+    );
+}
+
+function SkeletonCard({ large = false }: { large?: boolean }) {
+    return (
+        <div className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/80 p-5 shadow-sm backdrop-blur">
+            <div className="animate-pulse">
+                <div className="mb-3 h-4 w-28 rounded bg-slate-200" />
+                <div className={cx("rounded bg-slate-200", large ? "h-12 w-28" : "h-8 w-20")} />
+                <div className="mt-3 h-3 w-24 rounded bg-slate-100" />
+                {large ? <div className="mt-6 h-3 w-full rounded-full bg-slate-100" /> : null}
             </div>
         </div>
     );
@@ -312,9 +377,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-              status?: string;
-              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-          }
+            status?: string;
+            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+        }
         | null
         | undefined;
 
@@ -349,7 +414,6 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
 
 const fetchHomeSummary = async (): Promise<HomeSummaryResponse | null> => {
     const url = buildSummaryUrl();
-
     if (!url) return null;
 
     const response = await apiFetch<HomeSummaryResponseApiResponse>(url, {
@@ -366,11 +430,7 @@ export default function HomeSummary() {
         setCacheKey((prev) => prev + 1);
     }, []);
 
-    const {
-        data: summary,
-        isLoading,
-        error
-    } = useSWR(["home-summary", cacheKey], fetchHomeSummary, {
+    const { data: summary, isLoading, error } = useSWR(["home-summary", cacheKey], fetchHomeSummary, {
         refreshInterval: 3000,
         revalidateOnFocus: true,
         revalidateOnReconnect: true,
@@ -410,7 +470,7 @@ export default function HomeSummary() {
                     localStorage.removeItem(key);
                 }
             });
-        } catch {}
+        } catch { }
     }, [accountKey, hasSummary]);
 
     const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);
@@ -421,133 +481,172 @@ export default function HomeSummary() {
     const totalTasks = remainingTaskCount + overdueTaskCount + completedTaskCount;
 
     return (
-        <div className="bg-[radial-gradient(circle_at_top,#f8fafc_0%,#f8fafc_35%,#f3f4f6_100%)]">
-            <Container className="pt-8 pb-8">
+        <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#F8F7FF_34%,#F4F7FB_66%,#F1F5F9_100%)]">
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute left-[-80px] top-[-40px] h-72 w-72 rounded-full bg-violet-200/25 blur-3xl" />
+                <div className="absolute right-[-80px] top-[18%] h-80 w-80 rounded-full bg-sky-200/20 blur-3xl" />
+                <div className="absolute bottom-[-120px] left-[15%] h-96 w-96 rounded-full bg-emerald-100/20 blur-3xl" />
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
+            </div>
+
+            <Container className="relative pb-8 pt-8">
                 <div className="space-y-8">
-                    <section className="rounded-[28px] border border-gray-200/80 bg-white/90 px-6 py-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1 font-medium text-violet-700 text-xs">
-                                    <Sparkles className="h-3.5 w-3.5" />
-                                    Dashboard tổng quan
+                    <SectionReveal>
+                        <section className="relative overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.68))] px-6 py-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.14),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.10),transparent_30%)]" />
+
+                            <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                <div className="min-w-0">
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.96 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.35 }}
+                                        className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm"
+                                    >
+                                        <Sparkles className="h-3.5 w-3.5" />
+                                        Dashboard tổng quan
+                                    </motion.div>
+
+                                    <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[38px]">
+                                        Tổng quan công việc
+                                    </h1>
+
+                                    <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
+                                        Theo dõi tiến độ xử lý, công việc quá hạn và số nhóm bạn đang tham gia trong một giao diện trực quan hơn.
+                                    </p>
+
+                                    <div className="mt-4">
+                                        <HomeTopTabs />
+                                    </div>
                                 </div>
 
-                                <h1 className="mt-4 font-bold text-3xl text-gray-900 tracking-tight">
-                                    Tổng quan công việc
-                                </h1>
+                                <div className="flex items-center gap-3">
+                                    <div className="hidden rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur md:block">
+                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">trạng thái</p>
+                                        <div className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+                                            <Activity className="h-4 w-4 text-emerald-500" />
+                                            Dữ liệu đang đồng bộ
+                                        </div>
+                                    </div>
 
-                                <p className="mt-2 text-gray-500 text-sm">
-                                    Theo dõi tiến độ xử lý, công việc quá hạn và số nhóm bạn đang tham gia.
-                                </p>
+                                    <Button
+                                        variant="outline"
+                                        className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur hover:bg-white"
+                                    >
+                                        <CalendarDays className="mr-2 h-4 w-4" />
+                                        Lịch
+                                    </Button>
+                                </div>
                             </div>
-
-                            <Button
-                                variant="outline"
-                                className="h-11 rounded-2xl border-gray-200 bg-white px-4 text-gray-700 shadow-sm hover:bg-gray-50">
-                                <CalendarDays className="mr-2 h-4 w-4" />
-                                Lịch
-                            </Button>
-                        </div>
-                    </section>
+                        </section>
+                    </SectionReveal>
 
                     {isLoading ? (
                         <>
                             <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 {Array.from({ length: 4 }).map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-                                        <div className="animate-pulse">
-                                            <div className="mb-3 h-4 w-28 rounded bg-gray-200" />
-                                            <div className="mb-2 h-8 w-20 rounded bg-gray-200" />
-                                            <div className="h-3 w-24 rounded bg-gray-100" />
-                                        </div>
-                                    </div>
+                                    <SkeletonCard key={index} />
                                 ))}
                             </section>
 
                             <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                 {Array.from({ length: 3 }).map((_, index) => (
-                                    <div
-                                        key={index}
-                                        className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                                        <div className="animate-pulse">
-                                            <div className="h-5 w-36 rounded bg-gray-200" />
-                                            <div className="mt-8 h-12 w-28 rounded bg-gray-200" />
-                                            <div className="mt-3 h-4 w-40 rounded bg-gray-100" />
-                                            <div className="mt-5 h-2.5 w-full rounded bg-gray-100" />
-                                        </div>
-                                    </div>
+                                    <SkeletonCard key={index} large />
                                 ))}
                             </section>
                         </>
                     ) : error ? (
-                        <div className="rounded-3xl border border-red-200 bg-white px-5 py-4 text-red-600 text-sm shadow-sm">
-                            Không tải được dữ liệu tổng quan.
-                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+                                    <AlertTriangle className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold">Không tải được dữ liệu tổng quan.</p>
+                                    <p className="mt-1 text-red-400">Hãy kiểm tra kết nối hoặc thử tải lại sau.</p>
+                                </div>
+                            </div>
+                        </motion.div>
                     ) : (
                         <>
-                            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                                <StatCard
-                                    label="Công việc còn lại"
-                                    value={remainingTaskCount}
-                                    delta={remainingDelta?.value}
-                                    icon={<Clock3 className="h-5 w-5" />}
-                                    note="Đang chờ xử lý"
-                                />
+                            <SectionReveal delay={0.04}>
+                                <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                    <StatCard
+                                        label="Công việc còn lại"
+                                        value={remainingTaskCount}
+                                        delta={remainingDelta?.value}
+                                        icon={<Clock3 className="h-5 w-5" />}
+                                        note="Đang chờ xử lý"
+                                        tone="neutral"
+                                        index={0}
+                                    />
 
-                                <StatCard
-                                    label="Công việc quá hạn"
-                                    value={overdueTaskCount}
-                                    delta={overdueDelta?.value}
-                                    icon={<AlertTriangle className="h-5 w-5" />}
-                                    tone="danger"
-                                    note="Cần ưu tiên ngay"
-                                />
+                                    <StatCard
+                                        label="Công việc quá hạn"
+                                        value={overdueTaskCount}
+                                        delta={overdueDelta?.value}
+                                        icon={<Flame className="h-5 w-5" />}
+                                        tone="danger"
+                                        note="Cần ưu tiên ngay"
+                                        index={1}
+                                    />
 
-                                <StatCard
-                                    label="Đã hoàn thành"
-                                    value={completedTaskCount}
-                                    delta={completedDelta?.value}
-                                    icon={<CheckCircle2 className="h-5 w-5" />}
-                                    tone="success"
-                                    note="Đã xử lý xong"
-                                />
+                                    <StatCard
+                                        label="Đã hoàn thành"
+                                        value={completedTaskCount}
+                                        delta={completedDelta?.value}
+                                        icon={<CheckCircle2 className="h-5 w-5" />}
+                                        tone="success"
+                                        note="Đã xử lý xong"
+                                        index={2}
+                                    />
 
-                                <StatCard
-                                    label="Số nhóm tham gia"
-                                    value={totalJoinedGroupCount}
-                                    delta={joinedGroupDelta?.value}
-                                    icon={<Layers3 className="h-5 w-5" />}
-                                    note="Nhóm đang hoạt động"
-                                />
-                            </section>
+                                    <StatCard
+                                        label="Số nhóm tham gia"
+                                        value={totalJoinedGroupCount}
+                                        delta={joinedGroupDelta?.value}
+                                        icon={<Layers3 className="h-5 w-5" />}
+                                        note="Nhóm đang hoạt động"
+                                        tone="violet"
+                                        index={3}
+                                    />
+                                </section>
+                            </SectionReveal>
 
-                            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                <OverviewCard
-                                    title="Hoàn thành"
-                                    value={completedTaskCount}
-                                    total={totalTasks}
-                                    description={`${completedTaskCount} trên ${totalTasks} công việc đã hoàn tất`}
-                                    tone="success"
-                                />
+                            <SectionReveal delay={0.08}>
+                                <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                    <OverviewCard
+                                        title="Hoàn thành"
+                                        value={completedTaskCount}
+                                        total={totalTasks}
+                                        description={`${completedTaskCount} trên ${totalTasks} công việc đã hoàn tất`}
+                                        tone="success"
+                                        index={0}
+                                    />
 
-                                <OverviewCard
-                                    title="Còn lại"
-                                    value={remainingTaskCount}
-                                    total={totalTasks}
-                                    description={`${remainingTaskCount} công việc vẫn đang chờ xử lý`}
-                                    tone="neutral"
-                                />
+                                    <OverviewCard
+                                        title="Còn lại"
+                                        value={remainingTaskCount}
+                                        total={totalTasks}
+                                        description={`${remainingTaskCount} công việc vẫn đang chờ xử lý`}
+                                        tone="neutral"
+                                        index={1}
+                                    />
 
-                                <OverviewCard
-                                    title="Quá hạn"
-                                    value={overdueTaskCount}
-                                    total={totalTasks}
-                                    description={`${overdueTaskCount} công việc cần được ưu tiên`}
-                                    tone="danger"
-                                />
-                            </section>
+                                    <OverviewCard
+                                        title="Quá hạn"
+                                        value={overdueTaskCount}
+                                        total={totalTasks}
+                                        description={`${overdueTaskCount} công việc cần được ưu tiên`}
+                                        tone="danger"
+                                        index={2}
+                                    />
+                                </section>
+                            </SectionReveal>
                         </>
                     )}
                 </div>
