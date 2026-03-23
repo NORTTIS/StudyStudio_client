@@ -122,9 +122,7 @@ function isInteractiveElement(target: EventTarget | null) {
     const el = target as HTMLElement | null;
     if (!el) return false;
 
-    return !!el.closest(
-        'button, input, textarea, select, option, a, [role="button"], [data-no-pan="true"]'
-    );
+    return !!el.closest('button, input, textarea, select, option, a, [role="button"], [data-no-pan="true"]');
 }
 
 function dotClass(statusDot?: Task["statusDot"]) {
@@ -252,7 +250,10 @@ function getUserRoleOrNull() {
 }
 
 function normalizeGroupRole(role: string | null | undefined) {
-    const raw = String(role ?? "").trim().replace(/^['\"]+|['\"]+$/g, "").toLowerCase();
+    const raw = String(role ?? "")
+        .trim()
+        .replace(/^['"]+|['"]+$/g, "")
+        .toLowerCase();
     if (!raw) return null;
 
     if (raw.includes("owner") || raw === "admin") return "owner";
@@ -631,8 +632,8 @@ function applyTaskDrop(args: {
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-            ? overRaw.replace(END_PREFIX, "")
-            : overRaw;
+          ? overRaw.replace(END_PREFIX, "")
+          : overRaw;
 
     const fromCol = findColumnOfTask(board, columns, activeTaskId);
     if (!fromCol) return null;
@@ -696,7 +697,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 
 function DonePill() {
     return (
-        <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+        <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-semibold text-emerald-700 text-xs">
             <CheckCircle2 className="h-4 w-4" />
             Done
         </span>
@@ -710,7 +711,7 @@ function shouldShowProgress(task?: Pick<Task, "progress"> | null) {
 
 function ProgressPill({ progress }: { progress: number }) {
     return (
-        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700">
+        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 font-semibold text-indigo-700 text-xs">
             {progress}%
         </span>
     );
@@ -724,14 +725,14 @@ function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?:
                 done
                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                     : overdue
-                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                      ? "border-rose-200 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
-                <div className="whitespace-nowrap text-xs font-semibold">{due}</div>
+                <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
                 {!done && overdue ? (
-                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">
                         Quá hạn
                     </span>
                 ) : null}
@@ -785,15 +786,15 @@ function ConfirmModal({
             <div
                 className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
-                <h2 className="text-base font-bold text-zinc-900">{title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
+                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
+                <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
 
                 <div className="mt-6 flex items-center justify-end gap-3">
                     {!hideCancel ? (
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100">
+                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-100">
                             {cancelLabel}
                         </button>
                     ) : null}
@@ -801,7 +802,7 @@ function ConfirmModal({
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-700">
+                        className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white transition hover:bg-orange-700">
                         {confirmLabel}
                     </button>
                 </div>
@@ -859,8 +860,8 @@ function PortalDropdown({
             const m = menuRef.current;
             const t = e.target as Node | null;
             if (!t) return;
-            if (m && m.contains(t)) return;
-            if (a && a.contains(t)) return;
+            if (m?.contains(t)) return;
+            if (a?.contains(t)) return;
             onClose();
         };
 
@@ -915,13 +916,13 @@ function MenuItem({
     );
 }
 
-function useAutosizeTextarea(ref: React.RefObject<HTMLTextAreaElement | null>, value: string) {
+function useAutosizeTextarea(ref: React.RefObject<HTMLTextAreaElement | null>, _value: string) {
     React.useEffect(() => {
         const el = ref.current;
         if (!el) return;
         el.style.height = "0px";
         el.style.height = `${el.scrollHeight}px`;
-    }, [ref, value]);
+    }, [ref]);
 }
 
 type TaskCardProps = {
@@ -1033,7 +1034,7 @@ function TaskCard({
                                 <div className="min-w-0 flex-1">
                                     <p
                                         className={cn(
-                                            "line-clamp-3 pr-2 text-sm font-semibold leading-5",
+                                            "line-clamp-3 pr-2 font-semibold text-sm leading-5",
                                             done ? "text-zinc-500 line-through" : "text-zinc-900"
                                         )}>
                                         {task.title}
@@ -1121,7 +1122,7 @@ function TaskCard({
                                 rows={1}
                                 className={cn(
                                     "w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2",
-                                    "select-text text-sm font-semibold text-zinc-900 outline-none",
+                                    "select-text font-semibold text-sm text-zinc-900 outline-none",
                                     "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
                                 )}
                             />
@@ -1135,7 +1136,7 @@ function TaskCard({
                                         e.stopPropagation();
                                         safeCommit();
                                     }}
-                                    className="rounded-lg bg-[#f54a00] px-3 py-2 text-sm font-semibold text-white hover:bg-[#f54a00]/70">
+                                    className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
                                     Lưu
                                 </button>
 
@@ -1164,7 +1165,7 @@ function TaskCard({
                                     {task.severityLabel ? (
                                         <span
                                             className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                                     : severityTone(task.severityLabel)
@@ -1192,13 +1193,13 @@ function GhostTaskCard({ task }: { task: Task }) {
     const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
 
     return (
-        <div className={cn("rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/70 p-3")}>
+        <div className={cn("rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3")}>
             <div className="flex items-start gap-3">
                 <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
                 <div className="min-w-0 flex-1">
                     <p
                         className={cn(
-                            "line-clamp-3 text-sm font-semibold leading-5",
+                            "line-clamp-3 font-semibold text-sm leading-5",
                             done ? "text-zinc-500 line-through" : "text-zinc-800"
                         )}>
                         {task.title}
@@ -1213,7 +1214,7 @@ function GhostTaskCard({ task }: { task: Task }) {
                                     {task.severityLabel ? (
                                         <span
                                             className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                                     : severityTone(task.severityLabel)
@@ -1239,7 +1240,7 @@ type HeaderDragProps = Pick<ReturnType<typeof useSortable>, "attributes" | "list
     setActivatorNodeRef?: (node: HTMLElement | null) => void;
 };
 
-function filterDroppablesByType(droppables: DroppableContainer[], allow: Array<string>) {
+function filterDroppablesByType(droppables: DroppableContainer[], allow: string[]) {
     return droppables.filter((d) => {
         const t = d.data?.current?.type;
         return typeof t === "string" && allow.includes(t);
@@ -1307,7 +1308,7 @@ function AddColumnInline({
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left text-sm font-semibold text-white shadow-sm",
+                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left font-semibold text-sm text-white shadow-sm",
                     "transition hover:bg-[#f54a00]/80"
                 )}>
                 + Tạo trạng thái
@@ -1334,7 +1335,7 @@ function AddColumnInline({
 
             <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/30</div>
 
-            {error ? <div className="mt-2 text-xs font-medium text-rose-600">{error}</div> : null}
+            {error ? <div className="mt-2 font-medium text-rose-600 text-xs">{error}</div> : null}
 
             <div className="mt-3 flex items-center gap-2">
                 <button
@@ -1342,7 +1343,7 @@ function AddColumnInline({
                     onClick={() => void submit()}
                     disabled={isSubmitting}
                     className={cn(
-                        "rounded-xl px-3 py-2 text-sm font-semibold text-white",
+                        "rounded-xl px-3 py-2 font-semibold text-sm text-white",
                         "bg-[#f54a00] transition hover:bg-[#f54a00]/80",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}>
@@ -1372,7 +1373,7 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
+                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 font-semibold text-sm",
                 "bg-[#f54a00] text-white",
                 "transition hover:bg-[#f54a00]/80",
                 disabled && "pointer-events-none opacity-60"
@@ -1480,7 +1481,7 @@ function ColumnView({
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                         <div className="min-w-0 flex-1">
                             {!isColumnEditing ? (
-                                <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
+                                <p className="truncate font-bold text-sm text-zinc-900">{col.title}</p>
                             ) : (
                                 <div className="space-y-1">
                                     <input
@@ -1507,7 +1508,7 @@ function ColumnView({
                                             setTimeout(() => onColumnCommit(), 0);
                                         }}
                                         className={cn(
-                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 text-sm font-bold text-zinc-900 outline-none",
+                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
                                             columnError
                                                 ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
                                                 : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
@@ -1520,7 +1521,7 @@ function ColumnView({
                                     </div>
 
                                     {columnError ? (
-                                        <div className="text-[11px] font-medium text-rose-600">{columnError}</div>
+                                        <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
                                     ) : null}
                                 </div>
                             )}
@@ -1528,7 +1529,7 @@ function ColumnView({
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2">
-                        <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 text-xs font-semibold text-zinc-700">
+                        <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 font-semibold text-xs text-zinc-700">
                             {tasks.length}
                         </span>
 
@@ -1583,7 +1584,7 @@ function ColumnView({
                     className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}>
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {rendered.map((item) => {
                                     if (item.kind === "ghost")
                                         return <GhostTaskCard key={item.key} task={ghost!.task} />;
@@ -1609,8 +1610,8 @@ function ColumnView({
                                 })}
 
                                 {tasks.length === 0 ? (
-                                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center">
-                                        <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
+                                    <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
+                                        <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
                                         <div className="mt-1 text-xs text-zinc-500">
                                             Bấm “Thêm công việc” để tạo mới
                                         </div>
@@ -1627,7 +1628,7 @@ function ColumnView({
                             </div>
                         </SortableContext>
                     ) : (
-                        <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+                        <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {tasks.map((t) => {
                                 const isEditingThis =
                                     taskEditState.taskId === t.id && taskEditState.columnId === col.id;
@@ -1648,8 +1649,8 @@ function ColumnView({
                                 );
                             })}
                             {tasks.length === 0 ? (
-                                <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center">
-                                    <div className="text-sm font-semibold text-zinc-700">Chưa có công việc</div>
+                                <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
+                                    <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
                                     <div className="mt-1 text-xs text-zinc-500">Bấm “Thêm công việc” để tạo mới</div>
                                 </div>
                             ) : null}
@@ -1772,7 +1773,7 @@ function TaskOverlay({ task }: { task: Task }) {
 
     return (
         <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
-            <p className={cn("text-sm font-semibold leading-5", done ? "text-zinc-500 line-through" : "text-zinc-900")}>
+            <p className={cn("font-semibold text-sm leading-5", done ? "text-zinc-500 line-through" : "text-zinc-900")}>
                 {task.title}
             </p>
 
@@ -1789,7 +1790,7 @@ function TaskOverlay({ task }: { task: Task }) {
                             {task.severityLabel ? (
                                 <span
                                     className={cn(
-                                        "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 text-xs font-semibold",
+                                        "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                         done
                                             ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                             : severityTone(task.severityLabel)
@@ -1814,7 +1815,7 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
         <div className="min-w-[300px] max-w-[300px]">
             <div className="rounded-xl bg-[#f1f2f4] shadow-xl">
                 <div className="rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2">
-                    <p className="truncate text-sm font-bold text-zinc-900">{col.title}</p>
+                    <p className="truncate font-bold text-sm text-zinc-900">{col.title}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
                 <div className="px-2 pb-2">
@@ -1824,7 +1825,7 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
                                 <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
                                     <p
                                         className={cn(
-                                            "text-sm font-semibold",
+                                            "font-semibold text-sm",
                                             isTaskDone(t) ? "text-zinc-500 line-through" : "text-zinc-900"
                                         )}>
                                         {t.title}
@@ -1833,7 +1834,7 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
                             </div>
                         ))}
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                            <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                 (Trạng thái trống)
                             </div>
                         ) : null}
@@ -1881,7 +1882,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const handleBoardPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
         const state = dragScrollRef.current;
         const el = boardScrollRef.current;
-        if (!state.isDown || !el) return;
+        if (!(state.isDown && el)) return;
 
         const dx = e.clientX - state.startX;
         const dy = e.clientY - state.startY;
@@ -2025,7 +2026,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         if (topScrollRef.current) {
             topScrollRef.current.scrollLeft = 0;
         }
-    }, [groupId]);
+    }, []);
     const syncSourceRef = React.useRef<"top" | "board" | null>(null);
     const [topScrollbarWidth, setTopScrollbarWidth] = React.useState(0);
     const [showTopScrollbar, setShowTopScrollbar] = React.useState(false);
@@ -2086,7 +2087,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             resizeObserver?.disconnect();
             mutationObserver?.disconnect();
         };
-    }, [mounted, loading, columns.length, syncTopScrollbarWidth]);
+    }, [mounted, loading, syncTopScrollbarWidth]);
 
     React.useLayoutEffect(() => {
         if (!mounted || loading) return;
@@ -2096,7 +2097,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         });
 
         return () => window.cancelAnimationFrame(frame);
-    }, [mounted, loading, columns]);
+    }, [mounted, loading, syncTopScrollbarWidth]);
 
     const handleTopScroll: React.UIEventHandler<HTMLDivElement> = (e) => {
         const boardEl = boardScrollRef.current;
@@ -2303,8 +2304,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-                ? overId.replace(END_PREFIX, "")
-                : overId;
+              ? overId.replace(END_PREFIX, "")
+              : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -2702,14 +2703,14 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         return (
             <div className="min-h-[calc(100vh-0px)] bg-[#fafbfc]">
                 <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-sm text-rose-700">
+                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
                         {loadError}
                     </div>
                     <div className="mt-3">
                         <button
                             type="button"
                             onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100">
+                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                             Tải lại
                         </button>
                     </div>
@@ -2800,7 +2801,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                         onPointerMove={handleBoardPointerMove}
                         onPointerUp={handleBoardPointerUp}
                         onPointerCancel={handleBoardPointerCancel}
-                        className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6 cursor-grab active:cursor-grabbing select-none">
+                        className="scrollbar-hide flex cursor-grab select-none items-start gap-4 overflow-x-auto pb-6 active:cursor-grabbing">
                         {columns.map((col) => (
                             <ColumnView
                                 key={col.id}
@@ -2850,7 +2851,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                                 onPointerMove={handleBoardPointerMove}
                                 onPointerUp={handleBoardPointerUp}
                                 onPointerCancel={handleBoardPointerCancel}
-                                className="scrollbar-hide flex items-start gap-4 overflow-x-auto pb-6 cursor-grab active:cursor-grabbing select-none">
+                                className="scrollbar-hide flex cursor-grab select-none items-start gap-4 overflow-x-auto pb-6 active:cursor-grabbing">
                                 {columns.map((col) => (
                                     <SortableColumn
                                         key={col.id}

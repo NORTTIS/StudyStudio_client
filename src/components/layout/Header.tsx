@@ -9,7 +9,7 @@ import { logout } from "@/api/auth";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
 
-const SearchIcon = () => (
+const _SearchIcon = () => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
             d="M9 17C13.4183 17 17 13.4183 17 9C17 4.58172 13.4183 1 9 1C4.58172 1 1 4.58172 1 9C1 13.4183 4.58172 17 9 17Z"
@@ -209,7 +209,6 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     return (
         <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
             <div className="flex h-16 w-full items-center justify-end gap-4 px-4 sm:px-6 lg:px-8">
-
                 {/* Admin title */}
                 {isAdmin && (
                     <div className="flex-1">

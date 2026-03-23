@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import * as React from "react";
-import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
+import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import { Container } from "@/components/common";
 
@@ -25,7 +25,7 @@ function cn(...classes: Array<string | false | null | undefined>) {
 function parseDateString(value?: string) {
     if (!value) return undefined;
     const [y, m, d] = value.split("-").map(Number);
-    if (!y || !m || !d) return undefined;
+    if (!(y && m && d)) return undefined;
     return new Date(y, m - 1, d);
 }
 
@@ -307,7 +307,7 @@ function normalizeText(input?: string | null) {
 function matchDeletedDate(raw?: string | null, filter?: DeletedDateFilter | null) {
     if (!filter) return true;
     const { startDate, endDate } = filter;
-    if (!startDate && !endDate) return true;
+    if (!(startDate || endDate)) return true;
     const s = String(raw ?? "").trim();
     if (!s) return false;
     const d = new Date(s);
@@ -490,164 +490,164 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                <div
-                    ref={rootRef}
-                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                    style={{
-                        top: popupPosition.top,
-                        left: popupPosition.left,
-                        width: popupPosition.width
-                    }}>
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                value={month.getMonth()}
-                                onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
+                  <div
+                      ref={rootRef}
+                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                      style={{
+                          top: popupPosition.top,
+                          left: popupPosition.left,
+                          width: popupPosition.width
+                      }}>
+                      <div className="mb-4 flex items-center gap-3">
+                          <div className="relative flex-1">
+                              <select
+                                  value={month.getMonth()}
+                                  onChange={handleMonthChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {monthOptions.map((item) => (
+                                      <option key={item.value} value={item.value}>
+                                          {item.label}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
 
-                        <div className="relative w-[140px]">
-                            <select
-                                value={month.getFullYear()}
-                                onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-base font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {yearOptions.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
-                    </div>
+                          <div className="relative w-[140px]">
+                              <select
+                                  value={month.getFullYear()}
+                                  onChange={handleYearChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {yearOptions.map((year) => (
+                                      <option key={year} value={year}>
+                                          {year}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
+                      </div>
 
-                    <div className="rounded-[20px] border border-zinc-200 p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={goPrevMonth}
-                                disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
+                      <div className="rounded-[20px] border border-zinc-200 p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                              <button
+                                  type="button"
+                                  onClick={goPrevMonth}
+                                  disabled={isPrevDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronLeft className="h-5 w-5" />
+                              </button>
 
-                            <div className="text-[18px] font-bold text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                            </div>
+                              <div className="font-bold text-[18px] text-zinc-900">
+                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                              </div>
 
-                            <button
-                                type="button"
-                                onClick={goNextMonth}
-                                disabled={isNextDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                              <button
+                                  type="button"
+                                  onClick={goNextMonth}
+                                  disabled={isNextDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronRight className="h-5 w-5" />
+                              </button>
+                          </div>
 
-                        <DayPicker
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={selectedDate}
-                            onSelect={pickDate}
-                            disabled={
-                                maxDate && minDate
-                                    ? { before: minDate, after: maxDate }
-                                    : maxDate
+                          <DayPicker
+                              mode="single"
+                              month={month}
+                              onMonthChange={setMonth}
+                              selected={selectedDate}
+                              onSelect={pickDate}
+                              disabled={
+                                  maxDate && minDate
+                                      ? { before: minDate, after: maxDate }
+                                      : maxDate
                                         ? { after: maxDate }
                                         : minDate
-                                            ? { before: minDate }
-                                            : undefined
-                            }
-                            showOutsideDays
-                            className="w-full"
-                            styles={{
-                                day: { outline: "none", boxShadow: "none" },
-                                button: { outline: "none", boxShadow: "none" }
-                            }}
-                            classNames={{
-                                months: "flex w-full flex-col",
-                                month: "w-full space-y-3",
-                                month_caption: "hidden",
-                                caption: "hidden",
-                                caption_label: "hidden",
-                                nav: "hidden",
-                                table: "w-full border-collapse",
-                                month_grid: "w-full border-collapse",
-                                tbody: "w-full",
-                                weekdays: "flex w-full justify-between",
-                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                head_row: "flex w-full justify-between",
-                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                weeks: "w-full",
-                                week: "mt-2 flex w-full justify-between",
-                                row: "mt-2 flex w-full justify-between",
-                                day: "h-10 w-10 p-0 text-center",
-                                cell: "h-10 w-10 p-0 text-center",
-                                day_button:
-                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
-                                selected: "!bg-orange-500 !text-white rounded-xl",
-                                day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
-                                today: "text-orange-600 font-bold",
-                                day_today: "text-orange-600 font-bold",
-                                outside: "opacity-30",
-                                day_outside: "opacity-30",
-                                disabled: "opacity-30",
-                                day_disabled: "opacity-30 cursor-not-allowed",
-                                hidden: "invisible",
-                                day_hidden: "invisible"
-                            }}
-                        />
-                    </div>
+                                          ? { before: minDate }
+                                          : undefined
+                              }
+                              showOutsideDays
+                              className="w-full"
+                              styles={{
+                                  day: { outline: "none", boxShadow: "none" },
+                                  button: { outline: "none", boxShadow: "none" }
+                              }}
+                              classNames={{
+                                  months: "flex w-full flex-col",
+                                  month: "w-full space-y-3",
+                                  month_caption: "hidden",
+                                  caption: "hidden",
+                                  caption_label: "hidden",
+                                  nav: "hidden",
+                                  table: "w-full border-collapse",
+                                  month_grid: "w-full border-collapse",
+                                  tbody: "w-full",
+                                  weekdays: "flex w-full justify-between",
+                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                  head_row: "flex w-full justify-between",
+                                  head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                  weeks: "w-full",
+                                  week: "mt-2 flex w-full justify-between",
+                                  row: "mt-2 flex w-full justify-between",
+                                  day: "h-10 w-10 p-0 text-center",
+                                  cell: "h-10 w-10 p-0 text-center",
+                                  day_button:
+                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0",
+                                  selected: "!bg-orange-500 !text-white rounded-xl",
+                                  day_selected: "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white",
+                                  today: "text-orange-600 font-bold",
+                                  day_today: "text-orange-600 font-bold",
+                                  outside: "opacity-30",
+                                  day_outside: "opacity-30",
+                                  disabled: "opacity-30",
+                                  day_disabled: "opacity-30 cursor-not-allowed",
+                                  hidden: "invisible",
+                                  day_hidden: "invisible"
+                              }}
+                          />
+                      </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Today
-                        </button>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                              type="button"
+                              onClick={() => pickDate(new Date())}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                              Today
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Tomorrow
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 1))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                              Tomorrow
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Next week
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 7))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                              Next week
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
-                            No date
-                        </button>
-                    </div>
-                </div>,
-                document.body
-            )
+                          <button
+                              type="button"
+                              onClick={() => {
+                                  onChange("");
+                                  setOpen(false);
+                              }}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
+                              No date
+                          </button>
+                      </div>
+                  </div>,
+                  document.body
+              )
             : null;
 
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -668,7 +668,8 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             <CalendarDays className="h-4 w-4" />
                         </div>
 
-                        <span className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
+                        <span
+                            className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
                             {formatDateDisplay(value)}
                         </span>
                     </div>
@@ -748,15 +749,17 @@ function ConfirmModal({
             onPointerDown={(e) => {
                 if (e.target === e.currentTarget) onCancel();
             }}>
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" onPointerDown={(e) => e.stopPropagation()}>
-                <h2 className="text-base font-bold text-zinc-900">{title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{description}</p>
+            <div
+                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+                onPointerDown={(e) => e.stopPropagation()}>
+                <h2 className="font-bold text-base text-zinc-900">{title}</h2>
+                <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{description}</p>
 
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">
+                        className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                         {cancelLabel}
                     </button>
 
@@ -764,8 +767,10 @@ function ConfirmModal({
                         type="button"
                         onClick={onConfirm}
                         className={cn(
-                            "rounded-xl px-4 py-2 text-sm font-semibold text-white",
-                            confirmTone === "orange" ? "bg-orange-600 hover:bg-orange-700" : "bg-indigo-600 hover:bg-indigo-700"
+                            "rounded-xl px-4 py-2 font-semibold text-sm text-white",
+                            confirmTone === "orange"
+                                ? "bg-orange-600 hover:bg-orange-700"
+                                : "bg-indigo-600 hover:bg-indigo-700"
                         )}>
                         {confirmLabel}
                     </button>
@@ -814,7 +819,7 @@ function RowMenu({
             <button
                 type="button"
                 onClick={onRestore}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-zinc-800 hover:bg-zinc-100">
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-semibold text-sm text-zinc-800 hover:bg-zinc-100">
                 <RotateCcw className="h-5 w-5" />
                 Khôi phục
             </button>
@@ -822,7 +827,7 @@ function RowMenu({
             <button
                 type="button"
                 onClick={onDelete}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-red-500 hover:bg-red-50">
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-semibold text-red-500 text-sm hover:bg-red-50">
                 <Trash2 className="h-5 w-5" />
                 Xóa vĩnh viễn
             </button>
@@ -850,7 +855,7 @@ function DeletedByPicker({
 
     return (
         <div className="overflow-hidden">
-            <div className="border-b border-zinc-200 px-6 py-5">
+            <div className="border-zinc-200 border-b px-6 py-5">
                 <div className="relative">
                     <Search className="pointer-events-none absolute top-1/2 left-0 h-7 w-7 -translate-y-1/2 text-zinc-400" />
                     <input
@@ -870,10 +875,10 @@ function DeletedByPicker({
                         "flex w-full items-center gap-4 px-6 py-5 text-left hover:bg-zinc-50",
                         selectedId === null && "bg-zinc-100"
                     )}>
-                    <div className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-emerald-500 text-[18px] font-bold text-white">
+                    <div className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-emerald-500 font-bold text-[18px] text-white">
                         Me
                     </div>
-                    <div className="text-[20px] font-semibold text-zinc-900">Tất cả người xóa</div>
+                    <div className="font-semibold text-[20px] text-zinc-900">Tất cả người xóa</div>
                 </button>
 
                 {filtered.map((option) => {
@@ -891,12 +896,12 @@ function DeletedByPicker({
                             )}>
                             <div
                                 className={cn(
-                                    "grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full text-[18px] font-bold text-white",
+                                    "grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full font-bold text-[18px] text-white",
                                     tone
                                 )}>
                                 {initials}
                             </div>
-                            <div className="text-[20px] font-semibold text-zinc-900">{option.name}</div>
+                            <div className="font-semibold text-[20px] text-zinc-900">{option.name}</div>
                         </button>
                     );
                 })}
@@ -952,12 +957,14 @@ function FilterPopover({
             onPointerDown={(e) => e.stopPropagation()}>
             {view === "root" && (
                 <>
-                    <div className="border-b border-zinc-200 px-6 py-4 text-[20px] font-medium text-zinc-400">Filter by</div>
+                    <div className="border-zinc-200 border-b px-6 py-4 font-medium text-[20px] text-zinc-400">
+                        Filter by
+                    </div>
                     <div className="p-3">
                         <button
                             type="button"
                             onClick={() => onChangeView("deletedBy")}
-                            className="flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-[18px] font-semibold text-zinc-900 hover:bg-zinc-100">
+                            className="flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left font-semibold text-[18px] text-zinc-900 hover:bg-zinc-100">
                             <span>Người xóa</span>
                             <ChevronRight className="h-5 w-5 text-zinc-400" />
                         </button>
@@ -965,7 +972,7 @@ function FilterPopover({
                         <button
                             type="button"
                             onClick={() => onChangeView("deletedDate")}
-                            className="mt-2 flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left text-[18px] font-semibold text-zinc-900 hover:bg-zinc-100">
+                            className="mt-2 flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left font-semibold text-[18px] text-zinc-900 hover:bg-zinc-100">
                             <span>Ngày xóa</span>
                             <ChevronRight className="h-5 w-5 text-zinc-400" />
                         </button>
@@ -975,14 +982,14 @@ function FilterPopover({
 
             {view === "deletedBy" && (
                 <>
-                    <div className="flex items-center gap-3 border-b border-zinc-200 px-5 py-4">
+                    <div className="flex items-center gap-3 border-zinc-200 border-b px-5 py-4">
                         <button
                             type="button"
                             onClick={() => onChangeView("root")}
-                            className="rounded-lg px-2 py-1 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">
+                            className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
                             ←
                         </button>
-                        <div className="text-[18px] font-semibold text-zinc-900">Chọn người xóa</div>
+                        <div className="font-semibold text-[18px] text-zinc-900">Chọn người xóa</div>
                     </div>
                     <DeletedByPicker
                         options={deletedByOptions}
@@ -997,29 +1004,29 @@ function FilterPopover({
 
             {view === "deletedDate" && (
                 <>
-                    <div className="flex items-center gap-3 border-b border-zinc-200 px-5 py-4">
+                    <div className="flex items-center gap-3 border-zinc-200 border-b px-5 py-4">
                         <button
                             type="button"
                             onClick={() => onChangeView("root")}
-                            className="rounded-lg px-2 py-1 text-sm font-semibold text-zinc-600 hover:bg-zinc-100">
+                            className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
                             ←
                         </button>
-                        <div className="text-[18px] font-semibold text-zinc-900">Chọn ngày xóa</div>
+                        <div className="font-semibold text-[18px] text-zinc-900">Chọn ngày xóa</div>
                     </div>
 
                     <DeletedDateRangePicker value={deletedDateFilter} onChange={onChangeDeletedDate} />
 
-                    <div className="flex items-center justify-end gap-3 border-t border-zinc-200 p-4">
+                    <div className="flex items-center justify-end gap-3 border-zinc-200 border-t p-4">
                         <button
                             type="button"
                             onClick={() => onChangeDeletedDate({ startDate: "", endDate: "" })}
-                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100">
+                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
                             Xóa chọn
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700">
+                            className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white hover:bg-orange-700">
                             Áp dụng
                         </button>
                     </div>
@@ -1082,7 +1089,10 @@ export default function Trashed() {
         setError(null);
 
         try {
-            const [trashRes, membersRes] = await Promise.all([apiGetDeletedTasks(groupId), apiGetGroupMembers(groupId).catch(() => null)]);
+            const [trashRes, membersRes] = await Promise.all([
+                apiGetDeletedTasks(groupId),
+                apiGetGroupMembers(groupId).catch(() => null)
+            ]);
 
             const members = membersRes?.data?.members ?? [];
             const nextMemberNameMap: Record<string, string> = {};
@@ -1132,7 +1142,7 @@ export default function Trashed() {
 
     React.useEffect(() => {
         setPage(1);
-    }, [search, deletedByFilter, deletedDateFilter.startDate, deletedDateFilter.endDate]);
+    }, []);
 
     const deletedByOptions = React.useMemo<DeletedByOption[]>(() => {
         const map = new Map<string, string>();
@@ -1159,7 +1169,11 @@ export default function Trashed() {
             );
 
             const matchesText =
-                !q || nameText.includes(q) || typeText.includes(q) || deletedOnText.includes(q) || deletedByText.includes(q);
+                !q ||
+                nameText.includes(q) ||
+                typeText.includes(q) ||
+                deletedOnText.includes(q) ||
+                deletedByText.includes(q);
 
             const matchesDeletedBy = !deletedByFilter || String(item.deletedBy ?? "") === deletedByFilter;
             const matchesDeletedDate = matchDeletedDate(item.deletedOnRaw, deletedDateFilter);
@@ -1179,7 +1193,8 @@ export default function Trashed() {
         return filteredItems.slice(start, start + ITEMS_PER_PAGE);
     }, [filteredItems, page]);
 
-    const activeFilterCount = (deletedByFilter ? 1 : 0) + (deletedDateFilter.startDate || deletedDateFilter.endDate ? 1 : 0);
+    const activeFilterCount =
+        (deletedByFilter ? 1 : 0) + (deletedDateFilter.startDate || deletedDateFilter.endDate ? 1 : 0);
 
     const selectedDeletedByName =
         deletedByOptions.find((x) => x.id === deletedByFilter)?.name ||
@@ -1275,12 +1290,14 @@ export default function Trashed() {
             <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
                 <Container>
                     <div className="pt-8">
-                        <div className="rounded-3xl border border-rose-200 bg-white p-6 text-sm text-rose-700 shadow-sm">{error}</div>
+                        <div className="rounded-3xl border border-rose-200 bg-white p-6 text-rose-700 text-sm shadow-sm">
+                            {error}
+                        </div>
                         <div className="mt-4">
                             <button
                                 type="button"
                                 onClick={() => void refresh()}
-                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-100">
+                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                                 Tải lại
                             </button>
                         </div>
@@ -1317,7 +1334,7 @@ export default function Trashed() {
             <Container>
                 <div className="pt-8 pb-8">
                     <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
-                        <h1 className="text-[40px] font-bold tracking-tight text-zinc-900">Trash</h1>
+                        <h1 className="font-bold text-[40px] text-zinc-900 tracking-tight">Trash</h1>
 
                         <div className="mt-8 flex items-center gap-3">
                             <div className="relative w-full max-w-[680px]">
@@ -1341,7 +1358,7 @@ export default function Trashed() {
                                     aria-label="Bộ lọc">
                                     <Filter className="h-5 w-5" />
                                     {activeFilterCount > 0 ? (
-                                        <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
+                                        <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-orange-500 px-1 font-bold text-[10px] text-white">
                                             {activeFilterCount}
                                         </span>
                                     ) : null}
@@ -1393,7 +1410,7 @@ export default function Trashed() {
                                         setDeletedByFilter(null);
                                         setDeletedDateFilter({ startDate: "", endDate: "" });
                                     }}
-                                    className="text-sm font-semibold text-zinc-600 hover:text-zinc-900">
+                                    className="font-semibold text-sm text-zinc-600 hover:text-zinc-900">
                                     Xóa tất cả bộ lọc
                                 </button>
                             </div>
@@ -1403,19 +1420,19 @@ export default function Trashed() {
                             <table className="min-w-full table-fixed border-separate border-spacing-0">
                                 <thead>
                                     <tr>
-                                        <th className="w-[20%] border-b border-zinc-200 px-8 py-4 text-left text-xs font-bold uppercase tracking-wide text-zinc-500">
+                                        <th className="w-[20%] border-zinc-200 border-b px-8 py-4 text-left font-bold text-xs text-zinc-500 uppercase tracking-wide">
                                             Tên
                                         </th>
-                                        <th className="w-[10%] border-b border-zinc-200 px-4 py-4 text-center text-xs font-bold uppercase tracking-wide text-zinc-500">
+                                        <th className="w-[10%] border-zinc-200 border-b px-4 py-4 text-center font-bold text-xs text-zinc-500 uppercase tracking-wide">
                                             Loại
                                         </th>
-                                        <th className="w-[28%] border-b border-zinc-200 px-4 py-4 text-center text-xs font-bold uppercase tracking-wide text-zinc-500">
+                                        <th className="w-[28%] border-zinc-200 border-b px-4 py-4 text-center font-bold text-xs text-zinc-500 uppercase tracking-wide">
                                             Thời gian xóa
                                         </th>
-                                        <th className="w-[34%] border-b border-zinc-200 px-4 py-4 text-left text-xs font-bold uppercase tracking-wide text-zinc-500">
+                                        <th className="w-[34%] border-zinc-200 border-b px-4 py-4 text-left font-bold text-xs text-zinc-500 uppercase tracking-wide">
                                             Người xóa
                                         </th>
-                                        <th className="w-[8%] border-b border-zinc-200 px-4 py-4" />
+                                        <th className="w-[8%] border-zinc-200 border-b px-4 py-4" />
                                     </tr>
                                 </thead>
 
@@ -1429,53 +1446,57 @@ export default function Trashed() {
                                     ) : (
                                         paginatedItems.map((item) => {
                                             const displayDeletedBy =
-                                                item.deletedByName || memberNameMap[String(item.deletedBy ?? "")] || "Không rõ";
+                                                item.deletedByName ||
+                                                memberNameMap[String(item.deletedBy ?? "")] ||
+                                                "Không rõ";
 
                                             const initials = getInitials(displayDeletedBy);
                                             const tone = pickAvatarTone(displayDeletedBy || item.rowKey);
 
                                             return (
                                                 <tr key={item.rowKey}>
-                                                    <td className="border-b border-zinc-100 px-8 py-8 align-middle">
-                                                        <div className="max-w-[150px] truncate text-base font-semibold text-zinc-900">
+                                                    <td className="border-zinc-100 border-b px-8 py-8 align-middle">
+                                                        <div className="max-w-[150px] truncate font-semibold text-base text-zinc-900">
                                                             {item.name}
                                                         </div>
                                                     </td>
 
-                                                    <td className="border-b border-zinc-100 px-4 py-8 align-middle text-center text-base text-zinc-500">
+                                                    <td className="border-zinc-100 border-b px-4 py-8 text-center align-middle text-base text-zinc-500">
                                                         {item.type}
                                                     </td>
 
-                                                    <td className="border-b border-zinc-100 px-4 py-8 align-middle text-center text-base text-zinc-500">
+                                                    <td className="border-zinc-100 border-b px-4 py-8 text-center align-middle text-base text-zinc-500">
                                                         <div className="inline-flex items-center gap-2">
                                                             <CalendarDays className="h-4 w-4 text-zinc-400" />
                                                             <span>{item.deletedOn}</span>
                                                         </div>
                                                     </td>
 
-                                                    <td className="border-b border-zinc-100 px-4 py-8 align-middle">
+                                                    <td className="border-zinc-100 border-b px-4 py-8 align-middle">
                                                         <div className="flex items-center gap-3">
                                                             <div
                                                                 className={cn(
-                                                                    "grid h-12 w-12 shrink-0 place-items-center rounded-full text-base font-bold text-white",
+                                                                    "grid h-12 w-12 shrink-0 place-items-center rounded-full font-bold text-base text-white",
                                                                     tone
                                                                 )}
                                                                 title={displayDeletedBy}>
                                                                 {initials}
                                                             </div>
-                                                            <div className="max-w-[220px] truncate text-base font-medium text-zinc-800">
+                                                            <div className="max-w-[220px] truncate font-medium text-base text-zinc-800">
                                                                 {displayDeletedBy}
                                                             </div>
                                                         </div>
                                                     </td>
 
-                                                    <td className="border-b border-zinc-100 px-4 py-8 align-middle text-center">
+                                                    <td className="border-zinc-100 border-b px-4 py-8 text-center align-middle">
                                                         <div className="relative flex justify-center">
                                                             <button
                                                                 type="button"
                                                                 disabled={processingId === item.id}
                                                                 onClick={() =>
-                                                                    setOpenMenuKey((prev) => (prev === item.rowKey ? null : item.rowKey))
+                                                                    setOpenMenuKey((prev) =>
+                                                                        prev === item.rowKey ? null : item.rowKey
+                                                                    )
                                                                 }
                                                                 className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
                                                                 aria-label="Tùy chọn">
@@ -1511,7 +1532,7 @@ export default function Trashed() {
                                     type="button"
                                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                                     disabled={page <= 1}
-                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
+                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 font-semibold text-sm text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
                                     Trước
                                 </button>
 
@@ -1519,7 +1540,7 @@ export default function Trashed() {
                                     type="button"
                                     onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                                     disabled={page >= totalPages}
-                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
+                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 font-semibold text-sm text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
                                     Sau
                                 </button>
                             </div>

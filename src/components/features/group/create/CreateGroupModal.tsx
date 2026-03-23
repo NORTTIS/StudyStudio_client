@@ -56,18 +56,9 @@ const isShortcutKey = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaEle
     e.ctrlKey || e.metaKey || e.altKey;
 
 const isAllowedControlKey = (key: string) =>
-    [
-        "Backspace",
-        "Delete",
-        "ArrowLeft",
-        "ArrowRight",
-        "ArrowUp",
-        "ArrowDown",
-        "Tab",
-        "Home",
-        "End",
-        "Escape"
-    ].includes(key);
+    ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "Home", "End", "Escape"].includes(
+        key
+    );
 
 export function CreateGroupModal({
     open,
@@ -104,10 +95,7 @@ export function CreateGroupModal({
     const [ownerStudios, setOwnerStudios] = useState<StudioResponse[]>([]);
     const [templates, setTemplates] = useState<Array<{ id: string; name: string; desc: string }>>([]);
 
-    const limitReached = useMemo(
-        () => currentGroupCount >= groupLimit,
-        [currentGroupCount, groupLimit]
-    );
+    const limitReached = useMemo(() => currentGroupCount >= groupLimit, [currentGroupCount, groupLimit]);
 
     const remaining = useMemo(() => {
         const r = groupLimit - groupCreated;
@@ -172,7 +160,18 @@ export function CreateGroupModal({
         }
 
         return true;
-    }, [limitReached, createMode, variant, groupName, groupPrefix, groupCount, studioId, needStudio, hasOwnerStudio, remaining]);
+    }, [
+        limitReached,
+        createMode,
+        variant,
+        groupName,
+        groupPrefix,
+        groupCount,
+        studioId,
+        needStudio,
+        hasOwnerStudio,
+        remaining
+    ]);
 
     useEffect(() => {
         if (!open) return;
@@ -492,7 +491,8 @@ export function CreateGroupModal({
                                                     if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
 
                                                     const input = e.currentTarget;
-                                                    const hasSelection = (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
+                                                    const hasSelection =
+                                                        (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
 
                                                     if (!hasSelection && groupName.length >= GROUP_NAME_MAX_LENGTH) {
                                                         e.preventDefault();
@@ -530,9 +530,13 @@ export function CreateGroupModal({
                                                         if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
 
                                                         const input = e.currentTarget;
-                                                        const hasSelection = (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
+                                                        const hasSelection =
+                                                            (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
 
-                                                        if (!hasSelection && groupPrefix.length >= GROUP_NAME_MAX_LENGTH) {
+                                                        if (
+                                                            !hasSelection &&
+                                                            groupPrefix.length >= GROUP_NAME_MAX_LENGTH
+                                                        ) {
                                                             e.preventDefault();
                                                         }
                                                     }}
@@ -542,7 +546,9 @@ export function CreateGroupModal({
                                                         const start = input.selectionStart ?? 0;
                                                         const end = input.selectionEnd ?? 0;
                                                         const nextValue =
-                                                            groupPrefix.slice(0, start) + pastedText + groupPrefix.slice(end);
+                                                            groupPrefix.slice(0, start) +
+                                                            pastedText +
+                                                            groupPrefix.slice(end);
 
                                                         if (nextValue.length > GROUP_NAME_MAX_LENGTH) {
                                                             e.preventDefault();
@@ -600,13 +606,19 @@ export function CreateGroupModal({
 
                                                 if (e.key === "Enter") {
                                                     const lineBreakCount = countLineBreaks(description);
-                                                    if (!hasSelection && lineBreakCount >= GROUP_DESCRIPTION_MAX_BREAKS) {
+                                                    if (
+                                                        !hasSelection &&
+                                                        lineBreakCount >= GROUP_DESCRIPTION_MAX_BREAKS
+                                                    ) {
                                                         e.preventDefault();
                                                     }
                                                     return;
                                                 }
 
-                                                if (!hasSelection && description.length >= GROUP_DESCRIPTION_MAX_LENGTH) {
+                                                if (
+                                                    !hasSelection &&
+                                                    description.length >= GROUP_DESCRIPTION_MAX_LENGTH
+                                                ) {
                                                     e.preventDefault();
                                                 }
                                             }}

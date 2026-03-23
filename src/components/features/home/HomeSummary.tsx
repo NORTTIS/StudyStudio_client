@@ -1,14 +1,6 @@
 "use client";
 
-import {
-    AlertTriangle,
-    CalendarDays,
-    CheckCircle2,
-    Clock3,
-    Layers3,
-    Sparkles,
-    TrendingUp
-} from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Layers3, Sparkles, TrendingUp } from "lucide-react";
 import * as React from "react";
 import useSWR from "swr";
 import { apiFetch } from "@/api/api-client";
@@ -49,23 +41,12 @@ function cx(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
 }
 
-function useStatDelta(
-    key: string,
-    currentValue: number,
-    enabled: boolean,
-    accountKey?: string | number | null
-) {
+function useStatDelta(key: string, currentValue: number, enabled: boolean, accountKey?: string | number | null) {
     const safeAccountKey = String(accountKey ?? "default").trim() || "default";
 
-    const storageKey = React.useMemo(
-        () => `home-summary-delta:${safeAccountKey}:${key}`,
-        [safeAccountKey, key]
-    );
+    const storageKey = React.useMemo(() => `home-summary-delta:${safeAccountKey}:${key}`, [safeAccountKey, key]);
 
-    const baselineKey = React.useMemo(
-        () => `home-summary-baseline:${safeAccountKey}:${key}`,
-        [safeAccountKey, key]
-    );
+    const baselineKey = React.useMemo(() => `home-summary-baseline:${safeAccountKey}:${key}`, [safeAccountKey, key]);
 
     const [delta, setDelta] = React.useState<DeltaInfo | null>(null);
 
@@ -138,7 +119,7 @@ function useStatDelta(
     }, [enabled, currentValue, storageKey, baselineKey]);
 
     React.useEffect(() => {
-        if (!enabled || !delta || typeof window === "undefined") return;
+        if (!(enabled && delta) || typeof window === "undefined") return;
 
         const timeout = delta.expiresAt - Date.now();
 
@@ -147,7 +128,7 @@ function useStatDelta(
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch { }
+            } catch {}
             return;
         }
 
@@ -156,7 +137,7 @@ function useStatDelta(
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch { }
+            } catch {}
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -202,24 +183,22 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta }: StatCar
             className={cx(
                 "group relative overflow-hidden rounded-3xl border p-5 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)]",
                 s.card
-            )}
-        >
+            )}>
             <div className={cx("absolute inset-x-0 top-0 h-24 bg-gradient-to-b opacity-80", s.ring)} />
 
             <div className="relative flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                    <p className={cx("text-sm font-medium", s.label)}>{label}</p>
+                    <p className={cx("font-medium text-sm", s.label)}>{label}</p>
 
                     <div className="mt-3 flex items-end gap-2">
-                        <p className={cx("text-3xl font-bold tracking-tight", s.value)}>{value}</p>
+                        <p className={cx("font-bold text-3xl tracking-tight", s.value)}>{value}</p>
 
                         {hasDelta ? (
                             <span
                                 className={cx(
-                                    "mb-1 text-sm font-semibold",
+                                    "mb-1 font-semibold text-sm",
                                     isPositive ? "text-green-600" : "text-red-500"
-                                )}
-                            >
+                                )}>
                                 {isPositive ? `+${delta}` : `${delta}`}
                             </span>
                         ) : null}
@@ -232,8 +211,7 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta }: StatCar
                     className={cx(
                         "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm",
                         s.iconWrap
-                    )}
-                >
+                    )}>
                     {icon}
                 </div>
             </div>
@@ -281,8 +259,7 @@ function OverviewCard({ title, value, total, description, tone = "neutral" }: Ov
             className={cx(
                 "relative overflow-hidden rounded-3xl border p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)]",
                 s.card
-            )}
-        >
+            )}>
             <div className={cx("absolute inset-x-0 top-0 h-28 bg-gradient-to-b opacity-90", s.glow)} />
 
             <div className="relative">
@@ -292,20 +269,20 @@ function OverviewCard({ title, value, total, description, tone = "neutral" }: Ov
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-                        <p className="text-xs text-gray-400">Tổng quan hiện tại</p>
+                        <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
+                        <p className="text-gray-400 text-xs">Tổng quan hiện tại</p>
                     </div>
                 </div>
 
                 <div className="mt-8 flex items-end justify-between gap-4">
                     <div>
-                        <p className={cx("text-5xl font-bold tracking-tight", s.percent)}>{percent}%</p>
+                        <p className={cx("font-bold text-5xl tracking-tight", s.percent)}>{percent}%</p>
                         <p className={cx("mt-3 text-sm leading-6", s.desc)}>{description}</p>
                     </div>
 
                     <div className="rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2 text-right">
-                        <p className="text-[11px] uppercase tracking-wide text-gray-400">số lượng</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-700">
+                        <p className="text-[11px] text-gray-400 uppercase tracking-wide">số lượng</p>
+                        <p className="mt-1 font-semibold text-gray-700 text-sm">
                             {value}/{total}
                         </p>
                     </div>
@@ -335,9 +312,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-            status?: string;
-            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-        }
+              status?: string;
+              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+          }
         | null
         | undefined;
 
@@ -363,12 +340,7 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
         return (firstLayer as HomeSummaryResponseApiResponse).data ?? null;
     }
 
-    if (
-        source &&
-        typeof source === "object" &&
-        "data" in source &&
-        (source as HomeSummaryResponseApiResponse).data
-    ) {
+    if (source && typeof source === "object" && "data" in source && (source as HomeSummaryResponseApiResponse).data) {
         return (source as HomeSummaryResponseApiResponse).data ?? null;
     }
 
@@ -391,7 +363,7 @@ export default function HomeSummary() {
     const [cacheKey, setCacheKey] = React.useState(0);
 
     React.useEffect(() => {
-        setCacheKey(prev => prev + 1);
+        setCacheKey((prev) => prev + 1);
     }, []);
 
     const {
@@ -427,7 +399,7 @@ export default function HomeSummary() {
             const currentDeltaPrefix = `home-summary-delta:${String(accountKey)}:`;
             const currentBaselinePrefix = `home-summary-baseline:${String(accountKey)}:`;
 
-            keys.forEach(key => {
+            keys.forEach((key) => {
                 if (
                     (key.startsWith("home-summary-delta:") ||
                         key.startsWith("home-summary-baseline:") ||
@@ -438,7 +410,7 @@ export default function HomeSummary() {
                     localStorage.removeItem(key);
                 }
             });
-        } catch { }
+        } catch {}
     }, [accountKey, hasSummary]);
 
     const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);
@@ -450,29 +422,28 @@ export default function HomeSummary() {
 
     return (
         <div className="bg-[radial-gradient(circle_at_top,#f8fafc_0%,#f8fafc_35%,#f3f4f6_100%)]">
-            <Container className="pb-8 pt-8">
+            <Container className="pt-8 pb-8">
                 <div className="space-y-8">
                     <section className="rounded-[28px] border border-gray-200/80 bg-white/90 px-6 py-5 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1 font-medium text-violet-700 text-xs">
                                     <Sparkles className="h-3.5 w-3.5" />
                                     Dashboard tổng quan
                                 </div>
 
-                                <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900">
+                                <h1 className="mt-4 font-bold text-3xl text-gray-900 tracking-tight">
                                     Tổng quan công việc
                                 </h1>
 
-                                <p className="mt-2 text-sm text-gray-500">
+                                <p className="mt-2 text-gray-500 text-sm">
                                     Theo dõi tiến độ xử lý, công việc quá hạn và số nhóm bạn đang tham gia.
                                 </p>
                             </div>
 
                             <Button
                                 variant="outline"
-                                className="h-11 rounded-2xl border-gray-200 bg-white px-4 text-gray-700 shadow-sm hover:bg-gray-50"
-                            >
+                                className="h-11 rounded-2xl border-gray-200 bg-white px-4 text-gray-700 shadow-sm hover:bg-gray-50">
                                 <CalendarDays className="mr-2 h-4 w-4" />
                                 Lịch
                             </Button>
@@ -485,8 +456,7 @@ export default function HomeSummary() {
                                 {Array.from({ length: 4 }).map((_, index) => (
                                     <div
                                         key={index}
-                                        className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm"
-                                    >
+                                        className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
                                         <div className="animate-pulse">
                                             <div className="mb-3 h-4 w-28 rounded bg-gray-200" />
                                             <div className="mb-2 h-8 w-20 rounded bg-gray-200" />
@@ -500,8 +470,7 @@ export default function HomeSummary() {
                                 {Array.from({ length: 3 }).map((_, index) => (
                                     <div
                                         key={index}
-                                        className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm"
-                                    >
+                                        className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                                         <div className="animate-pulse">
                                             <div className="h-5 w-36 rounded bg-gray-200" />
                                             <div className="mt-8 h-12 w-28 rounded bg-gray-200" />
@@ -513,7 +482,7 @@ export default function HomeSummary() {
                             </section>
                         </>
                     ) : error ? (
-                        <div className="rounded-3xl border border-red-200 bg-white px-5 py-4 text-sm text-red-600 shadow-sm">
+                        <div className="rounded-3xl border border-red-200 bg-white px-5 py-4 text-red-600 text-sm shadow-sm">
                             Không tải được dữ liệu tổng quan.
                         </div>
                     ) : (

@@ -105,7 +105,7 @@ const getCurrentUserId = () => {
         const json = decodeURIComponent(
             atob(padded)
                 .split("")
-                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
                 .join("")
         );
 
@@ -822,7 +822,8 @@ export function GroupSettingView() {
                                                 const start = textarea.selectionStart;
                                                 const end = textarea.selectionEnd;
 
-                                                const newValue = description.slice(0, start) + trimmedText + description.slice(end);
+                                                const newValue =
+                                                    description.slice(0, start) + trimmedText + description.slice(end);
                                                 setDescription(newValue);
                                                 if (generalError) setGeneralError("");
                                             }
