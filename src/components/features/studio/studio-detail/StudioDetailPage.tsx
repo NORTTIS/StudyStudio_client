@@ -38,6 +38,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { ActivityHeatmap } from "./ActivityHeatmap";
+import AIMaster from "./AIMaster";
 import { GroupPerformanceRadar } from "./GroupPerformanceRadar";
 import { GroupProgressChart } from "./GroupProgressChart";
 import { MemberDetailModal } from "./MemberDetailModal";
@@ -88,7 +89,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
     const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [activeTab, setActiveTab] = useState<"groups" | "analytics" | "settings">("groups");
+    const [activeTab, setActiveTab] = useState<"groups" | "ai" | "analytics" | "settings">("groups");
     const [_analyticsSubTab, _setAnalyticsSubTab] = useState<
         "progress" | "activity" | "group-progress" | "performance"
     >("progress");
@@ -402,8 +403,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                 <button
                                     type="button"
-                                    onClick={() => router.push(`/${locale}/ai-master`)}
-                                    className="flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm text-slate-600 transition-all duration-300 hover:bg-violet-50 hover:text-violet-600">
+                                    onClick={() => setActiveTab("ai")}
+                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "ai"
+                                        ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                        }`}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -706,6 +710,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     <GroupPerformanceRadar data={mockGroupPerformance} />
                                 </div>
                             </div>
+                        )}
+
+                        {activeTab === "ai" && (
+                            <AIMaster studioId={studioId} />
                         )}
 
                         {activeTab === "settings" && (

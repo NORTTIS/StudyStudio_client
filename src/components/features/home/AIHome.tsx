@@ -3,9 +3,12 @@
 import { ChevronDown, Loader2, Send, Sparkles, Clock3, Flame, Gauge, ArrowUpRight, Stars } from "lucide-react";
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLocale } from "next-intl";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import HomeTopTabs from "@/components/features/home/HomeTopTabs";
+import { askPersonalAiStream } from "@/api/personal-ai";
+import { getUserProfile } from "@/api/user-profile";
 
 type ChatMessage = {
     id: string;
@@ -261,7 +264,7 @@ function TypingDots() {
 }
 
 export default function AIHome() {
-    const locale = "vi-VN";
+    const locale = useLocale();
     const [messages, setMessages] = React.useState<ChatMessage[]>(initialMessages);
     const [input, setInput] = React.useState("");
     const [isSending, setIsSending] = React.useState(false);
@@ -271,9 +274,23 @@ export default function AIHome() {
     const bottomAnchorRef = React.useRef<HTMLDivElement | null>(null);
     const shouldAutoScrollRef = React.useRef(true);
 
-    const [usedToday] = React.useState<number | null>(3);
-    const [remaining] = React.useState<number | null>(17);
-    const [dailyLimit] = React.useState<number | null>(20);
+    const [usageStats, setUsageStats] = React.useState({
+        usedToday: null as number | null,
+        remaining: null as number | null,
+        dailyLimit: null as number | null
+    });
+
+    React.useEffect(() => {
+        getUserProfile(locale).then((res) => {
+            if (res.status === "success" && res.data) {
+                setUsageStats({
+                    usedToday: res.data.aiRequestsUsedToday ?? null,
+                    remaining: res.data.aiRequestsRemaining ?? null,
+                    dailyLimit: res.data.aiDailyLimit ?? null
+                });
+            }
+        }).catch(() => {/* silent fail */});
+    }, [locale]);
 
     const scrollToBottom = React.useCallback((behavior: ScrollBehavior = "smooth") => {
         bottomAnchorRef.current?.scrollIntoView({ behavior, block: "end" });
@@ -305,21 +322,8 @@ export default function AIHome() {
         }
     }, [messages.length, scrollToBottom]);
 
-    const buildMockAnswer = React.useCallback((question: string) => {
-        return (
-            `Mình đã nhận câu hỏi: **${question}**.\n\n` +
-            "Đây là giao diện **AI cá nhân** mẫu với phong cách cao cấp hơn.\n\n" +
-            "Mình có thể hỗ trợ bạn:\n" +
-            "- Tóm tắt việc cần làm trong ngày\n" +
-            "- Gợi ý thứ tự ưu tiên cá nhân\n" +
-            "- Nhắc những việc quá hạn hoặc gần deadline\n" +
-            "- Hỗ trợ viết kế hoạch, ghi chú hoặc báo cáo ngắn\n\n" +
-            "Khi bạn nối API thật, phần phản hồi này sẽ hiển thị dữ liệu thật từ hệ thống."
-        );
-    }, []);
-
     const sendQuestion = React.useCallback(
-        async (question: string, userDisplayText?: string) => {
+        async (question: string) => {
             const trimmed = question.trim();
             if (!trimmed || isSending) return;
 
@@ -328,7 +332,7 @@ export default function AIHome() {
             const userMessage: ChatMessage = {
                 id: `u_${now}`,
                 role: "user",
-                content: userDisplayText?.trim() || trimmed,
+                content: trimmed,
                 createdAt: now
             };
 
@@ -350,15 +354,36 @@ export default function AIHome() {
             setIsSending(true);
 
             try {
-                await new Promise((resolve) => setTimeout(resolve, 900));
-                const answer = buildMockAnswer(trimmed);
-
-                setMessages((prev) => prev.map((m) => (m.id === assistantMessageId ? { ...m, content: answer } : m)));
+                await askPersonalAiStream(
+                    { question: trimmed },
+                    {
+                        onChunk: (fullText) => {
+                            setMessages((prev) =>
+                                prev.map((m) => (m.id === assistantMessageId ? { ...m, content: fullText } : m))
+                            );
+                        },
+                        onMetadata: (meta) => {
+                            if (meta.remainingRequests !== null && meta.dailyLimit !== null) {
+                                setUsageStats({
+                                    usedToday: meta.dailyLimit - meta.remainingRequests,
+                                    remaining: meta.remainingRequests,
+                                    dailyLimit: meta.dailyLimit
+                                });
+                            }
+                        }
+                    }
+                );
+            } catch {
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === assistantMessageId ? { ...m, content: "Xin lỗi, đã xảy ra lỗi." } : m
+                    )
+                );
             } finally {
                 setIsSending(false);
             }
         },
-        [buildMockAnswer, isSending, scrollToBottom]
+        [isSending, scrollToBottom]
     );
 
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -368,7 +393,7 @@ export default function AIHome() {
 
     const onQuickActionClick = React.useCallback(
         async (action: QuickAction) => {
-            await sendQuestion(action.prompt, action.title);
+            await sendQuestion(action.prompt);
         },
         [sendQuestion]
     );
@@ -420,11 +445,12 @@ export default function AIHome() {
 
                     <SectionReveal delay={0.05}>
                         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <UsageCard label="Đã dùng hôm nay" value={usedToday == null ? "--" : String(usedToday)} tone="default" icon={<Clock3 className="h-4 w-4" />} />
-                            <UsageCard label="Còn lại" value={remaining == null ? "--" : String(remaining)} tone="accent" icon={<Sparkles className="h-4 w-4" />} />
-                            <UsageCard label="Giới hạn ngày" value={dailyLimit == null ? "--" : String(dailyLimit)} tone="strong" icon={<Gauge className="h-4 w-4" />} />
+                            <UsageCard label="Đã dùng hôm nay" value={usageStats.usedToday == null ? "--" : String(usageStats.usedToday)} tone="default" icon={<Clock3 className="h-4 w-4" />} />
+                            <UsageCard label="Còn lại" value={usageStats.remaining == null ? "--" : String(usageStats.remaining)} tone="accent" icon={<Sparkles className="h-4 w-4" />} />
+                            <UsageCard label="Giới hạn ngày" value={usageStats.dailyLimit == null ? "--" : String(usageStats.dailyLimit)} tone="strong" icon={<Gauge className="h-4 w-4" />} />
                         </section>
                     </SectionReveal>
+
 
                     <AnimatePresence mode="wait">
                         {messages.length === 0 ? (

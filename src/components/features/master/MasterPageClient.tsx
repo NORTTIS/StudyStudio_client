@@ -558,39 +558,6 @@ export default function MasterPageClient({
                                 </Button>
                             </div>
 
-                            <div className="mb-8 rounded-[30px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl">
-                                <div className="mb-4 flex items-start gap-3">
-                                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-                                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <p className="text-[#6F6B99] text-sm leading-6">{t("infoBanner")}</p>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="font-medium text-[#261E33]">
-                                            {totalStudios}/{studioLimit} {t("studiosUsed")}
-                                        </span>
-                                        <span className="rounded-full bg-[#F7F4F1] px-2.5 py-1 text-[#6F6B99] text-xs">
-                                            {Math.round(usagePercent)}%
-                                        </span>
-                                    </div>
-
-                                    <div className="h-3 w-full overflow-hidden rounded-full bg-[#EEE9E4]">
-                                        <div
-                                            className="h-full rounded-full bg-[linear-gradient(90deg,#FF5F3D_0%,#FF8C66_100%)] transition-all duration-300"
-                                            style={{ width: `${usagePercent}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
                             {isLoading ? (
                                 <div className="flex items-center justify-center py-24">
                                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#FF5F3D]" />

@@ -18,7 +18,48 @@ type StudioFormData = {
     endDate: string;
 };
 
-const studioSchema = z
+// Get today's date at midnight for comparison
+const getToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+};
+
+// Schema cho tạo mới - validate startDate không trong quá khứ
+const studioCreateSchema = z
+    .object({
+        name: z
+            .string()
+            .trim()
+            .min(1, "Tên studio là bắt buộc")
+            .max(STUDIO_NAME_MAX_LENGTH, `Tên studio tối đa ${STUDIO_NAME_MAX_LENGTH} ký tự`),
+        description: z
+            .string()
+            .max(STUDIO_DESCRIPTION_MAX_LENGTH, `Mô tả không được vượt quá ${STUDIO_DESCRIPTION_MAX_LENGTH} ký tự`),
+        startDate: z.string(),
+        endDate: z.string()
+    })
+    .refine(
+        (data) => {
+            if (!data.startDate) return true;
+            const startDate = new Date(data.startDate);
+            startDate.setHours(0, 0, 0, 0);
+            return startDate >= getToday();
+        },
+        { message: "Ngày bắt đầu không được trong quá khứ", path: ["startDate"] }
+    )
+    .refine(
+        (data) => {
+            if (!data.startDate || !data.endDate) return true;
+            const startDate = new Date(data.startDate);
+            const endDate = new Date(data.endDate);
+            return endDate >= startDate;
+        },
+        { message: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu", path: ["endDate"] }
+    );
+
+// Schema cho chỉnh sửa - không validate startDate (giữ nguyên giá trị cũ)
+const studioEditSchema = z
     .object({
         name: z
             .string()
@@ -34,7 +75,9 @@ const studioSchema = z
     .refine(
         (data) => {
             if (!data.startDate || !data.endDate) return true;
-            return new Date(data.startDate) <= new Date(data.endDate);
+            const startDate = new Date(data.startDate);
+            const endDate = new Date(data.endDate);
+            return endDate >= startDate;
         },
         { message: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu", path: ["endDate"] }
     );
@@ -82,8 +125,9 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         endDate: false
     });
 
-    const getSchemaErrors = (data: StudioFormData) => {
-        const result = studioSchema.safeParse(data);
+    const getSchemaErrors = (data: StudioFormData, currentMode: "create" | "edit") => {
+        const schema = currentMode === "create" ? studioCreateSchema : studioEditSchema;
+        const result = schema.safeParse(data);
         const out = { name: "", description: "", startDate: "", endDate: "" };
         if (result.success) {
             return out;
@@ -143,7 +187,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         value: string,
         data: StudioFormData
     ) => {
-        const schemaErrors = getSchemaErrors(applyFieldData(data, field, value));
+        const schemaErrors = getSchemaErrors(applyFieldData(data, field, value), mode);
         if (field === "name") {
             return schemaErrors.name || getDuplicateNameError(value);
         }
@@ -180,7 +224,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         e.preventDefault();
 
         const currentData = { ...formData };
-        const schemaErrors = getSchemaErrors(currentData);
+        const schemaErrors = getSchemaErrors(currentData, mode);
         const nameError = schemaErrors.name || getDuplicateNameError(formData.name);
         const descriptionError = schemaErrors.description;
         const startDateError = schemaErrors.startDate;
@@ -284,6 +328,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                                 type="date"
                                 id="studio-startDate"
                                 value={formData.startDate}
+                                min={mode === "create" ? new Date().toISOString().split("T")[0] : undefined}
                                 onChange={(e) => handleChange("startDate", e.target.value)}
                                 onBlur={() => handleBlur("startDate")}
                                 className={errors.startDate && touched.startDate ? "border-red-500" : ""}
@@ -305,6 +350,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                                 type="date"
                                 id="studio-endDate"
                                 value={formData.endDate}
+                                min={mode === "create" ? (formData.startDate || new Date().toISOString().split("T")[0]) : formData.startDate || undefined}
                                 onChange={(e) => handleChange("endDate", e.target.value)}
                                 onBlur={() => handleBlur("endDate")}
                                 className={errors.endDate && touched.endDate ? "border-red-500" : ""}
