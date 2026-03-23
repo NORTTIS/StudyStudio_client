@@ -18,12 +18,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    type Announcement,
     deleteUserAnnouncement,
     getAllAnnouncements,
     getAnnouncementById,
     getUserAnnouncements,
     markAnnouncementAsRead,
+    type Announcement,
     type UserAnnouncement
 } from "@/api/user-announcements";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,9 @@ export function AnnouncementsPage() {
     const locale = useLocale();
     const t = useTranslations();
     const { toast } = useToast();
+
+    const isMentionType = (type: string) =>
+        type === "Mention" || type === "mention" || type === "4";
 
     const [publicAnnouncements, setPublicAnnouncements] = useState<Announcement[]>([]);
     const [userAnnouncements, setUserAnnouncements] = useState<UserAnnouncement[]>([]);
@@ -58,12 +61,43 @@ export function AnnouncementsPage() {
                 getUserAnnouncements(locale)
             ]);
 
+            let systemAnnouncements: Announcement[] = [];
+
+            // Lấy thông báo chưa đọc từ /api/announcements (lọc type != Mention)
             if (publicResult.status === "fulfilled" && publicResult.value.status === "success") {
-                setPublicAnnouncements(publicResult.value.data || []);
+                const all = publicResult.value.data || [];
+                systemAnnouncements = all.filter((ann) => !isMentionType(ann.type));
             }
 
+            // Lấy thông báo đã đọc từ /api/announcements/user (type != Mention)
             if (userResult.status === "fulfilled" && userResult.value.status === "success") {
-                setUserAnnouncements(userResult.value.data || []);
+                const all = userResult.value.data || [];
+                const readAnnouncements = all.filter((ann) => !isMentionType(ann.type));
+
+                // Map UserAnnouncement to Announcement for type compatibility
+                const normalizedRead: Announcement[] = readAnnouncements.map((a) => ({
+                    announcementId: a.announcementId,
+                    title: a.title,
+                    content: a.content,
+                    type: a.type,
+                    isActive: true,
+                    createdAt: a.createdAt,
+                    publishedAt: a.publishedAt
+                }));
+
+                // Merge: thêm các thông báo đã đọc không có trong danh sách chưa đọc
+                const readIds = new Set(normalizedRead.map((a) => a.announcementId));
+                const newAnnouncements = systemAnnouncements.filter((a) => !readIds.has(a.announcementId));
+                const combined = [...newAnnouncements, ...normalizedRead];
+                setPublicAnnouncements(combined);
+            } else {
+                setPublicAnnouncements(systemAnnouncements);
+            }
+
+            // Tab "Thông báo cá nhân" - chỉ hiển thị type = Mention
+            if (userResult.status === "fulfilled" && userResult.value.status === "success") {
+                const all = userResult.value.data || [];
+                setUserAnnouncements(all.filter((ann) => isMentionType(ann.type)));
             }
         } catch (error) {
             console.error("Failed to load announcements:", error);
@@ -80,24 +114,32 @@ export function AnnouncementsPage() {
         loadAnnouncements();
     }, [loadAnnouncements]);
 
-    const handleViewDetail = async (id: string, isUserAnn: boolean) => {
+    const handleViewDetail = async (id: string, isPersonalTab: boolean) => {
         setSelectedId(id);
         setIsDetailLoading(true);
 
         try {
-            const localData = isUserAnn
-                ? userAnnouncements.find((a) => a.userAnnouncementId === id)
-                : publicAnnouncements.find((a) => a.announcementId === id);
+            let localData: Announcement | UserAnnouncement | null = null;
+
+            if (isPersonalTab) {
+                // Tab cá nhân - tìm trong userAnnouncements
+                localData = userAnnouncements.find((a) => a.userAnnouncementId === id) || null;
+            } else {
+                // Tab hệ thống - tìm trong publicAnnouncements
+                localData = publicAnnouncements.find((a) => "announcementId" in a && a.announcementId === id) || null;
+            }
 
             if (localData) {
-                setSelectedDetail(localData as Announcement | UserAnnouncement);
+                setSelectedDetail(localData);
 
-                if (isUserAnn && !(localData as UserAnnouncement).isRead) {
+                // Chỉ đánh dấu đọc nếu là tab cá nhân và chưa đọc
+                if (isPersonalTab && "isRead" in localData && !localData.isRead) {
                     await handleMarkAsRead(id, false);
                 }
             }
 
-            const actualId = isUserAnn ? (localData as UserAnnouncement)?.announcementId : id;
+            // Lấy chi tiết từ API
+            const actualId = (localData && "announcementId" in localData) ? localData.announcementId : id;
             if (!actualId) return;
 
             const result = await getAnnouncementById(actualId, locale);
@@ -116,8 +158,11 @@ export function AnnouncementsPage() {
         try {
             const result = await markAnnouncementAsRead(userAnnouncementId, locale);
             if (result.status === "success") {
+                // Cập nhật trạng thái đã đọc cho userAnnouncements
                 setUserAnnouncements((prev) =>
-                    prev.map((ann) => (ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann))
+                    prev.map((ann) =>
+                        ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann
+                    )
                 );
 
                 if (showMsg) {
@@ -267,7 +312,7 @@ export function AnnouncementsPage() {
                             </motion.div>
 
                             <div className="mt-4 flex items-start gap-3">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FB923C] via-[#F97316] to-[#EA580C] shadow-md shadow-orange-200">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-md shadow-orange-200">
                                     <BellOutlined className="text-white text-xl" />
                                 </div>
 
@@ -366,7 +411,7 @@ export function AnnouncementsPage() {
                                     {
                                         key: "public" as const,
                                         icon: <CheckCircleOutlined />,
-                                        label: t("Announcements.publicTab")
+                                        label: t("Announcements.publicTab") || "Thông báo hệ thống"
                                     },
                                     {
                                         key: "personal" as const,
@@ -472,13 +517,11 @@ export function AnnouncementsPage() {
                                 <EmptyState isSearch={!!searchQuery} />
                             ) : (
                                 <div className="grid gap-4">
-                                    {currentItems.map((ann: Announcement | UserAnnouncement) => (
+                                    {currentItems.map((ann) => (
                                         <AnnouncementCard
-                                            key={
-                                                activeTab === "public"
-                                                    ? (ann as Announcement).announcementId
-                                                    : (ann as UserAnnouncement).userAnnouncementId
-                                            }
+                                            key={activeTab === "public"
+                                                ? (ann as Announcement).announcementId
+                                                : (ann as UserAnnouncement).userAnnouncementId}
                                             item={ann}
                                             isUserAnn={activeTab === "personal"}
                                             onClick={() =>
@@ -621,7 +664,8 @@ function AnnouncementCard({
     };
 }) {
     const userAnn = item as UserAnnouncement;
-    const isUnread = !!isUserAnn && !userAnn.isRead;
+    const isUnread = isUserAnn && "isRead" in item && !item.isRead;
+    const canDelete = isUserAnn && "userAnnouncementId" in item;
     const meta = getTypeMeta(item.type);
 
     return (
@@ -672,7 +716,7 @@ function AnnouncementCard({
                 </div>
 
                 <div className="ml-auto flex items-center gap-2">
-                    {isUserAnn && onDelete ? (
+                    {canDelete && onDelete ? (
                         <Button
                             variant="ghost"
                             size="icon"

@@ -7367,10 +7367,14 @@ export interface components {
             status?: string | null;
         };
         TaskItemGroupRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: uuid */
             assignees?: string | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             groupId?: string;
             /** Format: uuid */
@@ -7385,8 +7389,12 @@ export interface components {
             taskSeverity?: components["schemas"]["TaskSeverity"];
         };
         TaskItemPersonalRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             personalStatusId?: string | null;
             /** Format: date-time */
@@ -7397,6 +7405,8 @@ export interface components {
             taskSeverity?: components["schemas"]["TaskSeverity"];
         };
         TaskItemResponse: {
+            /** Format: double */
+            actualHours?: number | null;
             assignee?: components["schemas"]["UserDto"];
             /** Format: date-time */
             createdAt?: string;
@@ -7404,6 +7414,8 @@ export interface components {
             createdById?: string;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             groupStatus?: components["schemas"]["GroupTaskStatusDto"];
             personalStatus?: components["schemas"]["PersonalTaskStatusDto"];
             /** Format: int32 */
@@ -7623,8 +7635,12 @@ export interface components {
             isActive?: boolean;
         };
         UpdatePersonalTaskRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             personalStatusId?: string | null;
             /** Format: int32 */
@@ -7690,10 +7706,14 @@ export interface components {
             price: number;
         };
         UpdateTaskRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: uuid */
             assigneeId?: string | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             groupStatusId?: string | null;
             /** Format: int32 */

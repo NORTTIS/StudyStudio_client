@@ -76,6 +76,8 @@ export type TaskFormValues = {
     severity: TaskSeverity;
     startDate?: string;
     dueDate?: string;
+    estimatedHours?: number;
+    actualHours?: number;
 };
 
 export type TaskFormOption = {
@@ -511,6 +513,8 @@ export default function TaskFormModal({
 
     const [startDate, setStartDate] = React.useState("");
     const [dueDate, setDueDate] = React.useState("");
+    const [estimatedHours, setEstimatedHours] = React.useState<number | undefined>(undefined);
+    const [actualHours, setActualHours] = React.useState<number | undefined>(undefined);
 
     const [submitting, setSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -530,6 +534,8 @@ export default function TaskFormModal({
         setSeverity(defaultSeverity);
         setStartDate("");
         setDueDate("");
+        setEstimatedHours(undefined);
+        setActualHours(undefined);
     }, [open, defaultAssigneeId, defaultStatusId, defaultPriority, defaultSeverity, statuses]);
 
     React.useEffect(() => {
@@ -615,6 +621,8 @@ export default function TaskFormModal({
 
             if (startDate) payload.startDate = startDate;
             if (dueDate) payload.dueDate = dueDate;
+            if (estimatedHours != null && estimatedHours > 0) payload.estimatedHours = estimatedHours;
+            if (actualHours != null && actualHours > 0) payload.actualHours = actualHours;
 
             await onSubmit(payload);
             onClose();
@@ -823,6 +831,50 @@ export default function TaskFormModal({
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div>
+                            <div className="font-semibold text-sm text-zinc-600">Giờ ước lượng</div>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                value={estimatedHours ?? ""}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const num = parseFloat(val);
+                                    setEstimatedHours(val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e" || e.key === "E") {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                placeholder="Ví dụ: 2.5"
+                                className="mt-2 flex h-11 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                        </div>
+
+                        <div>
+                            <div className="font-semibold text-sm text-zinc-600">Giờ thực tế</div>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                value={actualHours ?? ""}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const num = parseFloat(val);
+                                    setActualHours(val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "-" || e.key === "e" || e.key === "E") {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                placeholder="Ví dụ: 3"
+                                className="mt-2 flex h-11 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
                         </div>
                     </div>
 
