@@ -64,18 +64,18 @@ function formatDateDisplay(value?: string) {
     }).format(target);
 }
 
-export type TaskPriority = "low" | "medium" | "high";
-export type TaskSeverity = "minor" | "moderate" | "major" | "critical";
+export type TaskPriority = 0 | 1 | 2;
+export type TaskSeverity = 0 | 1 | 2 | 3;
 
-export type TaskFormValues = {
-    title: string;
-    description: string;
+export type CreateTaskSubmitValues = {
+    taskName: string;
+    taskDescription: string | null;
     assigneeId: string | null;
-    statusId: string | null;
-    priority: TaskPriority;
-    severity: TaskSeverity;
-    startDate?: string;
-    dueDate?: string;
+    groupStatusId: string | null;
+    taskPriority: TaskPriority;
+    taskSeverity: TaskSeverity;
+    startDate: string | null;
+    dueDate: string | null;
 };
 
 export type TaskFormOption = {
@@ -87,7 +87,7 @@ export type TaskFormOption = {
 type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmit: (values: TaskFormValues) => Promise<void> | void;
+    onSubmit: (values: CreateTaskSubmitValues) => Promise<void> | void;
     members?: TaskFormOption[];
     statuses?: TaskFormOption[];
     defaultStatusId?: string | null;
@@ -97,28 +97,28 @@ type Props = {
 };
 
 function priorityTone(value: TaskPriority) {
-    if (value === "high") return "text-rose-600";
-    if (value === "medium") return "text-amber-700";
+    if (value === 2) return "text-rose-600";
+    if (value === 1) return "text-amber-700";
     return "text-emerald-700";
 }
 
 function severityTone(value: TaskSeverity) {
-    if (value === "critical") return "text-red-600";
-    if (value === "major") return "text-orange-600";
-    if (value === "moderate") return "text-yellow-500";
+    if (value === 3) return "text-red-600";
+    if (value === 2) return "text-orange-600";
+    if (value === 1) return "text-yellow-500";
     return "text-sky-600";
 }
 
 function priorityLabel(value: TaskPriority) {
-    if (value === "high") return "Cao";
-    if (value === "medium") return "Trung bình";
+    if (value === 2) return "Cao";
+    if (value === 1) return "Trung bình";
     return "Thấp";
 }
 
 function severityLabel(value: TaskSeverity) {
-    if (value === "critical") return "Nghiêm trọng";
-    if (value === "major") return "Cao";
-    if (value === "moderate") return "Trung bình";
+    if (value === 3) return "Nghiêm trọng";
+    if (value === 2) return "Cao";
+    if (value === 1) return "Trung bình";
     return "Thấp";
 }
 
@@ -308,148 +308,148 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                  <div
-                      ref={rootRef}
-                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                      style={{
-                          top: popupPosition.top,
-                          left: popupPosition.left,
-                          width: popupPosition.width
-                      }}>
-                      <div className="mb-4 flex items-center gap-3">
-                          <div className="relative flex-1">
-                              <select
-                                  value={month.getMonth()}
-                                  onChange={handleMonthChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {monthOptions.map((item) => (
-                                      <option key={item.value} value={item.value}>
-                                          {item.label}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
+                <div
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                    style={{
+                        top: popupPosition.top,
+                        left: popupPosition.left,
+                        width: popupPosition.width
+                    }}>
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <select
+                                value={month.getMonth()}
+                                onChange={handleMonthChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                {monthOptions.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
 
-                          <div className="relative w-[140px]">
-                              <select
-                                  value={month.getFullYear()}
-                                  onChange={handleYearChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {yearOptions.map((year) => (
-                                      <option key={year} value={year}>
-                                          {year}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
-                      </div>
+                        <div className="relative w-[140px]">
+                            <select
+                                value={month.getFullYear()}
+                                onChange={handleYearChange}
+                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                {yearOptions.map((year) => (
+                                    <option key={year} value={year}>
+                                        {year}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        </div>
+                    </div>
 
-                      <div className="rounded-[20px] border border-zinc-200 p-4">
-                          <div className="mb-4 flex items-center justify-between">
-                              <button
-                                  type="button"
-                                  onClick={goPrevMonth}
-                                  disabled={isPrevDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronLeft className="h-5 w-5" />
-                              </button>
+                    <div className="rounded-[20px] border border-zinc-200 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={goPrevMonth}
+                                disabled={isPrevDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
 
-                              <div className="font-bold text-[18px] text-zinc-900">
-                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                              </div>
+                            <div className="font-bold text-[18px] text-zinc-900">
+                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                            </div>
 
-                              <button
-                                  type="button"
-                                  onClick={goNextMonth}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
-                                  <ChevronRight className="h-5 w-5" />
-                              </button>
-                          </div>
+                            <button
+                                type="button"
+                                onClick={goNextMonth}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                          <DayPicker
-                              mode="single"
-                              month={month}
-                              onMonthChange={setMonth}
-                              selected={selectedDate}
-                              onSelect={pickDate}
-                              disabled={minDate ? { before: minDate } : undefined}
-                              showOutsideDays
-                              className="w-full"
-                              styles={{
-                                  day: {
-                                      outline: "none",
-                                      boxShadow: "none"
-                                  },
-                                  button: {
-                                      outline: "none",
-                                      boxShadow: "none"
-                                  }
-                              }}
-                              classNames={{
-                                  months: "flex w-full flex-col",
-                                  month: "w-full space-y-3",
-                                  caption: "hidden",
-                                  table: "w-full border-collapse",
-                                  tbody: "w-full",
-                                  head_row: "flex w-full justify-between",
-                                  head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                  row: "mt-2 flex w-full justify-between",
-                                  cell: "h-10 w-10 p-0 text-center",
-                                  day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                  day_button:
-                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                  selected: "!bg-orange-500 !text-white",
-                                  day_selected:
-                                      "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
-                                  today: "text-orange-600 font-bold",
-                                  day_today: "text-orange-600 font-bold",
-                                  outside: "text-zinc-300",
-                                  day_outside: "text-zinc-300",
-                                  disabled: "text-zinc-300 opacity-40",
-                                  day_disabled: "text-zinc-300 opacity-40",
-                                  hidden: "invisible",
-                                  day_hidden: "invisible"
-                              }}
-                          />
-                      </div>
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={minDate ? { before: minDate } : undefined}
+                            showOutsideDays
+                            className="w-full"
+                            styles={{
+                                day: {
+                                    outline: "none",
+                                    boxShadow: "none"
+                                },
+                                button: {
+                                    outline: "none",
+                                    boxShadow: "none"
+                                }
+                            }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                caption: "hidden",
+                                table: "w-full border-collapse",
+                                tbody: "w-full",
+                                head_row: "flex w-full justify-between",
+                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                row: "mt-2 flex w-full justify-between",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                day_button:
+                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                selected: "!bg-orange-500 !text-white",
+                                day_selected:
+                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                today: "text-orange-600 font-bold",
+                                day_today: "text-orange-600 font-bold",
+                                outside: "text-zinc-300",
+                                day_outside: "text-zinc-300",
+                                disabled: "text-zinc-300 opacity-40",
+                                day_disabled: "text-zinc-300 opacity-40",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                          <button
-                              type="button"
-                              onClick={() => pickDate(new Date())}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Hôm nay
-                          </button>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => pickDate(new Date())}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            Hôm nay
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 1))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Ngày mai
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 1))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            Ngày mai
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 7))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              Tuần sau
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 7))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            Tuần sau
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => {
-                                  onChange("");
-                                  setOpen(false);
-                              }}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                              Không chọn ngày
-                          </button>
-                      </div>
-                  </div>,
-                  document.body
-              )
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
+                            Không chọn ngày
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )
             : null;
 
     return (
@@ -489,6 +489,12 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
     );
 }
 
+function toApiDateTimeOrNull(input: string) {
+    const s = String(input ?? "").trim();
+    if (!s) return null;
+    return `${s}T00:00:00`;
+}
+
 export default function TaskFormModal({
     open,
     onClose,
@@ -497,8 +503,8 @@ export default function TaskFormModal({
     statuses = [],
     defaultStatusId = null,
     defaultAssigneeId = null,
-    defaultPriority = "low",
-    defaultSeverity = "minor"
+    defaultPriority = 0,
+    defaultSeverity = 0
 }: Props) {
     const [mounted, setMounted] = React.useState(false);
 
@@ -604,17 +610,16 @@ export default function TaskFormModal({
             setSubmitting(true);
             setError(null);
 
-            const payload: TaskFormValues = {
-                title: t,
-                description: d,
+            const payload: CreateTaskSubmitValues = {
+                taskName: t,
+                taskDescription: d || null,
                 assigneeId,
-                statusId,
-                priority,
-                severity
+                groupStatusId: statusId || null,
+                taskPriority: priority,
+                taskSeverity: severity,
+                startDate: toApiDateTimeOrNull(startDate),
+                dueDate: toApiDateTimeOrNull(dueDate)
             };
-
-            if (startDate) payload.startDate = startDate;
-            if (dueDate) payload.dueDate = dueDate;
 
             await onSubmit(payload);
             onClose();
@@ -732,9 +737,9 @@ export default function TaskFormModal({
 
                         <div>
                             <div className="font-semibold text-sm text-zinc-600">Trạng thái</div>
-                            <Select value={statusId} onValueChange={(v) => setStatusId(v)}>
+                            <Select value={statusId || "no-status"} onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
-                                    <span className="truncate">{selectedStatusName}</span>
+                                    <span className="truncate">{selectedStatusName || "Không có trạng thái"}</span>
                                 </SelectTrigger>
 
                                 <SelectContent
@@ -744,6 +749,10 @@ export default function TaskFormModal({
                                     sideOffset={8}
                                     avoidCollisions
                                     className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
+                                    <SelectItem value="no-status" className={selectItemClassName}>
+                                        Không có trạng thái
+                                    </SelectItem>
+
                                     {statuses.map((s) => (
                                         <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
                                             {s.label}
@@ -755,7 +764,9 @@ export default function TaskFormModal({
 
                         <div>
                             <div className="font-semibold text-sm text-zinc-600">Mức ưu tiên</div>
-                            <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
+                            <Select
+                                value={String(priority)}
+                                onValueChange={(v) => setPriority(Number(v) as TaskPriority)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
@@ -770,13 +781,13 @@ export default function TaskFormModal({
                                     sideOffset={8}
                                     avoidCollisions
                                     className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                    <SelectItem value="low" className={selectItemClassName}>
+                                    <SelectItem value="0" className={selectItemClassName}>
                                         Thấp
                                     </SelectItem>
-                                    <SelectItem value="medium" className={selectItemClassName}>
+                                    <SelectItem value="1" className={selectItemClassName}>
                                         Trung bình
                                     </SelectItem>
-                                    <SelectItem value="high" className={selectItemClassName}>
+                                    <SelectItem value="2" className={selectItemClassName}>
                                         Cao
                                     </SelectItem>
                                 </SelectContent>
@@ -794,7 +805,9 @@ export default function TaskFormModal({
 
                         <div>
                             <div className="font-semibold text-sm text-zinc-600">Mức độ</div>
-                            <Select value={severity} onValueChange={(v) => setSeverity(v as TaskSeverity)}>
+                            <Select
+                                value={String(severity)}
+                                onValueChange={(v) => setSeverity(Number(v) as TaskSeverity)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
@@ -809,16 +822,16 @@ export default function TaskFormModal({
                                     sideOffset={8}
                                     avoidCollisions
                                     className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                    <SelectItem value="minor" className={selectItemClassName}>
+                                    <SelectItem value="0" className={selectItemClassName}>
                                         Thấp
                                     </SelectItem>
-                                    <SelectItem value="moderate" className={selectItemClassName}>
+                                    <SelectItem value="1" className={selectItemClassName}>
                                         Trung bình
                                     </SelectItem>
-                                    <SelectItem value="major" className={selectItemClassName}>
+                                    <SelectItem value="2" className={selectItemClassName}>
                                         Cao
                                     </SelectItem>
-                                    <SelectItem value="critical" className={selectItemClassName}>
+                                    <SelectItem value="3" className={selectItemClassName}>
                                         Nghiêm trọng
                                     </SelectItem>
                                 </SelectContent>
