@@ -366,14 +366,32 @@ export default function GroupAiQaPage() {
                             if (!delta) return;
                             chunkQueue += delta;
                             ensureFlushTimer();
+                        },
+                        onMetadata: (metadata) => {
+                            // Cập nhật remaining requests và daily limit ngay khi nhận metadata
+                            if (metadata.remainingRequests != null) {
+                                setRemainingRequests(metadata.remainingRequests);
+                            }
+                            if (metadata.dailyLimit != null) {
+                                setDailyLimit(metadata.dailyLimit);
+                                // Cập nhật requests used today
+                                if (metadata.remainingRequests != null) {
+                                    setRequestsUsedToday(Math.max(metadata.dailyLimit - metadata.remainingRequests, 0));
+                                }
+                            }
                         }
                     }
                 );
+
+                // Backup: Nếu không nhận được metadata từ SSE, dùng data từ response
                 if (result.remainingRequests != null) {
                     setRemainingRequests(result.remainingRequests);
                 }
-                if (dailyLimit != null && result.remainingRequests != null) {
-                    setRequestsUsedToday(Math.max(dailyLimit - result.remainingRequests, 0));
+                if (result.dailyLimit != null) {
+                    setDailyLimit(result.dailyLimit);
+                    if (result.remainingRequests != null) {
+                        setRequestsUsedToday(Math.max(result.dailyLimit - result.remainingRequests, 0));
+                    }
                 }
 
                 const assistantText = result.answer.answer?.trim() || t("emptyAiAnswer");

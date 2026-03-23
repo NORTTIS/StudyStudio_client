@@ -468,7 +468,7 @@ export function UserManagementPage() {
                     setDrawerOpen(false);
                     setSelectedUserDetail(null);
                 }}
-                width={480}
+                styles={{ wrapper: { width: 480 } }}
                 extra={
                     selectedUser &&
                     canChangeUserStatus(selectedUser.originalStatus) && (

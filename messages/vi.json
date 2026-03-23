@@ -863,6 +863,37 @@
         "deleting": "Đang xóa...",
         "deleteDocument": "Xóa tài liệu"
     },
+    "StudioAiPage": {
+        "usedToday": "Lượt hỏi đã dùng hôm nay",
+        "remainingRequests": "Lượt hỏi còn lại",
+        "dailyLimit": "Giới hạn mỗi ngày",
+        "unknown": "Không rõ",
+        "startConversation": "Bắt đầu cuộc trò chuyện",
+        "description": "Hỏi tôi về tình hình Studio, so sánh các nhóm, phân tích rủi ro và đề xuất cải thiện.",
+        "inputPlaceholder": "Nhập câu hỏi cho AI...",
+        "cannotDetectStudioId": "Không xác định được studioId",
+        "aiThinking": "AI đang trả lời...",
+        "emptyAiAnswer": "AI chưa trả về nội dung trả lời.",
+        "aiResponseError": "Không thể nhận phản hồi từ AI",
+        "quickActions": {
+            "summary": {
+                "label": "Tổng hợp Studio",
+                "prompt": "Hãy tổng hợp và phân tích tình hình tổng thể của Studio dựa trên các nhóm và task hiện tại.\n\nCung cấp:\n1. Tổng quan số lượng nhóm, thành viên, task\n2. Tỷ lệ hoàn thành chung\n3. Các nhóm hoạt động tốt nhất và kém nhất\n4. Số lượng task quá hạn\n5. Nhận định và gợi ý cải thiện cho toàn Studio"
+            },
+            "risk": {
+                "label": "Phân tích rủi ro",
+                "prompt": "Hãy xác định và phân tích các nhóm có nguy cơ trong Studio.\n\nVới mỗi nhóm có nguy cơ, cung cấp:\n1. Tên nhóm và mức độ rủi ro (HIGH/MEDIUM/LOW)\n2. Các yếu tố rủi ro cụ thể (tỷ lệ hoàn thành thấp, nhiều task quá hạn, không hoạt động gần đây)\n3. Đề xuất hành động khắc phục cụ thể"
+            },
+            "report": {
+                "label": "Báo cáo tiến độ",
+                "prompt": "Hãy tạo báo cáo chi tiết về tiến độ các nhóm trong Studio.\n\nBao gồm:\n1. Bảng so sánh các nhóm theo tỷ lệ hoàn thành\n2. Số lượng task đã hoàn thành / đang thực hiện / chưa bắt đầu / quá hạn\n3. Nhóm hoàn thành tốt nhất và lý do\n4. Nhóm cần cải thiện và các vấn đề cụ thể\n5. Đề xuất điều phối công việc"
+            },
+            "deadline": {
+                "label": "Deadline sắp tới",
+                "prompt": "Hãy tổng hợp tình hình deadline trong Studio.\n\nCung cấp:\n1. Tổng số task quá hạn và task sắp đến hạn\n2. Nhóm nào có nhiều task quá hạn nhất\n3. Các nhóm hoàn thành tốt và giữ đúng tiến độ\n4. Đề xuất phân bổ công việc hợp lý"
+            }
+        }
+    },
     "GroupAiQaPage": {
         "usedToday": "Lượt hỏi đã dùng hôm nay",
         "remainingRequests": "Lượt hỏi còn lại",
