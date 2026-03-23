@@ -1,5 +1,6 @@
-import AIMaster from "@/components/features/studio/studio-detail/AIMaster";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-    return <AIMaster />;
+    // Redirect to master page since AI tab is now under /master/[studioId]/ai
+    redirect("/master");
 }

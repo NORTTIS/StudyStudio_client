@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
@@ -75,6 +75,7 @@ interface StudioDetailPageProps {
 export default function StudioDetailPage({ initialStudio, initialGroups }: StudioDetailPageProps) {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const t = useTranslations("MasterPage");
     const locale = useLocale();
     const { toast } = useToast();
@@ -222,6 +223,17 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
         }
     }, [studio]);
+
+    // Handle tab query parameter
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        if (tab === "ai") {
+            // Redirect to AI page
+            router.push(`/${locale}/master/${studioId}/ai`);
+        } else if (tab === "analytics" || tab === "settings") {
+            setActiveTab(tab);
+        }
+    }, [searchParams, studioId, locale, router]);
 
     const handleDeleteStudio = async () => {
         if (!studio) return;
@@ -402,7 +414,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                 <button
                                     type="button"
-                                    onClick={() => router.push(`/${locale}/ai-master`)}
+                                    onClick={() => router.push(`/${locale}/master/${studioId}/ai`)}
                                     className="flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm text-slate-600 transition-all duration-300 hover:bg-violet-50 hover:text-violet-600">
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path

@@ -16,8 +16,11 @@ import {
     Users
 } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import type { components } from "@/api/types";
+
+type StudioResponse = components["schemas"]["StudioResponse"];
 
 type Message = {
     role: "user" | "ai";
@@ -316,12 +319,16 @@ function QuickPrompt({
     );
 }
 
-export default function AIMaster() {
+interface AIMasterProps {
+    initialStudio?: StudioResponse | null;
+}
+
+export default function AIMaster({ initialStudio }: AIMasterProps) {
     const router = useRouter();
     const locale = useLocale();
-    const searchParams = useSearchParams();
+    const params = useParams();
 
-    const studioId = searchParams.get("studioId");
+    const studioId = params.studioId as string;
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
@@ -334,7 +341,7 @@ export default function AIMaster() {
 
     const studioDetailPath = useMemo(() => {
         if (!studioId) return null;
-        return `/${locale}/master/studio/${studioId}`;
+        return `/${locale}/master/${studioId}`;
     }, [locale, studioId]);
 
     const handleSend = async () => {
