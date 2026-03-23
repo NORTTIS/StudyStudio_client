@@ -97,15 +97,23 @@ export default function LandingPage() {
     const t = useTranslations("LandingPersonalPage");
     const locale = useLocale();
 
-    const stepDelayClasses = ["landing-delay-1", "landing-delay-2", "landing-delay-3", "landing-delay-4"];
+    const stepDelayClasses = ["landing-delay-1", "landing-delay-2", "landing-delay-3"];
     const featureDelayClasses = [
         "landing-delay-1",
         "landing-delay-2",
         "landing-delay-3",
-        "landing-delay-4",
-        "landing-delay-5",
-        "landing-delay-5"
+        "landing-delay-4"
     ];
+
+    const handleScrollToFeatures = () => {
+        const section = document.getElementById("features");
+        if (section) {
+            section.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+    };
 
     return (
         <div className="flex min-h-screen flex-col scroll-smooth bg-[linear-gradient(180deg,#FFF8F1_0%,#FFFDFB_38%,#FFF6EA_70%,#FFFFFF_100%)] text-gray-800">
@@ -150,25 +158,12 @@ export default function LandingPage() {
                             </Link>
 
                             <Button
+                                type="button"
                                 variant="outline"
+                                onClick={handleScrollToFeatures}
                                 className="h-14 rounded-full border-white/80 bg-white/75 px-8 text-base font-semibold text-gray-700 shadow-sm backdrop-blur transition-all duration-300 hover:scale-[1.03] hover:bg-white active:scale-[0.98]">
                                 {t("features.title")}
                             </Button>
-                        </div>
-
-                        <div className="landing-fade-up landing-delay-4 mt-10 grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
-                            <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                <p className="text-xs text-gray-500">Notes</p>
-                                <p className="mt-2 text-2xl font-semibold text-gray-900">Smart</p>
-                            </div>
-                            <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                <p className="text-xs text-gray-500">Tasks</p>
-                                <p className="mt-2 text-2xl font-semibold text-gray-900">Focused</p>
-                            </div>
-                            <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                <p className="text-xs text-gray-500">AI</p>
-                                <p className="mt-2 text-2xl font-semibold text-gray-900">Support</p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,7 +178,7 @@ export default function LandingPage() {
                         </h2>
                     </div>
 
-                    <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2">
+                    <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
                         <StepCard
                             number="1"
                             title={t("howToUse.step1.title")}
@@ -192,27 +187,21 @@ export default function LandingPage() {
                         />
                         <StepCard
                             number="2"
-                            title={t("howToUse.step2.title")}
-                            description={t("howToUse.step2.description")}
+                            title={t("howToUse.step3.title")}
+                            description={t("howToUse.step3.description")}
                             delayClass={stepDelayClasses[1]}
                         />
                         <StepCard
                             number="3"
-                            title={t("howToUse.step3.title")}
-                            description={t("howToUse.step3.description")}
-                            delayClass={stepDelayClasses[2]}
-                        />
-                        <StepCard
-                            number="4"
                             title={t("howToUse.step4.title")}
                             description={t("howToUse.step4.description")}
-                            delayClass={stepDelayClasses[3]}
+                            delayClass={stepDelayClasses[2]}
                         />
                     </div>
                 </div>
             </section>
 
-            <section className="landing-fade-up relative bg-white py-24">
+            <section id="features" className="landing-fade-up relative bg-white py-24">
                 <div className="mx-auto max-w-6xl px-6">
                     <div className="text-center">
                         <SectionBadge>{t("features.title")}</SectionBadge>
@@ -223,34 +212,24 @@ export default function LandingPage() {
 
                     <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2">
                         <FeatureCard
-                            title={t("features.smartNotes.title")}
-                            description={t("features.smartNotes.description")}
+                            title="Ghi chú thông minh"
+                            description={`Tạo và ghi chú với văn bản,\nhình ảnh, link`}
                             delayClass={featureDelayClasses[0]}
-                        />
-                        <FeatureCard
-                            title={t("features.tasks.title")}
-                            description={t("features.tasks.description")}
-                            delayClass={featureDelayClasses[1]}
-                        />
-                        <FeatureCard
-                            title={t("features.documents.title")}
-                            description={t("features.documents.description")}
-                            delayClass={featureDelayClasses[2]}
                         />
                         <FeatureCard
                             title={t("features.aiSupport.title")}
                             description={t("features.aiSupport.description")}
-                            delayClass={featureDelayClasses[3]}
+                            delayClass={featureDelayClasses[1]}
                         />
                         <FeatureCard
                             title={t("features.schedule.title")}
                             description={t("features.schedule.description")}
-                            delayClass={featureDelayClasses[4]}
+                            delayClass={featureDelayClasses[2]}
                         />
                         <FeatureCard
                             title={t("features.progress.title")}
                             description={t("features.progress.description")}
-                            delayClass={featureDelayClasses[5]}
+                            delayClass={featureDelayClasses[3]}
                         />
                     </div>
                 </div>

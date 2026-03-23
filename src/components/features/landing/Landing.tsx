@@ -30,8 +30,34 @@ function PreviewFrame({
         <div
             className={`group relative overflow-hidden rounded-[30px] border shadow-[0_18px_40px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_50px_rgba(15,23,42,0.08)] ${tones[tone]}`}>
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.65),transparent_35%)]" />
-            <div className="relative h-[320px] w-full p-6 md:h-[420px]">
-                <Image src={src} alt={alt} fill className="object-contain object-center p-2" />
+
+            <div className="relative h-[260px] w-full p-4 md:h-[340px] md:p-6">
+                <Image
+                    src={src}
+                    alt={alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain object-bottom transition-transform duration-500 group-hover:scale-[1.02]"
+                />
+            </div>
+        </div>
+    );
+}
+
+function HeroPreviewFrame({ src, alt }: { src: string; alt: string }) {
+    return (
+        <div className="group relative overflow-hidden rounded-[30px] border border-white/70 bg-white/55 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_50px_rgba(15,23,42,0.08)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.65),transparent_35%)]" />
+
+            <div className="relative h-[300px] w-full p-4 md:h-[390px] md:p-6">
+                <Image
+                    src={src}
+                    alt={alt}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain object-bottom transition-transform duration-500 group-hover:scale-[1.02]"
+                />
             </div>
         </div>
     );
@@ -48,11 +74,17 @@ function AICard({
 }) {
     return (
         <div
-            className={`rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)] landing-pop ${delay}`}>
-            <h4 className="font-semibold text-[18px] text-gray-800">{title}</h4>
-            <p className="mt-2 text-[15px] leading-7 text-gray-600">{description}</p>
+            className={`landing-pop ${delay} flex h-full flex-col rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]`}
+        >
+            <h4 className="text-[18px] font-semibold leading-8 text-gray-800">
+                {title}
+            </h4>
 
-            <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5">
+            <p className="mt-2 text-[15px] leading-7 text-gray-600">
+                {description}
+            </p>
+
+            <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5 md:mt-auto">
                 <div className="space-y-3">
                     <div className="h-4 w-2/3 rounded-full bg-gray-200" />
                     <div className="h-4 w-full rounded-full bg-gray-100" />
@@ -99,7 +131,7 @@ export default function LandingPage() {
                             </div>
 
                             <h1
-                                className={`mt-6 font-extrabold text-5xl leading-[1.05] tracking-tight text-gray-900 ${fadeUp} ${delay1} md:text-6xl xl:text-7xl`}>
+                                className={`mt-6 text-5xl font-extrabold leading-[1.05] tracking-tight text-gray-900 ${fadeUp} ${delay1} md:text-6xl xl:text-7xl`}>
                                 {t("hero.title")}
                                 <br />
                                 <span className="bg-[linear-gradient(135deg,#EA580C_0%,#F97316_35%,#7C3AED_100%)] bg-clip-text text-transparent">
@@ -114,48 +146,15 @@ export default function LandingPage() {
 
                             <div className={`mt-8 flex flex-wrap items-center gap-4 ${pop} ${delay3}`}>
                                 <Link href={`/${locale}/login`} className="inline-block cursor-pointer">
-                                    <Button className="h-14 rounded-full bg-[linear-gradient(135deg,#F97316_0%,#EA580C_45%,#DC2626_100%)] px-8 font-semibold text-base shadow-[0_16px_32px_rgba(249,115,22,0.24)] transition-all duration-300 hover:scale-[1.03] hover:brightness-105 active:scale-[0.98]">
+                                    <Button className="h-14 rounded-full bg-[linear-gradient(135deg,#F97316_0%,#EA580C_45%,#DC2626_100%)] px-8 text-base font-semibold shadow-[0_16px_32px_rgba(249,115,22,0.24)] transition-all duration-300 hover:scale-[1.03] hover:brightness-105 active:scale-[0.98]">
                                         {t("hero.registerButton")}
                                     </Button>
                                 </Link>
-
-                                <Button
-                                    variant="outline"
-                                    className="h-14 rounded-full border-white/80 bg-white/75 px-8 font-semibold text-base text-gray-700 shadow-sm backdrop-blur transition-all duration-300 hover:scale-[1.03] hover:bg-white active:scale-[0.98]">
-                                    {t("management.learnMore")}
-                                </Button>
-                            </div>
-
-                            <div className={`mt-10 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3 ${fadeUp} ${delay4}`}>
-                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                    <p className="text-xs text-gray-500">Workspace</p>
-                                    <p className="mt-2 text-2xl font-semibold text-gray-900">All-in-one</p>
-                                </div>
-                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                    <p className="text-xs text-gray-500">Collaboration</p>
-                                    <p className="mt-2 text-2xl font-semibold text-gray-900">Teams</p>
-                                </div>
-                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                    <p className="text-xs text-gray-500">AI</p>
-                                    <p className="mt-2 text-2xl font-semibold text-gray-900">Smart Flow</p>
-                                </div>
                             </div>
                         </div>
 
-                        <div className={`relative ${fadeUp} ${delay5}`}>
-                            <div className="relative overflow-hidden rounded-[36px] border border-white/70 bg-white/70 p-4 shadow-[0_30px_90px_rgba(15,23,42,0.10)] backdrop-blur-2xl">
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.18),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.18),transparent_34%)]" />
-
-                                <div className="relative h-[340px] w-full rounded-[28px] bg-[linear-gradient(180deg,#FFF8F3_0%,#FFFFFF_100%)] p-4 md:h-[460px]">
-                                    <Image
-                                        src="/images/2.png"
-                                        alt="Hero preview"
-                                        fill
-                                        priority
-                                        className="object-contain object-center p-2"
-                                    />
-                                </div>
-                            </div>
+                        <div className={`${fadeUp} ${delay5}`}>
+                            <HeroPreviewFrame src="/images/2.png" alt="Hero preview" />
                         </div>
                     </div>
                 </div>
@@ -163,7 +162,7 @@ export default function LandingPage() {
 
             <section className={`relative py-24 text-center ${fadeUp}`}>
                 <div className="mx-auto max-w-6xl px-6">
-                    <h2 className={`font-extrabold text-3xl tracking-tight text-gray-800 ${fadeUp} md:text-5xl`}>
+                    <h2 className={`text-3xl font-extrabold tracking-tight text-gray-800 ${fadeUp} md:text-5xl`}>
                         {t("architecture.title")}
                     </h2>
                     <p className={`mt-4 text-lg text-gray-600 ${fadeUp} ${delay1} md:text-xl`}>
@@ -193,9 +192,11 @@ export default function LandingPage() {
                                     </Button>
                                 </Link>
 
-                                <Button className="h-13 cursor-pointer rounded-full bg-gray-200 px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-gray-300 hover:shadow-md active:scale-[0.98]">
-                                    {t("management.learnMore")}
-                                </Button>
+                                <Link href={`/${locale}/landing/management`} className="cursor-pointer">
+                                    <Button className="h-13 rounded-full bg-gray-200 px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-gray-300 hover:shadow-md active:scale-[0.98]">
+                                        {t("management.learnMore")}
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
 
@@ -231,9 +232,11 @@ export default function LandingPage() {
                                     </Button>
                                 </Link>
 
-                                <Button className="h-13 cursor-pointer rounded-full bg-[#EDEDED] px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
-                                    {t("group.learnMore")}
-                                </Button>
+                                <Link href={`/${locale}/landing/group`} className="cursor-pointer">
+                                    <Button className="h-13 rounded-full bg-[#EDEDED] px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
+                                        {t("group.learnMore")}
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -261,9 +264,11 @@ export default function LandingPage() {
                                     </Button>
                                 </Link>
 
-                                <Button className="h-13 cursor-pointer rounded-full bg-[#EDEDED] px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
-                                    {t("personal.learnMore")}
-                                </Button>
+                                <Link href={`/${locale}/landing/personal`} className="cursor-pointer">
+                                    <Button className="h-13 rounded-full bg-[#EDEDED] px-7 font-semibold text-gray-700 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:bg-[#E2E2E2] hover:shadow-md active:scale-[0.98]">
+                                        {t("personal.learnMore")}
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
 

@@ -167,6 +167,16 @@ export default function LandingManagement() {
         }
     ];
 
+    const handleScrollToFeatures = () => {
+        const section = document.getElementById("features");
+        if (section) {
+            section.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+    };
+
     return (
         <div className="flex min-h-screen flex-col scroll-smooth bg-[linear-gradient(180deg,#FFF8F1_0%,#FFFDFB_35%,#FFF5E8_72%,#FFFFFF_100%)] text-gray-800">
             <GuestNavbar />
@@ -202,16 +212,12 @@ export default function LandingManagement() {
                                 </Link>
 
                                 <Button
+                                    type="button"
                                     variant="outline"
+                                    onClick={handleScrollToFeatures}
                                     className="h-14 rounded-full border-white/80 bg-white/75 px-8 text-base font-semibold text-gray-700 shadow-sm backdrop-blur transition-all duration-300 hover:scale-[1.03] hover:bg-white active:scale-[0.98]">
                                     {t("features.title")}
                                 </Button>
-                            </div>
-
-                            <div className="landing-fade-up landing-delay-4 mt-10 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
-                                <HeroStat label="Members" value="Unlimited" />
-                                <HeroStat label="Control" value="Roles" />
-                                <HeroStat label="Overview" value="Live" />
                             </div>
                         </div>
 
@@ -269,7 +275,7 @@ export default function LandingManagement() {
                 </div>
             </section>
 
-            <section className="landing-fade-up relative bg-white py-24">
+            <section id="features" className="landing-fade-up relative bg-white py-24 scroll-mt-24">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="mb-14 text-center">
                         <SectionBadge>{t("features.title")}</SectionBadge>

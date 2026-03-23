@@ -94,10 +94,13 @@ function AIPreviewCard({
 }) {
     return (
         <div
-            className={`landing-pop rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)] ${delayClass}`}>
-            <h4 className="font-semibold text-[18px] text-gray-800">{title}</h4>
+            className={`landing-pop ${delayClass} flex h-full flex-col rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]`}
+        >
+            <h4 className="min-h-[56px] text-[18px] font-semibold leading-7 text-gray-800 md:min-h-[64px]">
+                {title}
+            </h4>
 
-            <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5">
+            <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5 md:mt-auto">
                 <div className="space-y-3">
                     <div className="h-4 w-1/2 rounded-full bg-gray-200" />
                     <div className="h-4 w-full rounded-full bg-gray-100" />
@@ -116,6 +119,16 @@ export default function LandingGroup() {
     const t = useTranslations("LandingGroupPage");
     const locale = useLocale();
     const stepDelayClasses = ["landing-delay-1", "landing-delay-2", "landing-delay-3", "landing-delay-4"];
+
+    const handleScrollToFeatures = () => {
+        const section = document.getElementById("features");
+        if (section) {
+            section.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+    };
 
     return (
         <div className="flex min-h-screen flex-col scroll-smooth bg-[linear-gradient(180deg,#FFF8F1_0%,#FFFDFB_36%,#FFF5E8_72%,#FFFFFF_100%)] text-gray-800">
@@ -152,25 +165,12 @@ export default function LandingGroup() {
                                 </Link>
 
                                 <Button
+                                    type="button"
                                     variant="outline"
+                                    onClick={handleScrollToFeatures}
                                     className="h-14 rounded-full border-white/80 bg-white/75 px-8 text-base font-semibold text-gray-700 shadow-sm backdrop-blur transition-all duration-300 hover:scale-[1.03] hover:bg-white active:scale-[0.98]">
                                     {t("features.title")}
                                 </Button>
-                            </div>
-
-                            <div className="landing-fade-up landing-delay-4 mt-10 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3 mx-auto text-center">
-                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                    <p className="text-xs text-gray-500">Groups</p>
-                                    <p className="mt-2 text-2xl font-semibold text-gray-900">Structured</p>
-                                </div>
-                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                    <p className="text-xs text-gray-500">Tasks</p>
-                                    <p className="mt-2 text-2xl font-semibold text-gray-900">Visible</p>
-                                </div>
-                                <div className="rounded-2xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur">
-                                    <p className="text-xs text-gray-500">AI</p>
-                                    <p className="mt-2 text-2xl font-semibold text-gray-900">Assisted</p>
-                                </div>
                             </div>
                         </div>
 
@@ -223,7 +223,10 @@ export default function LandingGroup() {
                 </div>
             </section>
 
-            <section className="landing-fade-up relative bg-[linear-gradient(180deg,#FFF4E8_0%,#FFF9F4_100%)] py-24">
+            <section
+                id="features"
+                className="landing-fade-up relative bg-[linear-gradient(180deg,#FFF4E8_0%,#FFF9F4_100%)] py-24 scroll-mt-24"
+            >
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="mb-14 text-center">
                         <SectionLabel>{t("features.title")}</SectionLabel>
