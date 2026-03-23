@@ -646,7 +646,10 @@
             "subtitle": "Over xxx people use boards each month.",
             "personal": {
                 "title": "Individuals & Groups",
-                "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
+                "personal": {
+  "title": "Individuals & Groups",
+  "description": "For teachers, students, and self-learners\nfriend groups, project teams,\nand small communities\nlearning and working effectively together."
+}
             },
             "education": {
                 "title": "Education",
@@ -766,7 +769,7 @@
             },
             "permissions": {
                 "title": "Smart permissions",
-                "description": "Set permissions for each role: manager, member, guest"
+                "description": "Set permissions for each role: owner and member"
             },
             "overview": {
                 "title": "Overview",

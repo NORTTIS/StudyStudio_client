@@ -3167,7 +3167,10 @@ export default function HomePersonalTaskScreen() {
     );
 
     return (
-        <div className="min-h-[calc(100vh-0px)] bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]">
+        <div
+            id="home-personal-task-section"
+            className="min-h-[calc(100vh-0px)] scroll-mt-24 bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]"
+        >
             <InlineTaskFormModal
                 open={taskFormOpen}
                 onClose={handleCloseCreateTask}

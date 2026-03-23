@@ -448,8 +448,8 @@
                 "name": "Premium",
                 "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
                 "feature2": "Tối đa 10 Không gian nhóm",
-                "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
-                "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
+                "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+                "feature4": "1024 MB  tài liệu cho mỗi Không gian nhóm",
                 "feature5": "100 lượt yêu cầu AI mỗi ngày",
                 "button": "Nâng cấp lên Premium"
             }
@@ -730,8 +730,8 @@
             "title": "Ai đang sử dụng Study Studio",
             "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
             "students": {
-                "title": "Học sinh, sinh viên",
-                "description": "Sinh viên, người tự học, nhóm\nbạn, đội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc\nhiệu quả."
+                "title": "Giáo viên, học sinh, sinh viên",
+                "description": "Giáo viên, học sinh, sinh viên\nngười tự học, nhóm bạn\nđội dự án và cộng đồng nhỏ\ncùng học tập và làm việc hiệu quả."
             },
             "selfLearners": {
                 "title": "Người tự học",
@@ -777,7 +777,7 @@
             },
             "permissions": {
                 "title": "Phân quyền thông minh",
-                "description": "Thiết lập quyền hạn cho từng vai trò: quản lý, thành viên, khách"
+                "description": "Thiết lập quyền hạn cho từng vai trò: chủ sở hữu và thành viên"
             },
             "overview": {
                 "title": "Tổng quan",
@@ -820,8 +820,8 @@
             "registerButton": "Đăng ký",
             "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
             "feature2": "Tối đa 10 Không gian nhóm",
-            "feature3": "Tối đa 50 thành viên ở mỗi Không gian nhóm",
-            "feature4": "1 GB lưu trữ tài liệu cho mỗi Không gian nhóm",
+            "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+            "feature4": "1024 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
             "feature5": "100 lượt yêu cầu AI mỗi ngày"
         }
     },
@@ -1280,8 +1280,8 @@
             "premium": {
                 "feature1": "Tối đa 10 Không gian quản lý",
                 "feature2": "Tối đa 10 Không gian nhóm",
-                "feature3": "Tối đa 50 thành viên/nhóm",
-                "feature4": "1 GB lưu trữ/nhóm",
+                "feature3": "Tối đa 20 thành viên/nhóm",
+                "feature4": "1024 MB lưu trữ/nhóm",
                 "feature5": "100 yêu cầu AI/ngày"
             },
             "enterprise": {
