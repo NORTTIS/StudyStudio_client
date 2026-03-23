@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Home, Sparkles } from "lucide-react";
+import { Home, Sparkles, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -29,6 +29,12 @@ export default function HomeTopTabs() {
             href: (l) => `/${l}/home`
         },
         {
+            key: "analysis",
+            label: "Phân tích",
+            icon: BarChart3,
+            href: (l) => `/${l}/analysis`
+        },
+        {
             key: "ai",
             label: "AI",
             icon: Sparkles,
@@ -43,14 +49,15 @@ export default function HomeTopTabs() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-[#F3E4D7] bg-[#FFFCF8] p-1.5 shadow-sm">
+            className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-[#F3E4D7] bg-[#FFFCF8] p-1.5 shadow-sm"
+        >
             {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const href = tab.href(locale);
                 const target = stripLocale(href);
 
                 const active =
-                    tab.key === "home"
+                    target === "/home"
                         ? curPath === "/home"
                         : curPath === target || curPath.startsWith(`${target}/`);
 
@@ -65,7 +72,8 @@ export default function HomeTopTabs() {
                                 active
                                     ? "text-white shadow-md shadow-orange-200"
                                     : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
-                            )}>
+                            )}
+                        >
                             {active ? (
                                 <motion.div
                                     layoutId="activeHomeTab"

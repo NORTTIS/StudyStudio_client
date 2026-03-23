@@ -4,29 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { logout } from "@/api/auth";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
-
-const SearchIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M9 17C13.4183 17 17 13.4183 17 9C17 4.58172 13.4183 1 9 1C4.58172 1 1 4.58172 1 9C1 13.4183 4.58172 17 9 17Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-        <path
-            d="M19 19L14.65 14.65"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-    </svg>
-);
 
 const SettingsIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -80,15 +61,33 @@ const UserIcon = () => (
     </svg>
 );
 
-const ChevronDownIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const ChevronDownIcon = ({ open = false }: { open?: boolean }) => (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={`transition-transform duration-300 ease-out ${open ? "rotate-180" : "rotate-0"}`}
+    >
         <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 
+type SectionId =
+    | "home-summary-section"
+    | "home-group-task-section"
+    | "home-personal-task-section";
+
 interface HeaderProps {
     userProfile?: UserProfile | null;
 }
+
+const HOME_TABS: { id: SectionId; label: string }[] = [
+    { id: "home-summary-section", label: "Tổng quan công việc" },
+    { id: "home-group-task-section", label: "Công việc từ các nhóm" },
+    { id: "home-personal-task-section", label: "Quản lý công việc cá nhân" }
+];
 
 export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const t = useTranslations("Header");
@@ -100,8 +99,19 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(userProfileProp || null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(!userProfileProp);
+    const [activeSection, setActiveSection] = useState<SectionId>("home-summary-section");
+    const [activeTabStyle, setActiveTabStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const tabContainerRef = useRef<HTMLDivElement>(null);
+    const tabRefs = useRef<Record<SectionId, HTMLButtonElement | null>>({
+        "home-summary-section": null,
+        "home-group-task-section": null,
+        "home-personal-task-section": null
+    });
+
+    const isHomePage = pathname === `/${locale}/home` || pathname.endsWith("/home");
+    const isAdmin = userProfile?.isAdmin;
 
     useEffect(() => {
         if (userProfileProp) {
@@ -113,6 +123,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         const fetchUserProfile = async () => {
             try {
                 const result = await getUserProfile(locale);
+
                 if (result.status === "success" && result.data) {
                     setUserProfile(result.data);
 
@@ -129,28 +140,8 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
             }
         };
 
-        fetchUserProfile();
+        void fetchUserProfile();
     }, [locale, pathname, router, userProfileProp]);
-
-    const getUserData = () => {
-        if (userProfile) {
-            const avatarUrl = userProfile.avatarUrl || "/images/image-removebg-preview.png";
-
-            return {
-                name: `${userProfile.firstName} ${userProfile.lastName}`,
-                email: userProfile.email,
-                avatar: avatarUrl
-            };
-        }
-
-        return {
-            name: "username",
-            email: "email@gmail.com",
-            avatar: "/images/image-removebg-preview.png"
-        };
-    };
-
-    const userData = getUserData();
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -162,6 +153,123 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (!isHomePage || isAdmin) return;
+
+        const sectionIds: SectionId[] = [
+            "home-summary-section",
+            "home-group-task-section",
+            "home-personal-task-section"
+        ];
+
+        const updateActiveSection = () => {
+            const scrollY = window.scrollY;
+            const headerOffset = 140;
+
+            let currentSection: SectionId = "home-summary-section";
+
+            for (const id of sectionIds) {
+                const element = document.getElementById(id);
+                if (!element) continue;
+
+                const elementTop = element.getBoundingClientRect().top + window.scrollY;
+
+                if (scrollY >= elementTop - headerOffset) {
+                    currentSection = id;
+                }
+            }
+
+            setActiveSection(currentSection);
+        };
+
+        updateActiveSection();
+
+        window.addEventListener("scroll", updateActiveSection, { passive: true });
+        window.addEventListener("resize", updateActiveSection);
+
+        return () => {
+            window.removeEventListener("scroll", updateActiveSection);
+            window.removeEventListener("resize", updateActiveSection);
+        };
+    }, [isHomePage, isAdmin]);
+
+    useEffect(() => {
+        if (!isHomePage || isAdmin) return;
+
+        const updateActiveTabStyle = () => {
+            const container = tabContainerRef.current;
+            const activeTab = tabRefs.current[activeSection];
+
+            if (!container || !activeTab) {
+                setActiveTabStyle((prev) => ({ ...prev, opacity: 0 }));
+                return;
+            }
+
+            const containerRect = container.getBoundingClientRect();
+            const activeRect = activeTab.getBoundingClientRect();
+
+            setActiveTabStyle({
+                left: activeRect.left - containerRect.left,
+                width: activeRect.width,
+                opacity: 1
+            });
+        };
+
+        updateActiveTabStyle();
+
+        const resizeObserver = new ResizeObserver(() => {
+            updateActiveTabStyle();
+        });
+
+        if (tabContainerRef.current) resizeObserver.observe(tabContainerRef.current);
+
+        Object.values(tabRefs.current).forEach((tab) => {
+            if (tab) resizeObserver.observe(tab);
+        });
+
+        window.addEventListener("resize", updateActiveTabStyle);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener("resize", updateActiveTabStyle);
+        };
+    }, [activeSection, isHomePage, isAdmin]);
+
+    const scrollToSection = (sectionId: SectionId) => {
+        const element = document.getElementById(sectionId);
+        if (!element) return;
+
+        const headerOffset = 110;
+        const elementTop = element.getBoundingClientRect().top + window.scrollY;
+        const offsetTop = elementTop - headerOffset;
+
+        setActiveSection(sectionId);
+
+        window.scrollTo({
+            top: offsetTop,
+            behavior: "smooth"
+        });
+    };
+
+    const getTabTextClass = (sectionId: SectionId) =>
+        sectionId === activeSection ? "text-white" : "text-[#8F8A94] hover:text-[#261E33]";
+
+    const userData = useMemo(() => {
+        if (userProfile) {
+            return {
+                name: `${userProfile.firstName} ${userProfile.lastName}`.trim(),
+                email: userProfile.email,
+                avatar: userProfile.avatarUrl || "/images/image-removebg-preview.png"
+            };
+        }
+
+        return {
+            name: "username",
+            email: "email@gmail.com",
+            avatar: "/images/image-removebg-preview.png"
+        };
+    }, [userProfile]);
 
     const handleLogout = async () => {
         if (isLoggingOut) return;
@@ -187,93 +295,139 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
     if (isLoadingProfile) {
         return (
-            <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
-                <div className="flex h-16 w-full items-center justify-between gap-4 px-6 lg:px-8">
-                    <div className="h-8 w-32 animate-pulse rounded-lg bg-gray-200" />
-                    <div className="h-10 w-64 animate-pulse rounded-lg bg-gray-200" />
+            <header className="sticky top-0 z-40 border-b border-[#E5E5E5]/80 bg-white/90 backdrop-blur-md">
+                <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+                    <div className="hidden h-10 w-[420px] animate-pulse rounded-2xl bg-gray-200 lg:block" />
+                    <div className="flex-1 lg:hidden" />
                     <div className="flex items-center gap-2">
                         <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200" />
-                        <div className="h-10 w-32 animate-pulse rounded-lg bg-gray-200" />
+                        <div className="hidden md:block">
+                            <div className="mb-1 h-4 w-32 animate-pulse rounded bg-gray-200" />
+                            <div className="h-3 w-40 animate-pulse rounded bg-gray-200" />
+                        </div>
                     </div>
                 </div>
             </header>
         );
     }
 
-    // Check if user is admin
-    const isAdmin = userProfile?.isAdmin;
-    console.log("🔔 Header: User profile:", userProfile);
-    console.log("🔔 Header: Is admin?", isAdmin);
-    console.log("🔔 Header: Should show notifications?", !isAdmin);
-
     return (
-        <header className="sticky top-0 z-40 border-[#E5E5E5] border-b bg-white">
-            <div className="flex h-16 w-full items-center justify-end gap-4 px-4 sm:px-6 lg:px-8">
-                {/* Admin title */}
-                {isAdmin && (
-                    <div className="flex-1">
-                        <h1 className="font-semibold text-[#261E33] text-lg">Admin Dashboard</h1>
+        <header className="sticky top-0 z-40 border-b border-[#E5E5E5]/80 bg-white/90 backdrop-blur-md">
+            <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+                {isAdmin ? (
+                    <div className="min-w-0 flex-1">
+                        <h1 className="truncate text-lg font-semibold text-[#261E33]">Admin Dashboard</h1>
                     </div>
+                ) : isHomePage ? (
+                    <div className="min-w-0 flex-1">
+                        <div className="flex justify-start">
+                            <div
+                                ref={tabContainerRef}
+                                className="relative inline-flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-[20px] border border-[#E7D9CF] bg-[#F4EFEB] p-1 shadow-[0_4px_12px_rgba(38,30,51,0.05)] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                            >
+                                <div
+                                    className="pointer-events-none absolute bottom-1 top-1 rounded-[14px] bg-[linear-gradient(90deg,#FF7A00_0%,#FF3D00_55%,#FF0000_100%)] shadow-[0_6px_14px_rgba(255,90,0,0.22)] transition-all duration-300 ease-out"
+                                    style={{
+                                        left: activeTabStyle.left,
+                                        width: activeTabStyle.width,
+                                        opacity: activeTabStyle.opacity
+                                    }}
+                                />
+
+                                {HOME_TABS.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        ref={(el) => {
+                                            tabRefs.current[tab.id] = el;
+                                        }}
+                                        type="button"
+                                        onClick={() => scrollToSection(tab.id)}
+                                        className={`relative z-10 shrink-0 whitespace-nowrap rounded-[14px] px-3 py-2 text-[14px] font-medium transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.99] ${getTabTextClass(
+                                            tab.id
+                                        )}`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex-1" />
                 )}
 
-                <div className="flex items-center gap-2">
-                    {/* Notifications - chỉ hiện cho user thường */}
-                    {!isAdmin && <NotificationDropdown />}
+                <div className="flex shrink-0 items-center gap-2">
+                    {!isAdmin && (
+                        <div className="transition-transform duration-300 ease-out hover:scale-105">
+                            <NotificationDropdown />
+                        </div>
+                    )}
 
                     <div className="relative" ref={userMenuRef}>
                         <button
                             type="button"
-                            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                            className="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-[#F4F5FA]">
-                            <div className="relative h-8 w-8 overflow-hidden rounded-full bg-gray-200">
+                            onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                            className="group flex items-center gap-2 rounded-xl px-2.5 py-2 transition-all duration-300 ease-out hover:bg-[#F4F5FA] hover:shadow-sm"
+                        >
+                            <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gray-200 ring-2 ring-transparent transition-all duration-300 ease-out group-hover:ring-[#FFE1CC]">
                                 <Image src={userData.avatar} alt={userData.name} fill className="object-cover" />
                             </div>
-                            <div className="hidden text-left md:block">
-                                <p className="font-medium text-[#261E33] text-sm">{userData.name}</p>
-                                <p className="text-[#9CA3AF] text-xs">{userData.email}</p>
+
+                            <div className="hidden max-w-[220px] text-left md:block">
+                                <p className="truncate text-sm font-semibold leading-5 text-[#261E33]">{userData.name}</p>
+                                <p className="truncate text-xs leading-4 text-[#9CA3AF]">{userData.email}</p>
                             </div>
-                            <ChevronDownIcon />
+
+                            <div className="text-[#6F6B99] transition-colors duration-300 group-hover:text-[#261E33]">
+                                <ChevronDownIcon open={isUserMenuOpen} />
+                            </div>
                         </button>
 
-                        {isUserMenuOpen && (
-                            <div className="absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border border-[#E5E5E5] bg-white shadow-xl">
-                                <div className="border-[#E5E5E5] border-b px-4 py-3">
-                                    <p className="font-semibold text-[#261E33] text-sm">{userData.name}</p>
-                                    <p className="text-[#9CA3AF] text-xs">{userData.email}</p>
-                                </div>
-
-                                {/* Menu items - khác nhau cho admin và user */}
-                                {!isAdmin && (
-                                    <div className="py-2">
-                                        <Link
-                                            href={`/${locale}/settings`}
-                                            className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
-                                            <SettingsIcon />
-                                            <span>{t("settings")}</span>
-                                        </Link>
-
-                                        <Link
-                                            href={`/${locale}/settings`}
-                                            onClick={() => setIsUserMenuOpen(false)}
-                                            className="flex items-center gap-3 px-4 py-2 text-[#6F6B99] text-sm transition-colors hover:bg-[#F4F5FA] hover:text-[#261E33]">
-                                            <UserIcon />
-                                            <span>{t("profile")}</span>
-                                        </Link>
-                                    </div>
-                                )}
-
-                                <div className="border-[#E5E5E5] border-t py-2">
-                                    <button
-                                        type="button"
-                                        onClick={handleLogout}
-                                        disabled={isLoggingOut}
-                                        className="flex w-full items-center gap-3 px-4 py-2 text-left text-red-600 text-sm transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50">
-                                        <LogoutIcon />
-                                        <span>{isLoggingOut ? t("loggingOut") : t("logout")}</span>
-                                    </button>
-                                </div>
+                        <div
+                            className={`absolute right-0 top-full z-50 mt-2 w-60 origin-top-right rounded-2xl border border-[#E5E5E5] bg-white shadow-[0_18px_50px_rgba(38,30,51,0.16)] transition-all duration-200 ease-out ${isUserMenuOpen
+                                ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                                : "pointer-events-none -translate-y-2 scale-[0.98] opacity-0"
+                                }`}
+                        >
+                            <div className="border-b border-[#E5E5E5] px-4 py-3">
+                                <p className="truncate text-sm font-semibold text-[#261E33]">{userData.name}</p>
+                                <p className="truncate text-xs text-[#9CA3AF]">{userData.email}</p>
                             </div>
-                        )}
+
+                            {!isAdmin && (
+                                <div className="py-2">
+                                    <Link
+                                        href={`/${locale}/settings`}
+                                        onClick={() => setIsUserMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]"
+                                    >
+                                        <SettingsIcon />
+                                        <span>{t("settings")}</span>
+                                    </Link>
+
+                                    <Link
+                                        href={`/${locale}/settings`}
+                                        onClick={() => setIsUserMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]"
+                                    >
+                                        <UserIcon />
+                                        <span>{t("profile")}</span>
+                                    </Link>
+                                </div>
+                            )}
+
+                            <div className="border-t border-[#E5E5E5] py-2">
+                                <button
+                                    type="button"
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 transition-all duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <LogoutIcon />
+                                    <span>{isLoggingOut ? t("loggingOut") : t("logout")}</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
