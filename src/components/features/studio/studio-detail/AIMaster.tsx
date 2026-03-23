@@ -189,7 +189,7 @@ function renderAssistantMarkdown(content: string) {
     return <div className="space-y-2 text-sm leading-7">{elements}</div>;
 }
 
-export default function AIMaster({ studioId }: { studioId: string }) {
+export default function AIMaster({ studioId }: { studioId?: string }) {
     const locale = useLocale();
     const t = useTranslations("StudioAiPage");
     const { toast } = useToast();

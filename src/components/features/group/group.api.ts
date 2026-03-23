@@ -13,8 +13,8 @@ type GroupCardDto = NonNullable<NonNullable<GroupSections["favorites"]>[number]>
 
 type RequestDocumentUploadRequest = components["schemas"]["RequestDocumentUploadRequest"];
 type DocumentItem = components["schemas"]["DocumentItem"];
-type AIQuestionRequest = components["schemas"]["AIQuestionRequest"];
-type AIAnswerResponse = components["schemas"]["AIAnswerResponse"];
+type AIQuestionRequest = components["schemas"]["GroupAIRequest"];
+type AIAnswerResponse = components["schemas"]["AIResponse"];
 
 type RequestDocumentUploadResponseApi =
     | paths["/api/documents/request-upload"]["post"]["responses"][200]["content"]["application/json"]
@@ -32,12 +32,12 @@ type DocumentDownloadUrlResponseApi =
     | paths["/api/documents/{attachmentId}/download"]["get"]["responses"][200]["content"]["text/plain"];
 
 type AIAskResponseApi =
-    | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["application/json"]
-    | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/json"]
-    | paths["/api/ai/ask"]["post"]["responses"][200]["content"]["text/plain"];
+    | paths["/api/ai/group/ask"]["post"]["responses"][200]["content"]["application/json"]
+    | paths["/api/ai/group/ask"]["post"]["responses"][200]["content"]["text/json"]
+    | paths["/api/ai/group/ask"]["post"]["responses"][200]["content"]["text/plain"];
 
 type AIAskStreamRequest = NonNullable<
-    paths["/api/ai/ask/stream"]["post"]["requestBody"]
+    paths["/api/ai/group/ask/stream"]["post"]["requestBody"]
 >["content"]["application/json"];
 
 function getToken() {

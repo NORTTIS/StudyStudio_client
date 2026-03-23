@@ -1288,88 +1288,6 @@ export interface paths {
         };
         trace?: never;
     };
-    "/api/ai/ask": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/*+json": components["schemas"]["AIQuestionRequest"];
-                    "application/json": components["schemas"]["AIQuestionRequest"];
-                    "text/json": components["schemas"]["AIQuestionRequest"];
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AIAnswerResponseApiResponse"];
-                        "text/json": components["schemas"]["AIAnswerResponseApiResponse"];
-                        "text/plain": components["schemas"]["AIAnswerResponseApiResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/ask/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/*+json": components["schemas"]["AIQuestionRequest"];
-                    "application/json": components["schemas"]["AIQuestionRequest"];
-                    "text/json": components["schemas"]["AIQuestionRequest"];
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/ai/group/ask": {
         parameters: {
             query?: never;
@@ -1457,45 +1375,6 @@ export interface paths {
         trace?: never;
     };
     "/api/ai/group/info/{groupId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    groupId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AIResponse"];
-                        "text/json": components["schemas"]["AIResponse"];
-                        "text/plain": components["schemas"]["AIResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/group/suggestions/{groupId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1698,45 +1577,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/ai/master/suggestions/{studioId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    studioId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AIResponse"];
-                        "text/json": components["schemas"]["AIResponse"];
-                        "text/plain": components["schemas"]["AIResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/ai/personal/ask": {
         parameters: {
             query?: never;
@@ -1817,43 +1657,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ai/personal/suggestions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AIResponse"];
-                        "text/json": components["schemas"]["AIResponse"];
-                        "text/plain": components["schemas"]["AIResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5958,30 +5761,6 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        AIAnswerResponse: {
-            answer?: string | null;
-            /** Format: int32 */
-            dailyLimit?: number;
-            /** Format: date-time */
-            generatedAt?: string;
-            /** Format: int64 */
-            processingTimeMs?: number;
-            /** Format: int32 */
-            remainingRequests?: number;
-            sourceDocuments?: components["schemas"]["SourceDocument"][] | null;
-            taskSummary?: components["schemas"]["TaskSummaryResponse"];
-        };
-        AIAnswerResponseApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["AIAnswerResponse"];
-            message?: string | null;
-            status?: string | null;
-        };
-        AIQuestionRequest: {
-            /** Format: uuid */
-            groupId: string;
-            question: string;
-        };
         AIResponse: {
             answer?: string | null;
             data?: unknown;
@@ -7294,14 +7073,6 @@ export interface components {
             /** Format: uuid */
             taskId?: string;
         };
-        SourceDocument: {
-            /** Format: int32 */
-            chunkIndex?: number;
-            documentId?: string | null;
-            preview?: string | null;
-            /** Format: float */
-            relevanceScore?: number;
-        };
         StringApiResponse: {
             code?: string | null;
             data?: string | null;
@@ -7676,19 +7447,6 @@ export interface components {
             /** Format: uuid */
             statusId?: string;
             statusName?: string | null;
-        };
-        TaskSummaryResponse: {
-            /** Format: int32 */
-            completedTasks?: number;
-            /** Format: int32 */
-            completionPercentage?: number;
-            /** Format: date-time */
-            nearestDeadline?: string | null;
-            /** Format: int32 */
-            overdueTasks?: number;
-            riskFlags?: string[] | null;
-            /** Format: int32 */
-            totalTasks?: number;
         };
         TemplateListResponse: {
             subscription?: components["schemas"]["SubscriptionQuota"];
