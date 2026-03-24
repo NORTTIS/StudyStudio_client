@@ -280,7 +280,7 @@ function isOverdue(value?: string | null) {
 
 function priorityTone(value: "low" | "medium" | "high") {
     if (value === "high") return "text-rose-600";
-    if (value === "medium") return "text-amber-700";
+    if (value === "medium") return "text-yellow-500";
     return "text-emerald-700";
 }
 
@@ -366,7 +366,7 @@ function priorityFromTask(value?: number | null): "low" | "medium" | "high" {
 
 function priorityDotColor(priority?: number | null) {
     if (priority === 2) return "bg-rose-500";
-    if (priority === 1) return "bg-amber-500";
+    if (priority === 1) return "bg-yellow-500";
     return "bg-emerald-500";
 }
 

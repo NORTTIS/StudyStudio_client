@@ -4,15 +4,10 @@ import * as React from "react";
 import * as echarts from "echarts";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    BarChart3,
     Check,
-    CheckCircle2,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
-    LineChart,
-    PieChart,
-    Users,
     X
 } from "lucide-react";
 
@@ -367,7 +362,8 @@ function getRangeLabel(date: Date, mode: TimeViewMode) {
     if (mode === "week") {
         const start = getStartOfWeek(date);
         const end = getEndOfWeek(date);
-        return `${formatDate(start)} - ${formatDate(end)}`;
+
+        return `${pad2(start.getDate())}/${pad2(start.getMonth() + 1)} - ${pad2(end.getDate())}/${pad2(end.getMonth() + 1)}/${end.getFullYear()}`;
     }
 
     if (mode === "month") {
@@ -499,23 +495,16 @@ function MemberProgressCard({ member }: { member: MemberProgress }) {
 }
 
 function SectionTitle({
-    icon,
     title,
     description
 }: {
-    icon: React.ReactNode;
     title: string;
     description?: string;
 }) {
     return (
-        <div className="mb-5 flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-                {icon}
-            </div>
-            <div>
-                <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-                {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
-            </div>
+        <div className="mb-5">
+            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
         </div>
     );
 }
@@ -572,8 +561,6 @@ function GroupSelect({
                         : "border-slate-200 hover:border-orange-200 hover:shadow-[0_14px_32px_rgba(15,23,42,0.08)]"
                 )}
             >
-                <span className="absolute inset-x-0 bottom-0 h-[3px] bg-orange-500" />
-
                 <div className="flex min-w-0 items-center gap-3">
                     <span
                         className="h-3 w-3 shrink-0 rounded-full shadow-sm"
@@ -672,7 +659,7 @@ function TimeRangeToolbar({
 
     return (
         <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="inline-flex w-fit items-center rounded-[24px] bg-slate-100 p-1.5 shadow-inner">
+            <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
                 {tabs.map((tab) => {
                     const active = tab.key === mode;
 
@@ -682,10 +669,10 @@ function TimeRangeToolbar({
                             type="button"
                             onClick={() => onModeChange(tab.key)}
                             className={cn(
-                                "rounded-[18px] px-6 py-3 text-base font-semibold transition-all duration-200",
+                                "rounded-xl px-4 py-2 text-sm font-medium transition",
                                 active
-                                    ? "bg-white text-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.12)]"
-                                    : "text-slate-500 hover:text-slate-700"
+                                    ? "bg-white text-blue-600 shadow-sm"
+                                    : "text-slate-500 hover:text-slate-900"
                             )}
                         >
                             {tab.label}
@@ -694,23 +681,25 @@ function TimeRangeToolbar({
                 })}
             </div>
 
-            <div className="flex w-full max-w-[520px] items-center justify-between rounded-[28px] border border-slate-200 bg-white px-5 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+            <div className="inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50 px-2 py-1">
                 <button
                     type="button"
                     onClick={onPrev}
-                    className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
                 >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-4 w-4" />
                 </button>
 
-                <div className="text-center text-[18px] font-semibold text-slate-700">{rangeLabel}</div>
+                <div className="px-2 text-center text-sm font-medium text-slate-700 whitespace-nowrap">
+                    {rangeLabel}
+                </div>
 
                 <button
                     type="button"
                     onClick={onNext}
-                    className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
                 >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-4 w-4" />
                 </button>
             </div>
         </div>
@@ -1452,7 +1441,6 @@ export default function AnalyticMaster() {
                     className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
                 >
                     <SectionTitle
-                        icon={<PieChart className="h-5 w-5" />}
                         title="1. Task Status của toàn bộ 10 nhóm"
                         description=""
                     />
@@ -1493,7 +1481,6 @@ export default function AnalyticMaster() {
                     className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
                 >
                     <SectionTitle
-                        icon={<CheckCircle2 className="h-5 w-5" />}
                         title="2. Task Status theo từng nhóm"
                         description=""
                     />
@@ -1543,7 +1530,6 @@ export default function AnalyticMaster() {
                 className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
             >
                 <SectionTitle
-                    icon={<LineChart className="h-5 w-5" />}
                     title="3. So sánh task hoàn thành theo thời gian"
                 />
 
@@ -1576,7 +1562,6 @@ export default function AnalyticMaster() {
                 className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
             >
                 <SectionTitle
-                    icon={<BarChart3 className="h-5 w-5" />}
                     title="4. So sánh trạng thái task giữa các nhóm"
                 />
 
@@ -1609,7 +1594,6 @@ export default function AnalyticMaster() {
                 className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
             >
                 <SectionTitle
-                    icon={<Users className="h-5 w-5" />}
                     title="5. Tiến độ thành viên trong nhóm"
                 />
 

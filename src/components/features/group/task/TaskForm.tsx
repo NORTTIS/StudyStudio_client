@@ -69,7 +69,6 @@ export type TaskPriority = 0 | 1 | 2;
 export type TaskSeverity = 0 | 1 | 2 | 3;
 
 export type CreateTaskSubmitValues = components["schemas"]["TaskItemGroupRequest"];
-
 export type TaskFormValues = CreateTaskSubmitValues;
 
 export type TaskFormOption = {
@@ -92,7 +91,7 @@ type Props = {
 
 function priorityTone(value: TaskPriority) {
     if (value === 2) return "text-rose-600";
-    if (value === 1) return "text-amber-700";
+    if (value === 1) return "text-yellow-500";
     return "text-emerald-700";
 }
 
@@ -619,10 +618,13 @@ export default function TaskFormModal({
                 dueDate: toApiDateTimeOrNull(dueDate)
             };
 
-            if (startDate) payload.startDate = startDate;
-            if (dueDate) payload.dueDate = dueDate;
-            if (estimatedHours != null && estimatedHours > 0) payload.estimatedHours = estimatedHours;
-            if (actualHours != null && actualHours > 0) payload.actualHours = actualHours;
+            if (estimatedHours != null && estimatedHours > 0) {
+                payload.estimatedHours = estimatedHours;
+            }
+
+            if (actualHours != null && actualHours > 0) {
+                payload.actualHours = actualHours;
+            }
 
             await onSubmit(payload);
             onClose();
