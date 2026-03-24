@@ -1098,9 +1098,6 @@ export default function AnalysisHome() {
                                             <h2 className="text-lg font-semibold text-slate-900">
                                                 2. Task Progress Over Time
                                             </h2>
-                                            <p className="mt-1 text-sm text-slate-500">
-                                                Lọc theo tuần, tháng và năm.
-                                            </p>
                                         </div>
                                     </div>
 

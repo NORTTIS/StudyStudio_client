@@ -279,13 +279,15 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const visibleTabs = React.useMemo(() => {
         const canSeeSetting = userRole === "owner";
         const canSeeTrashed = userRole === "owner" || userRole === "moderator";
+        const canSeeAnalytic = userRole !== "viewer";
 
         return tabs.filter((tab) => {
             if (tab.key === "setting" && !canSeeSetting) return false;
             if (tab.key === "trashed" && !canSeeTrashed) return false;
+            if (tab.key === "analytic" && !canSeeAnalytic) return false;
             return true;
         });
-    }, [userRole, tabs.filter]);
+    }, [userRole, tabs]);
 
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
