@@ -5795,7 +5795,7 @@ export interface components {
          * Format: int32
          * @enum {integer}
          */
-        AnnouncementType: 0 | 1 | 2 | 3 | 4;
+        AnnouncementType: 0 | 1 | 2 | 3 | 4 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17;
         AssignRoleRequest: {
             /** Format: uuid */
             groupId: string;

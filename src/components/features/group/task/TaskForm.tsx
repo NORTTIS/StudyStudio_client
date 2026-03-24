@@ -6,6 +6,7 @@ import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { components } from "@/api/types";
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -67,18 +68,7 @@ function formatDateDisplay(value?: string) {
 export type TaskPriority = 0 | 1 | 2;
 export type TaskSeverity = 0 | 1 | 2 | 3;
 
-export type CreateTaskSubmitValues = {
-    taskName: string;
-    taskDescription: string | null;
-    assigneeId: string | null;
-    statusId: string | null;
-    priority: TaskPriority;
-    severity: TaskSeverity;
-    startDate?: string;
-    dueDate?: string;
-    estimatedHours?: number;
-    actualHours?: number;
-};
+export type CreateTaskSubmitValues = components["schemas"]["TaskItemGroupRequest"];
 
 export type TaskFormValues = CreateTaskSubmitValues;
 
@@ -495,7 +485,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
 
 function toApiDateTimeOrNull(input: string) {
     const s = String(input ?? "").trim();
-    if (!s) return null;
+    if (!s) return undefined;
     return `${s}T00:00:00`;
 }
 
@@ -514,7 +504,7 @@ export default function TaskFormModal({
 
     const [title, setTitle] = React.useState("");
     const [description, setDescription] = React.useState("");
-    const [assigneeId, setAssigneeId] = React.useState<string | null>(defaultAssigneeId);
+    const [assignees, setAssignees] = React.useState<string | null>(defaultAssigneeId);
     const [statusId, setStatusId] = React.useState<string>(defaultStatusId ?? statuses[0]?.value ?? "");
     const [priority, setPriority] = React.useState<TaskPriority>(defaultPriority);
     const [severity, setSeverity] = React.useState<TaskSeverity>(defaultSeverity);
@@ -536,7 +526,7 @@ export default function TaskFormModal({
         setSubmitting(false);
         setTitle("");
         setDescription("");
-        setAssigneeId(defaultAssigneeId);
+        setAssignees(defaultAssigneeId);
         setStatusId(defaultStatusId ?? statuses[0]?.value ?? "");
         setPriority(defaultPriority);
         setSeverity(defaultSeverity);
@@ -590,8 +580,8 @@ export default function TaskFormModal({
     }, [statuses, statusId]);
 
     const selectedAssignee = React.useMemo(() => {
-        return members.find((m) => m.value === assigneeId) ?? null;
-    }, [members, assigneeId]);
+        return members.find((m) => m.value === assignees) ?? null;
+    }, [members, assignees]);
 
     const selectedAssigneeDisplay = React.useMemo(() => {
         if (selectedAssignee) return selectedAssignee;
@@ -621,7 +611,7 @@ export default function TaskFormModal({
             const payload: CreateTaskSubmitValues = {
                 taskName: t,
                 taskDescription: d || null,
-                assigneeId,
+                assignees: assignees || null,
                 groupStatusId: statusId || null,
                 taskPriority: priority,
                 taskSeverity: severity,
@@ -691,8 +681,8 @@ export default function TaskFormModal({
                         <div>
                             <div className="font-semibold text-sm text-zinc-600">Người được giao</div>
                             <Select
-                                value={assigneeId ?? "unassigned"}
-                                onValueChange={(v) => setAssigneeId(v === "unassigned" ? null : v)}>
+                                value={assignees ?? "unassigned"}
+                                onValueChange={(v) => setAssignees(v === "unassigned" ? null : v)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
                                     <div className="flex min-w-0 items-center gap-2">
                                         {selectedAssigneeDisplay.avatarUrl ? (

@@ -187,9 +187,6 @@ export default function SecuritySettingsPage() {
 
             {/* ── Outer: 2 rows stacked ── */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                {/* ╔══════════════════════════════════════════════════╗
-                    ║  ROW 1 — Header banner (full width)             ║
-                    ╚══════════════════════════════════════════════════╝ */}
                 <div
                     style={{
                         borderRadius: 20,
@@ -221,40 +218,8 @@ export default function SecuritySettingsPage() {
                             {t("changePasswordSubtitle")}
                         </Text>
                     </div>
-                    {/* Mini tips chips */}
-                    <div
-                        style={{
-                            marginLeft: "auto",
-                            display: "flex",
-                            gap: 8,
-                            flexWrap: "wrap",
-                            justifyContent: "flex-end"
-                        }}>
-                        {[
-                            `🔒 ${t("strength.reqLength")}`,
-                            `🔄 ${t("changePasswordTitle")}`,
-                            `📱 ${t("updateButton")}`
-                        ].map((c) => (
-                            <span
-                                key={c}
-                                style={{
-                                    background: "rgba(255,255,255,0.08)",
-                                    border: "1px solid rgba(255,255,255,0.15)",
-                                    color: "rgba(255,255,255,0.7)",
-                                    fontSize: 11,
-                                    padding: "4px 12px",
-                                    borderRadius: 20,
-                                    fontWeight: 500
-                                }}>
-                                {c}
-                            </span>
-                        ))}
-                    </div>
                 </div>
 
-                {/* ╔══════════════════════════════════════════════════╗
-                    ║  ROW 2 — Form (left 60%) + Strength (right 40%) ║
-                    ╚══════════════════════════════════════════════════╝ */}
                 {step === "success" ? (
                     /* Success state */
                     <div
