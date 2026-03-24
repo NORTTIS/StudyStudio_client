@@ -26,6 +26,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
@@ -182,6 +183,9 @@ export function GroupSettingView() {
     const [initialColorHex, setInitialColorHex] = useState("#FF5F3D");
     const [initialIconEmoji, setInitialIconEmoji] = useState("");
 
+    const [isTemplate, setIsTemplate] = useState(false);
+    const [initialIsTemplate, setInitialIsTemplate] = useState(false);
+
     const [members, setMembers] = useState<Member[]>([]);
     const [myRoleInGroup, setMyRoleInGroup] = useState<MemberRole>("Member");
 
@@ -287,6 +291,8 @@ export function GroupSettingView() {
             setInitialAvatarUrl(null);
             setInitialColorHex("#FF5F3D");
             setInitialIconEmoji("");
+            setIsTemplate(false);
+            setInitialIsTemplate(false);
             return false;
         }
 
@@ -313,6 +319,8 @@ export function GroupSettingView() {
             setInitialAvatarUrl(null);
             setInitialColorHex("#FF5F3D");
             setInitialIconEmoji("");
+            setIsTemplate(false);
+            setInitialIsTemplate(false);
             return false;
         }
 
@@ -336,6 +344,15 @@ export function GroupSettingView() {
         setInitialAvatarUrl(data.avatarUrl ?? null);
         setInitialColorHex(data.colorHex ?? "#FF5F3D");
         setInitialIconEmoji(data.iconEmoji ?? "");
+
+        // Template field - check for isTemplate, template, or isTemplateGroup fields
+        const templateValue = (data as Record<string, unknown>).isTemplate
+            ?? (data as Record<string, unknown>).template
+            ?? (data as Record<string, unknown>).isTemplateGroup
+            ?? false;
+        const templateBool = Boolean(templateValue);
+        setIsTemplate(templateBool);
+        setInitialIsTemplate(templateBool);
 
         const roleFromDetail = toMemberRole(data.userRole);
         setMyRoleInGroup(roleFromDetail);
@@ -434,7 +451,8 @@ export function GroupSettingView() {
                     description: validation.data.description,
                     avatarUrl: avatarUrl,
                     colorHex: colorHex,
-                    iconEmoji: iconEmoji || null
+                    iconEmoji: iconEmoji || null,
+                    isTemplate: isTemplate
                 })
             });
 
@@ -461,6 +479,7 @@ export function GroupSettingView() {
             setInitialAvatarUrl(avatarUrl);
             setInitialColorHex(colorHex);
             setInitialIconEmoji(iconEmoji);
+            setInitialIsTemplate(isTemplate);
 
             setIsEditing(false);
             return;
@@ -475,6 +494,7 @@ export function GroupSettingView() {
         setAvatarUrl(initialAvatarUrl);
         setColorHex(initialColorHex);
         setIconEmoji(initialIconEmoji);
+        setIsTemplate(initialIsTemplate);
         setGeneralError("");
         setIsEditing(false);
     };
@@ -920,6 +940,24 @@ export function GroupSettingView() {
                                         />
                                     </div>
                                 ) : null}
+
+                                <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                    <div>
+                                        <div className="font-semibold text-gray-700 text-xs">Template nhóm</div>
+                                        <div className="mt-0.5 text-gray-500 text-xs">
+                                            Đánh dấu nhóm này làm template để sao chép cấu trúc
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={isTemplate}
+                                        onCheckedChange={(checked) => {
+                                            if (!isEditing) return;
+                                            setIsTemplate(checked);
+                                        }}
+                                        disabled={!isEditing}
+                                        className="data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-gray-300"
+                                    />
+                                </div>
                             </div>
 
                             {generalError ? (
