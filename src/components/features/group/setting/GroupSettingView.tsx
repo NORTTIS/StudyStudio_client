@@ -20,7 +20,10 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -172,6 +175,13 @@ export function GroupSettingView() {
     const [masterStudio, setMasterStudio] = useState("");
     const [initialSettings, setInitialSettings] = useState({ groupName: "", description: "" });
 
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [colorHex, setColorHex] = useState("#FF5F3D");
+    const [iconEmoji, setIconEmoji] = useState("");
+    const [initialAvatarUrl, setInitialAvatarUrl] = useState<string | null>(null);
+    const [initialColorHex, setInitialColorHex] = useState("#FF5F3D");
+    const [initialIconEmoji, setInitialIconEmoji] = useState("");
+
     const [members, setMembers] = useState<Member[]>([]);
     const [myRoleInGroup, setMyRoleInGroup] = useState<MemberRole>("Member");
 
@@ -271,6 +281,12 @@ export function GroupSettingView() {
             setInitialSettings({ groupName: "", description: "" });
             setMembers([]);
             setMyRoleInGroup("Member");
+            setAvatarUrl(null);
+            setColorHex("#FF5F3D");
+            setIconEmoji("");
+            setInitialAvatarUrl(null);
+            setInitialColorHex("#FF5F3D");
+            setInitialIconEmoji("");
             return false;
         }
 
@@ -291,6 +307,12 @@ export function GroupSettingView() {
             setInitialSettings({ groupName: "", description: "" });
             setMembers([]);
             setMyRoleInGroup("Member");
+            setAvatarUrl(null);
+            setColorHex("#FF5F3D");
+            setIconEmoji("");
+            setInitialAvatarUrl(null);
+            setInitialColorHex("#FF5F3D");
+            setInitialIconEmoji("");
             return false;
         }
 
@@ -308,6 +330,12 @@ export function GroupSettingView() {
         setDescription(data.description ?? "");
         setInitialSettings({ groupName: data.groupName ?? "", description: data.description ?? "" });
         setMasterStudio(data.studioName ?? "");
+        setAvatarUrl(data.avatarUrl ?? null);
+        setColorHex(data.colorHex ?? "#FF5F3D");
+        setIconEmoji(data.iconEmoji ?? "");
+        setInitialAvatarUrl(data.avatarUrl ?? null);
+        setInitialColorHex(data.colorHex ?? "#FF5F3D");
+        setInitialIconEmoji(data.iconEmoji ?? "");
 
         const roleFromDetail = toMemberRole(data.userRole);
         setMyRoleInGroup(roleFromDetail);
@@ -403,7 +431,10 @@ export function GroupSettingView() {
                 body: JSON.stringify({
                     groupId,
                     groupName: validation.data.groupName,
-                    description: validation.data.description
+                    description: validation.data.description,
+                    avatarUrl: avatarUrl,
+                    colorHex: colorHex,
+                    iconEmoji: iconEmoji || null
                 })
             });
 
@@ -427,6 +458,9 @@ export function GroupSettingView() {
             );
 
             setInitialSettings({ groupName: validation.data.groupName, description: validation.data.description });
+            setInitialAvatarUrl(avatarUrl);
+            setInitialColorHex(colorHex);
+            setInitialIconEmoji(iconEmoji);
 
             setIsEditing(false);
             return;
@@ -438,6 +472,9 @@ export function GroupSettingView() {
     const handleCancelEdit = () => {
         setGroupName(initialSettings.groupName);
         setDescription(initialSettings.description);
+        setAvatarUrl(initialAvatarUrl);
+        setColorHex(initialColorHex);
+        setIconEmoji(initialIconEmoji);
         setGeneralError("");
         setIsEditing(false);
     };
@@ -757,6 +794,35 @@ export function GroupSettingView() {
                         </div>
 
                         <div className="px-6 py-6">
+                            {/* Avatar + Color/Emoji row */}
+                            <div className="mb-6 flex items-end gap-6">
+                                <AvatarUpload
+                                    entityType="group"
+                                    entityId={groupId ?? ""}
+                                    avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
+                                    colorHex={isEditing ? colorHex : initialColorHex}
+                                    iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
+                                    onUploadSuccess={(url) => setAvatarUrl(url)}
+                                    onError={(msg) => setGeneralError(msg)}
+                                    disabled={!isEditing}
+                                />
+                                <div className="flex items-center gap-3">
+                                    <EmojiPicker
+                                        value={isEditing ? iconEmoji : initialIconEmoji}
+                                        onChange={isEditing ? setIconEmoji : undefined}
+                                        disabled={!isEditing}
+                                    />
+                                    <div className="flex-1">
+                                        <ColorPicker
+                                            label="Màu nhóm"
+                                            value={isEditing ? colorHex : initialColorHex}
+                                            onChange={isEditing ? setColorHex : undefined}
+                                            disabled={!isEditing}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 gap-5">
                                 <div>
                                     <label htmlFor="group-name-input" className="font-semibold text-gray-700 text-xs">

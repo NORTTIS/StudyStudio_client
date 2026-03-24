@@ -92,7 +92,10 @@ function mapGroup(item: GroupCardDto): Group {
         memberInitials: preview.map((u) => toInitials(u.firstName, u.lastName)),
         isStarred: !!item.isFavorite,
         tag: item.studio?.name || undefined,
-        shortCode: toShortCode(name)
+        shortCode: toShortCode(name),
+        avatarUrl: item.avatarUrl ?? null, // NEW
+        colorHex: item.colorHex ?? null, // NEW
+        iconEmoji: item.iconEmoji ?? null // NEW
     };
 }
 

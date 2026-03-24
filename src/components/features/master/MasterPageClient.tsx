@@ -312,6 +312,7 @@ export default function MasterPageClient({
         type: string;
         startDate?: string | null;
         endDate?: string | null;
+        colorHex?: string | null;
     }) => {
         if (totalStudios >= studioLimit) {
             setIsLimitModalOpen(true);
@@ -324,7 +325,8 @@ export default function MasterPageClient({
                 description: data.description.trim(),
                 type: data.type as "personal" | "group",
                 startDate: data.startDate ?? null,
-                endDate: data.endDate ?? null
+                endDate: data.endDate ?? null,
+                colorHex: data.colorHex ?? null
             };
 
             const result = await createStudio(studioData, locale);
@@ -351,6 +353,7 @@ export default function MasterPageClient({
         type: string;
         startDate?: string | null;
         endDate?: string | null;
+        colorHex?: string | null;
     }) => {
         if (!selectedStudio) return;
 
@@ -362,7 +365,8 @@ export default function MasterPageClient({
                     description: data.description,
                     type: data.type as "personal" | "group",
                     startDate: data.startDate ?? null,
-                    endDate: data.endDate ?? null
+                    endDate: data.endDate ?? null,
+                    colorHex: data.colorHex ?? null
                 },
                 locale
             );

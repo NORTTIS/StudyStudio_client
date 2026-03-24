@@ -3,6 +3,7 @@
 import { CheckSquare2, Star, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import { hexToGradient } from "@/lib/utils";
 import { RolePill } from "./RolePill";
 import type { Group } from "./types";
 

@@ -2555,6 +2555,240 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/avatar/group/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/group/{groupId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "application/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "text/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/group/{groupId}/request-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "application/json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "text/json": components["schemas"]["RequestAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/studio/{studioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/studio/{studioId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "application/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "text/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/studio/{studioId}/request-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "application/json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "text/json": components["schemas"]["RequestAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/change-password": {
         parameters: {
             query?: never;
@@ -5904,6 +6138,9 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        CompleteAvatarUploadRequest: {
+            fileKey: string;
+        };
         CreateAnnouncementRequest: {
             content: string;
             isActive?: boolean;
@@ -5913,8 +6150,11 @@ export interface components {
             type: components["schemas"]["AnnouncementType"];
         };
         CreateGroupRequest: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             description?: string | null;
             groupName: string;
+            iconEmoji?: string | null;
             /** Format: uuid */
             studioId?: string | null;
             /** Format: uuid */
@@ -6158,8 +6398,11 @@ export interface components {
             members?: components["schemas"]["MemberAssignmentDetail"][] | null;
         };
         GroupCardDto: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             createdBy?: components["schemas"]["UserDto"];
             description?: string | null;
+            iconEmoji?: string | null;
             /** Format: uuid */
             id?: string;
             isFavorite?: boolean;
@@ -6204,6 +6447,8 @@ export interface components {
             reason?: string | null;
         };
         GroupDetailResponse: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             /** Format: date-time */
             createdAt?: string;
             createdBy?: components["schemas"]["UserDto"];
@@ -6212,6 +6457,7 @@ export interface components {
             groupId?: string;
             groupName?: string | null;
             groupType?: string | null;
+            iconEmoji?: string | null;
             isFavorite?: boolean;
             isTemplate?: boolean;
             /** Format: int32 */
@@ -6926,6 +7172,11 @@ export interface components {
          * @enum {integer}
          */
         ReportType: 0 | 1 | 2 | 3;
+        RequestAvatarUploadRequest: {
+            contentType: string;
+            /** Format: int64 */
+            fileSize: number;
+        };
         RequestDocumentUploadRequest: {
             contentType: string;
             fileName: string;
@@ -7150,6 +7401,8 @@ export interface components {
             status?: string | null;
         };
         StudioResponse: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             /** Format: date-time */
             createdAt?: string;
             description?: string | null;
@@ -7605,18 +7858,24 @@ export interface components {
             type: components["schemas"]["AnnouncementType"];
         };
         UpdateGroupRequest: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             description?: string | null;
             /** Format: uuid */
             groupId: string;
             groupName: string;
+            iconEmoji?: string | null;
             isTemplate?: boolean;
         };
         UpdateGroupResponse: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             description?: string | null;
             /** Format: uuid */
             groupId?: string;
             groupName?: string | null;
             groupType?: string | null;
+            iconEmoji?: string | null;
             isTemplate?: boolean;
             /** Format: uuid */
             studioId?: string | null;
@@ -7660,6 +7919,8 @@ export interface components {
             status?: components["schemas"]["ReportStatus"];
         };
         UpdateStudioRequest: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             description?: string | null;
             /** Format: date-time */
             endDate?: string | null;
@@ -7670,6 +7931,8 @@ export interface components {
             studioName?: string | null;
         };
         UpdateStudioResponse: {
+            avatarUrl?: string | null;
+            colorHex?: string | null;
             description?: string | null;
             /** Format: date-time */
             endDate?: string | null;

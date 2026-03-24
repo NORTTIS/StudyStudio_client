@@ -6,6 +6,8 @@ import { apiGet, apiPost } from "@/api/api-client";
 import { downloadBatchAssignTemplate } from "@/api/studios";
 import type { components } from "@/api/types";
 import { Button } from "@/components/common/Button";
+import { ColorPicker } from "@/components/ui/color-picker";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { BatchUploadModal } from "./BatchUploadModal";
 
 type GroupType = "independent" | "managed";
@@ -85,6 +87,8 @@ export function CreateGroupModal({
     const [groupCount, setGroupCount] = useState<number>(1);
     const [description, setDescription] = useState("");
     const [templateId, setTemplateId] = useState<string>("");
+    const [colorHex, setColorHex] = useState("#FF5F3D");
+    const [iconEmoji, setIconEmoji] = useState("");
 
     const [loadingOptions, setLoadingOptions] = useState(false);
     const [optionsError, setOptionsError] = useState("");
@@ -207,6 +211,8 @@ export function CreateGroupModal({
         setGroupCount(1);
         setDescription("");
         setTemplateId("");
+        setColorHex("#FF5F3D");
+        setIconEmoji("");
         setOwnerStudios([]);
         setTemplates([]);
         setOptionsError("");
@@ -326,7 +332,9 @@ export function CreateGroupModal({
                     studioId: needStudio ? studioId : null,
                     groupName: groupName.trim(),
                     description: description.trim(),
-                    templateId: templateId ? templateId : null
+                    templateId: templateId ? templateId : null,
+                    colorHex: colorHex || null,
+                    iconEmoji: iconEmoji || null
                 };
                 res = await apiPost(buildApiUrl("/api/group"), payload);
             }
@@ -505,45 +513,68 @@ export function CreateGroupModal({
                                 </div>
 
                                 {createMode === "single" ? (
-                                    <Field label="Tên nhóm" required>
-                                        <div>
-                                            <input
-                                                value={groupName}
-                                                onChange={(e) => handleGroupNameChange(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
-
-                                                    const input = e.currentTarget;
-                                                    const hasSelection =
-                                                        (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
-
-                                                    if (!hasSelection && groupName.length >= GROUP_NAME_MAX_LENGTH) {
-                                                        e.preventDefault();
-                                                    }
-                                                }}
-                                                onPaste={(e) => {
-                                                    const pastedText = e.clipboardData.getData("text");
-                                                    const input = e.currentTarget;
-                                                    const start = input.selectionStart ?? 0;
-                                                    const end = input.selectionEnd ?? 0;
-                                                    const nextValue =
-                                                        groupName.slice(0, start) + pastedText + groupName.slice(end);
-
-                                                    if (nextValue.length > GROUP_NAME_MAX_LENGTH) {
-                                                        e.preventDefault();
-                                                    }
-                                                }}
-                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                                                placeholder="Nhập tên nhóm"
-                                                disabled={loadingOptions || creating}
-                                            />
-                                            <div className="mt-2 text-right text-[#6F6B99] text-xs">
-                                                {groupName.length}/{GROUP_NAME_MAX_LENGTH}
-                                            </div>
-                                        </div>
-                                    </Field>
-                                ) : (
                                     <>
+                                        <Field label="Tên nhóm" required>
+                                            <div>
+                                                <input
+                                                    value={groupName}
+                                                    onChange={(e) => handleGroupNameChange(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (isShortcutKey(e) || isAllowedControlKey(e.key)) return;
+
+                                                        const input = e.currentTarget;
+                                                        const hasSelection =
+                                                            (input.selectionStart ?? 0) !== (input.selectionEnd ?? 0);
+
+                                                        if (
+                                                            !hasSelection &&
+                                                            groupName.length >= GROUP_NAME_MAX_LENGTH
+                                                        ) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    onPaste={(e) => {
+                                                        const pastedText = e.clipboardData.getData("text");
+                                                        const input = e.currentTarget;
+                                                        const start = input.selectionStart ?? 0;
+                                                        const end = input.selectionEnd ?? 0;
+                                                        const nextValue =
+                                                            groupName.slice(0, start) +
+                                                            pastedText +
+                                                            groupName.slice(end);
+
+                                                        if (nextValue.length > GROUP_NAME_MAX_LENGTH) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                    placeholder="Nhập tên nhóm"
+                                                    disabled={loadingOptions || creating}
+                                                />
+                                                <div className="mt-2 text-right text-[#6F6B99] text-xs">
+                                                    {groupName.length}/{GROUP_NAME_MAX_LENGTH}
+                                                </div>
+                                            </div>
+                                        </Field>
+                                        <Field label={"Màu sắc & Biểu tượng"}>
+                                            <div className="flex items-center gap-3">
+                                                <EmojiPicker
+                                                    value={iconEmoji}
+                                                    onChange={setIconEmoji}
+                                                    disabled={loadingOptions || creating}
+                                                />
+                                                <div className="flex-1">
+                                                    <ColorPicker
+                                                        value={colorHex}
+                                                        onChange={setColorHex}
+                                                        disabled={loadingOptions || creating}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </Field>
+                                    </>
+                                ) : (
+                                    <div>
                                         <Field label="Tiền tố nhóm" required>
                                             <div>
                                                 <input
@@ -610,7 +641,7 @@ export function CreateGroupModal({
                                                 </p>
                                             </div>
                                         </Field>
-                                    </>
+                                    </div>
                                 )}
 
                                 <Field label="Mô tả">

@@ -4,17 +4,11 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getStudioGroupAnalytics, getStudioGroupHeatmap } from "@/api/analytics";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
-import {
-    deleteStudio,
-    getStudioMembers,
-    type StudioMemberResponse,
-    type StudioUI,
-    updateStudio
-} from "@/api/studios";
+import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
 import type { components } from "@/api/types";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
-import { getStudioGroupAnalytics, getStudioGroupHeatmap } from "@/api/analytics";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { mapRole } from "@/components/features/group/group.api";
 import { RolePill } from "@/components/features/group/RolePill";
@@ -33,10 +27,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { hexToGradient } from "@/lib/utils";
 import { ActivityHeatmap } from "./ActivityHeatmap";
 import AIMaster from "./AIMaster";
 import { GroupPerformanceRadar } from "./GroupPerformanceRadar";
@@ -46,11 +43,11 @@ import { MemberList } from "./MemberList";
 import { QuickAssignModal } from "./QuickAssignModal";
 import { StudioDateRange } from "./StudioDateRange";
 import {
+    type GroupHeatmapComparisonData,
+    type GroupProgress,
     mockGroupPerformance,
     transformGroupComparisonToProgress,
-    transformStudioHeatmapToComparison,
-    type GroupHeatmapComparisonData,
-    type GroupProgress
+    transformStudioHeatmapToComparison
 } from "./types";
 
 type StudioResponse = components["schemas"]["StudioResponse"];
@@ -66,6 +63,8 @@ interface TransformedGroup {
     description: string;
     membersPreview: GroupCardDto["membersPreview"];
     role: GroupRole;
+    colorHex?: string | null;
+    iconEmoji?: string | null;
 }
 
 interface StudioDetailPageProps {
@@ -104,6 +103,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editStartDate, setEditStartDate] = useState("");
     const [editEndDate, setEditEndDate] = useState("");
     const [editLoading, setEditLoading] = useState(false);
+    const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
+    const [editColorHex, setEditColorHex] = useState("#FF5F3D");
 
     const formatDateForInput = (iso: string) => (iso ? new Date(iso).toISOString().split("T")[0] : "");
 
@@ -120,7 +121,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             createdAt: initialStudio.createdAt || "",
             updatedAt: initialStudio.updatedAt || "",
             startDate: initialStudio.startDate,
-            endDate: initialStudio.endDate
+            endDate: initialStudio.endDate,
+            avatarUrl: initialStudio.avatarUrl ?? null,
+            colorHex: initialStudio.colorHex ?? null
         };
     }, [initialStudio]);
 
@@ -134,7 +137,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             progress: 0,
             description: group.description || "",
             membersPreview: group.membersPreview || [],
-            role: mapRole(group.role)
+            role: mapRole(group.role),
+            colorHex: group.colorHex ?? null,
+            iconEmoji: group.iconEmoji ?? null
         }));
     }, [initialGroups]);
 
@@ -221,8 +226,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             setEditDescription(studio.description);
             setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
+            setEditAvatarUrl(studio.avatarUrl ?? null);
+            setEditColorHex(studio.colorHex ?? "#FF5F3D");
         }
-    }, [studio]);
+    }, [studio, formatDateForInput]);
 
     const handleDeleteStudio = async () => {
         if (!studio) return;
@@ -248,6 +255,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             setEditDescription(studio.description);
             setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
+            setEditAvatarUrl(studio.avatarUrl ?? null);
+            setEditColorHex(studio.colorHex ?? "#FF5F3D");
         }
         setIsEditing(true);
     };
@@ -258,6 +267,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             setEditDescription(studio.description);
             setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
+            setEditAvatarUrl(studio.avatarUrl ?? null);
+            setEditColorHex(studio.colorHex ?? "#FF5F3D");
         }
         setIsEditing(false);
     };
@@ -279,7 +290,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                     description: editDescription,
                     type: "group",
                     startDate: editStartDate || null,
-                    endDate: editEndDate || null
+                    endDate: editEndDate || null,
+                    avatarUrl: editAvatarUrl,
+                    colorHex: editColorHex
                 },
                 locale
             );
@@ -356,19 +369,31 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-red-500 shadow-lg shadow-orange-500/30">
-                                            <svg
-                                                className="h-5 w-5 text-white"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-lg shadow-orange-500/30">
+                                            {studio.avatarUrl ? (
+                                                <img
+                                                    src={studio.avatarUrl}
+                                                    alt={studio.name}
+                                                    className="h-full w-full object-cover"
                                                 />
-                                            </svg>
+                                            ) : (
+                                                <div
+                                                    className="flex h-full w-full items-center justify-center text-white"
+                                                    style={{ background: hexToGradient(studio.colorHex ?? "#FF5F3D") }}>
+                                                    <svg
+                                                        className="h-5 w-5"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                            )}
                                         </div>
                                         <div>
                                             <h1 className="truncate font-bold text-[#261E33] text-xl">{studio.name}</h1>
@@ -386,10 +411,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab("groups")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "groups"
-                                        ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                        activeTab === "groups"
+                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                    }`}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -404,10 +430,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab("ai")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "ai"
-                                        ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                        : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                        activeTab === "ai"
+                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                    }`}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -423,10 +450,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab("analytics")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "analytics"
-                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                            }`}>
+                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                            activeTab === "analytics"
+                                                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                        }`}>
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
@@ -443,10 +471,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     <button
                                         type="button"
                                         onClick={() => setActiveTab("settings")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${activeTab === "settings"
-                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                            }`}>
+                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
+                                            activeTab === "settings"
+                                                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
+                                                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                                        }`}>
                                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
@@ -510,33 +539,45 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 <div className="lg:col-span-8">
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         {filteredGroups.length > 0 ? (
-                                            filteredGroups.map((group, index) => (
+                                            filteredGroups.map((group, _index) => (
                                                 <Link
                                                     href={`/${locale}/group/${group.id}`}
                                                     key={group.id}
                                                     className="flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
                                                     <div className="flex items-center gap-3">
-                                                        <div
-                                                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${index % 4 === 0
-                                                                ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                : index % 4 === 1
-                                                                    ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                    : index % 4 === 2
-                                                                        ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                        : "bg-gradient-to-br from-purple-400 to-violet-500"
-                                                                }`}>
-                                                            <svg
-                                                                className="h-5 w-5 text-white"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                viewBox="0 0 24 24">
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={2}
-                                                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                                                />
-                                                            </svg>
+                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+                                                            {group.iconEmoji ? (
+                                                                <div
+                                                                    className="flex h-full w-full items-center justify-center text-xl"
+                                                                    style={{
+                                                                        background: hexToGradient(
+                                                                            group.colorHex ?? "#FF5F3D"
+                                                                        )
+                                                                    }}>
+                                                                    {group.iconEmoji}
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    className="flex h-full w-full items-center justify-center text-white"
+                                                                    style={{
+                                                                        background: hexToGradient(
+                                                                            group.colorHex ?? "#FF5F3D"
+                                                                        )
+                                                                    }}>
+                                                                    <svg
+                                                                        className="h-5 w-5"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24">
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth={2}
+                                                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                                        />
+                                                                    </svg>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex items-center gap-2">
@@ -592,16 +633,17 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     return (
                                                                         <div
                                                                             key={`${group.id}-avatar-${i}`}
-                                                                            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${member?.avatarUrl
-                                                                                ? ""
-                                                                                : i % 4 === 0
-                                                                                    ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                                    : i % 4 === 1
+                                                                            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${
+                                                                                member?.avatarUrl
+                                                                                    ? ""
+                                                                                    : i % 4 === 0
+                                                                                      ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                                                      : i % 4 === 1
                                                                                         ? "bg-gradient-to-br from-blue-400 to-indigo-500"
                                                                                         : i % 4 === 2
-                                                                                            ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                            : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                                }`}>
+                                                                                          ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                                          : "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                                            }`}>
                                                                             {member?.avatarUrl ? (
                                                                                 <img
                                                                                     src={member.avatarUrl}
@@ -679,10 +721,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 <span className="font-semibold text-slate-800">
                                                     {studio.createdAt
                                                         ? new Date(studio.createdAt).toLocaleDateString("en-US", {
-                                                            month: "numeric",
-                                                            day: "numeric",
-                                                            year: "numeric"
-                                                        })
+                                                              month: "numeric",
+                                                              day: "numeric",
+                                                              year: "numeric"
+                                                          })
                                                         : "—"}
                                                 </span>
                                             </div>
@@ -712,9 +754,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             </div>
                         )}
 
-                        {activeTab === "ai" && (
-                            <AIMaster studioId={studioId} />
-                        )}
+                        {activeTab === "ai" && <AIMaster studioId={studioId} />}
 
                         {activeTab === "settings" && (
                             <div className="space-y-6">
@@ -770,6 +810,26 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </div>
 
                                     <div className="px-6 py-6">
+                                        <div className="mb-6 flex items-end gap-6">
+                                            <AvatarUpload
+                                                entityType="studio"
+                                                entityId={studio.id}
+                                                avatarUrl={isEditing ? editAvatarUrl : studio.avatarUrl}
+                                                colorHex={isEditing ? editColorHex : studio.colorHex}
+                                                onUploadSuccess={(url) => setEditAvatarUrl(url)}
+                                                onError={(msg) => toast({ description: msg, variant: "destructive" })}
+                                                disabled={!isEditing}
+                                            />
+                                            <div className="flex-1">
+                                                <ColorPicker
+                                                    label="Màu chủ đạo"
+                                                    value={isEditing ? editColorHex : (studio.colorHex ?? "#FF5F3D")}
+                                                    onChange={isEditing ? setEditColorHex : undefined}
+                                                    disabled={!isEditing}
+                                                />
+                                            </div>
+                                        </div>
+
                                         <div className="grid grid-cols-1 gap-5">
                                             <div>
                                                 <label
@@ -870,10 +930,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     value={
                                                         studio.createdAt
                                                             ? new Date(studio.createdAt).toLocaleDateString("vi-VN", {
-                                                                day: "numeric",
-                                                                month: "long",
-                                                                year: "numeric"
-                                                            })
+                                                                  day: "numeric",
+                                                                  month: "long",
+                                                                  year: "numeric"
+                                                              })
                                                             : "—"
                                                     }
                                                     readOnly

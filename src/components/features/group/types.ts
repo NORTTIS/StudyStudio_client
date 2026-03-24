@@ -12,6 +12,9 @@ export type Group = {
     createdByInitials: string;
     memberInitials: string[];
     isStarred?: boolean;
+    avatarUrl?: string | null; // NEW
+    colorHex?: string | null; // NEW
+    iconEmoji?: string | null; // NEW
 };
 
 export type GroupsPageData = {
