@@ -33,8 +33,23 @@ import { createPortal } from "react-dom";
 import { Container } from "@/components/common";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
+import type { components } from "@/api/types";
 
 type ColumnId = string;
+
+// Convert string priority/severity from TaskForm to API numeric types
+const PRIORITY_MAP: Record<string, components["schemas"]["TaskPriority"]> = {
+    low: 0,
+    medium: 1,
+    high: 2
+};
+
+const SEVERITY_MAP: Record<string, components["schemas"]["TaskSeverity"]> = {
+    minor: 0,
+    moderate: 1,
+    major: 2,
+    critical: 3
+};
 
 type Task = {
     id: string;
@@ -52,6 +67,8 @@ type Task = {
     priorityLabel?: string | null;
     severityLabel?: string | null;
     progress?: number;
+    estimatedHours?: number;
+    actualHours?: number;
 };
 
 type Column = {
@@ -76,6 +93,8 @@ type TaskItemResponse = {
     position?: number;
     taskPriority?: number;
     taskSeverity?: number;
+    estimatedHours?: number;
+    actualHours?: number;
     progress?: number;
 };
 
@@ -488,6 +507,10 @@ async function apiCreateTask(args: {
     startDate?: unknown;
     dueDateSelected?: boolean;
     startDateSelected?: boolean;
+    estimatedHours?: number;
+    actualHours?: number;
+    priority?: string;
+    severity?: string;
 }) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
@@ -500,7 +523,7 @@ async function apiCreateTask(args: {
 
     const url = apiUrl("/Task");
 
-    const payload: any = {
+    const payload: components["schemas"]["TaskItemGroupRequest"] = {
         groupId: args.groupId,
         groupStatusId: args.groupStatusId,
         taskName: String(args.taskName ?? "").trim()
@@ -513,6 +536,18 @@ async function apiCreateTask(args: {
 
     if (args.startDateSelected === true && startIso) payload.startDate = startIso;
     if (args.dueDateSelected === true && dueIso) payload.dueDate = dueIso;
+    if (args.estimatedHours != null && args.estimatedHours > 0) payload.estimatedHours = args.estimatedHours;
+    if (args.actualHours != null && args.actualHours > 0) payload.actualHours = args.actualHours;
+
+    // Convert string priority to API numeric type
+    if (args.priority != null && args.priority in PRIORITY_MAP) {
+        payload.taskPriority = PRIORITY_MAP[args.priority];
+    }
+
+    // Convert string severity to API numeric type
+    if (args.severity != null && args.severity in SEVERITY_MAP) {
+        payload.taskSeverity = SEVERITY_MAP[args.severity];
+    }
 
     return apiFetchJson<TaskItemResponse>(url, {
         method: "POST",
@@ -1156,11 +1191,11 @@ function TaskCard({
                         </div>
                     )}
 
-                    {task.due || task.severityLabel || done || showProgress ? (
+                    {task.due || task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {task.severityLabel || done || showProgress ? (
+                            {task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {task.severityLabel ? (
                                         <span
@@ -1177,6 +1212,18 @@ function TaskCard({
                                     {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
 
                                     {done ? <DonePill /> : null}
+
+                                    {task.estimatedHours != null ? (
+                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 font-semibold text-xs text-blue-700">
+                                            {task.estimatedHours}h ước lượng
+                                        </span>
+                                    ) : null}
+
+                                    {task.actualHours != null ? (
+                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-green-200 bg-green-50 px-3 py-2 font-semibold text-xs text-green-700">
+                                            {task.actualHours}h thực tế
+                                        </span>
+                                    ) : null}
                                 </div>
                             ) : null}
                         </div>
@@ -1205,11 +1252,11 @@ function GhostTaskCard({ task }: { task: Task }) {
                         {task.title}
                     </p>
 
-                    {task.due || task.severityLabel || done || showProgress ? (
+                    {task.due || task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {task.severityLabel || done || showProgress ? (
+                            {task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {task.severityLabel ? (
                                         <span
@@ -1226,6 +1273,18 @@ function GhostTaskCard({ task }: { task: Task }) {
                                     {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
 
                                     {done ? <DonePill /> : null}
+
+                                    {task.estimatedHours != null ? (
+                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 font-semibold text-xs text-blue-700">
+                                            {task.estimatedHours}h ước lượng
+                                        </span>
+                                    ) : null}
+
+                                    {task.actualHours != null ? (
+                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-green-200 bg-green-50 px-3 py-2 font-semibold text-xs text-green-700">
+                                            {task.actualHours}h thực tế
+                                        </span>
+                                    ) : null}
                                 </div>
                             ) : null}
                         </div>
@@ -2198,6 +2257,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
                 if (dueFmt) base.due = dueFmt;
                 if (dueRaw) base.dueRaw = dueRaw;
+                if (t.estimatedHours != null) base.estimatedHours = t.estimatedHours;
+                if (t.actualHours != null) base.actualHours = t.actualHours;
 
                 return base;
             });
@@ -2547,7 +2608,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 dueDate: rawDue,
                 startDate: rawStart,
                 dueDateSelected: dueSelected,
-                startDateSelected: startSelected
+                startDateSelected: startSelected,
+                estimatedHours: (values as any).estimatedHours ?? undefined,
+                actualHours: (values as any).actualHours ?? undefined,
+                priority: (values as any).priority,
+                severity: (values as any).severity
             });
 
             await refreshSilently();

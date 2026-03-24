@@ -50,6 +50,8 @@ type TaskItemResponse = {
     taskTitle?: string | null;
     dueDate?: string;
     startDate?: string;
+    estimatedHours?: number | null;
+    actualHours?: number | null;
     position?: number;
     taskPriority?: number;
     taskSeverity?: number;
@@ -119,6 +121,8 @@ export type TaskDetail = {
     dueDateRaw?: string | null;
     startDateFmt?: string | null;
     dueDateFmt?: string | null;
+    estimatedHours?: number | null;
+    actualHours?: number | null;
     raw?: unknown;
 };
 
@@ -1331,6 +1335,8 @@ function mapTaskDetailFromTaskItem(
         dueDateRaw: task?.dueDate ?? null,
         startDateFmt: task?.startDate ? formatDisplayDate(String(task.startDate)) : "",
         dueDateFmt: task?.dueDate ? formatDisplayDate(String(task.dueDate)) : "",
+        estimatedHours: task?.estimatedHours ?? null,
+        actualHours: task?.actualHours ?? null,
         raw: task
     };
 }
@@ -1698,6 +1704,8 @@ export default function TaskDetailModal(props: {
     const [progress, setProgress] = React.useState("0");
     const [startDate, setStartDate] = React.useState("");
     const [dueDate, setDueDate] = React.useState("");
+    const [estimatedHours, setEstimatedHours] = React.useState<number | undefined>(undefined);
+    const [actualHours, setActualHours] = React.useState<number | undefined>(undefined);
     const [description, setDescription] = React.useState("");
 
     const [submitting, setSubmitting] = React.useState(false);
@@ -2036,6 +2044,8 @@ export default function TaskDetailModal(props: {
         setProgress(String(normalizeProgressValue(task?.progressValue)));
         setStartDate(toDateInputValue(task?.startDateRaw));
         setDueDate(toDateInputValue(task?.dueDateRaw));
+        setEstimatedHours(task?.estimatedHours ?? undefined);
+        setActualHours(task?.actualHours ?? undefined);
         setDescription((task?.description ?? "").slice(0, TASK_DESCRIPTION_MAX_LENGTH));
         setSaveError(null);
         setIsEditing(false);
@@ -2134,7 +2144,9 @@ export default function TaskDetailModal(props: {
                     dueDate: toApiDateTimeOrNull(dueDate),
                     taskPriority: selectedPriorityValue,
                     taskSeverity: selectedSeverityValue,
-                    progress: normalizedProgressValue
+                    progress: normalizedProgressValue,
+                    estimatedHours: estimatedHours ?? null,
+                    actualHours: actualHours ?? null
                 }
             });
 
@@ -2159,6 +2171,8 @@ export default function TaskDetailModal(props: {
                     dueDateRaw: dueDate ? toApiDateTimeOrNull(dueDate) : null,
                     startDateFmt: startDate ? formatDisplayDate(startDate) : "",
                     dueDateFmt: dueDate ? formatDisplayDate(dueDate) : "",
+                    estimatedHours: estimatedHours ?? null,
+                    actualHours: actualHours ?? null,
                     description: descriptionTrimmed || null
                 };
             });
@@ -2386,7 +2400,6 @@ export default function TaskDetailModal(props: {
                                         </SelectContent>
                                     </Select>
                                 </div>
-
                                 <div>
                                     <div className="text-sm font-semibold text-zinc-600">Priority</div>
                                     <Select
@@ -2419,22 +2432,6 @@ export default function TaskDetailModal(props: {
                                         </SelectContent>
                                     </Select>
                                 </div>
-
-                                <TrelloDatePicker
-                                    label="Start Date"
-                                    value={startDate}
-                                    onChange={setStartDate}
-                                    disabled={!isEditing}
-                                />
-
-                                <TrelloDatePicker
-                                    label="Due Date"
-                                    value={dueDate}
-                                    onChange={setDueDate}
-                                    min={startDate || undefined}
-                                    disabled={!isEditing}
-                                />
-
                                 <div>
                                     <div className="text-sm font-semibold text-zinc-600">Severity</div>
                                     <Select
@@ -2469,6 +2466,69 @@ export default function TaskDetailModal(props: {
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                
+
+                                <TrelloDatePicker
+                                    label="Start Date"
+                                    value={startDate}
+                                    onChange={setStartDate}
+                                    disabled={!isEditing}
+                                />
+                                <TrelloDatePicker
+                                    label="Due Date"
+                                    value={dueDate}
+                                    onChange={setDueDate}
+                                    min={startDate || undefined}
+                                    disabled={!isEditing}
+                                />
+
+                                
+
+                                <div>
+                                    <div className="text-sm font-semibold text-zinc-600">Estimated Hours</div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        value={estimatedHours ?? ""}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const num = parseFloat(val);
+                                            setEstimatedHours(val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "-" || e.key === "e" || e.key === "E") {
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                        disabled={!isEditing}
+                                        placeholder="0"
+                                        className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <div className="text-sm font-semibold text-zinc-600">Actual Hours</div>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        value={actualHours ?? ""}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const num = parseFloat(val);
+                                            setActualHours(val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "-" || e.key === "e" || e.key === "E") {
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                        disabled={!isEditing}
+                                        placeholder="0"
+                                        className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
                                 </div>
 
                                 <div className="md:col-span-2 xl:col-span-2">

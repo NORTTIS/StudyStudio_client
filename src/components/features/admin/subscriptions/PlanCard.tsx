@@ -54,7 +54,7 @@ export function PlanCard({ plan, onEditLimits, onEditPrice }: PlanCardProps) {
             {/* Active Subscribers */}
             <div className="mb-4 rounded-lg bg-[#F8F8F8] p-4">
                 <p className="mb-1 text-[#6F6B99] text-xs">Active Subscribers</p>
-                <p className="font-bold text-2xl text-[#261E33]">{plan.activeSubscribers.toLocaleString()}</p>
+                <p className="font-bold text-2xl text-[#261E33]">{(plan.activeSubscribers ?? 0).toLocaleString()}</p>
             </div>
 
             {/* Plan Limits */}

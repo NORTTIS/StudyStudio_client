@@ -293,7 +293,7 @@ export async function getDocumentDownloadUrl(attachmentId: string, expirationMin
     return json.data.downloadUrl;
 }
 
-function toOptionalNumber(value: unknown): number | null {
+export function toOptionalNumber(value: unknown): number | null {
     if (typeof value === "number" && Number.isFinite(value)) return value;
     if (typeof value === "string" && value.trim() !== "") {
         const parsed = Number(value);
@@ -385,9 +385,15 @@ function parseSseChunk(data: string): string {
 type ParsedSseBlock = {
     chunk: string;
     done: boolean;
+    metadata?: {
+        remainingRequests: number | null;
+        dailyLimit: number | null;
+    };
 };
 
-function parseSseBlock(block: string): ParsedSseBlock {
+export function parseSseBlock(block: string, options?: {
+    onMetadata?: (metadata: { remainingRequests: number | null; dailyLimit: number | null }) => void;
+}): ParsedSseBlock {
     if (!block.trim()) return { chunk: "", done: false };
 
     const dataLines = block
@@ -401,21 +407,48 @@ function parseSseBlock(block: string): ParsedSseBlock {
     if (trimmed === "[DONE]") return { chunk: "", done: true };
 
     try {
-        const parsed = JSON.parse(trimmed) as { type?: unknown; message?: unknown };
+        const parsed = JSON.parse(trimmed) as {
+            type?: unknown;
+            message?: unknown;
+            remainingRequests?: unknown;
+            dailyLimit?: unknown;
+        };
+
         if (parsed.type === "done") return { chunk: "", done: true };
         if (parsed.type === "error") {
             throw new Error(typeof parsed.message === "string" ? parsed.message : "AI error");
         }
+
+        // Xử lý metadata event - extract remainingRequests và dailyLimit
+        if (parsed.type === "metadata") {
+            const remainingRequests = toOptionalNumber(parsed.remainingRequests);
+            const dailyLimit = toOptionalNumber(parsed.dailyLimit);
+
+            if (remainingRequests !== null || dailyLimit !== null) {
+                const metadata = { remainingRequests, dailyLimit };
+                options?.onMetadata?.(metadata);
+                return { chunk: "", done: false, metadata };
+            }
+        }
+
+        // No type field — treat as raw data, not a structured SSE event
+        if (parsed.type === undefined || parsed.type === null) {
+            return { chunk: "", done: false };
+        }
+
+        return { chunk: parseSseChunk(raw), done: false };
     } catch (error) {
         if (error instanceof Error) throw error;
     }
 
+    // Fallback for non-JSON content
     return { chunk: parseSseChunk(raw), done: false };
 }
 
 export type AskGroupAiResult = {
     answer: AIAnswerResponse;
     remainingRequests: number | null;
+    dailyLimit: number | null;
 };
 
 export async function askGroupAi(payload: AIQuestionRequest): Promise<AskGroupAiResult> {
@@ -444,7 +477,8 @@ export async function askGroupAi(payload: AIQuestionRequest): Promise<AskGroupAi
 
     return {
         answer: json.data,
-        remainingRequests: extractRemainingRequests(json, res.headers)
+        remainingRequests: extractRemainingRequests(json, res.headers),
+        dailyLimit: toOptionalNumber((json as { data?: { dailyLimit?: unknown } }).data?.dailyLimit)
     };
 }
 
@@ -452,6 +486,7 @@ export async function askGroupAiStream(
     payload: AIAskStreamRequest,
     options?: {
         onChunk?: (fullText: string, delta: string) => void;
+        onMetadata?: (metadata: { remainingRequests: number | null; dailyLimit: number | null }) => void;
     }
 ): Promise<AskGroupAiResult> {
     const baseUrl = getBaseUrl();
@@ -482,6 +517,8 @@ export async function askGroupAiStream(
     let buffer = "";
     let answer = "";
     let doneByEvent = false;
+    let remainingRequests: number | null = null;
+    let dailyLimit: number | null = null;
 
     while (true) {
         const { value, done } = await reader.read();
@@ -492,7 +529,17 @@ export async function askGroupAiStream(
         buffer = blocks.pop() || "";
 
         for (const block of blocks) {
-            const parsed = parseSseBlock(block);
+            const parsed = parseSseBlock(block, {
+                onMetadata: (metadata) => {
+                    if (metadata.remainingRequests !== null) {
+                        remainingRequests = metadata.remainingRequests;
+                    }
+                    if (metadata.dailyLimit !== null) {
+                        dailyLimit = metadata.dailyLimit;
+                    }
+                    options?.onMetadata?.(metadata);
+                }
+            });
             if (parsed.chunk) {
                 answer += parsed.chunk;
                 options?.onChunk?.(answer, parsed.chunk);
@@ -508,7 +555,17 @@ export async function askGroupAiStream(
 
     buffer += decoder.decode();
     if (buffer.trim()) {
-        const parsed = parseSseBlock(buffer);
+        const parsed = parseSseBlock(buffer, {
+            onMetadata: (metadata) => {
+                if (metadata.remainingRequests !== null) {
+                    remainingRequests = metadata.remainingRequests;
+                }
+                if (metadata.dailyLimit !== null) {
+                    dailyLimit = metadata.dailyLimit;
+                }
+                options?.onMetadata?.(metadata);
+            }
+        });
         if (parsed.chunk) {
             answer += parsed.chunk;
             options?.onChunk?.(answer, parsed.chunk);
@@ -523,7 +580,8 @@ export async function askGroupAiStream(
     return {
         answer: {
             answer: finalAnswer
-        } as AIAnswerResponse,
-        remainingRequests: extractRemainingRequestsFromHeaders(res.headers)
+        },
+        remainingRequests: remainingRequests ?? extractRemainingRequestsFromHeaders(res.headers),
+        dailyLimit
     };
 }
