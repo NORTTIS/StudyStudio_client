@@ -79,7 +79,7 @@ export function DashboardSidebar() {
     const currentPath = stripLocale(pathname || "");
 
     const activeGroups: Record<string, string[]> = {
-        "/home": ["/home", "/ai"],
+        "/home": ["/home", "/ai", "/analysis"],
         "/group": ["/group"],
         "/master": ["/master"],
         "/announcements": ["/announcements"],
