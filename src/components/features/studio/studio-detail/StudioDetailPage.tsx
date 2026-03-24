@@ -33,22 +33,11 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { hexToGradient } from "@/lib/utils";
-import { ActivityHeatmap } from "./ActivityHeatmap";
 import AIMaster from "./AIMaster";
-import { GroupPerformanceRadar } from "./GroupPerformanceRadar";
-import { GroupProgressChart } from "./GroupProgressChart";
+import AnalyticMaster from "./analytic/AnalyticMaster";
 import { MemberDetailModal } from "./MemberDetailModal";
 import { MemberList } from "./MemberList";
 import { QuickAssignModal } from "./QuickAssignModal";
-import { StudioDateRange } from "./StudioDateRange";
-import {
-    type GroupHeatmapComparisonData,
-    type GroupProgress,
-    mockGroupPerformance,
-    transformGroupComparisonToProgress,
-    transformStudioHeatmapToComparison
-} from "./types";
 
 type StudioResponse = components["schemas"]["StudioResponse"];
 type GroupCardDto = components["schemas"]["GroupCardDto"];
@@ -89,13 +78,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"groups" | "ai" | "analytics" | "settings">("groups");
-    const [_analyticsSubTab, _setAnalyticsSubTab] = useState<
-        "progress" | "activity" | "group-progress" | "performance"
-    >("progress");
-    const [heatmapData, setHeatmapData] = useState<GroupHeatmapComparisonData[]>([]);
-    const [heatmapLoading, setHeatmapLoading] = useState(true);
-    const [groupProgress, setGroupProgress] = useState<GroupProgress[]>([]);
-    const [groupsLoading, setGroupsLoading] = useState(true);
     const isStudioOwner = initialStudio?.studioRole === 0;
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState("");
@@ -168,45 +150,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             toast({ description: t("loadError"), variant: "destructive" });
         } finally {
             setMembersLoading(false);
-        }
-
-        if (studioId) {
-            setHeatmapLoading(true);
-            try {
-                const heatmapResult = await getStudioGroupHeatmap(studioId, { locale });
-                const heatmapPayload = heatmapResult.data as { groupHeatmap?: unknown } | null;
-                const hasData = heatmapPayload?.groupHeatmap != null;
-                if (hasData) {
-                    setHeatmapData(
-                        transformStudioHeatmapToComparison(
-                            (heatmapPayload as { groupHeatmap: components["schemas"]["StudioHeatmapData"][] })
-                                .groupHeatmap
-                        )
-                    );
-                } else {
-                    console.warn("[ActivityHeatmap] Unexpected response shape:", heatmapResult);
-                }
-            } catch (error) {
-                console.error("[ActivityHeatmap] Failed to load heatmap data:", error);
-            } finally {
-                setHeatmapLoading(false);
-            }
-        }
-
-        if (studioId) {
-            setGroupsLoading(true);
-            try {
-                const result = await getStudioGroupAnalytics(studioId, locale);
-                if (result.status === "success" && Array.isArray(result.data)) {
-                    setGroupProgress(transformGroupComparisonToProgress(result.data));
-                } else {
-                    console.warn("[GroupProgressChart] Unexpected response shape:", result);
-                }
-            } catch (error) {
-                console.error("[GroupProgressChart] Failed to load group analytics:", error);
-            } finally {
-                setGroupsLoading(false);
-            }
         }
     }, [locale, toast, t, studioId]);
 
@@ -734,25 +677,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             </div>
                         )}
 
-                        {activeTab === "analytics" && (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                    <StudioDateRange
-                                        startDate={studio.startDate ? formatDateForInput(studio.startDate) : ""}
-                                        dueDate={studio.endDate ? formatDateForInput(studio.endDate) : ""}
-                                    />
-                                    <ActivityHeatmap data={heatmapData} loading={heatmapLoading} />
-                                </div>
-                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                                    <GroupProgressChart
-                                        groups={groupsLoading ? [] : groupProgress}
-                                        studioStartDate={studio.startDate ? formatDateForInput(studio.startDate) : ""}
-                                        studioDueDate={studio.endDate ? formatDateForInput(studio.endDate) : ""}
-                                    />
-                                    <GroupPerformanceRadar data={mockGroupPerformance} />
-                                </div>
-                            </div>
-                        )}
+                        {activeTab === "analytics" && <AnalyticMaster />}
 
                         {activeTab === "ai" && <AIMaster studioId={studioId} />}
 

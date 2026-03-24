@@ -713,10 +713,6 @@ export default function HomeSummary() {
                                             Tổng quan công việc
                                         </h1>
 
-                                        <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
-                                            Hiển thị nhanh 3 chỉ số chính. Bấm vào chi tiết để mở layer tổng.
-                                        </p>
-
                                         <div className="mt-4">
                                             <HomeTopTabs />
                                         </div>
