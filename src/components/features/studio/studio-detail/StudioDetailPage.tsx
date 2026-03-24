@@ -33,6 +33,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { hexToGradient } from "@/lib/utils";
 import AIMaster from "./AIMaster";
 import AnalyticMaster from "./analytic/AnalyticMaster";
 import { MemberDetailModal } from "./MemberDetailModal";
