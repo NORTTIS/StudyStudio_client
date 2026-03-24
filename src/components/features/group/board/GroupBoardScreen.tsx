@@ -509,8 +509,8 @@ async function apiCreateTask(args: {
     startDateSelected?: boolean;
     estimatedHours?: number;
     actualHours?: number;
-    priority?: string;
-    severity?: string;
+    priority?: string | components["schemas"]["TaskPriority"];
+    severity?: string | components["schemas"]["TaskSeverity"];
 }) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
@@ -529,7 +529,9 @@ async function apiCreateTask(args: {
         taskName: String(args.taskName ?? "").trim()
     };
 
-    if (args.assigneeId && isUuidLike(args.assigneeId)) payload.assignees = args.assigneeId;
+    if (args.assigneeId && isUuidLike(args.assigneeId)) {
+        payload.assignees = args.assigneeId;
+    }
 
     const dueIso = toIsoOrNull(args.dueDate);
     const startIso = toIsoOrNull(args.startDate);
@@ -539,13 +541,15 @@ async function apiCreateTask(args: {
     if (args.estimatedHours != null && args.estimatedHours > 0) payload.estimatedHours = args.estimatedHours;
     if (args.actualHours != null && args.actualHours > 0) payload.actualHours = args.actualHours;
 
-    // Convert string priority to API numeric type
-    if (args.priority != null && args.priority in PRIORITY_MAP) {
+    if (typeof args.priority === "number") {
+        payload.taskPriority = args.priority;
+    } else if (typeof args.priority === "string" && args.priority in PRIORITY_MAP) {
         payload.taskPriority = PRIORITY_MAP[args.priority];
     }
 
-    // Convert string severity to API numeric type
-    if (args.severity != null && args.severity in SEVERITY_MAP) {
+    if (typeof args.severity === "number") {
+        payload.taskSeverity = args.severity;
+    } else if (typeof args.severity === "string" && args.severity in SEVERITY_MAP) {
         payload.taskSeverity = SEVERITY_MAP[args.severity];
     }
 
@@ -667,8 +671,8 @@ function applyTaskDrop(args: {
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-          ? overRaw.replace(END_PREFIX, "")
-          : overRaw;
+            ? overRaw.replace(END_PREFIX, "")
+            : overRaw;
 
     const fromCol = findColumnOfTask(board, columns, activeTaskId);
     if (!fromCol) return null;
@@ -760,8 +764,8 @@ function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?:
                 done
                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                     : overdue
-                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
@@ -2365,8 +2369,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-              ? overId.replace(END_PREFIX, "")
-              : overId;
+                ? overId.replace(END_PREFIX, "")
+                : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -2586,7 +2590,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         if (!groupId) throw new Error("Thiếu groupId.");
         if (!isUuidLike(groupId)) throw new Error("groupId route không hợp lệ (không phải UUID).");
 
-        const columnId = (values as any).statusId ?? taskFormColumnId ?? null;
+        const columnId = (values as any).statusId ?? (values as any).groupStatusId ?? taskFormColumnId ?? null;
         if (!columnId) throw new Error("Thiếu trạng thái.");
         if (!isUuidLike(columnId)) throw new Error("Sai columnId.");
 
@@ -2596,7 +2600,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const dueSelected = rawDue != null && String(rawDue).trim() !== "";
         const startSelected = rawStart != null && String(rawStart).trim() !== "";
 
-        const assigneeId = (values as any).assigneeId ?? (values as any).assignees ?? (values as any).assignee ?? null;
+        const assigneeId =
+            (values as any).assigneeId ??
+            (values as any).assignees ??
+            (values as any).assignee ??
+            null;
 
         setCreatingTask(true);
         try {
@@ -2611,8 +2619,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 startDateSelected: startSelected,
                 estimatedHours: (values as any).estimatedHours ?? undefined,
                 actualHours: (values as any).actualHours ?? undefined,
-                priority: (values as any).priority,
-                severity: (values as any).severity
+                priority: (values as any).taskPriority,
+                severity: (values as any).taskSeverity
             });
 
             await refreshSilently();

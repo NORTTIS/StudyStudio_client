@@ -148,7 +148,13 @@ type TaskCommentListResponse = {
     comments?: TaskCommentWithReplies[] | null;
 };
 
-type MentionUser = { id: string; name: string };
+type MentionUser = {
+    id: string;
+    name: string;
+    subtitle?: string;
+    avatarUrl?: string | null;
+    isAll?: boolean;
+};
 
 type MentionTextareaHandle = {
     getPayloadText: () => string;
@@ -168,7 +174,7 @@ function safeInitialsFromName(name?: string | null) {
 }
 
 function renderAllMentions(segment: string) {
-    const re = /@all\b/g;
+    const re = /@(all|mọi người)\b/g;
     const nodes: React.ReactNode[] = [];
     let last = 0;
 
@@ -191,8 +197,61 @@ function renderAllMentions(segment: string) {
     return nodes.length ? nodes : segment;
 }
 
-function compressAllMentionsForDisplay(text: string) {
-    return text;
+function escapeRegExp(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function compressAllMentionsForDisplay(
+    text: string,
+    membersById: Record<string, string>,
+    authorId?: string
+) {
+    const allMemberIds = Object.keys(membersById)
+        .map((id) => String(id).trim())
+        .filter(Boolean);
+
+    if (allMemberIds.length === 0) return text;
+
+    const normalizedAuthorId = normalizeUserId(authorId);
+    const expectedAllIds = allMemberIds.filter(
+        (id) => normalizeUserId(id) !== normalizedAuthorId
+    );
+
+    if (expectedAllIds.length === 0) return text;
+
+    const escaped = expectedAllIds.map((id) => `@${escapeRegExp(id)}`);
+
+    const patterns: string[] = [];
+
+    const permutations = (arr: string[]): string[][] => {
+        if (arr.length <= 1) return [arr];
+        const result: string[][] = [];
+        for (let i = 0; i < arr.length; i++) {
+            const current = arr[i];
+            const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+            for (const tail of permutations(rest)) {
+                result.push([current, ...tail]);
+            }
+        }
+        return result;
+    };
+
+    if (escaped.length <= 6) {
+        for (const perm of permutations(escaped)) {
+            patterns.push(perm.join("\\s+"));
+        }
+    } else {
+        patterns.push(escaped.join("\\s+"));
+    }
+
+    let output = text;
+
+    for (const pattern of patterns) {
+        const re = new RegExp(`(^|\\s)(${pattern})(?=\\s|$)`, "g");
+        output = output.replace(re, (_match, prefix) => `${prefix}@__all__`);
+    }
+
+    return output;
 }
 
 function normalizeUserId(value?: string | null) {
@@ -279,13 +338,17 @@ function apiUrl(path: string) {
 
 function RichTextWithMentions({
     text,
-    membersById
+    membersById,
+    authorId
 }: {
     text: string;
     membersById: Record<string, string>;
     authorId: string;
 }) {
-    const displayText = React.useMemo(() => compressAllMentionsForDisplay(text), [text]);
+    const displayText = React.useMemo(
+        () => compressAllMentionsForDisplay(text, membersById, authorId),
+        [text, membersById, authorId]
+    );
 
     const re = /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
     const parts: React.ReactNode[] = [];
@@ -301,7 +364,7 @@ function RichTextWithMentions({
         if (id === "__all__") {
             parts.push(
                 <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
-                    @all
+                    @mọi người
                 </span>
             );
         } else {
@@ -357,14 +420,21 @@ const MentionTextarea = React.forwardRef<
     ref
 ) {
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
+    const popupRef = React.useRef<HTMLDivElement | null>(null);
 
+    const [mounted, setMounted] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const [activeIndex, setActiveIndex] = React.useState(0);
     const [query, setQuery] = React.useState("");
     const [anchor, setAnchor] = React.useState<{ start: number; end: number } | null>(null);
+    const [popupPosition, setPopupPosition] = React.useState<{ top: number; left: number; width: number } | null>(null);
 
     const mentionsRef = React.useRef<{ id: string; name: string; start: number; end: number }[]>([]);
     const [inputHeight, setInputHeight] = React.useState(24);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const resizeTextarea = React.useCallback(() => {
         const el = taRef.current;
@@ -376,19 +446,80 @@ const MentionTextarea = React.forwardRef<
         setInputHeight(nextHeight);
     }, []);
 
+    const updatePopupPosition = React.useCallback(() => {
+        const el = taRef.current;
+        if (!el) return;
+
+        const rect = el.getBoundingClientRect();
+        const width = Math.min(420, Math.max(280, rect.width));
+        const viewportPadding = 12;
+
+        let left = rect.left;
+        if (left + width > window.innerWidth - viewportPadding) {
+            left = window.innerWidth - width - viewportPadding;
+        }
+        if (left < viewportPadding) left = viewportPadding;
+
+        const estimatedHeight = 320;
+        const showAbove = rect.top > estimatedHeight + 16;
+
+        setPopupPosition({
+            left,
+            width,
+            top: showAbove ? rect.top - 8 : rect.bottom + 8
+        });
+    }, []);
+
     React.useLayoutEffect(() => {
         resizeTextarea();
     }, [value, resizeTextarea]);
 
+    React.useEffect(() => {
+        if (!(open && mounted)) return;
+
+        updatePopupPosition();
+
+        const handleReposition = () => updatePopupPosition();
+
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+            if (taRef.current?.contains(target)) return;
+            if (popupRef.current?.contains(target)) return;
+            setOpen(false);
+        };
+
+        window.addEventListener("resize", handleReposition);
+        window.addEventListener("scroll", handleReposition, true);
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            window.removeEventListener("resize", handleReposition);
+            window.removeEventListener("scroll", handleReposition, true);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [open, mounted, updatePopupPosition]);
+
     const filtered = React.useMemo(() => {
         const q = query.trim().toLowerCase();
 
-        const allOption: MentionUser = { id: "__all__", name: "all" };
+        const allOption: MentionUser = {
+            id: "__all__",
+            name: "mọi người",
+            subtitle: "Nhắc đến mọi người trong cuộc trò chuyện này",
+            isAll: true
+        };
+
         const baseUsers = members.filter((u) => normalizeUserId(u.id) !== normalizeUserId(meId));
-        const full = [allOption, ...baseUsers];
+        const full = [...baseUsers, allOption];
 
         if (!q) return full.slice(0, 8);
-        return full.filter((u) => u.name.toLowerCase().includes(q)).slice(0, 8);
+
+        return full
+            .filter((u) => {
+                const haystack = `${u.name} ${u.subtitle ?? ""}`.toLowerCase();
+                return haystack.includes(q);
+            })
+            .slice(0, 8);
     }, [members, meId, query]);
 
     const detectFromText = React.useCallback((text: string, caret: number) => {
@@ -409,13 +540,17 @@ const MentionTextarea = React.forwardRef<
             setAnchor({ start: i, end: caret });
             setOpen(true);
             setActiveIndex(0);
+
+            requestAnimationFrame(() => {
+                updatePopupPosition();
+            });
             return;
         }
 
         setOpen(false);
         setAnchor(null);
         setQuery("");
-    }, []);
+    }, [updatePopupPosition]);
 
     const insertMention = (user: MentionUser) => {
         const el = taRef.current;
@@ -424,7 +559,8 @@ const MentionTextarea = React.forwardRef<
         const before = value.slice(0, anchor.start);
         const after = value.slice(anchor.end);
 
-        const tokenVisible = `@${user.name}`;
+        const visibleName = user.isAll ? "mọi người" : user.name;
+        const tokenVisible = `@${visibleName}`;
         const tokenInsert = `${tokenVisible} `;
         const next = before + tokenInsert + after;
 
@@ -437,8 +573,8 @@ const MentionTextarea = React.forwardRef<
 
         mentionsRef.current = mentionsRef.current.filter((m) => !(m.start < end && m.end > start));
 
-        if (user.id !== "__all__") {
-            mentionsRef.current.push({ id: user.id, name: user.name, start, end });
+        if (!user.isAll) {
+            mentionsRef.current.push({ id: user.id, name: visibleName, start, end });
         }
 
         setOpen(false);
@@ -478,7 +614,10 @@ const MentionTextarea = React.forwardRef<
         mentionsRef.current = mentionsRef.current.filter((m) => next.slice(m.start, m.end) === `@${m.name}`);
         detectFromText(next, caret);
 
-        requestAnimationFrame(resizeTextarea);
+        requestAnimationFrame(() => {
+            resizeTextarea();
+            if (open) updatePopupPosition();
+        });
     };
 
     const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
@@ -540,6 +679,7 @@ const MentionTextarea = React.forwardRef<
             text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
         }
 
+        text = text.replace(/@mọi người\b/g, "@__all__");
         text = text.replace(/@all\b/g, "@__all__");
 
         return text;
@@ -584,81 +724,127 @@ const MentionTextarea = React.forwardRef<
         return nodes.length ? nodes : text;
     }, [value]);
 
-    return (
-        <div className="relative w-full min-w-0 max-w-full overflow-x-hidden">
-            <div
-                className="relative"
-                style={{ minHeight: 24, height: inputHeight }}
-            >
+    const popup =
+        mounted && open && !disabled && popupPosition
+            ? createPortal(
                 <div
-                    aria-hidden
-                    className={cn(
-                        "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap break-words text-sm leading-6 text-zinc-900",
-                        disabled && "opacity-60"
-                    )}
-                    style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+                    ref={popupRef}
+                    className="fixed z-[22000] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                    style={{
+                        left: popupPosition.left,
+                        top: popupPosition.top,
+                        width: popupPosition.width,
+                        maxHeight: 320,
+                        transform:
+                            popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
+                                ? "translateY(-100%)"
+                                : undefined
+                    }}
                 >
-                    {value ? <>{previewNodes}</> : <span className="text-zinc-400">{placeholder}</span>}
-                </div>
+                    {filtered.length > 0 ? (
+                        <div className="max-h-80 overflow-y-auto py-2">
+                            {filtered.map((u, idx) => {
+                                const isActive = idx === activeIndex;
+                                const displayName = u.isAll ? "mọi người" : u.name;
+                                const subtitle =
+                                    u.subtitle || (u.isAll ? "Nhắc đến mọi người trong cuộc trò chuyện này" : "");
 
-                <textarea
-                    ref={taRef}
-                    data-task-comment-input="true"
-                    value={value}
-                    onChange={onTextChange}
-                    onKeyDown={onKeyDown}
-                    rows={1}
-                    placeholder=""
-                    disabled={disabled}
-                    maxLength={maxChars}
-                    className={cn(
-                        "relative z-10 block w-full max-w-full resize-none overflow-hidden bg-transparent text-sm leading-6 text-transparent caret-zinc-900 outline-none selection:bg-blue-200",
-                        "min-h-[24px]",
-                        "disabled:cursor-not-allowed disabled:caret-transparent",
-                        className
+                                return (
+                                    <button
+                                        key={u.id}
+                                        type="button"
+                                        onMouseDown={(ev) => {
+                                            ev.preventDefault();
+                                            insertMention(u);
+                                        }}
+                                        className={cn(
+                                            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
+                                            isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
+                                        )}
+                                    >
+                                        <div className="shrink-0">
+                                            {u.isAll ? (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
+                                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                                                        <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                                    </svg>
+                                                </div>
+                                            ) : u.avatarUrl ? (
+                                                <Image
+                                                    src={u.avatarUrl}
+                                                    alt={displayName}
+                                                    width={40}
+                                                    height={40}
+                                                    unoptimized
+                                                    className="h-10 w-10 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
+                                                    {safeInitialsFromName(displayName)}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-[17px] font-medium leading-5 text-zinc-900">
+                                                {displayName}
+                                            </div>
+                                            {subtitle ? (
+                                                <div className="truncate pt-0.5 text-[15px] leading-5 text-zinc-500">
+                                                    {subtitle}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="px-4 py-3 text-sm text-zinc-500">Không có thành viên để mention.</div>
                     )}
-                    style={{ height: inputHeight, overflowWrap: "anywhere", wordBreak: "break-word" }}
-                />
+                </div>,
+                document.body
+            )
+            : null;
+
+    return (
+        <>
+            <div className="relative w-full min-w-0 max-w-full overflow-visible">
+                <div className="relative" style={{ minHeight: 24, height: inputHeight }}>
+                    <div
+                        aria-hidden
+                        className={cn(
+                            "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap break-words text-sm leading-6 text-zinc-900",
+                            disabled && "opacity-60"
+                        )}
+                        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+                    >
+                        {value ? <>{previewNodes}</> : <span className="text-zinc-400">{placeholder}</span>}
+                    </div>
+
+                    <textarea
+                        ref={taRef}
+                        data-task-comment-input="true"
+                        value={value}
+                        onChange={onTextChange}
+                        onKeyDown={onKeyDown}
+                        rows={1}
+                        placeholder=""
+                        disabled={disabled}
+                        maxLength={maxChars}
+                        className={cn(
+                            "relative z-10 block w-full max-w-full resize-none overflow-hidden bg-transparent text-sm leading-6 text-transparent caret-zinc-900 outline-none selection:bg-blue-200",
+                            "min-h-[24px]",
+                            "disabled:cursor-not-allowed disabled:caret-transparent",
+                            className
+                        )}
+                        style={{ height: inputHeight, overflowWrap: "anywhere", wordBreak: "break-word" }}
+                    />
+                </div>
             </div>
 
-            {open && !disabled ? (
-                filtered.length > 0 ? (
-                    <div className="absolute left-0 top-full z-[12000] mt-2 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
-                        <div className="max-h-56 overflow-auto p-1">
-                            {filtered.map((u, idx) => (
-                                <button
-                                    key={u.id}
-                                    type="button"
-                                    onMouseDown={(ev) => {
-                                        ev.preventDefault();
-                                        insertMention(u);
-                                    }}
-                                    className={cn(
-                                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-zinc-50",
-                                        idx === activeIndex && "bg-zinc-50"
-                                    )}
-                                >
-                                    <div className="grid h-8 w-8 place-items-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-800">
-                                        {u.id === "__all__" ? "ALL" : safeInitialsFromName(u.name)}
-                                    </div>
-
-                                    <div className="min-w-0">
-                                        <div className="truncate font-semibold text-zinc-900">
-                                            {u.id === "__all__" ? "@all" : u.name}
-                                        </div>
-                                        <div className="text-xs text-zinc-500">Enter để chọn</div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="absolute left-0 top-full z-[12000] mt-2 w-full rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-500 shadow-xl">
-                        Không có thành viên để mention.
-                    </div>
-                )
-            ) : null}
-        </div>
+            {popup}
+        </>
     );
 });
 
@@ -829,7 +1015,7 @@ function relativeTimeOf(input?: string | null) {
 function priorityTone(label?: string | null) {
     const v = String(label ?? "").toLowerCase();
     if (v === "high") return "text-rose-600";
-    if (v === "medium") return "text-amber-700";
+    if (v === "medium") return "text-yellow-500";
     if (v === "low") return "text-emerald-700";
     return "text-zinc-700";
 }
@@ -1806,11 +1992,18 @@ export default function TaskDetailModal(props: {
 
     const mentionUsers = React.useMemo<MentionUser[]>(
         () =>
-            Object.entries(membersById).map(([id, name]) => ({
-                id,
-                name
-            })),
-        [membersById]
+            members.map((m) => {
+                const id = String(m.userId ?? "").trim();
+                const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email || "User";
+
+                return {
+                    id,
+                    name,
+                    subtitle: m.email ?? "",
+                    avatarUrl: safeAvatarUrl(m.avatarUrl)
+                };
+            }),
+        [members]
     );
 
     const handleSendComment = async () => {
@@ -2467,7 +2660,7 @@ export default function TaskDetailModal(props: {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                
+
 
                                 <TrelloDatePicker
                                     label="Start Date"
@@ -2483,7 +2676,7 @@ export default function TaskDetailModal(props: {
                                     disabled={!isEditing}
                                 />
 
-                                
+
 
                                 <div>
                                     <div className="text-sm font-semibold text-zinc-600">Estimated Hours</div>
@@ -2799,7 +2992,7 @@ export default function TaskDetailModal(props: {
                                             </div>
                                         )}
 
-                                        <div className="w-full min-w-0 flex-1 overflow-x-hidden rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm">
+                                        <div className="w-full min-w-0 flex-1 overflow-visible rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm">
                                             <div className="flex items-center gap-2">
                                                 <div className="min-w-0 flex-1">
                                                     <MentionTextarea

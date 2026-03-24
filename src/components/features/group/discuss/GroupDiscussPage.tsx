@@ -1,6 +1,7 @@
 "use client";
 
 import * as signalR from "@microsoft/signalr";
+import Image from "next/image";
 import {
     ChevronDown,
     ChevronUp,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { apiFetch } from "@/api/api-client";
 import { getAccessToken, getUserData } from "@/api/auth";
@@ -33,7 +35,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 
 type UserLite = {
@@ -74,7 +75,23 @@ type MessageDeletedPayload = {
     timestamp: string;
 };
 
-type MentionUser = { id: string; name: string };
+type MentionUser = {
+    id: string;
+    name: string;
+    subtitle?: string;
+    avatarUrl?: string | null;
+    isAll?: boolean;
+};
+
+type MentionTextareaHandle = {
+    getPayloadText: () => string;
+};
+
+type PopupPosition = {
+    top: number;
+    left: number;
+    width: number;
+};
 
 const MAX_CHARS = 500;
 
@@ -96,6 +113,106 @@ function safeInitials(name?: string) {
     const n = String(name || "").trim();
     if (!n || n === "Bạn") return "B";
     return initialsOf(n);
+}
+
+function safeInitialsFromName(name?: string | null) {
+    const s = String(name ?? "").trim();
+    if (!s) return "U";
+    const parts = s.split(/\s+/).filter(Boolean);
+    const a = parts[0]?.[0] ?? "";
+    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+    return `${a}${b}`.toUpperCase() || "U";
+}
+
+function safeAvatarUrl(input?: string | null) {
+    const raw = String(input ?? "").trim();
+    if (!raw) return "";
+    return raw.replace("localhost", "127.0.0.1");
+}
+
+function normalizeUserId(value?: string | null) {
+    return String(value ?? "").trim().toLowerCase();
+}
+
+function escapeRegExp(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function compressAllMentionsForDisplay(
+    text: string,
+    membersById: Record<string, string>,
+    authorId?: string
+) {
+    const allMemberIds = Object.keys(membersById)
+        .map((id) => String(id).trim())
+        .filter(Boolean);
+
+    if (allMemberIds.length === 0) return text;
+
+    const normalizedAuthorId = normalizeUserId(authorId);
+    const expectedAllIds = allMemberIds.filter(
+        (id) => normalizeUserId(id) !== normalizedAuthorId
+    );
+
+    if (expectedAllIds.length === 0) return text;
+
+    const escaped = expectedAllIds.map((id) => `@${escapeRegExp(id)}`);
+    const patterns: string[] = [];
+
+    const permutations = (arr: string[]): string[][] => {
+        if (arr.length <= 1) return [arr];
+        const result: string[][] = [];
+        for (let i = 0; i < arr.length; i++) {
+            const current = arr[i];
+            const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+            for (const tail of permutations(rest)) {
+                result.push([current, ...tail]);
+            }
+        }
+        return result;
+    };
+
+    if (escaped.length <= 6) {
+        for (const perm of permutations(escaped)) {
+            patterns.push(perm.join("\\s+"));
+        }
+    } else {
+        patterns.push(escaped.join("\\s+"));
+    }
+
+    let output = text;
+
+    for (const pattern of patterns) {
+        const re = new RegExp(`(^|\\s)(${pattern})(?=\\s|$)`, "g");
+        output = output.replace(re, (_match, prefix) => `${prefix}@__all__`);
+    }
+
+    return output;
+}
+
+function expandMentionAll(
+    payloadText: string,
+    membersById: Record<string, string>,
+    excludedIds: string[] = []
+) {
+    if (!payloadText.includes("@__all__")) return payloadText;
+
+    const excludedSet = new Set(
+        excludedIds.map((id) => normalizeUserId(id)).filter(Boolean)
+    );
+
+    const memberIds = Object.keys(membersById).filter((id) => {
+        const normalizedId = normalizeUserId(id);
+        return normalizedId && !excludedSet.has(normalizedId);
+    });
+
+    if (memberIds.length === 0) {
+        return payloadText.replace(/@__all__\b/g, "").replace(/\s{2,}/g, " ").trim();
+    }
+
+    const mentions = memberIds.map((id) => `@${id}`).join(" ");
+
+    return payloadText.replace(/@__all__\b/g, mentions).replace(/\s{2,}/g, " ").trim();
 }
 
 function timeAgoText(date: Date) {
@@ -236,28 +353,35 @@ function TextCounter({
 
 function RichTextWithMentions({
     text,
-    membersById
+    membersById,
+    authorId
 }: {
     text: string;
     membersById: Record<string, string>;
+    authorId?: string;
 }) {
+    const displayText = React.useMemo(
+        () => compressAllMentionsForDisplay(text, membersById, authorId),
+        [text, membersById, authorId]
+    );
+
     const re =
         /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
 
     const parts: React.ReactNode[] = [];
     let last = 0;
 
-    for (const m of text.matchAll(re)) {
+    for (const m of displayText.matchAll(re)) {
         const idx = m.index ?? 0;
         const whole = m[0];
         const id = (m[1] || "").trim();
 
-        if (idx > last) parts.push(text.slice(last, idx));
+        if (idx > last) parts.push(displayText.slice(last, idx));
 
         if (id === "__all__") {
             parts.push(
                 <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
-                    @all
+                    @mọi người
                 </span>
             );
         } else {
@@ -276,20 +400,16 @@ function RichTextWithMentions({
         last = idx + whole.length;
     }
 
-    if (last < text.length) parts.push(text.slice(last));
+    if (last < displayText.length) parts.push(displayText.slice(last));
     return <>{parts}</>;
 }
-
-type MentionTextareaHandle = {
-    getPayloadText: () => string;
-};
 
 function isWordChar(ch: string) {
     return /[\p{L}\p{N}._-]/u.test(ch);
 }
 
 function renderAllMentions(segment: string) {
-    const re = /@all\b/g;
+    const re = /@(all|mọi người)\b/g;
     const nodes: React.ReactNode[] = [];
     let last = 0;
 
@@ -312,6 +432,21 @@ function renderAllMentions(segment: string) {
     return nodes.length ? nodes : segment;
 }
 
+function limitLineBreaks(text: string, maxBreaks = 10) {
+    let breaks = 0;
+    let result = "";
+
+    for (const ch of text) {
+        if (ch === "\n") {
+            if (breaks >= maxBreaks) continue;
+            breaks += 1;
+        }
+        result += ch;
+    }
+
+    return result;
+}
+
 const MentionTextarea = React.forwardRef<
     MentionTextareaHandle,
     {
@@ -320,8 +455,10 @@ const MentionTextarea = React.forwardRef<
         members: MentionUser[];
         meId: string;
         placeholder?: string;
-        className?: string;
+        previewClassName?: string;
+        textareaClassName?: string;
         maxChars?: number;
+        onSubmit?: () => void;
         disabled?: boolean;
     }
 >(function MentionTextareaInner(
@@ -331,84 +468,179 @@ const MentionTextarea = React.forwardRef<
         members,
         meId,
         placeholder,
-        className,
+        previewClassName,
+        textareaClassName,
         maxChars = MAX_CHARS,
+        onSubmit,
         disabled = false
     },
     ref
 ) {
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
+    const popupRef = React.useRef<HTMLDivElement | null>(null);
 
+    const [mounted, setMounted] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const [activeIndex, setActiveIndex] = React.useState(0);
     const [query, setQuery] = React.useState("");
     const [anchor, setAnchor] = React.useState<{ start: number; end: number } | null>(null);
+    const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
+    const [inputHeight, setInputHeight] = React.useState(110);
 
-    const mentionsRef = React.useRef<{ id: string; name: string; start: number; end: number }[]>(
-        []
-    );
+    const mentionsRef = React.useRef<{ id: string; name: string; start: number; end: number }[]>([]);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const resizeTextarea = React.useCallback(() => {
+        const el = taRef.current;
+        if (!el) return;
+
+        el.style.height = "110px";
+        const nextHeight = Math.max(110, el.scrollHeight);
+        el.style.height = `${nextHeight}px`;
+        setInputHeight(nextHeight);
+    }, []);
+
+    const updatePopupPosition = React.useCallback(() => {
+        const el = taRef.current;
+        if (!el) return;
+
+        const rect = el.getBoundingClientRect();
+        const width = Math.min(420, Math.max(280, rect.width));
+        const viewportPadding = 12;
+
+        let left = rect.left;
+        if (left + width > window.innerWidth - viewportPadding) {
+            left = window.innerWidth - width - viewportPadding;
+        }
+        if (left < viewportPadding) left = viewportPadding;
+
+        const estimatedHeight = 320;
+        const showAbove = rect.top > estimatedHeight + 16;
+
+        setPopupPosition({
+            left,
+            width,
+            top: showAbove ? rect.top - 8 : rect.bottom + 8
+        });
+    }, []);
+
+    React.useLayoutEffect(() => {
+        resizeTextarea();
+    }, [value, resizeTextarea]);
+
+    React.useEffect(() => {
+        if (!(open && mounted)) return;
+
+        updatePopupPosition();
+
+        const handleReposition = () => updatePopupPosition();
+
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+            if (taRef.current?.contains(target)) return;
+            if (popupRef.current?.contains(target)) return;
+            setOpen(false);
+        };
+
+        window.addEventListener("resize", handleReposition);
+        window.addEventListener("scroll", handleReposition, true);
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            window.removeEventListener("resize", handleReposition);
+            window.removeEventListener("scroll", handleReposition, true);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [open, mounted, updatePopupPosition]);
 
     const filtered = React.useMemo(() => {
         const q = query.trim().toLowerCase();
 
-        const allOption: MentionUser = { id: "__all__", name: "all" };
-        const baseUsers = members.filter((u) => u.id !== meId);
-        const full = [allOption, ...baseUsers];
+        const allOption: MentionUser = {
+            id: "__all__",
+            name: "mọi người",
+            subtitle: "Nhắc đến mọi người trong cuộc trò chuyện này",
+            isAll: true
+        };
+
+        const baseUsers = members.filter((u) => normalizeUserId(u.id) !== normalizeUserId(meId));
+        const full = [...baseUsers, allOption];
 
         if (!q) return full.slice(0, 8);
-        return full.filter((u) => u.name.toLowerCase().includes(q)).slice(0, 8);
+
+        return full
+            .filter((u) => {
+                const haystack = `${u.name} ${u.subtitle ?? ""}`.toLowerCase();
+                return haystack.includes(q);
+            })
+            .slice(0, 8);
     }, [members, meId, query]);
 
-    const detectFromText = React.useCallback((text: string, caret: number) => {
-        let i = caret - 1;
+    const detectFromText = React.useCallback(
+        (text: string, caret: number) => {
+            let i = caret - 1;
 
-        if (i >= 0 && /\s/.test(text[i])) {
+            if (i >= 0 && /\s/.test(text[i])) {
+                setOpen(false);
+                setAnchor(null);
+                setQuery("");
+                return;
+            }
+
+            while (i >= 0 && isWordChar(text[i])) i--;
+
+            if (i >= 0 && text[i] === "@") {
+                const q = text.slice(i + 1, caret);
+                setQuery(q);
+                setAnchor({ start: i, end: caret });
+                setOpen(true);
+                setActiveIndex(0);
+
+                requestAnimationFrame(() => {
+                    updatePopupPosition();
+                });
+                return;
+            }
+
             setOpen(false);
             setAnchor(null);
             setQuery("");
-            return;
-        }
-
-        while (i >= 0 && isWordChar(text[i])) i--;
-
-        if (i >= 0 && text[i] === "@") {
-            const q = text.slice(i + 1, caret);
-            setQuery(q);
-            setAnchor({ start: i, end: caret });
-            setOpen(true);
-            setActiveIndex(0);
-            return;
-        }
-
-        setOpen(false);
-        setAnchor(null);
-        setQuery("");
-    }, []);
+        },
+        [updatePopupPosition]
+    );
 
     const insertMention = (user: MentionUser) => {
         const el = taRef.current;
-        if (!(el && anchor)) return;
+        if (!(el && anchor) || disabled) return;
 
         const before = value.slice(0, anchor.start);
         const after = value.slice(anchor.end);
 
-        const tokenVisible = `@${user.name}`;
+        const visibleName = user.isAll ? "mọi người" : user.name;
+        const tokenVisible = `@${visibleName}`;
         const tokenInsert = `${tokenVisible} `;
-
         const next = before + tokenInsert + after;
-        onChange(next);
+
+        if (next.length > maxChars) return;
 
         const start = before.length;
         const end = start + tokenVisible.length;
 
-        mentionsRef.current = mentionsRef.current.filter(
-            (m) => !(m.start < end && m.end > start)
-        );
+        mentionsRef.current = mentionsRef.current.filter((m) => !(m.start < end && m.end > start));
 
-        if (user.id !== "__all__") {
-            mentionsRef.current.push({ id: user.id, name: user.name, start, end });
+        if (!user.isAll) {
+            mentionsRef.current.push({
+                id: user.id,
+                name: visibleName,
+                start,
+                end
+            });
         }
 
+        onChange(next);
         setOpen(false);
         setAnchor(null);
         setQuery("");
@@ -417,44 +649,79 @@ const MentionTextarea = React.forwardRef<
             const pos = start + tokenInsert.length;
             el.focus();
             el.setSelectionRange(pos, pos);
+            resizeTextarea();
         });
     };
 
     const onTextChange: React.ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-        const next = e.target.value;
+        if (disabled) return;
+
+        let next = e.target.value;
+        next = limitLineBreaks(next, 10);
+
         const caret = e.target.selectionStart ?? next.length;
 
         if (next.length > maxChars) {
-            onChange(next.slice(0, maxChars));
+            requestAnimationFrame(() => {
+                if (taRef.current) {
+                    taRef.current.value = value;
+                    const pos = Math.min(value.length, Math.max(0, caret - 1));
+                    taRef.current.setSelectionRange(pos, pos);
+                    resizeTextarea();
+                }
+            });
             return;
         }
 
         onChange(next);
 
-        mentionsRef.current = mentionsRef.current.filter(
-            (m) => next.slice(m.start, m.end) === `@${m.name}`
-        );
+        mentionsRef.current = mentionsRef.current.filter((m) => next.slice(m.start, m.end) === `@${m.name}`);
         detectFromText(next, caret);
+
+        requestAnimationFrame(() => {
+            resizeTextarea();
+            if (open) updatePopupPosition();
+        });
     };
 
     const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
-        if (!open) return;
+        if (disabled) return;
 
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setActiveIndex((v) => Math.min(v + 1, filtered.length - 1));
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setActiveIndex((v) => Math.max(v - 1, 0));
-        } else if (e.key === "Enter") {
-            if (filtered[activeIndex]) {
+        if (open) {
+            if (e.key === "ArrowDown") {
                 e.preventDefault();
-                insertMention(filtered[activeIndex]);
+                setActiveIndex((v) => Math.min(v + 1, filtered.length - 1));
+                return;
             }
-        } else if (e.key === "Escape") {
-            e.preventDefault();
-            setOpen(false);
+
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setActiveIndex((v) => Math.max(v - 1, 0));
+                return;
+            }
+
+            if (e.key === "Enter" && !e.shiftKey) {
+                if (filtered[activeIndex]) {
+                    e.preventDefault();
+                    insertMention(filtered[activeIndex]);
+                    return;
+                }
+            }
+
+            if (e.key === "Escape") {
+                e.preventDefault();
+                setOpen(false);
+                return;
+            }
         }
+
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            onSubmit?.();
+            return;
+        }
+
+        requestAnimationFrame(resizeTextarea);
     };
 
     const getPayloadText = React.useCallback(() => {
@@ -468,6 +735,7 @@ const MentionTextarea = React.forwardRef<
             text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
         }
 
+        text = text.replace(/@mọi người\b/g, "@__all__");
         text = text.replace(/@all\b/g, "@__all__");
 
         return text;
@@ -512,77 +780,127 @@ const MentionTextarea = React.forwardRef<
         return nodes.length ? nodes : text;
     }, [value]);
 
-    React.useEffect(() => {
-        if (disabled) {
-            setOpen(false);
-            setAnchor(null);
-            setQuery("");
-        }
-    }, [disabled]);
+    const popup =
+        mounted && open && !disabled && popupPosition
+            ? createPortal(
+                <div
+                    ref={popupRef}
+                    className="fixed z-[22000] overflow-hidden rounded-2xl border border-[#EDEDED] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                    style={{
+                        left: popupPosition.left,
+                        top: popupPosition.top,
+                        width: popupPosition.width,
+                        maxHeight: 320,
+                        transform:
+                            popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
+                                ? "translateY(-100%)"
+                                : undefined
+                    }}
+                >
+                    {filtered.length > 0 ? (
+                        <div className="max-h-80 overflow-y-auto py-2">
+                            {filtered.map((u, idx) => {
+                                const isActive = idx === activeIndex;
+                                const displayName = u.isAll ? "mọi người" : u.name;
+                                const subtitle =
+                                    u.subtitle || (u.isAll ? "Nhắc đến mọi người trong cuộc trò chuyện này" : "");
+
+                                return (
+                                    <button
+                                        key={u.id}
+                                        type="button"
+                                        onMouseDown={(ev) => {
+                                            ev.preventDefault();
+                                            insertMention(u);
+                                        }}
+                                        className={twMerge(
+                                            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
+                                            isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
+                                        )}
+                                    >
+                                        <div className="shrink-0">
+                                            {u.isAll ? (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
+                                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                                                        <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                                    </svg>
+                                                </div>
+                                            ) : u.avatarUrl ? (
+                                                <Image
+                                                    src={u.avatarUrl}
+                                                    alt={displayName}
+                                                    width={40}
+                                                    height={40}
+                                                    unoptimized
+                                                    className="h-10 w-10 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
+                                                    {safeInitialsFromName(displayName)}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-[15px] font-medium leading-5 text-[#261E33]">
+                                                {displayName}
+                                            </div>
+                                            {subtitle ? (
+                                                <div className="truncate pt-0.5 text-[13px] leading-5 text-[#6F6B99]">
+                                                    {subtitle}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="px-4 py-3 text-sm text-[#6F6B99]">Không có thành viên để mention.</div>
+                    )}
+                </div>,
+                document.body
+            )
+            : null;
 
     return (
-        <div className="relative">
-            <div
-                aria-hidden
-                className={twMerge(
-                    "pointer-events-none absolute inset-0 z-0 whitespace-pre-wrap break-words rounded-md px-3 py-2 text-sm leading-6",
-                    "text-[#261E33]",
-                    disabled && "opacity-60"
-                )}>
-                {value ? <>{previewNodes}</> : <span className="text-[#9CA3AF]">{placeholder}</span>}
+        <>
+            <div className="relative w-full min-w-0 max-w-full overflow-visible">
+                <div className="relative" style={{ minHeight: 110, height: inputHeight }}>
+                    <div
+                        aria-hidden
+                        className={twMerge(
+                            "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap break-words rounded-md border border-[#EDEDED] bg-white px-3 py-2 text-sm leading-6 text-[#261E33]",
+                            disabled && "opacity-60",
+                            previewClassName
+                        )}
+                        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+                    >
+                        {value ? <>{previewNodes}</> : <span className="text-[#9CA3AF]">{placeholder}</span>}
+                    </div>
+
+                    <textarea
+                        ref={taRef}
+                        value={value}
+                        onChange={onTextChange}
+                        onKeyDown={onKeyDown}
+                        rows={1}
+                        placeholder=""
+                        disabled={disabled}
+                        maxLength={maxChars}
+                        className={twMerge(
+                            "relative z-10 block w-full max-w-full resize-none overflow-hidden rounded-md border border-[#EDEDED] bg-transparent px-3 py-2 text-sm leading-6 text-transparent caret-[#261E33] outline-none selection:bg-blue-200",
+                            "min-h-[110px]",
+                            "disabled:cursor-not-allowed disabled:caret-transparent",
+                            textareaClassName
+                        )}
+                        style={{ height: inputHeight, overflowWrap: "anywhere", wordBreak: "break-word" }}
+                    />
+                </div>
             </div>
 
-            <Textarea
-                ref={taRef as any}
-                value={value}
-                onChange={onTextChange}
-                onKeyDown={onKeyDown}
-                placeholder=""
-                disabled={disabled}
-                className={twMerge(
-                    className,
-                    "relative z-10 bg-transparent text-transparent caret-[#261E33]",
-                    "selection:bg-blue-200",
-                    disabled && "cursor-not-allowed opacity-60"
-                )}
-            />
-
-            {open && !disabled ? (
-                filtered.length > 0 ? (
-                    <div className="absolute top-full left-0 z-[999] mt-2 w-full overflow-hidden rounded-xl border border-[#EDEDED] bg-white shadow-xl">
-                        <div className="max-h-56 overflow-auto p-1">
-                            {filtered.map((u, idx) => (
-                                <button
-                                    key={u.id}
-                                    type="button"
-                                    onMouseDown={(ev) => {
-                                        ev.preventDefault();
-                                        insertMention(u);
-                                    }}
-                                    className={twMerge(
-                                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-[#FAFAFA]",
-                                        idx === activeIndex && "bg-[#FAFAFA]"
-                                    )}>
-                                    <div className="grid h-8 w-8 place-items-center rounded-full bg-[#F3F4F6] font-semibold text-[#261E33] text-xs">
-                                        {u.id === "__all__" ? "ALL" : safeInitials(u.name)}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="truncate font-semibold text-[#261E33]">
-                                            {u.id === "__all__" ? "@all" : u.name}
-                                        </div>
-                                        <div className="text-[#6F6B99] text-xs">Enter để chọn</div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="absolute top-full left-0 z-[999] mt-2 w-full rounded-xl border border-[#EDEDED] bg-white p-3 text-[#6F6B99] text-sm shadow-xl">
-                        Không có thành viên để mention.
-                    </div>
-                )
-            ) : null}
-        </div>
+            {popup}
+        </>
     );
 });
 
@@ -609,7 +927,6 @@ function ReplyComposer({
                 members={members}
                 meId={meId}
                 placeholder="Viết phản hồi... (gõ @ để mention)"
-                className="min-h-20 resize-none border-[#EDEDED] bg-white"
                 maxChars={MAX_CHARS}
             />
 
@@ -628,7 +945,8 @@ function ReplyComposer({
                         onSubmit(payload);
                         setText("");
                     }}
-                    className="rounded-xl bg-[#FF5722] text-white hover:bg-[#e24d1e]">
+                    className="rounded-xl bg-[#FF5722] text-white hover:bg-[#e24d1e]"
+                >
                     <SendHorizontal className="mr-2 h-4 w-4" />
                     Trả lời
                 </Button>
@@ -660,7 +978,11 @@ function ReplyItemView({
                         </div>
 
                         <p className="mt-1 whitespace-pre-wrap text-[#261E33] text-sm">
-                            <RichTextWithMentions text={r.content} membersById={membersById} />
+                            <RichTextWithMentions
+                                text={r.content}
+                                membersById={membersById}
+                                authorId={r.author.id}
+                            />
                         </p>
                     </div>
 
@@ -670,7 +992,8 @@ function ReplyItemView({
                                 <button
                                     type="button"
                                     className="rounded-lg p-2 text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                    aria-label="Thêm">
+                                    aria-label="Thêm"
+                                >
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
                             </DropdownMenuTrigger>
@@ -682,10 +1005,12 @@ function ReplyItemView({
                                     "z-[9999] w-40",
                                     "bg-white opacity-100 backdrop-blur-none",
                                     "border border-[#EDEDED] shadow-xl"
-                                )}>
+                                )}
+                            >
                                 <DropdownMenuItem
                                     className="text-red-600 focus:text-red-600"
-                                    onClick={() => onDelete(r.id)}>
+                                    onClick={() => onDelete(r.id)}
+                                >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Xóa
                                 </DropdownMenuItem>
@@ -750,7 +1075,11 @@ function PostCard({
                             </div>
 
                             <p className="mt-2 whitespace-pre-wrap text-[#261E33] text-[15px] leading-relaxed">
-                                <RichTextWithMentions text={post.content} membersById={membersById} />
+                                <RichTextWithMentions
+                                    text={post.content}
+                                    membersById={membersById}
+                                    authorId={post.author.id}
+                                />
                             </p>
                         </div>
 
@@ -759,7 +1088,8 @@ function PostCard({
                                 <button
                                     type="button"
                                     className="rounded-lg p-2 text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                    aria-label="Thêm">
+                                    aria-label="Thêm"
+                                >
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
                             </DropdownMenuTrigger>
@@ -771,11 +1101,13 @@ function PostCard({
                                     "z-[9999] w-40",
                                     "bg-white opacity-100 backdrop-blur-none",
                                     "border border-[#EDEDED] shadow-xl"
-                                )}>
+                                )}
+                            >
                                 {canDeletePost ? (
                                     <DropdownMenuItem
                                         className="text-red-600 focus:text-red-600"
-                                        onClick={() => onDelete(post.id)}>
+                                        onClick={() => onDelete(post.id)}
+                                    >
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Xóa
                                     </DropdownMenuItem>
@@ -794,7 +1126,8 @@ function PostCard({
                                 type="button"
                                 onClick={() => setReplyOpen((v) => !v)}
                                 className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                aria-label="Trả lời">
+                                aria-label="Trả lời"
+                            >
                                 <MessageCircle className="h-4 w-4" />
                                 <span>{post.replies.length}</span>
                             </button>
@@ -809,7 +1142,8 @@ function PostCard({
                             <button
                                 type="button"
                                 onClick={() => setRepliesOpen((v) => !v)}
-                                className="ml-1 inline-flex items-center gap-1 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]">
+                                className="ml-1 inline-flex items-center gap-1 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
+                            >
                                 {repliesOpen ? (
                                     <>
                                         <ChevronUp className="h-4 w-4" /> Ẩn phản hồi
@@ -889,6 +1223,15 @@ export default function GroupDiscussPage() {
     const [posts, setPosts] = React.useState<PostItem[]>([]);
     const [userRole, setUserRole] = React.useState<GroupRole>("member");
 
+    const [members, setMembers] = React.useState<
+        Array<{
+            userId: string;
+            name: string;
+            email?: string | null;
+            avatarUrl?: string | null;
+        }>
+    >([]);
+
     const [membersById, setMembersById] = React.useState<Record<string, string>>({});
     const [rolesById, setRolesById] = React.useState<Record<string, GroupRole>>({});
 
@@ -896,8 +1239,14 @@ export default function GroupDiscussPage() {
     const isComposerDisabled = !(isConnected && canComment) || composerText.trim().length === 0;
 
     const mentionUsers = React.useMemo<MentionUser[]>(
-        () => Object.entries(membersById).map(([id, name]) => ({ id, name })),
-        [membersById]
+        () =>
+            members.map((m) => ({
+                id: m.userId,
+                name: m.name,
+                subtitle: m.email ?? "",
+                avatarUrl: safeAvatarUrl(m.avatarUrl)
+            })),
+        [members]
     );
 
     const isOwnerId = React.useCallback(
@@ -1029,20 +1378,36 @@ export default function GroupDiscussPage() {
                 });
 
                 const list: any[] = res?.data?.data?.members || res?.data?.members || res?.data || [];
-                const map: Record<string, string> = {};
+
+                const nameMap: Record<string, string> = {};
                 const roleMap: Record<string, GroupRole> = {};
+                const nextMembers: Array<{
+                    userId: string;
+                    name: string;
+                    email?: string | null;
+                    avatarUrl?: string | null;
+                }> = [];
 
                 for (const m of list) {
                     const id = String(m?.id || m?.userId || "").trim();
                     if (!id) continue;
 
-                    const username =
-                        String(m?.userName || m?.username || "").trim() ||
+                    const name =
                         [m?.firstName, m?.lastName].filter(Boolean).join(" ").trim() ||
+                        String(m?.userName || m?.username || "").trim() ||
                         (m?.email ? String(m.email).split("@")[0] : "") ||
-                        "user";
+                        "User";
 
-                    map[id] = username;
+                    const email = m?.email ?? m?.user?.email ?? null;
+                    const avatarUrl = safeAvatarUrl(m?.avatarUrl ?? m?.user?.avatarUrl ?? "");
+
+                    nameMap[id] = name;
+                    nextMembers.push({
+                        userId: id,
+                        name,
+                        email,
+                        avatarUrl: avatarUrl || null
+                    });
 
                     const rawRole =
                         m?.role ??
@@ -1056,11 +1421,13 @@ export default function GroupDiscussPage() {
                 }
 
                 if (!isDisposed) {
-                    setMembersById(map);
+                    setMembers(nextMembers);
+                    setMembersById(nameMap);
                     setRolesById(roleMap);
                 }
             } catch {
                 if (!isDisposed) {
+                    setMembers([]);
                     setMembersById({});
                     setRolesById({});
                 }
@@ -1182,9 +1549,10 @@ export default function GroupDiscussPage() {
         if (!v) return;
 
         const rawPayload = composerMentionRef.current?.getPayloadText() ?? v;
+        const payload = expandMentionAll(rawPayload, membersById, [me.id]);
 
         try {
-            await connection.invoke("SendMessage", { groupId, content: rawPayload });
+            await connection.invoke("SendMessage", { groupId, content: payload });
             setComposerText("");
         } catch {
             toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
@@ -1208,7 +1576,8 @@ export default function GroupDiscussPage() {
         }
 
         try {
-            const payload = { groupId, parentMessageId: postId, content: payloadText };
+            const content = expandMentionAll(payloadText, membersById, [me.id]);
+            const payload = { groupId, parentMessageId: postId, content };
 
             try {
                 await connection.invoke("ReplyToMessage", payload);
@@ -1242,8 +1611,10 @@ export default function GroupDiscussPage() {
                                     members={mentionUsers}
                                     meId={me.id}
                                     placeholder="Viết gì đó để chia sẻ với mọi người... (gõ @ để mention)"
-                                    className="min-h-[110px] resize-none border-[#EDEDED] bg-white"
                                     maxChars={MAX_CHARS}
+                                    onSubmit={() => {
+                                        void onPost();
+                                    }}
                                 />
 
                                 <TextCounter text={composerText} maxChars={MAX_CHARS} />
@@ -1252,7 +1623,8 @@ export default function GroupDiscussPage() {
                                     <Button
                                         onClick={onPost}
                                         disabled={isComposerDisabled}
-                                        className="rounded-xl bg-[#FF5722] px-6 text-white hover:bg-[#e24d1e]">
+                                        className="rounded-xl bg-[#FF5722] px-6 text-white hover:bg-[#e24d1e]"
+                                    >
                                         <SendHorizontal className="mr-2 h-4 w-4" />
                                         Đăng
                                     </Button>
@@ -1294,7 +1666,8 @@ export default function GroupDiscussPage() {
 
                 <AlertDialog
                     open={deleteOpen}
-                    onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
+                    onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}
+                >
                     <AlertDialogContent className="rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl">Xác nhận xóa</AlertDialogTitle>
@@ -1312,7 +1685,8 @@ export default function GroupDiscussPage() {
                                     "border-0 shadow-none",
                                     "hover:bg-[#E5E7EB]",
                                     "focus-visible:ring-0"
-                                )}>
+                                )}
+                            >
                                 Hủy
                             </AlertDialogCancel>
 
@@ -1322,7 +1696,8 @@ export default function GroupDiscussPage() {
                                     e.preventDefault();
                                     void confirmDelete();
                                 }}
-                                className="rounded-xl bg-red-600 px-8 text-white hover:bg-red-700 focus-visible:ring-0">
+                                className="rounded-xl bg-red-600 px-8 text-white hover:bg-red-700 focus-visible:ring-0"
+                            >
                                 {isDeleting ? "Đang xóa..." : "Xóa"}
                             </AlertDialogAction>
                         </AlertDialogFooter>
