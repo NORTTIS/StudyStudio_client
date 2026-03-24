@@ -629,11 +629,11 @@ export default function HomeSummary() {
     }, []);
 
     const { data: summary, isLoading, error } = useSWR(["home-summary", cacheKey], fetchHomeSummary, {
-        refreshInterval: 3000,
-        revalidateOnFocus: true,
+        refreshInterval: 0,
+        revalidateOnFocus: false,
         revalidateOnReconnect: true,
-        dedupingInterval: 1000,
-        revalidateIfStale: true
+        dedupingInterval: 60000,
+        revalidateIfStale: false
     });
 
     const remainingTaskCount = summary?.remainingTaskCount ?? 0;

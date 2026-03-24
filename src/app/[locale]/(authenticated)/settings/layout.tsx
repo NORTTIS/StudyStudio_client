@@ -136,37 +136,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                         />
                     </div>
 
-                    {/* Back to Dashboard — prominent button */}
-                    <div style={{ padding: "12px 16px 20px", borderTop: `1px solid ${BORDER}` }}>
-                        <Link
-                            href={`/${locale}/home`}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                                padding: "11px 14px",
-                                borderRadius: 10,
-                                color: "#fff",
-                                fontSize: 13,
-                                fontWeight: 600,
-                                textDecoration: "none",
-                                background: `linear-gradient(135deg, ${DARK} 0%, #3a2a5e 100%)`,
-                                transition: "opacity 0.15s"
-                            }}
-                            onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.opacity = "0.85";
-                            }}
-                            onMouseLeave={(e) => {
-                                (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
-                            }}>
-                            <ArrowLeftOutlined style={{ fontSize: 12 }} />
-                            {t("backToDashboard")}
-                        </Link>
-                    </div>
+                    
                 </aside>
 
                 {/* ─────────── MAIN ─────────── */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+                    
                     {/* Top header bar */}
                     <div
                         style={{
@@ -182,6 +157,33 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             top: 0,
                             zIndex: 10
                         }}>
+                            {/* Back to Dashboard — prominent button */}
+                         <div style={{ borderTop: `1px solid ${BORDER}` }}>
+                            <Link
+                                href={`/${locale}/home`}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    padding: "11px 14px",
+                                    borderRadius: 10,
+                                    color: "#fff",
+                                    fontSize: 13,
+                                    fontWeight: 600,
+                                    textDecoration: "none",
+                                    background: "#eaeaea",
+                                    transition: "opacity 0.15s"
+                                }}
+                                className="hover:opacity-90"
+                                onMouseEnter={(e) => {
+                                    (e.currentTarget as HTMLAnchorElement).style.opacity = "0.85";
+                                }}
+                                onMouseLeave={(e) => {
+                                    (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
+                                }}>
+                                <ArrowLeftOutlined style={{ fontSize: 12, color: "#000000" }} />
+                            </Link>
+                        </div>
                         {/* Icon badge */}
                         <div
                             style={{

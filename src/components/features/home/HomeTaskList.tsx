@@ -931,16 +931,6 @@ function TaskListDetailLayer({
                             </div>
 
                             <div className="mt-5 flex flex-wrap items-center gap-3">
-                                <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm">
-                                    <Filter className="h-4 w-4 text-violet-600" />
-                                    <span>
-                                        Nguồn:{" "}
-                                        {selectedSource === "all"
-                                            ? "Tất cả"
-                                            : groups.find((g) => g.groupId === selectedSource)?.groupName ?? "Nhóm"}
-                                    </span>
-                                </div>
-
                                 {sortBy !== "none" && (
                                     <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm">
                                         <SlidersHorizontal className="h-4 w-4 text-sky-600" />

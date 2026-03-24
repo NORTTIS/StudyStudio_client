@@ -346,9 +346,7 @@ async function extractApiErrorMessage(res: Response): Promise<string> {
         if (typeof parsed.message === "string" && parsed.message.trim()) {
             return parsed.message;
         }
-    } catch {
-        // ignore
-    }
+    } catch {}
 
     return text;
 }
