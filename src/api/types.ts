@@ -1288,7 +1288,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/api/ai/ask": {
+    "/api/ai/group/ask": {
         parameters: {
             query?: never;
             header?: never;
@@ -1300,15 +1300,17 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    "Accept-Language"?: string;
+                };
                 path?: never;
                 cookie?: never;
             };
             requestBody?: {
                 content: {
-                    "application/*+json": components["schemas"]["AIQuestionRequest"];
-                    "application/json": components["schemas"]["AIQuestionRequest"];
-                    "text/json": components["schemas"]["AIQuestionRequest"];
+                    "application/*+json": components["schemas"]["GroupAIRequest"];
+                    "application/json": components["schemas"]["GroupAIRequest"];
+                    "text/json": components["schemas"]["GroupAIRequest"];
                 };
             };
             responses: {
@@ -1318,9 +1320,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["AIAnswerResponseApiResponse"];
-                        "text/json": components["schemas"]["AIAnswerResponseApiResponse"];
-                        "text/plain": components["schemas"]["AIAnswerResponseApiResponse"];
+                        "application/json": components["schemas"]["AIResponse"];
+                        "text/json": components["schemas"]["AIResponse"];
+                        "text/plain": components["schemas"]["AIResponse"];
                     };
                 };
             };
@@ -1331,7 +1333,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/ai/ask/stream": {
+    "/api/ai/group/ask/stream": {
         parameters: {
             query?: never;
             header?: never;
@@ -1343,15 +1345,306 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    "Accept-Language"?: string;
+                };
                 path?: never;
                 cookie?: never;
             };
             requestBody?: {
                 content: {
-                    "application/*+json": components["schemas"]["AIQuestionRequest"];
-                    "application/json": components["schemas"]["AIQuestionRequest"];
-                    "text/json": components["schemas"]["AIQuestionRequest"];
+                    "application/*+json": components["schemas"]["GroupAIRequest"];
+                    "application/json": components["schemas"]["GroupAIRequest"];
+                    "text/json": components["schemas"]["GroupAIRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/group/info/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AIResponse"];
+                        "text/json": components["schemas"]["AIResponse"];
+                        "text/plain": components["schemas"]["AIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/master/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Accept-Language"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["MasterAIRequest"];
+                    "application/json": components["schemas"]["MasterAIRequest"];
+                    "text/json": components["schemas"]["MasterAIRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AIResponse"];
+                        "text/json": components["schemas"]["AIResponse"];
+                        "text/plain": components["schemas"]["AIResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/master/ask/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Accept-Language"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["MasterAIRequest"];
+                    "application/json": components["schemas"]["MasterAIRequest"];
+                    "text/json": components["schemas"]["MasterAIRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/master/info/{studioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AIResponse"];
+                        "text/json": components["schemas"]["AIResponse"];
+                        "text/plain": components["schemas"]["AIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/master/stats/{studioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AIResponse"];
+                        "text/json": components["schemas"]["AIResponse"];
+                        "text/plain": components["schemas"]["AIResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/personal/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Accept-Language"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["PersonalAIRequest"];
+                    "application/json": components["schemas"]["PersonalAIRequest"];
+                    "text/json": components["schemas"]["PersonalAIRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AIResponse"];
+                        "text/json": components["schemas"]["AIResponse"];
+                        "text/plain": components["schemas"]["AIResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/personal/ask/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Accept-Language"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["PersonalAIRequest"];
+                    "application/json": components["schemas"]["PersonalAIRequest"];
+                    "text/json": components["schemas"]["PersonalAIRequest"];
                 };
             };
             responses: {
@@ -5468,29 +5761,11 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        AIAnswerResponse: {
+        AIResponse: {
             answer?: string | null;
-            /** Format: int32 */
-            dailyLimit?: number;
-            /** Format: date-time */
-            generatedAt?: string;
-            /** Format: int64 */
-            processingTimeMs?: number;
-            /** Format: int32 */
-            remainingRequests?: number;
-            sourceDocuments?: components["schemas"]["SourceDocument"][] | null;
-            taskSummary?: components["schemas"]["TaskSummaryResponse"];
-        };
-        AIAnswerResponseApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["AIAnswerResponse"];
+            data?: unknown;
             message?: string | null;
-            status?: string | null;
-        };
-        AIQuestionRequest: {
-            /** Format: uuid */
-            groupId: string;
-            question: string;
+            success?: boolean;
         };
         AnnouncementResponse: {
             /** Format: uuid */
@@ -5854,6 +6129,11 @@ export interface components {
             activityCount?: number;
             /** Format: date */
             date?: string;
+        };
+        GroupAIRequest: {
+            /** Format: uuid */
+            groupId?: string;
+            question?: string | null;
         };
         GroupAnalyticsResponse: {
             activityHeatmap?: components["schemas"]["GroupActivityHeatmapData"][] | null;
@@ -6260,6 +6540,11 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        MasterAIRequest: {
+            question?: string | null;
+            /** Format: uuid */
+            studioId?: string;
+        };
         MemberAssignmentDetail: {
             email?: string | null;
             role?: string | null;
@@ -6376,6 +6661,9 @@ export interface components {
             metric?: string | null;
             /** Format: double */
             score?: number;
+        };
+        PersonalAIRequest: {
+            question?: string | null;
         };
         PersonalTaskBoardResponse: {
             personalTaskStatuses?: components["schemas"]["TaskStatusDto"][] | null;
@@ -6785,14 +7073,6 @@ export interface components {
             /** Format: uuid */
             taskId?: string;
         };
-        SourceDocument: {
-            /** Format: int32 */
-            chunkIndex?: number;
-            documentId?: string | null;
-            preview?: string | null;
-            /** Format: float */
-            relevanceScore?: number;
-        };
         StringApiResponse: {
             code?: string | null;
             data?: string | null;
@@ -7087,10 +7367,14 @@ export interface components {
             status?: string | null;
         };
         TaskItemGroupRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: uuid */
             assignees?: string | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             groupId?: string;
             /** Format: uuid */
@@ -7105,8 +7389,12 @@ export interface components {
             taskSeverity?: components["schemas"]["TaskSeverity"];
         };
         TaskItemPersonalRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             personalStatusId?: string | null;
             /** Format: date-time */
@@ -7117,6 +7405,8 @@ export interface components {
             taskSeverity?: components["schemas"]["TaskSeverity"];
         };
         TaskItemResponse: {
+            /** Format: double */
+            actualHours?: number | null;
             assignee?: components["schemas"]["UserDto"];
             /** Format: date-time */
             createdAt?: string;
@@ -7124,6 +7414,8 @@ export interface components {
             createdById?: string;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             groupStatus?: components["schemas"]["GroupTaskStatusDto"];
             personalStatus?: components["schemas"]["PersonalTaskStatusDto"];
             /** Format: int32 */
@@ -7167,19 +7459,6 @@ export interface components {
             /** Format: uuid */
             statusId?: string;
             statusName?: string | null;
-        };
-        TaskSummaryResponse: {
-            /** Format: int32 */
-            completedTasks?: number;
-            /** Format: int32 */
-            completionPercentage?: number;
-            /** Format: date-time */
-            nearestDeadline?: string | null;
-            /** Format: int32 */
-            overdueTasks?: number;
-            riskFlags?: string[] | null;
-            /** Format: int32 */
-            totalTasks?: number;
         };
         TemplateListResponse: {
             subscription?: components["schemas"]["SubscriptionQuota"];
@@ -7356,8 +7635,12 @@ export interface components {
             isActive?: boolean;
         };
         UpdatePersonalTaskRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             personalStatusId?: string | null;
             /** Format: int32 */
@@ -7423,10 +7706,14 @@ export interface components {
             price: number;
         };
         UpdateTaskRequest: {
+            /** Format: double */
+            actualHours?: number | null;
             /** Format: uuid */
             assigneeId?: string | null;
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: double */
+            estimatedHours?: number | null;
             /** Format: uuid */
             groupStatusId?: string | null;
             /** Format: int32 */

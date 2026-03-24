@@ -78,6 +78,8 @@ export type CreateTaskSubmitValues = {
     dueDate: string | null;
 };
 
+export type TaskFormValues = CreateTaskSubmitValues;
+
 export type TaskFormOption = {
     value: string;
     label: string;
