@@ -20,9 +20,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
@@ -172,6 +176,16 @@ export function GroupSettingView() {
     const [masterStudio, setMasterStudio] = useState("");
     const [initialSettings, setInitialSettings] = useState({ groupName: "", description: "" });
 
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [colorHex, setColorHex] = useState("#FF5F3D");
+    const [iconEmoji, setIconEmoji] = useState("");
+    const [initialAvatarUrl, setInitialAvatarUrl] = useState<string | null>(null);
+    const [initialColorHex, setInitialColorHex] = useState("#FF5F3D");
+    const [initialIconEmoji, setInitialIconEmoji] = useState("");
+
+    const [isTemplate, setIsTemplate] = useState(false);
+    const [initialIsTemplate, setInitialIsTemplate] = useState(false);
+
     const [members, setMembers] = useState<Member[]>([]);
     const [myRoleInGroup, setMyRoleInGroup] = useState<MemberRole>("Member");
 
@@ -271,6 +285,14 @@ export function GroupSettingView() {
             setInitialSettings({ groupName: "", description: "" });
             setMembers([]);
             setMyRoleInGroup("Member");
+            setAvatarUrl(null);
+            setColorHex("#FF5F3D");
+            setIconEmoji("");
+            setInitialAvatarUrl(null);
+            setInitialColorHex("#FF5F3D");
+            setInitialIconEmoji("");
+            setIsTemplate(false);
+            setInitialIsTemplate(false);
             return false;
         }
 
@@ -291,6 +313,14 @@ export function GroupSettingView() {
             setInitialSettings({ groupName: "", description: "" });
             setMembers([]);
             setMyRoleInGroup("Member");
+            setAvatarUrl(null);
+            setColorHex("#FF5F3D");
+            setIconEmoji("");
+            setInitialAvatarUrl(null);
+            setInitialColorHex("#FF5F3D");
+            setInitialIconEmoji("");
+            setIsTemplate(false);
+            setInitialIsTemplate(false);
             return false;
         }
 
@@ -308,6 +338,21 @@ export function GroupSettingView() {
         setDescription(data.description ?? "");
         setInitialSettings({ groupName: data.groupName ?? "", description: data.description ?? "" });
         setMasterStudio(data.studioName ?? "");
+        setAvatarUrl(data.avatarUrl ?? null);
+        setColorHex(data.colorHex ?? "#FF5F3D");
+        setIconEmoji(data.iconEmoji ?? "");
+        setInitialAvatarUrl(data.avatarUrl ?? null);
+        setInitialColorHex(data.colorHex ?? "#FF5F3D");
+        setInitialIconEmoji(data.iconEmoji ?? "");
+
+        // Template field - check for isTemplate, template, or isTemplateGroup fields
+        const templateValue = (data as Record<string, unknown>).isTemplate
+            ?? (data as Record<string, unknown>).template
+            ?? (data as Record<string, unknown>).isTemplateGroup
+            ?? false;
+        const templateBool = Boolean(templateValue);
+        setIsTemplate(templateBool);
+        setInitialIsTemplate(templateBool);
 
         const roleFromDetail = toMemberRole(data.userRole);
         setMyRoleInGroup(roleFromDetail);
@@ -403,7 +448,11 @@ export function GroupSettingView() {
                 body: JSON.stringify({
                     groupId,
                     groupName: validation.data.groupName,
-                    description: validation.data.description
+                    description: validation.data.description,
+                    avatarUrl: avatarUrl,
+                    colorHex: colorHex,
+                    iconEmoji: iconEmoji || null,
+                    isTemplate: isTemplate
                 })
             });
 
@@ -427,6 +476,10 @@ export function GroupSettingView() {
             );
 
             setInitialSettings({ groupName: validation.data.groupName, description: validation.data.description });
+            setInitialAvatarUrl(avatarUrl);
+            setInitialColorHex(colorHex);
+            setInitialIconEmoji(iconEmoji);
+            setInitialIsTemplate(isTemplate);
 
             setIsEditing(false);
             return;
@@ -438,6 +491,10 @@ export function GroupSettingView() {
     const handleCancelEdit = () => {
         setGroupName(initialSettings.groupName);
         setDescription(initialSettings.description);
+        setAvatarUrl(initialAvatarUrl);
+        setColorHex(initialColorHex);
+        setIconEmoji(initialIconEmoji);
+        setIsTemplate(initialIsTemplate);
         setGeneralError("");
         setIsEditing(false);
     };
@@ -757,6 +814,35 @@ export function GroupSettingView() {
                         </div>
 
                         <div className="px-6 py-6">
+                            {/* Avatar + Color/Emoji row */}
+                            <div className="mb-6 flex items-end gap-6">
+                                <AvatarUpload
+                                    entityType="group"
+                                    entityId={groupId ?? ""}
+                                    avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
+                                    colorHex={isEditing ? colorHex : initialColorHex}
+                                    iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
+                                    onUploadSuccess={(url) => setAvatarUrl(url)}
+                                    onError={(msg) => setGeneralError(msg)}
+                                    disabled={!isEditing}
+                                />
+                                <div className="flex items-center gap-3">
+                                    <EmojiPicker
+                                        value={isEditing ? iconEmoji : initialIconEmoji}
+                                        onChange={isEditing ? setIconEmoji : undefined}
+                                        disabled={!isEditing}
+                                    />
+                                    <div className="flex-1">
+                                        <ColorPicker
+                                            label="Màu nhóm"
+                                            value={isEditing ? colorHex : initialColorHex}
+                                            onChange={isEditing ? setColorHex : undefined}
+                                            disabled={!isEditing}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 gap-5">
                                 <div>
                                     <label htmlFor="group-name-input" className="font-semibold text-gray-700 text-xs">
@@ -854,6 +940,24 @@ export function GroupSettingView() {
                                         />
                                     </div>
                                 ) : null}
+
+                                <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                    <div>
+                                        <div className="font-semibold text-gray-700 text-xs">Template nhóm</div>
+                                        <div className="mt-0.5 text-gray-500 text-xs">
+                                            Đánh dấu nhóm này làm template để sao chép cấu trúc
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={isTemplate}
+                                        onCheckedChange={(checked) => {
+                                            if (!isEditing) return;
+                                            setIsTemplate(checked);
+                                        }}
+                                        disabled={!isEditing}
+                                        className="data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-gray-300"
+                                    />
+                                </div>
                             </div>
 
                             {generalError ? (

@@ -34,6 +34,8 @@ export type Studio = {
     studioRole?: 0 | 1; // 0 = Owner, 1 = Member
     startDate?: string | null; // NEW
     endDate?: string | null; // NEW
+    avatarUrl?: string | null; // NEW
+    colorHex?: string | null; // NEW
 };
 
 // Map API response to UI format
@@ -50,6 +52,8 @@ export type StudioUI = {
     studioRole?: 0 | 1; // 0 = Owner, 1 = Member
     startDate?: string | null; // NEW
     endDate?: string | null; // NEW
+    avatarUrl?: string | null; // NEW
+    colorHex?: string | null; // NEW
 };
 
 export type CreateStudioRequest = {
@@ -58,6 +62,8 @@ export type CreateStudioRequest = {
     type: "personal" | "group";
     startDate?: string | null;
     endDate?: string | null;
+    avatarUrl?: string | null; // NEW
+    colorHex?: string | null; // NEW
 };
 
 export type UpdateStudioRequest = {
@@ -66,13 +72,15 @@ export type UpdateStudioRequest = {
     type?: "personal" | "group";
     startDate?: string | null; // NEW
     endDate?: string | null; // NEW
+    avatarUrl?: string | null; // NEW
+    colorHex?: string | null; // NEW
 };
 
 // Helper: convert ISO datetime string to YYYY-MM-DD for <input type="date">
 function toDateInputValue(dateStr: string | null | undefined): string {
     if (!dateStr) return "";
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "";
+    if (Number.isNaN(d.getTime())) return "";
     return d.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
@@ -90,7 +98,9 @@ function mapStudioToUI(studio: Studio): StudioUI {
         updatedAt: studio.updatedAt,
         studioRole: studio.studioRole, // 0 = Owner, 1 = Member
         startDate: toDateInputValue(studio.startDate), // NEW — YYYY-MM-DD for <input type="date">
-        endDate: toDateInputValue(studio.endDate) // NEW — YYYY-MM-DD for <input type="date">
+        endDate: toDateInputValue(studio.endDate), // NEW — YYYY-MM-DD for <input type="date">
+        avatarUrl: studio.avatarUrl ?? null, // NEW
+        colorHex: studio.colorHex ?? null // NEW
     };
 }
 
@@ -118,6 +128,8 @@ export async function getStudios(locale = "vi") {
         };
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: returning untyped error response
+    // biome-ignore lint/suspicious/noExplicitAny: returning untyped error response
     return result as any;
 }
 
@@ -138,6 +150,7 @@ export async function getStudioById(id: string, locale = "vi") {
         };
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: returning untyped error response
     return result as any;
 }
 
@@ -153,7 +166,9 @@ export async function createStudio(data: CreateStudioRequest, locale = "vi") {
             studioName: data.name,
             description: data.description,
             startDate: data.startDate ?? null,
-            endDate: data.endDate ?? null
+            endDate: data.endDate ?? null,
+            avatarUrl: data.avatarUrl ?? null, // NEW
+            colorHex: data.colorHex ?? null // NEW
         }),
         locale
     });
@@ -166,6 +181,7 @@ export async function createStudio(data: CreateStudioRequest, locale = "vi") {
         };
     }
 
+    // biome-ignore lint/suspicious/noExplicitAny: returning untyped error response
     return result as any;
 }
 
@@ -181,11 +197,14 @@ export async function updateStudio(id: string, data: UpdateStudioRequest, locale
             studioName: data.name,
             description: data.description,
             startDate: data.startDate ?? null,
-            endDate: data.endDate ?? null
+            endDate: data.endDate ?? null,
+            avatarUrl: data.avatarUrl ?? null, // NEW
+            colorHex: data.colorHex ?? null // NEW
         }),
         locale
     });
 
+    // biome-ignore lint/suspicious/noExplicitAny: returning untyped error response
     return result as any;
 }
 

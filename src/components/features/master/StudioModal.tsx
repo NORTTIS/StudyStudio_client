@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import type { StudioUI } from "@/api/studios";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
 
 const STUDIO_NAME_MAX_LENGTH = 30;
@@ -16,6 +17,7 @@ type StudioFormData = {
     type: "personal" | "group";
     startDate: string;
     endDate: string;
+    colorHex: string;
 };
 
 // Get today's date at midnight for comparison
@@ -50,7 +52,7 @@ const studioCreateSchema = z
     )
     .refine(
         (data) => {
-            if (!data.startDate || !data.endDate) return true;
+            if (!(data.startDate && data.endDate)) return true;
             const startDate = new Date(data.startDate);
             const endDate = new Date(data.endDate);
             return endDate >= startDate;
@@ -74,7 +76,7 @@ const studioEditSchema = z
     })
     .refine(
         (data) => {
-            if (!data.startDate || !data.endDate) return true;
+            if (!(data.startDate && data.endDate)) return true;
             const startDate = new Date(data.startDate);
             const endDate = new Date(data.endDate);
             return endDate >= startDate;
@@ -97,6 +99,7 @@ interface StudioModalProps {
         type: "personal" | "group";
         startDate?: string | null;
         endDate?: string | null;
+        colorHex?: string | null;
     }) => void;
     studio?: StudioUI | null;
     mode: "create" | "edit";
@@ -110,7 +113,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         description: "",
         type: "group",
         startDate: "",
-        endDate: ""
+        endDate: "",
+        colorHex: "#FF5F3D"
     });
     const [errors, setErrors] = useState({
         name: "",
@@ -166,7 +170,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     description: studio.description,
                     type: studio.type,
                     startDate: studio.startDate ?? "",
-                    endDate: studio.endDate ?? ""
+                    endDate: studio.endDate ?? "",
+                    colorHex: studio.colorHex ?? "#FF5F3D"
                 });
             } else {
                 setFormData({
@@ -174,7 +179,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     description: "",
                     type: "group",
                     startDate: "",
-                    endDate: ""
+                    endDate: "",
+                    colorHex: "#FF5F3D"
                 });
             }
             setErrors({ name: "", description: "", startDate: "", endDate: "" });
@@ -248,13 +254,14 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
             onSubmit({
                 ...formData,
                 startDate: formData.startDate || null,
-                endDate: formData.endDate || null
+                endDate: formData.endDate || null,
+                colorHex: formData.colorHex || null
             });
         }
     };
 
     const handleClose = () => {
-        setFormData({ name: "", description: "", type: "group", startDate: "", endDate: "" });
+        setFormData({ name: "", description: "", type: "group", startDate: "", endDate: "", colorHex: "#FF5F3D" });
         setErrors({ name: "", description: "", startDate: "", endDate: "" });
         setTouched({ name: false, description: false, startDate: false, endDate: false });
         onClose();
@@ -270,6 +277,14 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="mb-2 block font-medium text-[#261E33] text-sm">Màu chủ đạo</label>
+                        <ColorPicker
+                            value={formData.colorHex}
+                            onChange={(hex) => setFormData((f) => ({ ...f, colorHex: hex }))}
+                        />
+                    </div>
+
                     <div>
                         <label htmlFor="studio-name" className="mb-2 block font-medium text-[#261E33] text-sm">
                             {t("modal.name")}
@@ -350,7 +365,11 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                                 type="date"
                                 id="studio-endDate"
                                 value={formData.endDate}
-                                min={mode === "create" ? (formData.startDate || new Date().toISOString().split("T")[0]) : formData.startDate || undefined}
+                                min={
+                                    mode === "create"
+                                        ? formData.startDate || new Date().toISOString().split("T")[0]
+                                        : formData.startDate || undefined
+                                }
                                 onChange={(e) => handleChange("endDate", e.target.value)}
                                 onBlur={() => handleBlur("endDate")}
                                 className={errors.endDate && touched.endDate ? "border-red-500" : ""}

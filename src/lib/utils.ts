@@ -13,7 +13,7 @@ export function formatRelativeTime(isoDateTime: string): string {
     if (!isoDateTime) return "N/A";
 
     const date = new Date(isoDateTime);
-    if (isNaN(date.getTime())) return "N/A";
+    if (Number.isNaN(date.getTime())) return "N/A";
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -29,4 +29,28 @@ export function formatRelativeTime(isoDateTime: string): string {
     if (diffDays < 30) return `${diffDays}d ago`;
     if (diffMonths < 12) return `${diffMonths}mo ago`;
     return `${Math.floor(diffMonths / 12)}y ago`;
+}
+
+/**
+ * Generate a two-stop 135-degree linear gradient from a single hex color.
+ * The second stop is darkened to 60% of the original luminance.
+ * e.g. "#FF5F3D" → "linear-gradient(135deg, #FF5F3D, #992400)"
+ */
+export function hexToGradient(hex: string): string {
+    const clean = hex.replace("#", "");
+    if (!/^[0-9A-Fa-f]{6}$/.test(clean)) {
+        // Fallback to brand primary if invalid
+        return "linear-gradient(135deg, #FF5F3D, #992400)";
+    }
+
+    const r = Number.parseInt(clean.slice(0, 2), 16);
+    const g = Number.parseInt(clean.slice(2, 4), 16);
+    const b = Number.parseInt(clean.slice(4, 6), 16);
+
+    const dark = (c: number) =>
+        Math.max(0, Math.round(c * 0.6))
+            .toString(16)
+            .padStart(2, "0");
+
+    return `linear-gradient(135deg, #${clean}, #${dark(r)}${dark(g)}${dark(b)})`;
 }
