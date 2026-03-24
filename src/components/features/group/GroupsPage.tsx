@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { GroupCard } from "./GroupCard";
 import { addFavourite, fetchGroupsPageData, removeFavourite } from "./group.api";
-import type { Group, GroupsPageData } from "./types";
+import type { GroupsPageData, GroupCardDto } from "./types";
 import { UsageBar } from "./UsageBar";
 
 const emptyData: GroupsPageData = {
@@ -35,9 +35,9 @@ const normId = (v: unknown) => String(v ?? "").trim();
 const getGroupId = (g: any) => normId(g?.id ?? g?.groupId ?? g?.group_id);
 
 function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
-    const uniqKeepOrder = (list: Group[]) => {
+    const uniqKeepOrder = (list: GroupCardDto[]) => {
         const seen = new Set<string>();
-        const out: Group[] = [];
+        const out: GroupCardDto[] = [];
         for (const g of list ?? []) {
             const id = getGroupId(g);
             if (!id || seen.has(id)) continue;
@@ -55,9 +55,9 @@ function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
     };
 }
 
-function uniqueByIdKeepFirst(list: Group[]) {
+function uniqueByIdKeepFirst(list: GroupCardDto[]) {
     const seen = new Set<string>();
-    const out: Group[] = [];
+    const out: GroupCardDto[] = [];
     for (const g of list) {
         const id = getGroupId(g);
         if (!id || seen.has(id)) continue;
@@ -275,8 +275,8 @@ export function GroupsPage() {
         const current = all.find((g) => getGroupId(g) === groupId);
         if (!current) return;
 
-        const wasStarred = !!(current as any).isStarred;
-        const updated: Group = { ...(current as any), isStarred: !wasStarred };
+        const wasStarred = !!(current as any).isFavorite;
+        const updated: GroupCardDto = { ...(current as any), isFavorite: !wasStarred };
 
         setData((prev) => {
             if (!wasStarred) {
@@ -502,7 +502,7 @@ function GroupsSection({
     count: number;
     icon: React.ElementType;
     iconVariant: "orange" | "yellow" | "blue" | "purple" | "slate";
-    items: Group[];
+    items: GroupCardDto[];
     view: "grid" | "list";
     className?: string;
     expanded: boolean;

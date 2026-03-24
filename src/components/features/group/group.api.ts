@@ -1,5 +1,5 @@
 import type { components, paths } from "@/api/types";
-import type { Group, GroupRole, GroupsPageData } from "./types";
+import type { GroupCardDto, GroupsPageData } from "./types";
 
 type GetGroupsResponse =
     | paths["/api/group"]["get"]["responses"][200]["content"]["application/json"]
@@ -9,7 +9,6 @@ type GetGroupsResponse =
 type GroupListResponse = NonNullable<GetGroupsResponse["data"]>;
 type GroupSections = NonNullable<GroupListResponse["sections"]>;
 type SubscriptionInfo = NonNullable<GroupListResponse["subscription"]>;
-type GroupCardDto = NonNullable<NonNullable<GroupSections["favorites"]>[number]>;
 
 type RequestDocumentUploadRequest = components["schemas"]["RequestDocumentUploadRequest"];
 type DocumentItem = components["schemas"]["DocumentItem"];
@@ -58,15 +57,7 @@ function toInitials(firstName?: string | null, lastName?: string | null) {
     return res || "U";
 }
 
-function toShortCode(name: string) {
-    const words = (name || "").trim().split(/\s+/).filter(Boolean);
-    return words
-        .slice(0, 3)
-        .map((w) => w[0].toUpperCase())
-        .join("");
-}
-
-export function mapRole(role?: string | null): GroupRole {
+export function mapRole(role?: string | null): "owner" | "moderator" | "member" | "commenter" | "viewer" {
     const r = (role || "").toLowerCase().trim();
     if (r.includes("owner")) return "owner";
     if (r.includes("moderator")) return "moderator";
@@ -75,28 +66,6 @@ export function mapRole(role?: string | null): GroupRole {
     if (r.includes("viewer")) return "viewer";
     if (r === "admin") return "owner";
     return "member";
-}
-
-function mapGroup(item: GroupCardDto): Group {
-    const name = item.name || "";
-    const preview = item.membersPreview || [];
-
-    return {
-        id: item.id || "",
-        title: name,
-        description: item.description || "",
-        role: mapRole(item.role),
-        membersCount: item.memberCount ?? 0,
-        tasksCount: item.taskCount ?? 0,
-        createdByInitials: toInitials(item.createdBy?.firstName, item.createdBy?.lastName),
-        memberInitials: preview.map((u) => toInitials(u.firstName, u.lastName)),
-        isStarred: !!item.isFavorite,
-        tag: item.studio?.name || undefined,
-        shortCode: toShortCode(name),
-        avatarUrl: item.avatarUrl ?? null, // NEW
-        colorHex: item.colorHex ?? null, // NEW
-        iconEmoji: item.iconEmoji ?? null // NEW
-    };
 }
 
 export async function fetchGroupsPageData(): Promise<GroupsPageData> {
@@ -124,13 +93,9 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     const subscription = data?.subscription as SubscriptionInfo | undefined;
     const sections = data?.sections as GroupSections | undefined;
 
-    const favoriteItems = ((sections?.favorites || []) as GroupCardDto[]).filter(Boolean);
-    const managedItems = ((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean);
-    const independentItems = ((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean);
-
-    const favorites = favoriteItems.map(mapGroup);
-    const managed = managedItems.map(mapGroup);
-    const independent = independentItems.map(mapGroup);
+    const favorites = ((sections?.favorites || []) as GroupCardDto[]).filter(Boolean);
+    const managed = ((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean);
+    const independent = ((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean);
 
     return {
         usage: {

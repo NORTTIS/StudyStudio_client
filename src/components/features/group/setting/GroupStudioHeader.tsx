@@ -25,6 +25,7 @@ import { InviteMemberModal, type InviteRole } from "@/components/features/group/
 import { useToast } from "@/components/ui/use-toast";
 import { RolePill } from "../RolePill";
 import type { GroupRole } from "../types";
+import { components } from "@/api/types";
 
 type Tab = {
     key: string;
@@ -33,14 +34,7 @@ type Tab = {
     href: (locale: string, groupId: string) => string;
 };
 
-type GroupDetail = {
-    groupId?: string;
-    groupName?: string | null;
-    description?: string | null;
-    studioName?: string | null;
-    memberCount?: number | null;
-    userRole?: string | null;
-};
+type GroupDetail = components["schemas"]["GroupDetailResponse"];
 
 type GroupDetailResponse = {
     status?: string | null;
@@ -135,6 +129,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const groupId = groupIdProp || searchParams.get("id") || extractGroupIdFromPath(pathname || "") || "";
 
     const [groupName, setGroupName] = React.useState<string>("Group");
+    const [groupAvatarUrl, setGroupAvatarUrl] = React.useState<string | null>(null);
     const [groupDesc, setGroupDesc] = React.useState<string>("");
     const [studioName, setStudioName] = React.useState<string>("");
     const [memberCount, setMemberCount] = React.useState<number>(0);
@@ -201,6 +196,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 if (!alive) return;
 
                 setGroupName(data?.groupName || "Group");
+                setGroupAvatarUrl(data?.avatarUrl || null);
                 setGroupDesc(data?.description || "");
                 setStudioName(data?.studioName || "");
 
@@ -408,8 +404,12 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                             </AnimatePresence>
 
                             <div className="mt-2 flex items-start gap-3">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 via-orange-500 to-red-600 shadow-md shadow-orange-200">
-                                    <Users className="h-6 w-6 text-white" />
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-orange-500 via-orange-500 to-red-600 shadow-md shadow-orange-200">
+                                    {groupAvatarUrl ? (
+                                        <img src={groupAvatarUrl} alt="Group Avatar" className="h-full w-full object-cover" />
+                                    ) : (
+                                        <Users className="h-6 w-6 text-white" />
+                                    )}
                                 </div>
 
                                 <div className="min-w-0">

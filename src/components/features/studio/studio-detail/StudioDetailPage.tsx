@@ -221,7 +221,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     }, [isStudioOwner, activeTab]);
 
     useEffect(() => {
-        if (studio) {
+        if (studio && !isEditing) {
             setEditName(studio.name);
             setEditDescription(studio.description);
             setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
@@ -815,11 +815,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 entityType="studio"
                                                 entityId={studio.id}
                                                 avatarUrl={isEditing ? editAvatarUrl : studio.avatarUrl}
-                                                colorHex={isEditing ? editColorHex : studio.colorHex}
+                                                colorHex={editColorHex}
                                                 onUploadSuccess={(url) => setEditAvatarUrl(url)}
                                                 onError={(msg) => toast({ description: msg, variant: "destructive" })}
                                                 disabled={!isEditing}
-                                            />
+                                                />
                                             <div className="flex-1">
                                                 <ColorPicker
                                                     label="Màu chủ đạo"

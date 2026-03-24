@@ -1,25 +1,14 @@
-export type GroupRole = "owner" | "moderator" | "member" | "commenter" | "viewer";
+import type { components } from "@/api/types";
 
-export type Group = {
-    id: string;
-    title: string;
-    shortCode?: string;
-    tag?: string;
-    description: string;
-    role: GroupRole;
-    membersCount: number;
-    tasksCount: number;
-    createdByInitials: string;
-    memberInitials: string[];
-    isStarred?: boolean;
-    avatarUrl?: string | null; // NEW
-    colorHex?: string | null; // NEW
-    iconEmoji?: string | null; // NEW
-};
+// Use OpenAPI types via components["schemas"]
+export type GroupCardDto = components["schemas"]["GroupCardDto"];
+export type MemberPreviewDto = components["schemas"]["MemberPreviewDto"];
+
+export type GroupRole = "owner" | "moderator" | "member" | "commenter" | "viewer";
 
 export type GroupsPageData = {
     usage: { current: number; max: number };
-    favorites: Group[];
-    managed: Group[];
-    independent: Group[];
+    favorites: GroupCardDto[];
+    managed: GroupCardDto[];
+    independent: GroupCardDto[];
 };

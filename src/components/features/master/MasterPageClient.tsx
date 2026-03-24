@@ -29,33 +29,42 @@ interface MasterPageClientProps {
     initialSubscription: StudioListSubscription | null;
 }
 
-const gradientBackgrounds = [
-    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-    "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-    "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-    "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-    "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-    "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)",
-    "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"
-];
-
-function getGradientBackground(name: string, _index: number): string {
-    const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return gradientBackgrounds[hash % gradientBackgrounds.length];
+// Convert hex color to rgba with opacity
+function hexToRgba(hex: string, opacity: number): string {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!result) return `rgba(255, 95, 61, ${opacity})`;
+    const r = parseInt(result[1], 16);
+    const g = parseInt(result[2], 16);
+    const b = parseInt(result[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-function getStudioDisplayLetter(name: string): string {
-    const trimmed = name.trim();
+// Generate gradient from colorHex
+function getColorGradient(colorHex: string | null | undefined): string {
+    if (!colorHex) {
+        return "linear-gradient(135deg, #FF5F3D 0%, #FF7A59 100%)";
+    }
+    const baseColor = colorHex.startsWith("#") ? colorHex : `#${colorHex}`;
+    const lighterColor = hexToRgba(baseColor, 0.8);
+    const darkerColor = hexToRgba(baseColor, 0.6);
+    return `linear-gradient(135deg, ${baseColor} 0%, ${darkerColor} 100%)`;
+}
 
-    if (!trimmed) return "S";
+// Generate hover shadow color from colorHex
+function getHoverShadow(colorHex: string | null | undefined): string {
+    if (!colorHex) {
+        return "0 30px 70px rgba(255, 95, 61, 0.16)";
+    }
+    const baseColor = colorHex.startsWith("#") ? colorHex : `#${colorHex}`;
+    return `0 30px 70px ${hexToRgba(baseColor, 0.16)}`;
+}
 
-    const firstChar = trimmed.charAt(0).toUpperCase();
-
-    return firstChar
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace("Đ", "D");
+// Generate focus ring color from colorHex
+function getFocusRing(colorHex: string | null | undefined): string {
+    if (!colorHex) {
+        return "#FF5F3D";
+    }
+    return colorHex.startsWith("#") ? colorHex : `#${colorHex}`;
 }
 
 function FloatingOrb({ className }: { className: string }) {
@@ -64,25 +73,45 @@ function FloatingOrb({ className }: { className: string }) {
 
 interface StudioCardProps {
     studio: StudioUI;
-    index: number;
     onClick: () => void;
     onEdit: () => void;
     onDelete: () => void;
     canEdit: boolean;
 }
 
-function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: StudioCardProps) {
+function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardProps) {
     const t = useTranslations("MasterPage");
-    const gradient = getGradientBackground(studio.name, index);
-    const firstLetter = getStudioDisplayLetter(studio.name);
+    const gradient = getColorGradient(studio.colorHex);
+    const hoverShadow = getHoverShadow(studio.colorHex);
+    const focusRing = getFocusRing(studio.colorHex);
     const isOwner = studio.studioRole === 0;
+    const [isHovered, setIsHovered] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
+
+    const cardShadow = isHovered
+        ? hoverShadow
+        : isFocused
+            ? hoverShadow
+            : "0 20px 60px rgba(15,23,42,0.06)";
+    const borderColor = isHovered
+        ? `${studio.colorHex || "#FF5F3D"}35`
+        : "rgba(255,255,255,0.7)";
 
     return (
         <div
             role="button"
             tabIndex={0}
-            className="group relative cursor-pointer overflow-hidden rounded-[30px] border border-white/70 bg-white/82 text-left shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1.5 hover:border-[#FF5F3D]/35 hover:shadow-[0_30px_70px_rgba(255,95,61,0.16)] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]"
+            className="group relative cursor-pointer overflow-hidden rounded-[30px] border bg-white/82 text-left backdrop-blur-2xl transition-all duration-300 hover:-translate-y-1.5"
+            style={{
+                boxShadow: cardShadow,
+                borderColor: borderColor,
+                outline: isFocused ? `2px solid ${focusRing}` : "none",
+            } as React.CSSProperties}
             onClick={onClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -117,8 +146,18 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                     )}
                 </div>
 
-                <div className="absolute bottom-[-24px] left-5 z-10 flex h-16 w-16 items-center justify-center rounded-[20px] border border-white/85 bg-white text-[28px] font-bold text-[#261E33] shadow-[0_14px_28px_rgba(15,23,42,0.14)]">
-                    {firstLetter}
+                <div className="absolute bottom-[-24px] left-5 z-10 overflow-hidden rounded-[20px] border border-white/85 bg-white shadow-[0_14px_28px_rgba(15,23,42,0.14)]">
+                    {studio.avatarUrl ? (
+                        <img
+                            src={studio.avatarUrl}
+                            alt={studio.name}
+                            className="h-16 w-16 object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-16 w-16 items-center justify-center text-[28px] font-bold text-[#261E33]">
+                            {studio.name.charAt(0).toUpperCase()}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -459,11 +498,10 @@ export default function MasterPageClient({
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
-                    {studioList.map((studio, index) => (
+                    {studioList.map((studio) => (
                         <StudioCard
                             key={studio.id}
                             studio={studio}
-                            index={index}
                             onClick={() => handleStudioClick(studio)}
                             onEdit={() => handleOpenEditModal(studio)}
                             onDelete={() => handleOpenDeleteModal(studio)}
