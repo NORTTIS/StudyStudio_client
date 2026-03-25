@@ -279,7 +279,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         if (!studio) return;
 
         if (editStartDate && editEndDate && editStartDate > editEndDate) {
-            toast({ description: "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc", variant: "destructive" });
+            toast({ description: t("detail.validation.dateRangeError"), variant: "destructive" });
             return;
         }
 
@@ -341,7 +341,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                     <main className="flex-1">
                         <Header userProfile={userProfile} />
                         <div className="flex items-center justify-center py-24">
-                            <EmptyBlock title="Studio không tồn tại" subtitle="Vui lòng kiểm tra lại đường dẫn hoặc quay về danh sách studio" />
+                            <EmptyBlock title={t("detail.studioNotFound")} subtitle={t("detail.studioNotFoundSubtitle")} />
                         </div>
                     </main>
                 </div>

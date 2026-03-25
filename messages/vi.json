@@ -2,7 +2,13 @@
     "Common": {
         "loading": "Đang tải...",
         "checkingAuth": "Đang kiểm tra xác thực...",
-        "aiQATab": "AI Q&A"
+        "aiQATab": "AI Q&A",
+        "missingAccessToken": "Thiếu access token",
+        "missingInviteUrl": "thiếu inviteUrl",
+        "inviteCreateFailed": "Tạo link thất bại",
+        "inviteByEmailFailed": "Mời thành viên thất bại",
+        "members": "thành viên",
+        "addMember": "Thêm thành viên"
     },
     "Announcements": {
         "title": "Thông báo",
@@ -84,7 +90,9 @@
             "title": "Quản lý công việc hiệu quả hơn",
             "subtitle": "với sự giúp sức của AI",
             "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
-            "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
+            "feature1Description": "AI hỗ trợ bạn tóm tắt, phân tích và đưa ra gợi ý hành động nhanh hơn trong từng không gian làm việc.",
+            "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm",
+            "feature2Description": "Tương tác thông minh hơn với dữ liệu, task, nhóm và lịch trình để tăng tốc ra quyết định hằng ngày."
         }
     },
     "HomePage": {
@@ -595,6 +603,11 @@
             "activeBadge": "Đang hoạt động",
             "addGroupButton": "Thêm nhóm",
             "inviteMember": "Mời thành viên",
+            "studioNotFound": "Studio không tồn tại",
+            "studioNotFoundSubtitle": "Vui lòng kiểm tra lại đường dẫn hoặc quay về danh sách studio",
+            "validation": {
+                "dateRangeError": "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc"
+            },
             "groupsUsed": "không gian nhóm đang được sử dụng",
             "completionProgress": "Tiến độ hoàn thiện công việc trung bình",
             "tasks": "công việc",
@@ -818,12 +831,19 @@
             "price": "299.000 VND / Tháng",
             "description": "Phù hợp cho các nhóm lớn cần sự linh\nhoạt hơn",
             "registerButton": "Đăng ký",
+            "badge": "Phổ biến nhất",
+            "recommendation": "Dành cho người dùng muốn làm việc nghiêm túc hơn, cần nhiều công cụ mạnh hơn và muốn tối ưu toàn bộ quy trình học tập hoặc quản lý.",
             "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
             "feature2": "Tối đa 10 Không gian nhóm",
             "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
             "feature4": "1024 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
             "feature5": "100 lượt yêu cầu AI mỗi ngày"
-        }
+        },
+        "freePlanRecommendation": "Phù hợp để bắt đầu, trải nghiệm hệ thống và làm quen với cách quản lý công việc cơ bản.",
+        "landingCta": "Bắt đầu với Free bất cứ lúc nào, hoặc chọn Premium để mở khóa trải nghiệm đầy đủ và tăng tốc hiệu quả ngay từ hôm nay.",
+        "heroSubtitle": "Chọn gói phù hợp để bắt đầu ngay hôm nay. Dễ bắt đầu với Free, mạnh mẽ bứt tốc với Premium.",
+        "valuePill1": "Triển khai nhanh",
+        "valuePill2": "Hỗ trợ AI thông minh"
     },
     "GroupDocumentsPage": {
         "download": "Tải xuống",

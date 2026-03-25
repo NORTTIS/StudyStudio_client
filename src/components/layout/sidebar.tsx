@@ -47,15 +47,23 @@ export function DashboardSidebar() {
 
     useEffect(() => {
         setMounted(true);
-        const saved = localStorage.getItem("dashboard-sidebar-collapsed");
-        if (saved !== null) {
-            setCollapsed(saved === "true");
+        try {
+            const saved = localStorage.getItem("dashboard-sidebar-collapsed");
+            if (saved !== null) {
+                setCollapsed(saved === "true");
+            }
+        } catch (error) {
+            console.error("Failed to read sidebar state from localStorage:", error);
         }
     }, []);
 
     useEffect(() => {
         if (!mounted) return;
-        localStorage.setItem("dashboard-sidebar-collapsed", String(collapsed));
+        try {
+            localStorage.setItem("dashboard-sidebar-collapsed", String(collapsed));
+        } catch (error) {
+            console.error("Failed to save sidebar state to localStorage:", error);
+        }
     }, [collapsed, mounted]);
 
     useEffect(() => {

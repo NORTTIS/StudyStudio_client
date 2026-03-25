@@ -85,7 +85,7 @@ const okByJsonStatus = (obj: unknown) => {
 
 const extractApiMessage = (text: string, json: unknown) => {
     const msg = String(asObject(json)?.message ?? "").trim();
-    return msg || text.trim() || "Da xay ra loi";
+    return msg || text.trim() || "An error occurred";
 };
 
 function getApiBase() {

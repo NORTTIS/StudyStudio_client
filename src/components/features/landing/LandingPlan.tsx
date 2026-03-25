@@ -119,12 +119,12 @@ export default function LandingPlan() {
                         </h1>
 
                         <p className="landing-fade-up landing-delay-1 mx-auto mt-6 max-w-3xl text-lg leading-8 text-[#6F6B99] md:text-xl">
-                            Chọn gói phù hợp để bắt đầu ngay hôm nay. Dễ bắt đầu với Free, mạnh mẽ bứt tốc với Premium.
+                            {t("heroSubtitle")}
                         </p>
 
                         <div className="landing-pop landing-delay-2 mt-8 flex flex-wrap items-center justify-center gap-3">
-                            <ValuePill>Triển khai nhanh</ValuePill>
-                            <ValuePill>Hỗ trợ AI thông minh</ValuePill>
+                            <ValuePill>{t("valuePill1")}</ValuePill>
+                            <ValuePill>{t("valuePill2")}</ValuePill>
                         </div>
                     </div>
                 </section>
@@ -192,7 +192,7 @@ export default function LandingPlan() {
 
                             <div className="mt-8 rounded-[24px] border border-[#EFE4D8] bg-[#FFFCF9] p-4">
                                 <p className="text-sm leading-8 text-[#7C78A0]">
-                                    Phù hợp để bắt đầu, trải nghiệm hệ thống và làm quen với cách quản lý công việc cơ bản.
+                                    {t("freePlanRecommendation")}
                                 </p>
                             </div>
                         </div>
@@ -201,7 +201,7 @@ export default function LandingPlan() {
                         <div className="landing-pop relative scale-[1.01] rounded-[36px] border border-orange-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(255,247,241,0.95))] px-8 py-10 shadow-[0_24px_70px_rgba(249,115,22,0.14)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_34px_90px_rgba(249,115,22,0.20)] md:px-10 md:py-11">
                             <div className="pointer-events-none absolute -inset-0.5 rounded-[38px] bg-[linear-gradient(135deg,rgba(249,115,22,0.18),rgba(124,58,237,0.12),rgba(255,255,255,0))]" />
                             <div className="absolute -top-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-[linear-gradient(135deg,#F97316_0%,#EA580C_45%,#DC2626_100%)] px-5 py-1.5 text-sm font-semibold text-white shadow-lg">
-                                Most Popular
+                                {t("premiumPlan.badge")}
                             </div>
 
                             <div className="relative">
@@ -265,8 +265,7 @@ export default function LandingPlan() {
                                     <div className="flex items-start gap-3">
                                         <Star className="mt-0.5 h-5 w-5 text-orange-500" />
                                         <p className="text-sm leading-7 text-[#5F5A73]">
-                                            Dành cho người dùng muốn làm việc nghiêm túc hơn, cần nhiều công cụ mạnh hơn
-                                            và muốn tối ưu toàn bộ quy trình học tập hoặc quản lý.
+                                            {t("premiumPlan.recommendation")}
                                         </p>
                                     </div>
                                 </div>
@@ -276,8 +275,7 @@ export default function LandingPlan() {
 
                     <div className="mx-auto mt-12 max-w-4xl text-center">
                         <p className="text-sm leading-7 text-[#6F6B99]">
-                            Bắt đầu với Free bất cứ lúc nào, hoặc chọn Premium để mở khóa trải nghiệm đầy đủ và tăng tốc
-                            hiệu quả ngay từ hôm nay.
+                            {t("landingCta")}
                         </p>
                     </div>
                 </section>

@@ -270,9 +270,16 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="studio-modal-title"
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
+        >
             <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h2 className="mb-4 font-bold text-2xl text-[#261E33]">
+                <h2 id="studio-modal-title" className="mb-4 font-bold text-2xl text-[#261E33]">
                     {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
                 </h2>
 
@@ -290,6 +297,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                             {t("modal.name")}
                         </label>
                         <Input
+                            id="studio-name"
                             type="text"
                             value={formData.name}
                             onChange={(e) => handleChange("name", e.target.value)}
@@ -316,6 +324,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                             {t("modal.description")}
                         </label>
                         <textarea
+                            id="studio-description"
                             value={formData.description}
                             onChange={(e) => handleChange("description", e.target.value)}
                             onBlur={() => handleBlur("description")}

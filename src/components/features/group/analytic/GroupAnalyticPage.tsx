@@ -1,55 +1,20 @@
 "use client";
 
-import * as React from "react";
 import * as echarts from "echarts";
-import { motion, AnimatePresence } from "framer-motion";
-import { Users, Layers3, Clock3, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle2, Clock3, Layers3, MessageSquare, Plus, Users, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-
-import { getGroupAnalytics } from "@/api/analytics";
-import type { GroupAnalyticsResponse } from "@/api/analytics";
+import * as React from "react";
+import type { DailyActivityPoint, GroupSummaryResponse, MemberHeatmapData, MemberProgressTrendData } from "@/api/analytics";
+import { getGroupHeatmap, getGroupSummary, getGroupTrend } from "@/api/analytics";
+import { apiGet } from "@/api/api-client";
 import { Container } from "@/components/common";
 
-const selectedYear = 2026;
+// ==================== Types ====================
 
 type TrendFilter = "week" | "month" | "year";
 type HeatmapRangeFilter = "week" | "month";
 type GroupRole = "owner" | "moderator" | "member" | "commenter";
-
-type DailyProgressPoint = {
-    label: string;
-    [key: string]: string | number;
-};
-
-type MemberCompareSeries = {
-    userId: string;
-    userName: string;
-    totalTasks: number;
-    doneTasks: number;
-    inProgressTasks: number;
-    todoTasks: number;
-    overdueTasks: number;
-    contributionPercentage: number;
-    messagesSent: number;
-    colorSeed: number;
-};
-
-type PersonalAnalyticsData = {
-    totalTasks: number;
-    todoTasks: number;
-    inProgressTasks: number;
-    doneTasks: number;
-    overdueTasks: number;
-    completionTrend: DailyProgressPoint[];
-    compareMembers: MemberCompareSeries[];
-    heatmapByDate: Record<string, number>;
-};
-
-type TeamHeatmapMember = {
-    id: string;
-    name: string;
-    heatmapByDate: Record<string, number>;
-};
 
 type MemberProgressStatus = "on-track" | "warning" | "delayed";
 
@@ -59,13 +24,21 @@ type MemberProgressItem = {
     completedTasks: number;
     totalTasks: number;
     lastActivity: string;
-};
-
-type ApiResponse<T> = {
-    code?: string | null;
-    data?: T;
-    message?: string | null;
-    status?: string | null;
+    // From MemberContributionData (weighted scoring)
+    contributionPercentage?: number;
+    totalScore?: number;
+    tasksCompleted?: number;
+    tasksCreated?: number;
+    tasksUpdated?: number;
+    tasksDeleted?: number;
+    tasksAssigned?: number;
+    commentsCreated?: number;
+    messagesSent?: number;
+    completedScore?: number;
+    createdScore?: number;
+    updatedScore?: number;
+    deletedScore?: number;
+    assignedScore?: number;
 };
 
 type UserProfileLike = {
@@ -93,6 +66,8 @@ type GroupMemberListData = {
     totalMembers?: number;
 };
 
+// ==================== Utils ====================
+
 const MEMBER_COLORS = [
     "#2563eb",
     "#f97316",
@@ -104,20 +79,7 @@ const MEMBER_COLORS = [
     "#14b8a6",
     "#8b5cf6",
     "#ec4899",
-    "#22c55e",
-];
-
-const MOCK_MEMBER_NAMES = [
-    "dat",
-    "Nguyễn An",
-    "Trần Bình",
-    "Lê Chi",
-    "Phạm Duy",
-    "Hoàng Giang",
-    "Vũ Hạnh",
-    "Đỗ Khôi",
-    "Bùi Lan",
-    "Mai Nam",
+    "#22c55e"
 ];
 
 const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
@@ -140,117 +102,6 @@ function formatDisplayDate(date: Date) {
     const m = `${date.getMonth() + 1}`.padStart(2, "0");
     const y = date.getFullYear();
     return `${d}/${m}/${y}`;
-}
-
-function seededRandom(seed: string) {
-    let hash = 2166136261;
-
-    for (let i = 0; i < seed.length; i++) {
-        hash ^= seed.charCodeAt(i);
-        hash = Math.imul(hash, 16777619);
-    }
-
-    return ((hash >>> 0) % 1000) / 1000;
-}
-
-function generateYearHeatmapByDate(year: number, seedPrefix: string) {
-    const start = new Date(year, 0, 1);
-    const end = new Date(year, 11, 31);
-    const data: Record<string, number> = {};
-
-    for (
-        let current = new Date(start);
-        current <= end;
-        current.setDate(current.getDate() + 1)
-    ) {
-        const date = new Date(current);
-        const day = date.getDay();
-        const month = date.getMonth();
-        const weekSeed = Math.floor(
-            (date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 7)
-        );
-
-        const activeMonths = [0, 1, 2, 6, 7, 8, 10, 11];
-        const isActiveMonth = activeMonths.includes(month);
-        const isWeekend = day === 0 || day === 6;
-        const burst =
-            weekSeed % 9 === 0 ||
-            weekSeed % 13 === 0 ||
-            (month === 10 && weekSeed % 3 === 0);
-
-        let value = 0;
-        const dateKey = formatDateLocal(date);
-        const r = seededRandom(`${seedPrefix}-${year}-${dateKey}`);
-
-        if (burst) {
-            if (r > 0.78) value = 4;
-            else if (r > 0.58) value = 3;
-            else if (r > 0.34) value = 2;
-            else if (r > 0.16) value = 1;
-        } else if (isActiveMonth && !isWeekend) {
-            if (r > 0.88) value = 4;
-            else if (r > 0.74) value = 3;
-            else if (r > 0.55) value = 2;
-            else if (r > 0.34) value = 1;
-        } else if (!isWeekend) {
-            if (r > 0.94) value = 3;
-            else if (r > 0.82) value = 2;
-            else if (r > 0.62) value = 1;
-        } else {
-            if (r > 0.97) value = 2;
-            else if (r > 0.88) value = 1;
-        }
-
-        data[dateKey] = value;
-    }
-
-    return data;
-}
-
-function generateDailyCompletionSource(year: number, memberSeed: string) {
-    const start = new Date(year, 0, 1);
-    const end = new Date(year, 11, 31);
-    const result: Array<{ date: string; completed: number }> = [];
-
-    for (
-        let current = new Date(start);
-        current <= end;
-        current.setDate(current.getDate() + 1)
-    ) {
-        const date = new Date(current);
-        const day = date.getDay();
-        const month = date.getMonth();
-        const isWeekend = day === 0 || day === 6;
-        const dateKey = formatDateLocal(date);
-
-        let completed = 0;
-        const r = seededRandom(`${memberSeed}-${year}-${dateKey}`);
-
-        if (!isWeekend) {
-            if ([0, 1, 2, 6, 7, 8, 10, 11].includes(month)) {
-                if (r > 0.86) completed = 5;
-                else if (r > 0.7) completed = 4;
-                else if (r > 0.52) completed = 3;
-                else if (r > 0.3) completed = 2;
-                else if (r > 0.15) completed = 1;
-            } else {
-                if (r > 0.9) completed = 4;
-                else if (r > 0.75) completed = 3;
-                else if (r > 0.56) completed = 2;
-                else if (r > 0.35) completed = 1;
-            }
-        } else {
-            if (r > 0.93) completed = 2;
-            else if (r > 0.8) completed = 1;
-        }
-
-        result.push({
-            date: dateKey,
-            completed,
-        });
-    }
-
-    return result;
 }
 
 function getWeekStart(date: Date) {
@@ -281,12 +132,10 @@ function getMonthRange(date: Date) {
 function getDatesInRange(start: Date, end: Date) {
     const dates: Date[] = [];
     const current = new Date(start);
-
     while (current <= end) {
         dates.push(new Date(current));
         current.setDate(current.getDate() + 1);
     }
-
     return dates;
 }
 
@@ -296,7 +145,6 @@ function formatRangeLabel(start: Date, end: Date) {
     const endDay = `${end.getDate()}`.padStart(2, "0");
     const endMonth = `${end.getMonth() + 1}`.padStart(2, "0");
     const year = end.getFullYear();
-
     return `${startDay}/${startMonth} - ${endDay}/${endMonth}/${year}`;
 }
 
@@ -306,98 +154,16 @@ function getTrendRangeLabel(date: Date, filter: TrendFilter) {
         const startText = `${`${start.getDate()}`.padStart(2, "0")}/${`${start.getMonth() + 1}`.padStart(2, "0")}`;
         return `${startText} - ${formatDisplayDate(end)}`;
     }
-
     if (filter === "month") {
         const start = new Date(date.getFullYear(), date.getMonth(), 1);
         const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
         const startText = `${`${start.getDate()}`.padStart(2, "0")}/${`${start.getMonth() + 1}`.padStart(2, "0")}`;
         return `${startText} - ${formatDisplayDate(end)}`;
     }
-
     const start = new Date(date.getFullYear(), 0, 1);
     const end = new Date(date.getFullYear(), 11, 31);
     const startText = `${`${start.getDate()}`.padStart(2, "0")}/${`${start.getMonth() + 1}`.padStart(2, "0")}`;
     return `${startText} - ${formatDisplayDate(end)}`;
-}
-
-function getTrendDataByFilter(
-    source: Array<{ date: string; completed: number }>,
-    filter: TrendFilter,
-    year: number,
-    key: string,
-    anchorDate: Date
-): DailyProgressPoint[] {
-    const now = anchorDate;
-
-    if (filter === "week") {
-        const weekStart = getWeekStart(now);
-        const weekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-
-        return Array.from({ length: 7 }).map((_, index) => {
-            const current = new Date(weekStart);
-            current.setDate(weekStart.getDate() + index);
-            const found = source.find((item) => item.date === formatDateLocal(current));
-
-            return {
-                label: weekdays[index],
-                [key]: found?.completed ?? 0,
-            };
-        });
-    }
-
-    if (filter === "month") {
-        const month = now.getMonth();
-        const monthItems = source.filter((item) => {
-            const d = new Date(item.date);
-            return d.getFullYear() === year && d.getMonth() === month;
-        });
-
-        const buckets: DailyProgressPoint[] = [
-            { label: "Tuần 1", [key]: 0 },
-            { label: "Tuần 2", [key]: 0 },
-            { label: "Tuần 3", [key]: 0 },
-            { label: "Tuần 4", [key]: 0 },
-            { label: "Tuần 5", [key]: 0 },
-        ];
-
-        monthItems.forEach((item) => {
-            const day = new Date(item.date).getDate();
-            const bucketIndex = Math.min(Math.floor((day - 1) / 7), 4);
-            buckets[bucketIndex][key] =
-                Number(buckets[bucketIndex][key] || 0) + item.completed;
-        });
-
-        return buckets;
-    }
-
-    const monthNames = [
-        "T1",
-        "T2",
-        "T3",
-        "T4",
-        "T5",
-        "T6",
-        "T7",
-        "T8",
-        "T9",
-        "T10",
-        "T11",
-        "T12",
-    ];
-
-    return monthNames.map((label, monthIndex) => {
-        const total = source
-            .filter((item) => {
-                const d = new Date(item.date);
-                return d.getFullYear() === year && d.getMonth() === monthIndex;
-            })
-            .reduce((sum, item) => sum + item.completed, 0);
-
-        return {
-            label,
-            [key]: total,
-        };
-    });
 }
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -407,106 +173,57 @@ function cn(...classes: Array<string | false | null | undefined>) {
 function normalizeRole(input?: string | null): GroupRole | null {
     if (!input) return null;
     const value = input.toLowerCase();
-
     if (value === "owner") return "owner";
     if (value === "moderator") return "moderator";
     if (value === "member") return "member";
     if (value === "commenter") return "commenter";
-
     return null;
 }
 
-async function fetchJson<T>(url: string): Promise<T | null> {
-    try {
-        const res = await fetch(url, {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            cache: "no-store",
-        });
-
-        if (!res.ok) return null;
-        return (await res.json()) as T;
-    } catch {
-        return null;
-    }
-}
-
 async function getCurrentUserProfile(): Promise<UserProfileLike | null> {
-    const res = await fetchJson<ApiResponse<UserProfileLike>>("/api/user-profile");
-    return res?.data ?? null;
+    const res = await apiGet<UserProfileLike>("/user-profile");
+    return res.data ?? null;
 }
 
 async function getCurrentUserRoleInGroup(groupId: string): Promise<GroupRole> {
     const [profileRes, membersRes] = await Promise.all([
         getCurrentUserProfile(),
-        fetchJson<ApiResponse<GroupMemberListData>>(`/api/group/${groupId}/members`),
+        apiGet<GroupMemberListData>(`/group/${groupId}/members`)
     ]);
-
     const members = membersRes?.data?.members ?? [];
     const profile = profileRes;
-
     const matchedMember =
         members.find((m) => m.isCurrentUser === true) ??
-        members.find(
-            (m) =>
-                !!profile?.userId &&
-                (m.userId === profile.userId || m.id === profile.userId)
-        ) ??
-        members.find(
-            (m) =>
-                !!profile?.id &&
-                (m.userId === profile.id || m.id === profile.id)
-        ) ??
-        members.find(
-            (m) =>
-                !!profile?.email &&
-                !!m.email &&
-                m.email.toLowerCase() === profile.email.toLowerCase()
-        );
-
+        members.find((m) => !!profile?.userId && (m.userId === profile.userId || m.id === profile.userId)) ??
+        members.find((m) => !!profile?.id && (m.userId === profile.id || m.id === profile.id)) ??
+        members.find((m) => !!profile?.email && !!m.email && m.email.toLowerCase() === profile.email.toLowerCase());
     const role =
         normalizeRole(matchedMember?.role) ??
         normalizeRole(matchedMember?.groupRole) ??
         normalizeRole(matchedMember?.memberRole);
-
     return role ?? "member";
 }
 
-function SectionReveal({
-    children,
-    delay = 0,
-}: {
-    children: React.ReactNode;
-    delay?: number;
-}) {
+// ==================== Sub-components ====================
+
+function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
-        >
+            transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}>
             {children}
         </motion.div>
     );
 }
 
-function EChart({
-    option,
-    height = 320,
-}: {
-    option: echarts.EChartsOption;
-    height?: number;
-}) {
+function EChart({ option, height = 320 }: { option: echarts.EChartsOption; height?: number }) {
     const ref = React.useRef<HTMLDivElement | null>(null);
     const chartRef = React.useRef<echarts.ECharts | null>(null);
     const frameRef = React.useRef<number | null>(null);
 
     React.useEffect(() => {
         if (!ref.current) return;
-
         const chart = echarts.init(ref.current, undefined, { renderer: "canvas" });
         chartRef.current = chart;
         chart.setOption(option, true);
@@ -514,10 +231,9 @@ function EChart({
         const smoothResize = () => {
             if (!chartRef.current) return;
             if (frameRef.current) cancelAnimationFrame(frameRef.current);
-
             frameRef.current = requestAnimationFrame(() => {
                 chartRef.current?.resize({
-                    animation: { duration: 260, easing: "cubicOut" },
+                    animation: { duration: 260, easing: "cubicOut" }
                 });
             });
         };
@@ -533,22 +249,35 @@ function EChart({
             chart.dispose();
             chartRef.current = null;
         };
-    }, []);
+    }, [option]);
 
     React.useEffect(() => {
         if (!chartRef.current) return;
-
         chartRef.current.setOption(option, { notMerge: true, lazyUpdate: true });
-
         if (frameRef.current) cancelAnimationFrame(frameRef.current);
         frameRef.current = requestAnimationFrame(() => {
             chartRef.current?.resize({
-                animation: { duration: 260, easing: "cubicOut" },
+                animation: { duration: 260, easing: "cubicOut" }
             });
         });
     }, [option]);
 
     return <div ref={ref} style={{ width: "100%", height }} />;
+}
+
+function formatLastActivity(dateStr: string | null | undefined): string {
+    if (!dateStr) return "No activity";
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return formatDisplayDate(date);
 }
 
 function GroupActivityHeatmap({
@@ -557,9 +286,9 @@ function GroupActivityHeatmap({
     anchorDate,
     onPrev,
     onNext,
-    onChangeRange,
+    onChangeRange
 }: {
-    members: TeamHeatmapMember[];
+    members: { id: string; name: string; activityByDate: DailyActivityPoint[] }[];
     range: HeatmapRangeFilter;
     anchorDate: Date;
     onPrev: () => void;
@@ -571,7 +300,6 @@ function GroupActivityHeatmap({
     }, [anchorDate, range]);
 
     const dates = React.useMemo(() => getDatesInRange(start, end), [start, end]);
-
     const heatmapMotionKey = `${range}-${formatDateLocal(start)}-${formatDateLocal(end)}`;
 
     const colorMap: Record<number, string> = {
@@ -579,18 +307,16 @@ function GroupActivityHeatmap({
         1: "#d1fadf",
         2: "#73e2a3",
         3: "#16a34a",
-        4: "#166534",
+        4: "#166534"
     };
 
     return (
-        <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                    <h2 className="text-lg font-semibold text-slate-900">
-                        5. Hoạt động nhóm
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Heatmap hoạt động mock 10 thành viên theo {range === "week" ? "tuần" : "tháng"}.
+                    <h2 className="font-semibold text-lg text-slate-900">5. Hoạt động nhóm</h2>
+                    <p className="mt-1 text-slate-500 text-sm">
+                        Heatmap hoạt động của {members.length} thành viên theo {range === "week" ? "tuần" : "tháng"}.
                     </p>
                 </div>
 
@@ -598,19 +324,18 @@ function GroupActivityHeatmap({
                     <div className="inline-flex rounded-2xl bg-slate-100 p-1">
                         {[
                             { key: "week", label: "Tuần" },
-                            { key: "month", label: "Tháng" },
+                            { key: "month", label: "Tháng" }
                         ].map((item) => (
                             <button
                                 key={item.key}
                                 type="button"
                                 onClick={() => onChangeRange(item.key as HeatmapRangeFilter)}
                                 className={cn(
-                                    "rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300",
+                                    "rounded-xl px-4 py-2 font-medium text-sm transition-all duration-300",
                                     range === item.key
                                         ? "bg-white text-slate-900 shadow-sm"
-                                        : "text-slate-500 hover:text-slate-900 hover:bg-white/70"
-                                )}
-                            >
+                                        : "text-slate-500 hover:bg-white/70 hover:text-slate-900"
+                                )}>
                                 {item.label}
                             </button>
                         ))}
@@ -620,18 +345,16 @@ function GroupActivityHeatmap({
                         <button
                             type="button"
                             onClick={onPrev}
-                            className="rounded-lg px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-orange-50 hover:text-orange-600 active:scale-95"
-                        >
+                            className="rounded-lg px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-orange-50 hover:text-orange-600 active:scale-95">
                             ‹
                         </button>
-                        <div className="min-w-[170px] text-center text-sm font-medium text-slate-700">
+                        <div className="min-w-[170px] text-center font-medium text-slate-700 text-sm">
                             {formatRangeLabel(start, end)}
                         </div>
                         <button
                             type="button"
                             onClick={onNext}
-                            className="rounded-lg px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-orange-50 hover:text-orange-600 active:scale-95"
-                        >
+                            className="rounded-lg px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-orange-50 hover:text-orange-600 active:scale-95">
                             ›
                         </button>
                     </div>
@@ -646,17 +369,12 @@ function GroupActivityHeatmap({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.985 }}
                         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                        className={cn(
-                            "w-full",
-                            range === "week" ? "min-w-[520px]" : "min-w-[760px]"
-                        )}
-                    >
+                        className={cn("w-full", range === "week" ? "min-w-[520px]" : "min-w-[760px]")}>
                         <div
                             className="grid items-center gap-x-2 gap-y-3"
                             style={{
-                                gridTemplateColumns: `88px repeat(${dates.length}, minmax(18px, 1fr))`,
-                            }}
-                        >
+                                gridTemplateColumns: `88px repeat(${dates.length}, minmax(18px, 1fr))`
+                            }}>
                             <div className="sticky left-0 z-20 bg-white/90 backdrop-blur-sm" />
                             {dates.map((date, index) => (
                                 <motion.div
@@ -666,10 +384,9 @@ function GroupActivityHeatmap({
                                     transition={{
                                         duration: 0.2,
                                         delay: index * 0.012,
-                                        ease: [0.22, 1, 0.36, 1],
+                                        ease: [0.22, 1, 0.36, 1]
                                     }}
-                                    className="text-center text-[11px] text-slate-500"
-                                >
+                                    className="text-center text-[11px] text-slate-500">
                                     {date.getDate()}
                                 </motion.div>
                             ))}
@@ -682,31 +399,31 @@ function GroupActivityHeatmap({
                                         transition={{
                                             duration: 0.22,
                                             delay: memberIndex * 0.015,
-                                            ease: [0.22, 1, 0.36, 1],
+                                            ease: [0.22, 1, 0.36, 1]
                                         }}
-                                        className="sticky left-0 z-10 bg-white/90 pr-2 text-xs font-medium text-slate-700 backdrop-blur-sm"
-                                    >
+                                        className="sticky left-0 z-10 bg-white/90 pr-2 font-medium text-slate-700 text-xs backdrop-blur-sm">
                                         <span className="line-clamp-1">{member.name}</span>
                                     </motion.div>
 
                                     {dates.map((date, dateIndex) => {
                                         const dateKey = formatDateLocal(date);
-                                        const value = member.heatmapByDate[dateKey] ?? 0;
+                                        const activityPoint = member.activityByDate.find((p) => p.date === dateKey);
+                                        const value = activityPoint?.activityLevel ?? 0;
 
                                         return (
                                             <motion.div
                                                 key={`${member.id}-${dateKey}`}
-                                                title={`${member.name} • ${dateKey}: ${value}`}
+                                                title={`${member.name} • ${dateKey}: Level ${value}`}
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{
                                                     duration: 0.18,
                                                     delay: memberIndex * 0.01 + dateIndex * 0.004,
-                                                    ease: [0.22, 1, 0.36, 1],
+                                                    ease: [0.22, 1, 0.36, 1]
                                                 }}
                                                 className="h-[18px] w-full rounded-[5px] transition-transform duration-150 hover:scale-105"
                                                 style={{
-                                                    backgroundColor: colorMap[value] ?? colorMap[0],
+                                                    backgroundColor: colorMap[value] ?? colorMap[0]
                                                 }}
                                             />
                                         );
@@ -719,7 +436,7 @@ function GroupActivityHeatmap({
             </div>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-slate-500 text-sm">
                     <span>Ít</span>
                     {[0, 1, 2, 3, 4].map((level) => (
                         <div
@@ -730,105 +447,10 @@ function GroupActivityHeatmap({
                     ))}
                     <span>Nhiều</span>
                 </div>
-
-                <div className="text-sm text-slate-400">
-                    Cập nhật: {new Date().toLocaleDateString("vi-VN")}
-                </div>
+                <div className="text-slate-400 text-sm">Cập nhật: {new Date().toLocaleDateString("vi-VN")}</div>
             </div>
         </div>
     );
-}
-
-function deriveMemberAnalytics(
-    analytics: GroupAnalyticsResponse | null,
-    memberId: string,
-    memberName: string
-): PersonalAnalyticsData {
-    const contribution = analytics?.memberContribution ?? [];
-    const currentMember =
-        contribution.find((item) => item.userId === memberId) ?? contribution[0];
-
-    const fallbackTotal = currentMember
-        ? (currentMember.tasksCreated ?? 0) + (currentMember.tasksCompleted ?? 0)
-        : 18;
-
-    const doneTasks = currentMember?.tasksCompleted ?? 8;
-    const totalTasks = Math.max(fallbackTotal, doneTasks, 1);
-    const overdueTasks = Math.max(0, Math.round(totalTasks * 0.08));
-    const inProgressTasks = Math.max(0, Math.round((totalTasks - doneTasks) * 0.5));
-    const todoTasks = Math.max(
-        0,
-        totalTasks - doneTasks - inProgressTasks - overdueTasks
-    );
-
-    const compareMembers: MemberCompareSeries[] = contribution
-        .slice(0, 24)
-        .map((item, index) => {
-            const total = Math.max(
-                (item.tasksCreated ?? 0) + (item.tasksCompleted ?? 0),
-                item.tasksCompleted ?? 0,
-                1
-            );
-            const overdue = Math.max(
-                0,
-                Math.round(total * (0.04 + (index % 4) * 0.03))
-            );
-            const inProgress = Math.max(
-                0,
-                Math.round((total - (item.tasksCompleted ?? 0)) * 0.45)
-            );
-            const todo = Math.max(
-                0,
-                total - (item.tasksCompleted ?? 0) - inProgress - overdue
-            );
-
-            return {
-                userId: item.userId ?? `member-${index}`,
-                userName: item.userName ?? item.userId ?? `Member ${index + 1}`,
-                totalTasks: total,
-                doneTasks: item.tasksCompleted ?? 0,
-                inProgressTasks: inProgress,
-                todoTasks: todo,
-                overdueTasks: overdue,
-                contributionPercentage: item.contributionPercentage ?? 0,
-                messagesSent: item.messagesSent ?? 0,
-                colorSeed: index,
-            };
-        })
-        .sort((a, b) => b.doneTasks - a.doneTasks);
-
-    const meExists = compareMembers.some((member) => member.userId === memberId);
-    const members = meExists
-        ? compareMembers
-        : [
-            {
-                userId: memberId,
-                userName: memberName || "Tôi",
-                totalTasks,
-                doneTasks,
-                inProgressTasks,
-                todoTasks,
-                overdueTasks,
-                contributionPercentage: 0,
-                messagesSent: 0,
-                colorSeed: 0,
-            },
-            ...compareMembers,
-        ];
-
-    return {
-        totalTasks,
-        todoTasks,
-        inProgressTasks,
-        doneTasks,
-        overdueTasks,
-        completionTrend: [],
-        compareMembers: members,
-        heatmapByDate: generateYearHeatmapByDate(
-            selectedYear,
-            currentMember?.userId || memberId || "me-heatmap"
-        ),
-    };
 }
 
 function getProgressPercent(completed: number, total: number) {
@@ -849,26 +471,24 @@ function getMemberStatus(percent: number): {
             label: "Đúng tiến độ",
             textClass: "text-emerald-600",
             dotClass: "bg-emerald-500",
-            barClass: "bg-emerald-500",
+            barClass: "bg-emerald-500"
         };
     }
-
     if (percent >= 30) {
         return {
             key: "warning",
             label: "Cần chú ý",
             textClass: "text-orange-500",
             dotClass: "bg-orange-500",
-            barClass: "bg-orange-500",
+            barClass: "bg-orange-500"
         };
     }
-
     return {
         key: "delayed",
         label: "Chậm tiến độ",
         textClass: "text-red-500",
         dotClass: "bg-red-500",
-        barClass: "bg-red-500",
+        barClass: "bg-red-500"
     };
 }
 
@@ -876,11 +496,11 @@ function ProgressLegend() {
     const items = [
         { label: "Đúng tiến độ", dotClass: "bg-emerald-500" },
         { label: "Cần chú ý", dotClass: "bg-orange-500" },
-        { label: "Chậm tiến độ", dotClass: "bg-red-500" },
+        { label: "Chậm tiến độ", dotClass: "bg-red-500" }
     ];
 
     return (
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 sm:text-sm">
+        <div className="flex flex-wrap items-center gap-4 text-slate-600 text-xs sm:text-sm">
             {items.map((item) => (
                 <div key={item.label} className="flex items-center gap-2">
                     <span className={cn("h-2.5 w-2.5 rounded-full", item.dotClass)} />
@@ -891,39 +511,36 @@ function ProgressLegend() {
     );
 }
 
-function MemberProgressCard({ member }: { member: MemberProgressItem }) {
+function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; onClick?: () => void }) {
     const percent = getProgressPercent(member.completedTasks, member.totalTasks);
     const status = getMemberStatus(percent);
 
     return (
-        <div className="rounded-[14px] border border-slate-200 bg-slate-50/80 p-3.5">
+        <div
+            className={cn(
+                "rounded-[14px] border border-slate-200 bg-slate-50/80 p-3.5 cursor-pointer transition-all duration-200 hover:border-orange-300 hover:bg-orange-50/50 hover:shadow-md",
+                onClick && "active:scale-[0.98]"
+            )}
+            onClick={onClick}
+            role={onClick ? "button" : undefined}
+            tabIndex={onClick ? 0 : undefined}
+            onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}>
             <div className="mb-2.5 flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
                     <Layers3 className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                    <h3 className="truncate text-[14px] font-semibold text-slate-900">
-                        {member.name}
-                    </h3>
+                    <h3 className="truncate font-semibold text-[14px] text-slate-900">{member.name}</h3>
                 </div>
-
-                <div className={cn("shrink-0 text-[12px] font-medium", status.textClass)}>
-                    {status.label}
-                </div>
+                <div className={cn("shrink-0 font-medium text-[12px]", status.textClass)}>{status.label}</div>
             </div>
 
             <div className="mb-2.5 flex items-center gap-2.5">
                 <div className="h-2.5 flex-1 overflow-hidden rounded-md bg-slate-200">
                     <div
-                        className={cn(
-                            "h-full rounded-md transition-all duration-500",
-                            status.barClass
-                        )}
+                        className={cn("h-full rounded-md transition-all duration-500", status.barClass)}
                         style={{ width: `${percent}%` }}
                     />
                 </div>
-
-                <div className="w-[38px] text-right text-[13px] font-bold text-slate-900">
-                    {percent}%
-                </div>
+                <div className="w-[38px] text-right font-bold text-[13px] text-slate-900">{percent}%</div>
             </div>
 
             <div className="space-y-1.5 text-[12px] text-slate-500">
@@ -933,7 +550,14 @@ function MemberProgressCard({ member }: { member: MemberProgressItem }) {
                         {member.completedTasks} / {member.totalTasks} tasks
                     </span>
                 </div>
-
+                {member.contributionPercentage !== undefined && (
+                    <div className="flex items-center gap-1.5">
+                        <div className="h-3.5 w-3.5 rounded bg-orange-100 flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-orange-600">%</span>
+                        </div>
+                        <span>Contribution: {member.contributionPercentage.toFixed(2)}%</span>
+                    </div>
+                )}
                 <div className="flex items-center gap-1.5">
                     <Clock3 className="h-3.5 w-3.5" />
                     <span>last activity: {member.lastActivity}</span>
@@ -947,21 +571,20 @@ function TeamMemberProgressLayer({
     members,
     open,
     onClose,
+    onMemberClick
 }: {
     members: MemberProgressItem[];
     open: boolean;
     onClose: () => void;
+    onMemberClick?: (member: MemberProgressItem) => void;
 }) {
     React.useEffect(() => {
         if (!open) return;
-
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") onClose();
         };
-
         document.body.style.overflow = "hidden";
         window.addEventListener("keydown", onKeyDown);
-
         return () => {
             document.body.style.overflow = "";
             window.removeEventListener("keydown", onKeyDown);
@@ -976,28 +599,24 @@ function TeamMemberProgressLayer({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
-                    onClick={onClose}
-                >
+                    onClick={onClose}>
                     <motion.div
                         initial={{ opacity: 0, y: 20, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.98 }}
                         transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
                         onClick={(event) => event.stopPropagation()}
-                        className="relative max-h-[88vh] w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_24px_90px_rgba(15,23,42,0.24)]"
-                    >
+                        className="relative max-h-[88vh] w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_24px_90px_rgba(15,23,42,0.24)]">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="absolute right-5 top-5 z-20 rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all duration-300 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 active:scale-95"
-                        >
+                            className="absolute top-5 right-5 z-20 rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all duration-300 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 active:scale-95">
                             <X className="h-5 w-5" />
                         </button>
-
-                        <div className="max-h-[88vh] overflow-y-auto px-5 pb-5 pt-16 lg:px-6 lg:pb-6 lg:pt-16">
+                        <div className="max-h-[88vh] overflow-y-auto px-5 pt-16 pb-5 lg:px-6 lg:pt-16 lg:pb-6">
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                 {members.map((member) => (
-                                    <MemberProgressCard key={member.id} member={member} />
+                                    <MemberProgressCard key={member.id} member={member} onClick={onMemberClick ? () => onMemberClick(member) : undefined} />
                                 ))}
                             </div>
                         </div>
@@ -1010,56 +629,28 @@ function TeamMemberProgressLayer({
 
 function TeamMemberProgressSection({
     members,
+    onMemberClick
 }: {
-    members: Array<{
-        userId: string;
-        userName: string;
-        totalTasks: number;
-        doneTasks: number;
-        messagesSent: number;
-    }>;
+    members: MemberProgressItem[];
+    onMemberClick?: (member: MemberProgressItem) => void;
 }) {
     const [openLayer, setOpenLayer] = React.useState(false);
-
-    const mappedMembers: MemberProgressItem[] = React.useMemo(
-        () =>
-            members.map((item, index) => ({
-                id: item.userId,
-                name: item.userName,
-                completedTasks: item.doneTasks,
-                totalTasks: item.totalTasks,
-                lastActivity:
-                    index % 4 === 0
-                        ? "20m ago"
-                        : index % 4 === 1
-                            ? "2h ago"
-                            : index % 4 === 2
-                                ? "1d ago"
-                                : "3d ago",
-            })),
-        [members]
-    );
-
-    const previewMembers = mappedMembers.slice(0, 2);
+    const previewMembers = members.slice(0, 2);
 
     return (
         <>
-            <section className="rounded-[24px] border border-white/70 bg-white/85 p-4 lg:p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+            <section className="rounded-[24px] border border-white/70 bg-white/85 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-5">
                 <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-900">
-                            6. Tiến độ thành viên
-                        </h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                            Xem chi tiết.
-                        </p>
+                        <h2 className="font-semibold text-lg text-slate-900">6. Tiến độ thành viên</h2>
+                        <p className="mt-1 text-slate-500 text-sm">Xem chi tiết.</p>
                     </div>
                     <ProgressLegend />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {previewMembers.map((member) => (
-                        <MemberProgressCard key={member.id} member={member} />
+                        <MemberProgressCard key={member.id} member={member} onClick={onMemberClick ? () => onMemberClick(member) : undefined} />
                     ))}
                 </div>
 
@@ -1067,8 +658,7 @@ function TeamMemberProgressSection({
                     <button
                         type="button"
                         onClick={() => setOpenLayer(true)}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-orange-600 hover:shadow-md active:scale-[0.98]"
-                    >
+                        className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2.5 font-medium text-sm text-white shadow-sm transition-all duration-300 hover:bg-orange-600 hover:shadow-md active:scale-[0.98]">
                         <Users className="h-4 w-4" />
                         Xem chi tiết
                     </button>
@@ -1076,94 +666,590 @@ function TeamMemberProgressSection({
             </section>
 
             <TeamMemberProgressLayer
-                members={mappedMembers.slice(0, 10)}
+                members={members.slice(0, 10)}
                 open={openLayer}
                 onClose={() => setOpenLayer(false)}
+                onMemberClick={onMemberClick}
             />
         </>
     );
 }
+
+// ==================== Member Detail Modal ====================
+
+function MemberDetailModal({
+    member,
+    open,
+    onClose
+}: {
+    member: MemberProgressItem | null;
+    open: boolean;
+    onClose: () => void;
+}) {
+    React.useEffect(() => {
+        if (!open) return;
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") onClose();
+        };
+        document.body.style.overflow = "hidden";
+        window.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.body.style.overflow = "";
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [open, onClose]);
+
+    if (!member) return null;
+
+    const percent = getProgressPercent(member.completedTasks, member.totalTasks);
+    const status = getMemberStatus(percent);
+
+    return (
+        <AnimatePresence>
+            {open && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm"
+                    onClick={onClose}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 24, scale: 0.96 }}
+                        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                        onClick={(event) => event.stopPropagation()}
+                        className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-white/70 bg-white shadow-[0_24px_90px_rgba(15,23,42,0.28)]">
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-orange-50 to-amber-50 px-5 py-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+                                    <Layers3 className="h-5 w-5 text-orange-600" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-slate-900">{member.name}</h3>
+                                    <div className={cn("text-xs font-medium", status.textClass)}>{status.label}</div>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition-all duration-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 active:scale-95">
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5 space-y-4">
+                            {/* Progress bar */}
+                            <div>
+                                <div className="mb-2 flex items-center justify-between text-sm">
+                                    <span className="font-medium text-slate-700">Task Progress</span>
+                                    <span className={cn("font-bold", status.textClass)}>{percent}%</span>
+                                </div>
+                                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                                    <div
+                                        className={cn("h-full rounded-full transition-all duration-500", status.barClass)}
+                                        style={{ width: `${percent}%` }}
+                                    />
+                                </div>
+                                <div className="mt-1 text-xs text-slate-500">
+                                    {member.completedTasks} of {member.totalTasks} tasks completed
+                                </div>
+                            </div>
+
+                            {/* Stats grid - weighted scores */}
+                            <div className="grid grid-cols-4 gap-3">
+                                <div className="rounded-xl border border-slate-100 bg-emerald-50/50 p-3 text-center">
+                                    <CheckCircle2 className="mx-auto mb-1.5 h-5 w-5 text-emerald-500" />
+                                    <div className="font-bold text-slate-900">{member.completedScore?.toFixed(1) ?? 0}</div>
+                                    <div className="text-xs text-slate-500">Complete pts</div>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-blue-50/50 p-3 text-center">
+                                    <Plus className="mx-auto mb-1.5 h-5 w-5 text-blue-500" />
+                                    <div className="font-bold text-slate-900">{member.createdScore?.toFixed(1) ?? 0}</div>
+                                    <div className="text-xs text-slate-500">Create pts</div>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-amber-50/50 p-3 text-center">
+                                    <div className="mx-auto mb-1.5 flex h-5 w-5 items-center justify-center text-amber-500">
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                    </div>
+                                    <div className="font-bold text-slate-900">{member.updatedScore?.toFixed(1) ?? 0}</div>
+                                    <div className="text-xs text-slate-500">Update pts</div>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-purple-50/50 p-3 text-center">
+                                    <MessageSquare className="mx-auto mb-1.5 h-5 w-5 text-purple-500" />
+                                    <div className="font-bold text-slate-900">{member.messagesSent ?? 0}</div>
+                                    <div className="text-xs text-slate-500">Messages</div>
+                                </div>
+                            </div>
+
+                            {/* Detailed breakdown */}
+                            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 space-y-2">
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Activity Breakdown</h4>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600">Completed</span>
+                                        <span className="font-mono text-slate-900">{member.tasksCompleted ?? 0} × {(member.completedScore ?? 0) / (member.tasksCompleted || 1) || 0}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600">Created</span>
+                                        <span className="font-mono text-slate-900">{member.tasksCreated ?? 0} × {(member.createdScore ?? 0) / (member.tasksCreated || 1) || 0}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600">Updated</span>
+                                        <span className="font-mono text-slate-900">{member.tasksUpdated ?? 0}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600">Assigned</span>
+                                        <span className="font-mono text-slate-900">{member.tasksAssigned ?? 0}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600">Comments</span>
+                                        <span className="font-mono text-slate-900">{member.commentsCreated ?? 0}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-600">Messages</span>
+                                        <span className="font-mono text-slate-900">{member.messagesSent ?? 0}</span>
+                                    </div>
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between font-semibold">
+                                    <span className="text-slate-700">Total Score</span>
+                                    <span className="text-orange-600 font-mono">{member.totalScore?.toFixed(1) ?? 0}</span>
+                                </div>
+                            </div>
+
+                            {/* Contribution rate */}
+                            {member.contributionPercentage !== undefined && (
+                                <div className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-slate-700">Contribution Rate</span>
+                                        <span className="text-lg font-bold text-orange-600">
+                                            {member.contributionPercentage.toFixed(2)}%
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-orange-100">
+                                        <div
+                                            className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
+                                            style={{ width: `${Math.min(100, member.contributionPercentage)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Last activity */}
+                            <div className="flex items-center gap-2 text-sm text-slate-500">
+                                <Clock3 className="h-4 w-4" />
+                                <span>Last activity: {member.lastActivity}</span>
+                            </div>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
+// ==================== Main Component ====================
 
 export default function GroupMemberAnalyticsPage() {
     const pathname = usePathname();
     const groupId = extractGroupIdFromPath(pathname || "");
 
     const [loading, setLoading] = React.useState(false);
-    const [analytics, setAnalytics] = React.useState<GroupAnalyticsResponse | null>(null);
-    const [trendFilter, setTrendFilter] = React.useState<TrendFilter>("week");
-    const [trendAnchorDate, setTrendAnchorDate] = React.useState(
-        new Date(2026, 3, 20)
-    );
-    const [currentMemberId] = React.useState("me");
-    const [currentMemberName] = React.useState("Tôi");
+    const [summary, setSummary] = React.useState<GroupSummaryResponse | null>(null);
+    const [trendData, setTrendData] = React.useState<MemberProgressTrendData[] | null>(null);
+    const [heatmapData, setHeatmapData] = React.useState<MemberHeatmapData[] | null>(null);
+    const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
     const [currentUserRole, setCurrentUserRole] = React.useState<GroupRole>("member");
+    const [selectedMember, setSelectedMember] = React.useState<MemberProgressItem | null>(null);
 
-    const [heatmapRange, setHeatmapRange] =
-        React.useState<HeatmapRangeFilter>("month");
-    const [heatmapAnchorDate, setHeatmapAnchorDate] = React.useState(
-        new Date(2026, 2, 24)
-    );
+    const [trendFilter, setTrendFilter] = React.useState<TrendFilter>("week");
+    const [trendAnchorDate, setTrendAnchorDate] = React.useState(new Date(2026, 3, 20));
 
+    const [heatmapRange, setHeatmapRange] = React.useState<HeatmapRangeFilter>("month");
+    const [heatmapAnchorDate, setHeatmapAnchorDate] = React.useState(new Date(2026, 2, 24));
+
+    // Load summary data (no date filter) - Chart 1, 2, 4, 6
     React.useEffect(() => {
         if (!groupId) return;
 
         let isMounted = true;
 
-        async function loadData() {
+        async function loadSummary() {
             try {
                 setLoading(true);
-
-                const end = new Date();
-                const start = new Date();
-                start.setDate(end.getDate() - 90);
-
-                const [analyticsRes, roleRes] = await Promise.all([
-                    getGroupAnalytics(groupId, {
-                        startDate: start.toISOString().slice(0, 10),
-                        endDate: end.toISOString().slice(0, 10),
-                    }),
+                const [summaryRes, roleRes, profileRes] = await Promise.all([
+                    getGroupSummary(groupId),
                     getCurrentUserRoleInGroup(groupId),
+                    getCurrentUserProfile()
                 ]);
 
                 if (!isMounted) return;
 
-                if (analyticsRes.status === "success" && analyticsRes.data) {
-                    setAnalytics(analyticsRes.data);
-                } else {
-                    setAnalytics(null);
+                if (summaryRes.status === "success" && summaryRes.data) {
+                    setSummary(summaryRes.data);
                 }
 
                 setCurrentUserRole(roleRes);
+                setCurrentUserId(profileRes?.userId ?? profileRes?.id ?? null);
             } catch {
                 if (!isMounted) return;
-                setAnalytics(null);
-                setCurrentUserRole("member");
+                setSummary(null);
             } finally {
                 if (isMounted) setLoading(false);
             }
         }
 
-        loadData();
+        loadSummary();
 
         return () => {
             isMounted = false;
         };
     }, [groupId]);
 
+    // Load trend data with date filter - Chart 3
+    React.useEffect(() => {
+        if (!groupId) return;
+
+        let isMounted = true;
+
+        async function loadTrend() {
+            try {
+                const end = trendAnchorDate;
+                const start = new Date(end);
+                if (trendFilter === "week") {
+                    start.setDate(end.getDate() - 7);
+                } else if (trendFilter === "month") {
+                    start.setMonth(end.getMonth() - 1);
+                } else {
+                    start.setFullYear(end.getFullYear() - 1);
+                }
+
+                const res = await getGroupTrend(groupId, {
+                    startDate: start.toISOString().slice(0, 10),
+                    endDate: end.toISOString().slice(0, 10)
+                });
+
+                if (!isMounted) return;
+                if (res.status === "success" && res.data) {
+                    setTrendData(res.data);
+                }
+            } catch {
+                if (!isMounted) return;
+                setTrendData(null);
+            }
+        }
+
+        loadTrend();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [groupId, trendFilter, trendAnchorDate]);
+
+    // Load heatmap data with date filter - Chart 5
+    React.useEffect(() => {
+        if (!groupId) return;
+
+        let isMounted = true;
+
+        async function loadHeatmap() {
+            try {
+                const end = heatmapAnchorDate;
+                const start = new Date(end);
+                if (heatmapRange === "week") {
+                    start.setDate(end.getDate() - 7);
+                } else {
+                    start.setMonth(end.getMonth() - 1);
+                }
+
+                const res = await getGroupHeatmap(groupId, {
+                    startDate: start.toISOString().slice(0, 10),
+                    endDate: end.toISOString().slice(0, 10)
+                });
+
+                if (!isMounted) return;
+                if (res.status === "success" && res.data) {
+                    setHeatmapData(res.data);
+                }
+            } catch {
+                if (!isMounted) return;
+                setHeatmapData(null);
+            }
+        }
+
+        loadHeatmap();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [groupId, heatmapRange, heatmapAnchorDate]);
+
     const canViewPersonalPieChart = currentUserRole !== "commenter";
+
+    // ==================== Derived Data from API ====================
+
+    // Personal donut data
+    const personalPieData = React.useMemo(() => {
+        if (!(summary?.memberTaskBreakdown && currentUserId)) {
+            return { data: [], total: 0 };
+        }
+
+        const currentMember =
+            summary.memberTaskBreakdown.find((m) => m.userId === currentUserId) ?? summary.memberTaskBreakdown[0];
+
+        if (!currentMember) {
+            return { data: [], total: 0 };
+        }
+
+        const data = [
+            { name: "To do", value: currentMember.todoTasks ?? 0 },
+            { name: "In progress", value: currentMember.inProgressTasks ?? 0 },
+            { name: "Done", value: currentMember.doneTasks ?? 0 },
+            { name: "Overdue", value: currentMember.overdueTasks ?? 0 }
+        ];
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+
+        return { data, total };
+    }, [summary, currentUserId]);
+
+    // Group donut data
+    const teamPieData = React.useMemo(() => {
+        if (!summary?.memberTaskBreakdown) {
+            return { data: [], total: 0 };
+        }
+
+        const sumTodo = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.todoTasks ?? 0), 0);
+        const sumInProgress = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.inProgressTasks ?? 0), 0);
+        const sumDone = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.doneTasks ?? 0), 0);
+        const sumOverdue = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.overdueTasks ?? 0), 0);
+
+        const data = [
+            { name: "To do", value: sumTodo },
+            { name: "In progress", value: sumInProgress },
+            { name: "Done", value: sumDone },
+            { name: "Overdue", value: sumOverdue }
+        ];
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+
+        return { data, total };
+    }, [summary]);
+
+    // Line chart data
+    const lineChartData = React.useMemo(() => {
+        if (!trendData) {
+            return { myData: [], groupData: [], labels: [] as string[] };
+        }
+
+        const { start, end } =
+            trendFilter === "week"
+                ? getWeekRange(trendAnchorDate)
+                : trendFilter === "month"
+                  ? getMonthRange(trendAnchorDate)
+                  : {
+                        start: new Date(trendAnchorDate.getFullYear(), 0, 1),
+                        end: new Date(trendAnchorDate.getFullYear(), 11, 31)
+                    };
+
+        const dates = getDatesInRange(start, end);
+        const labels =
+            trendFilter === "week"
+                ? ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+                : trendFilter === "month"
+                  ? ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5"]
+                  : ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+
+        // Current user's trend
+        const currentUserTrend =
+            trendData?.find((m) => m.userId === currentUserId) ?? trendData?.[0];
+
+        let myData: number[] = [];
+        let groupData: number[] = [];
+
+        if (trendFilter === "week") {
+            myData = dates.map((date) => {
+                const dateStr = formatDateLocal(date);
+                const point = currentUserTrend?.dailyCompletions?.find((p) => p.date === dateStr);
+                return point?.completedTasks ?? 0;
+            });
+
+            groupData = dates.map((date) => {
+                const dateStr = formatDateLocal(date);
+                return (
+                    trendData?.reduce((sum, member) => {
+                        const point = member.dailyCompletions?.find((p) => p.date === dateStr);
+                        return sum + (point?.completedTasks ?? 0);
+                    }, 0) ?? 0
+                );
+            });
+        } else if (trendFilter === "month") {
+            const bucketSize = Math.max(1, Math.ceil(dates.length / 5));
+            for (let i = 0; i < 5; i++) {
+                const bucketStart = i * bucketSize;
+                const bucketEnd = Math.min((i + 1) * bucketSize, dates.length);
+                const mySum = dates.slice(bucketStart, bucketEnd).reduce((acc, date) => {
+                    const dateStr = formatDateLocal(date);
+                    const point = currentUserTrend?.dailyCompletions?.find((p) => p.date === dateStr);
+                    return acc + (point?.completedTasks ?? 0);
+                }, 0);
+                myData.push(mySum);
+
+                const groupSum = dates.slice(bucketStart, bucketEnd).reduce((acc, date) => {
+                    const dateStr = formatDateLocal(date);
+                    return (
+                        acc +
+                        (trendData?.reduce((s, member) => {
+                            const point = member.dailyCompletions?.find((p) => p.date === dateStr);
+                            return s + (point?.completedTasks ?? 0);
+                        }, 0) ?? 0)
+                    );
+                }, 0);
+                groupData.push(groupSum);
+            }
+        } else {
+            for (let month = 0; month < 12; month++) {
+                const monthStart = new Date(trendAnchorDate.getFullYear(), month, 1);
+                const monthEnd = new Date(trendAnchorDate.getFullYear(), month + 1, 0);
+
+                const mySum = dates
+                    .filter((d) => d >= monthStart && d <= monthEnd)
+                    .reduce((acc, date) => {
+                        const dateStr = formatDateLocal(date);
+                        const point = currentUserTrend?.dailyCompletions?.find((p) => p.date === dateStr);
+                        return acc + (point?.completedTasks ?? 0);
+                    }, 0);
+                myData.push(mySum);
+
+                const groupSum = dates
+                    .filter((d) => d >= monthStart && d <= monthEnd)
+                    .reduce((acc, date) => {
+                        const dateStr = formatDateLocal(date);
+                        return (
+                            acc +
+                            (trendData?.reduce((s, member) => {
+                                const point = member.dailyCompletions?.find((p) => p.date === dateStr);
+                                return s + (point?.completedTasks ?? 0);
+                            }, 0) ?? 0)
+                        );
+                    }, 0);
+                groupData.push(groupSum);
+            }
+        }
+
+        return { myData, groupData, labels };
+    }, [trendData, currentUserId, trendFilter, trendAnchorDate]);
+
+    // Bar chart data
+    const barCompareMembers = React.useMemo(() => {
+        if (!summary?.memberTaskBreakdown) return [];
+
+        return summary.memberTaskBreakdown.map((member, index) => ({
+            userId: member.userId ?? `member-${index}`,
+            userName: member.userName ?? `Member ${index + 1}`,
+            totalTasks: member.totalTasks ?? 0,
+            doneTasks: member.doneTasks ?? 0,
+            inProgressTasks: member.inProgressTasks ?? 0,
+            todoTasks: member.todoTasks ?? 0,
+            overdueTasks: member.overdueTasks ?? 0,
+            contributionPercentage: member.contributionPercentage ?? 0,
+            messagesSent: member.messagesSent ?? 0,
+            colorSeed: index
+        }));
+    }, [summary]);
+
+    // Heatmap data
+    const heatmapMembers = React.useMemo(() => {
+        if (!heatmapData) return [];
+
+        return heatmapData.map((member) => ({
+            id: member.userId ?? `member-${Math.random()}`,
+            name: member.userName ?? "Unknown",
+            activityByDate:
+                member.activityByDate?.map((p) => ({
+                    date: typeof p.date === "string" ? p.date : formatDateLocal(new Date(p.date as unknown as string)),
+                    activityLevel: p.activityLevel ?? 0
+                })) ?? []
+        }));
+    }, [summary]);
+
+    // Member progress cards - combine with contribution data
+    const memberProgressItems = React.useMemo((): MemberProgressItem[] => {
+        if (!summary?.memberActivitySummary) return [];
+
+        // Create map of contribution data by userId (includes weighted scores)
+        const contributionMap = new Map<string, {
+            contributionPercentage: number;
+            totalScore: number;
+            tasksCompleted: number;
+            tasksCreated: number;
+            tasksUpdated: number;
+            tasksDeleted: number;
+            tasksAssigned: number;
+            commentsCreated: number;
+            messagesSent: number;
+            completedScore: number;
+            createdScore: number;
+            updatedScore: number;
+            deletedScore: number;
+            assignedScore: number;
+        }>();
+        summary.memberContribution?.forEach((c) => {
+            if (c.userId) {
+                contributionMap.set(c.userId, {
+                    contributionPercentage: c.contributionPercentage ?? 0,
+                    totalScore: c.totalScore ?? 0,
+                    tasksCompleted: c.tasksCompleted ?? 0,
+                    tasksCreated: c.tasksCreated ?? 0,
+                    tasksUpdated: c.tasksUpdated ?? 0,
+                    tasksDeleted: c.tasksDeleted ?? 0,
+                    tasksAssigned: c.tasksAssigned ?? 0,
+                    commentsCreated: c.commentsCreated ?? 0,
+                    messagesSent: c.messagesSent ?? 0,
+                    completedScore: c.completedScore ?? 0,
+                    createdScore: c.createdScore ?? 0,
+                    updatedScore: c.updatedScore ?? 0,
+                    deletedScore: c.deletedScore ?? 0,
+                    assignedScore: c.assignedScore ?? 0
+                });
+            }
+        });
+
+        return summary.memberActivitySummary.map((member) => {
+            const contribution = contributionMap.get(member.userId ?? "");
+            return {
+                id: member.userId ?? `member-${Math.random()}`,
+                name: member.userName ?? "Unknown",
+                completedTasks: member.completedTasks ?? 0,
+                totalTasks: member.totalTasks ?? 0,
+                lastActivity: formatLastActivity(member.lastActivityAt as unknown as string),
+                // From memberContribution (weighted)
+                contributionPercentage: contribution?.contributionPercentage,
+                totalScore: contribution?.totalScore,
+                tasksCompleted: contribution?.tasksCompleted,
+                tasksCreated: contribution?.tasksCreated,
+                tasksUpdated: contribution?.tasksUpdated,
+                tasksDeleted: contribution?.tasksDeleted,
+                tasksAssigned: contribution?.tasksAssigned,
+                commentsCreated: contribution?.commentsCreated,
+                messagesSent: contribution?.messagesSent,
+                completedScore: contribution?.completedScore,
+                createdScore: contribution?.createdScore,
+                updatedScore: contribution?.updatedScore,
+                deletedScore: contribution?.deletedScore,
+                assignedScore: contribution?.assignedScore
+            };
+        });
+    }, [summary]);
+
+    // ==================== Chart Options ====================
 
     const handlePrevTrendRange = React.useCallback(() => {
         setTrendAnchorDate((prev) => {
             const next = new Date(prev);
-
-            if (trendFilter === "week") {
-                next.setDate(next.getDate() - 7);
-            } else if (trendFilter === "month") {
-                next.setMonth(next.getMonth() - 1);
-            } else {
-                next.setFullYear(next.getFullYear() - 1);
-            }
-
+            if (trendFilter === "week") next.setDate(next.getDate() - 7);
+            else if (trendFilter === "month") next.setMonth(next.getMonth() - 1);
+            else next.setFullYear(next.getFullYear() - 1);
             return next;
         });
     }, [trendFilter]);
@@ -1171,15 +1257,9 @@ export default function GroupMemberAnalyticsPage() {
     const handleNextTrendRange = React.useCallback(() => {
         setTrendAnchorDate((prev) => {
             const next = new Date(prev);
-
-            if (trendFilter === "week") {
-                next.setDate(next.getDate() + 7);
-            } else if (trendFilter === "month") {
-                next.setMonth(next.getMonth() + 1);
-            } else {
-                next.setFullYear(next.getFullYear() + 1);
-            }
-
+            if (trendFilter === "week") next.setDate(next.getDate() + 7);
+            else if (trendFilter === "month") next.setMonth(next.getMonth() + 1);
+            else next.setFullYear(next.getFullYear() + 1);
             return next;
         });
     }, [trendFilter]);
@@ -1188,88 +1268,11 @@ export default function GroupMemberAnalyticsPage() {
         return getTrendRangeLabel(trendAnchorDate, trendFilter);
     }, [trendAnchorDate, trendFilter]);
 
-    const data = React.useMemo(
-        () => deriveMemberAnalytics(analytics, currentMemberId, currentMemberName),
-        [analytics, currentMemberId, currentMemberName]
-    );
-
-    const uniqueMembers = React.useMemo(
-        () =>
-            Array.from(
-                new Map(data.compareMembers.map((member) => [member.userId, member])).values()
-            ),
-        [data.compareMembers]
-    );
-
-    const myTrendData = React.useMemo(() => {
-        const source = generateDailyCompletionSource(selectedYear, currentMemberId);
-        return getTrendDataByFilter(
-            source,
-            trendFilter,
-            selectedYear,
-            "me",
-            trendAnchorDate
-        );
-    }, [currentMemberId, trendFilter, trendAnchorDate]);
-
-    const groupTrendData = React.useMemo(() => {
-        if (uniqueMembers.length === 0) {
-            return [] as DailyProgressPoint[];
-        }
-
-        const merged = new Map<string, DailyProgressPoint>();
-
-        uniqueMembers.forEach((member) => {
-            const source = generateDailyCompletionSource(selectedYear, member.userId);
-            const trend = getTrendDataByFilter(
-                source,
-                trendFilter,
-                selectedYear,
-                member.userId,
-                trendAnchorDate
-            );
-
-            trend.forEach((point) => {
-                const current = merged.get(point.label) ?? { label: point.label };
-                current[member.userId] = point[member.userId];
-                merged.set(point.label, current);
-            });
-        });
-
-        return Array.from(merged.values()).map((point) => {
-            const totalCompleted = uniqueMembers.reduce(
-                (sum, member) => sum + Number(point[member.userId] || 0),
-                0
-            );
-
-            return {
-                label: point.label,
-                group: totalCompleted,
-            };
-        });
-    }, [trendFilter, uniqueMembers, trendAnchorDate]);
-
-    const mockTeamHeatmapMembers = React.useMemo<TeamHeatmapMember[]>(
-        () =>
-            MOCK_MEMBER_NAMES.map((name, index) => ({
-                id: `mock-member-${index + 1}`,
-                name,
-                heatmapByDate: generateYearHeatmapByDate(
-                    selectedYear,
-                    `team-member-${index + 1}-${name}`
-                ),
-            })),
-        []
-    );
-
     const handlePrevHeatmapRange = React.useCallback(() => {
         setHeatmapAnchorDate((prev) => {
             const next = new Date(prev);
-            if (heatmapRange === "week") {
-                next.setDate(next.getDate() - 7);
-            } else {
-                next.setMonth(next.getMonth() - 1);
-            }
+            if (heatmapRange === "week") next.setDate(next.getDate() - 7);
+            else next.setMonth(next.getMonth() - 1);
             return next;
         });
     }, [heatmapRange]);
@@ -1277,190 +1280,15 @@ export default function GroupMemberAnalyticsPage() {
     const handleNextHeatmapRange = React.useCallback(() => {
         setHeatmapAnchorDate((prev) => {
             const next = new Date(prev);
-            if (heatmapRange === "week") {
-                next.setDate(next.getDate() + 7);
-            } else {
-                next.setMonth(next.getMonth() + 1);
-            }
+            if (heatmapRange === "week") next.setDate(next.getDate() + 7);
+            else next.setMonth(next.getMonth() + 1);
             return next;
         });
     }, [heatmapRange]);
 
-    const barCompareMembers = React.useMemo<MemberCompareSeries[]>(
-        () => [
-            {
-                userId: "me",
-                userName: "Tôi",
-                totalTasks: 42,
-                doneTasks: 20,
-                inProgressTasks: 10,
-                todoTasks: 8,
-                overdueTasks: 4,
-                contributionPercentage: 14.2,
-                messagesSent: 120,
-                colorSeed: 0,
-            },
-            {
-                userId: "member-1",
-                userName: "Nguyễn An",
-                totalTasks: 50,
-                doneTasks: 26,
-                inProgressTasks: 11,
-                todoTasks: 9,
-                overdueTasks: 4,
-                contributionPercentage: 16.5,
-                messagesSent: 140,
-                colorSeed: 1,
-            },
-            {
-                userId: "member-2",
-                userName: "Trần Bình",
-                totalTasks: 46,
-                doneTasks: 23,
-                inProgressTasks: 10,
-                todoTasks: 9,
-                overdueTasks: 4,
-                contributionPercentage: 15.1,
-                messagesSent: 110,
-                colorSeed: 2,
-            },
-            {
-                userId: "member-3",
-                userName: "Lê Chi",
-                totalTasks: 40,
-                doneTasks: 18,
-                inProgressTasks: 9,
-                todoTasks: 9,
-                overdueTasks: 4,
-                contributionPercentage: 13.3,
-                messagesSent: 98,
-                colorSeed: 3,
-            },
-            {
-                userId: "member-4",
-                userName: "Phạm Duy",
-                totalTasks: 38,
-                doneTasks: 17,
-                inProgressTasks: 8,
-                todoTasks: 9,
-                overdueTasks: 4,
-                contributionPercentage: 12.4,
-                messagesSent: 95,
-                colorSeed: 4,
-            },
-            {
-                userId: "member-5",
-                userName: "Hoàng Giang",
-                totalTasks: 35,
-                doneTasks: 16,
-                inProgressTasks: 8,
-                todoTasks: 7,
-                overdueTasks: 4,
-                contributionPercentage: 11.8,
-                messagesSent: 87,
-                colorSeed: 5,
-            },
-            {
-                userId: "member-6",
-                userName: "Vũ Hạnh",
-                totalTasks: 33,
-                doneTasks: 15,
-                inProgressTasks: 7,
-                todoTasks: 7,
-                overdueTasks: 4,
-                contributionPercentage: 10.9,
-                messagesSent: 80,
-                colorSeed: 6,
-            },
-            {
-                userId: "member-7",
-                userName: "Đỗ Khôi",
-                totalTasks: 31,
-                doneTasks: 14,
-                inProgressTasks: 7,
-                todoTasks: 6,
-                overdueTasks: 4,
-                contributionPercentage: 10.1,
-                messagesSent: 76,
-                colorSeed: 7,
-            },
-            {
-                userId: "member-8",
-                userName: "Bùi Lan",
-                totalTasks: 29,
-                doneTasks: 13,
-                inProgressTasks: 6,
-                todoTasks: 6,
-                overdueTasks: 4,
-                contributionPercentage: 9.4,
-                messagesSent: 70,
-                colorSeed: 8,
-            },
-            {
-                userId: "member-9",
-                userName: "Mai Nam",
-                totalTasks: 27,
-                doneTasks: 12,
-                inProgressTasks: 6,
-                todoTasks: 5,
-                overdueTasks: 4,
-                contributionPercentage: 8.7,
-                messagesSent: 65,
-                colorSeed: 9,
-            },
-        ],
-        []
-    );
-
-    const pieData = React.useMemo(
-        () => [
-            { name: "To do", value: data.todoTasks },
-            { name: "In progress", value: data.inProgressTasks },
-            { name: "Done", value: data.doneTasks },
-            { name: "Overdue", value: data.overdueTasks },
-        ],
-        [data]
-    );
-
-    const totalPie = React.useMemo(
-        () => pieData.reduce((sum, item) => sum + item.value, 0),
-        [pieData]
-    );
-
-    const teamPieData = React.useMemo(() => {
-        return [
-            {
-                name: "To do",
-                value: uniqueMembers.reduce((sum, member) => sum + member.todoTasks, 0),
-            },
-            {
-                name: "In progress",
-                value: uniqueMembers.reduce(
-                    (sum, member) => sum + member.inProgressTasks,
-                    0
-                ),
-            },
-            {
-                name: "Done",
-                value: uniqueMembers.reduce((sum, member) => sum + member.doneTasks, 0),
-            },
-            {
-                name: "Overdue",
-                value: uniqueMembers.reduce(
-                    (sum, member) => sum + member.overdueTasks,
-                    0
-                ),
-            },
-        ];
-    }, [uniqueMembers]);
-
-    const teamTotalPie = React.useMemo(
-        () => teamPieData.reduce((sum, item) => sum + item.value, 0),
-        [teamPieData]
-    );
-
-    const statusDonutOption = React.useMemo<echarts.EChartsOption>(
-        () => ({
+    const statusDonutOption = React.useMemo<echarts.EChartsOption>(() => {
+        const { data, total } = personalPieData;
+        return {
             animationDuration: 700,
             animationDurationUpdate: 400,
             animationEasing: "cubicOut",
@@ -1471,8 +1299,8 @@ export default function GroupMemberAnalyticsPage() {
                 backgroundColor: "#0f172a",
                 borderWidth: 0,
                 textStyle: { color: "#fff" },
-                formatter: (params: any) =>
-                    `${params.name}<br/>${params.value} tasks (${params.percent}%)`,
+                formatter: (params: unknown) =>
+                    `${(params as { name: string; value: number; percent: number }).name}<br/>${(params as { value: number; percent: number }).value} tasks (${(params as { percent: number }).percent}%)`
             },
             legend: { show: false },
             graphic: [
@@ -1481,12 +1309,12 @@ export default function GroupMemberAnalyticsPage() {
                     left: "center",
                     top: "42%",
                     style: {
-                        text: `${totalPie}`,
+                        text: `${total}`,
                         textAlign: "center",
                         fill: "#0f172a",
                         fontSize: 28,
-                        fontWeight: 700,
-                    },
+                        fontWeight: 700
+                    }
                 },
                 {
                     type: "text",
@@ -1497,9 +1325,9 @@ export default function GroupMemberAnalyticsPage() {
                         textAlign: "center",
                         fill: "#64748b",
                         fontSize: 13,
-                        fontWeight: 500,
-                    },
-                },
+                        fontWeight: 500
+                    }
+                }
             ],
             series: [
                 {
@@ -1514,7 +1342,7 @@ export default function GroupMemberAnalyticsPage() {
                         borderColor: "#ffffff",
                         borderWidth: 6,
                         shadowBlur: 12,
-                        shadowColor: "rgba(15,23,42,0.08)",
+                        shadowColor: "rgba(15,23,42,0.08)"
                     },
                     label: { show: false },
                     labelLine: { show: false },
@@ -1523,18 +1351,18 @@ export default function GroupMemberAnalyticsPage() {
                         scaleSize: 6,
                         itemStyle: {
                             shadowBlur: 18,
-                            shadowColor: "rgba(249,115,22,0.18)",
-                        },
+                            shadowColor: "rgba(249,115,22,0.18)"
+                        }
                     },
-                    data: pieData,
-                },
-            ],
-        }),
-        [pieData, totalPie]
-    );
+                    data
+                }
+            ]
+        };
+    }, [personalPieData]);
 
-    const teamStatusDonutOption = React.useMemo<echarts.EChartsOption>(
-        () => ({
+    const teamStatusDonutOption = React.useMemo<echarts.EChartsOption>(() => {
+        const { data, total } = teamPieData;
+        return {
             animationDuration: 700,
             animationDurationUpdate: 400,
             animationEasing: "cubicOut",
@@ -1545,8 +1373,8 @@ export default function GroupMemberAnalyticsPage() {
                 backgroundColor: "#0f172a",
                 borderWidth: 0,
                 textStyle: { color: "#fff" },
-                formatter: (params: any) =>
-                    `${params.name}<br/>${params.value} tasks (${params.percent}%)`,
+                formatter: (params: unknown) =>
+                    `${(params as { name: string; value: number; percent: number }).name}<br/>${(params as { value: number; percent: number }).value} tasks (${(params as { percent: number }).percent}%)`
             },
             legend: { show: false },
             graphic: [
@@ -1555,12 +1383,12 @@ export default function GroupMemberAnalyticsPage() {
                     left: "center",
                     top: "42%",
                     style: {
-                        text: `${teamTotalPie}`,
+                        text: `${total}`,
                         textAlign: "center",
                         fill: "#0f172a",
                         fontSize: 28,
-                        fontWeight: 700,
-                    },
+                        fontWeight: 700
+                    }
                 },
                 {
                     type: "text",
@@ -1571,9 +1399,9 @@ export default function GroupMemberAnalyticsPage() {
                         textAlign: "center",
                         fill: "#64748b",
                         fontSize: 13,
-                        fontWeight: 500,
-                    },
-                },
+                        fontWeight: 500
+                    }
+                }
             ],
             series: [
                 {
@@ -1588,7 +1416,7 @@ export default function GroupMemberAnalyticsPage() {
                         borderColor: "#ffffff",
                         borderWidth: 6,
                         shadowBlur: 12,
-                        shadowColor: "rgba(15,23,42,0.08)",
+                        shadowColor: "rgba(15,23,42,0.08)"
                     },
                     label: { show: false },
                     labelLine: { show: false },
@@ -1597,19 +1425,17 @@ export default function GroupMemberAnalyticsPage() {
                         scaleSize: 6,
                         itemStyle: {
                             shadowBlur: 18,
-                            shadowColor: "rgba(249,115,22,0.18)",
-                        },
+                            shadowColor: "rgba(249,115,22,0.18)"
+                        }
                     },
-                    data: teamPieData,
-                },
-            ],
-        }),
-        [teamPieData, teamTotalPie]
-    );
+                    data
+                }
+            ]
+        };
+    }, [teamPieData]);
 
     const compareLineOption = React.useMemo<echarts.EChartsOption>(() => {
-        const labels = myTrendData.map((item) => item.label);
-
+        const { myData, groupData, labels } = lineChartData;
         return {
             animationDuration: 700,
             animationDurationUpdate: 400,
@@ -1619,18 +1445,18 @@ export default function GroupMemberAnalyticsPage() {
                 trigger: "axis",
                 backgroundColor: "#0f172a",
                 borderWidth: 0,
-                textStyle: { color: "#fff" },
+                textStyle: { color: "#fff" }
             },
             legend: {
                 bottom: 0,
-                textStyle: { color: "#64748B" },
+                textStyle: { color: "#64748B" }
             },
             grid: {
                 left: 30,
                 right: 20,
                 top: 30,
                 bottom: 56,
-                containLabel: true,
+                containLabel: true
             },
             xAxis: {
                 type: "category",
@@ -1638,13 +1464,13 @@ export default function GroupMemberAnalyticsPage() {
                 data: labels,
                 axisTick: { show: false },
                 axisLine: { lineStyle: { color: "#CBD5E1" } },
-                axisLabel: { color: "#64748B" },
+                axisLabel: { color: "#64748B" }
             },
             yAxis: {
                 type: "value",
                 minInterval: 1,
                 axisLabel: { color: "#64748B" },
-                splitLine: { lineStyle: { color: "#E2E8F0" } },
+                splitLine: { lineStyle: { color: "#E2E8F0" } }
             },
             series: [
                 {
@@ -1653,23 +1479,23 @@ export default function GroupMemberAnalyticsPage() {
                     smooth: true,
                     symbol: "circle",
                     symbolSize: 9,
-                    data: myTrendData.map((item) => Number(item.me || 0)),
+                    data: myData,
                     lineStyle: {
                         width: 4,
                         color: "#2563eb",
-                        opacity: 1,
+                        opacity: 1
                     },
                     itemStyle: {
                         color: "#2563eb",
                         borderColor: "#fff",
-                        borderWidth: 2,
+                        borderWidth: 2
                     },
                     areaStyle: {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                             { offset: 0, color: "rgba(37,99,235,0.20)" },
-                            { offset: 1, color: "rgba(37,99,235,0.03)" },
-                        ]),
-                    },
+                            { offset: 1, color: "rgba(37,99,235,0.03)" }
+                        ])
+                    }
                 },
                 {
                     name: "Nhóm",
@@ -1677,46 +1503,38 @@ export default function GroupMemberAnalyticsPage() {
                     smooth: true,
                     symbol: "circle",
                     symbolSize: 7,
-                    data: groupTrendData.map((item) => Number(item.group || 0)),
+                    data: groupData,
                     lineStyle: {
                         width: 3,
                         color: "#f97316",
-                        opacity: 0.95,
+                        opacity: 0.95
                     },
                     itemStyle: {
                         color: "#f97316",
                         borderColor: "#fff",
-                        borderWidth: 2,
-                    },
-                },
-            ],
+                        borderWidth: 2
+                    }
+                }
+            ]
         };
-    }, [groupTrendData, myTrendData]);
+    }, [trendData]);
 
     const compareBarOption = React.useMemo<echarts.EChartsOption>(() => {
         const categories = ["To do", "In progress", "Done", "Overdue"];
-
-        const series: echarts.BarSeriesOption[] = barCompareMembers.map(
-            (member, index) => ({
-                name: member.userName,
-                type: "bar",
-                barMaxWidth: 18,
-                barGap: "8%",
-                data: [
-                    member.todoTasks,
-                    member.inProgressTasks,
-                    member.doneTasks,
-                    member.overdueTasks,
-                ],
-                itemStyle: {
-                    borderRadius: [8, 8, 0, 0],
-                    color: MEMBER_COLORS[index % MEMBER_COLORS.length],
-                },
-                emphasis: {
-                    focus: "series",
-                },
-            })
-        );
+        const series: echarts.BarSeriesOption[] = barCompareMembers.map((member, index) => ({
+            name: member.userName,
+            type: "bar",
+            barMaxWidth: 18,
+            barGap: "8%",
+            data: [member.todoTasks, member.inProgressTasks, member.doneTasks, member.overdueTasks],
+            itemStyle: {
+                borderRadius: [8, 8, 0, 0],
+                color: MEMBER_COLORS[index % MEMBER_COLORS.length]
+            },
+            emphasis: {
+                focus: "series"
+            }
+        }));
 
         return {
             animationDuration: 800,
@@ -1729,20 +1547,20 @@ export default function GroupMemberAnalyticsPage() {
                 backgroundColor: "#0f172a",
                 borderWidth: 0,
                 padding: [10, 12],
-                textStyle: { color: "#fff" },
+                textStyle: { color: "#fff" }
             },
             legend: {
                 bottom: 0,
                 type: "scroll",
                 textStyle: { color: "#64748B" },
-                pageTextStyle: { color: "#64748B" },
+                pageTextStyle: { color: "#64748B" }
             },
             grid: {
                 left: 8,
                 right: 8,
                 top: 24,
                 bottom: 64,
-                containLabel: true,
+                containLabel: true
             },
             xAxis: {
                 type: "category",
@@ -1753,29 +1571,31 @@ export default function GroupMemberAnalyticsPage() {
                     color: "#475569",
                     interval: 0,
                     fontSize: 12,
-                    margin: 14,
-                },
+                    margin: 14
+                }
             },
             yAxis: {
                 type: "value",
                 minInterval: 1,
                 axisLabel: { color: "#64748B" },
-                splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } },
+                splitLine: { lineStyle: { color: "#E2E8F0", type: "dashed" } }
             },
-            series,
+            series
         };
     }, [barCompareMembers]);
+
+    // ==================== Render ====================
 
     return (
         <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#FFF7ED_34%,#FFFBF5_66%,#F8FAFC_100%)]">
             <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-[-80px] top-[-40px] h-72 w-72 rounded-full bg-orange-200/25 blur-3xl" />
-                <div className="absolute right-[-80px] top-[18%] h-80 w-80 rounded-full bg-amber-200/20 blur-3xl" />
+                <div className="absolute top-[-40px] left-[-80px] h-72 w-72 rounded-full bg-orange-200/25 blur-3xl" />
+                <div className="absolute top-[18%] right-[-80px] h-80 w-80 rounded-full bg-amber-200/20 blur-3xl" />
                 <div className="absolute bottom-[-120px] left-[15%] h-96 w-96 rounded-full bg-orange-100/20 blur-3xl" />
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
             </div>
 
-            <Container className="relative pb-6 pt-8">
+            <Container className="relative pt-8 pb-6">
                 <div className="space-y-5">
                     <SectionReveal delay={0.04}>
                         <section className="space-y-4">
@@ -1783,15 +1603,14 @@ export default function GroupMemberAnalyticsPage() {
                                 className={cn(
                                     "grid gap-4",
                                     canViewPersonalPieChart ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-1"
-                                )}
-                            >
+                                )}>
                                 {canViewPersonalPieChart && (
-                                    <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                                    <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                         <div className="mb-5">
-                                            <h2 className="text-lg font-semibold text-slate-900">
+                                            <h2 className="font-semibold text-lg text-slate-900">
                                                 1. My Task Status Distribution
                                             </h2>
-                                            <p className="mt-1 text-sm text-slate-500">
+                                            <p className="mt-1 text-slate-500 text-sm">
                                                 Trạng thái task cá nhân trong group hiện tại.
                                             </p>
                                         </div>
@@ -1802,31 +1621,22 @@ export default function GroupMemberAnalyticsPage() {
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-3">
-                                                {pieData.map((item, index) => {
-                                                    const colors = [
-                                                        "#3b82f6",
-                                                        "#f59e0b",
-                                                        "#10b981",
-                                                        "#ef4444",
-                                                    ];
-
+                                                {personalPieData.data.map((item, index) => {
+                                                    const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
                                                     return (
                                                         <div
                                                             key={item.name}
-                                                            className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3"
-                                                        >
+                                                            className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3">
                                                             <div className="flex items-center gap-2">
                                                                 <span
                                                                     className="h-2.5 w-2.5 rounded-full"
-                                                                    style={{
-                                                                        backgroundColor: colors[index],
-                                                                    }}
+                                                                    style={{ backgroundColor: colors[index] }}
                                                                 />
-                                                                <span className="text-xs font-medium text-slate-500">
+                                                                <span className="font-medium text-slate-500 text-xs">
                                                                     {item.name}
                                                                 </span>
                                                             </div>
-                                                            <div className="mt-2 text-lg font-bold text-slate-900">
+                                                            <div className="mt-2 font-bold text-lg text-slate-900">
                                                                 {item.value}
                                                             </div>
                                                         </div>
@@ -1837,14 +1647,14 @@ export default function GroupMemberAnalyticsPage() {
                                     </div>
                                 )}
 
-                                <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                                <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                     <div className="mb-5">
-                                        <h2 className="text-lg font-semibold text-slate-900">
+                                        <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
                                                 ? "2. Group Task Status Distribution"
                                                 : "1. Group Task Status Distribution"}
                                         </h2>
-                                        <p className="mt-1 text-sm text-slate-500">
+                                        <p className="mt-1 text-slate-500 text-sm">
                                             Tổng quan trạng thái task của toàn bộ nhóm.
                                         </p>
                                     </div>
@@ -1855,31 +1665,22 @@ export default function GroupMemberAnalyticsPage() {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
-                                            {teamPieData.map((item, index) => {
-                                                const colors = [
-                                                    "#3b82f6",
-                                                    "#f59e0b",
-                                                    "#10b981",
-                                                    "#ef4444",
-                                                ];
-
+                                            {teamPieData.data.map((item, index) => {
+                                                const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
                                                 return (
                                                     <div
                                                         key={item.name}
-                                                        className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3"
-                                                    >
+                                                        className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3">
                                                         <div className="flex items-center gap-2">
                                                             <span
                                                                 className="h-2.5 w-2.5 rounded-full"
-                                                                style={{
-                                                                    backgroundColor: colors[index],
-                                                                }}
+                                                                style={{ backgroundColor: colors[index] }}
                                                             />
-                                                            <span className="text-xs font-medium text-slate-500">
+                                                            <span className="font-medium text-slate-500 text-xs">
                                                                 {item.name}
                                                             </span>
                                                         </div>
-                                                        <div className="mt-2 text-lg font-bold text-slate-900">
+                                                        <div className="mt-2 font-bold text-lg text-slate-900">
                                                             {item.value}
                                                         </div>
                                                     </div>
@@ -1890,15 +1691,15 @@ export default function GroupMemberAnalyticsPage() {
                                 </div>
                             </div>
 
-                            <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                            <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                 <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div>
-                                        <h2 className="text-lg font-semibold text-slate-900">
+                                        <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
                                                 ? "3. Task Progress Over Time"
                                                 : "2. Task Progress Over Time"}
                                         </h2>
-                                        <p className="mt-1 text-sm text-slate-500">
+                                        <p className="mt-1 text-slate-500 text-sm">
                                             So sánh tổng số task hoàn thành của bạn với toàn bộ nhóm theo thời gian.
                                         </p>
                                     </div>
@@ -1908,7 +1709,7 @@ export default function GroupMemberAnalyticsPage() {
                                             {[
                                                 { key: "week", label: "Tuần" },
                                                 { key: "month", label: "Tháng" },
-                                                { key: "year", label: "Năm" },
+                                                { key: "year", label: "Năm" }
                                             ].map((item) => (
                                                 <button
                                                     key={item.key}
@@ -1916,7 +1717,6 @@ export default function GroupMemberAnalyticsPage() {
                                                     onClick={() => {
                                                         const nextFilter = item.key as TrendFilter;
                                                         setTrendFilter(nextFilter);
-
                                                         if (nextFilter === "week") {
                                                             setTrendAnchorDate(new Date(2026, 3, 20));
                                                         } else if (nextFilter === "month") {
@@ -1926,12 +1726,11 @@ export default function GroupMemberAnalyticsPage() {
                                                         }
                                                     }}
                                                     className={cn(
-                                                        "rounded-xl px-4 py-2 text-sm font-medium transition",
+                                                        "rounded-xl px-4 py-2 font-medium text-sm transition",
                                                         trendFilter === item.key
                                                             ? "bg-white text-orange-500 shadow-sm"
                                                             : "text-slate-500 hover:text-orange-500"
-                                                    )}
-                                                >
+                                                    )}>
                                                     {item.label}
                                                 </button>
                                             ))}
@@ -1941,20 +1740,16 @@ export default function GroupMemberAnalyticsPage() {
                                             <button
                                                 type="button"
                                                 onClick={handlePrevTrendRange}
-                                                className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
-                                            >
+                                                className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95">
                                                 ‹
                                             </button>
-
-                                            <div className="min-w-[190px] text-center text-sm font-semibold text-slate-700">
+                                            <div className="min-w-[190px] text-center font-semibold text-slate-700 text-sm">
                                                 {trendRangeLabel}
                                             </div>
-
                                             <button
                                                 type="button"
                                                 onClick={handleNextTrendRange}
-                                                className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
-                                            >
+                                                className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95">
                                                 ›
                                             </button>
                                         </div>
@@ -1968,10 +1763,10 @@ export default function GroupMemberAnalyticsPage() {
 
                     <SectionReveal delay={0.08}>
                         <section className="space-y-4">
-                            <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                            <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                 <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div>
-                                        <h2 className="text-lg font-semibold text-slate-900">
+                                        <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
                                                 ? "4. Compare Task Status by Member"
                                                 : "3. Compare Task Status by Member"}
@@ -1983,7 +1778,7 @@ export default function GroupMemberAnalyticsPage() {
                             </div>
 
                             <GroupActivityHeatmap
-                                members={mockTeamHeatmapMembers}
+                                members={heatmapMembers}
                                 range={heatmapRange}
                                 anchorDate={heatmapAnchorDate}
                                 onPrev={handlePrevHeatmapRange}
@@ -1994,12 +1789,17 @@ export default function GroupMemberAnalyticsPage() {
                     </SectionReveal>
 
                     <SectionReveal delay={0.12}>
-                        <TeamMemberProgressSection members={barCompareMembers} />
+                        <TeamMemberProgressSection members={memberProgressItems} onMemberClick={setSelectedMember} />
                     </SectionReveal>
 
-                    {loading && (
-                        <div className="text-sm text-slate-500">Đang tải dữ liệu...</div>
-                    )}
+                    {/* Member Detail Modal - Layer 2 */}
+                    <MemberDetailModal
+                        member={selectedMember}
+                        open={selectedMember !== null}
+                        onClose={() => setSelectedMember(null)}
+                    />
+
+                    {loading && <div className="text-slate-500 text-sm">Đang tải dữ liệu...</div>}
                 </div>
             </Container>
         </div>

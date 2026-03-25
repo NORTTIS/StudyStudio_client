@@ -2,7 +2,13 @@
     "Common": {
         "loading": "Loading...",
         "checkingAuth": "Checking authentication...",
-        "aiQATab": "AI Q&A"
+        "aiQATab": "AI Q&A",
+        "missingAccessToken": "Missing access token",
+        "missingInviteUrl": "missing inviteUrl",
+        "inviteCreateFailed": "Failed to create invite link",
+        "inviteByEmailFailed": "Failed to invite member",
+        "members": "members",
+        "addMember": "Add member"
     },
     "Announcements": {
         "title": "Announcements",
@@ -84,7 +90,9 @@
             "title": "Manage work more efficiently",
             "subtitle": "with AI support",
             "feature1": "Provide reports on group work status",
-            "feature2": "Answer questions about information provided in groups"
+            "feature1Description": "AI helps you summarize, analyze, and get action suggestions faster in each workspace.",
+            "feature2": "Answer questions about information provided in groups",
+            "feature2Description": "Smarter interactions with data, tasks, groups, and schedules to speed up daily decisions."
         }
     },
     "HomePage": {
@@ -584,6 +592,11 @@
             "activeBadge": "Active",
             "addGroupButton": "Add Group",
             "inviteMember": "Invite Member",
+            "studioNotFound": "Studio not found",
+            "studioNotFoundSubtitle": "Please check the URL or go back to the studios list",
+            "validation": {
+                "dateRangeError": "Start date must be less than or equal to end date"
+            },
             "groupsUsed": "group spaces being used",
             "completionProgress": "Average work completion progress",
             "tasks": "tasks",
@@ -646,10 +659,7 @@
             "subtitle": "Over xxx people use boards each month.",
             "personal": {
                 "title": "Individuals & Groups",
-                "personal": {
-  "title": "Individuals & Groups",
-  "description": "For teachers, students, and self-learners\nfriend groups, project teams,\nand small communities\nlearning and working effectively together."
-}
+                "description": "For teachers, students, and self-learners\nfriend groups, project teams,\nand small communities\nlearning and working effectively together."
             },
             "education": {
                 "title": "Education",
@@ -810,12 +820,19 @@
             "price": "299,000 VND / Month",
             "description": "Suitable for large groups needing\nmore flexibility",
             "registerButton": "Sign up",
+            "badge": "Most Popular",
+            "recommendation": "For users who want to work more seriously, need more powerful tools, and want to optimize their entire learning or management process.",
             "feature1": "Up to 10 separate management spaces",
             "feature2": "Up to 10 group spaces",
-            "feature3": "Up to 50 members per group space",
+            "feature3": "Up to 10 members per group space",
             "feature4": "1 GB document storage per group space",
             "feature5": "100 AI requests per day"
-        }
+        },
+        "freePlanRecommendation": "Perfect to get started, experience the system, and get familiar with basic work management.",
+        "landingCta": "Start with Free anytime, or choose Premium to unlock the full experience and boost efficiency starting today.",
+        "heroSubtitle": "Choose the right plan to get started today. Easy to begin with Free, powerful acceleration with Premium.",
+        "valuePill1": "Quick deployment",
+        "valuePill2": "Smart AI support"
     },
     "currentPlan": {
         "title": "Current Plan",

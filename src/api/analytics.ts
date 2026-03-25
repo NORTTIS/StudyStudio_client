@@ -16,11 +16,21 @@ export type StudioGroupHeatmapResponseApiResponse = components["schemas"]["Studi
 export type StudioHeatmapData = components["schemas"]["StudioHeatmapData"];
 export type StudioGroupActivityItem = components["schemas"]["StudioGroupActivityItem"];
 
-// Group analytics types
-export type GroupAnalyticsResponse = components["schemas"]["GroupAnalyticsResponse"];
-export type GroupProgressData = components["schemas"]["GroupProgressData"];
-export type GroupActivityHeatmapData = components["schemas"]["GroupActivityHeatmapData"];
+// Group analytics types (only needed types)
+// === NEW: GroupAnalyticPage enhanced types ===
+export type MemberTaskBreakdownData = components["schemas"]["MemberTaskBreakdownData"];
+export type DailyProgressPoint = components["schemas"]["DailyProgressPoint"];
+export type MemberProgressTrendData = components["schemas"]["MemberProgressTrendData"];
+export type MemberHeatmapData = components["schemas"]["MemberHeatmapData"];
+export type DailyActivityPoint = components["schemas"]["DailyActivityPoint"];
+export type MemberActivitySummary = components["schemas"]["MemberActivitySummary"];
 export type MemberContributionData = components["schemas"]["MemberContributionData"];
+
+// === NEW: Group Summary Response (no date filter) ===
+export type GroupSummaryResponse = components["schemas"]["GroupSummaryResponse"];
+
+// Backward compatibility alias
+export type GroupAnalyticsResponse = GroupSummaryResponse;
 
 /**
  * GET /api/analytics/studio/{studioId}/groups
@@ -88,5 +98,63 @@ export async function getGroupAnalytics(
         `/analytics/group/${groupId}${query ? `?${query}` : ""}`,
         locale,
         false
+    );
+}
+
+/**
+ * GET /api/analytics/group/{groupId}/summary
+ *
+ * Returns group summary WITHOUT date filter (all time data).
+ * Used for Chart 1, 2, 4, 6
+ *
+ * @param groupId - The group UUID
+ */
+export async function getGroupSummary(groupId: string): Promise<ApiResponse<GroupSummaryResponse>> {
+    return apiGet<GroupSummaryResponse>(`/analytics/group/${groupId}/summary`);
+}
+
+/**
+ * GET /api/analytics/group/{groupId}/trend
+ *
+ * Returns member progress trend WITH date filter.
+ * Used for Chart 3 (Line Chart)
+ *
+ * @param groupId - The group UUID
+ * @param options - Optional: startDate, endDate (YYYY-MM-DD)
+ */
+export async function getGroupTrend(
+    groupId: string,
+    options?: { startDate?: string; endDate?: string }
+): Promise<ApiResponse<MemberProgressTrendData[]>> {
+    const params = new URLSearchParams();
+    if (options?.startDate) params.set("startDate", options.startDate);
+    if (options?.endDate) params.set("endDate", options.endDate);
+    const query = params.toString();
+
+    return apiGet<MemberProgressTrendData[]>(
+        `/analytics/group/${groupId}/trend${query ? `?${query}` : ""}`
+    );
+}
+
+/**
+ * GET /api/analytics/group/{groupId}/heatmap
+ *
+ * Returns member heatmap data WITH date filter.
+ * Used for Chart 5 (Member Heatmap)
+ *
+ * @param groupId - The group UUID
+ * @param options - Optional: startDate, endDate (YYYY-MM-DD)
+ */
+export async function getGroupHeatmap(
+    groupId: string,
+    options?: { startDate?: string; endDate?: string }
+): Promise<ApiResponse<MemberHeatmapData[]>> {
+    const params = new URLSearchParams();
+    if (options?.startDate) params.set("startDate", options.startDate);
+    if (options?.endDate) params.set("endDate", options.endDate);
+    const query = params.toString();
+
+    return apiGet<MemberHeatmapData[]>(
+        `/analytics/group/${groupId}/heatmap${query ? `?${query}` : ""}`
     );
 }

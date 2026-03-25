@@ -1259,10 +1259,18 @@ export default function Trashed() {
 
         try {
             await apiRestoreTask({ groupId, taskId });
-            await refresh();
         } catch (e: any) {
             setItems(prev);
             setError(e?.message ?? "Không thể khôi phục task.");
+            setProcessingId(null);
+            return;
+        }
+
+        try {
+            await refresh();
+        } catch (e: any) {
+            // Restore succeeded but refresh failed - don't rollback, just log
+            setError(e?.message ?? "Không thể làm mới danh sách.");
         } finally {
             setProcessingId(null);
         }
@@ -1280,10 +1288,18 @@ export default function Trashed() {
 
         try {
             await apiPermanentDeleteTask({ groupId, taskId });
-            await refresh();
         } catch (e: any) {
             setItems(prev);
             setError(e?.message ?? "Không thể xóa vĩnh viễn task.");
+            setProcessingId(null);
+            return;
+        }
+
+        try {
+            await refresh();
+        } catch (e: any) {
+            // Delete succeeded but refresh failed - don't rollback, just log
+            setError(e?.message ?? "Không thể làm mới danh sách.");
         } finally {
             setProcessingId(null);
         }

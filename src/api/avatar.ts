@@ -46,7 +46,7 @@ export async function requestAvatarUpload(
  * Step 2: Upload the file directly to the presigned URL.
  * IMPORTANT: B2 presigned URLs do NOT accept an Authorization header.
  * The signature is already embedded in the URL itself.
- * Content-Type must also be omitted — B2 determines it automatically.
+ * Content-Type is set automatically by the browser based on the File object's type.
  */
 export async function uploadToPresignedUrl(uploadUrl: string, file: File): Promise<void> {
     const res = await fetch(uploadUrl, {

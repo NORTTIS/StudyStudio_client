@@ -123,6 +123,11 @@ export function GroupCard({ group, onToggleStar }: { group: GroupCardDto; onTogg
                                     onSelect={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        // TODO: Implement leave group functionality
+                                        // - Add leaveGroup API call (DELETE /api/group/{groupId}/leave)
+                                        // - Show confirmation dialog
+                                        // - On success: refresh group list or navigate away
+                                        console.warn("[GroupCard] Leave group not yet implemented - needs backend API");
                                     }}>
                                     Rời nhóm
                                 </DropdownMenuItem>

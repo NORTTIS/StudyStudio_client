@@ -479,24 +479,10 @@ export default function MasterPageClient({
                 setSelectedStudio(null);
                 loadData();
             } else {
-                const updatedStudios = studios.map((s) =>
-                    s.id === selectedStudio.id
-                        ? {
-                            ...s,
-                            name: data.name,
-                            description: data.description,
-                            type: data.type as "personal" | "group",
-                            updatedAt: new Date().toISOString(),
-                            colorHex: data.colorHex ?? s.colorHex,
-                            startDate: data.startDate ?? s.startDate,
-                            endDate: data.endDate ?? s.endDate
-                        }
-                        : s
-                );
-                setStudios(updatedStudios);
-                toast({ description: t("modal.editSuccess"), variant: "success" });
-                setIsCreateModalOpen(false);
-                setSelectedStudio(null);
+                toast({
+                    description: result.message || t("modal.editError"),
+                    variant: "destructive"
+                });
             }
         } catch (error) {
             console.error("Update studio failed:", error);
@@ -516,11 +502,10 @@ export default function MasterPageClient({
                 setSelectedStudio(null);
                 loadData();
             } else {
-                const updatedStudios = studios.filter((s) => s.id !== selectedStudio.id);
-                setStudios(updatedStudios);
-                toast({ description: t("deleteModal.success"), variant: "success" });
-                setIsDeleteModalOpen(false);
-                setSelectedStudio(null);
+                toast({
+                    description: result.message || t("deleteModal.error"),
+                    variant: "destructive"
+                });
             }
         } catch (error) {
             console.error("Delete studio failed:", error);

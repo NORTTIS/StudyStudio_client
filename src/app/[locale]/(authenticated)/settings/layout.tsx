@@ -213,7 +213,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                 {t("title")}
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 1 }}>
-                                <Text style={{ color: "#B0AAC5", fontSize: 12 }}>Cài đặt</Text>
+                                <Text style={{ color: "#B0AAC5", fontSize: 12 }}>{t("title")}</Text>
                                 <Text style={{ color: "#B0AAC5", fontSize: 12 }}>/</Text>
                                 <Text style={{ color: MUTED, fontSize: 12, fontWeight: 600 }}>
                                     {activeItem?.description}

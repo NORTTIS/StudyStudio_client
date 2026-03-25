@@ -374,8 +374,6 @@ async function apiGetGroupMembers(groupId: string) {
         cache: "no-store"
     });
 
-    console.log("[apiGetGroupMembers] Raw API response:", response);
-
     return response;
 }
 
@@ -2303,28 +2301,13 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             return mapped === "commenter" || mapped === "viewer";
         };
 
-        // Debug: check member roles
-        console.log("[apiGetGroupMembers] Raw members data:", list);
-        console.log("[GroupBoardScreen] Members from API processed:", list.map(m => ({
-            userId: m.userId,
-            name: m.firstName,
-            role: m.role,
-            roleType: typeof m.role,
-            roleValue: String(m.role),
-            mappedRole: mapRole(String(m?.role)),
-            isRestricted: isRestrictedRole(m?.role)
-        })));
-
         const filteredMembers = list
             .filter((m) => typeof m?.userId === "string" && !!m.userId)
             .filter((m) => {
                 // Exclude roles: commenter (3) and viewer (4)
                 const restricted = isRestrictedRole(m?.role);
-                console.log(`[Filter] User ${m?.userId} (${m?.firstName} ${m?.lastName}): role=${m?.role} (type: ${typeof m?.role}) -> restricted=${restricted}`);
                 return !restricted;
             });
-
-        console.log(`[Filter] Total: ${list.length} members -> ${filteredMembers.length} after filtering`);
 
         setMembersOptions(
             filteredMembers.map((m) => {

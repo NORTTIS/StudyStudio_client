@@ -245,7 +245,7 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
 }
 
 /**
- * Get notification count (unread) - tính từ announcements chung
+ * Get notification count (active) - calculated from active announcements
  */
 export async function getNotificationCount(locale = "vi"): Promise<number> {
     try {

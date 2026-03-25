@@ -1663,7 +1663,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/group/{groupId}": {
+    "/api/analytics/group/{groupId}/heatmap": {
         parameters: {
             query?: never;
             header?: never;
@@ -1690,9 +1690,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["GroupAnalyticsResponseApiResponse"];
-                        "text/json": components["schemas"]["GroupAnalyticsResponseApiResponse"];
-                        "text/plain": components["schemas"]["GroupAnalyticsResponseApiResponse"];
+                        "application/json": components["schemas"]["MemberHeatmapDataListApiResponse"];
+                        "text/json": components["schemas"]["MemberHeatmapDataListApiResponse"];
+                        "text/plain": components["schemas"]["MemberHeatmapDataListApiResponse"];
                     };
                 };
             };
@@ -1732,6 +1732,87 @@ export interface paths {
                         "application/json": components["schemas"]["MemberContributionDataListApiResponse"];
                         "text/json": components["schemas"]["MemberContributionDataListApiResponse"];
                         "text/plain": components["schemas"]["MemberContributionDataListApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/group/{groupId}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GroupSummaryResponseApiResponse"];
+                        "text/json": components["schemas"]["GroupSummaryResponseApiResponse"];
+                        "text/plain": components["schemas"]["GroupSummaryResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/group/{groupId}/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    endDate?: string;
+                    startDate?: string;
+                };
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberProgressTrendDataListApiResponse"];
+                        "text/json": components["schemas"]["MemberProgressTrendDataListApiResponse"];
+                        "text/plain": components["schemas"]["MemberProgressTrendDataListApiResponse"];
                     };
                 };
             };
@@ -6279,6 +6360,18 @@ export interface components {
             groupName: string;
             groupTaskStatuses: components["schemas"]["TemplateTaskStatusRequest"][];
         };
+        DailyActivityPoint: {
+            /** Format: int32 */
+            activityLevel?: number;
+            /** Format: date */
+            date?: string;
+        };
+        DailyProgressPoint: {
+            /** Format: int32 */
+            completedTasks?: number;
+            /** Format: date */
+            date?: string;
+        };
         DeadlinePerformanceData: {
             /** Format: int32 */
             lateCount?: number;
@@ -6364,30 +6457,10 @@ export interface components {
         GoogleLoginRequest: {
             idToken: string;
         };
-        GroupActivityHeatmapData: {
-            /** Format: int32 */
-            activityCount?: number;
-            /** Format: date */
-            date?: string;
-        };
         GroupAIRequest: {
             /** Format: uuid */
             groupId?: string;
             question?: string | null;
-        };
-        GroupAnalyticsResponse: {
-            activityHeatmap?: components["schemas"]["GroupActivityHeatmapData"][] | null;
-            /** Format: double */
-            completionRate?: number;
-            memberContribution?: components["schemas"]["MemberContributionData"][] | null;
-            performanceRadar?: components["schemas"]["PerformanceRadarData"][] | null;
-            progress?: components["schemas"]["GroupProgressData"][] | null;
-        };
-        GroupAnalyticsResponseApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["GroupAnalyticsResponse"];
-            message?: string | null;
-            status?: string | null;
         };
         GroupAssignmentSummary: {
             /** Format: uuid */
@@ -6594,16 +6667,6 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        GroupProgressData: {
-            /** Format: int32 */
-            completedTasks?: number;
-            /** Format: double */
-            completionRate?: number;
-            /** Format: date */
-            date?: string;
-            /** Format: int32 */
-            totalTasks?: number;
-        };
         /**
          * Format: int32
          * @enum {integer}
@@ -6623,6 +6686,17 @@ export interface components {
             studioGroupCount?: number;
             /** Format: int32 */
             totalGroups?: number;
+        };
+        GroupSummaryResponse: {
+            memberActivitySummary?: components["schemas"]["MemberActivitySummary"][] | null;
+            memberContribution?: components["schemas"]["MemberContributionData"][] | null;
+            memberTaskBreakdown?: components["schemas"]["MemberTaskBreakdownData"][] | null;
+        };
+        GroupSummaryResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["GroupSummaryResponse"];
+            message?: string | null;
+            status?: string | null;
         };
         GroupTaskItemResponse: {
             assignees?: components["schemas"]["UserDto"][] | null;
@@ -6791,6 +6865,27 @@ export interface components {
             /** Format: uuid */
             studioId?: string;
         };
+        MemberActivitySummary: {
+            /** Format: int32 */
+            completedTasks?: number;
+            /** Format: double */
+            contributionPercentage?: number;
+            /** Format: int32 */
+            inProgressTasks?: number;
+            /** Format: date-time */
+            lastActivityAt?: string | null;
+            /** Format: int32 */
+            messagesSent?: number;
+            /** Format: int32 */
+            overdueTasks?: number;
+            /** Format: int32 */
+            todoTasks?: number;
+            /** Format: int32 */
+            totalTasks?: number;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
         MemberAssignmentDetail: {
             email?: string | null;
             role?: string | null;
@@ -6799,13 +6894,33 @@ export interface components {
         };
         MemberContributionData: {
             /** Format: double */
+            assignedScore?: number;
+            /** Format: int32 */
+            commentsCreated?: number;
+            /** Format: double */
+            completedScore?: number;
+            /** Format: double */
             contributionPercentage?: number;
+            /** Format: double */
+            createdScore?: number;
+            /** Format: double */
+            deletedScore?: number;
             /** Format: int32 */
             messagesSent?: number;
+            /** Format: int32 */
+            tasksAssigned?: number;
             /** Format: int32 */
             tasksCompleted?: number;
             /** Format: int32 */
             tasksCreated?: number;
+            /** Format: int32 */
+            tasksDeleted?: number;
+            /** Format: int32 */
+            tasksUpdated?: number;
+            /** Format: double */
+            totalScore?: number;
+            /** Format: double */
+            updatedScore?: number;
             /** Format: uuid */
             userId?: string;
             userName?: string | null;
@@ -6816,12 +6931,55 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        MemberHeatmapData: {
+            activityByDate?: components["schemas"]["DailyActivityPoint"][] | null;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
+        MemberHeatmapDataListApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["MemberHeatmapData"][] | null;
+            message?: string | null;
+            status?: string | null;
+        };
         MemberPreviewDto: {
             avatarUrl?: string | null;
             firstName?: string | null;
             /** Format: uuid */
             id?: string;
             lastName?: string | null;
+        };
+        MemberProgressTrendData: {
+            dailyCompletions?: components["schemas"]["DailyProgressPoint"][] | null;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
+        MemberProgressTrendDataListApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["MemberProgressTrendData"][] | null;
+            message?: string | null;
+            status?: string | null;
+        };
+        MemberTaskBreakdownData: {
+            /** Format: double */
+            contributionPercentage?: number;
+            /** Format: int32 */
+            doneTasks?: number;
+            /** Format: int32 */
+            inProgressTasks?: number;
+            /** Format: int32 */
+            messagesSent?: number;
+            /** Format: int32 */
+            overdueTasks?: number;
+            /** Format: int32 */
+            todoTasks?: number;
+            /** Format: int32 */
+            totalTasks?: number;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
         };
         MRRBreakdownResponse: {
             /** Format: double */
@@ -6902,11 +7060,6 @@ export interface components {
             data?: components["schemas"]["PaymentStatusResponse"];
             message?: string | null;
             status?: string | null;
-        };
-        PerformanceRadarData: {
-            metric?: string | null;
-            /** Format: double */
-            score?: number;
         };
         PersonalAIRequest: {
             question?: string | null;

@@ -187,14 +187,14 @@ export default function LandingPage() {
                         />
                         <StepCard
                             number="2"
-                            title={t("howToUse.step3.title")}
-                            description={t("howToUse.step3.description")}
+                            title={t("howToUse.step2.title")}
+                            description={t("howToUse.step2.description")}
                             delayClass={stepDelayClasses[1]}
                         />
                         <StepCard
                             number="3"
-                            title={t("howToUse.step4.title")}
-                            description={t("howToUse.step4.description")}
+                            title={t("howToUse.step3.title")}
+                            description={t("howToUse.step3.description")}
                             delayClass={stepDelayClasses[2]}
                         />
                     </div>
@@ -212,8 +212,8 @@ export default function LandingPage() {
 
                     <div className="mx-auto mt-16 grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2">
                         <FeatureCard
-                            title="Ghi chú thông minh"
-                            description={`Tạo và ghi chú với văn bản,\nhình ảnh, link`}
+                            title={t("features.smartNotes.title")}
+                            description={t("features.smartNotes.description")}
                             delayClass={featureDelayClasses[0]}
                         />
                         <FeatureCard

@@ -292,13 +292,13 @@ export default function LandingPage() {
                     <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
                         <AICard
                             title={t("ai.feature1")}
-                            description="AI hỗ trợ bạn tóm tắt, phân tích và đưa ra gợi ý hành động nhanh hơn trong từng không gian làm việc."
+                            description={t("ai.feature1Description")}
                             delay={delay1}
                         />
 
                         <AICard
                             title={t("ai.feature2")}
-                            description="Tương tác thông minh hơn với dữ liệu, task, nhóm và lịch trình để tăng tốc ra quyết định hằng ngày."
+                            description={t("ai.feature2Description")}
                             delay={delay2}
                         />
                     </div>

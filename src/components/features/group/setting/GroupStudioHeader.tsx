@@ -288,7 +288,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
-            toast({ description: "Thiếu access token", variant: "destructive" });
+            toast({ description: t("missingAccessToken"), variant: "destructive" });
             return null;
         }
         return token;
@@ -321,13 +321,13 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 const url = String(json?.data?.inviteUrl ?? "").trim();
                 if (url) return url;
                 toast({
-                    description: `[invite/create] thiếu inviteUrl (sent role="${apiRole}")`,
+                    description: `[invite/create] ${t("missingInviteUrl")} (sent role="${apiRole}")`,
                     variant: "destructive"
                 });
                 return null;
             }
 
-            const msg = json?.message || text || `Tạo link thất bại (${res.status})`;
+            const msg = json?.message || text || `${t("inviteCreateFailed")} (${res.status})`;
             toast({
                 description: `[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`,
                 variant: "destructive"
@@ -362,7 +362,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
-            const msg = json?.message || text || `Mời thành viên thất bại (${res.status})`;
+            const msg = json?.message || text || `${t("inviteByEmailFailed")} (${res.status})`;
             toast({
                 description: `[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`,
                 variant: "destructive"
@@ -474,7 +474,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         className="font-semibold text-[#261E33]">
                                         {memberCount}
                                     </motion.span>{" "}
-                                    thành viên
+                                    {t("members")}
                                 </span>
                             </motion.div>
 
@@ -487,7 +487,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                     transition={{ duration: 0.18 }}
                                     className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-orange-500 hover:to-red-700 hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
                                     <UserPlus className="h-4 w-4" />
-                                    Thêm thành viên
+                                    {t("addMember")}
                                 </motion.button>
                             ) : null}
                         </div>

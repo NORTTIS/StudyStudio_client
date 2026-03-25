@@ -406,7 +406,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                                     </Link>
 
                                     <Link
-                                        href={`/${locale}/settings`}
+                                        href={`/${locale}/profile`}
                                         onClick={() => setIsUserMenuOpen(false)}
                                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]"
                                     >

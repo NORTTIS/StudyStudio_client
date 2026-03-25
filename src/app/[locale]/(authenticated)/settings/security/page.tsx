@@ -53,22 +53,28 @@ export default function SecuritySettingsPage() {
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const strengthLabels = {
-        weak: t("strength.weak"),
-        fair: t("strength.fair"),
-        good: t("strength.good"),
-        strong: t("strength.strong")
-    };
-    const REQUIREMENTS = [
-        { key: "length", label: t("strength.reqLength"), test: (v: string) => v.length >= 10 && v.length <= 20 },
-        { key: "upper", label: t("strength.reqUpper"), test: (v: string) => /[A-Z]/.test(v) },
-        { key: "lower", label: t("strength.reqLower"), test: (v: string) => /[a-z]/.test(v) },
-        { key: "number", label: t("strength.reqNumber"), test: (v: string) => /\d/.test(v) }
-    ];
+    const strengthLabels = useMemo(
+        () => ({
+            weak: t("strength.weak"),
+            fair: t("strength.fair"),
+            good: t("strength.good"),
+            strong: t("strength.strong")
+        }),
+        [t]
+    );
+    const REQUIREMENTS = useMemo(
+        () => [
+            { key: "length", label: t("strength.reqLength"), test: (v: string) => v.length >= 10 && v.length <= 20 },
+            { key: "upper", label: t("strength.reqUpper"), test: (v: string) => /[A-Z]/.test(v) },
+            { key: "lower", label: t("strength.reqLower"), test: (v: string) => /[a-z]/.test(v) },
+            { key: "number", label: t("strength.reqNumber"), test: (v: string) => /\d/.test(v) }
+        ],
+        [t]
+    );
 
     const strength = useMemo(
         () => getStrength(passwordData.newPassword, strengthLabels),
-        [passwordData.newPassword, strengthLabels.weak, strengthLabels]
+        [passwordData.newPassword, strengthLabels]
     );
     const isMatch =
         passwordData.newPassword &&
