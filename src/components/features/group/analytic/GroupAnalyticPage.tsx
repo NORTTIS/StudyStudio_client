@@ -14,6 +14,7 @@ const selectedYear = 2026;
 
 type TrendFilter = "week" | "month" | "year";
 type HeatmapRangeFilter = "week" | "month";
+type GroupRole = "owner" | "moderator" | "member" | "commenter";
 
 type DailyProgressPoint = {
     label: string;
@@ -58,6 +59,38 @@ type MemberProgressItem = {
     completedTasks: number;
     totalTasks: number;
     lastActivity: string;
+};
+
+type ApiResponse<T> = {
+    code?: string | null;
+    data?: T;
+    message?: string | null;
+    status?: string | null;
+};
+
+type UserProfileLike = {
+    userId?: string;
+    id?: string;
+    email?: string;
+};
+
+type GroupMemberLike = {
+    userId?: string;
+    id?: string;
+    email?: string;
+    role?: string;
+    groupRole?: string;
+    memberRole?: string;
+    userName?: string;
+    fullName?: string;
+    isCurrentUser?: boolean;
+};
+
+type GroupMemberListData = {
+    groupId?: string;
+    groupName?: string | null;
+    members?: GroupMemberLike[] | null;
+    totalMembers?: number;
 };
 
 const MEMBER_COLORS = [
@@ -369,6 +402,77 @@ function getTrendDataByFilter(
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
+}
+
+function normalizeRole(input?: string | null): GroupRole | null {
+    if (!input) return null;
+    const value = input.toLowerCase();
+
+    if (value === "owner") return "owner";
+    if (value === "moderator") return "moderator";
+    if (value === "member") return "member";
+    if (value === "commenter") return "commenter";
+
+    return null;
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+    try {
+        const res = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cache: "no-store",
+        });
+
+        if (!res.ok) return null;
+        return (await res.json()) as T;
+    } catch {
+        return null;
+    }
+}
+
+async function getCurrentUserProfile(): Promise<UserProfileLike | null> {
+    const res = await fetchJson<ApiResponse<UserProfileLike>>("/api/user-profile");
+    return res?.data ?? null;
+}
+
+async function getCurrentUserRoleInGroup(groupId: string): Promise<GroupRole> {
+    const [profileRes, membersRes] = await Promise.all([
+        getCurrentUserProfile(),
+        fetchJson<ApiResponse<GroupMemberListData>>(`/api/group/${groupId}/members`),
+    ]);
+
+    const members = membersRes?.data?.members ?? [];
+    const profile = profileRes;
+
+    const matchedMember =
+        members.find((m) => m.isCurrentUser === true) ??
+        members.find(
+            (m) =>
+                !!profile?.userId &&
+                (m.userId === profile.userId || m.id === profile.userId)
+        ) ??
+        members.find(
+            (m) =>
+                !!profile?.id &&
+                (m.userId === profile.id || m.id === profile.id)
+        ) ??
+        members.find(
+            (m) =>
+                !!profile?.email &&
+                !!m.email &&
+                m.email.toLowerCase() === profile.email.toLowerCase()
+        );
+
+    const role =
+        normalizeRole(matchedMember?.role) ??
+        normalizeRole(matchedMember?.groupRole) ??
+        normalizeRole(matchedMember?.memberRole);
+
+    return role ?? "member";
 }
 
 function SectionReveal({
@@ -992,11 +1096,61 @@ export default function GroupMemberAnalyticsPage() {
     );
     const [currentMemberId] = React.useState("me");
     const [currentMemberName] = React.useState("Tôi");
+    const [currentUserRole, setCurrentUserRole] = React.useState<GroupRole>("member");
+
     const [heatmapRange, setHeatmapRange] =
         React.useState<HeatmapRangeFilter>("month");
     const [heatmapAnchorDate, setHeatmapAnchorDate] = React.useState(
         new Date(2026, 2, 24)
     );
+
+    React.useEffect(() => {
+        if (!groupId) return;
+
+        let isMounted = true;
+
+        async function loadData() {
+            try {
+                setLoading(true);
+
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - 90);
+
+                const [analyticsRes, roleRes] = await Promise.all([
+                    getGroupAnalytics(groupId, {
+                        startDate: start.toISOString().slice(0, 10),
+                        endDate: end.toISOString().slice(0, 10),
+                    }),
+                    getCurrentUserRoleInGroup(groupId),
+                ]);
+
+                if (!isMounted) return;
+
+                if (analyticsRes.status === "success" && analyticsRes.data) {
+                    setAnalytics(analyticsRes.data);
+                } else {
+                    setAnalytics(null);
+                }
+
+                setCurrentUserRole(roleRes);
+            } catch {
+                if (!isMounted) return;
+                setAnalytics(null);
+                setCurrentUserRole("member");
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        }
+
+        loadData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [groupId]);
+
+    const canViewPersonalPieChart = currentUserRole !== "commenter";
 
     const handlePrevTrendRange = React.useCallback(() => {
         setTrendAnchorDate((prev) => {
@@ -1033,29 +1187,6 @@ export default function GroupMemberAnalyticsPage() {
     const trendRangeLabel = React.useMemo(() => {
         return getTrendRangeLabel(trendAnchorDate, trendFilter);
     }, [trendAnchorDate, trendFilter]);
-
-    React.useEffect(() => {
-        if (!groupId) return;
-
-        setLoading(true);
-        const end = new Date();
-        const start = new Date();
-        start.setDate(end.getDate() - 90);
-
-        getGroupAnalytics(groupId, {
-            startDate: start.toISOString().slice(0, 10),
-            endDate: end.toISOString().slice(0, 10),
-        })
-            .then((res) => {
-                if (res.status === "success" && res.data) {
-                    setAnalytics(res.data);
-                }
-            })
-            .catch(() => {
-                setAnalytics(null);
-            })
-            .finally(() => setLoading(false));
-    }, [groupId]);
 
     const data = React.useMemo(
         () => deriveMemberAnalytics(analytics, currentMemberId, currentMemberName),
@@ -1498,7 +1629,7 @@ export default function GroupMemberAnalyticsPage() {
                 left: 30,
                 right: 20,
                 top: 30,
-                bottom: 48,
+                bottom: 56,
                 containLabel: true,
             },
             xAxis: {
@@ -1548,7 +1679,7 @@ export default function GroupMemberAnalyticsPage() {
                     symbolSize: 7,
                     data: groupTrendData.map((item) => Number(item.group || 0)),
                     lineStyle: {
-                        width: 2.8,
+                        width: 3,
                         color: "#f97316",
                         opacity: 0.95,
                     },
@@ -1647,190 +1778,203 @@ export default function GroupMemberAnalyticsPage() {
             <Container className="relative pb-6 pt-8">
                 <div className="space-y-5">
                     <SectionReveal delay={0.04}>
-                        <section className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
-                            <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-                                <div className="mb-5">
-                                    <h2 className="text-lg font-semibold text-slate-900">
-                                        1. My Task Status Distribution
-                                    </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        Trạng thái task cá nhân trong group hiện tại.
-                                    </p>
-                                </div>
+                        <section className="space-y-4">
+                            <div
+                                className={cn(
+                                    "grid gap-4",
+                                    canViewPersonalPieChart ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-1"
+                                )}
+                            >
+                                {canViewPersonalPieChart && (
+                                    <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                                        <div className="mb-5">
+                                            <h2 className="text-lg font-semibold text-slate-900">
+                                                1. My Task Status Distribution
+                                            </h2>
+                                            <p className="mt-1 text-sm text-slate-500">
+                                                Trạng thái task cá nhân trong group hiện tại.
+                                            </p>
+                                        </div>
 
-                                <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-                                    <div className="mx-auto w-full max-w-[260px]">
-                                        <EChart option={statusDonutOption} height={250} />
+                                        <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+                                            <div className="mx-auto w-full max-w-[260px]">
+                                                <EChart option={statusDonutOption} height={250} />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {pieData.map((item, index) => {
+                                                    const colors = [
+                                                        "#3b82f6",
+                                                        "#f59e0b",
+                                                        "#10b981",
+                                                        "#ef4444",
+                                                    ];
+
+                                                    return (
+                                                        <div
+                                                            key={item.name}
+                                                            className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <span
+                                                                    className="h-2.5 w-2.5 rounded-full"
+                                                                    style={{
+                                                                        backgroundColor: colors[index],
+                                                                    }}
+                                                                />
+                                                                <span className="text-xs font-medium text-slate-500">
+                                                                    {item.name}
+                                                                </span>
+                                                            </div>
+                                                            <div className="mt-2 text-lg font-bold text-slate-900">
+                                                                {item.value}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                                    <div className="mb-5">
+                                        <h2 className="text-lg font-semibold text-slate-900">
+                                            {canViewPersonalPieChart
+                                                ? "2. Group Task Status Distribution"
+                                                : "1. Group Task Status Distribution"}
+                                        </h2>
+                                        <p className="mt-1 text-sm text-slate-500">
+                                            Tổng quan trạng thái task của toàn bộ nhóm.
+                                        </p>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {pieData.map((item, index) => {
-                                            const colors = [
-                                                "#3b82f6",
-                                                "#f59e0b",
-                                                "#10b981",
-                                                "#ef4444",
-                                            ];
+                                    <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+                                        <div className="mx-auto w-full max-w-[260px]">
+                                            <EChart option={teamStatusDonutOption} height={250} />
+                                        </div>
 
-                                            return (
-                                                <div
-                                                    key={item.name}
-                                                    className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span
-                                                            className="h-2.5 w-2.5 rounded-full"
-                                                            style={{
-                                                                backgroundColor: colors[index],
-                                                            }}
-                                                        />
-                                                        <span className="text-xs font-medium text-slate-500">
-                                                            {item.name}
-                                                        </span>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {teamPieData.map((item, index) => {
+                                                const colors = [
+                                                    "#3b82f6",
+                                                    "#f59e0b",
+                                                    "#10b981",
+                                                    "#ef4444",
+                                                ];
+
+                                                return (
+                                                    <div
+                                                        key={item.name}
+                                                        className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <span
+                                                                className="h-2.5 w-2.5 rounded-full"
+                                                                style={{
+                                                                    backgroundColor: colors[index],
+                                                                }}
+                                                            />
+                                                            <span className="text-xs font-medium text-slate-500">
+                                                                {item.name}
+                                                            </span>
+                                                        </div>
+                                                        <div className="mt-2 text-lg font-bold text-slate-900">
+                                                            {item.value}
+                                                        </div>
                                                     </div>
-                                                    <div className="mt-2 text-lg font-bold text-slate-900">
-                                                        {item.value}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-                                <div className="mb-5">
-                                    <h2 className="text-lg font-semibold text-slate-900">
-                                        2. Group Task Status Distribution
-                                    </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        Tổng quan trạng thái task của toàn bộ nhóm.
-                                    </p>
-                                </div>
-
-                                <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-                                    <div className="mx-auto w-full max-w-[260px]">
-                                        <EChart option={teamStatusDonutOption} height={250} />
+                            <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                                <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-slate-900">
+                                            {canViewPersonalPieChart
+                                                ? "3. Task Progress Over Time"
+                                                : "2. Task Progress Over Time"}
+                                        </h2>
+                                        <p className="mt-1 text-sm text-slate-500">
+                                            So sánh tổng số task hoàn thành của bạn với toàn bộ nhóm theo thời gian.
+                                        </p>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {teamPieData.map((item, index) => {
-                                            const colors = [
-                                                "#3b82f6",
-                                                "#f59e0b",
-                                                "#10b981",
-                                                "#ef4444",
-                                            ];
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <div className="inline-flex rounded-2xl bg-slate-100 p-1">
+                                            {[
+                                                { key: "week", label: "Tuần" },
+                                                { key: "month", label: "Tháng" },
+                                                { key: "year", label: "Năm" },
+                                            ].map((item) => (
+                                                <button
+                                                    key={item.key}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const nextFilter = item.key as TrendFilter;
+                                                        setTrendFilter(nextFilter);
 
-                                            return (
-                                                <div
-                                                    key={item.name}
-                                                    className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3"
+                                                        if (nextFilter === "week") {
+                                                            setTrendAnchorDate(new Date(2026, 3, 20));
+                                                        } else if (nextFilter === "month") {
+                                                            setTrendAnchorDate(new Date(2026, 3, 1));
+                                                        } else {
+                                                            setTrendAnchorDate(new Date(2026, 0, 1));
+                                                        }
+                                                    }}
+                                                    className={cn(
+                                                        "rounded-xl px-4 py-2 text-sm font-medium transition",
+                                                        trendFilter === item.key
+                                                            ? "bg-white text-orange-500 shadow-sm"
+                                                            : "text-slate-500 hover:text-orange-500"
+                                                    )}
                                                 >
-                                                    <div className="flex items-center gap-2">
-                                                        <span
-                                                            className="h-2.5 w-2.5 rounded-full"
-                                                            style={{
-                                                                backgroundColor: colors[index],
-                                                            }}
-                                                        />
-                                                        <span className="text-xs font-medium text-slate-500">
-                                                            {item.name}
-                                                        </span>
-                                                    </div>
-                                                    <div className="mt-2 text-lg font-bold text-slate-900">
-                                                        {item.value}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
+                                                    {item.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                                            <button
+                                                type="button"
+                                                onClick={handlePrevTrendRange}
+                                                className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                                            >
+                                                ‹
+                                            </button>
+
+                                            <div className="min-w-[190px] text-center text-sm font-semibold text-slate-700">
+                                                {trendRangeLabel}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleNextTrendRange}
+                                                className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                                            >
+                                                ›
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+
+                                <EChart option={compareLineOption} height={460} />
                             </div>
                         </section>
                     </SectionReveal>
 
                     <SectionReveal delay={0.08}>
-                        <section className="rounded-[30px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-                            <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                <div>
-                                    <h2 className="text-lg font-semibold text-slate-900">
-                                        3. Task Progress Over Time
-                                    </h2>
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        So sánh tổng số task hoàn thành của bạn với toàn bộ nhóm theo thời gian.
-                                    </p>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <div className="inline-flex rounded-2xl bg-slate-100 p-1">
-                                        {[
-                                            { key: "week", label: "Tuần" },
-                                            { key: "month", label: "Tháng" },
-                                            { key: "year", label: "Năm" },
-                                        ].map((item) => (
-                                            <button
-                                                key={item.key}
-                                                type="button"
-                                                onClick={() => {
-                                                    const nextFilter = item.key as TrendFilter;
-                                                    setTrendFilter(nextFilter);
-
-                                                    if (nextFilter === "week") {
-                                                        setTrendAnchorDate(new Date(2026, 3, 20));
-                                                    } else if (nextFilter === "month") {
-                                                        setTrendAnchorDate(new Date(2026, 3, 1));
-                                                    } else {
-                                                        setTrendAnchorDate(new Date(2026, 0, 1));
-                                                    }
-                                                }}
-                                                className={cn(
-                                                    "rounded-xl px-4 py-2 text-sm font-medium transition",
-                                                    trendFilter === item.key
-                                                        ? "bg-white text-slate-900 shadow-sm"
-                                                        : "text-slate-500 hover:text-slate-900"
-                                                )}
-                                            >
-                                                {item.label}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <button
-                                            type="button"
-                                            onClick={handlePrevTrendRange}
-                                            className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
-                                        >
-                                            ‹
-                                        </button>
-
-                                        <div className="min-w-[190px] text-center text-sm font-semibold text-slate-700">
-                                            {trendRangeLabel}
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={handleNextTrendRange}
-                                            className="rounded-full px-2 py-1 text-slate-500 transition-all duration-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95"
-                                        >
-                                            ›
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <EChart option={compareLineOption} height={360} />
-                        </section>
-                    </SectionReveal>
-
-                    <SectionReveal delay={0.12}>
                         <section className="space-y-4">
                             <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 lg:p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                                 <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div>
                                         <h2 className="text-lg font-semibold text-slate-900">
-                                            4. Compare Task Status by Member
+                                            {canViewPersonalPieChart
+                                                ? "4. Compare Task Status by Member"
+                                                : "3. Compare Task Status by Member"}
                                         </h2>
                                     </div>
                                 </div>
@@ -1849,7 +1993,7 @@ export default function GroupMemberAnalyticsPage() {
                         </section>
                     </SectionReveal>
 
-                    <SectionReveal delay={0.16}>
+                    <SectionReveal delay={0.12}>
                         <TeamMemberProgressSection members={barCompareMembers} />
                     </SectionReveal>
 

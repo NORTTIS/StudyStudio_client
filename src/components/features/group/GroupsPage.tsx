@@ -306,6 +306,8 @@ export function GroupsPage() {
         }
     };
 
+
+
     return (
         <>
             <div className="relative -mt-px min-h-screen overflow-hidden bg-white px-3 pt-0 pb-4 md:px-4 xl:px-5">

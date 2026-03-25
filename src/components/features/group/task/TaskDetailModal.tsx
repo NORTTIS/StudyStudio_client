@@ -18,6 +18,7 @@ import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import type { components } from "@/api/types";
+import { mapRole } from "@/components/features/group/group.api";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -79,6 +80,7 @@ type GroupMemberDto = {
     lastName?: string | null;
     email?: string | null;
     avatarUrl?: string | null;
+    role?: string | null;
 };
 
 type GroupMemberListResponse = {
@@ -1722,6 +1724,12 @@ function toApiDateTimeOrNull(input: string) {
     return `${s}T00:00:00`;
 }
 
+function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
+    if (!memberRole) return false;
+    const roleStr = String(memberRole).trim().toLowerCase();
+    return roleStr === "3" || roleStr === "4" || roleStr === "commenter" || roleStr === "viewer";
+}
+
 async function apiUpdateTask(args: { groupId: string; taskId: string; payload: UpdateTaskRequest }) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
@@ -2189,7 +2197,13 @@ export default function TaskDetailModal(props: {
                 const resp = await apiGetGroupMembers(groupId);
                 const list = resp?.data?.members ?? [];
                 if (!alive) return;
-                setMembers((list ?? []).filter((m) => !!String(m?.userId ?? "").trim()));
+
+                // Filter out members with restricted roles (commenter, viewer)
+                const filteredList = (list ?? [])
+                    .filter((m) => !!String(m?.userId ?? "").trim())
+                    .filter((m) => !isRestrictedMemberRole(m?.role));
+
+                setMembers(filteredList);
             } catch (e: unknown) {
                 if (!alive) return;
                 setMembersError(getErrorMessage(e, "Không tải được danh sách thành viên"));
@@ -2312,6 +2326,15 @@ export default function TaskDetailModal(props: {
         if (startDate && dueDate && startDate > dueDate) {
             setSaveError("Start Date phải nhỏ hơn hoặc bằng Due Date.");
             return;
+        }
+
+        // Check if assignee has restricted role
+        if (assigneeId) {
+            const selectedMember = members.find((m) => String(m?.userId ?? "") === assigneeId);
+            if (selectedMember && isRestrictedMemberRole(selectedMember.role)) {
+                setSaveError("Không thể giao công việc cho những thành viên có role Commenter hoặc Viewer.");
+                return;
+            }
         }
 
         if (groupId == null || taskId == null) {
@@ -2468,7 +2491,6 @@ export default function TaskDetailModal(props: {
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
                                     <div className="text-lg font-bold text-zinc-900">Task information</div>
-                                    <div className="text-sm text-zinc-500">Chi tiết và trạng thái của task</div>
                                 </div>
 
                                 <div className="flex items-center gap-2">

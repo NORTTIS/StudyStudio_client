@@ -215,8 +215,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
             field === "name"
                 ? STUDIO_NAME_MAX_LENGTH
                 : field === "description"
-                  ? STUDIO_DESCRIPTION_MAX_LENGTH
-                  : undefined;
+                    ? STUDIO_DESCRIPTION_MAX_LENGTH
+                    : undefined;
         const boundedValue = maxLength ? value.slice(0, maxLength) : value;
         const nextData = applyFieldData(formData, field, boundedValue);
         setFormData(nextData);
@@ -300,9 +300,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                         />
                         <div className="mt-1 flex items-center justify-between text-xs">
                             <p
-                                className={`max-w-[70%] overflow-hidden text-ellipsis text-xs ${
-                                    errors.name && touched.name ? "text-red-500" : "text-transparent"
-                                }`}
+                                className={`max-w-[70%] overflow-hidden text-ellipsis text-xs ${errors.name && touched.name ? "text-red-500" : "text-transparent"
+                                    }`}
                                 aria-live="assertive">
                                 {errors.name && touched.name ? errors.name : "\u00A0"}
                             </p>
@@ -322,11 +321,10 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                             onBlur={() => handleBlur("description")}
                             placeholder={t("modal.descriptionPlaceholder")}
                             rows={3}
-                            className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${
-                                errors.description && touched.description
-                                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                                    : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
-                            }`}
+                            className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${errors.description && touched.description
+                                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                                : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
+                                }`}
                             maxLength={STUDIO_DESCRIPTION_MAX_LENGTH}
                         />
                         <p className="mt-1 text-right text-gray-500 text-xs">
@@ -349,9 +347,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                                 className={errors.startDate && touched.startDate ? "border-red-500" : ""}
                             />
                             <p
-                                className={`mt-1 text-xs ${
-                                    errors.startDate && touched.startDate ? "text-red-500" : "text-transparent"
-                                }`}
+                                className={`mt-1 text-xs ${errors.startDate && touched.startDate ? "text-red-500" : "text-transparent"
+                                    }`}
                                 aria-live="assertive">
                                 {errors.startDate && touched.startDate ? errors.startDate : "\u00A0"}
                             </p>
@@ -375,9 +372,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                                 className={errors.endDate && touched.endDate ? "border-red-500" : ""}
                             />
                             <p
-                                className={`mt-1 text-xs ${
-                                    errors.endDate && touched.endDate ? "text-red-500" : "text-transparent"
-                                }`}
+                                className={`mt-1 text-xs ${errors.endDate && touched.endDate ? "text-red-500" : "text-transparent"
+                                    }`}
                                 aria-live="assertive">
                                 {errors.endDate && touched.endDate ? errors.endDate : "\u00A0"}
                             </p>

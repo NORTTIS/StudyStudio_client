@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getStudioGroupAnalytics, getStudioGroupHeatmap } from "@/api/analytics";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
 import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
 import type { components } from "@/api/types";
@@ -62,6 +62,63 @@ interface StudioDetailPageProps {
     initialGroups: GroupCardDto[];
 }
 
+function FloatingOrb({ className }: { className: string }) {
+    return (
+        <motion.div
+            className={`pointer-events-none absolute rounded-full blur-3xl ${className}`}
+            animate={{ y: [0, -16, 0], x: [0, 8, 0] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        />
+    );
+}
+
+function TabButton({
+    active,
+    onClick,
+    children
+}: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <motion.button
+            type="button"
+            onClick={onClick}
+            whileTap={{ scale: 0.98 }}
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-300 ${active
+                ? "bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_16px_32px_rgba(230,73,45,0.28)]"
+                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}
+        >
+            {children}
+        </motion.button>
+    );
+}
+
+function EmptyBlock({ title, subtitle }: { title: string; subtitle: string }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-[28px] border border-white/80 bg-white/82 p-14 text-center shadow-sm backdrop-blur"
+        >
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#FFF1EC_0%,#F5F0FF_100%)]">
+                <svg className="h-7 w-7 text-[#9B8CA8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M3 7h18M6 7V6a2 2 0 012-2h8a2 2 0 012 2v1m-1 0v11a2 2 0 01-2 2H8a2 2 0 01-2-2V7"
+                    />
+                </svg>
+            </div>
+            <p className="text-sm font-medium text-slate-600">{title}</p>
+            <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
+        </motion.div>
+    );
+}
+
 export default function StudioDetailPage({ initialStudio, initialGroups }: StudioDetailPageProps) {
     const params = useParams();
     const router = useRouter();
@@ -77,9 +134,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
     const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"groups" | "ai" | "analytics" | "settings">("groups");
     const isStudioOwner = initialStudio?.studioRole === 0;
+
+    const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState("");
     const [editDescription, setEditDescription] = useState("");
@@ -89,7 +148,12 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
     const [editColorHex, setEditColorHex] = useState("#FF5F3D");
 
-    const formatDateForInput = (iso: string) => (iso ? new Date(iso).toISOString().split("T")[0] : "");
+    const formatDateForInput = useCallback((iso: string) => {
+        if (!iso) return "";
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) return "";
+        return date.toISOString().split("T")[0];
+    }, []);
 
     const studio: StudioUI | null = useMemo(() => {
         if (!initialStudio) return null;
@@ -126,12 +190,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         }));
     }, [initialGroups]);
 
-    const filteredGroups = groups.filter(
-        (group) =>
-            (group.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-            (group.description?.toLowerCase() || "").includes(searchQuery.toLowerCase())
-    );
-
     const loadData = useCallback(async () => {
         setMembersLoading(true);
         try {
@@ -152,7 +210,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         } finally {
             setMembersLoading(false);
         }
-    }, [locale, toast, t, studioId]);
+    }, [locale, studioId, t, toast]);
 
     useEffect(() => {
         loadData();
@@ -165,15 +223,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     }, [isStudioOwner, activeTab]);
 
     useEffect(() => {
-        if (studio && !isEditing) {
-            setEditName(studio.name);
-            setEditDescription(studio.description);
-            setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
-            setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
-            setEditAvatarUrl(studio.avatarUrl ?? null);
-            setEditColorHex(studio.colorHex ?? "#FF5F3D");
-        }
-    }, [studio, formatDateForInput]);
+        if (!studio || isEditing) return;
+
+        setEditName(studio.name);
+        setEditDescription(studio.description);
+        setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
+        setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
+        setEditAvatarUrl(studio.avatarUrl ?? null);
+        setEditColorHex(studio.colorHex ?? "#FF5F3D");
+    }, [studio, isEditing, formatDateForInput]);
 
     const handleDeleteStudio = async () => {
         if (!studio) return;
@@ -258,13 +316,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
     if (membersLoading) {
         return (
-            <div className="min-h-screen bg-[#F8F8F8]">
+            <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)]">
                 <div className="flex min-h-screen">
                     <DashboardSidebar />
                     <main className="flex-1">
                         <Header userProfile={userProfile} />
-                        <div className="flex items-center justify-center py-20">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#FF5F3D]" />
+                        <div className="flex items-center justify-center py-24">
+                            <div className="relative">
+                                <div className="h-14 w-14 rounded-full border-4 border-[#F1E8E3]" />
+                                <div className="absolute inset-0 h-14 w-14 animate-spin rounded-full border-4 border-transparent border-t-[#FF5F3D] border-r-[#FF7A59]" />
+                            </div>
                         </div>
                     </main>
                 </div>
@@ -274,13 +335,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
     if (!studio) {
         return (
-            <div className="min-h-screen bg-[#F8F8F8]">
+            <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)]">
                 <div className="flex min-h-screen">
                     <DashboardSidebar />
                     <main className="flex-1">
                         <Header userProfile={userProfile} />
-                        <div className="flex items-center justify-center py-20">
-                            <p className="text-center text-[#6F6B99]">Studio không tồn tại</p>
+                        <div className="flex items-center justify-center py-24">
+                            <EmptyBlock title="Studio không tồn tại" subtitle="Vui lòng kiểm tra lại đường dẫn hoặc quay về danh sách studio" />
                         </div>
                     </main>
                 </div>
@@ -289,77 +350,95 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F8F8]">
+        <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
             <div className="flex min-h-screen">
                 <DashboardSidebar />
-                <main className="flex-1">
-                    <Header userProfile={userProfile} />
-                    <div className="px-6 py-6">
-                        <div className="mb-6">
-                            <div className="flex items-start gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => router.push(`/${locale}/master`)}
-                                    className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600">
-                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M15 19l-7-7 7-7"
-                                        />
-                                    </svg>
-                                </button>
 
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-lg shadow-orange-500/30">
-                                            {studio.avatarUrl ? (
-                                                <img
-                                                    src={studio.avatarUrl}
-                                                    alt={studio.name}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            ) : (
-                                                <div
-                                                    className="flex h-full w-full items-center justify-center text-white"
-                                                    style={{ background: hexToGradient(studio.colorHex ?? "#FF5F3D") }}>
-                                                    <svg
-                                                        className="h-5 w-5"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                                        />
-                                                    </svg>
+                <main className="relative flex-1 overflow-hidden">
+                    <FloatingOrb className="left-[-120px] top-[-40px] h-72 w-72 bg-orange-200/25" />
+                    <FloatingOrb className="right-[-100px] top-[12%] h-80 w-80 bg-violet-200/20" />
+                    <FloatingOrb className="bottom-[-120px] left-[15%] h-80 w-80 bg-sky-200/15" />
+
+                    <Header userProfile={userProfile} />
+
+                    <div className="px-6 py-6">
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="relative mb-6 overflow-hidden rounded-[36px] border border-white/70 bg-white/72 px-6 py-7 shadow-[0_28px_90px_rgba(15,23,42,0.06)] backdrop-blur-2xl"
+                        >
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.20),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.68),rgba(255,248,242,0.56))]" />
+                            <div className="absolute inset-x-0 top-0 h-px bg-white/90" />
+
+                            <div className="relative">
+                                <div className="mb-5 flex items-start gap-4">
+                                    <motion.button
+                                        whileHover={{ x: -2 }}
+                                        whileTap={{ scale: 0.96 }}
+                                        type="button"
+                                        onClick={() => router.push(`/${locale}/master`)}
+                                        className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600"
+                                    >
+                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </motion.button>
+
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-4">
+                                            <motion.div
+                                                whileHover={{ rotate: -2, scale: 1.04 }}
+                                                className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/80 shadow-[0_16px_30px_rgba(255,95,61,0.18)]"
+                                            >
+                                                {studio.avatarUrl ? (
+                                                    <img src={studio.avatarUrl} alt={studio.name} className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <div
+                                                        className="flex h-full w-full items-center justify-center text-white"
+                                                        style={{ background: hexToGradient(studio.colorHex ?? "#FF5F3D") }}
+                                                    >
+                                                        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-3">
+                                                    <h1 className="truncate text-2xl font-bold text-[#261E33] sm:text-[30px]">
+                                                        {studio.name}
+                                                    </h1>
+                                                    <span className="rounded-full border border-orange-100/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700 shadow-sm">
+                                                        Studio workspace
+                                                    </span>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h1 className="truncate font-bold text-[#261E33] text-xl">{studio.name}</h1>
-                                            <p className="mt-0.5 text-[#6F6B99] text-sm">
-                                                {studio.description || "Chưa có mô tả"}
-                                            </p>
+
+                                                {studio.description?.trim() ? (
+                                                    <p className="mt-2 max-w-3xl text-sm leading-7 text-[#6F6B99]">
+                                                        {studio.description}
+                                                    </p>
+                                                ) : null}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div className="mb-6 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2 rounded-xl border border-orange-100/50 bg-white/80 p-1.5 shadow-lg shadow-orange-900/5 backdrop-blur-xl">
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveTab("groups")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
-                                        activeTab === "groups"
-                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                    }`}>
+                        <motion.div
+                            initial={{ opacity: 0, y: 14 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.06 }}
+                            className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
+                        >
+                            <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-orange-100/50 bg-white/80 p-2 shadow-lg shadow-orange-900/5 backdrop-blur-xl xl:w-auto">
+                                <TabButton active={activeTab === "groups"} onClick={() => setActiveTab("groups")}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -369,16 +448,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         />
                                     </svg>
                                     Nhóm
-                                </button>
+                                </TabButton>
 
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveTab("ai")}
-                                    className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
-                                        activeTab === "ai"
-                                            ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                            : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                    }`}>
+                                <TabButton active={activeTab === "ai"} onClick={() => setActiveTab("ai")}>
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -388,17 +460,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         />
                                     </svg>
                                     AI
-                                </button>
+                                </TabButton>
 
                                 {isStudioOwner && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab("analytics")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
-                                            activeTab === "analytics"
-                                                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                    <TabButton active={activeTab === "analytics"} onClick={() => setActiveTab("analytics")}>
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
@@ -408,18 +473,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             />
                                         </svg>
                                         Phân tích
-                                    </button>
+                                    </TabButton>
                                 )}
 
                                 {isStudioOwner && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveTab("settings")}
-                                        className={`flex items-center gap-2 rounded-lg px-5 py-2.5 font-medium text-sm transition-all duration-300 ${
-                                            activeTab === "settings"
-                                                ? "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30"
-                                                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-                                        }`}>
+                                    <TabButton active={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
                                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path
                                                 strokeLinecap="round"
@@ -427,539 +485,639 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 strokeWidth={2}
                                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826-3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
                                             />
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                            />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                         Cài đặt
-                                    </button>
+                                    </TabButton>
                                 )}
                             </div>
 
-                            <div className="flex flex-1 items-center justify-between gap-4">
-                                <div className="relative flex-1">
-                                    <input
-                                        type="text"
-                                        placeholder="Tìm kiếm nhóm ..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20"
-                                    />
-                                    <svg
-                                        className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                        />
-                                    </svg>
-                                </div>
-                                <Button
-                                    type="button"
-                                    className="bg-[#FF5F3D] hover:bg-[#ff4620]"
-                                    onClick={() => setIsCreateGroupModalOpen(true)}>
-                                    <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M12 4v16m8-8H4"
-                                        />
-                                    </svg>
-                                    Thêm nhóm
-                                </Button>
+                            <div className="flex w-full justify-end xl:w-auto">
+                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                    <Button
+                                        type="button"
+                                        className="h-14 rounded-[22px] bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] px-6 font-semibold text-white shadow-[0_18px_36px_rgba(230,73,45,0.34)] transition-all duration-200 hover:brightness-110 hover:shadow-[0_22px_40px_rgba(230,73,45,0.42)] active:scale-[0.98]"
+                                        onClick={() => setIsCreateGroupModalOpen(true)}
+                                    >
+                                        <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Thêm nhóm
+                                    </Button>
+                                </motion.div>
                             </div>
-                        </div>
+                        </motion.div>
 
-                        {activeTab === "groups" && (
-                            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                                <div className="lg:col-span-8">
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                        {filteredGroups.length > 0 ? (
-                                            filteredGroups.map((group, _index) => (
-                                                <Link
-                                                    href={`/${locale}/group/${group.id}`}
-                                                    key={group.id}
-                                                    className="flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
-                                                            {group.iconEmoji ? (
-                                                                <div
-                                                                    className="flex h-full w-full items-center justify-center text-xl"
-                                                                    style={{
-                                                                        background: hexToGradient(
-                                                                            group.colorHex ?? "#FF5F3D"
-                                                                        )
-                                                                    }}>
-                                                                    {group.iconEmoji}
-                                                                </div>
-                                                            ) : (
-                                                                <div
-                                                                    className="flex h-full w-full items-center justify-center text-white"
-                                                                    style={{
-                                                                        background: hexToGradient(
-                                                                            group.colorHex ?? "#FF5F3D"
-                                                                        )
-                                                                    }}>
-                                                                    <svg
-                                                                        className="h-5 w-5"
-                                                                        fill="none"
-                                                                        stroke="currentColor"
-                                                                        viewBox="0 0 24 24">
-                                                                        <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            strokeWidth={2}
-                                                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                                                        />
-                                                                    </svg>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <h3 className="truncate font-semibold text-slate-800 text-sm">
-                                                                    {group.name}
-                                                                </h3>
-                                                                <RolePill role={group.role} />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <p className="mt-3 line-clamp-2 text-[#FF5722] text-sm">
-                                                        {group.description || "Chưa có mô tả cho nhóm này"}
-                                                    </p>
-
-                                                    <div className="mt-4 flex items-center justify-between">
-                                                        <div className="flex items-center gap-3 text-slate-500 text-xs">
-                                                            <span className="inline-flex items-center gap-1">
-                                                                <svg
-                                                                    className="h-3.5 w-3.5"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={2}
-                                                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                                                                    />
-                                                                </svg>
-                                                                {group.members} members
-                                                            </span>
-                                                            <span className="inline-flex items-center gap-1">
-                                                                <svg
-                                                                    className="h-3.5 w-3.5"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={2}
-                                                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                                                                    />
-                                                                </svg>
-                                                                {group.tasks} tasks
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex -space-x-1.5">
-                                                            {Array.from({ length: Math.min(group.members, 4) }).map(
-                                                                (_, i) => {
-                                                                    const member = group.membersPreview?.[i];
-                                                                    return (
+                        <AnimatePresence mode="wait">
+                            {activeTab === "groups" && (
+                                <motion.div
+                                    key="groups"
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    className="grid grid-cols-1 gap-6 lg:grid-cols-12"
+                                >
+                                    <div className="min-w-0 lg:col-span-8">
+                                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                            {groups.length > 0 ? (
+                                                groups.map((group) => (
+                                                    <motion.div
+                                                        key={group.id}
+                                                        layout
+                                                        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        whileHover={{ y: -6 }}
+                                                        transition={{ duration: 0.24 }}
+                                                    >
+                                                        <Link
+                                                            href={`/${locale}/group/${group.id}`}
+                                                            className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/88 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur transition-all duration-300 hover:border-orange-200 hover:shadow-[0_22px_50px_rgba(255,95,61,0.12)]"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <motion.div
+                                                                    whileHover={{ rotate: -3, scale: 1.04 }}
+                                                                    className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-sm"
+                                                                >
+                                                                    {group.iconEmoji ? (
                                                                         <div
-                                                                            key={`${group.id}-avatar-${i}`}
-                                                                            className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white font-medium text-[9px] text-white ${
-                                                                                member?.avatarUrl
+                                                                            className="flex h-full w-full items-center justify-center text-xl"
+                                                                            style={{ background: hexToGradient(group.colorHex ?? "#FF5F3D") }}
+                                                                        >
+                                                                            {group.iconEmoji}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div
+                                                                            className="flex h-full w-full items-center justify-center text-white"
+                                                                            style={{ background: hexToGradient(group.colorHex ?? "#FF5F3D") }}
+                                                                        >
+                                                                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path
+                                                                                    strokeLinecap="round"
+                                                                                    strokeLinejoin="round"
+                                                                                    strokeWidth={2}
+                                                                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                                                />
+                                                                            </svg>
+                                                                        </div>
+                                                                    )}
+                                                                </motion.div>
+
+                                                                <div className="min-w-0 flex-1">
+                                                                    <div className="flex min-w-0 flex-nowrap items-center gap-2">
+                                                                        <h3 className="truncate text-base font-semibold text-slate-800 transition group-hover:text-[#FF5F3D]">
+                                                                            {group.name}
+                                                                        </h3>
+                                                                        <div className="shrink-0">
+                                                                            <RolePill role={group.role} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {group.description?.trim() ? (
+                                                                <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#6F6B99]">
+                                                                    {group.description}
+                                                                </p>
+                                                            ) : null}
+
+                                                            <div className="mt-5 grid grid-cols-2 gap-3">
+                                                                <div className="rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm">
+                                                                    <div className="flex items-center gap-2 text-xs text-[#6F6B99]">
+                                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                strokeWidth={2}
+                                                                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                                                                            />
+                                                                        </svg>
+                                                                        <span>Thành viên</span>
+                                                                    </div>
+                                                                    <p className="mt-2 text-lg font-semibold text-[#261E33]">{group.members}</p>
+                                                                </div>
+
+                                                                <div className="rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm">
+                                                                    <div className="flex items-center gap-2 text-xs text-[#6F6B99]">
+                                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                strokeWidth={2}
+                                                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                                                                            />
+                                                                        </svg>
+                                                                        <span>Công việc</span>
+                                                                    </div>
+                                                                    <p className="mt-2 text-lg font-semibold text-[#261E33]">{group.tasks}</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="mt-5 flex justify-end">
+                                                                <div className="flex -space-x-1.5">
+                                                                    {Array.from({ length: Math.min(group.members, 4) }).map((_, i) => {
+                                                                        const member = group.membersPreview?.[i];
+                                                                        return (
+                                                                            <div
+                                                                                key={`${group.id}-avatar-${i}`}
+                                                                                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[9px] font-medium text-white shadow-sm ${member?.avatarUrl
                                                                                     ? ""
                                                                                     : i % 4 === 0
-                                                                                      ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                                      : i % 4 === 1
-                                                                                        ? "bg-gradient-to-br from-blue-400 to-indigo-500"
-                                                                                        : i % 4 === 2
-                                                                                          ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                          : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                            }`}>
-                                                                            {member?.avatarUrl ? (
-                                                                                <img
-                                                                                    src={member.avatarUrl}
-                                                                                    alt={member.firstName || "Member"}
-                                                                                    className="h-full w-full rounded-full object-cover"
-                                                                                />
-                                                                            ) : (
-                                                                                String.fromCharCode(65 + i)
-                                                                            )}
+                                                                                        ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                                                        : i % 4 === 1
+                                                                                            ? "bg-gradient-to-br from-blue-400 to-indigo-500"
+                                                                                            : i % 4 === 2
+                                                                                                ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                                                : "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                                                    }`}
+                                                                            >
+                                                                                {member?.avatarUrl ? (
+                                                                                    <img
+                                                                                        src={member.avatarUrl}
+                                                                                        alt={member.firstName || "Member"}
+                                                                                        className="h-full w-full rounded-full object-cover"
+                                                                                    />
+                                                                                ) : (
+                                                                                    String.fromCharCode(65 + i)
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                    {group.members > 4 && (
+                                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-[9px] font-medium text-slate-600">
+                                                                            +{group.members - 4}
                                                                         </div>
-                                                                    );
-                                                                }
-                                                            )}
-                                                            {group.members > 4 && (
-                                                                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-slate-200 font-medium text-[9px] text-slate-600">
-                                                                    +{group.members - 4}
+                                                                    )}
                                                                 </div>
-                                                            )}
-                                                        </div>
+                                                            </div>
+                                                        </Link>
+                                                    </motion.div>
+                                                ))
+                                            ) : (
+                                                <div className="col-span-2">
+                                                    <EmptyBlock title="Chưa có nhóm nào" subtitle="Tạo nhóm đầu tiên để bắt đầu" />
+                                                </div>
+                                            )
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div className="flex min-w-0 justify-end lg:col-span-4">
+                                        <motion.aside
+                                            animate={{
+                                                width: isRightPanelCollapsed ? 96 : 380
+                                            }}
+                                            transition={{ duration: 0.28, ease: "easeInOut" }}
+                                            className="h-fit max-w-full shrink-0 overflow-hidden rounded-[30px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur"
+                                        >
+                                            <div
+                                                className={`flex border-b border-[#F3F0F7] px-4 py-4 ${isRightPanelCollapsed ? "justify-center" : "items-center justify-between"
+                                                    }`}
+                                            >
+                                                {!isRightPanelCollapsed ? (
+                                                    <div className="min-w-0">
+                                                        <h3 className="truncate text-base font-semibold text-slate-800">Studio Panel</h3>
+                                                        <p className="mt-0.5 text-xs text-slate-500">Danh sách thành viên và thống kê nhanh</p>
                                                     </div>
-                                                </Link>
-                                            ))
-                                        ) : (
-                                            <div className="col-span-2 rounded-2xl border-2 border-slate-200 border-dashed bg-white/50 p-16 text-center">
-                                                <p className="font-medium text-slate-500 text-sm">
-                                                    {searchQuery ? "Không tìm thấy kết quả" : "Chưa có nhóm nào"}
-                                                </p>
-                                                <p className="mt-1 text-slate-400 text-xs">
-                                                    {searchQuery
-                                                        ? "Thử tìm kiếm với từ khóa khác"
-                                                        : "Tạo nhóm đầu tiên để bắt đầu"}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                                ) : null}
 
-                                <div className="flex flex-col gap-4 lg:col-span-4">
-                                    <MemberList
-                                        members={members}
-                                        studioOwnerId={initialStudio?.ownerId}
-                                        groups={initialGroups.map((g) => ({ id: g.id || "", name: g.name || "" }))}
-                                        onInviteClick={() => setIsInviteModalOpen(true)}
-                                        onQuickAssignClick={() => setIsQuickAssignOpen(true)}
-                                        onMemberClick={(member) => setSelectedMember(member)}
-                                    />
-                                    <QuickAssignModal
-                                        open={isQuickAssignOpen}
-                                        onClose={() => setIsQuickAssignOpen(false)}
-                                        studioId={studioId}
-                                        groups={initialGroups.map((g) => ({
-                                            id: g.id || "",
-                                            name: g.name || "",
-                                            memberCount: g.memberCount ?? 0
-                                        }))}
-                                        studioOwnerId={initialStudio?.ownerId}
-                                        members={members}
-                                        onSuccess={() => {
-                                            loadData();
-                                        }}
-                                    />
-                                    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                                        <h3 className="mb-4 font-semibold text-base text-slate-800">Quick Stats</h3>
-                                        <div className="space-y-3">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-500">Groups</span>
-                                                <span className="font-semibold text-slate-800">{groups.length}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-500">Members</span>
-                                                <span className="font-semibold text-slate-800">{members.length}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-500">Created</span>
-                                                <span className="font-semibold text-slate-800">
-                                                    {studio.createdAt
-                                                        ? new Date(studio.createdAt).toLocaleDateString("en-US", {
-                                                              month: "numeric",
-                                                              day: "numeric",
-                                                              year: "numeric"
-                                                          })
-                                                        : "—"}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === "analytics" && <AnalyticMaster />}
-
-                        {activeTab === "ai" && <AIMaster studioId={studioId} />}
-
-                        {activeTab === "settings" && (
-                            <div className="space-y-6">
-                                <section className="rounded-2xl border bg-white shadow-sm">
-                                    <div className="flex items-start justify-between border-b px-6 py-5">
-                                        <div className="flex items-start gap-3">
-                                            <div className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
-                                                <svg
-                                                    className="h-4 w-4 text-gray-700"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                                                    />
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h2 className="font-bold text-gray-900 text-sm">Cài đặt chung</h2>
-                                                <p className="mt-0.5 text-gray-500 text-xs">
-                                                    Quản lý thông tin cơ bản của Studio
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            {isEditing ? (
-                                                <Button
+                                                <button
                                                     type="button"
-                                                    variant="outline"
-                                                    onClick={handleCancelEdit}
-                                                    className="h-10 rounded-xl border-gray-300 px-4 font-semibold text-gray-700 text-sm hover:bg-gray-100">
-                                                    Hủy
-                                                </Button>
-                                            ) : null}
-                                            <Button
-                                                type="button"
-                                                onClick={isEditing ? handleSaveEdit : handleStartEdit}
-                                                disabled={editLoading}
-                                                className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700 disabled:opacity-50">
-                                                {editLoading ? "Đang lưu..." : isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    <div className="px-6 py-6">
-                                        <div className="mb-6 flex items-end gap-6">
-                                            <AvatarUpload
-                                                entityType="studio"
-                                                entityId={studio.id}
-                                                avatarUrl={isEditing ? editAvatarUrl : studio.avatarUrl}
-                                                colorHex={editColorHex}
-                                                onUploadSuccess={(url) => setEditAvatarUrl(url)}
-                                                onError={(msg) => toast({ description: msg, variant: "destructive" })}
-                                                disabled={!isEditing}
-                                                />
-                                            <div className="flex-1">
-                                                <ColorPicker
-                                                    label="Màu chủ đạo"
-                                                    value={isEditing ? editColorHex : (studio.colorHex ?? "#FF5F3D")}
-                                                    onChange={isEditing ? setEditColorHex : undefined}
-                                                    disabled={!isEditing}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 gap-5">
-                                            <div>
-                                                <label
-                                                    htmlFor="studio-name-input"
-                                                    className="font-semibold text-gray-700 text-xs">
-                                                    Tên Studio <span className="text-red-500">*</span>
-                                                </label>
-                                                <Input
-                                                    id="studio-name-input"
-                                                    disabled={!isEditing}
-                                                    value={editName}
-                                                    onChange={(e) => setEditName(e.target.value)}
-                                                    className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
-                                                />
+                                                    onClick={() => setIsRightPanelCollapsed((prev) => !prev)}
+                                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600"
+                                                    title={isRightPanelCollapsed ? "Mở rộng panel" : "Thu gọn panel"}
+                                                >
+                                                    <motion.svg
+                                                        animate={{ rotate: isRightPanelCollapsed ? 0 : 180 }}
+                                                        transition={{ duration: 0.22 }}
+                                                        className="h-5 w-5"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                    </motion.svg>
+                                                </button>
                                             </div>
 
-                                            <div>
-                                                <label
-                                                    htmlFor="studio-description-input"
-                                                    className="font-semibold text-gray-700 text-xs">
-                                                    Mô tả
-                                                </label>
-                                                <Textarea
-                                                    id="studio-description-input"
-                                                    disabled={!isEditing}
-                                                    value={editDescription}
-                                                    onChange={(e) => setEditDescription(e.target.value)}
-                                                    className="mt-2 min-h-24 rounded-xl border-gray-200 pb-7 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
-                                                    placeholder="Nhập mô tả cho Studio..."
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label
-                                                        htmlFor="studio-start-date"
-                                                        className="font-semibold text-gray-700 text-xs">
-                                                        Ngày bắt đầu
-                                                    </label>
-                                                    {isEditing ? (
-                                                        <Input
-                                                            id="studio-start-date"
-                                                            type="date"
-                                                            value={editStartDate}
-                                                            onChange={(e) => setEditStartDate(e.target.value)}
-                                                            className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500"
-                                                        />
-                                                    ) : (
-                                                        <Input
-                                                            id="studio-start-date"
-                                                            value={editStartDate || "—"}
-                                                            readOnly
-                                                            tabIndex={-1}
-                                                            aria-readonly="true"
-                                                            onMouseDown={(e) => e.preventDefault()}
-                                                            onFocus={(e) => e.currentTarget.blur()}
-                                                            className="mt-2 h-10 cursor-default rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
-                                                        />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        htmlFor="studio-end-date"
-                                                        className="font-semibold text-gray-700 text-xs">
-                                                        Ngày kết thúc
-                                                    </label>
-                                                    {isEditing ? (
-                                                        <Input
-                                                            id="studio-end-date"
-                                                            type="date"
-                                                            value={editEndDate}
-                                                            onChange={(e) => setEditEndDate(e.target.value)}
-                                                            className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500"
-                                                        />
-                                                    ) : (
-                                                        <Input
-                                                            id="studio-end-date"
-                                                            value={editEndDate || "—"}
-                                                            readOnly
-                                                            tabIndex={-1}
-                                                            aria-readonly="true"
-                                                            onMouseDown={(e) => e.preventDefault()}
-                                                            onFocus={(e) => e.currentTarget.blur()}
-                                                            className="mt-2 h-10 cursor-default rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
-                                                        />
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label
-                                                    htmlFor="studio-created-date"
-                                                    className="font-semibold text-gray-700 text-xs">
-                                                    Ngày tạo
-                                                </label>
-                                                <Input
-                                                    id="studio-created-date"
-                                                    value={
-                                                        studio.createdAt
-                                                            ? new Date(studio.createdAt).toLocaleDateString("vi-VN", {
-                                                                  day: "numeric",
-                                                                  month: "long",
-                                                                  year: "numeric"
-                                                              })
-                                                            : "—"
-                                                    }
-                                                    readOnly
-                                                    tabIndex={-1}
-                                                    aria-readonly="true"
-                                                    onMouseDown={(e) => e.preventDefault()}
-                                                    onFocus={(e) => e.currentTarget.blur()}
-                                                    className="mt-2 h-10 cursor-default rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label
-                                                    htmlFor="studio-group-count"
-                                                    className="font-semibold text-gray-700 text-xs">
-                                                    Số nhóm
-                                                </label>
-                                                <Input
-                                                    id="studio-group-count"
-                                                    value={studio.groupCount}
-                                                    readOnly
-                                                    tabIndex={-1}
-                                                    aria-readonly="true"
-                                                    onMouseDown={(e) => e.preventDefault()}
-                                                    onFocus={(e) => e.currentTarget.blur()}
-                                                    className="mt-2 h-10 cursor-default rounded-xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
-                                    <div className="border-red-200 border-b px-6 py-5">
-                                        <h2 className="font-bold text-red-700 text-sm">Vùng nguy hiểm</h2>
-                                    </div>
-
-                                    <div className="px-6 py-6">
-                                        <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-                                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                                <div>
-                                                    <div className="font-bold text-red-700 text-sm">Xóa Studio</div>
-                                                    <div className="mt-1 text-red-600 text-xs">
-                                                        Xóa Studio khỏi danh sách của bạn. Studio sẽ bị ẩn và không thể
-                                                        truy cập được, nhưng dữ liệu sẽ vẫn được giữ lại trong trường
-                                                        hợp bạn muốn khôi phục sau này.
-                                                    </div>
-                                                </div>
-
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button
+                                            <AnimatePresence mode="wait" initial={false}>
+                                                {isRightPanelCollapsed ? (
+                                                    <motion.div
+                                                        key="collapsed-panel"
+                                                        initial={{ opacity: 0, scale: 0.96 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.96 }}
+                                                        className="flex flex-col items-center gap-4 px-3 py-5"
+                                                    >
+                                                        <button
                                                             type="button"
-                                                            className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700">
+                                                            onClick={() => setIsInviteModalOpen(true)}
+                                                            className="group flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md"
+                                                            title="Thành viên"
+                                                        >
                                                             <svg
-                                                                className="mr-2 h-4 w-4"
+                                                                className="h-5 w-5 transition-transform group-hover:scale-110"
                                                                 fill="none"
                                                                 stroke="currentColor"
-                                                                viewBox="0 0 24 24">
+                                                                viewBox="0 0 24 24"
+                                                            >
                                                                 <path
                                                                     strokeLinecap="round"
                                                                     strokeLinejoin="round"
                                                                     strokeWidth={2}
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                                                                 />
                                                             </svg>
-                                                            Xóa Studio
-                                                        </Button>
-                                                    </AlertDialogTrigger>
+                                                        </button>
 
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>
-                                                                Bạn chắc chắn muốn xóa Studio này?
-                                                            </AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                Hành động này có thể hoàn tác. Studio và toàn bộ dữ liệu
-                                                                sẽ bị ẩn.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
+                                                        {isStudioOwner && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setActiveTab("analytics")}
+                                                                className={`group flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${(activeTab as "groups" | "ai" | "analytics" | "settings") === "analytics"
+                                                                    ? "border-violet-200 bg-violet-100 text-violet-700"
+                                                                    : "border-violet-100 bg-violet-50 text-violet-600 hover:bg-violet-100"
+                                                                    }`}
+                                                                title="Phân tích"
+                                                            >
+                                                                <svg
+                                                                    className="h-5 w-5 transition-transform group-hover:scale-110"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M9 17v-6m4 6V7m4 10v-3M5 21h14"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        )}
+                                                    </motion.div>
+                                                ) : (
+                                                    <motion.div
+                                                        key="expanded-panel"
+                                                        initial={{ opacity: 0, x: 8 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: -8 }}
+                                                        className="space-y-6 px-5 py-5"
+                                                    >
+                                                        <section className="min-w-0">
+                                                            <div className="mb-3 flex items-center justify-between gap-3">
+                                                                <h4 className="text-sm font-semibold text-slate-800">Danh sách thành viên</h4>
+                                                                <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-600">
+                                                                    {members.length}
+                                                                </span>
+                                                            </div>
 
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Hủy</AlertDialogCancel>
-                                                            <AlertDialogAction
-                                                                className="bg-red-600 hover:bg-red-700"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    handleDeleteStudio();
-                                                                }}>
-                                                                Xác nhận xóa
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
+                                                            <div className="min-w-0">
+                                                                <MemberList
+                                                                    members={members}
+                                                                    studioOwnerId={initialStudio?.ownerId}
+                                                                    groups={initialGroups.map((g) => ({ id: g.id || "", name: g.name || "" }))}
+                                                                    onInviteClick={() => setIsInviteModalOpen(true)}
+                                                                    onQuickAssignClick={() => setIsQuickAssignOpen(true)}
+                                                                    onMemberClick={(member) => setSelectedMember(member)}
+                                                                />
+                                                            </div>
+                                                        </section>
+
+                                                        <section className="border-t border-[#F3F0F7] pt-5">
+                                                            <div className="mb-3 flex items-center gap-3">
+                                                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F8F5FF] text-violet-600">
+                                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth={2}
+                                                                            d="M9 17v-6m4 6V7m4 10v-3M5 21h14"
+                                                                        />
+                                                                    </svg>
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-sm font-semibold text-slate-800">Quick Stats</h4>
+                                                                    <p className="text-xs text-slate-500">Tổng quan nhanh của studio</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
+                                                                    <span className="text-slate-500">Groups</span>
+                                                                    <span className="font-semibold text-slate-800">{groups.length}</span>
+                                                                </div>
+
+                                                                <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
+                                                                    <span className="text-slate-500">Members</span>
+                                                                    <span className="font-semibold text-slate-800">{members.length}</span>
+                                                                </div>
+
+                                                                <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
+                                                                    <span className="text-slate-500">Created</span>
+                                                                    <span className="font-semibold text-slate-800">
+                                                                        {studio.createdAt
+                                                                            ? new Date(studio.createdAt).toLocaleDateString("en-US", {
+                                                                                month: "numeric",
+                                                                                day: "numeric",
+                                                                                year: "numeric"
+                                                                            })
+                                                                            : "—"}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </section>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.aside>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {activeTab === "analytics" && (
+                                <motion.div
+                                    key="analytics"
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                >
+                                    <AnalyticMaster />
+                                </motion.div>
+                            )}
+
+                            {activeTab === "ai" && (
+                                <motion.div
+                                    key="ai"
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                >
+                                    <AIMaster studioId={studioId} />
+                                </motion.div>
+                            )}
+
+                            {activeTab === "settings" && (
+                                <motion.div
+                                    key="settings"
+                                    initial={{ opacity: 0, y: 14 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    className="space-y-6"
+                                >
+                                    <section className="overflow-hidden rounded-[28px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
+                                        <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
+                                            <div className="flex items-start gap-3">
+                                                <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100">
+                                                    <svg className="h-4 w-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826-3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                                        />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-sm font-bold text-gray-900">Cài đặt chung</h2>
+                                                    <p className="mt-0.5 text-xs text-gray-500">Quản lý thông tin cơ bản của Studio</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                {isEditing ? (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={handleCancelEdit}
+                                                        className="h-10 rounded-xl border-gray-300 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        Hủy
+                                                    </Button>
+                                                ) : null}
+
+                                                <Button
+                                                    type="button"
+                                                    onClick={isEditing ? handleSaveEdit : handleStartEdit}
+                                                    disabled={editLoading}
+                                                    className="h-10 rounded-xl bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] px-4 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(230,73,45,0.24)] hover:brightness-110 disabled:opacity-50"
+                                                >
+                                                    {editLoading ? "Đang lưu..." : isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
+                                                </Button>
                                             </div>
                                         </div>
-                                    </div>
-                                </section>
-                            </div>
-                        )}
+
+                                        <div className="px-6 py-6">
+                                            <div className="mb-6 flex flex-col gap-6 lg:flex-row lg:items-end">
+                                                <AvatarUpload
+                                                    entityType="studio"
+                                                    entityId={studio.id}
+                                                    avatarUrl={isEditing ? editAvatarUrl : studio.avatarUrl}
+                                                    colorHex={editColorHex}
+                                                    onUploadSuccess={(url) => setEditAvatarUrl(url)}
+                                                    onError={(msg) => toast({ description: msg, variant: "destructive" })}
+                                                    disabled={!isEditing}
+                                                />
+                                                <div className="flex-1 rounded-[24px] border border-[#F1EDF7] bg-[#FCFBFE] p-4 shadow-sm">
+                                                    <ColorPicker
+                                                        label="Màu chủ đạo"
+                                                        value={isEditing ? editColorHex : studio.colorHex ?? "#FF5F3D"}
+                                                        onChange={isEditing ? setEditColorHex : undefined}
+                                                        disabled={!isEditing}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 gap-5">
+                                                <div>
+                                                    <label htmlFor="studio-name-input" className="text-xs font-semibold text-gray-700">
+                                                        Tên Studio <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <Input
+                                                        id="studio-name-input"
+                                                        disabled={!isEditing}
+                                                        value={editName}
+                                                        onChange={(e) => setEditName(e.target.value)}
+                                                        className="mt-2 h-11 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label htmlFor="studio-description-input" className="text-xs font-semibold text-gray-700">
+                                                        Mô tả
+                                                    </label>
+                                                    <Textarea
+                                                        id="studio-description-input"
+                                                        disabled={!isEditing}
+                                                        value={editDescription}
+                                                        onChange={(e) => setEditDescription(e.target.value)}
+                                                        className="mt-2 min-h-28 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                                        placeholder="Nhập mô tả cho Studio..."
+                                                    />
+                                                </div>
+
+                                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                    <div>
+                                                        <label htmlFor="studio-start-date" className="text-xs font-semibold text-gray-700">
+                                                            Ngày bắt đầu
+                                                        </label>
+                                                        {isEditing ? (
+                                                            <Input
+                                                                id="studio-start-date"
+                                                                type="date"
+                                                                value={editStartDate}
+                                                                onChange={(e) => setEditStartDate(e.target.value)}
+                                                                className="mt-2 h-11 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500"
+                                                            />
+                                                        ) : (
+                                                            <Input
+                                                                id="studio-start-date"
+                                                                value={editStartDate || "—"}
+                                                                readOnly
+                                                                tabIndex={-1}
+                                                                aria-readonly="true"
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onFocus={(e) => e.currentTarget.blur()}
+                                                                className="mt-2 h-11 cursor-default rounded-2xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
+                                                            />
+                                                        )}
+                                                    </div>
+
+                                                    <div>
+                                                        <label htmlFor="studio-end-date" className="text-xs font-semibold text-gray-700">
+                                                            Ngày kết thúc
+                                                        </label>
+                                                        {isEditing ? (
+                                                            <Input
+                                                                id="studio-end-date"
+                                                                type="date"
+                                                                value={editEndDate}
+                                                                onChange={(e) => setEditEndDate(e.target.value)}
+                                                                className="mt-2 h-11 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500"
+                                                            />
+                                                        ) : (
+                                                            <Input
+                                                                id="studio-end-date"
+                                                                value={editEndDate || "—"}
+                                                                readOnly
+                                                                tabIndex={-1}
+                                                                aria-readonly="true"
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onFocus={(e) => e.currentTarget.blur()}
+                                                                className="mt-2 h-11 cursor-default rounded-2xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                    <div>
+                                                        <label htmlFor="studio-created-date" className="text-xs font-semibold text-gray-700">
+                                                            Ngày tạo
+                                                        </label>
+                                                        <Input
+                                                            id="studio-created-date"
+                                                            value={
+                                                                studio.createdAt
+                                                                    ? new Date(studio.createdAt).toLocaleDateString("vi-VN", {
+                                                                        day: "numeric",
+                                                                        month: "long",
+                                                                        year: "numeric"
+                                                                    })
+                                                                    : "—"
+                                                            }
+                                                            readOnly
+                                                            tabIndex={-1}
+                                                            aria-readonly="true"
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            onFocus={(e) => e.currentTarget.blur()}
+                                                            className="mt-2 h-11 cursor-default rounded-2xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label htmlFor="studio-group-count" className="text-xs font-semibold text-gray-700">
+                                                            Số nhóm
+                                                        </label>
+                                                        <Input
+                                                            id="studio-group-count"
+                                                            value={studio.groupCount}
+                                                            readOnly
+                                                            tabIndex={-1}
+                                                            aria-readonly="true"
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            onFocus={(e) => e.currentTarget.blur()}
+                                                            className="mt-2 h-11 cursor-default rounded-2xl border-gray-200 bg-gray-50 text-gray-900 focus-visible:ring-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section className="overflow-hidden rounded-[28px] border border-red-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                                        <div className="border-b border-red-200 px-6 py-5">
+                                            <h2 className="text-sm font-bold text-red-700">Vùng nguy hiểm</h2>
+                                        </div>
+
+                                        <div className="px-6 py-6">
+                                            <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
+                                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                                    <div>
+                                                        <div className="text-sm font-bold text-red-700">Xóa Studio</div>
+                                                        <div className="mt-1 text-xs leading-6 text-red-600">
+                                                            Xóa Studio khỏi danh sách của bạn. Studio sẽ bị ẩn và không thể truy cập được,
+                                                            nhưng dữ liệu sẽ vẫn được giữ lại trong trường hợp bạn muốn khôi phục sau này.
+                                                        </div>
+                                                    </div>
+
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button
+                                                                type="button"
+                                                                className="h-11 rounded-2xl bg-red-600 px-5 text-sm font-semibold text-white hover:bg-red-700"
+                                                            >
+                                                                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                    />
+                                                                </svg>
+                                                                Xóa Studio
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Bạn chắc chắn muốn xóa Studio này?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    Hành động này có thể hoàn tác. Studio và toàn bộ dữ liệu sẽ bị ẩn.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    className="bg-red-600 hover:bg-red-700"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        handleDeleteStudio();
+                                                                    }}
+                                                                >
+                                                                    Xác nhận xóa
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </main>
             </div>
@@ -994,6 +1152,22 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                         description: "Nhóm đã được tạo thành công!",
                         variant: "success"
                     });
+                }}
+            />
+
+            <QuickAssignModal
+                open={isQuickAssignOpen}
+                onClose={() => setIsQuickAssignOpen(false)}
+                studioId={studioId}
+                groups={initialGroups.map((g) => ({
+                    id: g.id || "",
+                    name: g.name || "",
+                    memberCount: g.memberCount ?? 0
+                }))}
+                studioOwnerId={initialStudio?.ownerId}
+                members={members}
+                onSuccess={() => {
+                    loadData();
                 }}
             />
 
