@@ -1,6 +1,7 @@
 "use client";
 
 import { Settings, Trash2, UserPlus, Users } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -9,6 +10,7 @@ import type { components } from "@/api/types";
 
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
+import { getRoleIcon, getRoleColor, roleDisplayText } from "@/components/features/group/RoleUtils";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -48,6 +50,7 @@ type Member = {
     email: string;
     initials: string;
     role: MemberRole;
+    avatarUrl?: string | null;
 };
 
 const roleOptions: Exclude<MemberRole, "Owner">[] = ["Moderator", "Member", "Commenter", "Viewer"];
@@ -260,13 +263,15 @@ export function GroupSettingView() {
             const last = (m.lastName ?? "").trim();
             const uid = m.userId ?? `${idx}`;
             const role = toMemberRole(m.role);
+            const avatarUrl = String(m.avatarUrl ?? "").trim().replace("localhost", "127.0.0.1") || null;
 
             return {
                 id: String(uid),
                 name: `${first} ${last}`.trim() || "Không rõ",
                 email: (m.email ?? "").trim(),
                 initials: safeInitials(first, last),
-                role
+                role,
+                avatarUrl
             };
         });
     };
@@ -1008,9 +1013,20 @@ export function GroupSettingView() {
                                             className="grid grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-gray-50/80 md:grid-cols-12 md:items-center">
                                             <div className="md:col-span-6">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 font-bold text-gray-700 text-sm">
-                                                        {m.initials}
-                                                    </div>
+                                                    {m.avatarUrl ? (
+                                                        <Image
+                                                            src={m.avatarUrl}
+                                                            alt={m.name}
+                                                            width={40}
+                                                            height={40}
+                                                            unoptimized
+                                                            className="h-10 w-10 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 font-bold text-gray-700 text-sm">
+                                                            {m.initials}
+                                                        </div>
+                                                    )}
                                                     <div className="min-w-0">
                                                         <div className="truncate font-semibold text-gray-900 text-sm">
                                                             {m.name}
@@ -1026,8 +1042,9 @@ export function GroupSettingView() {
 
                                             <div className="flex items-center justify-center gap-3 md:col-span-3">
                                                 {isOwner(m.role) ? (
-                                                    <div className="inline-flex h-10 w-42.5 items-center justify-center rounded-xl border bg-gray-50 px-3 font-semibold text-gray-800 text-sm">
-                                                        Owner
+                                                    <div className="inline-flex h-10 w-42.5 items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 font-semibold text-orange-700 text-sm">
+                                                        {getRoleIcon(m.role)}
+                                                        <span>Owner</span>
                                                     </div>
                                                 ) : (
                                                     <Select
@@ -1055,7 +1072,10 @@ export function GroupSettingView() {
                                                                     key={r}
                                                                     value={r}
                                                                     className="relative cursor-pointer rounded-xl px-3 py-2.5 text-gray-900 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 data-highlighted:bg-gray-100 data-[state=checked]:font-bold">
-                                                                    {r}
+                                                                    <div className="flex items-center gap-2">
+                                                                        {getRoleIcon(r)}
+                                                                        <span>{r}</span>
+                                                                    </div>
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>

@@ -2763,6 +2763,19 @@ export default function HomePersonalTaskScreen() {
         try {
             setIsSubmitting(true);
 
+            const tasks = status.taskList ?? [];
+            for (const task of tasks) {
+                if (task.taskId) {
+                    try {
+                        await apiFetch<ObjectApiResponse>(buildDeletePersonalTaskUrl(String(task.taskId)), {
+                            method: "DELETE"
+                        });
+                    } catch (error) {
+                        console.error("Failed to delete personal task:", error);
+                    }
+                }
+            }
+
             await apiFetch<ObjectApiResponse>(buildDeletePersonalStatusUrl(String(status.statusId)), {
                 method: "DELETE"
             });
@@ -3131,7 +3144,7 @@ export default function HomePersonalTaskScreen() {
 
     if (isLoading) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]">
+            <div className="bg-white">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
                         Đang tải board…
@@ -3143,7 +3156,7 @@ export default function HomePersonalTaskScreen() {
 
     if (loadError) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]">
+            <div className="bg-white">
                 <Container>
                     <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
                         {loadError}
@@ -3169,7 +3182,7 @@ export default function HomePersonalTaskScreen() {
     return (
         <div
             id="home-personal-task-section"
-            className="min-h-[calc(100vh-0px)] scroll-mt-24 bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_38%,#F3F7FB_100%)]"
+            className="scroll-mt-24 bg-white"
         >
             <InlineTaskFormModal
                 open={taskFormOpen}

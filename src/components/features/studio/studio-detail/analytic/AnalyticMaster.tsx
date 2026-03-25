@@ -671,8 +671,8 @@ function TimeRangeToolbar({
                             className={cn(
                                 "rounded-xl px-4 py-2 text-sm font-medium transition",
                                 active
-                                    ? "bg-white text-blue-600 shadow-sm"
-                                    : "text-slate-500 hover:text-slate-900"
+                                    ? "bg-white text-orange-600 shadow-sm"
+                                    : "text-slate-500 hover:text-orange-600"
                             )}
                         >
                             {tab.label}
@@ -959,7 +959,7 @@ function CompareGroupPicker({
                                     <button
                                         type="button"
                                         onClick={() => setOpen(false)}
-                                        className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                                        className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                                     >
                                         Xong
                                     </button>

@@ -123,7 +123,7 @@ export function MemberList({
                         <div
                             key={member.userId}
                             onClick={() => onMemberClick?.(member)}
-                            className="flex cursor-pointer items-center justify-between rounded-xl px-2 py-2.5 transition-colors hover:bg-gray-50">
+                            className="flex cursor-pointer items-center justify-between rounded-xl px-2 py-2.5 transition-all duration-200 hover:bg-gray-50">
                             <div className="flex items-center gap-3">
                                 {member.avatarUrl ? (
                                     <img
@@ -133,15 +133,14 @@ export function MemberList({
                                     />
                                 ) : (
                                     <div
-                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${
-                                            index % 4 === 0
-                                                ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                : index % 4 === 1
-                                                  ? "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                  : index % 4 === 2
+                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${index % 4 === 0
+                                            ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                            : index % 4 === 1
+                                                ? "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                : index % 4 === 2
                                                     ? "bg-gradient-to-br from-blue-400 to-indigo-500"
                                                     : "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                        }`}>
+                                            }`}>
                                         {getInitials(member.userName)}
                                     </div>
                                 )}
@@ -153,7 +152,7 @@ export function MemberList({
                             <div className="flex flex-col items-end gap-1">
                                 {/* Only show Studio Owner badge for studio owner */}
                                 {member.userId === studioOwnerId && (
-                                    <span className="rounded-full border border-slate-300 px-2.5 py-0.5 font-medium text-slate-700 text-xs">
+                                    <span className="whitespace-nowrap rounded-full border border-slate-300 px-2.5 py-0.5 font-medium text-slate-700 text-xs transition-all duration-300">
                                         Chủ sở hữu
                                     </span>
                                 )}
@@ -162,7 +161,7 @@ export function MemberList({
                                         {member.groupInfo.slice(0, 2).map((group) => (
                                             <span
                                                 key={group.groupId}
-                                                className="max-w-[100px] truncate rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
+                                                className="max-w-[100px] truncate rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 transition-all duration-300">
                                                 {group.groupName?.slice(0, 20)}-{getGroupRoleLabel(group.groupRole)}
                                             </span>
                                         ))}

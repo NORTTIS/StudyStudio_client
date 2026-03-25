@@ -36,11 +36,13 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/use-toast";
+import { getRoleIcon, roleDisplayText, getRoleColor } from "@/components/features/group/RoleUtils";
 
 type UserLite = {
     id: string;
     name: string;
     initials: string;
+    avatarUrl?: string | null;
 };
 
 type GroupRole = "owner" | "moderator" | "member" | "commenter" | "viewer";
@@ -243,7 +245,8 @@ function dtoToUserLite(userId?: string, user?: HubUserDto | null): UserLite {
     return {
         id: user?.id || userId || "unknown-user",
         name,
-        initials: initialsOf(name)
+        initials: initialsOf(name),
+        avatarUrl: safeAvatarUrl(user?.avatarUrl ?? "")
     };
 }
 
@@ -316,7 +319,20 @@ function buildPostsFromMessages(messages?: GroupMessageDto[] | null) {
     return [...postMap.values()];
 }
 
-function Avatar({ initials }: { initials: string }) {
+function Avatar({ initials, avatarUrl }: { initials: string; avatarUrl?: string | null }) {
+    if (avatarUrl) {
+        return (
+            <Image
+                src={avatarUrl}
+                alt="avatar"
+                width={36}
+                height={36}
+                unoptimized
+                className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-black/5"
+            />
+        );
+    }
+
     return (
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F3F4F6] font-semibold text-[#261E33] text-xs ring-1 ring-black/5">
             {initials}
@@ -959,21 +975,32 @@ function ReplyItemView({
     r,
     membersById,
     canDelete,
-    onDelete
+    onDelete,
+    rolesById
 }: {
     r: ReplyItem;
     membersById: Record<string, string>;
     canDelete: boolean;
     onDelete: (id: string) => void;
+    rolesById: Record<string, GroupRole>;
 }) {
     return (
         <div className="flex gap-3">
-            <Avatar initials={r.author.initials} />
+            <Avatar initials={r.author.initials} avatarUrl={r.author.avatarUrl} />
             <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <p className="font-semibold text-[#261E33] text-sm">{r.author.name}</p>
+                            {rolesById[r.author.id] && (() => {
+                                const colors = getRoleColor(rolesById[r.author.id]);
+                                return (
+                                    <div className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${colors.bg} ${colors.text} ${colors.border}`}>
+                                        {getRoleIcon(rolesById[r.author.id])}
+                                        <span>{roleDisplayText[rolesById[r.author.id]]}</span>
+                                    </div>
+                                );
+                            })()}
                             <span className="text-[#9CA3AF] text-xs">• {r.createdAtText}</span>
                         </div>
 
@@ -1033,7 +1060,8 @@ function PostCard({
     mentionUsers,
     meId,
     isOwnerId,
-    canComment
+    canComment,
+    rolesById
 }: {
     post: PostItem;
     onDelete: (id: string) => void;
@@ -1045,6 +1073,7 @@ function PostCard({
     meId: string;
     isOwnerId: (userId: string) => boolean;
     canComment: boolean;
+    rolesById: Record<string, GroupRole>;
 }) {
     const [replyOpen, setReplyOpen] = React.useState(false);
     const [repliesOpen, setRepliesOpen] = React.useState(true);
@@ -1060,7 +1089,7 @@ function PostCard({
     return (
         <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
             <div className="flex items-start gap-3">
-                <Avatar initials={post.author.initials} />
+                <Avatar initials={post.author.initials} avatarUrl={post.author.avatarUrl} />
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
@@ -1069,6 +1098,15 @@ function PostCard({
                                 <p className="truncate font-semibold text-[#261E33] text-sm">
                                     {post.author.name}
                                 </p>
+                                {rolesById[post.author.id] && (() => {
+                                    const colors = getRoleColor(rolesById[post.author.id]);
+                                    return (
+                                        <div className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${colors.bg} ${colors.text} ${colors.border}`}>
+                                            {getRoleIcon(rolesById[post.author.id])}
+                                            <span>{roleDisplayText[rolesById[post.author.id]]}</span>
+                                        </div>
+                                    );
+                                })()}
                                 <span className="text-[#9CA3AF] text-xs">
                                     • {post.createdAtText}
                                 </span>
@@ -1172,6 +1210,7 @@ function PostCard({
                                         membersById={membersById}
                                         canDelete={canDeleteReply}
                                         onDelete={onDelete}
+                                        rolesById={rolesById}
                                     />
                                 );
                             })}
@@ -1206,7 +1245,8 @@ export default function GroupDiscussPage() {
     const [me, setMe] = React.useState<UserLite>({
         id: "me",
         name: "Bạn",
-        initials: "B"
+        initials: "B",
+        avatarUrl: null
     });
 
     React.useEffect(() => {
@@ -1215,7 +1255,8 @@ export default function GroupDiscussPage() {
         setMe({
             id: user?.id || "me",
             name: fullName,
-            initials: safeInitials(fullName)
+            initials: safeInitials(fullName),
+            avatarUrl: null
         });
     }, []);
 
@@ -1602,7 +1643,7 @@ export default function GroupDiscussPage() {
                 <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
                     {canComment ? (
                         <div className="flex gap-3">
-                            <Avatar initials={me.initials} />
+                            <Avatar initials={me.initials} avatarUrl={me.avatarUrl} />
                             <div className="min-w-0 flex-1">
                                 <MentionTextarea
                                     ref={composerMentionRef}
@@ -1653,6 +1694,7 @@ export default function GroupDiscussPage() {
                                 meId={me.id}
                                 isOwnerId={isOwnerId}
                                 canComment={canComment}
+                                rolesById={rolesById}
                             />
                         ))
                     ) : (

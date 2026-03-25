@@ -33,6 +33,7 @@ import { createPortal } from "react-dom";
 import { Container } from "@/components/common";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
+import { mapRole } from "@/components/features/group/group.api";
 import type { components } from "@/api/types";
 
 type ColumnId = string;
@@ -124,6 +125,7 @@ type GroupMemberDto = {
     lastName?: string | null;
     email?: string | null;
     avatarUrl?: string | null;
+    role?: string | null;
 };
 
 type GroupMemberListResponse = {
@@ -362,7 +364,7 @@ async function apiGetGroupMembers(groupId: string) {
     if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
     const url = apiUrl(`/group/${encodeURIComponent(groupId)}/members`);
 
-    return apiFetchJson<GroupMemberListResponse>(url, {
+    const response = await apiFetchJson<GroupMemberListResponse>(url, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -371,6 +373,10 @@ async function apiGetGroupMembers(groupId: string) {
         },
         cache: "no-store"
     });
+
+    console.log("[apiGetGroupMembers] Raw API response:", response);
+
+    return response;
 }
 
 async function apiReorderGroupTaskStatus(args: {
@@ -2282,17 +2288,54 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         setCurrentUserRole(normalizeGroupRole(detail?.data?.userRole) ?? getUserRoleOrNull());
 
         const list = members?.data?.members ?? [];
+
+        // Helper to check if role is restricted (commenter or viewer)
+        const isRestrictedRole = (role?: string | null | number): boolean => {
+            if (role === null || role === undefined || role === "") return false;
+
+            const roleStr = String(role).trim().toLowerCase();
+
+            // Handle numeric values: 3 = commenter, 4 = viewer (also as string "3", "4")
+            if (roleStr === "3" || roleStr === "4") return true;
+
+            // Handle text values using mapRole
+            const mapped = mapRole(String(role));
+            return mapped === "commenter" || mapped === "viewer";
+        };
+
+        // Debug: check member roles
+        console.log("[apiGetGroupMembers] Raw members data:", list);
+        console.log("[GroupBoardScreen] Members from API processed:", list.map(m => ({
+            userId: m.userId,
+            name: m.firstName,
+            role: m.role,
+            roleType: typeof m.role,
+            roleValue: String(m.role),
+            mappedRole: mapRole(String(m?.role)),
+            isRestricted: isRestrictedRole(m?.role)
+        })));
+
+        const filteredMembers = list
+            .filter((m) => typeof m?.userId === "string" && !!m.userId)
+            .filter((m) => {
+                // Exclude roles: commenter (3) and viewer (4)
+                const restricted = isRestrictedRole(m?.role);
+                console.log(`[Filter] User ${m?.userId} (${m?.firstName} ${m?.lastName}): role=${m?.role} (type: ${typeof m?.role}) -> restricted=${restricted}`);
+                return !restricted;
+            });
+
+        console.log(`[Filter] Total: ${list.length} members -> ${filteredMembers.length} after filtering`);
+
         setMembersOptions(
-            list
-                .filter((m) => typeof m?.userId === "string" && !!m.userId)
-                .map((m) => {
-                    const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim();
-                    return {
-                        value: String(m.userId),
-                        label: name || m.email || "Unnamed",
-                        avatarUrl: m.avatarUrl ?? null
-                    };
-                })
+            filteredMembers.map((m) => {
+                const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim();
+                return {
+                    value: String(m.userId),
+                    label: name || m.email || "Unnamed",
+                    avatarUrl: m.avatarUrl ?? null,
+                    role: m.role ?? null // Include role for validation
+                };
+            })
         );
     }, [groupId, syncColumnsFromDetail]);
 

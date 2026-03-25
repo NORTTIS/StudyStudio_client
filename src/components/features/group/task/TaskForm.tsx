@@ -75,6 +75,7 @@ export type TaskFormOption = {
     value: string;
     label: string;
     avatarUrl?: string | null;
+    role?: string | null; // Add role to track permissions
 };
 
 type Props = {
@@ -488,6 +489,12 @@ function toApiDateTimeOrNull(input: string) {
     return `${s}T00:00:00`;
 }
 
+function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
+    if (!memberRole) return false;
+    const roleStr = String(memberRole).trim().toLowerCase();
+    return roleStr === "3" || roleStr === "4" || roleStr === "commenter" || roleStr === "viewer";
+}
+
 export default function TaskFormModal({
     open,
     onClose,
@@ -601,6 +608,15 @@ export default function TaskFormModal({
         if (startDate && dueDate && startDate > dueDate) {
             setError("Ngày bắt đầu phải nhỏ hơn hoặc bằng hạn hoàn thành.");
             return;
+        }
+
+        // Check if assignee has restricted role
+        if (assignees) {
+            const selectedMember = members.find((m) => m.value === assignees);
+            if (selectedMember && isRestrictedMemberRole(selectedMember.role)) {
+                setError("Không thể giao công việc cho những thành viên có role Commenter hoặc Viewer.");
+                return;
+            }
         }
 
         try {
