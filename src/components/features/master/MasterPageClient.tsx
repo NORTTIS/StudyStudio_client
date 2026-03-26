@@ -90,21 +90,17 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
                     e.preventDefault();
                     onClick();
                 }
-            }}
-        >
+            }}>
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.24),rgba(255,255,255,0.04))]" />
 
-            <div
-                className="relative h-32 overflow-visible px-5 pt-5"
-                style={{ background: gradient }}
-            >
+            <div className="relative h-32 overflow-visible px-5 pt-5" style={{ background: gradient }}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.36),transparent_36%)]" />
                 <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
-                <div className="absolute right-[-24px] top-[-20px] h-28 w-28 rounded-full bg-white/15 blur-2xl" />
+                <div className="absolute top-[-20px] right-[-24px] h-28 w-28 rounded-full bg-white/15 blur-2xl" />
 
                 <div className="relative flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
-                        <div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
+                        <div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 font-semibold text-[11px] text-white/95 uppercase tracking-[0.18em] backdrop-blur">
                             Studio
                         </div>
                         <button
@@ -114,14 +110,12 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
                                 onToggleStar();
                             }}
                             className="rounded-full border border-white/30 bg-white/15 p-1.5 backdrop-blur transition hover:bg-white/25"
-                            title={isStarred ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
-                        >
+                            title={isStarred ? "Bỏ yêu thích" : "Thêm vào yêu thích"}>
                             <svg
                                 className={`h-4 w-4 transition ${isStarred ? "fill-yellow-400 text-yellow-400" : "text-white/90"}`}
                                 fill={isStarred ? "currentColor" : "none"}
                                 stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
+                                viewBox="0 0 24 24">
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -134,17 +128,17 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
 
                     {studio.studioRole !== undefined && (
                         <span
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm ${isOwner
-                                ? "bg-gradient-to-r from-orange-500 to-red-500"
-                                : "bg-gradient-to-r from-teal-500 to-cyan-500"
-                                }`}
-                        >
+                            className={`inline-flex items-center rounded-full px-3 py-1 font-medium text-white text-xs shadow-sm ${
+                                isOwner
+                                    ? "bg-gradient-to-r from-orange-500 to-red-500"
+                                    : "bg-gradient-to-r from-teal-500 to-cyan-500"
+                            }`}>
                             {isOwner ? t("roles.owner") : t("roles.member")}
                         </span>
                     )}
                 </div>
 
-                <div className="absolute bottom-[-24px] left-5 z-10 flex h-16 w-16 items-center justify-center rounded-[20px] border border-white/85 bg-white text-[28px] font-bold text-[#261E33] shadow-[0_14px_28px_rgba(15,23,42,0.14)]">
+                <div className="absolute bottom-[-24px] left-5 z-10 flex h-16 w-16 items-center justify-center rounded-[20px] border border-white/85 bg-white font-bold text-[#261E33] text-[28px] shadow-[0_14px_28px_rgba(15,23,42,0.14)]">
                     {firstLetter}
                 </div>
             </div>
@@ -152,12 +146,10 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
             <div className="mt-10 p-5 pt-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <h3 className="truncate text-[19px] font-semibold text-[#261E33] transition group-hover:text-[#FF5F3D]">
+                        <h3 className="truncate font-semibold text-[#261E33] text-[19px] transition group-hover:text-[#FF5F3D]">
                             {studio.name}
                         </h3>
-                        <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#6F6B99]">
-                            {studio.description}
-                        </p>
+                        <p className="mt-1.5 line-clamp-2 text-[#6F6B99] text-sm leading-6">{studio.description}</p>
                     </div>
 
                     {canEdit && (
@@ -169,14 +161,12 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
                                     onEdit();
                                 }}
                                 className="rounded-xl border border-gray-200 bg-white/95 p-2 shadow-sm transition hover:-translate-y-0.5 hover:bg-gray-50"
-                                title="Edit"
-                            >
+                                title="Edit">
                                 <svg
                                     className="h-4 w-4 text-gray-500"
                                     fill="none"
                                     stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
+                                    viewBox="0 0 24 24">
                                     <path
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -193,14 +183,12 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
                                     onDelete();
                                 }}
                                 className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-50"
-                                title="Delete"
-                            >
+                                title="Delete">
                                 <svg
                                     className="h-4 w-4 text-red-500"
                                     fill="none"
                                     stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
+                                    viewBox="0 0 24 24">
                                     <path
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -215,7 +203,7 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
 
                 <div className="mt-5 grid grid-cols-2 gap-3">
                     <div className="rounded-[20px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs text-[#6F6B99]">
+                        <div className="flex items-center gap-2 text-[#6F6B99] text-xs">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
                                     strokeLinecap="round"
@@ -226,11 +214,11 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
                             </svg>
                             <span>{t("groups")}</span>
                         </div>
-                        <p className="mt-2 text-xl font-semibold text-[#261E33]">{studio.groupCount}</p>
+                        <p className="mt-2 font-semibold text-[#261E33] text-xl">{studio.groupCount}</p>
                     </div>
 
                     <div className="rounded-[20px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs text-[#6F6B99]">
+                        <div className="flex items-center gap-2 text-[#6F6B99] text-xs">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
                                     strokeLinecap="round"
@@ -241,7 +229,7 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, is
                             </svg>
                             <span>{t("members")}</span>
                         </div>
-                        <p className="mt-2 text-xl font-semibold text-[#261E33]">{studio.memberCount}</p>
+                        <p className="mt-2 font-semibold text-[#261E33] text-xl">{studio.memberCount}</p>
                     </div>
                 </div>
             </div>
@@ -439,12 +427,12 @@ export default function MasterPageClient({
                 const updatedStudios = studios.map((s) =>
                     s.id === selectedStudio.id
                         ? {
-                            ...s,
-                            name: data.name,
-                            description: data.description,
-                            type: data.type as "personal" | "group",
-                            updatedAt: new Date().toISOString()
-                        }
+                              ...s,
+                              name: data.name,
+                              description: data.description,
+                              type: data.type as "personal" | "group",
+                              updatedAt: new Date().toISOString()
+                          }
                         : s
                 );
                 setStudios(updatedStudios);
@@ -546,24 +534,24 @@ export default function MasterPageClient({
             <div className="flex min-h-screen">
                 <DashboardSidebar />
                 <main className="relative flex-1 overflow-hidden">
-                    <FloatingOrb className="left-[-120px] top-[-40px] h-72 w-72 bg-orange-200/25" />
-                    <FloatingOrb className="right-[-100px] top-[12%] h-80 w-80 bg-violet-200/20" />
+                    <FloatingOrb className="top-[-40px] left-[-120px] h-72 w-72 bg-orange-200/25" />
+                    <FloatingOrb className="top-[12%] right-[-100px] h-80 w-80 bg-violet-200/20" />
                     <FloatingOrb className="bottom-[-120px] left-[15%] h-80 w-80 bg-sky-200/15" />
 
                     <Header userProfile={userProfile} />
 
                     <Container>
                         <div className="py-6">
-                            <div className="mb-6 relative overflow-hidden rounded-[38px] border border-white/70 bg-white/72 px-6 py-7 shadow-[0_28px_90px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:px-8 sm:py-8">
+                            <div className="relative mb-6 overflow-hidden rounded-[38px] border border-white/70 bg-white/72 px-6 py-7 shadow-[0_28px_90px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:px-8 sm:py-8">
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.20),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.68),rgba(255,248,242,0.56))]" />
                                 <div className="absolute inset-x-0 top-0 h-px bg-white/90" />
 
                                 <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                                     <div className="max-w-3xl">
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm">
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/75 px-3 py-1 font-semibold text-[11px] text-orange-700 uppercase tracking-[0.18em] shadow-sm">
                                             Studio workspace
                                         </div>
-                                        <h1 className="mt-4 bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#FF5F3D_100%)] bg-clip-text font-bold text-3xl tracking-tight text-transparent sm:text-[40px]">
+                                        <h1 className="mt-4 bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#FF5F3D_100%)] bg-clip-text font-bold text-3xl text-transparent tracking-tight sm:text-[40px]">
                                             {t("title")}
                                         </h1>
                                         <p className="mt-3 max-w-2xl text-[#6F6B99] text-[15px] leading-7">
@@ -604,7 +592,7 @@ export default function MasterPageClient({
                                         className="h-13 rounded-[22px] border-white/80 bg-white/82 pl-12 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur"
                                     />
                                     <svg
-                                        className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+                                        className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24">
