@@ -841,7 +841,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
                                 >
-                                    <AnalyticMaster />
+                                    <AnalyticMaster
+                                        studioRole={initialStudio?.studioRole}
+                                        maxStorageMb={userProfile?.subscriptionPlan?.maxStorageMb}
+                                    />
                                 </motion.div>
                             )}
 
