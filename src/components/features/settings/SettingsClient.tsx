@@ -148,12 +148,13 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
     const initials = `${formData.firstName?.[0] ?? ""}${formData.lastName?.[0] ?? ""}`.toUpperCase() || "U";
 
     useEffect(() => {
-        const savedAvatar = localStorage.getItem("userAvatar");
         const savedLocale = localStorage.getItem("preferredLocale");
         const currentLocale = pathname.split("/")[1] || "vi";
         const lang = savedLocale || initialData.language || currentLocale;
 
-        if (savedAvatar) setAvatarPreview(savedAvatar);
+        // Always use avatarUrl from API, not localStorage
+        setAvatarPreview(initialData.avatarUrl || "/images/image-removebg-preview.png");
+
         setFormData((p) => (p.language === lang ? p : { ...p, language: lang }));
         localStorage.setItem("preferredLocale", lang);
 
@@ -161,7 +162,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             const noLocale = pathname.replace(/^\/(en|vi)/, "");
             router.replace(`/${lang}${noLocale || "/"}`);
         }
-    }, [initialData.language, pathname, router]);
+    }, [initialData.language, initialData.avatarUrl, pathname, router]);
 
     // ── Profile handlers ───────────────────────────────
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -181,7 +182,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             reader.onload = (ev) => {
                 const result = ev.target?.result as string;
                 setAvatarPreview(result);
-                localStorage.setItem("userAvatar", result);
+                // Don't save to localStorage yet - wait for API response
             };
             reader.readAsDataURL(file);
         }
@@ -239,6 +240,9 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             if (avatarFile) payload.avatar = avatarFile;
             const res = await updateUserProfile(payload, loc);
             if (res.status === "success") {
+                // Clear localStorage avatar cache to force refetch from API
+                localStorage.removeItem("userAvatar");
+
                 messageApi.success({
                     content: t("profile.saveSuccess"),
                     icon: <CheckCircleFilled style={{ color: "#52c41a" }} />

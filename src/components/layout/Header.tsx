@@ -116,6 +116,11 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                 if (result.status === "success" && result.data) {
                     setUserProfile(result.data);
 
+                    // Update localStorage with latest avatar from API
+                    if (result.data.avatarUrl) {
+                        localStorage.setItem("userAvatar", result.data.avatarUrl);
+                    }
+
                     if (result.data.language && result.data.language !== locale) {
                         const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}(?=\/)/i, "");
                         router.push(`/${result.data.language}${pathWithoutLocale}`);
@@ -172,8 +177,10 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
             await logout(locale);
 
             if (typeof window !== "undefined") {
+                // Clear all user-related data from localStorage
                 localStorage.removeItem("userSettings");
                 localStorage.removeItem("userAvatar");
+                localStorage.removeItem("preferredLocale");
             }
 
             router.push(`/${locale}/login`);

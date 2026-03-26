@@ -211,6 +211,7 @@ export function GroupsPage() {
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
     const [openCreate, setOpenCreate] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const [expandFav, setExpandFav] = useState(false);
     const [expandAll, setExpandAll] = useState(false);
@@ -262,6 +263,22 @@ export function GroupsPage() {
         () => uniqueByIdKeepFirst([...favorites, ...managed, ...independent]),
         [favorites, managed, independent]
     );
+
+    // Filter groups based on search query
+    const filterGroups = (groups: Group[]) => {
+        if (!searchQuery.trim()) return groups;
+        const query = searchQuery.toLowerCase();
+        return groups.filter(
+            (g) =>
+                g.title?.toLowerCase().includes(query) ||
+                g.description?.toLowerCase().includes(query)
+        );
+    };
+
+    const filteredFavorites = useMemo(() => filterGroups(favorites), [favorites, searchQuery]);
+    const filteredAllGroups = useMemo(() => filterGroups(allGroups), [allGroups, searchQuery]);
+    const filteredManaged = useMemo(() => filterGroups(managed), [managed, searchQuery]);
+    const filteredIndependent = useMemo(() => filterGroups(independent), [independent, searchQuery]);
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
     const currentGroupsCount =
@@ -367,6 +384,40 @@ export function GroupsPage() {
                                         </motion.div>
                                     </div>
                                 </div>
+
+                                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                                    <div className="relative flex-1">
+                                        <input
+                                            type="text"
+                                            placeholder="Tìm kiếm nhóm theo tên hoặc mô tả..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="h-11 w-full rounded-2xl border border-white/80 bg-white/75 py-2 pr-4 pl-11 text-sm shadow-[0_10px_25px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all duration-300 placeholder:text-[#A39487] focus:border-orange-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-100"
+                                        />
+                                        <svg
+                                            className="absolute top-1/2 left-4 h-4.5 w-4.5 -translate-y-1/2 text-[#A39487]"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                            />
+                                        </svg>
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setSearchQuery("")}
+                                                className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-[#A39487] transition hover:bg-orange-50 hover:text-orange-600">
+                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                             </CardHeader>
 
                             <CardContent className="relative pb-6 pt-1">
@@ -410,13 +461,13 @@ export function GroupsPage() {
                                 icon={Star}
                                 iconVariant="yellow"
                                 title="Nhóm yêu thích"
-                                count={favorites.length}
+                                count={filteredFavorites.length}
                                 view={view}
-                                items={favorites}
+                                items={filteredFavorites}
                                 expanded={expandFav}
                                 onToggle={() => setExpandFav((v) => !v)}
                                 onToggleStar={onToggleStar}
-                                emptyText="Chưa có nhóm nào trong mục yêu thích."
+                                emptyText={searchQuery ? "Không tìm thấy nhóm yêu thích nào." : "Chưa có nhóm nào trong mục yêu thích."}
                                 loading={loading}
                             />
                         </SectionReveal>
@@ -426,13 +477,13 @@ export function GroupsPage() {
                                 icon={FolderKanban}
                                 iconVariant="blue"
                                 title="Các nhóm bạn đã tạo"
-                                count={allGroups.length}
+                                count={filteredAllGroups.length}
                                 view={view}
-                                items={allGroups}
+                                items={filteredAllGroups}
                                 expanded={expandAll}
                                 onToggle={() => setExpandAll((v) => !v)}
                                 onToggleStar={onToggleStar}
-                                emptyText="Bạn chưa có nhóm nào."
+                                emptyText={searchQuery ? "Không tìm thấy nhóm nào." : "Bạn chưa có nhóm nào."}
                                 loading={loading}
                             />
                         </SectionReveal>
@@ -442,13 +493,13 @@ export function GroupsPage() {
                                 icon={Layers}
                                 iconVariant="purple"
                                 title="Nhóm thuộc studio tôi quản lý"
-                                count={managed.length}
+                                count={filteredManaged.length}
                                 view={view}
-                                items={managed}
+                                items={filteredManaged}
                                 expanded={expandManaged}
                                 onToggle={() => setExpandManaged((v) => !v)}
                                 onToggleStar={onToggleStar}
-                                emptyText="Chưa có nhóm nào thuộc studio bạn quản lý."
+                                emptyText={searchQuery ? "Không tìm thấy nhóm nào." : "Chưa có nhóm nào thuộc studio bạn quản lý."}
                                 loading={loading}
                             />
                         </SectionReveal>
@@ -458,13 +509,13 @@ export function GroupsPage() {
                                 icon={Users}
                                 iconVariant="slate"
                                 title="Nhóm độc lập"
-                                count={independent.length}
+                                count={filteredIndependent.length}
                                 view={view}
-                                items={independent}
+                                items={filteredIndependent}
                                 expanded={expandIndependent}
                                 onToggle={() => setExpandIndependent((v) => !v)}
                                 onToggleStar={onToggleStar}
-                                emptyText="Chưa có nhóm độc lập nào."
+                                emptyText={searchQuery ? "Không tìm thấy nhóm độc lập nào." : "Chưa có nhóm độc lập nào."}
                                 loading={loading}
                             />
                         </SectionReveal>

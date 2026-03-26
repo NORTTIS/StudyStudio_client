@@ -68,10 +68,12 @@ interface StudioCardProps {
     onClick: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onToggleStar: () => void;
+    isStarred: boolean;
     canEdit: boolean;
 }
 
-function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: StudioCardProps) {
+function StudioCard({ studio, index, onClick, onEdit, onDelete, onToggleStar, isStarred, canEdit }: StudioCardProps) {
     const t = useTranslations("MasterPage");
     const gradient = getGradientBackground(studio.name, index);
     const firstLetter = getStudioDisplayLetter(studio.name);
@@ -101,8 +103,33 @@ function StudioCard({ studio, index, onClick, onEdit, onDelete, canEdit }: Studi
                 <div className="absolute right-[-24px] top-[-20px] h-28 w-28 rounded-full bg-white/15 blur-2xl" />
 
                 <div className="relative flex items-start justify-between gap-3">
-                    <div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
-                        Studio
+                    <div className="flex items-center gap-2">
+                        <div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
+                            Studio
+                        </div>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleStar();
+                            }}
+                            className="rounded-full border border-white/30 bg-white/15 p-1.5 backdrop-blur transition hover:bg-white/25"
+                            title={isStarred ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+                        >
+                            <svg
+                                className={`h-4 w-4 transition ${isStarred ? "fill-yellow-400 text-yellow-400" : "text-white/90"}`}
+                                fill={isStarred ? "currentColor" : "none"}
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                                />
+                            </svg>
+                        </button>
                     </div>
 
                     {studio.studioRole !== undefined && (
@@ -237,6 +264,13 @@ export default function MasterPageClient({
     const [subscriptionInfo, setSubscriptionInfo] = useState<StudioListSubscription | null>(initialSubscription);
     const [searchQuery, setSearchQuery] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [favoriteStudioIds, setFavoriteStudioIds] = useState<Set<string>>(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("favoriteStudios");
+            return saved ? new Set(JSON.parse(saved)) : new Set();
+        }
+        return new Set();
+    });
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -244,11 +278,35 @@ export default function MasterPageClient({
     const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
-    const { ownedStudios, joinedStudios } = useMemo(() => {
+    // Save favorites to localStorage whenever it changes
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("favoriteStudios", JSON.stringify(Array.from(favoriteStudioIds)));
+        }
+    }, [favoriteStudioIds]);
+
+    const handleToggleStar = (studioId: string) => {
+        setFavoriteStudioIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(studioId)) {
+                next.delete(studioId);
+            } else {
+                next.add(studioId);
+            }
+            return next;
+        });
+    };
+
+    const { ownedStudios, joinedStudios, favoriteStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
         const joined: StudioUI[] = [];
+        const favorites: StudioUI[] = [];
 
         studios.forEach((studio) => {
+            if (favoriteStudioIds.has(studio.id)) {
+                favorites.push(studio);
+            }
+
             if (studio.studioRole === 0) {
                 owned.push(studio);
             } else {
@@ -256,12 +314,16 @@ export default function MasterPageClient({
             }
         });
 
-        return { ownedStudios: owned, joinedStudios: joined };
-    }, [studios]);
+        return { ownedStudios: owned, joinedStudios: joined, favoriteStudios: favorites };
+    }, [studios, favoriteStudioIds]);
 
-    const { filteredOwnedStudios, filteredJoinedStudios } = useMemo(() => {
+    const { filteredOwnedStudios, filteredJoinedStudios, filteredFavoriteStudios } = useMemo(() => {
         if (!searchQuery.trim()) {
-            return { filteredOwnedStudios: ownedStudios, filteredJoinedStudios: joinedStudios };
+            return {
+                filteredOwnedStudios: ownedStudios,
+                filteredJoinedStudios: joinedStudios,
+                filteredFavoriteStudios: favoriteStudios
+            };
         }
 
         const query = searchQuery.toLowerCase();
@@ -270,9 +332,10 @@ export default function MasterPageClient({
 
         return {
             filteredOwnedStudios: ownedStudios.filter(filterFn),
-            filteredJoinedStudios: joinedStudios.filter(filterFn)
+            filteredJoinedStudios: joinedStudios.filter(filterFn),
+            filteredFavoriteStudios: favoriteStudios.filter(filterFn)
         };
-    }, [searchQuery, ownedStudios, joinedStudios]);
+    }, [searchQuery, ownedStudios, joinedStudios, favoriteStudios]);
 
     const studioLimit = subscriptionInfo?.studioLimit ?? 3;
     const studioCreated = subscriptionInfo?.studioCreated ?? studios.length;
@@ -463,6 +526,8 @@ export default function MasterPageClient({
                             onClick={() => handleStudioClick(studio)}
                             onEdit={() => handleOpenEditModal(studio)}
                             onDelete={() => handleOpenDeleteModal(studio)}
+                            onToggleStar={() => handleToggleStar(studio.id)}
+                            isStarred={favoriteStudioIds.has(studio.id)}
                             canEdit={studio.studioRole === 0}
                         />
                     ))}
@@ -471,9 +536,10 @@ export default function MasterPageClient({
         );
     };
 
+    const hasFavoriteStudios = filteredFavoriteStudios.length > 0;
     const hasOwnedStudios = filteredOwnedStudios.length > 0;
     const hasJoinedStudios = filteredJoinedStudios.length > 0;
-    const hasNoResults = !(hasOwnedStudios || hasJoinedStudios);
+    const hasNoResults = !(hasFavoriteStudios || hasOwnedStudios || hasJoinedStudios);
 
     return (
         <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
@@ -578,7 +644,7 @@ export default function MasterPageClient({
                                             {totalStudios}/{studioLimit} {t("studiosUsed")}
                                         </span>
                                         <span className="rounded-full bg-[#F7F4F1] px-2.5 py-1 text-[#6F6B99] text-xs">
-                                            {Math.round(usagePercent)}%
+                                            {Math.round(usagePercent)}
                                         </span>
                                     </div>
 
@@ -603,6 +669,7 @@ export default function MasterPageClient({
                                 </div>
                             ) : (
                                 <div>
+                                    {renderStudioSection("Studio yêu thích", filteredFavoriteStudios)}
                                     {renderStudioSection(t("yourStudios"), filteredOwnedStudios)}
                                     {renderStudioSection(t("joinedStudios"), filteredJoinedStudios)}
                                 </div>
