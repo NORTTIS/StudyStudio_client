@@ -96,6 +96,13 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     const favorites = ((sections?.favorites || []) as GroupCardDto[]).filter(Boolean);
     const managed = ((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean);
     const independent = ((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean);
+    
+    // Filter for joined groups (where user is not the owner)
+    const allGroups = [...favorites, ...managed, ...independent];
+    const joined = allGroups.filter((g) => {
+        const role = mapRole(g.role);
+        return role !== "owner";
+    });
 
     return {
         usage: {
@@ -104,7 +111,8 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
         },
         favorites,
         managed,
-        independent
+        independent,
+        joined
     };
 }
 

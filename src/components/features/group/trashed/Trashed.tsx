@@ -111,6 +111,7 @@ type TrashItem = {
 type DeletedByOption = {
     id: string;
     name: string;
+    avatarUrl?: string | null;
 };
 
 type FilterView = "root" | "deletedBy" | "deletedDate";
@@ -908,6 +909,7 @@ function DeletedByPicker({
                 {filtered.map((option) => {
                     const initials = getInitials(option.name);
                     const tone = pickAvatarTone(option.name || option.id);
+                    const hasAvatar = option.avatarUrl && String(option.avatarUrl).trim();
 
                     return (
                         <button
@@ -918,13 +920,21 @@ function DeletedByPicker({
                                 "flex w-full items-center gap-4 px-6 py-5 text-left hover:bg-zinc-50",
                                 selectedId === option.id && "bg-zinc-100"
                             )}>
-                            <div
-                                className={cn(
-                                    "grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full font-bold text-[18px] text-white",
-                                    tone
-                                )}>
-                                {initials}
-                            </div>
+                            {hasAvatar ? (
+                                <img
+                                    src={option.avatarUrl!}
+                                    alt={option.name}
+                                    className="h-[72px] w-[72px] shrink-0 rounded-full object-cover"
+                                />
+                            ) : (
+                                <div
+                                    className={cn(
+                                        "grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full font-bold text-[18px] text-white",
+                                        tone
+                                    )}>
+                                    {initials}
+                                </div>
+                            )}
                             <div className="font-semibold text-[20px] text-zinc-900">{option.name}</div>
                         </button>
                     );
@@ -1073,6 +1083,7 @@ export default function Trashed() {
     const [page, setPage] = React.useState(1);
 
     const [memberNameMap, setMemberNameMap] = React.useState<Record<string, string>>({});
+    const [memberAvatarMap, setMemberAvatarMap] = React.useState<Record<string, string | null>>({});
     const [deletedByFilter, setDeletedByFilter] = React.useState<string | null>(null);
     const [deletedDateFilter, setDeletedDateFilter] = React.useState<DeletedDateFilter>({
         startDate: "",
@@ -1118,15 +1129,21 @@ export default function Trashed() {
 
             const members = membersRes?.data?.members ?? [];
             const nextMemberNameMap: Record<string, string> = {};
+            const nextMemberAvatarMap: Record<string, string | null> = {};
 
             for (const member of members) {
                 const userId = String(member?.userId ?? "").trim();
                 if (!userId) continue;
                 const fullName = buildFullName(member?.firstName, member?.lastName, member?.email);
                 nextMemberNameMap[userId] = fullName || member?.email || "Không rõ";
+                nextMemberAvatarMap[userId] = member?.avatarUrl ?? null;
             }
 
             setMemberNameMap(nextMemberNameMap);
+            setMemberAvatarMap(nextMemberAvatarMap);
+
+            console.log("[Trashed] memberNameMap:", nextMemberNameMap);
+            console.log("[Trashed] memberAvatarMap:", nextMemberAvatarMap);
 
             const list = trashRes?.data ?? [];
 
@@ -1167,17 +1184,18 @@ export default function Trashed() {
     }, [search, deletedByFilter, deletedDateFilter.startDate, deletedDateFilter.endDate]);
 
     const deletedByOptions = React.useMemo<DeletedByOption[]>(() => {
-        const map = new Map<string, string>();
+        const map = new Map<string, { name: string; avatarUrl: string | null }>();
         items.forEach((item) => {
             const id = String(item.deletedBy ?? "").trim();
             if (!id) return;
             const name = item.deletedByName || memberNameMap[id] || "Không rõ";
-            map.set(id, name);
+            const avatarUrl = memberAvatarMap[id] ?? null;
+            map.set(id, { name, avatarUrl });
         });
         return Array.from(map.entries())
-            .map(([id, name]) => ({ id, name }))
+            .map(([id, { name, avatarUrl }]) => ({ id, name, avatarUrl }))
             .sort((a, b) => a.name.localeCompare(b.name, "vi"));
-    }, [items, memberNameMap]);
+    }, [items, memberNameMap, memberAvatarMap]);
 
     const filteredItems = React.useMemo(() => {
         const q = normalizeText(search);
@@ -1490,6 +1508,8 @@ export default function Trashed() {
 
                                             const initials = getInitials(displayDeletedBy);
                                             const tone = pickAvatarTone(displayDeletedBy || item.rowKey);
+                                            const avatarUrl = item.deletedBy ? memberAvatarMap[String(item.deletedBy)] : null;
+                                            const hasAvatar = avatarUrl && String(avatarUrl).trim();
 
                                             return (
                                                 <tr key={item.rowKey}>
@@ -1512,14 +1532,22 @@ export default function Trashed() {
 
                                                     <td className="border-zinc-100 border-b px-4 py-8 align-middle">
                                                         <div className="flex items-center justify-center gap-3">
-                                                            <div
-                                                                className={cn(
-                                                                    "grid h-12 w-12 shrink-0 place-items-center rounded-full font-bold text-base text-white",
-                                                                    tone
-                                                                )}
-                                                                title={displayDeletedBy}>
-                                                                {initials}
-                                                            </div>
+                                                            {hasAvatar ? (
+                                                                <img
+                                                                    src={avatarUrl}
+                                                                    alt={displayDeletedBy}
+                                                                    className="h-12 w-12 shrink-0 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div
+                                                                    className={cn(
+                                                                        "grid h-12 w-12 shrink-0 place-items-center rounded-full font-bold text-base text-white",
+                                                                        tone
+                                                                    )}
+                                                                    title={displayDeletedBy}>
+                                                                    {initials}
+                                                                </div>
+                                                            )}
                                                             <div className="max-w-[220px] truncate font-medium text-base text-zinc-800">
                                                                 {displayDeletedBy}
                                                             </div>

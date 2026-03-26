@@ -268,11 +268,9 @@ export default function AIHome() {
     const [messages, setMessages] = React.useState<ChatMessage[]>(initialMessages);
     const [input, setInput] = React.useState("");
     const [isSending, setIsSending] = React.useState(false);
-    const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
     const [isComposerFocused, setIsComposerFocused] = React.useState(false);
 
     const bottomAnchorRef = React.useRef<HTMLDivElement | null>(null);
-    const shouldAutoScrollRef = React.useRef(true);
 
     const [usageStats, setUsageStats] = React.useState({
         usedToday: null as number | null,
@@ -289,7 +287,7 @@ export default function AIHome() {
                     dailyLimit: res.data.aiDailyLimit ?? null
                 });
             }
-        }).catch(() => {/* silent fail */});
+        }).catch(() => {/* silent fail */ });
     }, [locale]);
 
     const scrollToBottom = React.useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -297,29 +295,8 @@ export default function AIHome() {
     }, []);
 
     React.useEffect(() => {
-        const checkNearBottom = () => {
-            const viewportBottom = window.scrollY + window.innerHeight;
-            const pageBottom = document.documentElement.scrollHeight;
-            const nearBottom = viewportBottom >= pageBottom - 160;
-            shouldAutoScrollRef.current = nearBottom;
-            setShowScrollToBottom(!nearBottom);
-        };
-
-        checkNearBottom();
-        window.addEventListener("scroll", checkNearBottom, { passive: true });
-        window.addEventListener("resize", checkNearBottom);
-
-        return () => {
-            window.removeEventListener("scroll", checkNearBottom);
-            window.removeEventListener("resize", checkNearBottom);
-        };
-    }, []);
-
-    React.useEffect(() => {
         if (messages.length === 0) return;
-        if (shouldAutoScrollRef.current) {
-            scrollToBottom("auto");
-        }
+        scrollToBottom("auto");
     }, [messages.length, scrollToBottom]);
 
     const sendQuestion = React.useCallback(
@@ -569,21 +546,21 @@ export default function AIHome() {
                                 className="relative overflow-hidden rounded-[32px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(248,244,255,0.72))] p-3 backdrop-blur-2xl"
                             >
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,196,160,0.18),transparent_32%)]" />
-                                <div className="relative flex flex-col gap-3 sm:flex-row sm:items-end">
+                                <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center">
                                     <textarea
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onFocus={() => setIsComposerFocused(true)}
                                         onBlur={() => setIsComposerFocused(false)}
                                         placeholder="Hỏi AI về công việc cá nhân của bạn..."
-                                        className="min-h-[100px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
+                                        className="min-h-[50px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
                                     />
 
                                     <motion.div whileTap={{ scale: 0.96 }} whileHover={{ y: -1 }}>
                                         <Button
                                             type="submit"
                                             disabled={isSending || !input.trim()}
-                                            className="h-12 rounded-2xl bg-[linear-gradient(135deg,#FF6B35_0%,#F97316_38%,#8B5CF6_100%)] px-5 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:brightness-105"
+                                            className="h-10 w-10 rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 flex items-center justify-center shrink-0"
                                         >
                                             {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                                         </Button>
@@ -596,26 +573,6 @@ export default function AIHome() {
                     <div ref={bottomAnchorRef} />
                 </div>
             </Container>
-
-            <AnimatePresence>
-                {showScrollToBottom && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 12, scale: 0.9 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 12, scale: 0.9 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <Button
-                            type="button"
-                            onClick={() => scrollToBottom("smooth")}
-                            className="fixed bottom-8 right-8 z-20 h-12 w-12 rounded-full border border-white/10 bg-[linear-gradient(135deg,#2B2118_0%,#4C1D95_100%)] p-0 text-white shadow-[0_18px_34px_rgba(43,33,24,0.30)] hover:bg-[#201812]"
-                            aria-label="Scroll to bottom"
-                        >
-                            <ChevronDown className="h-5 w-5" />
-                        </Button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }

@@ -1022,7 +1022,7 @@ export default function AnalysisHome() {
                     </SectionReveal>
 
                     <SectionReveal delay={0.04}>
-                        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                             <SummaryCard
                                 title="Total Tasks"
                                 value={data.totalTasks}
@@ -1043,12 +1043,6 @@ export default function AnalysisHome() {
                                 note="Task đang thực hiện"
                                 icon={<Clock3 className="h-5 w-5" />}
                                 tone="warning"
-                            />
-                            <SummaryCard
-                                title="Top Workload Group"
-                                value={topGroup?.groupName ?? "-"}
-                                note={topGroup ? `${topGroup.taskCount} task` : "Không có dữ liệu"}
-                                icon={<Flame className="h-5 w-5" />}
                             />
                         </section>
                     </SectionReveal>

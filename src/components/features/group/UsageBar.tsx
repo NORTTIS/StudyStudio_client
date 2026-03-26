@@ -1,7 +1,11 @@
 import { ArrowUpRight, Infinity, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 
 export function UsageBar({ current, max }: { current: number; max: number }) {
+    const router = useRouter();
+    const locale = useLocale();
     const isUnlimited = max <= 0;
     const safeMax = isUnlimited ? 1 : Math.max(1, max);
     const ratio = isUnlimited ? 1 : current / safeMax;
@@ -197,6 +201,7 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                             whileHover={{ y: -1, scale: 1.01 }}
                             whileTap={{ scale: 0.985 }}
                             type="button"
+                            onClick={() => router.push(`/${locale}/settings/billing`)}
                             className={[
                                 "inline-flex items-center justify-center rounded-2xl bg-gradient-to-r px-4 py-2.5 font-semibold text-sm text-white",
                                 "shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition focus:outline-none focus:ring-4",

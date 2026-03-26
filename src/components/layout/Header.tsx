@@ -74,20 +74,9 @@ const ChevronDownIcon = ({ open = false }: { open?: boolean }) => (
     </svg>
 );
 
-type SectionId =
-    | "home-summary-section"
-    | "home-group-task-section"
-    | "home-personal-task-section";
-
 interface HeaderProps {
     userProfile?: UserProfile | null;
 }
-
-const HOME_TABS: { id: SectionId; label: string }[] = [
-    { id: "home-summary-section", label: "Tổng quan công việc" },
-    { id: "home-group-task-section", label: "Công việc từ các nhóm" },
-    { id: "home-personal-task-section", label: "Quản lý công việc cá nhân" }
-];
 
 export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const t = useTranslations("Header");
@@ -99,16 +88,8 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(userProfileProp || null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(!userProfileProp);
-    const [activeSection, setActiveSection] = useState<SectionId>("home-summary-section");
-    const [activeTabStyle, setActiveTabStyle] = useState({ left: 0, width: 0, opacity: 0 });
 
     const userMenuRef = useRef<HTMLDivElement>(null);
-    const tabContainerRef = useRef<HTMLDivElement>(null);
-    const tabRefs = useRef<Record<SectionId, HTMLButtonElement | null>>({
-        "home-summary-section": null,
-        "home-group-task-section": null,
-        "home-personal-task-section": null
-    });
 
     const isHomePage = pathname === `/${locale}/home` || pathname.endsWith("/home");
     const isAdmin = userProfile?.isAdmin;
@@ -151,109 +132,14 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         };
 
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
     }, []);
 
-    useEffect(() => {
-        if (!isHomePage || isAdmin) return;
 
-        const sectionIds: SectionId[] = [
-            "home-summary-section",
-            "home-group-task-section",
-            "home-personal-task-section"
-        ];
 
-        const updateActiveSection = () => {
-            const scrollY = window.scrollY;
-            const headerOffset = 140;
 
-            let currentSection: SectionId = "home-summary-section";
-
-            for (const id of sectionIds) {
-                const element = document.getElementById(id);
-                if (!element) continue;
-
-                const elementTop = element.getBoundingClientRect().top + window.scrollY;
-
-                if (scrollY >= elementTop - headerOffset) {
-                    currentSection = id;
-                }
-            }
-
-            setActiveSection(currentSection);
-        };
-
-        updateActiveSection();
-
-        window.addEventListener("scroll", updateActiveSection, { passive: true });
-        window.addEventListener("resize", updateActiveSection);
-
-        return () => {
-            window.removeEventListener("scroll", updateActiveSection);
-            window.removeEventListener("resize", updateActiveSection);
-        };
-    }, [isHomePage, isAdmin]);
-
-    useEffect(() => {
-        if (!isHomePage || isAdmin) return;
-
-        const updateActiveTabStyle = () => {
-            const container = tabContainerRef.current;
-            const activeTab = tabRefs.current[activeSection];
-
-            if (!container || !activeTab) {
-                setActiveTabStyle((prev) => ({ ...prev, opacity: 0 }));
-                return;
-            }
-
-            const containerRect = container.getBoundingClientRect();
-            const activeRect = activeTab.getBoundingClientRect();
-
-            setActiveTabStyle({
-                left: activeRect.left - containerRect.left,
-                width: activeRect.width,
-                opacity: 1
-            });
-        };
-
-        updateActiveTabStyle();
-
-        const resizeObserver = new ResizeObserver(() => {
-            updateActiveTabStyle();
-        });
-
-        if (tabContainerRef.current) resizeObserver.observe(tabContainerRef.current);
-
-        Object.values(tabRefs.current).forEach((tab) => {
-            if (tab) resizeObserver.observe(tab);
-        });
-
-        window.addEventListener("resize", updateActiveTabStyle);
-
-        return () => {
-            resizeObserver.disconnect();
-            window.removeEventListener("resize", updateActiveTabStyle);
-        };
-    }, [activeSection, isHomePage, isAdmin]);
-
-    const scrollToSection = (sectionId: SectionId) => {
-        const element = document.getElementById(sectionId);
-        if (!element) return;
-
-        const headerOffset = 110;
-        const elementTop = element.getBoundingClientRect().top + window.scrollY;
-        const offsetTop = elementTop - headerOffset;
-
-        setActiveSection(sectionId);
-
-        window.scrollTo({
-            top: offsetTop,
-            behavior: "smooth"
-        });
-    };
-
-    const getTabTextClass = (sectionId: SectionId) =>
-        sectionId === activeSection ? "text-white" : "text-[#8F8A94] hover:text-[#261E33]";
 
     const userData = useMemo(() => {
         if (userProfile) {
@@ -317,40 +203,6 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                 {isAdmin ? (
                     <div className="min-w-0 flex-1">
                         <h1 className="truncate text-lg font-semibold text-[#261E33]">Admin Dashboard</h1>
-                    </div>
-                ) : isHomePage ? (
-                    <div className="min-w-0 flex-1">
-                        <div className="flex justify-start">
-                            <div
-                                ref={tabContainerRef}
-                                className="relative inline-flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-[20px] border border-[#E7D9CF] bg-[#F4EFEB] p-1 shadow-[0_4px_12px_rgba(38,30,51,0.05)] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                            >
-                                <div
-                                    className="pointer-events-none absolute bottom-1 top-1 rounded-[14px] bg-[linear-gradient(90deg,#FF7A00_0%,#FF3D00_55%,#FF0000_100%)] shadow-[0_6px_14px_rgba(255,90,0,0.22)] transition-all duration-300 ease-out"
-                                    style={{
-                                        left: activeTabStyle.left,
-                                        width: activeTabStyle.width,
-                                        opacity: activeTabStyle.opacity
-                                    }}
-                                />
-
-                                {HOME_TABS.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        ref={(el) => {
-                                            tabRefs.current[tab.id] = el;
-                                        }}
-                                        type="button"
-                                        onClick={() => scrollToSection(tab.id)}
-                                        className={`relative z-10 shrink-0 whitespace-nowrap rounded-[14px] px-3 py-2 text-[14px] font-medium transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.99] ${getTabTextClass(
-                                            tab.id
-                                        )}`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
                     </div>
                 ) : (
                     <div className="flex-1" />

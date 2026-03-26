@@ -9,6 +9,7 @@ export type AuthTokens = {
     firstName: string;
     lastName: string;
     isAdmin?: boolean; // Add isAdmin field from API
+    avatarUrl?: string | null; // User avatar URL
     accessToken: string;
     accessExpireIn: number;
     refreshToken: string;
