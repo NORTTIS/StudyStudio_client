@@ -165,7 +165,7 @@ export function DashboardSidebar() {
     return (
         <aside
             className={twMerge(
-                "hidden h-screen shrink-0 overflow-hidden border-r border-[#E5E5E5] bg-[#F8F8F8] transition-[width] duration-300 ease-in-out lg:block",
+                "sticky top-0 hidden h-screen shrink-0 overflow-y-auto border-r border-[#E5E5E5] bg-[#F8F8F8] transition-[width] duration-300 ease-in-out lg:block",
                 collapsed ? "w-24" : "w-72"
             )}>
             <div className="flex h-full flex-col border-r border-orange-100/60 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
