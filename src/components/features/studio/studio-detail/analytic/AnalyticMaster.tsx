@@ -1150,7 +1150,7 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         {/* Dynamic statuses from API */}
-                        {(selectedGroup.taskStatuses ?? []).map((s, i) => {
+                        {(selectedGroup?.taskStatuses ?? []).map((s, i) => {
                             const STATUS_COLORS = [
                                 "#3b82f6",
                                 "#f59e0b",
