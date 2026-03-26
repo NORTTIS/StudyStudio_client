@@ -9,7 +9,7 @@ import { mapRole } from "./group.api";
 import { RolePill } from "./RolePill";
 import type { GroupCardDto } from "./types";
 
-export function GroupCard({ group, onToggleStar }: { group: GroupCardDto; onToggleStar: () => Promise<void> }) {
+export function GroupCard({ group, onToggleStar, view = "grid" }: { group: GroupCardDto; onToggleStar: () => Promise<void>; view?: "grid" | "list" }) {
     const router = useRouter();
     const locale = useLocale();
     const groupRole = mapRole(group.role);
@@ -24,7 +24,12 @@ export function GroupCard({ group, onToggleStar }: { group: GroupCardDto; onTogg
     const visibleTasksCount = Number(group.taskCount ?? 0);
 
     const title = group.name ?? "";
-    const description = group.description ?? "";
+    const rawDescription = group.description ?? "";
+
+    // Giới hạn độ dài mô tả ở dạng list
+    const description = view === "list" && rawDescription.length > 120
+        ? `${rawDescription.slice(0, 120)}...`
+        : rawDescription;
 
     const createdByInitials = (() => {
         const f = (group.createdBy?.firstName || "").trim();
@@ -63,11 +68,9 @@ export function GroupCard({ group, onToggleStar }: { group: GroupCardDto; onTogg
                 }
             }}
             className="cursor-pointer rounded-xl border border-[#E5E5E5] bg-white p-3 shadow-sm transition hover:bg-[#FAFAFA]">
-            <div className="flex items-start justify-between gap-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                    {group.studio?.name && <p className="truncate text-[#6F6B99] text-xs">{group.studio.name}</p>}
-
-                    <div className={`${group.studio?.name ? "mt-1" : ""} flex items-center gap-2`}>
+                    <div className="flex items-center gap-2">
                         <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F4F5FA] ring-1 ring-[#E5E5E5]">
                             {group.avatarUrl ? (
                                 <Image src={group.avatarUrl} alt={displayTitle} fill className="object-cover" sizes="32px" />
@@ -83,7 +86,12 @@ export function GroupCard({ group, onToggleStar }: { group: GroupCardDto; onTogg
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
+                    {group.studio?.name && (
+                        <span className="hidden sm:inline-flex items-center rounded-md border border-purple-500/60 px-2 py-0.5 font-medium text-xs text-purple-600 bg-purple-50 shrink-0">
+                            {group.studio.name}
+                        </span>
+                    )}
                     <button
                         type="button"
                         onClick={async (e) => {
@@ -94,7 +102,7 @@ export function GroupCard({ group, onToggleStar }: { group: GroupCardDto; onTogg
                         className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
                         aria-label={starred ? "Bỏ yêu thích" : "Thêm yêu thích"}>
                         <Star
-                            className={`h-4 w-4 transition ${starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-[#261E33]"}`}
+                            className={`h-4 w-4 transition ${starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-yellow-500"}`}
                             fill={starred ? "currentColor" : "transparent"}
                         />
                     </button>

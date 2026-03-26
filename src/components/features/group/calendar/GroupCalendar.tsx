@@ -219,68 +219,63 @@ function CalendarToolbar({
     ];
 
     return (
-        <div className="mb-6 flex flex-col gap-4">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
-                    {tabs.map((tab) => {
-                        const active = tab.key === mode;
+        <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
+                {tabs.map((tab) => {
+                    const active = tab.key === mode;
 
-                        return (
-                            <button
-                                key={tab.key}
-                                type="button"
-                                onClick={() => onModeChange(tab.key)}
-                                className={cn(
-                                    "rounded-xl px-4 py-2 text-sm font-medium transition",
-                                    active
-                                        ? "bg-white text-orange-600 shadow-sm"
-                                        : "text-slate-500 hover:text-orange-600"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </div>
-
-                <div className="inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50 px-2 py-1">
-                    <button
-                        type="button"
-                        onClick={onPrev}
-                        className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </button>
-
-                    <div className="px-2 text-center text-sm font-medium text-slate-700 whitespace-nowrap">
-                        {rangeLabel}
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={onNext}
-                        className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </button>
-                </div>
+                    return (
+                        <button
+                            key={tab.key}
+                            type="button"
+                            onClick={() => onModeChange(tab.key)}
+                            className={cn(
+                                "rounded-xl px-4 py-2 text-sm font-medium transition",
+                                active
+                                    ? "bg-white text-orange-600 shadow-sm"
+                                    : "text-slate-500 hover:text-orange-600"
+                            )}
+                        >
+                            {tab.label}
+                        </button>
+                    );
+                })}
             </div>
 
-            <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
-                <label className="text-sm font-medium text-slate-700">Lọc theo Assignee:</label>
-                <select
-                    value={selectedAssigneeId || ""}
-                    onChange={(e) => onAssigneeChange(e.target.value || null)}
-                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            <div className="inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50 px-2 py-1">
+                <button
+                    type="button"
+                    onClick={onPrev}
+                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
                 >
-                    <option value="">Tất cả Assignee</option>
-                    {assigneeOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                            {option.name}
-                        </option>
-                    ))}
-                </select>
+                    <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                <div className="px-2 text-center text-sm font-medium text-slate-700 whitespace-nowrap">
+                    {rangeLabel}
+                </div>
+
+                <button
+                    type="button"
+                    onClick={onNext}
+                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </button>
             </div>
+
+            <select
+                value={selectedAssigneeId || ""}
+                onChange={(e) => onAssigneeChange(e.target.value || null)}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+                <option value="">Tất cả công việc</option>
+                {assigneeOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                        {option.name}
+                    </option>
+                ))}
+            </select>
         </div>
     );
 }
@@ -460,7 +455,7 @@ export default function GroupCalendar() {
             headerToolbar: false as const,
             selectable: false,
             editable: false,
-            dayMaxEvents: 3,
+            dayMaxEvents: 2,
             displayEventTime: false,
             events,
             eventMouseEnter: (info: {
@@ -672,12 +667,12 @@ export default function GroupCalendar() {
 
                 .fc .fc-event {
                     border: none !important;
-                    border-radius: 8px !important;
-                    padding: 2px 6px !important;
-                    min-height: 20px !important;
-                    font-size: 11px !important;
-                    line-height: 1.2 !important;
-                    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+                    border-radius: 6px !important;
+                    padding: 1px 4px !important;
+                    min-height: 16px !important;
+                    font-size: 10px !important;
+                    line-height: 1.1 !important;
+                    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
                     transition:
                         transform 0.18s ease,
                         box-shadow 0.18s ease,
@@ -686,9 +681,9 @@ export default function GroupCalendar() {
                 }
 
                 .fc .fc-event:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-                    opacity: 0.96;
+                    transform: translateY(-0.5px);
+                    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.10);
+                    opacity: 0.95;
                 }
 
                 .fc .fc-event-title {
@@ -696,6 +691,8 @@ export default function GroupCalendar() {
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    display: block;
+                    max-width: 100%;
                 }
 
                 .fc .fc-daygrid-event-dot {
@@ -723,12 +720,12 @@ export default function GroupCalendar() {
                 }
 
                 .fc .fc-daygrid-day-frame {
-                    min-height: 110px;
+                    min-height: 100px;
                 }
 
                 @media (max-width: 1024px) {
                     .fc .fc-daygrid-day-frame {
-                        min-height: 95px;
+                        min-height: 85px;
                     }
                 }
 
@@ -744,14 +741,14 @@ export default function GroupCalendar() {
                     }
 
                     .fc .fc-event {
-                        font-size: 10px !important;
-                        padding: 1px 5px !important;
-                        min-height: 18px !important;
-                        line-height: 1.1 !important;
+                        font-size: 9px !important;
+                        padding: 1px 3px !important;
+                        min-height: 15px !important;
+                        line-height: 1 !important;
                     }
 
                     .fc .fc-daygrid-day-frame {
-                        min-height: 78px;
+                        min-height: 70px;
                     }
                 }
             `}</style>

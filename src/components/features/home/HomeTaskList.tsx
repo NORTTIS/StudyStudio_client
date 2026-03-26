@@ -1491,7 +1491,7 @@ export default function HomeTaskList() {
                             <div className="mt-6 flex justify-end">
                                 <Button
                                     onClick={handleOpenDetail}
-                                    className="h-11 rounded-2xl bg-orange-500 px-5 text-white hover:bg-orange-600"
+                                    className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4"
                                 >
                                     Xem chi tiết
                                 </Button>

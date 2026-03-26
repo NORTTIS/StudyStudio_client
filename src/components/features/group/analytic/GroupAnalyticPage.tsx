@@ -654,15 +654,17 @@ function TeamMemberProgressSection({
                     ))}
                 </div>
 
-                <div className="mt-4 flex justify-end">
-                    <button
-                        type="button"
-                        onClick={() => setOpenLayer(true)}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2.5 font-medium text-sm text-white shadow-sm transition-all duration-300 hover:bg-orange-600 hover:shadow-md active:scale-[0.98]">
-                        <Users className="h-4 w-4" />
-                        Xem chi tiết
-                    </button>
-                </div>
+                {members.length > 2 && (
+                    <div className="mt-4 flex justify-end">
+                        <button
+                            type="button"
+                            onClick={() => setOpenLayer(true)}
+                            className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2.5 font-medium text-sm text-white shadow-sm transition-all duration-300 hover:bg-orange-600 hover:shadow-md active:scale-[0.98]">
+                            <Users className="h-4 w-4" />
+                            Xem chi tiết
+                        </button>
+                    </div>
+                )}
             </section>
 
             <TeamMemberProgressLayer
@@ -1046,8 +1048,8 @@ export default function GroupMemberAnalyticsPage() {
             trendFilter === "week"
                 ? getWeekRange(trendAnchorDate)
                 : trendFilter === "month"
-                  ? getMonthRange(trendAnchorDate)
-                  : {
+                    ? getMonthRange(trendAnchorDate)
+                    : {
                         start: new Date(trendAnchorDate.getFullYear(), 0, 1),
                         end: new Date(trendAnchorDate.getFullYear(), 11, 31)
                     };
@@ -1057,8 +1059,8 @@ export default function GroupMemberAnalyticsPage() {
             trendFilter === "week"
                 ? ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
                 : trendFilter === "month"
-                  ? ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5"]
-                  : ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+                    ? ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5"]
+                    : ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
 
         // Current user's trend
         const currentUserTrend =

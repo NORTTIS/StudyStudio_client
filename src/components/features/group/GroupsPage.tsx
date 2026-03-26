@@ -9,7 +9,8 @@ import {
     Plus,
     Sparkles,
     Star,
-    Users
+    Users,
+    Users2
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { GroupCard } from "./GroupCard";
-import { addFavourite, fetchGroupsPageData, removeFavourite } from "./group.api";
+import { addFavourite, fetchGroupsPageData, mapRole, removeFavourite } from "./group.api";
 import type { GroupsPageData, GroupCardDto } from "./types";
 import { UsageBar } from "./UsageBar";
 
@@ -26,7 +27,8 @@ const emptyData: GroupsPageData = {
     usage: { current: 0, max: 0 },
     favorites: [],
     managed: [],
-    independent: []
+    independent: [],
+    joined: []
 };
 
 const PREVIEW_COUNT = 3;
@@ -51,7 +53,8 @@ function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
         ...raw,
         favorites: uniqKeepOrder(raw.favorites ?? []),
         managed: uniqKeepOrder(raw.managed ?? []),
-        independent: uniqKeepOrder(raw.independent ?? [])
+        independent: uniqKeepOrder(raw.independent ?? []),
+        joined: uniqKeepOrder(raw.joined ?? [])
     };
 }
 
@@ -216,6 +219,7 @@ export function GroupsPage() {
     const [expandAll, setExpandAll] = useState(false);
     const [expandManaged, setExpandManaged] = useState(false);
     const [expandIndependent, setExpandIndependent] = useState(false);
+    const [expandJoined, setExpandJoined] = useState(false);
 
     const reload = async () => {
         try {
@@ -256,22 +260,37 @@ export function GroupsPage() {
         };
     }, []);
 
-    const { usage, favorites, managed, independent } = useMemo(() => data, [data]);
+    const { usage, favorites, managed, independent, joined } = useMemo(() => data, [data]);
 
     const allGroups = useMemo(
         () => uniqueByIdKeepFirst([...favorites, ...managed, ...independent]),
         [favorites, managed, independent]
     );
 
+    const ownedGroups = useMemo(
+        () => allGroups.filter((g) => mapRole(g.role) === "owner"),
+        [allGroups]
+    );
+
+    const ownedManaged = useMemo(
+        () => managed.filter((g) => mapRole(g.role) === "owner"),
+        [managed]
+    );
+
+    const ownedIndependent = useMemo(
+        () => independent.filter((g) => mapRole(g.role) === "owner"),
+        [independent]
+    );
+
     const maxGroups = usage.max > 0 ? usage.max : 5;
     const currentGroupsCount =
-        usage.current > 0 ? usage.current : favorites.length + managed.length + independent.length;
+        usage.current > 0 ? usage.current : ownedGroups.length;
     const limitReached = currentGroupsCount >= maxGroups;
 
     const onToggleStar = async (groupIdRaw: string) => {
         const groupId = normId(groupIdRaw);
         const snapshot = data;
-        const all = [...snapshot.favorites, ...snapshot.managed, ...snapshot.independent];
+        const all = [...snapshot.favorites, ...snapshot.managed, ...snapshot.independent, ...snapshot.joined];
         const current = all.find((g) => getGroupId(g) === groupId);
         if (!current) return;
 
@@ -285,7 +304,8 @@ export function GroupsPage() {
                     ...prev,
                     favorites: inFav ? prev.favorites : [updated, ...prev.favorites],
                     managed: prev.managed.map((g) => (getGroupId(g) === groupId ? updated : g)),
-                    independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g))
+                    independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g)),
+                    joined: prev.joined.map((g) => (getGroupId(g) === groupId ? updated : g))
                 };
             }
 
@@ -293,7 +313,8 @@ export function GroupsPage() {
                 ...prev,
                 favorites: prev.favorites.filter((g) => getGroupId(g) !== groupId),
                 managed: prev.managed.map((g) => (getGroupId(g) === groupId ? updated : g)),
-                independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g))
+                independent: prev.independent.map((g) => (getGroupId(g) === groupId ? updated : g)),
+                joined: prev.joined.map((g) => (getGroupId(g) === groupId ? updated : g))
             };
         });
 
@@ -407,69 +428,95 @@ export function GroupsPage() {
                     </SectionReveal>
 
                     <div className="space-y-4">
-                        <SectionReveal delay={0.03}>
-                            <GroupsSection
-                                icon={Star}
-                                iconVariant="yellow"
-                                title="Nhóm yêu thích"
-                                count={favorites.length}
-                                view={view}
-                                items={favorites}
-                                expanded={expandFav}
-                                onToggle={() => setExpandFav((v) => !v)}
-                                onToggleStar={onToggleStar}
-                                emptyText="Chưa có nhóm nào trong mục yêu thích."
-                                loading={loading}
-                            />
-                        </SectionReveal>
+                        {(loading || favorites.length > 0) && (
+                            <SectionReveal delay={0.03}>
+                                <GroupsSection
+                                    icon={Star}
+                                    iconVariant="yellow"
+                                    title="Nhóm yêu thích"
+                                    count={favorites.length}
+                                    view={view}
+                                    items={favorites}
+                                    expanded={expandFav}
+                                    onToggle={() => setExpandFav((v) => !v)}
+                                    onToggleStar={onToggleStar}
+                                    emptyText="Chưa có nhóm nào trong mục yêu thích."
+                                    loading={loading}
+                                />
+                            </SectionReveal>
+                        )}
 
-                        <SectionReveal delay={0.06}>
-                            <GroupsSection
-                                icon={FolderKanban}
-                                iconVariant="blue"
-                                title="Các nhóm bạn đã tạo"
-                                count={allGroups.length}
-                                view={view}
-                                items={allGroups}
-                                expanded={expandAll}
-                                onToggle={() => setExpandAll((v) => !v)}
-                                onToggleStar={onToggleStar}
-                                emptyText="Bạn chưa có nhóm nào."
-                                loading={loading}
-                            />
-                        </SectionReveal>
+                        {(loading || ownedGroups.length > 0) && (
+                            <SectionReveal delay={0.06}>
+                                <GroupsSection
+                                    icon={FolderKanban}
+                                    iconVariant="blue"
+                                    title="Các nhóm bạn đã tạo"
+                                    count={ownedGroups.length}
+                                    view={view}
+                                    items={ownedGroups}
+                                    expanded={expandAll}
+                                    onToggle={() => setExpandAll((v) => !v)}
+                                    onToggleStar={onToggleStar}
+                                    emptyText="Bạn chưa có nhóm nào."
+                                    loading={loading}
+                                />
+                            </SectionReveal>
+                        )}
 
-                        <SectionReveal delay={0.09}>
-                            <GroupsSection
-                                icon={Layers}
-                                iconVariant="purple"
-                                title="Nhóm thuộc studio tôi quản lý"
-                                count={managed.length}
-                                view={view}
-                                items={managed}
-                                expanded={expandManaged}
-                                onToggle={() => setExpandManaged((v) => !v)}
-                                onToggleStar={onToggleStar}
-                                emptyText="Chưa có nhóm nào thuộc studio bạn quản lý."
-                                loading={loading}
-                            />
-                        </SectionReveal>
+                        {(loading || ownedManaged.length > 0) && (
+                            <SectionReveal delay={0.09}>
+                                <GroupsSection
+                                    icon={Layers}
+                                    iconVariant="purple"
+                                    title="Nhóm thuộc studio tôi quản lý"
+                                    count={ownedManaged.length}
+                                    view={view}
+                                    items={ownedManaged}
+                                    expanded={expandManaged}
+                                    onToggle={() => setExpandManaged((v) => !v)}
+                                    onToggleStar={onToggleStar}
+                                    emptyText="Chưa có nhóm nào thuộc studio bạn quản lý."
+                                    loading={loading}
+                                />
+                            </SectionReveal>
+                        )}
 
-                        <SectionReveal delay={0.12}>
-                            <GroupsSection
-                                icon={Users}
-                                iconVariant="slate"
-                                title="Nhóm độc lập"
-                                count={independent.length}
-                                view={view}
-                                items={independent}
-                                expanded={expandIndependent}
-                                onToggle={() => setExpandIndependent((v) => !v)}
-                                onToggleStar={onToggleStar}
-                                emptyText="Chưa có nhóm độc lập nào."
-                                loading={loading}
-                            />
-                        </SectionReveal>
+                        {(loading || ownedIndependent.length > 0) && (
+                            <SectionReveal delay={0.12}>
+                                <GroupsSection
+                                    icon={Users}
+                                    iconVariant="slate"
+                                    title="Nhóm độc lập"
+                                    count={ownedIndependent.length}
+                                    view={view}
+                                    items={ownedIndependent}
+                                    expanded={expandIndependent}
+                                    onToggle={() => setExpandIndependent((v) => !v)}
+                                    onToggleStar={onToggleStar}
+                                    emptyText="Chưa có nhóm độc lập nào."
+                                    loading={loading}
+                                />
+                            </SectionReveal>
+                        )}
+
+                        {(loading || joined.length > 0) && (
+                            <SectionReveal delay={0.15}>
+                                <GroupsSection
+                                    icon={Users2}
+                                    iconVariant="orange"
+                                    title="Các nhóm đã tham gia"
+                                    count={joined.length}
+                                    view={view}
+                                    items={joined}
+                                    expanded={expandJoined}
+                                    onToggle={() => setExpandJoined((v) => !v)}
+                                    onToggleStar={onToggleStar}
+                                    emptyText="Chưa có nhóm nào mà bạn đã tham gia."
+                                    loading={loading}
+                                />
+                            </SectionReveal>
+                        )}
                     </div>
                 </div>
             </div>
@@ -719,13 +766,14 @@ function GroupsSection({
                                             ease: [0.22, 1, 0.36, 1]
                                         }}
                                         whileHover={{ y: -6, scale: 1.01 }}
-                                        className="group/card relative self-start">
+                                        className={cn("group/card relative", view === "list" ? "w-full" : "self-start")}>
                                         <div className="pointer-events-none absolute inset-0 rounded-[26px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_42%)] opacity-0 blur-xl transition duration-300 group-hover/card:opacity-100" />
                                         <div className="pointer-events-none absolute inset-0 rounded-[26px] shadow-[0_24px_44px_rgba(15,23,42,0.00)] transition duration-300 group-hover/card:shadow-[0_24px_44px_rgba(15,23,42,0.12)]" />
                                         <div className="relative rounded-[26px]">
                                             <GroupCard
                                                 group={g}
                                                 onToggleStar={() => onToggleStar(getGroupId(g))}
+                                                view={view}
                                             />
                                         </div>
                                     </motion.div>

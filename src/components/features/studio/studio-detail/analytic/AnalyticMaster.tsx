@@ -1044,9 +1044,9 @@ function MemberProgressModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                        className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50"
                     >
-                        Đóng
+                        <X className="h-4 w-4" />
                     </button>
                 </div>
 
@@ -1130,6 +1130,47 @@ export default function AnalyticMaster() {
     const totalSelectedGroup = React.useMemo(
         () => selectedGroupStatusSummary.reduce((sum, item) => sum + item.value, 0),
         [selectedGroupStatusSummary]
+    );
+
+    const selectedGroupStatusBreakdown = React.useMemo(() => {
+        const highestValue = Math.max(...selectedGroupStatusSummary.map((item) => item.value), 0);
+
+        return STATUS_META.map((status, index) => {
+            const value = selectedGroup?.statuses[status.key] ?? 0;
+            const percent = totalSelectedGroup ? Math.round((value / totalSelectedGroup) * 100) : 0;
+
+            return {
+                ...status,
+                value,
+                percent,
+                softColor: `${status.color}18`,
+                isPrimary: value > 0 && value === highestValue,
+                chartValue: selectedGroupStatusSummary[index]?.value ?? value
+            };
+        });
+    }, [selectedGroup, selectedGroupStatusSummary, totalSelectedGroup]);
+
+    const donePercent = React.useMemo(() => {
+        if (!totalSelectedGroup) return 0;
+        return Math.round(((selectedGroup?.statuses.done ?? 0) / totalSelectedGroup) * 100);
+    }, [selectedGroup, totalSelectedGroup]);
+
+    const dominantStatus = React.useMemo(
+        () =>
+            selectedGroupStatusBreakdown.reduce(
+                (best, current) => (current.value > best.value ? current : best),
+                selectedGroupStatusBreakdown[0] ?? {
+                    key: "todo" as TaskStatusKey,
+                    label: "To do",
+                    color: "#3b82f6",
+                    value: 0,
+                    percent: 0,
+                    softColor: "#3b82f618",
+                    isPrimary: false,
+                    chartValue: 0
+                }
+            ),
+        [selectedGroupStatusBreakdown]
     );
 
     const selectedLineGroups = React.useMemo(() => {
@@ -1433,47 +1474,7 @@ export default function AnalyticMaster() {
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                <motion.section
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.42, delay: 0.04 }}
-                    className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
-                >
-                    <SectionTitle
-                        title="1. Task Status của toàn bộ 10 nhóm"
-                        description=""
-                    />
-
-                    <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-                        <div className="mx-auto w-full max-w-[260px]">
-                            <EChart option={aggregatePieOption} height={260} />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            {STATUS_META.map((status, index) => (
-                                <div
-                                    key={status.key}
-                                    className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className="h-2.5 w-2.5 rounded-full"
-                                            style={{ backgroundColor: STATUS_META[index].color }}
-                                        />
-                                        <span className="text-xs font-medium text-slate-500">
-                                            {status.label}
-                                        </span>
-                                    </div>
-                                    <div className="mt-2 text-lg font-bold text-slate-900">
-                                        {allGroupStatusSummary[index].value}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </motion.section>
-
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.5fr]">
                 <motion.section
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1481,7 +1482,7 @@ export default function AnalyticMaster() {
                     className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
                 >
                     <SectionTitle
-                        title="2. Task Status theo từng nhóm"
+                        title="1. Task Status theo từng nhóm"
                         description=""
                     />
 
@@ -1493,12 +1494,12 @@ export default function AnalyticMaster() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+                    <div className="flex flex-col items-center">
                         <div className="mx-auto w-full max-w-[260px]">
                             <EChart option={selectedPieOption} height={260} />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="mt-5 grid w-full grid-cols-2 gap-3">
                             {STATUS_META.map((status, index) => (
                                 <div
                                     key={status.key}
@@ -1521,39 +1522,39 @@ export default function AnalyticMaster() {
                         </div>
                     </div>
                 </motion.section>
+
+                <motion.section
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.42, delay: 0.12 }}
+                    className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
+                >
+                    <SectionTitle
+                        title="2. So sánh task hoàn thành theo thời gian"
+                    />
+
+                    <TimeRangeToolbar
+                        mode={lineTimeMode}
+                        onModeChange={setLineTimeMode}
+                        rangeLabel={lineRangeLabel}
+                        onPrev={() => setLineAnchorDate((prev) => shiftDateByMode(prev, lineTimeMode, -1))}
+                        onNext={() => setLineAnchorDate((prev) => shiftDateByMode(prev, lineTimeMode, 1))}
+                    />
+
+                    <CompareGroupPicker
+                        groups={groups}
+                        selectedIds={lineCompareIds}
+                        onChange={setLineCompareIds}
+                        triggerLabel="Bộ lọc so sánh"
+                        title="Chọn nhóm cho biểu đồ tiến độ"
+                        description="Chọn một hoặc nhiều nhóm để so sánh tốc độ hoàn thành task theo thời gian."
+                    />
+
+                    <div className="mt-5">
+                        <EChart option={lineChartOption} height={380} />
+                    </div>
+                </motion.section>
             </div>
-
-            <motion.section
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.45, delay: 0.12 }}
-                className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
-            >
-                <SectionTitle
-                    title="3. So sánh task hoàn thành theo thời gian"
-                />
-
-                <TimeRangeToolbar
-                    mode={lineTimeMode}
-                    onModeChange={setLineTimeMode}
-                    rangeLabel={lineRangeLabel}
-                    onPrev={() => setLineAnchorDate((prev) => shiftDateByMode(prev, lineTimeMode, -1))}
-                    onNext={() => setLineAnchorDate((prev) => shiftDateByMode(prev, lineTimeMode, 1))}
-                />
-
-                <CompareGroupPicker
-                    groups={groups}
-                    selectedIds={lineCompareIds}
-                    onChange={setLineCompareIds}
-                    triggerLabel="Bộ lọc so sánh"
-                    title="Chọn nhóm cho biểu đồ tiến độ"
-                    description="Chọn một hoặc nhiều nhóm để so sánh tốc độ hoàn thành task theo thời gian."
-                />
-
-                <div className="mt-5">
-                    <EChart option={lineChartOption} height={380} />
-                </div>
-            </motion.section>
 
             <motion.section
                 initial={{ opacity: 0, y: 18 }}
@@ -1562,7 +1563,7 @@ export default function AnalyticMaster() {
                 className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
             >
                 <SectionTitle
-                    title="4. So sánh trạng thái task giữa các nhóm"
+                    title="3. So sánh trạng thái task giữa các nhóm"
                 />
 
                 <TimeRangeToolbar
@@ -1594,7 +1595,7 @@ export default function AnalyticMaster() {
                 className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl"
             >
                 <SectionTitle
-                    title="5. Tiến độ thành viên trong nhóm"
+                    title="4. Tiến độ thành viên trong nhóm"
                 />
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">

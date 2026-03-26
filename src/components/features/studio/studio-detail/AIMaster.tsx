@@ -415,23 +415,23 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
         <div className="w-full">
             <Container className="px-6">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="font-semibold text-[#261E33] text-xl">AI Q&A</h2>
+                    <h2 className="font-semibold text-[#2B2118] text-xl">AI Q&A</h2>
                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <div className="rounded-full border border-[#E8E8E8] bg-[#FAFAFA] px-4 py-1.5 text-[#6F6B99]">
+                        <div className="rounded-full border border-[#E8E8E8] bg-[#FAFAFA] px-4 py-1.5 text-[#7A6858]">
                             {t("usedToday")}:{" "}
-                            <span className="font-semibold text-[#261E33]">
+                            <span className="font-semibold text-[#2B2118]">
                                 {requestsUsedToday == null ? t("unknown") : requestsUsedToday}
                             </span>
                         </div>
-                        <div className="rounded-full border border-[#E8E8E8] bg-[#FAFAFA] px-4 py-1.5 text-[#6F6B99]">
+                        <div className="rounded-full border border-[#E8E8E8] bg-[#FAFAFA] px-4 py-1.5 text-[#7A6858]">
                             {t("remainingRequests")}:{" "}
-                            <span className="font-semibold text-[#261E33]">
+                            <span className="font-semibold text-[#2B2118]">
                                 {remainingRequests == null ? t("unknown") : remainingRequests}
                             </span>
                         </div>
-                        <div className="rounded-full border border-[#E8E8E8] bg-[#FAFAFA] px-4 py-1.5 text-[#6F6B99]">
+                        <div className="rounded-full border border-[#E8E8E8] bg-[#FAFAFA] px-4 py-1.5 text-[#7A6858]">
                             {t("dailyLimit")}:{" "}
-                            <span className="font-semibold text-[#261E33]">
+                            <span className="font-semibold text-[#2B2118]">
                                 {dailyLimit == null ? t("unknown") : dailyLimit}
                             </span>
                         </div>
@@ -439,16 +439,20 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                 </div>
 
                 {messages.length === 0 ? (
-                    <div className="rounded-2xl border border-[#F0F0F0] bg-white p-8 text-center">
-                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFF3ED]">
-                            <Sparkles className="h-8 w-8 text-[#FF8A65]" />
-                        </div>
-                        <h3 className="font-semibold text-[#261E33] text-[34px] md:text-[40px]">
-                            {t("startConversation")}
-                        </h3>
-                        <p className="mx-auto mt-2 max-w-2xl text-[#6F6B99] text-base">{t("description")}</p>
+                    <div className="relative overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.70),rgba(255,246,241,0.68))] px-8 py-10 shadow-[0_24px_70px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,188,140,0.12),transparent_30%)]"></div>
 
-                        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="relative mx-auto max-w-3xl text-center">
+                            <div className="mx-auto mb-5 flex h-18 w-18 items-center justify-center rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,#FFF4EA_0%,#FFE5D1_100%)] shadow-[0_20px_40px_rgba(255,107,53,0.14),inset_0_1px_0_rgba(255,255,255,0.95)]">
+                                <Sparkles className="h-8 w-8 text-[#FF8A65]" />
+                            </div>
+                            <h3 className="font-semibold text-[#2B2118] text-[31px] md:text-[40px]">
+                                {t("startConversation")}
+                            </h3>
+                            <p className="mx-auto mt-3 max-w-2xl text-[#7A6858] text-base leading-7">{t("description")}</p>
+                        </div>
+
+                        <div className="relative mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             {quickActions.map((action) => (
                                 <Button
                                     key={action.key}
@@ -456,7 +460,7 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                                     variant="outline"
                                     disabled={isSending}
                                     onClick={() => void onQuickActionClick(action)}
-                                    className="rounded-xl border-[#E5E5E5] text-[#4E4B66] hover:bg-[#FAFAFA]">
+                                    className="rounded-full border-white/70 bg-white/80 text-[#5E4E42] shadow-sm backdrop-blur transition hover:bg-white/90">
                                     {action.label}
                                 </Button>
                             ))}
@@ -475,11 +479,11 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                                 <div
                                     className={
                                         m.role === "user"
-                                            ? "rounded-2xl bg-[#261E33] px-4 py-3 text-white"
-                                            : "rounded-2xl border border-[#ECECEC] bg-white px-4 py-3 text-[#261E33]"
+                                            ? "rounded-[24px] rounded-br-md border border-[#4A2E25] bg-[linear-gradient(135deg,#432818_0%,#7C2D12_45%,#7C3AED_100%)] px-4 py-3 text-white shadow-[0_18px_32px_rgba(43,33,24,0.22)]"
+                                            : "rounded-[24px] rounded-bl-md border border-[#EFE6DE] bg-[linear-gradient(135deg,#FFFDFC_0%,#FFF7F2_58%,#F5F3FF_100%)] px-4 py-3 text-[#2B2118] shadow-[0_14px_28px_rgba(15,23,42,0.04)]"
                                     }>
                                     {m.role === "assistant" && !m.content.trim() && isSending ? (
-                                        <div className="flex items-center gap-2 text-[#6F6B99] text-sm">
+                                        <div className="flex items-center gap-2 text-[#7A6858] text-sm">
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                             <span>{t("aiThinking")}</span>
                                         </div>
@@ -510,19 +514,22 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                             </Button>
                         ))}
                     </div>
-                    <div className="flex items-center gap-3 rounded-2xl border border-[#E9E9E9] bg-white p-2">
-                        <input
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder={t("inputPlaceholder")}
-                            className="h-11 w-full rounded-xl border-0 px-3 text-sm outline-none placeholder:text-[#A8A6BA]"
-                        />
-                        <Button
-                            type="submit"
-                            disabled={isSending || !input.trim()}
-                            className="rounded-xl bg-[#FF5722] text-white hover:bg-[#e24d1e]">
-                            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                        </Button>
+                    <div className="relative overflow-hidden rounded-[32px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(248,244,255,0.72))] p-3 backdrop-blur-2xl">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,196,160,0.18),transparent_32%)]"></div>
+                        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder={t("inputPlaceholder")}
+                                className="min-h-[50px] max-h-[200px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
+                            />
+                            <Button
+                                type="submit"
+                                disabled={isSending || !input.trim()}
+                                className="h-10 w-10 rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 flex items-center justify-center shrink-0">
+                                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            </Button>
+                        </div>
                     </div>
                 </form>
                 <div ref={bottomAnchorRef} />

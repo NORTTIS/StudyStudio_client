@@ -16,6 +16,7 @@ import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 import { apiFetch } from "@/api/api-client";
 import { getAccessToken, getUserData } from "@/api/auth";
+import { getUserProfile } from "@/api/user-profile";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import {
@@ -87,6 +88,7 @@ type MentionUser = {
 
 type MentionTextareaHandle = {
     getPayloadText: () => string;
+    reset: () => void;
 };
 
 type PopupPosition = {
@@ -128,7 +130,7 @@ function safeInitialsFromName(name?: string | null) {
 
 function safeAvatarUrl(input?: string | null) {
     const raw = String(input ?? "").trim();
-    if (!raw) return "";
+    if (!raw) return null;
     return raw.replace("localhost", "127.0.0.1");
 }
 
@@ -156,7 +158,21 @@ function compressAllMentionsForDisplay(
         (id) => normalizeUserId(id) !== normalizedAuthorId
     );
 
-    if (expectedAllIds.length === 0) return text;
+    // Detect all mentions in the text
+    const mentionRegex = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
+    const mentionedIds = new Set<string>();
+
+    for (const match of text.matchAll(mentionRegex)) {
+        mentionedIds.add(normalizeUserId(match[1]));
+    }
+
+    const expectedNormalizedIds = new Set(expectedAllIds.map(id => normalizeUserId(id)));
+
+    const isAllMentioned = expectedNormalizedIds.size > 0 &&
+        expectedNormalizedIds.size === mentionedIds.size &&
+        Array.from(expectedNormalizedIds).every(id => mentionedIds.has(id));
+
+    if (!isAllMentioned) return text;
 
     const escaped = expectedAllIds.map((id) => `@${escapeRegExp(id)}`);
     const patterns: string[] = [];
@@ -509,6 +525,12 @@ const MentionTextarea = React.forwardRef<
         setMounted(true);
     }, []);
 
+    React.useEffect(() => {
+        if (!value) {
+            mentionsRef.current = [];
+        }
+    }, [value]);
+
     const resizeTextarea = React.useCallback(() => {
         const el = taRef.current;
         if (!el) return;
@@ -757,7 +779,12 @@ const MentionTextarea = React.forwardRef<
         return text;
     }, [value]);
 
-    React.useImperativeHandle(ref, () => ({ getPayloadText }), [getPayloadText]);
+    React.useImperativeHandle(ref, () => ({
+        getPayloadText,
+        reset: () => {
+            mentionsRef.current = [];
+        }
+    }), [getPayloadText]);
 
     const previewNodes = React.useMemo(() => {
         const text = value ?? "";
@@ -1240,6 +1267,7 @@ export default function GroupDiscussPage() {
     const groupId = extractGroupIdFromPath(pathname || "");
     const hubUrl = React.useMemo(() => buildHubUrl(), []);
     const connectionRef = React.useRef<signalR.HubConnection | null>(null);
+    const startPromiseRef = React.useRef<Promise<void> | null>(null);
     const [isConnected, setIsConnected] = React.useState(false);
 
     const [me, setMe] = React.useState<UserLite>({
@@ -1256,8 +1284,24 @@ export default function GroupDiscussPage() {
             id: user?.id || "me",
             name: fullName,
             initials: safeInitials(fullName),
-            avatarUrl: null
+            avatarUrl: safeAvatarUrl(user?.avatarUrl ?? "")
         });
+
+        // Fetch full profile to get avatar
+        const fetchProfile = async () => {
+            try {
+                const result = await getUserProfile("vi");
+                if (result.status === "success" && result.data) {
+                    setMe((prev) => ({
+                        ...prev,
+                        avatarUrl: safeAvatarUrl(result.data?.avatarUrl)
+                    }));
+                }
+            } catch { }
+
+        };
+
+        void fetchProfile();
     }, []);
 
     const [composerText, setComposerText] = React.useState("");
@@ -1343,9 +1387,13 @@ export default function GroupDiscussPage() {
     React.useEffect(() => {
         let isDisposed = false;
 
-        if (!groupId) return;
+        if (!groupId) {
+            console.warn("[GroupDiscussPage] No groupId found in path");
+            return;
+        }
 
         if (!hubUrl) {
+            console.error("[GroupDiscussPage] Hub URL not configured - missing NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL");
             toast({
                 variant: "destructive",
                 description:
@@ -1354,9 +1402,26 @@ export default function GroupDiscussPage() {
             return;
         }
 
+        console.log("[GroupDiscussPage] Initializing connection for group:", groupId, "Hub URL:", hubUrl);
+
+        const token = getAccessToken();
+        if (!token) {
+            console.warn("[GroupDiscussPage] No access token found");
+            toast({
+                variant: "destructive",
+                description: "Vui lòng đăng nhập lại để sử dụng tính năng thảo luận"
+            });
+            return;
+        }
+
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(hubUrl, { accessTokenFactory: () => getAccessToken() || "" })
+            .withUrl(hubUrl, {
+                accessTokenFactory: () => token,
+                skipNegotiation: true,
+                transport: signalR.HttpTransportType.WebSockets
+            })
             .withAutomaticReconnect([0, 2000, 10000, 30000])
+            .configureLogging(signalR.LogLevel.Information)
             .build();
 
         connectionRef.current = connection;
@@ -1519,55 +1584,93 @@ export default function GroupDiscussPage() {
             toast({ variant: "destructive", description: errorMessage });
         });
 
-        connection.onreconnecting(() => setIsConnected(false));
+        connection.onreconnecting(() => {
+            console.warn("[GroupDiscussPage] Reconnecting...");
+            setIsConnected(false);
+        });
 
         connection.onreconnected(async () => {
             if (isDisposed) return;
 
             setIsConnected(true);
+            console.log("[GroupDiscussPage] Reconnected successfully");
             try {
                 await connection.invoke("JoinGroup", groupId);
                 await Promise.all([loadHistory(), loadUserRole(), loadMembers()]);
-            } catch {
+            } catch (err: any) {
                 if (isDisposed) return;
+                console.error("[GroupDiscussPage] Rejoin failed:", err?.message || err);
                 toast({ variant: "destructive", description: "Không thể tham gia lại phòng thảo luận" });
             }
         });
 
-        connection.onclose(() => setIsConnected(false));
+        connection.onclose((err) => {
+            console.warn("[GroupDiscussPage] Connection closed:", err?.message || "No error details");
+            setIsConnected(false);
+        });
 
         const start = async () => {
             try {
+                if (isDisposed) return;
                 await connection.start();
+
+                if (isDisposed) {
+                    try {
+                        await connection.stop();
+                    } catch {
+                        // Ignore errors
+                    }
+                    return;
+                }
+
                 await connection.invoke("JoinGroup", groupId);
                 if (isDisposed) return;
 
                 setIsConnected(true);
                 await Promise.all([loadHistory(), loadUserRole(), loadMembers()]);
-            } catch {
+            } catch (err: any) {
                 if (isDisposed) return;
 
                 setIsConnected(false);
-                toast({
-                    variant: "destructive",
-                    description: "Vui lòng thử tải lại trang hoặc đăng nhập lại"
-                });
+                const errorMsg = err?.message || String(err);
+                console.error("[GroupDiscussPage] Connection failed:", errorMsg);
+
+                if (errorMsg.includes("negotiation") || errorMsg.includes("connection was stopped")) {
+                    toast({
+                        variant: "destructive",
+                        description: "Không thể kết nối đến thảo luận. Vui lòng tải lại trang."
+                    });
+                } else {
+                    toast({
+                        variant: "destructive",
+                        description: "Vui lòng thử tải lại trang hoặc đăng nhập lại"
+                    });
+                }
             }
         };
 
-        void start();
+        const startPromise = start();
+        startPromiseRef.current = startPromise;
 
         return () => {
             isDisposed = true;
 
             const cleanup = async () => {
                 try {
-                    if (connection.state === signalR.HubConnectionState.Connected) {
-                        await connection.invoke("LeaveGroup", groupId);
+                    if (startPromiseRef.current) {
+                        await startPromiseRef.current.catch(() => { });
                     }
-                } catch {
-                } finally {
-                    await connection.stop();
+
+                    const state = connection.state;
+                    if (state !== signalR.HubConnectionState.Disconnected && state !== signalR.HubConnectionState.Disconnecting) {
+                        try {
+                            if (state === signalR.HubConnectionState.Connected) {
+                                await connection.invoke("LeaveGroup", groupId);
+                            }
+                        } catch { }
+                        await connection.stop();
+                    }
+                } catch { } finally {
                     if (connectionRef.current === connection) connectionRef.current = null;
                     setIsConnected(false);
                 }
@@ -1595,6 +1698,7 @@ export default function GroupDiscussPage() {
         try {
             await connection.invoke("SendMessage", { groupId, content: payload });
             setComposerText("");
+            composerMentionRef.current?.reset?.();
         } catch {
             toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
         }
