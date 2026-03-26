@@ -21,14 +21,26 @@ export interface ExcelExportOptions {
     };
 }
 
+// SheetJS type declarations
+interface SheetJS {
+    utils: {
+        book_new: () => unknown;
+        aoa_to_sheet: (data: unknown[][]) => unknown;
+        decode_range: (ref: string) => { e: { c: number; r: number } };
+        book_append_sheet: (workbook: unknown, worksheet: unknown, name: string) => void;
+    };
+    writeFile: (workbook: unknown, filename: string) => void;
+}
+
 /**
  * Load SheetJS library dynamically from CDN
  */
-function loadSheetJS(): Promise<unknown> {
+function loadSheetJS(): Promise<SheetJS> {
     return new Promise((resolve, reject) => {
         // Check if XLSX is already loaded
-        if (typeof (window as Record<string, unknown>).XLSX !== "undefined") {
-            resolve((window as Record<string, unknown>).XLSX);
+        const win = window as unknown as Record<string, unknown>;
+        if (typeof win.XLSX !== "undefined") {
+            resolve(win.XLSX as SheetJS);
             return;
         }
 
@@ -36,7 +48,7 @@ function loadSheetJS(): Promise<unknown> {
         const script = document.createElement("script");
         script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
         script.onload = () => {
-            resolve((window as Record<string, unknown>).XLSX);
+            resolve(win.XLSX as SheetJS);
         };
         script.onerror = () => {
             reject(new Error("Failed to load SheetJS library"));
@@ -56,7 +68,10 @@ export async function exportToExcel(options: ExcelExportOptions): Promise<void> 
         const XLSX = await loadSheetJS();
 
         // Create a new workbook
-        const workbook = XLSX.utils.book_new();
+        const workbook = XLSX.utils.book_new() as {
+            SheetNames: string[];
+            Sheets: Record<string, unknown>;
+        };
 
         // Prepare worksheet data
         const worksheetData: unknown[][] = [];
@@ -110,7 +125,11 @@ export async function exportToExcel(options: ExcelExportOptions): Promise<void> 
         worksheetData.push([`Xuất lúc: ${new Date().toLocaleString("vi-VN")}`]);
 
         // Create worksheet from array of arrays
-        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData) as {
+            "!ref"?: string;
+            "!cols"?: { wch: number }[];
+            "!merges"?: { s: { r: number; c: number }; e: { r: number; c: number } }[];
+        };
 
         // Set column widths
         const columnWidths = columns.map((col) => ({ wch: col.width || 15 }));
@@ -118,7 +137,7 @@ export async function exportToExcel(options: ExcelExportOptions): Promise<void> 
 
         // Style the title row (merge cells if possible)
         const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
-        if (range.e.c >= headers.length - 1) {
+        if (range.e?.c !== undefined && range.e.c >= headers.length - 1) {
             worksheet["!merges"] = [
                 {
                     s: { r: 0, c: 0 },
