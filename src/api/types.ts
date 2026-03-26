@@ -1825,6 +1825,133 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/studio/{studioId}/completion-trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    endDate?: string;
+                    groupIds?: string;
+                    startDate?: string;
+                };
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioCompletionTrendResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioCompletionTrendResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioCompletionTrendResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/studio/{studioId}/group-activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    endDate?: string;
+                    startDate?: string;
+                };
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioGroupActivityResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioGroupActivityResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioGroupActivityResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/studio/{studioId}/group-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    endDate?: string;
+                    startDate?: string;
+                };
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioGroupStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioGroupStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioGroupStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/studio/{studioId}/groups": {
         parameters: {
             query?: never;
@@ -1894,6 +2021,45 @@ export interface paths {
                         "application/json": components["schemas"]["StudioGroupHeatmapResponseApiResponse"];
                         "text/json": components["schemas"]["StudioGroupHeatmapResponseApiResponse"];
                         "text/plain": components["schemas"]["StudioGroupHeatmapResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/studio/{studioId}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioOverviewResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioOverviewResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioOverviewResponseApiResponse"];
                     };
                 };
             };
@@ -6740,6 +6906,13 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        GroupTaskStatusCount: {
+            /** Format: int32 */
+            count?: number;
+            /** Format: uuid */
+            statusId?: string;
+            statusName?: string | null;
+        };
         GroupTaskStatusDto: {
             /** Format: uuid */
             groupId?: string;
@@ -7483,6 +7656,33 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        StudioActivityItem: {
+            /** Format: int32 */
+            activityLevel?: number;
+            /** Format: int32 */
+            activityScore?: number;
+            groupColor?: string | null;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: int32 */
+            messagesSent?: number;
+            /** Format: int32 */
+            tasksCompleted?: number;
+        };
+        StudioActivityRow: {
+            date?: string | null;
+            groups?: components["schemas"]["StudioActivityItem"][] | null;
+        };
+        StudioCompletionTrendResponse: {
+            groups?: components["schemas"]["StudioGroupTrendData"][] | null;
+        };
+        StudioCompletionTrendResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioCompletionTrendResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         StudioDto: {
             /** Format: uuid */
             id?: string;
@@ -7496,6 +7696,34 @@ export interface components {
             groupName?: string | null;
             /** Format: int32 */
             tasksCompleted?: number;
+        };
+        StudioGroupActivityResponse: {
+            data?: components["schemas"]["StudioActivityRow"][] | null;
+        };
+        StudioGroupActivityResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioGroupActivityResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        StudioGroupData: {
+            /** Format: int32 */
+            activeMembers?: number;
+            /** Format: double */
+            completionRate?: number;
+            groupColor?: string | null;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: date-time */
+            lastActivityDateTime?: string | null;
+            /** Format: int32 */
+            overdueTasks?: number;
+            taskStatuses?: components["schemas"]["GroupTaskStatusCount"][] | null;
+            /** Format: int32 */
+            totalCompletedTasks?: number;
+            /** Format: int32 */
+            totalTasks?: number;
         };
         StudioGroupHeatmapResponse: {
             groupHeatmap?: components["schemas"]["StudioHeatmapData"][] | null;
@@ -7516,6 +7744,37 @@ export interface components {
             data?: components["schemas"]["StudioGroupListResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        StudioGroupStatusData: {
+            /** Format: int32 */
+            doneTasks?: number;
+            groupColor?: string | null;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: int32 */
+            inProgressTasks?: number;
+            /** Format: int32 */
+            overdueTasks?: number;
+            taskStatuses?: components["schemas"]["GroupTaskStatusCount"][] | null;
+            /** Format: int32 */
+            todoTasks?: number;
+        };
+        StudioGroupStatusResponse: {
+            groups?: components["schemas"]["StudioGroupStatusData"][] | null;
+        };
+        StudioGroupStatusResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioGroupStatusResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        StudioGroupTrendData: {
+            groupColor?: string | null;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            points?: components["schemas"]["StudioTrendPoint"][] | null;
         };
         StudioHeatmapData: {
             /** Format: date */
@@ -7553,6 +7812,24 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        StudioOverviewResponse: {
+            dueDate?: string | null;
+            groups?: components["schemas"]["StudioGroupData"][] | null;
+            startDate?: string | null;
+            statusBreakdown?: components["schemas"]["StudioStatusBreakdown"];
+            /** Format: uuid */
+            studioId?: string;
+            /** Format: int32 */
+            totalGroups?: number;
+            /** Format: int32 */
+            totalTasks?: number;
+        };
+        StudioOverviewResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioOverviewResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         StudioResponse: {
             avatarUrl?: string | null;
             colorHex?: string | null;
@@ -7585,6 +7862,23 @@ export interface components {
          * @enum {integer}
          */
         StudioRole: 0 | 1;
+        StudioStatusBreakdown: {
+            /** Format: int32 */
+            done?: number;
+            /** Format: int32 */
+            inProgress?: number;
+            /** Format: int32 */
+            overdue?: number;
+            /** Format: int32 */
+            todo?: number;
+        };
+        StudioTrendPoint: {
+            /** Format: date */
+            date?: string;
+            label?: string | null;
+            /** Format: int32 */
+            value?: number;
+        };
         SubscriptionDistributionItem: {
             /** Format: int32 */
             count?: number;

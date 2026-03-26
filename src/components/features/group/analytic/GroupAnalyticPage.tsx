@@ -5,7 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Clock3, Layers3, MessageSquare, Plus, Users, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import * as React from "react";
-import type { DailyActivityPoint, GroupSummaryResponse, MemberHeatmapData, MemberProgressTrendData } from "@/api/analytics";
+import type {
+    DailyActivityPoint,
+    GroupSummaryResponse,
+    MemberHeatmapData,
+    MemberProgressTrendData
+} from "@/api/analytics";
 import { getGroupHeatmap, getGroupSummary, getGroupTrend } from "@/api/analytics";
 import { apiGet } from "@/api/api-client";
 import { Container } from "@/components/common";
@@ -518,7 +523,7 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
     return (
         <div
             className={cn(
-                "rounded-[14px] border border-slate-200 bg-slate-50/80 p-3.5 cursor-pointer transition-all duration-200 hover:border-orange-300 hover:bg-orange-50/50 hover:shadow-md",
+                "cursor-pointer rounded-[14px] border border-slate-200 bg-slate-50/80 p-3.5 transition-all duration-200 hover:border-orange-300 hover:bg-orange-50/50 hover:shadow-md",
                 onClick && "active:scale-[0.98]"
             )}
             onClick={onClick}
@@ -552,8 +557,8 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
                 </div>
                 {member.contributionPercentage !== undefined && (
                     <div className="flex items-center gap-1.5">
-                        <div className="h-3.5 w-3.5 rounded bg-orange-100 flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-orange-600">%</span>
+                        <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
+                            <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
                         <span>Contribution: {member.contributionPercentage.toFixed(2)}%</span>
                     </div>
@@ -616,7 +621,11 @@ function TeamMemberProgressLayer({
                         <div className="max-h-[88vh] overflow-y-auto px-5 pt-16 pb-5 lg:px-6 lg:pt-16 lg:pb-6">
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                 {members.map((member) => (
-                                    <MemberProgressCard key={member.id} member={member} onClick={onMemberClick ? () => onMemberClick(member) : undefined} />
+                                    <MemberProgressCard
+                                        key={member.id}
+                                        member={member}
+                                        onClick={onMemberClick ? () => onMemberClick(member) : undefined}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -650,7 +659,11 @@ function TeamMemberProgressSection({
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {previewMembers.map((member) => (
-                        <MemberProgressCard key={member.id} member={member} onClick={onMemberClick ? () => onMemberClick(member) : undefined} />
+                        <MemberProgressCard
+                            key={member.id}
+                            member={member}
+                            onClick={onMemberClick ? () => onMemberClick(member) : undefined}
+                        />
                     ))}
                 </div>
 
@@ -721,14 +734,14 @@ function MemberDetailModal({
                         onClick={(event) => event.stopPropagation()}
                         className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-white/70 bg-white shadow-[0_24px_90px_rgba(15,23,42,0.28)]">
                         {/* Header */}
-                        <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-orange-50 to-amber-50 px-5 py-4">
+                        <div className="flex items-center justify-between border-slate-100 border-b bg-gradient-to-r from-orange-50 to-amber-50 px-5 py-4">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
                                     <Layers3 className="h-5 w-5 text-orange-600" />
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-slate-900">{member.name}</h3>
-                                    <div className={cn("text-xs font-medium", status.textClass)}>{status.label}</div>
+                                    <div className={cn("font-medium text-xs", status.textClass)}>{status.label}</div>
                                 </div>
                             </div>
                             <button
@@ -740,7 +753,7 @@ function MemberDetailModal({
                         </div>
 
                         {/* Content */}
-                        <div className="p-5 space-y-4">
+                        <div className="space-y-4 p-5">
                             {/* Progress bar */}
                             <div>
                                 <div className="mb-2 flex items-center justify-between text-sm">
@@ -749,11 +762,14 @@ function MemberDetailModal({
                                 </div>
                                 <div className="h-3 overflow-hidden rounded-full bg-slate-100">
                                     <div
-                                        className={cn("h-full rounded-full transition-all duration-500", status.barClass)}
+                                        className={cn(
+                                            "h-full rounded-full transition-all duration-500",
+                                            status.barClass
+                                        )}
                                         style={{ width: `${percent}%` }}
                                     />
                                 </div>
-                                <div className="mt-1 text-xs text-slate-500">
+                                <div className="mt-1 text-slate-500 text-xs">
                                     {member.completedTasks} of {member.totalTasks} tasks completed
                                 </div>
                             </div>
@@ -762,39 +778,60 @@ function MemberDetailModal({
                             <div className="grid grid-cols-4 gap-3">
                                 <div className="rounded-xl border border-slate-100 bg-emerald-50/50 p-3 text-center">
                                     <CheckCircle2 className="mx-auto mb-1.5 h-5 w-5 text-emerald-500" />
-                                    <div className="font-bold text-slate-900">{member.completedScore?.toFixed(1) ?? 0}</div>
-                                    <div className="text-xs text-slate-500">Complete pts</div>
+                                    <div className="font-bold text-slate-900">
+                                        {member.completedScore?.toFixed(1) ?? 0}
+                                    </div>
+                                    <div className="text-slate-500 text-xs">Complete pts</div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-blue-50/50 p-3 text-center">
                                     <Plus className="mx-auto mb-1.5 h-5 w-5 text-blue-500" />
-                                    <div className="font-bold text-slate-900">{member.createdScore?.toFixed(1) ?? 0}</div>
-                                    <div className="text-xs text-slate-500">Create pts</div>
+                                    <div className="font-bold text-slate-900">
+                                        {member.createdScore?.toFixed(1) ?? 0}
+                                    </div>
+                                    <div className="text-slate-500 text-xs">Create pts</div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-amber-50/50 p-3 text-center">
                                     <div className="mx-auto mb-1.5 flex h-5 w-5 items-center justify-center text-amber-500">
-                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                            />
+                                        </svg>
                                     </div>
-                                    <div className="font-bold text-slate-900">{member.updatedScore?.toFixed(1) ?? 0}</div>
-                                    <div className="text-xs text-slate-500">Update pts</div>
+                                    <div className="font-bold text-slate-900">
+                                        {member.updatedScore?.toFixed(1) ?? 0}
+                                    </div>
+                                    <div className="text-slate-500 text-xs">Update pts</div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-purple-50/50 p-3 text-center">
                                     <MessageSquare className="mx-auto mb-1.5 h-5 w-5 text-purple-500" />
                                     <div className="font-bold text-slate-900">{member.messagesSent ?? 0}</div>
-                                    <div className="text-xs text-slate-500">Messages</div>
+                                    <div className="text-slate-500 text-xs">Messages</div>
                                 </div>
                             </div>
 
                             {/* Detailed breakdown */}
-                            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 space-y-2">
-                                <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Activity Breakdown</h4>
+                            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                <h4 className="mb-2 font-semibold text-slate-500 text-xs uppercase tracking-wider">
+                                    Activity Breakdown
+                                </h4>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-slate-600">Completed</span>
-                                        <span className="font-mono text-slate-900">{member.tasksCompleted ?? 0} × {(member.completedScore ?? 0) / (member.tasksCompleted || 1) || 0}</span>
+                                        <span className="font-mono text-slate-900">
+                                            {member.tasksCompleted ?? 0} ×{" "}
+                                            {(member.completedScore ?? 0) / (member.tasksCompleted || 1) || 0}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-600">Created</span>
-                                        <span className="font-mono text-slate-900">{member.tasksCreated ?? 0} × {(member.createdScore ?? 0) / (member.tasksCreated || 1) || 0}</span>
+                                        <span className="font-mono text-slate-900">
+                                            {member.tasksCreated ?? 0} ×{" "}
+                                            {(member.createdScore ?? 0) / (member.tasksCreated || 1) || 0}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-600">Updated</span>
@@ -813,9 +850,11 @@ function MemberDetailModal({
                                         <span className="font-mono text-slate-900">{member.messagesSent ?? 0}</span>
                                     </div>
                                 </div>
-                                <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between font-semibold">
+                                <div className="mt-3 flex justify-between border-slate-200 border-t pt-3 font-semibold">
                                     <span className="text-slate-700">Total Score</span>
-                                    <span className="text-orange-600 font-mono">{member.totalScore?.toFixed(1) ?? 0}</span>
+                                    <span className="font-mono text-orange-600">
+                                        {member.totalScore?.toFixed(1) ?? 0}
+                                    </span>
                                 </div>
                             </div>
 
@@ -823,8 +862,8 @@ function MemberDetailModal({
                             {member.contributionPercentage !== undefined && (
                                 <div className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium text-slate-700">Contribution Rate</span>
-                                        <span className="text-lg font-bold text-orange-600">
+                                        <span className="font-medium text-slate-700 text-sm">Contribution Rate</span>
+                                        <span className="font-bold text-lg text-orange-600">
                                             {member.contributionPercentage.toFixed(2)}%
                                         </span>
                                     </div>
@@ -838,7 +877,7 @@ function MemberDetailModal({
                             )}
 
                             {/* Last activity */}
-                            <div className="flex items-center gap-2 text-sm text-slate-500">
+                            <div className="flex items-center gap-2 text-slate-500 text-sm">
                                 <Clock3 className="h-4 w-4" />
                                 <span>Last activity: {member.lastActivity}</span>
                             </div>
@@ -1061,8 +1100,7 @@ export default function GroupMemberAnalyticsPage() {
                   : ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
 
         // Current user's trend
-        const currentUserTrend =
-            trendData?.find((m) => m.userId === currentUserId) ?? trendData?.[0];
+        const currentUserTrend = trendData?.find((m) => m.userId === currentUserId) ?? trendData?.[0];
 
         let myData: number[] = [];
         let groupData: number[] = [];
@@ -1178,22 +1216,25 @@ export default function GroupMemberAnalyticsPage() {
         if (!summary?.memberActivitySummary) return [];
 
         // Create map of contribution data by userId (includes weighted scores)
-        const contributionMap = new Map<string, {
-            contributionPercentage: number;
-            totalScore: number;
-            tasksCompleted: number;
-            tasksCreated: number;
-            tasksUpdated: number;
-            tasksDeleted: number;
-            tasksAssigned: number;
-            commentsCreated: number;
-            messagesSent: number;
-            completedScore: number;
-            createdScore: number;
-            updatedScore: number;
-            deletedScore: number;
-            assignedScore: number;
-        }>();
+        const contributionMap = new Map<
+            string,
+            {
+                contributionPercentage: number;
+                totalScore: number;
+                tasksCompleted: number;
+                tasksCreated: number;
+                tasksUpdated: number;
+                tasksDeleted: number;
+                tasksAssigned: number;
+                commentsCreated: number;
+                messagesSent: number;
+                completedScore: number;
+                createdScore: number;
+                updatedScore: number;
+                deletedScore: number;
+                assignedScore: number;
+            }
+        >();
         summary.memberContribution?.forEach((c) => {
             if (c.userId) {
                 contributionMap.set(c.userId, {

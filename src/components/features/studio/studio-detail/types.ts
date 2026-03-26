@@ -20,6 +20,7 @@ export function transformGroupComparisonToProgress(data: GroupComparisonData[]):
     return data.map((g) => ({
         groupId: g.groupId ?? "",
         groupName: g.groupName ?? "",
+        groupColor: (g as any).groupColor ?? undefined,
         completedTasks: g.completedTasks ?? 0,
         totalTasks: g.totalTasks ?? 0,
         progress: Math.round((g.completionRate ?? 0) * 100),
@@ -64,6 +65,7 @@ export interface StudioMember {
 export interface GroupProgress {
     groupId: string;
     groupName: string;
+    groupColor?: string; // hex color, e.g. "#f97316"
     completedTasks: number;
     totalTasks: number;
     progress: number; // percentage
@@ -220,9 +222,18 @@ export function calculateScheduleStatus(
 
     const totalDuration = due.getTime() - start.getTime();
     const elapsed = now.getTime() - start.getTime();
-    const expectedProgress = Math.min(100, (elapsed / totalDuration) * 100);
+
+    // Only calculate if studio hasn't started yet or is in progress
+    if (elapsed <= 0) {
+        return { status: "on-track", message: "Chưa bắt đầu" };
+    }
+
+    // Expected progress = elapsed / totalDuration * 100 (cap at 100% when overdue)
+    // If actual progress < expected, group is behind
+    const expectedProgress = Math.min((elapsed / totalDuration) * 100, 100);
     const actualProgress = groupProgress.progress;
 
+    // Allow some buffer: -10% grace for "on-track"
     const difference = actualProgress - expectedProgress;
 
     if (difference >= -10) {
