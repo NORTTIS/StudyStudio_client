@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Loader2, X, Zap } from "lucide-react";
+import { AlertCircle, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
@@ -30,18 +31,6 @@ interface QuickAssignModalProps {
 type AssignScope = 0 | 1;
 type GroupRole = 0 | 1 | 2 | 3 | 4;
 
-const RoleLabels: Record<Exclude<GroupRole, 0>, string> = {
-    1: "Moderator",
-    2: "Member",
-    3: "Commenter",
-    4: "Viewer"
-};
-
-const ScopeLabels: Record<AssignScope, string> = {
-    0: "Chưa phân nhóm",
-    1: "Tất cả thành viên"
-};
-
 const formSchema = z.object({
     scope: z.union([z.literal(0), z.literal(1)]),
     defaultRole: z.enum(["1", "2", "3", "4"]),
@@ -60,6 +49,8 @@ export function QuickAssignModal({
     members,
     onSuccess
 }: QuickAssignModalProps) {
+    const t = useTranslations("QuickAssignModal");
+
     const [mounted, setMounted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -100,6 +91,21 @@ export function QuickAssignModal({
         () => members.filter((m) => m.userId && !allExcludedIds.has(m.userId)),
         [members, allExcludedIds]
     );
+
+    const roleOptions = useMemo(
+        () => [
+            { value: "1", label: t("roles.moderator") },
+            { value: "2", label: t("roles.member") },
+            { value: "3", label: t("roles.commenter") },
+            { value: "4", label: t("roles.viewer") }
+        ],
+        [t]
+    );
+
+    const scopeLabels: Record<AssignScope, string> = {
+        0: t("scope.unassignedOnly"),
+        1: t("scope.allMembers")
+    };
 
     useEffect(() => setMounted(true), []);
 
@@ -191,10 +197,10 @@ export function QuickAssignModal({
                     onClose();
                 }, 1500);
             } else {
-                setSubmitError(result.message || "Phân phối thất bại. Vui lòng thử lại.");
+                setSubmitError(result.message || t("errors.assignFailed"));
             }
         } catch {
-            setSubmitError("Đã xảy ra lỗi khi phân phối. Vui lòng thử lại.");
+            setSubmitError(t("errors.assignException"));
         } finally {
             setSubmitting(false);
         }
@@ -221,9 +227,9 @@ export function QuickAssignModal({
                         <div className="flex items-center gap-3">
                             <div>
                                 <h2 className="font-semibold text-2xl text-[#111827] tracking-tight">
-                                    Phân phối nhanh
+                                    {t("title")}
                                 </h2>
-                                <p className="text-[#6B7280] text-sm">Phân phối ngẫu nhiên thành viên vào nhóm</p>
+                                <p className="text-[#6B7280] text-sm">{t("subtitle")}</p>
                             </div>
                         </div>
 
@@ -239,7 +245,7 @@ export function QuickAssignModal({
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-8 py-6">
                         {/* Scope */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">Phạm vi phân phối</label>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("scope.title")}</h3>
                             <div className="mt-3 space-y-2">
                                 <label
                                     className={cn(
@@ -256,9 +262,9 @@ export function QuickAssignModal({
                                         className="h-4 w-4 accent-orange-500"
                                     />
                                     <div className="flex-1">
-                                        <span className="font-medium text-[#111827]">{ScopeLabels[0]}</span>
+                                        <span className="font-medium text-[#111827]">{scopeLabels[0]}</span>
                                         <p className="mt-0.5 text-[#6B7280] text-sm">
-                                            Chỉ phân phối thành viên chưa thuộc nhóm nào
+                                            {t("scope.unassignedDescription")}
                                         </p>
                                     </div>
                                 </label>
@@ -278,8 +284,8 @@ export function QuickAssignModal({
                                         className="h-4 w-4 accent-orange-500"
                                     />
                                     <div className="flex-1">
-                                        <span className="font-medium text-[#111827]">{ScopeLabels[1]}</span>
-                                        <p className="mt-0.5 text-[#6B7280] text-sm">Phân phối lại tất cả thành viên</p>
+                                        <span className="font-medium text-[#111827]">{scopeLabels[1]}</span>
+                                        <p className="mt-0.5 text-[#6B7280] text-sm">{t("scope.allMembersDescription")}</p>
                                     </div>
                                 </label>
                             </div>
@@ -287,26 +293,24 @@ export function QuickAssignModal({
 
                         {/* Default Role */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">Vai trò mặc định</label>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("defaultRole.title")}</h3>
                             <div className="mt-3">
                                 <select
                                     {...form.register("defaultRole")}
                                     className="h-11 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-4 text-[#111827] text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20">
-                                    {(Object.entries(RoleLabels) as unknown as [string, string][]).map(
-                                        ([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {label}
-                                            </option>
-                                        )
-                                    )}
+                                    {roleOptions.map(({ value, label }) => (
+                                        <option key={value} value={value}>
+                                            {label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
 
                         {/* Target Groups */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">Nhóm đích</label>
-                            <p className="mt-1 mb-3 text-[#6B7280] text-xs">Để trống để phân phối vào tất cả nhóm</p>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("targetGroups.title")}</h3>
+                            <p className="mt-1 mb-3 text-[#6B7280] text-xs">{t("targetGroups.hint")}</p>
                             {groups.length > 0 ? (
                                 <div className="max-h-[180px] space-y-2 overflow-y-auto rounded-xl border border-gray-200 p-3">
                                     {groups.map((group) => {
@@ -330,7 +334,7 @@ export function QuickAssignModal({
                                                         {group.name}
                                                     </span>
                                                     <span className="text-[#6B7280] text-xs">
-                                                        {group.memberCount} thành viên
+                                                        {t("targetGroups.memberCount", { count: group.memberCount })}
                                                     </span>
                                                 </div>
                                             </label>
@@ -339,16 +343,16 @@ export function QuickAssignModal({
                                 </div>
                             ) : (
                                 <div className="rounded-xl border border-gray-200 p-4 text-center text-[#6B7280] text-sm">
-                                    Chưa có nhóm nào
+                                    {t("targetGroups.noGroups")}
                                 </div>
                             )}
                         </div>
 
                         {/* Exclude Users */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">Loại trừ thành viên</label>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("excludeMembers.title")}</h3>
                             <p className="mt-1 mb-3 text-[#6B7280] text-xs">
-                                Những thành viên này sẽ không được phân phối
+                                {t("excludeMembers.hint")}
                             </p>
 
                             {/* Member multi-select */}
@@ -403,7 +407,7 @@ export function QuickAssignModal({
                                 </div>
                             ) : (
                                 <div className="rounded-xl border border-gray-200 p-4 text-center text-[#6B7280] text-sm">
-                                    Không có thành viên nào để loại trừ
+                                    {t("excludeMembers.none")}
                                 </div>
                             )}
                         </div>
@@ -419,7 +423,7 @@ export function QuickAssignModal({
                         {/* Success */}
                         {submitSuccess && (
                             <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-700 text-sm">
-                                Phân phối thành công!
+                                {t("success")}
                             </div>
                         )}
 
@@ -431,7 +435,7 @@ export function QuickAssignModal({
                                 onClick={onClose}
                                 disabled={submitting}
                                 className="h-11 rounded-xl border-gray-200 px-6 font-medium text-[#111827] hover:bg-gray-50">
-                                Hủy
+                                {t("actions.cancel")}
                             </Button>
                             <Button
                                 type="submit"
@@ -440,10 +444,10 @@ export function QuickAssignModal({
                                 {submitting ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Đang phân phối...
+                                        {t("actions.assigning")}
                                     </>
                                 ) : (
-                                    "Phân phối ngẫu nhiên"
+                                    t("actions.assignRandom")
                                 )}
                             </Button>
                         </div>

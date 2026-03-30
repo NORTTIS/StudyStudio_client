@@ -35,7 +35,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 export function AnnouncementsPage() {
     const locale = useLocale();
-    const t = useTranslations();
+    const t = useTranslations("Announcements");
     const { toast } = useToast();
 
     const isMentionType = (type: string) =>
@@ -102,7 +102,7 @@ export function AnnouncementsPage() {
         } catch (error) {
             console.error("Failed to load announcements:", error);
             toast({
-                description: t("Common.loadError") || "Failed to load announcements",
+                description: t("loadFailed"),
                 variant: "destructive"
             });
         } finally {
@@ -167,7 +167,7 @@ export function AnnouncementsPage() {
 
                 if (showMsg) {
                     toast({
-                        description: t("Announcements.markAsReadSuccess")
+                        description: t("markAsReadSuccess")
                     });
                 }
             }
@@ -179,9 +179,7 @@ export function AnnouncementsPage() {
     const handleDeleteAnnouncement = async (e: React.MouseEvent, userAnnouncementId: string) => {
         e.stopPropagation();
 
-        const confirmed = window.confirm(
-            t("Announcements.confirmDelete") || "Bạn có chắc muốn xóa thông báo này không?"
-        );
+        const confirmed = window.confirm(t("confirmDelete"));
         if (!confirmed) return;
 
         try {
@@ -189,17 +187,17 @@ export function AnnouncementsPage() {
             if (result.status === "success") {
                 setUserAnnouncements((prev) => prev.filter((ann) => ann.userAnnouncementId !== userAnnouncementId));
                 toast({
-                    description: t("Announcements.deleteSuccess")
+                    description: t("deleteSuccess")
                 });
             } else {
                 toast({
-                    description: t("Announcements.deleteFailed") || "Xóa không thành công",
+                    description: t("deleteFailed"),
                     variant: "destructive"
                 });
             }
         } catch {
             toast({
-                description: "Xóa không thành công",
+                description: t("deleteFailed"),
                 variant: "destructive"
             });
         }
@@ -236,7 +234,7 @@ export function AnnouncementsPage() {
             case "0":
             case "info":
                 return {
-                    label: t("Announcements.info"),
+                    label: t("info"),
                     icon: <InfoCircleOutlined className="text-sky-500" />,
                     iconLarge: <InfoCircleOutlined className="text-3xl text-sky-500" />,
                     badgeClass: "border-sky-200 bg-sky-50 text-sky-600",
@@ -246,7 +244,7 @@ export function AnnouncementsPage() {
             case "1":
             case "warning":
                 return {
-                    label: t("Announcements.warning"),
+                    label: t("warning"),
                     icon: <WarningOutlined className="text-amber-500" />,
                     iconLarge: <WarningOutlined className="text-3xl text-amber-500" />,
                     badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
@@ -256,7 +254,7 @@ export function AnnouncementsPage() {
             case "2":
             case "critical":
                 return {
-                    label: t("Announcements.critical"),
+                    label: t("critical"),
                     icon: <ExclamationCircleOutlined className="text-rose-500" />,
                     iconLarge: <ExclamationCircleOutlined className="text-3xl text-rose-500" />,
                     badgeClass: "border-rose-200 bg-rose-50 text-rose-600",
@@ -265,7 +263,7 @@ export function AnnouncementsPage() {
                 };
             default:
                 return {
-                    label: "Notice",
+                    label: t("other"),
                     icon: <BellOutlined className="text-orange-500" />,
                     iconLarge: <BellOutlined className="text-3xl text-orange-500" />,
                     badgeClass: "border-orange-200 bg-orange-50 text-orange-600",
@@ -286,7 +284,7 @@ export function AnnouncementsPage() {
             <div className="flex min-h-[70vh] items-center justify-center bg-white">
                 <div className="flex flex-col items-center gap-4">
                     <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
-                    <p className="font-medium text-[#7C6A5A] text-sm">Đang tải thông báo...</p>
+                    <p className="font-medium text-[#7C6A5A] text-sm">{t("loading")}</p>
                 </div>
             </div>
         );
@@ -308,7 +306,7 @@ export function AnnouncementsPage() {
                                 transition={{ duration: 0.22 }}
                                 className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-700 text-sm">
                                 <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.12)]" />
-                                Learning Hub
+                                {t("learningHub")}
                             </motion.div>
 
                             <div className="mt-4 flex items-start gap-3">
@@ -321,7 +319,7 @@ export function AnnouncementsPage() {
                                         layout
                                         transition={{ type: "spring", stiffness: 280, damping: 26 }}
                                         className="font-extrabold text-3xl text-[#261E33] leading-[1.2] tracking-tight lg:text-5xl">
-                                        {t("Announcements.title")}
+                                        {t("title")}
                                     </motion.h1>
 
                                     <motion.p
@@ -329,8 +327,7 @@ export function AnnouncementsPage() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.22, delay: 0.05 }}
                                         className="mt-2 max-w-3xl text-[#7C6A5A] text-sm leading-7 lg:text-[15px]">
-                                        Theo dõi cập nhật học tập, thông báo hệ thống và tin nhắn cá nhân trong giao
-                                        diện sáng sủa, hiện đại và tập trung hơn.
+                                        {t("heroDescription")}
                                     </motion.p>
                                 </div>
                             </div>
@@ -352,7 +349,7 @@ export function AnnouncementsPage() {
                                         className="font-bold text-[#261E33]">
                                         {publicAnnouncements.length + userAnnouncements.length}
                                     </motion.span>{" "}
-                                    thông báo
+                                    {t("labelAnnouncements")}
                                 </span>
                             </motion.div>
 
@@ -371,7 +368,7 @@ export function AnnouncementsPage() {
                                         className="font-bold text-[#261E33]">
                                         {unreadCount}
                                     </motion.span>{" "}
-                                    chưa đọc
+                                    {t("labelUnread")}
                                 </span>
                             </motion.div>
                         </div>
@@ -380,19 +377,19 @@ export function AnnouncementsPage() {
 
                 <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                     <StatCard
-                        label={t("Announcements.total")}
+                        label={t("total")}
                         value={publicAnnouncements.length + userAnnouncements.length}
                         icon={<BellOutlined />}
                         iconClass="bg-orange-50 text-orange-500"
                     />
                     <StatCard
-                        label={t("Announcements.public")}
+                        label={t("public")}
                         value={publicAnnouncements.length}
                         icon={<CheckCircleOutlined />}
                         iconClass="bg-emerald-50 text-emerald-500"
                     />
                     <StatCard
-                        label={t("Announcements.personal")}
+                        label={t("personal")}
                         value={userAnnouncements.length}
                         icon={<EyeOutlined />}
                         iconClass="bg-sky-50 text-sky-500"
@@ -411,12 +408,12 @@ export function AnnouncementsPage() {
                                     {
                                         key: "public" as const,
                                         icon: <CheckCircleOutlined />,
-                                        label: t("Announcements.publicTab") || "Thông báo hệ thống"
+                                        label: t("publicTab")
                                     },
                                     {
                                         key: "personal" as const,
                                         icon: <EyeOutlined />,
-                                        label: t("Announcements.personalTab"),
+                                        label: t("personalTab"),
                                         badge: unreadCount
                                     }
                                 ].map((tab) => {
@@ -432,11 +429,10 @@ export function AnnouncementsPage() {
                                                 whileHover={{ y: -1 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 transition={{ duration: 0.15 }}
-                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${
-                                                    active
+                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${active
                                                         ? "text-white shadow-md shadow-orange-200"
                                                         : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
-                                                }`}>
+                                                    }`}>
                                                 {active ? (
                                                     <motion.div
                                                         layoutId="activeAnnouncementTab"
@@ -450,11 +446,10 @@ export function AnnouncementsPage() {
                                                 ) : null}
 
                                                 <span
-                                                    className={`relative z-10 transition-colors duration-200 ${
-                                                        active
+                                                    className={`relative z-10 transition-colors duration-200 ${active
                                                             ? "text-white"
                                                             : "text-[#8C8C8C] group-hover:text-[#EA580C]"
-                                                    }`}>
+                                                        }`}>
                                                     {tab.icon}
                                                 </span>
 
@@ -462,11 +457,10 @@ export function AnnouncementsPage() {
 
                                                 {"badge" in tab && tab.badge ? (
                                                     <span
-                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${
-                                                            active
+                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${active
                                                                 ? "bg-white/20 text-white"
                                                                 : "bg-orange-100 text-orange-700"
-                                                        }`}>
+                                                            }`}>
                                                         {tab.badge}
                                                     </span>
                                                 ) : null}
@@ -482,7 +476,7 @@ export function AnnouncementsPage() {
                                     <Input
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder={t("Announcements.searchPlaceholder")}
+                                        placeholder={t("searchPlaceholder")}
                                         className="h-11 rounded-xl border-orange-200 bg-white pl-10"
                                     />
                                 </div>
@@ -493,10 +487,10 @@ export function AnnouncementsPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="newest">
-                                            {t("Announcements.sortNewest") || "Mới nhất"}
+                                            {t("sortNewest")}
                                         </SelectItem>
                                         <SelectItem value="oldest">
-                                            {t("Announcements.sortOldest") || "Cũ nhất"}
+                                            {t("sortOldest")}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -514,7 +508,13 @@ export function AnnouncementsPage() {
                             exit={{ opacity: 0, y: -8 }}
                             transition={{ duration: 0.2 }}>
                             {currentItems.length === 0 ? (
-                                <EmptyState isSearch={!!searchQuery} />
+                                <EmptyState
+                                    isSearch={!!searchQuery}
+                                    emptyTitle={t("emptyStateTitle")}
+                                    emptyDescription={t("emptyStateDescription")}
+                                    noResultTitle={t("noResultTitle")}
+                                    noResultDescription={t("noResultDescription")}
+                                />
                             ) : (
                                 <div className="grid gap-4">
                                     {currentItems.map((ann) => (
@@ -535,6 +535,9 @@ export function AnnouncementsPage() {
                                             onDelete={handleDeleteAnnouncement}
                                             formatDate={formatDate}
                                             getTypeMeta={getTypeMeta}
+                                            unreadLabel={t("new")}
+                                            systemLabel={t("systemNews")}
+                                            updateLabel={t("update")}
                                         />
                                     ))}
                                 </div>
@@ -593,7 +596,7 @@ export function AnnouncementsPage() {
                                     <Button
                                         onClick={() => setSelectedId(null)}
                                         className="h-11 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] px-8 font-semibold text-white hover:from-[#EA580C] hover:to-[#DC2626]">
-                                        {t("Announcements.confirmed") || "Đã hiểu"}
+                                        {t("confirmed")}
                                     </Button>
                                 </DialogFooter>
                             </div>
@@ -647,13 +650,19 @@ function AnnouncementCard({
     onClick,
     onDelete,
     formatDate,
-    getTypeMeta
+    getTypeMeta,
+    unreadLabel,
+    systemLabel,
+    updateLabel
 }: {
     item: Announcement | UserAnnouncement;
     isUserAnn?: boolean;
     onClick: () => void;
     onDelete?: (e: React.MouseEvent, userAnnouncementId: string) => void;
     formatDate: (value: string) => string;
+    unreadLabel: string;
+    systemLabel: string;
+    updateLabel: string;
     getTypeMeta: (type: string) => {
         label: string;
         icon: React.ReactNode;
@@ -690,15 +699,14 @@ function AnnouncementCard({
                         {isUnread && (
                             <Badge className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 font-bold text-[11px] text-orange-700 hover:bg-orange-100">
                                 <span className="h-2 w-2 rounded-full bg-orange-500" />
-                                Chưa đọc
+                                {unreadLabel}
                             </Badge>
                         )}
                     </div>
 
                     <h4
-                        className={`mb-2 text-lg leading-7 ${
-                            isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
-                        }`}>
+                        className={`mb-2 text-lg leading-7 ${isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
+                            }`}>
                         {item.title}
                     </h4>
 
@@ -710,7 +718,7 @@ function AnnouncementCard({
                             {formatDate(item.publishedAt)}
                         </p>
                         <p className="font-medium text-slate-400 text-xs">
-                            {item.type === "0" || item.type === "info" ? "Hệ thống" : "Cập nhật"}
+                            {item.type === "0" || item.type === "info" ? systemLabel : updateLabel}
                         </p>
                     </div>
                 </div>
@@ -735,17 +743,29 @@ function AnnouncementCard({
     );
 }
 
-function EmptyState({ isSearch }: { isSearch: boolean }) {
+function EmptyState({
+    isSearch,
+    emptyTitle,
+    emptyDescription,
+    noResultTitle,
+    noResultDescription
+}: {
+    isSearch: boolean;
+    emptyTitle: string;
+    emptyDescription: string;
+    noResultTitle: string;
+    noResultDescription: string;
+}) {
     return (
         <div className="rounded-[32px] border border-orange-200 border-dashed bg-white px-6 py-20 text-center shadow-sm">
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-orange-50">
                 <SoundOutlined className="text-4xl text-orange-300" />
             </div>
             <h4 className="mb-2 font-extrabold text-[#261E33] text-xl">
-                {isSearch ? "Không có kết quả" : "Mọi thứ đều đã cập nhật"}
+                {isSearch ? noResultTitle : emptyTitle}
             </h4>
             <p className="text-[#7C6A5A]">
-                {isSearch ? "Thử lại với từ khóa khác." : "Bạn đã xem hết các thông báo hiện có."}
+                {isSearch ? noResultDescription : emptyDescription}
             </p>
         </div>
     );

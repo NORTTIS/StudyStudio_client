@@ -139,7 +139,7 @@ export default function LandingPlan() {
                                 <div>
                                     <div className="inline-flex items-center gap-2 rounded-full bg-[#F4F1ED] px-3 py-1 text-xs font-semibold text-[#8A7A6A]">
                                         <ShieldCheck className="h-3.5 w-3.5" />
-                                        Starter
+                                        {t("freePlan.tierBadge")}
                                     </div>
                                     <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#261E33]">
                                         {t("freePlan.title")}
@@ -209,7 +209,7 @@ export default function LandingPlan() {
                                     <div>
                                         <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
                                             <Crown className="h-3.5 w-3.5" />
-                                            Premium
+                                            {t("premiumPlan.tierBadge")}
                                         </div>
                                         <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#261E33]">
                                             {t("premiumPlan.title")}

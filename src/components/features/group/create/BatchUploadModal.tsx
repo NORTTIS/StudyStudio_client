@@ -2,6 +2,7 @@
 
 import { Download, UploadCloud, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { BatchAssignResponse, BatchErrorRow } from "@/api/studios";
 import { uploadBatchAssignCsv } from "@/api/studios";
 import { Button } from "@/components/common/Button";
@@ -19,6 +20,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 
 export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUploadModalProps) {
+    const t = useTranslations("BatchUploadModal");
     const [state, setState] = useState<UploadState>("idle");
     const [isUploading, setIsUploading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -53,13 +55,13 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
     const validateFile = useCallback((file: File): string | null => {
         const extension = "." + file.name.split(".").pop()?.toLowerCase();
         if (!ALLOWED_EXTENSIONS.includes(extension)) {
-            return "Chỉ chấp nhận file .csv, .xlsx, .xls";
+            return t("selectError.invalidFormat");
         }
         if (file.size > MAX_FILE_SIZE) {
-            return "File không được vượt quá 5MB";
+            return t("selectError.fileTooLarge");
         }
         return null;
-    }, []);
+    }, [t]);
 
     const handleFileSelect = useCallback(
         (file: File) => {
@@ -125,7 +127,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
             }
         } catch (err) {
             console.error("[BatchUploadModal] Upload failed:", err);
-            setErrorMessage("Đã xảy ra lỗi khi tải lên. Vui lòng thử lại.");
+            setErrorMessage(t("errors.uploadFailed"));
             setState("error");
         } finally {
             setIsUploading(false);
@@ -149,7 +151,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "danh-sach-loi.tsv";
+        a.download = t("downloadErrorsFilename");
         a.click();
         URL.revokeObjectURL(url);
     }, [uploadResult]);
@@ -162,9 +164,9 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
     }, [state, onSuccess, onClose]);
 
     const formatFileSize = (bytes: number): string => {
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        if (bytes < 1024) return `${bytes} ${t("fileSize.bytes")}`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ${t("fileSize.kb")}`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} ${t("fileSize.mb")}`;
     };
 
     if (!open) return null;
@@ -179,10 +181,10 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                     <div className="flex items-start justify-between gap-4 px-8 py-6 sm:px-10">
                         <div>
                             <h2 className="font-bold text-2xl text-[#2A2438] tracking-tight">
-                                Tải lên danh sách thành viên
+                                {t("title")}
                             </h2>
                             <p className="mt-2 text-[#6F6B99] text-sm">
-                                Tải file CSV hoặc Excel để tạo nhóm và thêm thành viên
+                                {t("subtitle")}
                             </p>
                         </div>
 
@@ -190,7 +192,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                             type="button"
                             onClick={handleClose}
                             className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-orange-200 text-[#2A2438] hover:bg-orange-50"
-                            aria-label="Close">
+                            aria-label={t("closeButton")}>
                             <X size={18} />
                         </button>
                     </div>
@@ -205,11 +207,10 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${
-                                        dragOver
+                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${dragOver
                                             ? "border-orange-400 bg-orange-50"
                                             : "border-[#E6E6E6] bg-[#FAFAFF] hover:border-[#CFCFCF]"
-                                    }`}>
+                                        }`}>
                                     <input
                                         ref={fileInputRef}
                                         type="file"
@@ -223,9 +224,9 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                             <UploadCloud className="h-8 w-8 text-[#6F6B99]" />
                                         </div>
                                         <p className="mt-4 font-medium text-[#2A2438] text-sm">
-                                            Kéo thả file .csv, .xlsx vào đây hoặc nhấn để chọn
+                                            {t("dropzone.text")}
                                         </p>
-                                        <p className="mt-2 text-[#6F6B99] text-xs">Dung lượng tối đa: 5MB</p>
+                                        <p className="mt-2 text-[#6F6B99] text-xs">{t("dropzone.maxSize")}</p>
                                     </div>
                                 </div>
 
@@ -271,14 +272,14 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                         type="button"
                                         onClick={handleClose}
                                         className="font-medium text-[#6F6B99] text-sm hover:text-[#2A2438]">
-                                        Hủy
+                                        {t("buttons.cancel")}
                                     </button>
                                     <Button
                                         onClick={handleUpload}
                                         disabled={!selectedFile}
                                         isLoading={isUploading}
                                         className="h-11 rounded-xl bg-orange-500 px-8 font-semibold text-sm hover:bg-orange-600 disabled:bg-gray-300">
-                                        Tải lên
+                                        {t("buttons.upload")}
                                     </Button>
                                 </div>
                             </>
@@ -289,8 +290,8 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                 <div className="grid h-16 w-16 place-items-center rounded-full bg-orange-100">
                                     <UploadCloud className="h-8 w-8 animate-bounce text-orange-500" />
                                 </div>
-                                <p className="mt-4 font-medium text-[#2A2438] text-sm">Đang tải lên...</p>
-                                <p className="mt-2 text-[#6F6B99] text-xs">Vui lòng chờ trong giây lát</p>
+                                <p className="mt-4 font-medium text-[#2A2438] text-sm">{t("uploading.title")}</p>
+                                <p className="mt-2 text-[#6F6B99] text-xs">{t("uploading.hint")}</p>
                             </div>
                         )}
 
@@ -315,10 +316,10 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                         </div>
                                         <div>
                                             <div className="font-semibold text-green-700 text-sm">
-                                                Tải lên thành công!
+                                                {t("success.title")}
                                             </div>
                                             <div className="text-green-600 text-xs">
-                                                Đã xử lý {uploadResult.totalRows || 0} dòng dữ liệu
+                                                {t("success.subtitle", { totalRows: uploadResult.totalRows || 0 })}
                                             </div>
                                         </div>
                                     </div>
@@ -330,19 +331,19 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                         <div className="font-bold text-green-600 text-xl">
                                             {uploadResult.successCount || 0}
                                         </div>
-                                        <div className="text-[#6F6B99] text-xs">Thành công</div>
+                                        <div className="text-[#6F6B99] text-xs">{t("stats.success")}</div>
                                     </div>
                                     <div className="rounded-xl border border-[#E6E6E6] bg-white px-4 py-3 text-center">
                                         <div className="font-bold text-amber-600 text-xl">
                                             {uploadResult.skippedCount || 0}
                                         </div>
-                                        <div className="text-[#6F6B99] text-xs">Bị bỏ qua</div>
+                                        <div className="text-[#6F6B99] text-xs">{t("stats.skipped")}</div>
                                     </div>
                                     <div className="rounded-xl border border-[#E6E6E6] bg-white px-4 py-3 text-center">
                                         <div className="font-bold text-red-600 text-xl">
                                             {uploadResult.errors?.length || 0}
                                         </div>
-                                        <div className="text-[#6F6B99] text-xs">Lỗi</div>
+                                        <div className="text-[#6F6B99] text-xs">{t("stats.error")}</div>
                                     </div>
                                 </div>
 
@@ -350,23 +351,23 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                 {uploadResult.errors && uploadResult.errors.length > 0 && (
                                     <div className="mt-4">
                                         <div className="mb-2 font-semibold text-[#2A2438] text-sm">
-                                            Danh sách lỗi ({uploadResult.errors.length})
+                                            {t("errorList.title", { count: uploadResult.errors.length })}
                                         </div>
                                         <div className="max-h-48 overflow-y-auto rounded-xl border border-[#E6E6E6]">
                                             <table className="w-full text-sm">
                                                 <thead className="sticky top-0 bg-[#FAFAFF]">
                                                     <tr>
                                                         <th className="px-4 py-2 text-left font-semibold text-[#2A2438]">
-                                                            STT
+                                                            {t("table.row")}
                                                         </th>
                                                         <th className="px-4 py-2 text-left font-semibold text-[#2A2438]">
-                                                            Email
+                                                            {t("table.email")}
                                                         </th>
                                                         <th className="px-4 py-2 text-left font-semibold text-[#2A2438]">
-                                                            Nhóm
+                                                            {t("table.group")}
                                                         </th>
                                                         <th className="px-4 py-2 text-left font-semibold text-[#2A2438]">
-                                                            Lý do
+                                                            {t("table.reason")}
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -392,13 +393,13 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                     {uploadResult.errors && uploadResult.errors.length > 0 && (
                                         <Button variant="outline" size="sm" onClick={handleDownloadErrors}>
                                             <Download className="h-4 w-4" />
-                                            Tải danh sách lỗi
+                                            {t("buttons.downloadErrors")}
                                         </Button>
                                     )}
                                     <Button
                                         onClick={handleClose}
                                         className="h-11 rounded-xl bg-orange-500 px-8 font-semibold text-sm hover:bg-orange-600">
-                                        Đóng
+                                        {t("buttons.close")}
                                     </Button>
                                 </div>
                             </>
@@ -424,7 +425,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                             </svg>
                                         </div>
                                         <div>
-                                            <div className="font-semibold text-red-700 text-sm">Tải lên thất bại</div>
+                                            <div className="font-semibold text-red-700 text-sm">{t("error.title")}</div>
                                             <div className="text-red-600 text-xs">{errorMessage}</div>
                                         </div>
                                     </div>
@@ -436,12 +437,12 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                         type="button"
                                         onClick={handleClose}
                                         className="font-medium text-[#6F6B99] text-sm hover:text-[#2A2438]">
-                                        Đóng
+                                        {t("buttons.close")}
                                     </button>
                                     <Button
                                         onClick={() => setState("idle")}
                                         className="h-11 rounded-xl bg-orange-500 px-8 font-semibold text-sm hover:bg-orange-600">
-                                        Thử lại
+                                        {t("buttons.tryAgain")}
                                     </Button>
                                 </div>
                             </>

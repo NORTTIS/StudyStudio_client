@@ -134,7 +134,7 @@ export default function LandingPage() {
 
                 <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 text-center lg:px-8">
                     <div className="landing-fade-up">
-                        <SectionBadge>Personal workspace</SectionBadge>
+                        <SectionBadge>{t("badge")}</SectionBadge>
 
                         <h1 className="landing-fade-up landing-delay-1 mt-6 text-5xl font-extrabold leading-[1.05] tracking-tight text-gray-900 md:text-6xl xl:text-7xl">
                             {t("hero.title")}

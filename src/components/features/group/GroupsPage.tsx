@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -209,6 +210,7 @@ function SegmentedView({
 }
 
 export function GroupsPage() {
+    const t = useTranslations("GroupsPage");
     const [view, setView] = useState<"grid" | "list">("grid");
     const [data, setData] = useState<GroupsPageData>(emptyData);
     const [error, setError] = useState<string>("");
@@ -352,12 +354,12 @@ export function GroupsPage() {
                                         <div>
                                             <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm backdrop-blur">
                                                 <Sparkles className="h-3.5 w-3.5" />
-                                                Workspace groups
+                                                {t("workspaceGroups")}
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-2.5">
                                                 <h1 className="bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#EA580C_100%)] bg-clip-text font-bold text-[1.8rem] tracking-tight text-transparent">
-                                                    Nhóm
+                                                    {t("title")}
                                                 </h1>
                                                 <span className="rounded-full border border-orange-200/60 bg-orange-50/90 px-3 py-1 font-semibold text-[11px] text-orange-700 shadow-sm">
                                                     {currentGroupsCount}/{maxGroups}
@@ -365,7 +367,7 @@ export function GroupsPage() {
                                             </div>
 
                                             <p className="mt-1 text-[#7C6A58] text-sm leading-6">
-                                                Quản lý các nhóm học tập của bạn theo cách trực quan và sinh động hơn.
+                                                {t("subtitle")}
                                             </p>
                                         </div>
                                     </div>
@@ -385,7 +387,7 @@ export function GroupsPage() {
                                                         : "cursor-not-allowed bg-[#EAE3DB] text-[#A39487] shadow-none"
                                                 )}>
                                                 <Plus className="h-4 w-4" />
-                                                <span>Nhóm mới</span>
+                                                <span>{t("newGroup")}</span>
                                             </Button>
                                         </motion.div>
                                     </div>
@@ -407,7 +409,7 @@ export function GroupsPage() {
                                                 exit={{ opacity: 0, y: -6 }}
                                                 className="flex items-center gap-2 rounded-2xl border border-[#F1E4D9] bg-white/60 px-3 py-2.5 text-[#8A7868] text-sm backdrop-blur">
                                                 <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E4D9CD] border-t-orange-400" />
-                                                Đang tải dữ liệu nhóm...
+                                                {t("loading")}
                                             </motion.div>
                                         )}
 
@@ -433,15 +435,16 @@ export function GroupsPage() {
                                 <GroupsSection
                                     icon={Star}
                                     iconVariant="yellow"
-                                    title="Nhóm yêu thích"
+                                    title={t("favorites")}
                                     count={favorites.length}
                                     view={view}
                                     items={favorites}
                                     expanded={expandFav}
                                     onToggle={() => setExpandFav((v) => !v)}
                                     onToggleStar={onToggleStar}
-                                    emptyText="Chưa có nhóm nào trong mục yêu thích."
+                                    emptyText={t("favoritesEmpty")}
                                     loading={loading}
+                                    t={t}
                                 />
                             </SectionReveal>
                         )}
@@ -451,15 +454,16 @@ export function GroupsPage() {
                                 <GroupsSection
                                     icon={FolderKanban}
                                     iconVariant="blue"
-                                    title="Các nhóm bạn đã tạo"
+                                    title={t("created")}
                                     count={ownedGroups.length}
                                     view={view}
                                     items={ownedGroups}
                                     expanded={expandAll}
                                     onToggle={() => setExpandAll((v) => !v)}
                                     onToggleStar={onToggleStar}
-                                    emptyText="Bạn chưa có nhóm nào."
+                                    emptyText={t("createdEmpty")}
                                     loading={loading}
+                                    t={t}
                                 />
                             </SectionReveal>
                         )}
@@ -469,15 +473,16 @@ export function GroupsPage() {
                                 <GroupsSection
                                     icon={Layers}
                                     iconVariant="purple"
-                                    title="Nhóm thuộc studio tôi quản lý"
+                                    title={t("managed")}
                                     count={ownedManaged.length}
                                     view={view}
                                     items={ownedManaged}
                                     expanded={expandManaged}
                                     onToggle={() => setExpandManaged((v) => !v)}
                                     onToggleStar={onToggleStar}
-                                    emptyText="Chưa có nhóm nào thuộc studio bạn quản lý."
+                                    emptyText={t("managedEmpty")}
                                     loading={loading}
+                                    t={t}
                                 />
                             </SectionReveal>
                         )}
@@ -487,15 +492,16 @@ export function GroupsPage() {
                                 <GroupsSection
                                     icon={Users}
                                     iconVariant="slate"
-                                    title="Nhóm độc lập"
+                                    title={t("independent")}
                                     count={ownedIndependent.length}
                                     view={view}
                                     items={ownedIndependent}
                                     expanded={expandIndependent}
                                     onToggle={() => setExpandIndependent((v) => !v)}
                                     onToggleStar={onToggleStar}
-                                    emptyText="Chưa có nhóm độc lập nào."
+                                    emptyText={t("independentEmpty")}
                                     loading={loading}
+                                    t={t}
                                 />
                             </SectionReveal>
                         )}
@@ -505,15 +511,16 @@ export function GroupsPage() {
                                 <GroupsSection
                                     icon={Users2}
                                     iconVariant="orange"
-                                    title="Các nhóm đã tham gia"
+                                    title={t("joined")}
                                     count={joined.length}
                                     view={view}
                                     items={joined}
                                     expanded={expandJoined}
                                     onToggle={() => setExpandJoined((v) => !v)}
                                     onToggleStar={onToggleStar}
-                                    emptyText="Chưa có nhóm nào mà bạn đã tham gia."
+                                    emptyText={t("joinedEmpty")}
                                     loading={loading}
+                                    t={t}
                                 />
                             </SectionReveal>
                         )}
@@ -545,7 +552,8 @@ function GroupsSection({
     onToggle,
     onToggleStar,
     emptyText,
-    loading = false
+    loading = false,
+    t
 }: {
     title: string;
     count: number;
@@ -559,6 +567,7 @@ function GroupsSection({
     onToggleStar: (groupId: string) => Promise<void>;
     emptyText: string;
     loading?: boolean;
+    t: (key: string) => string;
 }) {
     const canToggle = items.length > PREVIEW_COUNT;
     const visibleItems = expanded || !canToggle ? items : items.slice(0, PREVIEW_COUNT);
@@ -687,12 +696,12 @@ function GroupsSection({
                                         theme.softBg,
                                         theme.softText
                                     )}>
-                                    {count > 0 ? "Đang hoạt động" : "Chưa có nhóm"}
+                                    {count > 0 ? t("active") : t("noGroups")}
                                 </span>
                                 <p className="truncate text-[#94867B] text-xs">
                                     {count > 0
-                                        ? `${count} thẻ nhóm đang hiển thị`
-                                        : "Thêm nhóm để bắt đầu quản lý trực quan hơn"}
+                                        ? `${count} ${t("cardsShowing")}`
+                                        : t("addGroupsHint")}
                                 </p>
                             </div>
                         </div>
@@ -708,18 +717,20 @@ function GroupsSection({
                                 "inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-4 py-2 font-medium text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:bg-white",
                                 theme.buttonHover
                             )}>
-                            <span>{expanded ? "Thu gọn" : "Xem tất cả"}</span>
-                            <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.25 }}>
-                                <ChevronDown className="h-3.5 w-3.5" />
-                            </motion.div>
+                            <span>{expanded ? t("collapse") : t("viewAll")}</span>
+                            <ChevronDown
+                                className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")}
+                            />
                         </motion.button>
                     )}
                 </div>
             </div>
 
-            <motion.div layout className={cn("relative bg-gradient-to-b p-5 md:p-6", theme.content)}>
-                <div className="pointer-events-none absolute inset-x-10 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.5),transparent_72%)]" />
-
+            <motion.div
+                className={cn(
+                    "relative px-5 py-5 md:px-6",
+                    theme.content
+                )}>
                 {loading ? (
                     <SectionSkeleton />
                 ) : visibleItems.length === 0 ? (
@@ -739,7 +750,7 @@ function GroupsSection({
                         <div className="mt-4 space-y-1.5">
                             <p className="font-semibold text-[#544A42] text-sm">{emptyText}</p>
                             <p className="text-[#9B8F84] text-xs">
-                                Khu vực này sẽ hiển thị các nhóm dưới dạng thẻ động đẹp hơn.
+                                {t("emptyAreaHint")}
                             </p>
                         </div>
                     </motion.div>
@@ -787,7 +798,7 @@ function GroupsSection({
                                 whileTap={{ scale: 0.99 }}
                                 onClick={onToggle}
                                 className="mt-5 w-full rounded-[22px] border border-white/85 border-dashed bg-white/78 py-3.5 font-medium text-[#8B7B6D] text-[13px] shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-300 hover:bg-white hover:text-[#EA580C]">
-                                + {items.length - PREVIEW_COUNT} nhóm khác
+                                + {items.length - PREVIEW_COUNT} {t("moreGroups")}
                             </motion.button>
                         )}
                     </>

@@ -127,7 +127,7 @@ export default function LandingPage() {
                             <div
                                 className={`inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm backdrop-blur ${fadeUp}`}>
                                 <span className="h-2 w-2 rounded-full bg-orange-500" />
-                                Productivity Ecosystem
+                                {t("badges.productivityEcosystem")}
                             </div>
 
                             <h1
@@ -154,7 +154,7 @@ export default function LandingPage() {
                         </div>
 
                         <div className={`${fadeUp} ${delay5}`}>
-                            <HeroPreviewFrame src="/images/2.png" alt="Hero preview" />
+                            <HeroPreviewFrame src="/images/2.png" alt={t("previews.hero")} />
                         </div>
                     </div>
                 </div>
@@ -176,7 +176,7 @@ export default function LandingPage() {
                     <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
                         <div className={`${fadeUp} ${delay2}`}>
                             <div className="inline-flex rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
-                                Management
+                                {t("badges.management")}
                             </div>
                             <h3 className="mt-5 text-3xl font-bold tracking-tight text-gray-800 md:text-4xl">
                                 {t("management.title")}
@@ -201,7 +201,7 @@ export default function LandingPage() {
                         </div>
 
                         <div className={`${fadeUp} ${delay4}`}>
-                            <PreviewFrame src="/images/2.png" alt="Management preview" tone="glass" />
+                            <PreviewFrame src="/images/2.png" alt={t("previews.management")} tone="glass" />
                         </div>
                     </div>
                 </div>
@@ -211,12 +211,12 @@ export default function LandingPage() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
                         <div className={`${fadeUp} ${delay2} order-2 lg:order-1`}>
-                            <PreviewFrame src="/images/2.png" alt="Group preview" tone="warm" />
+                            <PreviewFrame src="/images/2.png" alt={t("previews.group")} tone="warm" />
                         </div>
 
                         <div className={`${fadeUp} ${delay1} order-1 lg:order-2`}>
                             <div className="inline-flex rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
-                                Group
+                                {t("badges.group")}
                             </div>
                             <h3 className="mt-5 text-3xl font-bold tracking-tight text-gray-800 md:text-4xl">
                                 {t("group.title")}
@@ -248,7 +248,7 @@ export default function LandingPage() {
                     <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
                         <div className={`${fadeUp} ${delay1}`}>
                             <div className="inline-flex rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
-                                Personal
+                                {t("badges.personal")}
                             </div>
                             <h3 className="mt-5 text-3xl font-bold tracking-tight text-gray-800 md:text-4xl">
                                 {t("personal.title")}
@@ -273,7 +273,7 @@ export default function LandingPage() {
                         </div>
 
                         <div className={`${fadeUp} ${delay2}`}>
-                            <PreviewFrame src="/images/2.png" alt="Personal preview" tone="light" />
+                            <PreviewFrame src="/images/2.png" alt={t("previews.personal")} tone="light" />
                         </div>
                     </div>
                 </div>

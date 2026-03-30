@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
     type CollisionDetection,
@@ -29,6 +29,7 @@ import { CSS } from "@dnd-kit/utilities";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import "react-day-picker/dist/style.css";
 import {
     CalendarDays,
@@ -159,16 +160,17 @@ function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function formatDateDisplay(value?: string) {
+function formatDateDisplay(value?: string, t?: (key: string) => string) {
     const date = parseDateString(value);
-    if (!date) return "Select a date";
+    const selectDateLabel = t ? t("selectDate") : "Select a date";
+    if (!date) return selectDateLabel;
 
     const today = startOfDay(new Date());
     const target = startOfDay(date);
     const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
 
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === 0) return t ? t("today") : "Today";
+    if (diffDays === 1) return t ? t("tomorrow") : "Tomorrow";
 
     return new Intl.DateTimeFormat("en-US", {
         weekday: "short",
@@ -342,11 +344,11 @@ function ProgressPill({ progress }: { progress: number }) {
 
 import { CheckCircle2 } from "lucide-react";
 
-function DonePill() {
+function DonePill({ label = "Done" }: { label?: string } = {}) {
     return (
         <span className="inline-flex h-10 items-center gap-2 rounded-[16px] border border-emerald-300 bg-emerald-50 px-4 font-medium text-emerald-700 text-sm">
             <CheckCircle2 className="h-4 w-4" />
-            Done
+            {label}
         </span>
     );
 }
@@ -690,10 +692,19 @@ function ConfirmModal({
 
 function AddColumnInline({
     isSubmitting,
-    onSubmit
+    onSubmit,
+    labels
 }: {
     isSubmitting: boolean;
     onSubmit: (title: string) => Promise<void>;
+    labels: {
+        errorMessage: string;
+        failedMessage: string;
+        createStatus: string;
+        enterStatusName: string;
+        confirm: string;
+        cancel: string;
+    };
 }) {
     const [open, setOpen] = React.useState(false);
     const [title, setTitle] = React.useState("");
@@ -717,7 +728,7 @@ function AddColumnInline({
         const trimmed = title.trim().slice(0, 30);
 
         if (!trimmed) {
-            setError("Vui lòng nhập tên trạng thái.");
+            setError(labels.errorMessage);
             inputRef.current?.focus();
             return;
         }
@@ -727,7 +738,7 @@ function AddColumnInline({
             await onSubmit(trimmed);
             close();
         } catch (e: any) {
-            setError(e?.message ?? "Tạo trạng thái thất bại");
+            setError(e?.message ?? labels.failedMessage);
             inputRef.current?.focus();
         }
     };
@@ -752,7 +763,7 @@ function AddColumnInline({
                     "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left font-semibold text-sm text-white shadow-sm",
                     "transition hover:bg-[#f54a00]/80"
                 )}>
-                + Tạo trạng thái
+                {labels.createStatus}
             </button>
         );
     }
@@ -766,7 +777,7 @@ function AddColumnInline({
                 onChange={(e) => setTitle(e.target.value.slice(0, 30))}
                 onKeyDown={onKeyDown}
                 disabled={isSubmitting}
-                placeholder="Nhập tên trạng thái..."
+                placeholder={labels.enterStatusName}
                 className={cn(
                     "w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none",
                     "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
@@ -781,33 +792,21 @@ function AddColumnInline({
             <div className="mt-3 flex items-center gap-2">
                 <button
                     type="button"
-                    onClick={() => void submit()}
+                    onClick={close}
                     disabled={isSubmitting}
                     className={cn(
                         "rounded-xl px-3 py-2 font-semibold text-sm text-white",
                         "bg-[#f54a00] transition hover:bg-[#f54a00]/80",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}>
-                    Thêm trạng thái
-                </button>
-
-                <button
-                    type="button"
-                    onClick={close}
-                    disabled={isSubmitting}
-                    className={cn(
-                        "grid h-9 w-9 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-700",
-                        "transition hover:bg-zinc-100",
-                        isSubmitting && "pointer-events-none opacity-60"
-                    )}>
-                    ✕
+                    {labels.cancel}
                 </button>
             </div>
         </div>
     );
 }
 
-function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
+function AddTaskButton({ disabled, onClick, labels }: { disabled: boolean; onClick: () => void; labels: { addTask: string } }) {
     return (
         <button
             type="button"
@@ -820,7 +819,7 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
                 disabled && "pointer-events-none opacity-60"
             )}>
             <Plus className="h-4 w-4" />
-            Thêm công việc
+            {labels.addTask}
         </button>
     );
 }
@@ -831,7 +830,8 @@ function PersonalTaskCard({
     isSubmitting,
     onOpen,
     onRename,
-    onDelete
+    onDelete,
+    t
 }: {
     task: PersonalTaskItemResponse;
     columnId: string;
@@ -839,6 +839,7 @@ function PersonalTaskCard({
     onOpen: (task: PersonalTaskItemResponse) => void;
     onRename: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
     onDelete: (task: PersonalTaskItemResponse) => Promise<void>;
+    t: (key: string) => string;
 }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: String(task.taskId ?? ""),
@@ -873,7 +874,8 @@ function PersonalTaskCard({
 
     const dueText = formatDueDate(task.dueDate);
     const overdue = isOverdue(task.dueDate);
-    const title = task.taskTitle || "Untitled task";
+    const untitledLabel = t ? t("untitledTask") : "Untitled task";
+    const title = task.taskTitle || untitledLabel;
     const severity = taskSeverityToFormValue(task.taskSeverity);
 
     const done = isTaskDone(task);
@@ -964,7 +966,7 @@ function PersonalTaskCard({
                                             e.stopPropagation();
                                         }}
                                         className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                                        aria-label="Menu">
+                                        aria-label={t("menu")}>
                                         <MoreHorizontal className="h-4 w-4" />
                                     </button>
 
@@ -974,7 +976,7 @@ function PersonalTaskCard({
                                         anchorRef={btnRef as React.RefObject<HTMLElement>}>
                                         <MenuItem
                                             icon={<Pencil className="h-4 w-4" />}
-                                            label="Chỉnh sửa tên"
+                                            label={t("editTaskName")}
                                             onClick={() => {
                                                 setOpenMenu(false);
                                                 setIsEditing(true);
@@ -982,7 +984,7 @@ function PersonalTaskCard({
                                         />
                                         <MenuItem
                                             icon={<Trash2 className="h-4 w-4" />}
-                                            label="Xóa"
+                                            label={t("delete")}
                                             danger
                                             onClick={() => {
                                                 setOpenMenu(false);
@@ -1044,7 +1046,7 @@ function PersonalTaskCard({
                                         cancelEdit();
                                     }}
                                     className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label="Hủy">
+                                    aria-label={t("cancel")}>
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
@@ -1077,7 +1079,7 @@ function PersonalTaskCard({
 
                                     {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
 
-                                    {done ? <DonePill /> : null}
+                                    {done ? <DonePill label={t("progressDone")} /> : null}
                                 </div>
                             ) : null}
                         </div>
@@ -1088,13 +1090,15 @@ function PersonalTaskCard({
     );
 }
 
-function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
+function GhostTaskCard({ task, t }: { task: PersonalTaskItemResponse; t: (key: string) => string }) {
     const dueText = formatDueDate(task.dueDate);
     const severity = taskSeverityToFormValue(task.taskSeverity);
     const done = isTaskDone(task);
     const showProgress = shouldShowProgress(task);
     const overdue = isOverdue(task.dueDate);
     const normalizedProgress = normalizeProgressValue(task.progress);
+    const untitledLabel = t("untitledTask");
+    const title = task.taskTitle || untitledLabel;
 
     return (
         <div className="rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3">
@@ -1106,7 +1110,7 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
                             "line-clamp-3 font-semibold text-sm leading-5",
                             done ? "text-zinc-500 line-through" : "text-zinc-800"
                         )}>
-                        {task.taskTitle || "Untitled task"}
+                        {title}
                     </p>
 
                     {dueText || severity || done || showProgress ? (
@@ -1134,7 +1138,7 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
                                     ) : null}
 
                                     {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
-                                    {done ? <DonePill /> : null}
+                                    {done ? <DonePill label={t("progressDone")} /> : null}
                                 </div>
                             ) : null}
                         </div>
@@ -1145,9 +1149,10 @@ function GhostTaskCard({ task }: { task: PersonalTaskItemResponse }) {
     );
 }
 
-function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
+function TaskOverlay({ task, t }: { task: PersonalTaskItemResponse; t: (key: string) => string }) {
     const dueText = formatDueDate(task.dueDate);
     const overdue = isOverdue(task.dueDate);
+    const untitledLabel = t ? t("untitledTask") : "Untitled task";
     const severity = taskSeverityToFormValue(task.taskSeverity);
     const done = isTaskDone(task);
     const showProgress = shouldShowProgress(task);
@@ -1156,7 +1161,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
     return (
         <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
             <p className={cn("font-semibold text-sm leading-5", done ? "text-zinc-500 line-through" : "text-zinc-900")}>
-                {task.taskTitle || "Untitled task"}
+                {task.taskTitle || untitledLabel}
             </p>
 
             {dueText || severity || done || showProgress ? (
@@ -1184,7 +1189,7 @@ function TaskOverlay({ task }: { task: PersonalTaskItemResponse }) {
                             ) : null}
 
                             {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
-                            {done ? <DonePill /> : null}
+                            {done ? <DonePill label={t("progressDone")} /> : null}
                         </div>
                     ) : null}
                 </div>
@@ -1243,7 +1248,8 @@ function BoardColumn({
     columnError,
     onColumnDraftChange,
     onColumnCommit,
-    onColumnCancel
+    onColumnCancel,
+    t
 }: {
     status: PersonalTaskStatusDto;
     isSubmitting: boolean;
@@ -1260,6 +1266,7 @@ function BoardColumn({
     onColumnDraftChange: (value: string) => void;
     onColumnCommit: () => void;
     onColumnCancel: () => void;
+    t: (key: string) => string;
 }) {
     const statusId = String(status.statusId ?? "");
     const tasks = [...((status.taskList ?? []) as PersonalTaskItemResponse[])];
@@ -1406,7 +1413,7 @@ function BoardColumn({
                                         e.stopPropagation();
                                     }}
                                     className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
-                                    aria-label="Column menu">
+                                    aria-label={t("columnMenu")}>
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
 
@@ -1416,7 +1423,7 @@ function BoardColumn({
                                     anchorRef={btnRef as React.RefObject<HTMLElement>}>
                                     <MenuItem
                                         icon={<Pencil className="h-4 w-4" />}
-                                        label="Chỉnh sửa tên trạng thái"
+                                        label={t("editStatusName")}
                                         onClick={() => {
                                             setOpenMenu(false);
                                             void onRenameStatus(status);
@@ -1424,7 +1431,7 @@ function BoardColumn({
                                     />
                                     <MenuItem
                                         icon={<Trash2 className="h-4 w-4" />}
-                                        label="Xóa trạng thái"
+                                        label={t("deleteStatus")}
                                         danger
                                         onClick={() => {
                                             setOpenMenu(false);
@@ -1445,7 +1452,7 @@ function BoardColumn({
                             <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {rendered.map((item, index) =>
                                     item.kind === "ghost" ? (
-                                        <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} />
+                                        <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} t={t} />
                                     ) : (
                                         <PersonalTaskCard
                                             key={String(item.task.taskId)}
@@ -1455,15 +1462,16 @@ function BoardColumn({
                                             onOpen={onOpenTask}
                                             onRename={onRenameTask}
                                             onDelete={onDeleteTask}
+                                            t={t}
                                         />
                                     )
                                 )}
 
                                 {tasks.length === 0 ? (
                                     <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
-                                        <div className="font-semibold text-sm text-zinc-700">Chưa có công việc</div>
+                                        <div className="font-semibold text-sm text-zinc-700">{t("noTasksInStatus")}</div>
                                         <div className="mt-1 text-xs text-zinc-500">
-                                            Bấm “Thêm công việc” để tạo mới
+                                            {t("addTaskHint")}
                                         </div>
                                     </div>
                                 ) : null}
@@ -1478,7 +1486,7 @@ function BoardColumn({
                             </div>
                         </SortableContext>
 
-                        <AddTaskButton disabled={isSubmitting} onClick={() => void onCreateTask(status)} />
+                        <AddTaskButton disabled={isSubmitting} onClick={() => void onCreateTask(status)} labels={{ addTask: t("addTask") }} />
                     </div>
                 </div>
             </div>
@@ -1491,13 +1499,15 @@ function InlineDatePicker({
     value,
     onChange,
     min,
-    disabled = false
+    disabled = false,
+    t
 }: {
     label: string;
     value: string;
     onChange: (value: string) => void;
     min?: string;
     disabled?: boolean;
+    t: (key: string) => string;
 }) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
@@ -1672,7 +1682,7 @@ function InlineDatePicker({
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
                                 disabled && "text-zinc-500"
                             )}>
-                            {formatDateDisplay(value)}
+                            {formatDateDisplay(value, t)}
                         </span>
                     </div>
                 </button>
@@ -1828,13 +1838,15 @@ function InlineTaskFormModal({
     onClose,
     onSubmit,
     statuses,
-    defaultStatusId
+    defaultStatusId,
+    t
 }: {
     open: boolean;
     onClose: () => void;
     onSubmit: (values: InlineTaskFormValues) => Promise<void> | void;
     statuses: InlineTaskFormOption[];
     defaultStatusId?: string | null;
+    t: (key: string) => string;
 }) {
     const [mounted, setMounted] = React.useState(false);
 
@@ -1877,22 +1889,23 @@ function InlineTaskFormModal({
     }, [open, onClose]);
 
     const selectedStatusName = React.useMemo(() => {
-        return statuses.find((s) => s.value === statusId)?.label ?? "No status";
-    }, [statuses, statusId]);
+        const noStatusLabel = t ? t("noStatus") : "No status";
+        return statuses.find((s) => s.value === statusId)?.label ?? noStatusLabel;
+    }, [statuses, statusId, t]);
 
     const canSubmit = title.trim().length > 0 && !submitting;
 
     const handleSubmit = async () => {
-        const t = title.trim();
+        const trimmedTitle = title.trim();
         const desc = description.trim();
 
-        if (!t) {
-            setError("Vui lòng nhập tên công việc.");
+        if (!trimmedTitle) {
+            setError(t("pleaseEnterTaskTitle"));
             return;
         }
 
         if (startDate && dueDate && startDate > dueDate) {
-            setError("Ngày bắt đầu phải nhỏ hơn hoặc bằng hạn hoàn thành.");
+            setError(t("startDateAfterDueDate"));
             return;
         }
 
@@ -1901,7 +1914,7 @@ function InlineTaskFormModal({
             setError(null);
 
             await onSubmit({
-                title: t,
+                title: trimmedTitle,
                 description: desc,
                 statusId,
                 priority,
@@ -1912,7 +1925,7 @@ function InlineTaskFormModal({
 
             onClose();
         } catch (e: any) {
-            setError(e?.message ?? "Tạo công việc thất bại");
+            setError(e?.message ?? t("createTaskFailed"));
         } finally {
             setSubmitting(false);
         }
@@ -1936,7 +1949,7 @@ function InlineTaskFormModal({
                             value={title}
                             maxLength={30}
                             onChange={(e) => setTitle(e.target.value.slice(0, 30))}
-                            placeholder="Task name"
+                            placeholder={t("taskName")}
                             className="w-full max-w-[520px] rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                         />
 
@@ -1947,7 +1960,7 @@ function InlineTaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close">
+                        aria-label={t("close")}>
                         <X className="h-5 w-5" />
                     </button>
                 </div>
@@ -1977,7 +1990,7 @@ function InlineTaskFormModal({
                                     avoidCollisions
                                     className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
-                                        No status
+                                        {t("noStatus")}
                                     </SelectItem>
                                     {statuses.map((s) => (
                                         <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
@@ -2053,13 +2066,14 @@ function InlineTaskFormModal({
                             </Select>
                         </div>
 
-                        <InlineDatePicker label="Start Date" value={startDate} onChange={setStartDate} />
+                        <InlineDatePicker label={t("startDate")} value={startDate} onChange={setStartDate} t={t} />
 
                         <InlineDatePicker
-                            label="Due Date"
+                            label={t("dueDate")}
                             value={dueDate}
                             onChange={setDueDate}
                             min={startDate || undefined}
+                            t={t}
                         />
                     </div>
 
@@ -2069,7 +2083,7 @@ function InlineTaskFormModal({
                             value={description}
                             maxLength={200}
                             onChange={(e) => setDescription(e.target.value.slice(0, 200))}
-                            placeholder="Nhập mô tả công việc"
+                            placeholder={t("enterTaskDescription")}
                             className="mt-2 min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none"
                         />
 
@@ -2092,7 +2106,7 @@ function InlineTaskFormModal({
                         }}
                         disabled={!canSubmit}
                         className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
-                        {submitting ? "Creating..." : "Create task"}
+                        {submitting ? t("creatingTask") : t("createTask")}
                     </button>
                 </div>
             </div>
@@ -2108,7 +2122,8 @@ function PersonalTaskDetailModal({
     saving,
     onClose,
     onSave,
-    onDelete
+    onDelete,
+    t
 }: {
     open: boolean;
     task: PersonalTaskItemResponse | null;
@@ -2129,6 +2144,7 @@ function PersonalTaskDetailModal({
         };
     }) => Promise<void>;
     onDelete: (task: PersonalTaskItemResponse) => Promise<void>;
+    t: (key: string) => string;
 }) {
     const [mounted, setMounted] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
@@ -2170,8 +2186,9 @@ function PersonalTaskDetailModal({
     }, [open, onClose]);
 
     const selectedStatusName = React.useMemo(() => {
-        return statuses.find((s) => s.value === statusId)?.label ?? "No status";
-    }, [statuses, statusId]);
+        const noStatusLabel = t ? t("noStatus") : "No status";
+        return statuses.find((s) => s.value === statusId)?.label ?? noStatusLabel;
+    }, [statuses, statusId, t]);
 
     const handleSave = async () => {
         if (!task) return;
@@ -2231,7 +2248,7 @@ function PersonalTaskDetailModal({
                                     value={title}
                                     maxLength={30}
                                     onChange={(e) => setTitle(e.target.value.slice(0, 30))}
-                                    placeholder="Task name"
+                                    placeholder={t("taskName")}
                                     className="mt-0 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[28px] text-zinc-900 leading-none outline-none"
                                 />
                                 <div className="mt-1 text-right text-[11px] text-zinc-500">{title.length}/30</div>
@@ -2247,7 +2264,7 @@ function PersonalTaskDetailModal({
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close">
+                        aria-label={t("close")}>
                         <X className="h-5 w-5" />
                     </button>
                 </div>
@@ -2278,7 +2295,7 @@ function PersonalTaskDetailModal({
                                     avoidCollisions
                                     className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
-                                        No status
+                                        {t("noStatus")}
                                     </SelectItem>
                                     {statuses.map((s) => (
                                         <SelectItem key={s.value} value={s.value} className={selectItemClassName}>
@@ -2359,18 +2376,20 @@ function PersonalTaskDetailModal({
                         </div>
 
                         <InlineDatePicker
-                            label="Start Date"
+                            label={t("startDate")}
                             value={startDate}
                             onChange={setStartDate}
                             disabled={!isEditing}
+                            t={t}
                         />
 
                         <InlineDatePicker
-                            label="Due Date"
+                            label={t("dueDate")}
                             value={dueDate}
                             onChange={setDueDate}
                             min={startDate || undefined}
                             disabled={!isEditing}
+                            t={t}
                         />
 
                         <TaskProgressEditor value={progress} onChange={setProgress} disabled={!isEditing} />
@@ -2435,6 +2454,7 @@ function PersonalTaskDetailModal({
 }
 
 export default function HomePersonalTaskScreen() {
+    const t = useTranslations("HomePersonalTask");
     const [board, setBoard] = React.useState<PersonalTaskBoardResponse | null>(null);
     const [statuses, setStatuses] = React.useState<PersonalTaskStatusDto[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
@@ -2504,12 +2524,12 @@ export default function HomePersonalTaskScreen() {
             } else {
                 console.error("Home personal task response format unexpected:", response);
                 setBoard(null);
-                setLoadError("Không đọc được dữ liệu personal task.");
+                setLoadError(t("failedLoadPersonalTask"));
             }
         } catch (error: any) {
             console.error("Failed to fetch personal board:", error);
             setBoard(null);
-            setLoadError(error?.message ?? "Không tải được dữ liệu personal task.");
+            setLoadError(error?.message ?? t("failedLoadPersonalTaskData"));
         }
     }, []);
 
@@ -2665,7 +2685,7 @@ export default function HomePersonalTaskScreen() {
                     return {
                         ...prev,
                         draft: nextDraft,
-                        error: "Vui lòng nhập tên trạng thái."
+                        error: t("pleaseEnterStatusName")
                     };
                 }
 
@@ -2680,7 +2700,7 @@ export default function HomePersonalTaskScreen() {
                 return {
                     ...prev,
                     draft: nextDraft,
-                    error: duplicated ? "Tên trạng thái đã tồn tại. Hãy nhập tên khác." : null
+                    error: duplicated ? t("statusNameDuplicated") : null
                 };
             });
         },
@@ -2704,7 +2724,7 @@ export default function HomePersonalTaskScreen() {
         if (!nextName) {
             setEditingColumn((prev) => ({
                 ...prev,
-                error: "Vui lòng nhập tên trạng thái."
+                error: t("pleaseEnterStatusName")
             }));
             return;
         }
@@ -2720,7 +2740,7 @@ export default function HomePersonalTaskScreen() {
         if (duplicated) {
             setEditingColumn((prev) => ({
                 ...prev,
-                error: "Tên trạng thái đã tồn tại. Hãy nhập tên khác."
+                error: t("statusNameDuplicated")
             }));
             return;
         }
@@ -3190,6 +3210,7 @@ export default function HomePersonalTaskScreen() {
                 onSubmit={handleSubmitCreateTask}
                 statuses={statusOptions}
                 defaultStatusId={taskFormStatusId}
+                t={t}
             />
 
             <PersonalTaskDetailModal
@@ -3202,24 +3223,25 @@ export default function HomePersonalTaskScreen() {
                 onDelete={async (task) => {
                     setConfirmDeleteTask({ open: true, task, fromDetail: true });
                 }}
+                t={t}
             />
 
             <ConfirmModal
                 open={confirmDeleteColumn.open}
-                title="Xác nhận xóa trạng thái"
-                description={`Bạn có chắc chắn muốn xóa trạng thái "${confirmDeleteColumn.status?.statusName ?? ""}" không?`}
-                confirmLabel="Xóa trạng thái"
-                cancelLabel="Hủy"
+                title={t("confirmedDeleteStatus")}
+                description={`${t("confirmedDeleteStatus")}: "${confirmDeleteColumn.status?.statusName ?? ""}"`}
+                confirmLabel={t("deleteStatus")}
+                cancelLabel={t("cancel")}
                 onConfirm={() => void handleDeleteColumn()}
                 onCancel={() => setConfirmDeleteColumn({ open: false, status: null })}
             />
 
             <ConfirmModal
                 open={confirmDeleteTask.open}
-                title="Xác nhận xóa công việc"
-                description={`Bạn có chắc chắn muốn xóa công việc "${confirmDeleteTask.task?.taskTitle ?? ""}" không? Công việc này sẽ bị xóa vĩnh viễn và không thể hoàn tác.`}
-                confirmLabel="Xóa công việc"
-                cancelLabel="Hủy"
+                title={t("confirmDeleteTask")}
+                description={`${t("confirmDeleteTask")}: "${confirmDeleteTask.task?.taskTitle ?? ""}"?`}
+                confirmLabel={t("deleteTask")}
+                cancelLabel={t("cancel")}
                 zIndexClassName={confirmDeleteTask.fromDetail ? "z-[10020]" : "z-[10000]"}
                 onConfirm={() => void handleDeleteTask()}
                 onCancel={() => setConfirmDeleteTask({ open: false, task: null, fromDetail: false })}
@@ -3229,11 +3251,11 @@ export default function HomePersonalTaskScreen() {
                 <div className="mt-5 rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,250,252,0.76))] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                     <div className="mb-6 overflow-hidden rounded-[28px] border border-white/70 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.06),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.78))] px-5 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                         <h2 className="font-bold text-[30px] text-slate-900 leading-tight tracking-[-0.02em] md:text-[36px]">
-                            Quản lý công việc cá nhân
+                            {t("title")}
                         </h2>
 
                         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
-                            Theo dõi và sắp xếp các công việc cá nhân của bạn theo từng trạng thái.
+                            {t("subtitle")}
                         </p>
                     </div>
 
@@ -3271,12 +3293,24 @@ export default function HomePersonalTaskScreen() {
                                         onColumnDraftChange={handleColumnDraftChange}
                                         onColumnCommit={() => void commitEditColumn()}
                                         onColumnCancel={cancelEditColumn}
+                                        t={t}
                                     />
                                 </div>
                             ))}
 
                             <div className="min-w-[300px] max-w-[300px] self-start">
-                                <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
+                                <AddColumnInline
+                                    isSubmitting={isSubmitting}
+                                    onSubmit={handleCreateColumn}
+                                    labels={{
+                                        errorMessage: t("pleaseEnterStatusName"),
+                                        failedMessage: t("createStatusFailed"),
+                                        createStatus: t("createStatus"),
+                                        enterStatusName: t("enterStatusName"),
+                                        confirm: t("cancel"),
+                                        cancel: t("cancel")
+                                    }}
+                                />
                             </div>
                         </div>
                     ) : (
@@ -3321,19 +3355,31 @@ export default function HomePersonalTaskScreen() {
                                                 onColumnDraftChange={handleColumnDraftChange}
                                                 onColumnCommit={() => void commitEditColumn()}
                                                 onColumnCancel={cancelEditColumn}
+                                                t={t}
                                             />
                                         </div>
                                     ))}
 
                                     <div className="min-w-[300px] max-w-[300px] self-start">
-                                        <AddColumnInline isSubmitting={isSubmitting} onSubmit={handleCreateColumn} />
+                                        <AddColumnInline
+                                            isSubmitting={isSubmitting}
+                                            onSubmit={handleCreateColumn}
+                                            labels={{
+                                                errorMessage: t("pleaseEnterStatusName"),
+                                                failedMessage: t("createStatusFailed"),
+                                                createStatus: t("createStatus"),
+                                                enterStatusName: t("enterStatusName"),
+                                                confirm: t("cancel"),
+                                                cancel: t("cancel")
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </SortableContext>
 
                             <DragOverlay>
                                 {activeTask ? (
-                                    <TaskOverlay task={activeTask} />
+                                    <TaskOverlay task={activeTask} t={t} />
                                 ) : activeColumn ? (
                                     <ColumnOverlay status={activeColumn} />
                                 ) : null}

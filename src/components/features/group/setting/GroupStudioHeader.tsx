@@ -124,7 +124,8 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const searchParams = useSearchParams();
     const router = useRouter();
     const { toast } = useToast();
-    const t = useTranslations("Common");
+    const tCommon = useTranslations("Common");
+    const t = useTranslations("GroupStudioHeader");
 
     const groupId = groupIdProp || searchParams.get("id") || extractGroupIdFromPath(pathname || "") || "";
 
@@ -139,17 +140,20 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const [inviteOpen, setInviteOpen] = React.useState(false);
     const [hasModerator, setHasModerator] = React.useState(false);
 
-    const tabs: Tab[] = [
-        { key: "board", label: "Board", icon: LayoutGrid, href: (l, id) => `/${l}/group/${id}` },
-        { key: "list", label: "List", icon: List, href: (l, id) => `/${l}/group/${id}/list` },
-        { key: "calendar", label: "Calendar", icon: Calendar, href: (l, id) => `/${l}/group/${id}/calendar` },
-        { key: "documents", label: "Documents", icon: FileText, href: (l, id) => `/${l}/group/${id}/documents` },
-        { key: "ai-qa", label: t("aiQATab"), icon: Sparkles, href: (l, id) => `/${l}/group/${id}/ai-qa` },
-        { key: "discuss", label: "Discuss", icon: MessageSquare, href: (l, id) => `/${l}/group/${id}/discuss` },
-        { key: "analytic", label: "Analytic", icon: BarChart3, href: (l, id) => `/${l}/group/${id}/analytic` },
-        { key: "setting", label: "Setting", icon: Settings, href: (l, id) => `/${l}/group/${id}/setting` },
-        { key: "trashed", label: "Trashed", icon: Trash2, href: (l, id) => `/${l}/group/${id}/trashed` }
-    ];
+    const tabs: Tab[] = React.useMemo(
+        () => [
+            { key: "board", label: t("tabs.board"), icon: LayoutGrid, href: (l, id) => `/${l}/group/${id}` },
+            { key: "list", label: t("tabs.list"), icon: List, href: (l, id) => `/${l}/group/${id}/list` },
+            { key: "calendar", label: t("tabs.calendar"), icon: Calendar, href: (l, id) => `/${l}/group/${id}/calendar` },
+            { key: "documents", label: t("tabs.documents"), icon: FileText, href: (l, id) => `/${l}/group/${id}/documents` },
+            { key: "ai-qa", label: tCommon("aiQATab"), icon: Sparkles, href: (l, id) => `/${l}/group/${id}/ai-qa` },
+            { key: "discuss", label: t("tabs.discuss"), icon: MessageSquare, href: (l, id) => `/${l}/group/${id}/discuss` },
+            { key: "analytic", label: t("tabs.analytic"), icon: BarChart3, href: (l, id) => `/${l}/group/${id}/analytic` },
+            { key: "setting", label: t("tabs.setting"), icon: Settings, href: (l, id) => `/${l}/group/${id}/setting` },
+            { key: "trashed", label: t("tabs.trashed"), icon: Trash2, href: (l, id) => `/${l}/group/${id}/trashed` }
+        ],
+        [t, tCommon]
+    );
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -179,7 +183,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 } catch { }
 
                 if (!res.ok) {
-                    const msg = json?.message || text || `Failed to fetch group detail (${res.status})`;
+                    const msg = json?.message || text || `${t("errors.fetchDetailFailed")} (${res.status})`;
                     toast({
                         description: msg,
                         variant: "destructive"
@@ -237,7 +241,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 }
             } catch (e: any) {
                 if (!alive) return;
-                setError(e?.message || "Failed to fetch group detail");
+                setError(e?.message || t("errors.fetchDetailFailed"));
             }
         })();
 
@@ -288,7 +292,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
-            toast({ description: t("missingAccessToken"), variant: "destructive" });
+            toast({ description: tCommon("missingAccessToken"), variant: "destructive" });
             return null;
         }
         return token;
@@ -321,13 +325,13 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 const url = String(json?.data?.inviteUrl ?? "").trim();
                 if (url) return url;
                 toast({
-                    description: `[invite/create] ${t("missingInviteUrl")} (sent role="${apiRole}")`,
+                    description: `[invite/create] ${tCommon("missingInviteUrl")} (sent role="${apiRole}")`,
                     variant: "destructive"
                 });
                 return null;
             }
 
-            const msg = json?.message || text || `${t("inviteCreateFailed")} (${res.status})`;
+            const msg = json?.message || text || `${tCommon("inviteCreateFailed")} (${res.status})`;
             toast({
                 description: `[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`,
                 variant: "destructive"
@@ -362,7 +366,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
-            const msg = json?.message || text || `${t("inviteByEmailFailed")} (${res.status})`;
+            const msg = json?.message || text || `${tCommon("inviteByEmailFailed")} (${res.status})`;
             toast({
                 description: `[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`,
                 variant: "destructive"
@@ -474,7 +478,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         className="font-semibold text-[#261E33]">
                                         {memberCount}
                                     </motion.span>{" "}
-                                    {t("members")}
+                                    {tCommon("members")}
                                 </span>
                             </motion.div>
 
@@ -487,7 +491,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                     transition={{ duration: 0.18 }}
                                     className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-orange-500 hover:to-red-700 hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
                                     <UserPlus className="h-4 w-4" />
-                                    {t("addMember")}
+                                    {tCommon("addMember")}
                                 </motion.button>
                             ) : null}
                         </div>

@@ -41,25 +41,21 @@ export function TaskProgressEditor({ value, onChange, disabled = false }: TaskPr
             return;
         }
 
-        // 00, 000 -> 0
         if (/^0+$/.test(digits)) {
             onChange("0");
             return;
         }
 
-        // cho phép 100
         if (digits === "100") {
             onChange("100");
             return;
         }
 
-        // nếu gõ quá 100 thì khóa về 100
         if (digits.startsWith("100")) {
             onChange("100");
             return;
         }
 
-        // còn lại giữ nguyên, tối đa 2 ký tự
         onChange(digits.slice(0, 2));
     };
 

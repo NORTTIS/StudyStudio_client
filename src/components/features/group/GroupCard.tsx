@@ -3,13 +3,14 @@
 import { CheckSquare2, MoreVertical, Star, Users, Users2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { mapRole } from "./group.api";
 import { RolePill } from "./RolePill";
 import type { GroupCardDto } from "./types";
 
 export function GroupCard({ group, onToggleStar, view = "grid" }: { group: GroupCardDto; onToggleStar: () => Promise<void>; view?: "grid" | "list" }) {
+    const t = useTranslations("GroupCard");
     const router = useRouter();
     const locale = useLocale();
     const groupRole = mapRole(group.role);
@@ -100,7 +101,7 @@ export function GroupCard({ group, onToggleStar, view = "grid" }: { group: Group
                             await onToggleStar();
                         }}
                         className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
-                        aria-label={starred ? "Bỏ yêu thích" : "Thêm yêu thích"}>
+                        aria-label={starred ? t("removeFavorite") : t("addFavorite")}>
                         <Star
                             className={`h-4 w-4 transition ${starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-yellow-500"}`}
                             fill={starred ? "currentColor" : "transparent"}
@@ -117,7 +118,7 @@ export function GroupCard({ group, onToggleStar, view = "grid" }: { group: Group
                                         e.stopPropagation();
                                     }}
                                     className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
-                                    aria-label="Menu">
+                                    aria-label={t("menuLabel")}>
                                     <MoreVertical className="h-4 w-4 text-[#6F6B99] hover:text-[#261E33]" />
                                 </button>
                             </DropdownMenuTrigger>
@@ -131,13 +132,9 @@ export function GroupCard({ group, onToggleStar, view = "grid" }: { group: Group
                                     onSelect={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        // TODO: Implement leave group functionality
-                                        // - Add leaveGroup API call (DELETE /api/group/{groupId}/leave)
-                                        // - Show confirmation dialog
-                                        // - On success: refresh group list or navigate away
                                         console.warn("[GroupCard] Leave group not yet implemented - needs backend API");
                                     }}>
-                                    Rời nhóm
+                                    {t("leaveGroup")}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -150,7 +147,7 @@ export function GroupCard({ group, onToggleStar, view = "grid" }: { group: Group
             <div className="mt-3 border-[#E5E5E5] border-t pt-2">
                 <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2 text-[#6F6B99]">
-                        <span className="text-xs">Tạo bởi</span>
+                        <span className="text-xs">{t("createdBy")}</span>
                         {group.createdBy?.avatarUrl ? (
                             <div className="relative h-6 w-6 overflow-hidden rounded-full ring-1 ring-[#E5E5E5]">
                                 <Image src={group.createdBy.avatarUrl} alt={createdByInitials} fill className="object-cover" sizes="24px" />
@@ -165,12 +162,12 @@ export function GroupCard({ group, onToggleStar, view = "grid" }: { group: Group
                     <div className="flex items-center gap-3 text-[#6F6B99]">
                         <span className="inline-flex items-center gap-1">
                             <Users className="h-4 w-4" />
-                            <span>{group.memberCount ?? 0} thành viên</span>
+                            <span>{group.memberCount ?? 0} {t("members")}</span>
                         </span>
 
                         <span className="inline-flex items-center gap-1">
                             <CheckSquare2 className="h-4 w-4" />
-                            <span>{visibleTasksCount} công việc</span>
+                            <span>{visibleTasksCount} {t("tasks")}</span>
                         </span>
                     </div>
                 </div>

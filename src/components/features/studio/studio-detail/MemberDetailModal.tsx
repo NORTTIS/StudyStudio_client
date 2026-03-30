@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { StudioMemberResponse } from "@/api/studios";
 
 interface MemberDetailModalProps {
@@ -10,6 +11,8 @@ interface MemberDetailModalProps {
 }
 
 export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: MemberDetailModalProps) {
+    const t = useTranslations("MemberDetailModal");
+
     if (!(isOpen && member)) return null;
 
     const getInitials = (name: string | null | undefined) => {
@@ -26,11 +29,11 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
         // StudioRole: 0 = owner, 1 = member
         switch (role) {
             case 0:
-                return "Owner";
+                return t("studioRole.owner");
             case 1:
-                return "Member";
+                return t("studioRole.member");
             default:
-                return "Member";
+                return t("studioRole.member");
         }
     };
 
@@ -50,17 +53,17 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
         // GroupRole: 0=Owner, 1=Moderator, 2=Member, 3=Commenter, 4=Viewer
         switch (role) {
             case 0:
-                return "Người tạo";
+                return t("groupRole.owner");
             case 1:
-                return "Điều hành";
+                return t("groupRole.moderator");
             case 2:
-                return "Thành viên";
+                return t("groupRole.member");
             case 3:
-                return "Người bình luận";
+                return t("groupRole.commenter");
             case 4:
-                return "Người xem";
+                return t("groupRole.viewer");
             default:
-                return "Thành viên";
+                return t("groupRole.member");
         }
     };
 
@@ -69,7 +72,7 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
-                    <h2 className="font-bold text-[#261E33] text-xl">Chi tiết thành viên</h2>
+                    <h2 className="font-bold text-[#261E33] text-xl">{t("title")}</h2>
                     <button
                         type="button"
                         onClick={onClose}
@@ -95,7 +98,7 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
                         <p className="truncate text-slate-500 text-sm">{member.email}</p>
                         {member.userId === studioOwnerId ? (
                             <span className="mt-2 inline-block rounded-full bg-gradient-to-r from-orange-500 to-red-600 px-3 py-1 font-medium text-white text-xs">
-                                Chủ sở hữu
+                                {t("studioRole.owner")}
                             </span>
                         ) : (
                             <span
@@ -108,7 +111,7 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
 
                 {/* Group info */}
                 <div className="border-slate-100 border-t pt-4">
-                    <h4 className="mb-3 font-medium text-slate-700 text-sm">Nhóm tham gia</h4>
+                    <h4 className="mb-3 font-medium text-slate-700 text-sm">{t("joinedGroups")}</h4>
                     {member.groupInfo && member.groupInfo.length > 0 ? (
                         <div className="space-y-2">
                             {member.groupInfo.map((group) => (
@@ -139,7 +142,7 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
                             ))}
                         </div>
                     ) : (
-                        <p className="text-slate-400 text-sm">Chưa tham gia nhóm nào</p>
+                        <p className="text-slate-400 text-sm">{t("noJoinedGroups")}</p>
                     )}
                 </div>
 
@@ -149,7 +152,7 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
                         type="button"
                         onClick={onClose}
                         className="rounded-lg bg-slate-100 px-4 py-2 font-medium text-slate-700 text-sm transition-colors hover:bg-slate-200">
-                        Đóng
+                        {t("close")}
                     </button>
                 </div>
             </div>
