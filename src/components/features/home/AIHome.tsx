@@ -484,7 +484,7 @@ export default function AIHome() {
                                     className="inline-flex items-center gap-2 rounded-full border border-orange-100/90 bg-white/85 px-3 py-1.5 text-xs font-medium text-orange-700 shadow-[0_8px_20px_rgba(249,115,22,0.10)] backdrop-blur"
                                 >
                                     <Sparkles className="h-3.5 w-3.5" />
-                                    Personal AI
+                                    {tr("badge")}
                                 </motion.div>
 
                                 <div className="mt-5 max-w-3xl">

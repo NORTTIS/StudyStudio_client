@@ -28,7 +28,7 @@ import {
 } from "@/api/user-announcements";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
@@ -430,8 +430,8 @@ export function AnnouncementsPage() {
                                                 whileTap={{ scale: 0.98 }}
                                                 transition={{ duration: 0.15 }}
                                                 className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${active
-                                                        ? "text-white shadow-md shadow-orange-200"
-                                                        : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                                    ? "text-white shadow-md shadow-orange-200"
+                                                    : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
                                                     }`}>
                                                 {active ? (
                                                     <motion.div
@@ -447,8 +447,8 @@ export function AnnouncementsPage() {
 
                                                 <span
                                                     className={`relative z-10 transition-colors duration-200 ${active
-                                                            ? "text-white"
-                                                            : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                        ? "text-white"
+                                                        : "text-[#8C8C8C] group-hover:text-[#EA580C]"
                                                         }`}>
                                                     {tab.icon}
                                                 </span>
@@ -458,8 +458,8 @@ export function AnnouncementsPage() {
                                                 {"badge" in tab && tab.badge ? (
                                                     <span
                                                         className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${active
-                                                                ? "bg-white/20 text-white"
-                                                                : "bg-orange-100 text-orange-700"
+                                                            ? "bg-white/20 text-white"
+                                                            : "bg-orange-100 text-orange-700"
                                                             }`}>
                                                         {tab.badge}
                                                     </span>
@@ -556,6 +556,7 @@ export function AnnouncementsPage() {
                     }
                 }}>
                 <DialogContent className="max-h-[90vh] overflow-hidden rounded-[28px] border border-orange-100 bg-white p-0 sm:max-w-[760px]">
+                    <DialogTitle className="sr-only">Announcement Details</DialogTitle>
                     {isDetailLoading ? (
                         <div className="flex justify-center p-20">
                             <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
