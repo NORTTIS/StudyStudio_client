@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
     type CollisionDetection,
     closestCenter,
@@ -233,13 +233,17 @@ function parseMaybeJson(raw: string) {
     }
 }
 
-const okByJsonStatus = (obj: any) => {
-    const s = String(obj?.status ?? "").toLowerCase();
+function asObject(v: unknown): Record<string, unknown> | null {
+    return typeof v === "object" && v !== null ? (v as Record<string, unknown>) : null;
+}
+
+const okByJsonStatus = (obj: unknown) => {
+    const s = String(asObject(obj)?.status ?? "").toLowerCase();
     return s === "" || s === "success" || s === "ok" || s === "true";
 };
 
-const extractApiMessage = (text: string, json: any, fallback: string) => {
-    const msg = (json?.message ?? "").toString().trim();
+const extractApiMessage = (text: string, json: unknown, fallback: string) => {
+    const msg = String(asObject(json)?.message ?? "").trim();
     if (msg) return msg;
     const t = (text ?? "").toString().trim();
     return t || fallback;
@@ -312,16 +316,29 @@ async function apiFetchJson<T>(input: RequestInfo, init: RequestInit, messages: 
     return (json ?? null) as ApiResponse<T> | null;
 }
 
-function formatDueCompact(input: string) {
+function parseDateString(value?: string) {
+    if (!value) return undefined;
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+    if (!match) return undefined;
+    const y = Number(match[1]);
+    const m = Number(match[2]);
+    const d = Number(match[3]);
+    if (!(y && m && d)) return undefined;
+    return new Date(y, m - 1, d);
+}
+
+function formatDueCompact(input: string, locale: string) {
     const s = String(input ?? "").trim();
     if (!s) return "";
-    const d = new Date(s);
-    if (Number.isNaN(d.getTime())) return s;
+    const d = parseDateString(s);
+    if (!d) return s;
 
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yyyy = String(d.getFullYear());
-    return `${dd}/${mm}/${yyyy}`;
+    const normalizedLocale = locale.includes("-") ? locale : locale === "vi" ? "vi-VN" : "en-US";
+    return new Intl.DateTimeFormat(normalizedLocale, {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    }).format(d);
 }
 
 function formatAssigneeName(
@@ -1371,8 +1388,9 @@ function AddColumnInline({
             setError(null);
             await onSubmit(trimmed);
             close();
-        } catch (e: any) {
-            setError(e?.message ?? t("createStatusFailed"));
+        } catch (e: unknown) {
+            const errorMsg = e instanceof Error ? e.message : "";
+            setError(errorMsg || t("createStatusFailed"));
             inputRef.current?.focus();
         }
     };
@@ -1642,7 +1660,7 @@ function ColumnView({
                             <PortalDropdown
                                 open={openColMenu}
                                 onClose={() => setOpenColMenu(false)}
-                                anchorRef={colMenuBtnRef as any}>
+                                anchorRef={colMenuBtnRef as unknown as React.RefObject<HTMLButtonElement>}>
                                 <MenuItem
                                     icon={<Pencil className="h-4 w-4" />}
                                     label={t("editStatusName")}
@@ -1943,6 +1961,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const router = useRouter();
     const searchParams = useSearchParams();
     const t = useTranslations("GroupBoardScreen");
+    const locale = useLocale();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
     const apiMessages = React.useMemo<ApiMessages>(
@@ -2287,8 +2306,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 const startRaw = apiTask.startDate ? String(apiTask.startDate) : "";
                 const assigneeName = formatAssigneeName(apiTask.assignee);
 
-                const dueFmt = dueRaw ? formatDueCompact(dueRaw) : "";
-                const startFmt = startRaw ? formatDueCompact(startRaw) : "";
+                const dueFmt = dueRaw ? formatDueCompact(dueRaw, locale) : "";
+                const startFmt = startRaw ? formatDueCompact(startRaw, locale) : "";
 
                 const base: Task = {
                     id: String(apiTask.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
@@ -2313,7 +2332,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         }
 
         setBoard(nextBoard);
-    }, []);
+    }, [locale]);
 
     const fetchBoardData = React.useCallback(async () => {
         if (!groupId) throw new Error(t("missingGroupId"));
@@ -2371,8 +2390,9 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         try {
             await fetchBoardData();
-        } catch (e: any) {
-            setLoadError(e?.message ?? t("failedLoadData"));
+        } catch (e: unknown) {
+            const errorMsg = e instanceof Error ? e.message : "";
+            setLoadError(errorMsg || t("failedLoadData"));
             setMembersOptions([]);
         } finally {
             setLoading(false);
@@ -2383,8 +2403,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         try {
             await fetchBoardData();
             setLoadError(null);
-        } catch (e: any) {
-            console.error("refreshSilently error:", e);
+        } catch (e: unknown) {
+            console.error("refreshSilently error:", e instanceof Error ? e.message : String(e));
         }
     }, [fetchBoardData]);
 
@@ -2517,9 +2537,10 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             }, apiMessages);
             cancelEditColumn();
             await refreshSilently();
-        } catch (e: any) {
+        } catch (e: unknown) {
             setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: prevTitle } : c)));
-            setEditingColumn((p) => ({ ...p, error: e?.message ?? t("errorOccurred") }));
+            const errorMsg = e instanceof Error ? e.message : "";
+            setEditingColumn((p) => ({ ...p, error: errorMsg || t("errorOccurred") }));
         }
     };
 
@@ -2660,37 +2681,49 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         if (!groupId) throw new Error(t("missingGroupId"));
         if (!isUuidLike(groupId)) throw new Error(t("invalidGroupId"));
 
-        const columnId = (values as any).statusId ?? (values as any).groupStatusId ?? taskFormColumnId ?? null;
+        const normalizeFormValues = (values: unknown) => {
+            const obj = asObject(values) ?? {};
+            const taskPriority = typeof obj.taskPriority === "number" || (typeof obj.taskPriority === "string" && obj.taskPriority) ? obj.taskPriority : undefined;
+            const taskSeverity = typeof obj.taskSeverity === "number" || (typeof obj.taskSeverity === "string" && obj.taskSeverity) ? obj.taskSeverity : undefined;
+            return {
+                statusId: String(obj.statusId ?? obj.groupStatusId ?? "").trim(),
+                title: String(obj.title ?? obj.taskName ?? "").trim(),
+                dueDate: obj.dueDate ?? obj.due ?? null,
+                startDate: obj.startDate ?? obj.start ?? null,
+                assigneeId: obj.assigneeId ?? obj.assignees ?? obj.assignee ?? null,
+                estimatedHours: typeof obj.estimatedHours === "number" ? obj.estimatedHours : undefined,
+                actualHours: typeof obj.actualHours === "number" ? obj.actualHours : undefined,
+                taskPriority: taskPriority as string | 0 | 1 | 2 | undefined,
+                taskSeverity: taskSeverity as string | 0 | 1 | 2 | 3 | undefined
+            };
+        };
+
+        const normalized = normalizeFormValues(values);
+        const columnId = normalized.statusId || taskFormColumnId || null;
         if (!columnId) throw new Error(t("missingStatus"));
         if (!isUuidLike(columnId)) throw new Error(t("invalidStatus"));
 
-        const rawDue = (values as any).dueDate ?? (values as any).due ?? null;
-        const rawStart = (values as any).startDate ?? (values as any).start ?? null;
+        const rawDue = normalized.dueDate;
+        const rawStart = normalized.startDate;
 
         const dueSelected = rawDue != null && String(rawDue).trim() !== "";
         const startSelected = rawStart != null && String(rawStart).trim() !== "";
-
-        const assigneeId =
-            (values as any).assigneeId ??
-            (values as any).assignees ??
-            (values as any).assignee ??
-            null;
 
         setCreatingTask(true);
         try {
             await apiCreateTask({
                 groupId,
                 groupStatusId: columnId,
-                taskName: (values as any).title ?? (values as any).taskName ?? "",
-                assigneeId: assigneeId ? String(assigneeId) : null,
+                taskName: normalized.title,
+                assigneeId: normalized.assigneeId ? String(normalized.assigneeId) : null,
                 dueDate: rawDue,
                 startDate: rawStart,
                 dueDateSelected: dueSelected,
                 startDateSelected: startSelected,
-                estimatedHours: (values as any).estimatedHours ?? undefined,
-                actualHours: (values as any).actualHours ?? undefined,
-                priority: (values as any).taskPriority,
-                severity: (values as any).taskSeverity
+                estimatedHours: normalized.estimatedHours,
+                actualHours: normalized.actualHours,
+                priority: normalized.taskPriority,
+                severity: normalized.taskSeverity
             }, apiMessages);
 
             await refreshSilently();

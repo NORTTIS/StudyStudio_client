@@ -782,9 +782,9 @@ export default function AnalysisHome() {
             let message = fallbackMessages[key as keyof typeof fallbackMessages] ?? key;
 
             if (values) {
-                Object.entries(values).forEach(([name, value]) => {
+                for (const [name, value] of Object.entries(values)) {
                     message = message.replaceAll(`{${name}}`, String(value));
-                });
+                }
             }
 
             return message;
