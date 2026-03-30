@@ -3,7 +3,7 @@
 import { Settings, Trash2, UserPlus, Users } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import type { components } from "@/api/types";
@@ -57,11 +57,6 @@ const roleOptions: Exclude<MemberRole, "Owner">[] = ["Moderator", "Member", "Com
 const GROUP_UPDATED_EVENT = "group:updated";
 const GROUP_NAME_MAX_LENGTH = 30;
 const GROUP_DESCRIPTION_MAX_LENGTH = 200;
-
-const groupSettingSchema = z.object({
-    groupName: z.string().trim().min(1, "Tên nhóm là bắt buộc").max(GROUP_NAME_MAX_LENGTH, "Tên nhóm tối đa 30 ký tự"),
-    description: z.string().max(GROUP_DESCRIPTION_MAX_LENGTH, "Mô tả nhóm tối đa 200 ký tự")
-});
 
 const isOwner = (role: MemberRole) => role === "Owner";
 
@@ -163,6 +158,7 @@ const getApiBase = () => {
 export function GroupSettingView() {
     const locale = useLocale();
     const router = useRouter();
+    const t = useTranslations("GroupSettingView");
 
     const sp = useSearchParams();
     const params = useParams<{ groupId?: string }>();
@@ -214,6 +210,19 @@ export function GroupSettingView() {
 
     const apiBase = getApiBase();
 
+    const groupSettingSchema = useMemo(
+        () =>
+            z.object({
+                groupName: z
+                    .string()
+                    .trim()
+                    .min(1, t("validation.groupNameRequired"))
+                    .max(GROUP_NAME_MAX_LENGTH, t("validation.groupNameMax")),
+                description: z.string().max(GROUP_DESCRIPTION_MAX_LENGTH, t("validation.descriptionMax"))
+            }),
+        [t]
+    );
+
     const currentModeratorId = useMemo(() => {
         const mod = members.find((m) => m.role === "Moderator");
         return mod?.id ? String(mod.id) : null;
@@ -237,7 +246,7 @@ export function GroupSettingView() {
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
-            setGeneralError("Thiếu access token");
+            setGeneralError(t("errors.missingToken"));
             return null;
         }
         return token;
@@ -250,7 +259,7 @@ export function GroupSettingView() {
         });
 
         const text = await readText(res);
-        if (!res.ok) throw new Error(text || `Tải members thất bại (${res.status})`);
+        if (!res.ok) throw new Error(text || `${t("errors.loadMembersFailed")} (${res.status})`);
 
         const json = parseJsonSafe(text);
         return (json ?? {}) as GroupMemberListResponseApiResponse;
@@ -334,7 +343,7 @@ export function GroupSettingView() {
 
         if (!data?.groupId) {
             setNotFound(true);
-            setGeneralError("Tải nhóm thất bại");
+            setGeneralError(t("errors.loadGroupFailed"));
             return false;
         }
 
@@ -419,7 +428,7 @@ export function GroupSettingView() {
             } catch {
                 if (!alive) return;
                 setNotFound(true);
-                setGeneralError("Có lỗi bất ngờ khi tải nhóm");
+                setGeneralError(t("loading.error"));
                 setLoading(false);
             }
         })();
@@ -427,7 +436,7 @@ export function GroupSettingView() {
         return () => {
             alive = false;
         };
-    }, [groupId]);
+    }, [groupId, t]);
 
     const handleEditSave = async () => {
         if (!groupId) return;
@@ -682,7 +691,7 @@ export function GroupSettingView() {
         if (!canManageMembers) return;
 
         if (role === "Moderator" && currentModeratorId && String(userId) !== String(currentModeratorId)) {
-            setMembersError("Nhóm chỉ được có 1 Moderator. Hãy đổi Moderator hiện tại sang vai trò khác trước.");
+            setMembersError(t("members.oneModeratorError"));
             return;
         }
 
@@ -766,17 +775,17 @@ export function GroupSettingView() {
     };
 
     if (loading) {
-        return <div className="p-6 text-gray-500 text-sm">Đang tải...</div>;
+        return <div className="p-6 text-gray-500 text-sm">{t("loading.loading")}</div>;
     }
 
     if (!groupId) {
-        return <div className="p-6 text-gray-500 text-sm">Thiếu id nhóm. Hãy mở một group để vào trang này.</div>;
+        return <div className="p-6 text-gray-500 text-sm">{t("loading.noGroupId")}</div>;
     }
 
     if (notFound) {
         return (
             <div className="p-6 text-gray-500 text-sm">
-                Không tìm thấy nhóm hoặc bạn không có quyền truy cập.
+                {t("loading.notFound")}
                 {generalError ? <div className="mt-2 text-red-600 text-xs">{generalError}</div> : null}
             </div>
         );
@@ -796,8 +805,8 @@ export function GroupSettingView() {
                                     <Settings className="h-4 w-4 text-gray-700" />
                                 </div>
                                 <div>
-                                    <h2 className="font-bold text-gray-900 text-sm">Cài đặt chung</h2>
-                                    <p className="mt-0.5 text-gray-500 text-xs">Quản lý thông tin cơ bản của nhóm</p>
+                                    <h2 className="font-bold text-gray-900 text-sm">{t("general.title")}</h2>
+                                    <p className="mt-0.5 text-gray-500 text-xs">{t("general.subtitle")}</p>
                                 </div>
                             </div>
 
@@ -807,13 +816,13 @@ export function GroupSettingView() {
                                         variant="outline"
                                         onClick={handleCancelEdit}
                                         className="h-10 rounded-xl border-gray-300 px-4 font-semibold text-gray-700 text-sm hover:bg-gray-100">
-                                        Hủy
+                                        {t("general.cancelButton")}
                                     </Button>
                                 ) : null}
                                 <Button
                                     onClick={handleEditSave}
                                     className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700">
-                                    {isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
+                                    {isEditing ? t("general.saveButton") : t("general.editButton")}
                                 </Button>
                             </div>
                         </div>
@@ -851,7 +860,7 @@ export function GroupSettingView() {
                             <div className="grid grid-cols-1 gap-5">
                                 <div>
                                     <label htmlFor="group-name-input" className="font-semibold text-gray-700 text-xs">
-                                        Tên nhóm <span className="text-red-500">*</span>
+                                        {t("groupInfo.nameLabel")} <span className="text-red-500">*</span>
                                     </label>
                                     <Input
                                         id="group-name-input"
@@ -873,7 +882,7 @@ export function GroupSettingView() {
                                     <label
                                         htmlFor="group-description-input"
                                         className="font-semibold text-gray-700 text-xs">
-                                        Mô tả
+                                        {t("groupInfo.descriptionLabel")}
                                     </label>
                                     <Textarea
                                         id="group-description-input"
@@ -931,7 +940,7 @@ export function GroupSettingView() {
                                         <label
                                             htmlFor="master-studio-input"
                                             className="font-semibold text-gray-700 text-xs">
-                                            Master Studio
+                                            {t("groupInfo.masterStudioLabel")}
                                         </label>
                                         <Input
                                             id="master-studio-input"
@@ -948,9 +957,9 @@ export function GroupSettingView() {
 
                                 <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                                     <div>
-                                        <div className="font-semibold text-gray-700 text-xs">Template nhóm</div>
+                                        <div className="font-semibold text-gray-700 text-xs">{t("template.label")}</div>
                                         <div className="mt-0.5 text-gray-500 text-xs">
-                                            Đánh dấu nhóm này làm template để sao chép cấu trúc
+                                            {t("template.description")}
                                         </div>
                                     </div>
                                     <Switch
@@ -980,8 +989,8 @@ export function GroupSettingView() {
                                     <Users className="h-4 w-4 text-gray-700" />
                                 </div>
                                 <div>
-                                    <h2 className="font-bold text-gray-900 text-sm">Thành viên</h2>
-                                    <p className="mt-0.5 text-gray-500 text-xs">Quản lý thành viên và vai trò</p>
+                                    <h2 className="font-bold text-gray-900 text-sm">{t("members.title")}</h2>
+                                    <p className="mt-0.5 text-gray-500 text-xs">{t("members.subtitle")}</p>
                                 </div>
                             </div>
 
@@ -990,15 +999,15 @@ export function GroupSettingView() {
                                 onClick={() => setInviteOpen(true)}
                                 className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700 disabled:opacity-50">
                                 <UserPlus className="mr-2 h-4 w-4" />
-                                Thêm thành viên
+                                {t("members.addButton")}
                             </Button>
                         </div>
 
                         <div className="px-6 py-6">
                             <div className="hidden grid-cols-12 gap-3 rounded-xl border bg-gray-50 px-4 py-3 font-semibold text-gray-600 text-xs md:grid">
-                                <div className="col-span-6">Thành viên</div>
-                                <div className="col-span-3 flex justify-center">Vai trò</div>
-                                <div className="col-span-3 flex justify-center">Thao tác</div>
+                                <div className="col-span-6">{t("members.tableHeaders.member")}</div>
+                                <div className="col-span-3 flex justify-center">{t("members.tableHeaders.role")}</div>
+                                <div className="col-span-3 flex justify-center">{t("members.tableHeaders.action")}</div>
                             </div>
 
                             <div className="mt-3 divide-y rounded-2xl border">
@@ -1044,7 +1053,7 @@ export function GroupSettingView() {
                                                 {isOwner(m.role) ? (
                                                     <div className="inline-flex h-10 w-42.5 items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 font-semibold text-orange-700 text-sm">
                                                         {getRoleIcon(m.role)}
-                                                        <span>Owner</span>
+                                                        <span>{t("members.ownerRole")}</span>
                                                     </div>
                                                 ) : (
                                                     <Select
@@ -1055,7 +1064,7 @@ export function GroupSettingView() {
                                                         }>
                                                         <SelectTrigger className="h-10 w-42.5 justify-between rounded-xl border border-gray-200 bg-white px-3 font-semibold text-gray-900 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 data-[state=open]:ring-2 data-[state=open]:ring-orange-500">
                                                             <SelectValue
-                                                                placeholder="Chọn role"
+                                                                placeholder={t("members.selectPlaceholder")}
                                                                 className="text-left"
                                                             />
                                                         </SelectTrigger>
@@ -1103,7 +1112,7 @@ export function GroupSettingView() {
 
                                 {members.length === 0 ? (
                                     <div className="px-4 py-10 text-center text-gray-500 text-sm">
-                                        Chưa có thành viên để hiển thị.
+                                        {t("members.emptyState")}
                                     </div>
                                 ) : null}
                             </div>
@@ -1118,17 +1127,17 @@ export function GroupSettingView() {
 
                     <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
                         <div className="border-red-200 border-b px-6 py-5">
-                            <h2 className="font-bold text-red-700 text-sm">Vùng nguy hiểm</h2>
-                            <p className="mt-0.5 text-red-600 text-xs">Các thao tác không thể hoàn tác</p>
+                            <h2 className="font-bold text-red-700 text-sm">{t("dangerZone.title")}</h2>
+                            <p className="mt-0.5 text-red-600 text-xs">{t("dangerZone.subtitle")}</p>
                         </div>
 
                         <div className="px-6 py-6">
                             <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                     <div>
-                                        <div className="font-bold text-red-700 text-sm">Xóa nhóm</div>
+                                        <div className="font-bold text-red-700 text-sm">{t("dangerZone.deleteGroup.label")}</div>
                                         <div className="mt-1 text-red-600 text-xs">
-                                            Xóa vĩnh viễn nhóm và toàn bộ dữ liệu liên quan.
+                                            {t("dangerZone.deleteGroup.description")}
                                         </div>
                                     </div>
 
@@ -1138,21 +1147,20 @@ export function GroupSettingView() {
                                                 disabled={!canDelete}
                                                 className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                Xóa nhóm
+                                                {t("dangerZone.deleteGroup.button")}
                                             </Button>
                                         </AlertDialogTrigger>
 
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Bạn chắc chắn muốn xóa nhóm này?</AlertDialogTitle>
+                                                <AlertDialogTitle>{t("dangerZone.deleteGroup.confirmTitle")}</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Hành động này không thể hoàn tác. Nhóm và toàn bộ dữ liệu sẽ bị xóa
-                                                    vĩnh viễn.
+                                                    {t("dangerZone.deleteGroup.confirmDescription")}
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
 
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel disabled={deleteLoading}>Hủy</AlertDialogCancel>
+                                                <AlertDialogCancel disabled={deleteLoading}>{t("removeMember.cancelButton")}</AlertDialogCancel>
                                                 <AlertDialogAction
                                                     disabled={deleteLoading || !canDelete}
                                                     className="bg-red-600 hover:bg-red-700"
@@ -1160,7 +1168,7 @@ export function GroupSettingView() {
                                                         e.preventDefault();
                                                         void handleDelete();
                                                     }}>
-                                                    {deleteLoading ? "Đang xóa..." : "Xác nhận xóa"}
+                                                    {deleteLoading ? t("dangerZone.deleteGroup.deleting") : t("dangerZone.deleteGroup.confirmButton")}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
@@ -1169,7 +1177,7 @@ export function GroupSettingView() {
 
                                 {!canDelete ? (
                                     <div className="mt-4 text-red-700 text-xs">
-                                        Chỉ <b>Owner</b> mới có quyền xóa nhóm.
+                                        {t("dangerZone.deleteGroup.onlyOwner")}
                                     </div>
                                 ) : null}
                             </div>
@@ -1212,18 +1220,16 @@ export function GroupSettingView() {
                 }}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Xác nhận xóa thành viên</AlertDialogTitle>
+                        <AlertDialogTitle>{t("removeMember.confirmTitle")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn có chắc chắn muốn xóa{" "}
-                            <span className="font-semibold text-gray-900">
-                                {removeTarget?.name || "thành viên này"}
-                            </span>{" "}
-                            khỏi nhóm không? Hành động này không thể hoàn tác.
+                            {t("removeMember.confirmDescription", {
+                                name: removeTarget?.name || "member"
+                            })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={removeBusy}>Hủy</AlertDialogCancel>
+                        <AlertDialogCancel disabled={removeBusy}>{t("removeMember.cancelButton")}</AlertDialogCancel>
                         <AlertDialogAction
                             className="bg-red-600 hover:bg-red-700"
                             disabled={removeBusy}
@@ -1231,7 +1237,7 @@ export function GroupSettingView() {
                                 e.preventDefault();
                                 void confirmRemoveMember();
                             }}>
-                            {removeBusy ? "Đang xóa..." : "Xóa thành viên"}
+                            {removeBusy ? t("removeMember.deleting") : t("removeMember.confirmButton")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

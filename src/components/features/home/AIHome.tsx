@@ -3,7 +3,7 @@
 import { ChevronDown, Loader2, Send, Sparkles, Clock3, Flame, Gauge, ArrowUpRight, Stars } from "lucide-react";
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import HomeTopTabs from "@/components/features/home/HomeTopTabs";
@@ -29,37 +29,6 @@ type InlineNode = {
     type: "text" | "strong";
     value: string;
 };
-
-const quickActions: QuickAction[] = [
-    {
-        key: "today",
-        title: "Việc hôm nay",
-        description: "Tóm tắt những việc cá nhân cần ưu tiên trong ngày",
-        prompt: "Hãy tóm tắt những việc cá nhân tôi nên ưu tiên hôm nay.",
-        icon: <Clock3 className="h-4 w-4" />
-    },
-    {
-        key: "plan",
-        title: "Lên kế hoạch",
-        description: "Sắp xếp thứ tự làm việc hợp lý cho hôm nay",
-        prompt: "Hãy giúp tôi lập kế hoạch làm việc cá nhân cho hôm nay.",
-        icon: <Gauge className="h-4 w-4" />
-    },
-    {
-        key: "overdue",
-        title: "Xử lý quá hạn",
-        description: "Gợi ý cách xử lý các việc đang bị trễ",
-        prompt: "Hãy gợi ý cách xử lý các công việc cá nhân đang quá hạn.",
-        icon: <Flame className="h-4 w-4" />
-    },
-    {
-        key: "focus",
-        title: "Chọn việc để tập trung",
-        description: "Xác định 3 việc quan trọng nhất lúc này",
-        prompt: "Hãy giúp tôi chọn 3 việc quan trọng nhất để tập trung ngay bây giờ.",
-        icon: <Stars className="h-4 w-4" />
-    }
-];
 
 const initialMessages: ChatMessage[] = [];
 
@@ -249,12 +218,12 @@ function UsageCard({
     );
 }
 
-function TypingDots() {
+function TypingDots({ thinkingText }: { thinkingText: string }) {
     return (
         <div className="flex items-center gap-2 text-[#8C7A6B] text-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
             <div className="flex items-center gap-1">
-                <span>AI đang suy nghĩ</span>
+                <span>{thinkingText}</span>
                 <motion.span animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.2 }}>.</motion.span>
                 <motion.span animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }}>.</motion.span>
                 <motion.span animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.4 }}>.</motion.span>
@@ -265,6 +234,39 @@ function TypingDots() {
 
 export default function AIHome() {
     const locale = useLocale();
+    const t = useTranslations("AIHome");
+
+    const quickActions: QuickAction[] = React.useMemo(() => [
+        {
+            key: "today",
+            title: t("today"),
+            description: t("todayDesc"),
+            prompt: "Hãy tóm tắt những việc cá nhân tôi nên ưu tiên hôm nay.",
+            icon: <Clock3 className="h-4 w-4" />
+        },
+        {
+            key: "plan",
+            title: t("plan"),
+            description: t("planDesc"),
+            prompt: "Hãy giúp tôi lập kế hoạch làm việc cá nhân cho hôm nay.",
+            icon: <Gauge className="h-4 w-4" />
+        },
+        {
+            key: "overdue",
+            title: t("overdue"),
+            description: t("overdueDesc"),
+            prompt: "Hãy gợi ý cách xử lý các công việc cá nhân đang quá hạn.",
+            icon: <Flame className="h-4 w-4" />
+        },
+        {
+            key: "focus",
+            title: t("focus"),
+            description: t("focusDesc"),
+            prompt: "Hãy giúp tôi chọn 3 việc quan trọng nhất để tập trung ngay bây giờ.",
+            icon: <Stars className="h-4 w-4" />
+        }
+    ], [t]);
+
     const [messages, setMessages] = React.useState<ChatMessage[]>(initialMessages);
     const [input, setInput] = React.useState("");
     const [isSending, setIsSending] = React.useState(false);
@@ -353,7 +355,7 @@ export default function AIHome() {
             } catch {
                 setMessages((prev) =>
                     prev.map((m) =>
-                        m.id === assistantMessageId ? { ...m, content: "Xin lỗi, đã xảy ra lỗi." } : m
+                        m.id === assistantMessageId ? { ...m, content: t("error") } : m
                     )
                 );
             } finally {
@@ -405,11 +407,11 @@ export default function AIHome() {
 
                                 <div className="mt-5 max-w-3xl">
                                     <h1 className="bg-[linear-gradient(135deg,#2B2118_0%,#7C3AED_55%,#0F766E_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[44px]">
-                                        Trợ lý AI cá nhân
+                                        {t("title")}
                                     </h1>
 
                                     <p className="mt-3 max-w-2xl text-sm leading-7 text-[#7A6858] md:text-[15px]">
-                                        Một không gian riêng để bạn suy nghĩ rõ hơn, sắp xếp công việc gọn hơn và nhận hỗ trợ nhanh cho các đầu việc hằng ngày.
+                                        {t("subtitle")}
                                     </p>
                                 </div>
 
@@ -422,9 +424,9 @@ export default function AIHome() {
 
                     <SectionReveal delay={0.05}>
                         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <UsageCard label="Đã dùng hôm nay" value={usageStats.usedToday == null ? "--" : String(usageStats.usedToday)} tone="default" icon={<Clock3 className="h-4 w-4" />} />
-                            <UsageCard label="Còn lại" value={usageStats.remaining == null ? "--" : String(usageStats.remaining)} tone="accent" icon={<Sparkles className="h-4 w-4" />} />
-                            <UsageCard label="Giới hạn ngày" value={usageStats.dailyLimit == null ? "--" : String(usageStats.dailyLimit)} tone="strong" icon={<Gauge className="h-4 w-4" />} />
+                            <UsageCard label={t("usedToday")} value={usageStats.usedToday == null ? "--" : String(usageStats.usedToday)} tone="default" icon={<Clock3 className="h-4 w-4" />} />
+                            <UsageCard label={t("remaining")} value={usageStats.remaining == null ? "--" : String(usageStats.remaining)} tone="accent" icon={<Sparkles className="h-4 w-4" />} />
+                            <UsageCard label={t("dailyLimit")} value={usageStats.dailyLimit == null ? "--" : String(usageStats.dailyLimit)} tone="strong" icon={<Gauge className="h-4 w-4" />} />
                         </section>
                     </SectionReveal>
 
@@ -450,10 +452,10 @@ export default function AIHome() {
                                         <Sparkles className="h-8 w-8 text-[#FF8A65]" />
                                     </motion.div>
 
-                                    <h2 className="text-[31px] font-semibold text-[#2B2118] md:text-[40px]">Hôm nay bạn muốn AI giúp gì?</h2>
+                                    <h2 className="text-[31px] font-semibold text-[#2B2118] md:text-[40px]">{t("emptyTitle")}</h2>
 
                                     <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-[#7A6858]">
-                                        Bạn có thể hỏi về kế hoạch hôm nay, việc đang quá hạn, cách ưu tiên công việc hoặc nhấn vào một gợi ý bên dưới để bắt đầu nhanh.
+                                        {t("emptySubtitle")}
                                     </p>
                                 </div>
 
@@ -480,12 +482,12 @@ export default function AIHome() {
                             >
                                 <div className="flex items-center justify-between gap-3 border-b border-[#F4ECE6] pb-4">
                                     <div>
-                                        <h2 className="text-lg font-semibold text-[#2B2118]">Cuộc trò chuyện cá nhân</h2>
-                                        <p className="mt-1 text-sm text-[#9C8C80]">Nơi bạn trao đổi riêng với AI về công việc và kế hoạch của mình</p>
+                                        <h2 className="text-lg font-semibold text-[#2B2118]">{t("chatTitle")}</h2>
+                                        <p className="mt-1 text-sm text-[#9C8C80]">{t("chatSubtitle")}</p>
                                     </div>
 
                                     <div className="rounded-full border border-[#F3E6DB] bg-[#FFF8F3]/90 px-3 py-1 text-xs text-[#A06A43] shadow-sm backdrop-blur">
-                                        Private space
+                                        {t("privateSpace")}
                                     </div>
                                 </div>
 
@@ -502,7 +504,7 @@ export default function AIHome() {
                                             >
                                                 <div className={m.role === "user" ? "rounded-[24px] rounded-br-md border border-[#4A2E25] bg-[linear-gradient(135deg,#432818_0%,#7C2D12_45%,#7C3AED_100%)] px-4 py-3 text-white shadow-[0_18px_32px_rgba(43,33,24,0.22)]" : "rounded-[24px] rounded-bl-md border border-[#EFE6DE] bg-[linear-gradient(135deg,#FFFDFC_0%,#FFF7F2_58%,#F5F3FF_100%)] px-4 py-3 text-[#2B2118] shadow-[0_14px_28px_rgba(15,23,42,0.04)]"}>
                                                     {m.role === "assistant" && !m.content.trim() && isSending ? (
-                                                        <TypingDots />
+                                                        <TypingDots thinkingText={t("thinking")} />
                                                     ) : m.role === "assistant" ? (
                                                         renderAssistantMarkdown(m.content)
                                                     ) : (
@@ -552,7 +554,7 @@ export default function AIHome() {
                                         onChange={(e) => setInput(e.target.value)}
                                         onFocus={() => setIsComposerFocused(true)}
                                         onBlur={() => setIsComposerFocused(false)}
-                                        placeholder="Hỏi AI về công việc cá nhân của bạn..."
+                                        placeholder={t("placeholder")}
                                         className="min-h-[50px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
                                     />
 

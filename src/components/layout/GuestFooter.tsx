@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { FaFacebook, FaInstagram, FaLinkedin, FaXTwitter, FaYoutube } from "react-icons/fa6";
 
 export interface GuestFooterProps {
     className?: string;
@@ -11,6 +11,13 @@ export interface GuestFooterProps {
 export function GuestFooter({ className = "" }: GuestFooterProps) {
     const t = useTranslations("GuestFooter");
     const locale = useLocale();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const changeLocale = (nextLocale: "en" | "vi") => {
+        const pathWithoutLocale = (pathname || "").replace(/^\/[a-z]{2}(?=\/|$)/i, "");
+        router.push(`/${nextLocale}${pathWithoutLocale}`);
+    };
 
     const productLinks = [
         {
@@ -35,106 +42,71 @@ export function GuestFooter({ className = "" }: GuestFooterProps) {
         }
     ];
 
-    const socialLinks = [
-        {
-            icon: <FaXTwitter size={18} />,
-            bgColor: "bg-black",
-            href: "#",
-            label: "Twitter"
-        },
-        {
-            icon: <FaYoutube size={18} />,
-            bgColor: "bg-red-600",
-            href: "#",
-            label: "YouTube"
-        },
-        {
-            icon: <FaInstagram size={18} />,
-            bgColor: "bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600",
-            href: "#",
-            label: "Instagram"
-        },
-        {
-            icon: <FaFacebook size={18} />,
-            bgColor: "bg-blue-600",
-            href: "#",
-            label: "Facebook"
-        },
-        {
-            icon: <FaLinkedin size={18} />,
-            bgColor: "bg-[#0A66C2]",
-            href: "#",
-            label: "LinkedIn"
-        }
-    ];
-
     return (
-        <footer className={`bg-orange-200 py-10 ${className}`}>
-            <div className="mx-auto flex w-[90%] max-w-7xl flex-col items-center justify-between gap-8 md:flex-row md:items-start">
-                {/* Logo & Language Selector */}
-                <div className="flex flex-col gap-6">
-                    <div className="flex items-center gap-2">
-                        <svg width="36" height="36" viewBox="0 0 64 64">
-                            <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
-                            <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
-                        </svg>
-                        <div className="font-bold text-orange-600 text-xl leading-tight">
-                            Study
-                            <br />
-                            Studio
-                        </div>
-                    </div>
+        <footer className={`relative overflow-hidden bg-[linear-gradient(180deg,#FFEAD3_0%,#FFD8AF_100%)] py-12 ${className}`}>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
 
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F3CFA8] text-gray-700">
-                            🌐
-                        </div>
-                        <button
-                            type="button"
-                            className="flex cursor-pointer items-center gap-2 rounded-full bg-[#F3CFA8] px-5 py-2 font-medium text-gray-800 text-sm transition hover:bg-[#EBC190]">
-                            {t("language")}
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-gray-600">
-                                <path
-                                    d="M6 9L12 15L18 9"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
+            <div className="mx-auto w-[92%] max-w-7xl">
+                <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-5">
+                        <Link href={`/${locale}`} className="inline-flex items-center gap-2">
+                            <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">
+                                <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
+                                <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
                             </svg>
-                        </button>
+                            <div className="font-bold text-orange-600 text-xl leading-tight">
+                                Study
+                                <br />
+                                Studio
+                            </div>
+                        </Link>
+
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/45 text-sm shadow-[0_6px_18px_rgba(249,115,22,0.12)]">
+                                🌐
+                            </div>
+                            <div className="flex items-center rounded-full border border-white/70 bg-white/55 p-1 shadow-[0_8px_24px_rgba(249,115,22,0.14)] backdrop-blur">
+                                <button
+                                    type="button"
+                                    onClick={() => changeLocale("vi")}
+                                    className={`rounded-full px-4 py-1.5 font-semibold text-xs transition-colors ${locale === "vi"
+                                        ? "bg-orange-500 text-white"
+                                        : "text-[#5F4A3A] hover:bg-orange-100"
+                                        }`}
+                                    aria-label="Switch language to Vietnamese"
+                                >
+                                    VI
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => changeLocale("en")}
+                                    className={`rounded-full px-4 py-1.5 font-semibold text-xs transition-colors ${locale === "en"
+                                        ? "bg-orange-500 text-white"
+                                        : "text-[#5F4A3A] hover:bg-orange-100"
+                                        }`}
+                                    aria-label="Switch language to English"
+                                >
+                                    EN
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                {/* Social Links */}
-                <div className="flex flex-col items-center gap-4">
-                    <p className="text-gray-700 text-sm">{t("contactUs")}</p>
-
-                    <div className="flex items-center gap-4">
-                        {socialLinks.map((social) => (
-                            <a
-                                key={social.label}
-                                href={social.href}
-                                aria-label={social.label}
-                                className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-white transition hover:opacity-80 ${social.bgColor}`}>
-                                {social.icon}
-                            </a>
-                        ))}
+                    <div className="md:max-w-[62%]">
+                        <p className="mb-3 text-center font-semibold text-[#261E33] text-sm">{t("products")}</p>
+                        <ul className="flex flex-wrap justify-center gap-2">
+                            {productLinks.map((link) => (
+                                <li key={link.key}>
+                                    <Link
+                                        href={link.href}
+                                        className="inline-flex items-center rounded-full border border-white/70 bg-white/45 px-4 py-2 font-medium text-[#5F4A3A] text-sm transition-colors hover:bg-white/70 hover:text-orange-700"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                </div>
-
-                {/* Product Links */}
-                <div className="text-center text-gray-700 text-sm md:text-left">
-                    <p className="mb-3 font-semibold text-black">{t("products")}</p>
-                    <ul className="space-y-2">
-                        {productLinks.map((link) => (
-                            <li key={link.key}>
-                                <Link href={link.href} className="cursor-pointer transition hover:text-orange-600">
-                                    {link.label}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
                 </div>
             </div>
         </footer>

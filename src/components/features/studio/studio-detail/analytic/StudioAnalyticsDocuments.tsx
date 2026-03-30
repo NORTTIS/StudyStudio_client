@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Cloud, FileText, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import type { StudioGroupData } from "@/api/analytics";
 import { Modal } from "@/components/common";
@@ -49,7 +50,17 @@ function formatBytesMB(mb?: number): string {
 }
 
 // Storage quota bar component
-function StorageQuotaBar({ usedBytes, limitMb }: { usedBytes: number; limitMb: number }) {
+function StorageQuotaBar({
+    usedBytes,
+    limitMb,
+    title,
+    remainingLabel
+}: {
+    usedBytes: number;
+    limitMb: number;
+    title: string;
+    remainingLabel: string;
+}) {
     const limitBytes = limitMb * 1024 * 1024;
     const percent = limitBytes > 0 ? Math.min(100, (usedBytes / limitBytes) * 100) : 0;
     const remainingBytes = Math.max(0, limitBytes - usedBytes);
@@ -62,13 +73,15 @@ function StorageQuotaBar({ usedBytes, limitMb }: { usedBytes: number; limitMb: n
             <div className="mb-2 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <Cloud className="h-4 w-4 text-slate-500" />
-                    <span className="font-medium text-slate-600 text-sm">Dung lượng lưu trữ</span>
+                    <span className="font-medium text-slate-600 text-sm">{title}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                     <span className="font-medium text-slate-600">
                         {formatBytes(usedBytes)} / {formatBytesMB(limitMb)}
                     </span>
-                    <span className={textColor}>Còn trống: {formatBytes(remainingBytes)}</span>
+                    <span className={textColor}>
+                        {remainingLabel}: {formatBytes(remainingBytes)}
+                    </span>
                 </div>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
@@ -92,6 +105,7 @@ export default function StudioAnalyticsDocuments({
     studioRole,
     maxStorageMb
 }: StudioAnalyticsDocumentsProps) {
+    const t = useTranslations("StudioAnalyticsDocuments");
     const { toast } = useToast();
     // studioRole: 0 = owner, 1 = admin/member
     const canManage = studioRole === 0 || studioRole === 1;
@@ -127,7 +141,7 @@ export default function StudioAnalyticsDocuments({
             const items = await fetchGroupDocuments(groupId);
             const mapped: DocumentData[] = items.map((item) => ({
                 attachmentId: item.attachmentId || "",
-                fileName: item.fileName || "Untitled",
+                fileName: item.fileName || t("documents.untitled"),
                 fileSize: item.fileSize,
                 contentType: item.contentType ?? undefined,
                 uploadedBy: item.uploadedBy,
@@ -143,7 +157,7 @@ export default function StudioAnalyticsDocuments({
                 [groupId]: { docs: [], loading: false }
             }));
         }
-    }, []);
+    }, [t]);
 
     // Initial load
     React.useEffect(() => {
@@ -199,29 +213,29 @@ export default function StudioAnalyticsDocuments({
 
     const handleUploadFile = async (file: File) => {
         if (!currentGroupId) {
-            toast({ variant: "destructive", description: "Vui lòng chọn một nhóm để tải lên." });
+            toast({ variant: "destructive", description: t("upload.selectGroupFirst") });
             return;
         }
         if (!isAllowedFile(file)) {
-            toast({ variant: "destructive", description: "Chỉ chấp nhận file: pdf, txt, docx, md." });
+            toast({ variant: "destructive", description: t("upload.invalidExtension") });
             return;
         }
         if (file.size > MAX_FILE_SIZE) {
-            toast({ variant: "destructive", description: "File vượt quá 5MB." });
+            toast({ variant: "destructive", description: t("upload.fileTooLarge") });
             return;
         }
 
         setIsUploading(true);
         try {
             await uploadFile(file, currentGroupId);
-            toast({ variant: "success", description: "Tải lên thành công!" });
+            toast({ variant: "success", description: t("upload.success") });
             setIsUploadModalOpen(false);
             // Reload
             void loadGroupDocs(currentGroupId);
         } catch (error) {
             toast({
                 variant: "destructive",
-                description: error instanceof Error ? error.message : "Tải lên thất bại."
+                description: error instanceof Error ? error.message : t("upload.failed")
             });
         } finally {
             setIsUploading(false);
@@ -235,7 +249,7 @@ export default function StudioAnalyticsDocuments({
         if (isUploading) return;
         const files = Array.from(event.dataTransfer?.files || []);
         if (files.length > 1) {
-            toast({ variant: "destructive", description: "Chỉ được tải lên 1 file mỗi lần." });
+            toast({ variant: "destructive", description: t("upload.onlyOneFile") });
             return;
         }
         if (files.length === 1) {
@@ -266,11 +280,11 @@ export default function StudioAnalyticsDocuments({
             }));
             setDeleteConfirmOpen(false);
             setDeleteTarget(null);
-            toast({ variant: "success", description: "Đã xóa tài liệu." });
+            toast({ variant: "success", description: t("delete.success") });
         } catch (error) {
             toast({
                 variant: "destructive",
-                description: error instanceof Error ? error.message : "Xóa thất bại."
+                description: error instanceof Error ? error.message : t("delete.failed")
             });
         } finally {
             setIsDeleting(false);
@@ -293,14 +307,16 @@ export default function StudioAnalyticsDocuments({
         } catch (error) {
             toast({
                 variant: "destructive",
-                description: error instanceof Error ? error.message : "Tải xuống thất bại."
+                description: error instanceof Error ? error.message : t("download.failed")
             });
         }
     };
 
     const tabs = groups
         .filter((g) => (g.groupId ?? "") !== "")
-        .map((g) => ({ key: g.groupId ?? "", label: g.groupName ?? "Nhóm" }));
+        .map((g) => ({ key: g.groupId ?? "", label: g.groupName ?? t("tabs.unnamedGroup") }));
+
+    const currentGroupName = groups.find((g) => g.groupId === activeTab)?.groupName ?? t("tabs.unnamedGroup");
 
     React.useEffect(() => {
         if (!tabs.length) return;
@@ -318,8 +334,8 @@ export default function StudioAnalyticsDocuments({
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 {/* Section title */}
                 <div>
-                    <h2 className="font-semibold text-lg text-slate-900">6. Quản lý tài liệu</h2>
-                    <p className="mt-1 text-slate-500 text-sm">Xem và quản lý tài liệu của các nhóm trong studio.</p>
+                    <h2 className="font-semibold text-lg text-slate-900">{t("section.title")}</h2>
+                    <p className="mt-1 text-slate-500 text-sm">{t("section.description")}</p>
                 </div>
 
                 {/* Upload button */}
@@ -341,7 +357,7 @@ export default function StudioAnalyticsDocuments({
                             disabled={isUploading}
                             className="rounded-2xl bg-orange-500 px-5 text-white hover:opacity-90">
                             <Upload className="mr-2 h-4 w-4" />
-                            {isUploading ? "Đang tải..." : "Tải lên"}
+                            {isUploading ? t("upload.loading") : t("upload.button")}
                         </Button>
                     </div>
                 )}
@@ -354,18 +370,22 @@ export default function StudioAnalyticsDocuments({
                         key={tab.key}
                         type="button"
                         onClick={() => setActiveTab(tab.key)}
-                        className={`rounded-2xl px-4 py-2 font-medium text-sm transition-all duration-200 ${
-                            activeTab === tab.key
+                        className={`rounded-2xl px-4 py-2 font-medium text-sm transition-all duration-200 ${activeTab === tab.key
                                 ? "bg-orange-500 text-white shadow-sm"
                                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}>
+                            }`}>
                         {tab.label}
                     </button>
                 ))}
             </div>
 
             {/* Storage quota */}
-            <StorageQuotaBar usedBytes={usedBytes} limitMb={maxStorageMb ?? 100} />
+            <StorageQuotaBar
+                usedBytes={usedBytes}
+                limitMb={maxStorageMb ?? 100}
+                title={t("storage.title")}
+                remainingLabel={t("storage.remaining")}
+            />
 
             {/* Document grid */}
             {currentLoading ? (
@@ -387,8 +407,8 @@ export default function StudioAnalyticsDocuments({
             ) : currentDocs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-300 border-dashed py-16 text-center">
                     <FileText className="mb-3 h-12 w-12 text-slate-300" />
-                    <p className="font-medium text-slate-500">Chưa có tài liệu nào.</p>
-                    <p className="mt-1 text-slate-400 text-sm">Tải lên tài liệu đầu tiên cho nhóm này.</p>
+                    <p className="font-medium text-slate-500">{t("empty.title")}</p>
+                    <p className="mt-1 text-slate-400 text-sm">{t("empty.description")}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -412,7 +432,7 @@ export default function StudioAnalyticsDocuments({
                     if (!isUploading) setIsUploadModalOpen(false);
                     setIsDragActive(false);
                 }}
-                title="Tải lên tài liệu"
+                title={t("upload.modalTitle")}
                 size="md">
                 <div className="space-y-4">
                     {/* biome-ignore lint/a11y/useSemanticElements: <explanation> */}
@@ -442,27 +462,25 @@ export default function StudioAnalyticsDocuments({
                             setIsDragActive(false);
                         }}
                         onDrop={onDrop}
-                        className={`flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 text-center transition-all duration-200 ${
-                            isDragActive
+                        className={`flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 text-center transition-all duration-200 ${isDragActive
                                 ? "border-orange-400 bg-orange-50"
                                 : "border-slate-300 bg-white hover:border-orange-300"
-                        }`}>
+                            }`}>
                         <Upload className="mb-3 h-8 w-8 text-orange-500" />
-                        <p className="font-semibold text-base text-slate-800">Kéo thả file vào đây</p>
-                        <p className="mt-1 text-slate-500 text-sm">hoặc nhấn để chọn file</p>
+                        <p className="font-semibold text-base text-slate-800">{t("upload.dropTitle")}</p>
+                        <p className="mt-1 text-slate-500 text-sm">{t("upload.dropDescription")}</p>
                         <Button
                             type="button"
                             disabled={isUploading}
                             className="mt-4 rounded-xl bg-orange-500 text-white hover:opacity-90">
-                            Chọn file
+                            {t("upload.chooseFile")}
                         </Button>
                     </div>
                     <p className="text-slate-500 text-sm">
-                        Chấp nhận: <span className="font-medium">pdf, txt, docx, md</span>. Tối đa{" "}
-                        <span className="font-medium">5MB</span>.
+                        {t("upload.accepted", { types: "pdf, txt, docx, md", max: "5MB" })}
                     </p>
                     <p className="rounded-lg bg-slate-100 px-3 py-2 text-slate-600 text-sm">
-                        Đang tải lên nhóm: <span className="font-medium">{groups.find((g) => g.groupId === activeTab)?.groupName}</span>
+                        {t("upload.targetGroup", { groupName: currentGroupName })}
                     </p>
                 </div>
             </Modal>
@@ -476,15 +494,13 @@ export default function StudioAnalyticsDocuments({
                 }}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Xóa tài liệu?</AlertDialogTitle>
+                        <AlertDialogTitle>{t("delete.title")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bạn có chắc muốn xóa{" "}
-                            <span className="font-semibold text-slate-900">{deleteTarget?.name}</span>? Hành động này
-                            không thể hoàn tác.
+                            {t("delete.description", { name: deleteTarget?.name ?? "" })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isDeleting}>{t("delete.cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                             className="bg-red-600 hover:bg-red-700"
                             disabled={isDeleting}
@@ -492,7 +508,7 @@ export default function StudioAnalyticsDocuments({
                                 e.preventDefault();
                                 void confirmDelete();
                             }}>
-                            {isDeleting ? "Đang xóa..." : "Xóa"}
+                            {isDeleting ? t("delete.processing") : t("delete.confirm")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

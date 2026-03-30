@@ -13,6 +13,11 @@
     "Announcements": {
         "title": "Thông báo",
         "subtitle": "Cập nhật thông tin mới nhất từ Study Studio",
+        "loading": "Đang tải thông báo...",
+        "learningHub": "Learning Hub",
+        "heroDescription": "Theo dõi cập nhật học tập, thông báo hệ thống và tin nhắn cá nhân trong giao diện sáng sủa, hiện đại và tập trung hơn.",
+        "labelAnnouncements": "thông báo",
+        "labelUnread": "chưa đọc",
         "publicTab": "Thông báo chung",
         "personalTab": "Thông báo cá nhân",
         "noPublicAnnouncements": "Chưa có thông báo chung nào",
@@ -33,8 +38,15 @@
         "sortNewest": "Sắp xếp: Mới nhất",
         "sortOldest": "Sắp xếp: Cũ nhất",
         "markAsReadSuccess": "Đã đánh dấu là đã đọc",
+        "loadFailed": "Không thể tải thông báo",
         "deleteSuccess": "Đã xóa thông báo thành công",
+        "deleteFailed": "Xóa không thành công",
         "confirmed": "Đã xác nhận",
+        "update": "Cập nhật",
+        "emptyStateTitle": "Mọi thứ đều đã cập nhật",
+        "emptyStateDescription": "Bạn đã xem hết các thông báo hiện có.",
+        "noResultTitle": "Không có kết quả",
+        "noResultDescription": "Thử lại với từ khóa khác.",
         "systemNews": "Thông báo hệ thống",
         "newsroom": "Study Studio Newsroom"
     },
@@ -93,6 +105,18 @@
             "feature1Description": "AI hỗ trợ bạn tóm tắt, phân tích và đưa ra gợi ý hành động nhanh hơn trong từng không gian làm việc.",
             "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm",
             "feature2Description": "Tương tác thông minh hơn với dữ liệu, task, nhóm và lịch trình để tăng tốc ra quyết định hằng ngày."
+        },
+        "badges": {
+            "productivityEcosystem": "Hệ sinh thái năng suất",
+            "management": "Quản lý",
+            "group": "Nhóm",
+            "personal": "Cá nhân"
+        },
+        "previews": {
+            "hero": "Xem trước phần mở đầu",
+            "management": "Xem trước không gian quản lý",
+            "group": "Xem trước không gian nhóm",
+            "personal": "Xem trước không gian cá nhân"
         }
     },
     "HomePage": {
@@ -605,9 +629,52 @@
             "inviteMember": "Mời thành viên",
             "studioNotFound": "Studio không tồn tại",
             "studioNotFoundSubtitle": "Vui lòng kiểm tra lại đường dẫn hoặc quay về danh sách studio",
+            "workspaceBadge": "Không gian studio",
+            "memberAltFallback": "Thành viên",
+            "noGroupsSubtitle": "Tạo nhóm đầu tiên để bắt đầu",
+            "notAvailable": "—",
             "validation": {
                 "dateRangeError": "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc"
             },
+            "tabs": {
+                "groups": "Nhóm",
+                "ai": "AI",
+                "analytics": "Phân tích",
+                "settings": "Cài đặt"
+            },
+            "panel": {
+                "title": "Bảng studio",
+                "subtitle": "Danh sách thành viên và thống kê nhanh",
+                "expand": "Mở rộng panel",
+                "collapse": "Thu gọn panel",
+                "memberListTitle": "Danh sách thành viên",
+                "quickStatsTitle": "Thống kê nhanh",
+                "quickStatsSubtitle": "Tổng quan nhanh của studio",
+                "created": "Ngày tạo"
+            },
+            "settings": {
+                "title": "Cài đặt chung",
+                "subtitle": "Quản lý thông tin cơ bản của Studio",
+                "saving": "Đang lưu...",
+                "saveChanges": "Lưu thay đổi",
+                "edit": "Chỉnh sửa",
+                "primaryColor": "Màu chủ đạo",
+                "startDate": "Ngày bắt đầu",
+                "endDate": "Ngày kết thúc",
+                "createdDate": "Ngày tạo",
+                "groupCount": "Số nhóm"
+            },
+            "danger": {
+                "title": "Vùng nguy hiểm",
+                "deleteDescription": "Xóa Studio khỏi danh sách của bạn. Studio sẽ bị ẩn và không thể truy cập được, nhưng dữ liệu sẽ vẫn được giữ lại trong trường hợp bạn muốn khôi phục sau này.",
+                "confirmTitle": "Bạn chắc chắn muốn xóa Studio này?",
+                "confirmDescription": "Hành động này có thể hoàn tác. Studio và toàn bộ dữ liệu sẽ bị ẩn.",
+                "confirmDelete": "Xác nhận xóa"
+            },
+            "invite": {
+                "createLinkError": "Tạo liên kết mời thất bại"
+            },
+            "groupCreatedSuccess": "Nhóm đã được tạo thành công!",
             "groupsUsed": "không gian nhóm đang được sử dụng",
             "completionProgress": "Tiến độ hoàn thiện công việc trung bình",
             "tasks": "công việc",
@@ -633,14 +700,17 @@
         "errorAcceptFailed": "Chấp nhận lời mời thất bại."
     },
     "LandingGroupPage": {
+        "badge": "Cộng tác nhóm",
         "hero": {
             "title": "Không gian làm việc chung cho",
             "titleHighlight": "học tập & dự án",
             "createButton": "Tạo nhóm →",
-            "imageAlt": "Group collaboration"
+            "imageAlt": "Group collaboration",
+            "description": "Xây dựng không gian nhóm rõ ràng, phân công minh bạch, theo dõi tiến độ tập trung và cộng tác hiệu quả hơn trong cùng một nơi."
         },
         "howToUse": {
             "title": "Cách sử dụng",
+            "description": "Bắt đầu nhanh với quy trình ngắn gọn, rõ bước, phù hợp cho nhóm học tập, nhóm dự án và nhóm cộng tác dài hạn.",
             "step1": "Tạo mới một nhóm với template có sẵn",
             "step2": "Sau đó chia sẻ bảng với những người dùng khác",
             "step3": "Tạo công việc, giao nhiệm vụ cho thành viên",
@@ -685,6 +755,7 @@
         }
     },
     "LandingPersonalPage": {
+        "badge": "Không gian cá nhân",
         "hero": {
             "title": "Không gian làm việc",
             "titleHighlight": "dành riêng cho bạn",
@@ -753,14 +824,19 @@
         }
     },
     "LandingManagementPage": {
+        "badge": "Không gian quản lý",
         "hero": {
             "title": "Quản lý toàn bộ nhóm",
             "titleHighlight": "từ một nơi",
             "createButton": "Bắt đầu quản lý →",
-            "imageAlt": "Management Illustration"
+            "imageAlt": "Management Illustration",
+            "description": "Quản lý nhóm, thành viên, phân quyền và toàn bộ tiến độ trong một không gian điều hành trực quan và mạnh mẽ hơn.",
+            "executiveLabel": "Góc nhìn điều hành",
+            "executiveCaption": "Mọi thứ trong một nơi"
         },
         "howToUse": {
             "title": "Cách sử dụng",
+            "description": "Bắt đầu quản lý nhanh với quy trình rõ ràng: tạo không gian, tổ chức thành viên, phân quyền và theo dõi hiệu quả trong thời gian thực.",
             "step1": {
                 "title": "Tạo Không gian quản lý",
                 "description": "Thiết lập không gian và cấu hình theo nhu cầu tổ chức của bạn"
@@ -817,6 +893,7 @@
         },
         "freePlan": {
             "title": "Gói miễn phí",
+            "tierBadge": "Khởi đầu",
             "price": "0 VND",
             "description": "Phù hợp cho người dùng cá nhân và các\nnhóm nhỏ trải nghiệm",
             "registerButton": "Đăng ký",
@@ -828,6 +905,7 @@
         },
         "premiumPlan": {
             "title": "Gói nâng cấp",
+            "tierBadge": "Premium",
             "price": "299.000 VND / Tháng",
             "description": "Phù hợp cho các nhóm lớn cần sự linh\nhoạt hơn",
             "registerButton": "Đăng ký",
@@ -966,6 +1044,106 @@
         "linkError": "Không thể tạo liên kết. Vui lòng thử lại.",
         "linkCopied": "Đã sao chép liên kết!",
         "copyError": "Không thể sao chép. Vui lòng thử lại."
+    },
+    "AnalysisHome": {
+        "title": "Phân tích hiệu suất cá nhân",
+        "personalAnalytics": "Personal Analytics",
+        "taskStatusDistribution": "1. Task Status Distribution",
+        "taskProgressOverTime": "2. Task Progress Over Time",
+        "workloadByGroup": "3. Workload by Group",
+        "contributionActivity": "4. Contribution Activity",
+        "week": "Tuần",
+        "month": "Tháng",
+        "year": "Năm",
+        "totalTasks": "Total Tasks",
+        "totalTasksHint": "Tổng số task hiện tại",
+        "completed": "Completed",
+        "completedHint": "Task đã hoàn thành",
+        "inProgress": "In Progress",
+        "inProgressHint": "Task đang thực hiện"
+    },
+    "AIHome": {
+        "today": "Việc hôm nay",
+        "todayDesc": "Tóm tắt những việc cá nhân cần ưu tiên trong ngày",
+        "plan": "Lên kế hoạch",
+        "planDesc": "Sắp xếp thứ tự làm việc hợp lý cho hôm nay",
+        "overdue": "Xử lý quá hạn",
+        "overdueDesc": "Gợi ý cách xử lý các việc đang bị trễ",
+        "focus": "Chọn việc để tập trung",
+        "focusDesc": "Xác định 3 việc quan trọng nhất lúc này",
+        "title": "Trợ lý AI cá nhân",
+        "subtitle": "Một không gian riêng để bạn suy nghĩ rõ hơn, sắp xếp công việc gọn hơn và nhận hỗ trợ nhanh cho các đầu việc hằng ngày.",
+        "usedToday": "Đã dùng hôm nay",
+        "remaining": "Còn lại",
+        "dailyLimit": "Giới hạn ngày",
+        "emptyTitle": "Hôm nay bạn muốn AI giúp gì?",
+        "emptySubtitle": "Bạn có thể hỏi về kế hoạch hôm nay, việc đang quá hạn, cách ưu tiên công việc hoặc nhấn vào một gợi ý bên dưới để bắt đầu nhanh.",
+        "chatTitle": "Cuộc trò chuyện cá nhân",
+        "chatSubtitle": "Nơi bạn trao đổi riêng với AI về công việc và kế hoạch của mình",
+        "privateSpace": "Private space",
+        "thinking": "AI đang suy nghĩ",
+        "error": "Xin lỗi, đã xảy ra lỗi.",
+        "placeholder": "Hỏi AI về công việc cá nhân của bạn..."
+    },
+    "GroupsPage": {
+        "workspaceGroups": "Workspace groups",
+        "title": "Nhóm",
+        "subtitle": "Quản lý các nhóm học tập của bạn theo cách trực quan và sinh động hơn.",
+        "newGroup": "Nhóm mới",
+        "loading": "Đang tải dữ liệu nhóm...",
+        "favorites": "Nhóm yêu thích",
+        "favoritesEmpty": "Chưa có nhóm nào trong mục yêu thích.",
+        "created": "Các nhóm bạn đã tạo",
+        "createdEmpty": "Bạn chưa có nhóm nào.",
+        "managed": "Nhóm thuộc studio tôi quản lý",
+        "managedEmpty": "Chưa có nhóm nào thuộc studio bạn quản lý.",
+        "independent": "Nhóm độc lập",
+        "independentEmpty": "Chưa có nhóm độc lập nào.",
+        "joined": "Các nhóm đã tham gia",
+        "joinedEmpty": "Chưa có nhóm nào mà bạn đã tham gia.",
+        "active": "Đang hoạt động",
+        "noGroups": "Chưa có nhóm",
+        "cardsShowing": "thẻ nhóm đang hiển thị",
+        "addGroupsHint": "Thêm nhóm để bắt đầu quản lý trực quan hơn",
+        "collapse": "Thu gọn",
+        "viewAll": "Xem tất cả",
+        "emptyAreaHint": "Khu vực này sẽ hiển thị các nhóm dưới dạng thẻ động đẹp hơn.",
+        "moreGroups": "nhóm khác"
+    },
+    "UsageBar": {
+        "limitReached": "Đã đạt giới hạn nhóm",
+        "nearLimit": "Sắp chạm giới hạn nhóm",
+        "unlimited": "Không giới hạn nhóm",
+        "usage": "Tình trạng sử dụng",
+        "badgeFull": "Đã đầy",
+        "badgeNear": "Gần đầy",
+        "badgeUnlimited": "PRO",
+        "badgeInUse": "Đang dùng",
+        "currentLabel": "Hiện có",
+        "maxLabel": "Tối đa",
+        "remainingLabel": "Còn trống",
+        "percentUsed": "% đã dùng",
+        "unlimitedText": "∞ không giới hạn",
+        "usageLevel": "Mức sử dụng",
+        "limitReachedHint": "Bạn đang sử dụng {usage}/{max} nhóm. Hãy nâng cấp để tạo thêm nhóm mới.",
+        "nearLimitHint": "Bạn đang sử dụng {usage}/{max} nhóm. Có thể cần nâng cấp sớm để tránh bị giới hạn.",
+        "unlimitedHint": "Gói hiện tại cho phép bạn tạo nhóm không giới hạn.",
+        "normalHint": "Bạn đang sử dụng {usage}/{max} nhóm. Bạn có thể nâng cấp để tăng giới hạn.",
+        "canCreateMessage": "Bạn có thể tạo thêm nhóm bất kỳ lúc nào.",
+        "fullGroupsMessage": "Bạn đã dùng hết {max} nhóm trong gói hiện tại.",
+        "remainingGroupsMessage": "Bạn còn {remaining} nhóm có thể tạo.",
+        "upgradeButton": "Nâng cấp gói",
+        "usageNote": "Nâng cấp để tăng giới hạn nhóm và mở rộng thêm không gian học tập mới.",
+        "usageAmount": "{current}/{max} nhóm"
+    },
+    "GroupCard": {
+        "removeFavorite": "Bỏ yêu thích",
+        "addFavorite": "Thêm yêu thích",
+        "menuLabel": "Menu",
+        "leaveGroup": "Rời nhóm",
+        "createdBy": "Tạo bởi",
+        "members": "thành viên",
+        "tasks": "công việc"
     },
     "GroupInviteModal": {
         "title": "Mời người dùng vào {groupName}",
@@ -1451,5 +1629,621 @@
         "moderate": "Vừa",
         "major": "Lớn",
         "critical": "Khẩn cấp"
+    },
+    "HomeTaskList": {
+        "badge": "Danh sách công việc",
+        "title": "Công việc của bạn",
+        "subtitle": "Quản lý và theo dõi tất cả công việc",
+        "detailedTitle": "Danh sách chi tiết",
+        "detailedSubtitle": "Xem tất cả công việc của bạn",
+        "searchPlaceholder": "Tìm kiếm công việc...",
+        "allGroups": "Tất cả nhóm",
+        "sortNone": "Không sắp xếp",
+        "sortDeadline": "Theo hạn chót",
+        "sortPriority": "Theo độ ưu tiên",
+        "sortSeverity": "Theo độ khẩn cấp",
+        "sortStatus": "Theo trạng thái",
+        "selectFilter": "Chọn bộ lọc",
+        "sortingBy": "Đang sắp xếp theo",
+        "filterDeadline": "Hạn chót",
+        "selectDate": "Chọn ngày",
+        "today": "Hôm nay",
+        "tomorrow": "Ngày mai",
+        "nextWeek": "Tuần tới",
+        "noDate": "Không có ngày",
+        "fromDate": "Từ ngày",
+        "toDate": "Đến ngày",
+        "clearSelection": "Xóa lựa chọn",
+        "tableHeaderTask": "Công việc",
+        "tableHeaderSource": "Nguồn",
+        "tableHeaderSeverity": "Độ khẩn cấp",
+        "tableHeaderPriority": "Độ ưu tiên",
+        "tableHeaderStatus": "Trạng thái",
+        "tableHeaderDueDate": "Thời hạn đến",
+        "noTasks": "Không có công việc nào",
+        "noTasksHint": "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để xem thêm kết quả.",
+        "totalTasks": "Tổng công việc",
+        "availableGroups": "Nhóm khả dụng",
+        "noGroups": "Không có nhóm nào",
+        "noGroupsHint": "Chưa có dữ liệu nhóm để hiển thị trong phần xem nhanh.",
+        "taskCountLabel": "công việc",
+        "topGroup": "Top nhóm",
+        "viewDetails": "Xem chi tiết",
+        "previous": "Trước",
+        "next": "Sau",
+        "groupSource": "Nhóm",
+        "severityLow": "Thấp",
+        "severityNormal": "Bình thường",
+        "severityImportant": "Quan trọng",
+        "severityCritical": "Khẩn cấp",
+        "priorityLow": "Low",
+        "priorityMedium": "Medium",
+        "priorityHigh": "High",
+        "selectDateRange": "Chọn khoảng ngày"
+    },
+    "HomeTopTabs": {
+        "home": "Trang chủ",
+        "analysis": "Phân tích",
+        "ai": "AI"
+    },
+    "HomePersonalTask": {
+        "title": "Quản lý công việc cá nhân",
+        "subtitle": "Theo dõi và sắp xếp các công việc cá nhân của bạn theo từng trạng thái.",
+        "addTaskHint": "Nhấp \"Thêm công việc\" để tạo mới",
+        "pleaseEnterTaskTitle": "Vui lòng nhập tên công việc.",
+        "startDateAfterDueDate": "Ngày bắt đầu phải nhỏ hơn hoặc bằng hạn hoàn thành.",
+        "createTaskFailed": "Tạo công việc thất bại",
+        "pleaseEnterStatusName": "Vui lòng nhập tên trạng thái.",
+        "statusNameDuplicated": "Tên trạng thái đã tồn tại. Hãy nhập tên khác.",
+        "failedLoadPersonalTask": "Không đọc được dữ liệu personal task.",
+        "failedLoadPersonalTaskData": "Không tải được dữ liệu personal task.",
+        "selectDate": "Chọn ngày",
+        "today": "Hôm nay",
+        "tomorrow": "Ngày mai",
+        "confirmedDeleteStatus": "Xác nhận xóa trạng thái",
+        "deleteStatus": "Xóa trạng thái",
+        "cancel": "Hủy",
+        "confirmDeleteTask": "Xác nhận xóa công việc",
+        "deleteTask": "Xóa công việc",
+        "createStatusFailed": "Tạo trạng thái thất bại",
+        "createStatus": "+ Tạo trạng thái",
+        "enterStatusName": "Nhập tên trạng thái...",
+        "addTask": "Thêm công việc",
+        "untitledTask": "Công việc không tên",
+        "priorityHigh": "High",
+        "priorityMedium": "Medium",
+        "priorityLow": "Low",
+        "severityCritical": "Critical",
+        "severityMajor": "Major",
+        "severityModerate": "Moderate",
+        "severityMinor": "Minor",
+        "progressToDo": "To do",
+        "progressStarted": "Started",
+        "progressInProgress": "In progress",
+        "progressReview": "Review",
+        "progressDone": "Done",
+        "taskTitleRequired": "Vui lòng nhập tiêu đề công việc",
+        "editTaskName": "Chỉnh sửa tên",
+        "delete": "Xóa",
+        "editStatusName": "Chỉnh sửa tên trạng thái",
+        "enterTaskDescription": "Nhập mô tả công việc",
+        "taskName": "Task name",
+        "startDate": "Start Date",
+        "dueDate": "Due Date",
+        "menu": "Menu",
+        "columnMenu": "Column menu",
+        "close": "Close",
+        "save": "Lưu",
+        "creatingTask": "Đang tạo...",
+        "createTask": "Tạo công việc",
+        "noStatus": "Không có trạng thái",
+        "noTasksInStatus": "Chưa có công việc",
+        "movingStatus": "Đang di chuyển trạng thái…"
+    },
+    "HomeSummary": {
+        "badge": "Dashboard tổng quan",
+        "title": "Tổng quan công việc",
+        "calendar": "Lịch",
+        "remainingTasksLabel": "Công việc còn lại",
+        "remainingTasksNote": "Đang chờ xử lý",
+        "overdueTasksLabel": "Công việc quá hạn",
+        "overdueTasksNote": "Cần ưu tiên ngay",
+        "completedTasksLabel": "Đã hoàn thành",
+        "completedTasksNote": "Đã xử lý xong",
+        "joinedGroupsLabel": "Số nhóm tham gia",
+        "joinedGroupsNote": "Nhóm đang hoạt động",
+        "viewDetails": "Xem chi tiết",
+        "detailedBadge": "Tổng quan chi tiết",
+        "detailsTitle": "Chi tiết công việc",
+        "loadingError": "Không tải được dữ liệu tổng quan.",
+        "loadingErrorHint": "Hãy kiểm tra kết nối hoặc thử tải lại sau.",
+        "completedCardTitle": "Hoàn thành",
+        "remainingCardTitle": "Còn lại",
+        "overdueCardTitle": "Quá hạn",
+        "currentOverview": "Tổng quan hiện tại",
+        "quantity": "số lượng",
+        "completedDescription": "{value} trên {total} công việc đã hoàn tất",
+        "remainingDescription": "{value} công việc vẫn đang chờ xử lý",
+        "overdueDescription": "{value} công việc cần được ưu tiên",
+        "completedDescriptionFallback": "Công việc đã hoàn thành",
+        "remainingDescriptionFallback": "Công việc đang chờ",
+        "overdueDescriptionFallback": "Công việc cần ưu tiên"
+    },
+    "GroupBoardScreen": {
+        "overdue": "Quá hạn",
+        "done": "Hoàn tất",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy",
+        "menu": "Menu",
+        "columnMenu": "Menu cột",
+        "editName": "Chỉnh sửa tên",
+        "delete": "Xóa",
+        "assignee": "Người thực hiện",
+        "notAssigned": "Chưa gán",
+        "noTasks": "Chưa có công việc",
+        "addTaskHint": "Bấm 'Thêm công việc' để tạo mới",
+        "estimatedHours": "h ước lượng",
+        "actualHours": "h thực tế",
+        "save": "Lưu",
+        "editStatusName": "Chỉnh sửa tên trạng thái",
+        "deleteStatus": "Xóa trạng thái",
+        "createStatus": "Tạo trạng thái",
+        "enterStatusName": "Vui lòng nhập tên trạng thái.",
+        "createStatusFailed": "Tạo trạng thái thất bại",
+        "statusNamePlaceholder": "Nhập tên trạng thái...",
+        "addStatus": "Thêm trạng thái",
+        "addTask": "Thêm công việc",
+        "loadingBoard": "Đang tải board…",
+        "reload": "Tải lại",
+        "confirmDeleteStatus": "Xác nhận xóa trạng thái",
+        "confirmDeleteStatusDesc": "Bạn có chắc chắn muốn xóa trạng thái \"{title}\" không?",
+        "confirmDeleteTask": "Xác nhận xóa công việc",
+        "confirmDeleteTaskDesc": "Bạn có chắc chắn muốn xóa công việc \"{title}\" không?",
+        "deleteTaskButton": "Xóa công việc",
+        "deleteStatusButton": "Xóa trạng thái",
+        "permissionDenied": "Không có thẩm quyền",
+        "notification": "Thông báo",
+        "close": "Đóng",
+        "movingStatus": "Đang di chuyển trạng thái…",
+        "emptyStatus": "(Trạng thái trống)",
+        "failedLoadData": "Không tải được dữ liệu group.",
+        "noPermissionDeleteTask": "Bạn không có thẩm quyền xóa công việc này",
+        "noPermissionDeleteStatus": "Bạn không có thẩm quyền xóa trạng thái này",
+        "statusNameExists": "Tên trạng thái đã tồn tại. Hãy nhập tên khác.",
+        "deleteTaskFailed": "Xóa công việc thất bại",
+        "deleteStatusFailed": "Xóa trạng thái thất bại",
+        "errorOccurred": "Đã xảy ra lỗi",
+        "missingGroupId": "Thiếu groupId",
+        "invalidGroupId": "groupId không hợp lệ (không phải UUID)",
+        "missingApiBase": "Thiếu NEXT_PUBLIC_API_BASE_URL",
+        "missingStatus": "Thiếu trạng thái",
+        "invalidStatus": "Trạng thái không hợp lệ",
+        "invalidTaskId": "taskId không hợp lệ",
+        "unnamed": "Chưa đặt tên"
+    },
+    "GroupStudioHeader": {
+        "tabs": {
+            "board": "Bảng",
+            "list": "Danh sách",
+            "calendar": "Lịch",
+            "documents": "Tài liệu",
+            "discuss": "Thảo luận",
+            "analytic": "Phân tích",
+            "setting": "Cài đặt",
+            "trashed": "Thùng rác"
+        },
+        "errors": {
+            "fetchDetailFailed": "Không thể tải chi tiết nhóm"
+        }
+    },
+    "TrashedPage": {
+        "title": "Thùng rác",
+        "common": {
+            "back": "Quay lại",
+            "cancel": "Hủy"
+        },
+        "actions": {
+            "reload": "Tải lại",
+            "restore": "Khôi phục",
+            "deletePermanently": "Xóa vĩnh viễn",
+            "moreOptions": "Tùy chọn"
+        },
+        "search": {
+            "placeholder": "Tìm kiếm"
+        },
+        "fallbacks": {
+            "unknown": "Không rõ",
+            "untitledTask": "Công việc chưa đặt tên"
+        },
+        "errors": {
+            "missingGroupId": "Thiếu groupId trong route.",
+            "invalidGroupId": "groupId không hợp lệ.",
+            "invalidTaskId": "taskId không hợp lệ.",
+            "missingApiBase": "Thiếu NEXT_PUBLIC_API_BASE_URL.",
+            "cannotLoadTrash": "Không tải được danh sách thùng rác.",
+            "cannotRestoreTask": "Không thể khôi phục task.",
+            "cannotDeleteTaskPermanently": "Không thể xóa vĩnh viễn task.",
+            "cannotRefreshList": "Không thể làm mới danh sách.",
+            "unknown": "Đã xảy ra lỗi không mong muốn."
+        },
+        "confirm": {
+            "restore": {
+                "title": "Khôi phục task",
+                "description": "Bạn có chắc muốn khôi phục \"{taskName}\" không?"
+            },
+            "delete": {
+                "title": "Xóa vĩnh viễn task",
+                "description": "Bạn có chắc muốn xóa vĩnh viễn \"{taskName}\" không?"
+            }
+        },
+        "filters": {
+            "ariaLabel": "Bộ lọc",
+            "title": "Lọc theo",
+            "clearAll": "Xóa tất cả bộ lọc",
+            "deletedBy": {
+                "label": "Người xóa",
+                "selectTitle": "Chọn người xóa",
+                "searchPlaceholder": "Tìm kiếm hoặc nhập email...",
+                "me": "Tôi",
+                "all": "Tất cả người xóa"
+            },
+            "deletedDate": {
+                "label": "Ngày xóa",
+                "selectTitle": "Chọn ngày xóa",
+                "clearSelection": "Xóa chọn",
+                "apply": "Áp dụng",
+                "fromDate": "từ {date}",
+                "toDate": "đến {date}"
+            },
+            "dateRange": {
+                "fromDate": "Từ ngày",
+                "toDate": "Đến ngày"
+            }
+        },
+        "chips": {
+            "deletedBy": "Người xóa: {name}",
+            "deletedDate": "Ngày xóa: {dateRange}"
+        },
+        "table": {
+            "headers": {
+                "name": "Tên",
+                "type": "Loại",
+                "deletedTime": "Thời gian xóa",
+                "deletedBy": "Người xóa"
+            },
+            "noData": "Không có task nào phù hợp."
+        },
+        "pagination": {
+            "summary": "{count} mục • Trang {page}/{totalPages}",
+            "previous": "Trước",
+            "next": "Sau"
+        },
+        "datePicker": {
+            "selectDate": "Chọn ngày",
+            "today": "Hôm nay",
+            "tomorrow": "Ngày mai",
+            "nextWeek": "Tuần sau",
+            "noDate": "Không chọn ngày",
+            "month1": "Tháng 1",
+            "month2": "Tháng 2",
+            "month3": "Tháng 3",
+            "month4": "Tháng 4",
+            "month5": "Tháng 5",
+            "month6": "Tháng 6",
+            "month7": "Tháng 7",
+            "month8": "Tháng 8",
+            "month9": "Tháng 9",
+            "month10": "Tháng 10",
+            "month11": "Tháng 11",
+            "month12": "Tháng 12"
+        }
+    },
+    "AnalyticMaster": {
+        "time": {
+            "week": "Tuần",
+            "month": "Tháng",
+            "year": "Năm",
+            "monthPrefix": "Tháng",
+            "yearPrefix": "Năm"
+        },
+        "timeLabels": {
+            "mon": "T2",
+            "tue": "T3",
+            "wed": "T4",
+            "thu": "T5",
+            "fri": "T6",
+            "sat": "T7",
+            "sun": "CN",
+            "week1": "Tuần 1",
+            "week2": "Tuần 2",
+            "week3": "Tuần 3",
+            "week4": "Tuần 4",
+            "month1": "Th1",
+            "month2": "Th2",
+            "month3": "Th3",
+            "month4": "Th4",
+            "month5": "Th5",
+            "month6": "Th6",
+            "month7": "Th7",
+            "month8": "Th8",
+            "month9": "Th9",
+            "month10": "Th10",
+            "month11": "Th11",
+            "month12": "Th12"
+        },
+        "sections": {
+            "overview": {
+                "title": "Tổng quan nhóm"
+            },
+            "taskStatus": {
+                "title": "Trạng thái công việc theo nhóm",
+                "noData": "Không có dữ liệu trạng thái"
+            },
+            "comparison": {
+                "title": "So sánh tiến độ hoàn thành theo thời gian"
+            },
+            "memberProgress": {
+                "title": "Tiến độ thành viên theo nhóm",
+                "description": "Nhấn vào thẻ nhóm để xem chi tiết theo thành viên"
+            }
+        },
+        "compare": {
+            "triggerLabel": "So sánh nhóm",
+            "title": "Chọn nhóm để so sánh",
+            "description": "Chọn một hoặc nhiều nhóm để so sánh xu hướng hoàn thành",
+            "noGroupSelected": "Chưa chọn nhóm",
+            "moreGroups": "+{count} nhóm",
+            "selectedCount": "Đã chọn {count}",
+            "topFourDefault": "Chọn nhanh 4 nhóm đầu",
+            "keepOneGroup": "Cần giữ ít nhất 1 nhóm"
+        },
+        "groupSelect": {
+            "selectGroup": "Chọn nhóm",
+            "selected": "Đã chọn"
+        },
+        "member": {
+            "tasks": "công việc",
+            "contribution": "Đóng góp: {value}%",
+            "lastActivity": "Hoạt động gần nhất: {value}",
+            "detail": "Chi tiết thành viên",
+            "taskProgress": "Tiến độ công việc",
+            "completedTasks": "Đã hoàn thành {completed} / {total} công việc",
+            "contributionScore": "Điểm đóng góp",
+            "totalScore": "Tổng điểm",
+            "contributionRate": "Tỷ lệ đóng góp",
+            "listTitle": "Danh sách tiến độ thành viên",
+            "score": {
+                "completed": "Hoàn thành",
+                "created": "Tạo mới",
+                "updated": "Cập nhật",
+                "messages": "Tin nhắn"
+            },
+            "status": {
+                "onTrack": "Đúng tiến độ",
+                "needAttention": "Cần chú ý",
+                "behindSchedule": "Chậm tiến độ"
+            }
+        },
+        "common": {
+            "done": "Xong",
+            "close": "Đóng",
+            "notAvailable": "Không có"
+        },
+        "statusFallback": "Trạng thái {index}"
+    },
+    "StudioAnalyticsDocuments": {
+        "section": {
+            "title": "6. Quản lý tài liệu",
+            "description": "Xem và quản lý tài liệu của các nhóm trong studio."
+        },
+        "storage": {
+            "title": "Dung lượng lưu trữ",
+            "remaining": "Còn trống"
+        },
+        "documents": {
+            "untitled": "Chưa đặt tên"
+        },
+        "tabs": {
+            "unnamedGroup": "Nhóm"
+        },
+        "empty": {
+            "title": "Chưa có tài liệu nào.",
+            "description": "Tải lên tài liệu đầu tiên cho nhóm này."
+        },
+        "upload": {
+            "button": "Tải lên",
+            "loading": "Đang tải...",
+            "modalTitle": "Tải lên tài liệu",
+            "dropTitle": "Kéo thả file vào đây",
+            "dropDescription": "hoặc nhấn để chọn file",
+            "chooseFile": "Chọn file",
+            "accepted": "Chấp nhận: {types}. Tối đa {max}.",
+            "targetGroup": "Đang tải lên nhóm: {groupName}",
+            "selectGroupFirst": "Vui lòng chọn một nhóm để tải lên.",
+            "invalidExtension": "Chỉ chấp nhận file: pdf, txt, docx, md.",
+            "fileTooLarge": "File vượt quá 5MB.",
+            "onlyOneFile": "Chỉ được tải lên 1 file mỗi lần.",
+            "success": "Tải lên thành công!",
+            "failed": "Tải lên thất bại."
+        },
+        "download": {
+            "failed": "Tải xuống thất bại."
+        },
+        "delete": {
+            "title": "Xóa tài liệu?",
+            "description": "Bạn có chắc muốn xóa {name}? Hành động này không thể hoàn tác.",
+            "cancel": "Hủy",
+            "confirm": "Xóa",
+            "processing": "Đang xóa...",
+            "success": "Đã xóa tài liệu.",
+            "failed": "Xóa thất bại."
+        }
+    },
+    "StudioGroupHeatmap": {
+        "common": {
+            "notAvailable": "Không có"
+        },
+        "header": {
+            "title": "4. Hoạt động nhóm",
+            "description": "Heatmap hoạt động của {count} nhóm theo {range}."
+        },
+        "range": {
+            "week": "tuần",
+            "month": "tháng"
+        },
+        "legend": {
+            "groups": "Nhóm:",
+            "activityLevel": "Mức hoạt động:",
+            "low": "Ít",
+            "high": "Nhiều"
+        },
+        "levels": {
+            "inactive": "Không hoạt động",
+            "veryLow": "Rất thấp",
+            "low": "Thấp",
+            "medium": "Trung bình",
+            "high": "Cao"
+        },
+        "tooltip": {
+            "cell": "{name} • {date}\nTasks: {tasks} | Score: {score} | {level}"
+        }
+    },
+    "GroupProgressChart": {
+        "title": "Tiến độ nhóm",
+        "status": {
+            "notStarted": "Chưa bắt đầu",
+            "onTrack": "Đúng tiến độ",
+            "atRisk": "Cần chú ý",
+            "behind": "Chậm tiến độ"
+        },
+        "taskInfo": {
+            "tasks": "công việc",
+            "overdue": "{count} quá hạn",
+            "lastActivity": "hoạt động gần nhất: {value}"
+        }
+    },
+    "MemberDetailModal": {
+        "title": "Chi tiết thành viên",
+        "joinedGroups": "Nhóm tham gia",
+        "noJoinedGroups": "Chưa tham gia nhóm nào",
+        "close": "Đóng",
+        "studioRole": {
+            "owner": "Chủ sở hữu",
+            "member": "Thành viên"
+        },
+        "groupRole": {
+            "owner": "Người tạo",
+            "moderator": "Điều hành",
+            "member": "Thành viên",
+            "commenter": "Người bình luận",
+            "viewer": "Người xem"
+        }
+    },
+    "MemberList": {
+        "title": "Danh sách thành viên",
+        "quickAssign": "Phân phối nhanh",
+        "invite": "Mời",
+        "avatarFallback": "Ảnh đại diện",
+        "owner": "Chủ sở hữu",
+        "empty": "Chưa có thành viên nào",
+        "groupRole": {
+            "owner": "Owner",
+            "moderator": "Mod",
+            "member": "Member",
+            "commenter": "Commenter",
+            "viewer": "Viewer"
+        }
+    },
+    "QuickAssignModal": {
+        "title": "Phân phối nhanh",
+        "subtitle": "Phân phối ngẫu nhiên thành viên vào nhóm",
+        "roles": {
+            "moderator": "Moderator",
+            "member": "Member",
+            "commenter": "Commenter",
+            "viewer": "Viewer"
+        },
+        "scope": {
+            "title": "Phạm vi phân phối",
+            "unassignedOnly": "Chưa phân nhóm",
+            "allMembers": "Tất cả thành viên",
+            "unassignedDescription": "Chỉ phân phối thành viên chưa thuộc nhóm nào",
+            "allMembersDescription": "Phân phối lại tất cả thành viên"
+        },
+        "defaultRole": {
+            "title": "Vai trò mặc định"
+        },
+        "targetGroups": {
+            "title": "Nhóm đích",
+            "hint": "Để trống để phân phối vào tất cả nhóm",
+            "memberCount": "{count} thành viên",
+            "noGroups": "Chưa có nhóm nào"
+        },
+        "excludeMembers": {
+            "title": "Loại trừ thành viên",
+            "hint": "Những thành viên này sẽ không được phân phối",
+            "none": "Không có thành viên nào để loại trừ"
+        },
+        "errors": {
+            "assignFailed": "Phân phối thất bại. Vui lòng thử lại.",
+            "assignException": "Đã xảy ra lỗi khi phân phối. Vui lòng thử lại."
+        },
+        "success": "Phân phối thành công!",
+        "actions": {
+            "cancel": "Hủy",
+            "assigning": "Đang phân phối...",
+            "assignRandom": "Phân phối ngẫu nhiên"
+        }
+    },
+    "StudioDateRange": {
+        "title": "Thời gian dự án",
+        "notAvailable": "—",
+        "days": "{count} ngày",
+        "status": {
+            "overdue": "Đã quá hạn",
+            "upcoming": "Sắp bắt đầu"
+        },
+        "labels": {
+            "start": "Bắt đầu",
+            "end": "Kết thúc",
+            "overdue": "Quá hạn",
+            "remaining": "Còn lại"
+        },
+        "progress": {
+            "title": "Tiến độ thời gian",
+            "elapsed": "Đã trôi qua {elapsed} / {total} ngày"
+        }
+    },
+    "GroupPerformanceRadar": {
+        "title": "So sánh hiệu suất nhóm",
+        "metrics": {
+            "completedTasks": "Hoàn thành task",
+            "discussions": "Thảo luận",
+            "collaboration": "Hợp tác"
+        },
+        "labels": {
+            "task": "Task:",
+            "discussions": "Thảo luận:",
+            "collaboration": "Hợp tác:",
+            "average": "TB:"
+        }
+    },
+    "ActivityHeatmap": {
+        "title": "Hoạt động nhóm",
+        "empty": "Không có dữ liệu hoạt động nhóm",
+        "actions": {
+            "previousPeriod": "Kỳ trước",
+            "nextPeriod": "Kỳ sau"
+        },
+        "tooltip": {
+            "activity": "Hoạt động",
+            "completed": "Hoàn thành",
+            "tasks": "task"
+        },
+        "legend": {
+            "low": "Ít",
+            "high": "Nhiều"
+        },
+        "updatedAt": "Cập nhật: {date}"
     }
 }

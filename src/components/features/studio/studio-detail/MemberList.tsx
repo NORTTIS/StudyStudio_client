@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { StudioMemberResponse } from "@/api/studios";
 
 interface GroupBasic {
@@ -24,6 +25,8 @@ export function MemberList({
     onQuickAssignClick,
     onMemberClick
 }: MemberListProps) {
+    const t = useTranslations("MemberList");
+
     // Sort members: Studio Owner first, then by group role (Moderator -> Member -> Commenter -> Viewer)
     const sortedMembers = [...members].sort((a, b) => {
         // Check if user is studio owner
@@ -54,65 +57,42 @@ export function MemberList({
             .slice(0, 2);
     };
 
-    const getRoleLabel = (role: number | null | undefined) => {
-        // StudioRole: 0 = owner, 1 = member
-        switch (role) {
-            case 0:
-                return "Owner";
-            case 1:
-                return "Member";
-            default:
-                return "Member";
-        }
-    };
-
-    const getRoleBorderStyle = (role: number | null | undefined) => {
-        switch (role) {
-            case 0:
-                return "border border-slate-300 text-slate-700";
-            case 1:
-                return "border border-slate-200 text-slate-500";
-            default:
-                return "border border-slate-200 text-slate-500";
-        }
-    };
-
     const getGroupRoleLabel = (role: number | null | undefined) => {
         // GroupRole: 0=Owner, 1=Moderator, 2=Member, 3=Commenter, 4=Viewer
         switch (role) {
             case 0:
-                return "Owner";
+                return t("groupRole.owner");
             case 1:
-                return "Mod";
+                return t("groupRole.moderator");
             case 2:
-                return "Member";
+                return t("groupRole.member");
             case 3:
-                return "Commenter";
+                return t("groupRole.commenter");
             case 4:
-                return "Viewer";
+                return t("groupRole.viewer");
             default:
-                return "Member";
+                return t("groupRole.member");
         }
     };
 
     return (
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-semibold text-base text-slate-800">Danh sách thành viên</h3>
+                <h3 className="font-semibold text-base text-slate-800">{t("title")}</h3>
                 <div className="flex gap-2">
                     {groups && groups.length > 0 && (
                         <button
                             type="button"
                             onClick={onQuickAssignClick}
                             className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-600 text-xs transition-colors hover:bg-slate-100">
-                            Phân phối nhanh
+                            {t("quickAssign")}
                         </button>
                     )}
                     <button
                         type="button"
                         onClick={onInviteClick}
                         className="rounded-lg border border-[#FF5722] px-3 py-1.5 font-medium text-[#FF5722] text-xs transition-colors hover:bg-[#FF5722] hover:text-white">
-                        + Mời
+                        + {t("invite")}
                     </button>
                 </div>
             </div>
@@ -128,7 +108,7 @@ export function MemberList({
                                 {member.avatarUrl ? (
                                     <img
                                         src={member.avatarUrl}
-                                        alt={member.userName || "Avatar"}
+                                        alt={member.userName || t("avatarFallback")}
                                         className="h-9 w-9 shrink-0 rounded-full object-cover"
                                     />
                                 ) : (
@@ -153,7 +133,7 @@ export function MemberList({
                                 {/* Only show Studio Owner badge for studio owner */}
                                 {member.userId === studioOwnerId && (
                                     <span className="whitespace-nowrap rounded-full border border-slate-300 px-2.5 py-0.5 font-medium text-slate-700 text-xs transition-all duration-300">
-                                        Chủ sở hữu
+                                        {t("owner")}
                                     </span>
                                 )}
                                 {member.groupInfo && member.groupInfo.length > 0 && (
@@ -173,7 +153,7 @@ export function MemberList({
                 </div>
             ) : (
                 <div className="py-8 text-center">
-                    <p className="text-slate-400 text-sm">Chưa có thành viên nào</p>
+                    <p className="text-slate-400 text-sm">{t("empty")}</p>
                 </div>
             )}
         </div>

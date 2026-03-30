@@ -415,7 +415,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         {studio.name}
                                                     </h1>
                                                     <span className="rounded-full border border-orange-100/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700 shadow-sm">
-                                                        Studio workspace
+                                                        {t("detail.workspaceBadge")}
                                                     </span>
                                                 </div>
 
@@ -447,7 +447,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                                         />
                                     </svg>
-                                    Nhóm
+                                    {t("detail.tabs.groups")}
                                 </TabButton>
 
                                 <TabButton active={activeTab === "ai"} onClick={() => setActiveTab("ai")}>
@@ -459,7 +459,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             d="M9.75 3v2.25m4.5-2.25v2.25M4.5 9.75H3m18 0h-1.5M6.364 6.364l-1.06-1.06m13.392 13.392-1.06-1.06M12 7.5a4.5 4.5 0 00-4.5 4.5v1.25a2.25 2.25 0 01-.659 1.591L6 15.682V18h12v-2.318l-.841-.841A2.25 2.25 0 0116.5 13.25V12A4.5 4.5 0 0012 7.5zM9.75 21h4.5"
                                         />
                                     </svg>
-                                    AI
+                                    {t("detail.tabs.ai")}
                                 </TabButton>
 
                                 {isStudioOwner && (
@@ -472,7 +472,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                                             />
                                         </svg>
-                                        Phân tích
+                                        {t("detail.tabs.analytics")}
                                     </TabButton>
                                 )}
 
@@ -487,7 +487,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
-                                        Cài đặt
+                                        {t("detail.tabs.settings")}
                                     </TabButton>
                                 )}
                             </div>
@@ -502,7 +502,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                         </svg>
-                                        Thêm nhóm
+                                        {t("detail.addGroupButton")}
                                     </Button>
                                 </motion.div>
                             </div>
@@ -591,7 +591,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                                                                             />
                                                                         </svg>
-                                                                        <span>Thành viên</span>
+                                                                        <span>{t("members")}</span>
                                                                     </div>
                                                                     <p className="mt-2 text-lg font-semibold text-[#261E33]">{group.members}</p>
                                                                 </div>
@@ -606,7 +606,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                                                                             />
                                                                         </svg>
-                                                                        <span>Công việc</span>
+                                                                        <span>{t("detail.tasks")}</span>
                                                                     </div>
                                                                     <p className="mt-2 text-lg font-semibold text-[#261E33]">{group.tasks}</p>
                                                                 </div>
@@ -633,7 +633,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                                 {member?.avatarUrl ? (
                                                                                     <img
                                                                                         src={member.avatarUrl}
-                                                                                        alt={member.firstName || "Member"}
+                                                                                        alt={member.firstName || t("detail.memberAltFallback")}
                                                                                         className="h-full w-full rounded-full object-cover"
                                                                                     />
                                                                                 ) : (
@@ -654,7 +654,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 ))
                                             ) : (
                                                 <div className="col-span-2">
-                                                    <EmptyBlock title="Chưa có nhóm nào" subtitle="Tạo nhóm đầu tiên để bắt đầu" />
+                                                    <EmptyBlock title={t("noGroups")} subtitle={t("detail.noGroupsSubtitle")} />
                                                 </div>
                                             )
                                             }
@@ -675,8 +675,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             >
                                                 {!isRightPanelCollapsed ? (
                                                     <div className="min-w-0">
-                                                        <h3 className="truncate text-base font-semibold text-slate-800">Studio Panel</h3>
-                                                        <p className="mt-0.5 text-xs text-slate-500">Danh sách thành viên và thống kê nhanh</p>
+                                                        <h3 className="truncate text-base font-semibold text-slate-800">{t("detail.panel.title")}</h3>
+                                                        <p className="mt-0.5 text-xs text-slate-500">{t("detail.panel.subtitle")}</p>
                                                     </div>
                                                 ) : null}
 
@@ -684,7 +684,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     type="button"
                                                     onClick={() => setIsRightPanelCollapsed((prev) => !prev)}
                                                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600"
-                                                    title={isRightPanelCollapsed ? "Mở rộng panel" : "Thu gọn panel"}
+                                                    title={isRightPanelCollapsed ? t("detail.panel.expand") : t("detail.panel.collapse")}
                                                 >
                                                     <motion.svg
                                                         animate={{ rotate: isRightPanelCollapsed ? 0 : 180 }}
@@ -712,7 +712,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                             type="button"
                                                             onClick={() => setIsInviteModalOpen(true)}
                                                             className="group flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md"
-                                                            title="Thành viên"
+                                                            title={t("members")}
                                                         >
                                                             <svg
                                                                 className="h-5 w-5 transition-transform group-hover:scale-110"
@@ -737,7 +737,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     ? "border-violet-200 bg-violet-100 text-violet-700"
                                                                     : "border-violet-100 bg-violet-50 text-violet-600 hover:bg-violet-100"
                                                                     }`}
-                                                                title="Phân tích"
+                                                                title={t("detail.tabs.analytics")}
                                                             >
                                                                 <svg
                                                                     className="h-5 w-5 transition-transform group-hover:scale-110"
@@ -765,7 +765,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     >
                                                         <section className="min-w-0">
                                                             <div className="mb-3 flex items-center justify-between gap-3">
-                                                                <h4 className="text-sm font-semibold text-slate-800">Danh sách thành viên</h4>
+                                                                <h4 className="text-sm font-semibold text-slate-800">{t("detail.panel.memberListTitle")}</h4>
                                                                 <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-600">
                                                                     {members.length}
                                                                 </span>
@@ -796,32 +796,32 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     </svg>
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-sm font-semibold text-slate-800">Quick Stats</h4>
-                                                                    <p className="text-xs text-slate-500">Tổng quan nhanh của studio</p>
+                                                                    <h4 className="text-sm font-semibold text-slate-800">{t("detail.panel.quickStatsTitle")}</h4>
+                                                                    <p className="text-xs text-slate-500">{t("detail.panel.quickStatsSubtitle")}</p>
                                                                 </div>
                                                             </div>
 
                                                             <div className="space-y-3">
                                                                 <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
-                                                                    <span className="text-slate-500">Groups</span>
+                                                                    <span className="text-slate-500">{t("groups")}</span>
                                                                     <span className="font-semibold text-slate-800">{groups.length}</span>
                                                                 </div>
 
                                                                 <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
-                                                                    <span className="text-slate-500">Members</span>
+                                                                    <span className="text-slate-500">{t("members")}</span>
                                                                     <span className="font-semibold text-slate-800">{members.length}</span>
                                                                 </div>
 
                                                                 <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
-                                                                    <span className="text-slate-500">Created</span>
+                                                                    <span className="text-slate-500">{t("detail.panel.created")}</span>
                                                                     <span className="font-semibold text-slate-800">
                                                                         {studio.createdAt
-                                                                            ? new Date(studio.createdAt).toLocaleDateString("en-US", {
+                                                                            ? new Date(studio.createdAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
                                                                                 month: "numeric",
                                                                                 day: "numeric",
                                                                                 year: "numeric"
                                                                             })
-                                                                            : "—"}
+                                                                            : t("detail.notAvailable")}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -882,8 +882,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <h2 className="text-sm font-bold text-gray-900">Cài đặt chung</h2>
-                                                    <p className="mt-0.5 text-xs text-gray-500">Quản lý thông tin cơ bản của Studio</p>
+                                                    <h2 className="text-sm font-bold text-gray-900">{t("detail.settings.title")}</h2>
+                                                    <p className="mt-0.5 text-xs text-gray-500">{t("detail.settings.subtitle")}</p>
                                                 </div>
                                             </div>
 
@@ -895,7 +895,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         onClick={handleCancelEdit}
                                                         className="h-10 rounded-xl border-gray-300 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-100"
                                                     >
-                                                        Hủy
+                                                        {t("modal.cancel")}
                                                     </Button>
                                                 ) : null}
 
@@ -905,7 +905,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     disabled={editLoading}
                                                     className="h-10 rounded-xl bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] px-4 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(230,73,45,0.24)] hover:brightness-110 disabled:opacity-50"
                                                 >
-                                                    {editLoading ? "Đang lưu..." : isEditing ? "Lưu thay đổi" : "Chỉnh sửa"}
+                                                    {editLoading ? t("detail.settings.saving") : isEditing ? t("detail.settings.saveChanges") : t("detail.settings.edit")}
                                                 </Button>
                                             </div>
                                         </div>
@@ -923,7 +923,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 />
                                                 <div className="flex-1 rounded-[24px] border border-[#F1EDF7] bg-[#FCFBFE] p-4 shadow-sm">
                                                     <ColorPicker
-                                                        label="Màu chủ đạo"
+                                                        label={t("detail.settings.primaryColor")}
                                                         value={isEditing ? editColorHex : studio.colorHex ?? "#FF5F3D"}
                                                         onChange={isEditing ? setEditColorHex : undefined}
                                                         disabled={!isEditing}
@@ -934,7 +934,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             <div className="grid grid-cols-1 gap-5">
                                                 <div>
                                                     <label htmlFor="studio-name-input" className="text-xs font-semibold text-gray-700">
-                                                        Tên Studio <span className="text-red-500">*</span>
+                                                        {t("modal.name")} <span className="text-red-500">*</span>
                                                     </label>
                                                     <Input
                                                         id="studio-name-input"
@@ -947,7 +947,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                                 <div>
                                                     <label htmlFor="studio-description-input" className="text-xs font-semibold text-gray-700">
-                                                        Mô tả
+                                                        {t("modal.description")}
                                                     </label>
                                                     <Textarea
                                                         id="studio-description-input"
@@ -955,14 +955,14 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         value={editDescription}
                                                         onChange={(e) => setEditDescription(e.target.value)}
                                                         className="mt-2 min-h-28 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
-                                                        placeholder="Nhập mô tả cho Studio..."
+                                                        placeholder={t("modal.descriptionPlaceholder")}
                                                     />
                                                 </div>
 
                                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                     <div>
                                                         <label htmlFor="studio-start-date" className="text-xs font-semibold text-gray-700">
-                                                            Ngày bắt đầu
+                                                            {t("detail.settings.startDate")}
                                                         </label>
                                                         {isEditing ? (
                                                             <Input
@@ -975,7 +975,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         ) : (
                                                             <Input
                                                                 id="studio-start-date"
-                                                                value={editStartDate || "—"}
+                                                                value={editStartDate || t("detail.notAvailable")}
                                                                 readOnly
                                                                 tabIndex={-1}
                                                                 aria-readonly="true"
@@ -988,7 +988,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                                     <div>
                                                         <label htmlFor="studio-end-date" className="text-xs font-semibold text-gray-700">
-                                                            Ngày kết thúc
+                                                            {t("detail.settings.endDate")}
                                                         </label>
                                                         {isEditing ? (
                                                             <Input
@@ -1001,7 +1001,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         ) : (
                                                             <Input
                                                                 id="studio-end-date"
-                                                                value={editEndDate || "—"}
+                                                                value={editEndDate || t("detail.notAvailable")}
                                                                 readOnly
                                                                 tabIndex={-1}
                                                                 aria-readonly="true"
@@ -1016,18 +1016,18 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                     <div>
                                                         <label htmlFor="studio-created-date" className="text-xs font-semibold text-gray-700">
-                                                            Ngày tạo
+                                                            {t("detail.settings.createdDate")}
                                                         </label>
                                                         <Input
                                                             id="studio-created-date"
                                                             value={
                                                                 studio.createdAt
-                                                                    ? new Date(studio.createdAt).toLocaleDateString("vi-VN", {
+                                                                    ? new Date(studio.createdAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US", {
                                                                         day: "numeric",
                                                                         month: "long",
                                                                         year: "numeric"
                                                                     })
-                                                                    : "—"
+                                                                    : t("detail.notAvailable")
                                                             }
                                                             readOnly
                                                             tabIndex={-1}
@@ -1040,7 +1040,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                                     <div>
                                                         <label htmlFor="studio-group-count" className="text-xs font-semibold text-gray-700">
-                                                            Số nhóm
+                                                            {t("detail.settings.groupCount")}
                                                         </label>
                                                         <Input
                                                             id="studio-group-count"
@@ -1060,17 +1060,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                     <section className="overflow-hidden rounded-[28px] border border-red-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
                                         <div className="border-b border-red-200 px-6 py-5">
-                                            <h2 className="text-sm font-bold text-red-700">Vùng nguy hiểm</h2>
+                                            <h2 className="text-sm font-bold text-red-700">{t("detail.danger.title")}</h2>
                                         </div>
 
                                         <div className="px-6 py-6">
                                             <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
                                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                                     <div>
-                                                        <div className="text-sm font-bold text-red-700">Xóa Studio</div>
+                                                        <div className="text-sm font-bold text-red-700">{t("deleteModal.title")}</div>
                                                         <div className="mt-1 text-xs leading-6 text-red-600">
-                                                            Xóa Studio khỏi danh sách của bạn. Studio sẽ bị ẩn và không thể truy cập được,
-                                                            nhưng dữ liệu sẽ vẫn được giữ lại trong trường hợp bạn muốn khôi phục sau này.
+                                                            {t("detail.danger.deleteDescription")}
                                                         </div>
                                                     </div>
 
@@ -1088,20 +1087,20 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                                                     />
                                                                 </svg>
-                                                                Xóa Studio
+                                                                {t("deleteModal.title")}
                                                             </Button>
                                                         </AlertDialogTrigger>
 
                                                         <AlertDialogContent>
                                                             <AlertDialogHeader>
-                                                                <AlertDialogTitle>Bạn chắc chắn muốn xóa Studio này?</AlertDialogTitle>
+                                                                <AlertDialogTitle>{t("detail.danger.confirmTitle")}</AlertDialogTitle>
                                                                 <AlertDialogDescription>
-                                                                    Hành động này có thể hoàn tác. Studio và toàn bộ dữ liệu sẽ bị ẩn.
+                                                                    {t("detail.danger.confirmDescription")}
                                                                 </AlertDialogDescription>
                                                             </AlertDialogHeader>
 
                                                             <AlertDialogFooter>
-                                                                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                                                <AlertDialogCancel>{t("deleteModal.cancel")}</AlertDialogCancel>
                                                                 <AlertDialogAction
                                                                     className="bg-red-600 hover:bg-red-700"
                                                                     onClick={(e) => {
@@ -1109,7 +1108,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                         handleDeleteStudio();
                                                                     }}
                                                                 >
-                                                                    Xác nhận xóa
+                                                                    {t("detail.danger.confirmDelete")}
                                                                 </AlertDialogAction>
                                                             </AlertDialogFooter>
                                                         </AlertDialogContent>
@@ -1128,7 +1127,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             <InviteMemberModal
                 open={isInviteModalOpen}
                 onClose={() => setIsInviteModalOpen(false)}
-                groupName={studio?.name || "Studio"}
+                groupName={studio?.name || t("group")}
                 variant="studio"
                 canManage={true}
                 onCreateLink={async ({ role }) => {
@@ -1136,7 +1135,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                     if (result.status === "success" && result.data?.inviteUrl) {
                         return result.data.inviteUrl;
                     }
-                    throw new Error("Failed to create invite link");
+                    throw new Error(t("detail.invite.createLinkError"));
                 }}
                 onSendInvite={async ({ email, role }) => {
                     await sendStudioInviteEmail({ studioId: studio?.id, role: role as string, email }, locale);
@@ -1152,7 +1151,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                 onCreate={async () => {
                     router.refresh();
                     toast({
-                        description: "Nhóm đã được tạo thành công!",
+                        description: t("detail.groupCreatedSuccess"),
                         variant: "success"
                     });
                 }}

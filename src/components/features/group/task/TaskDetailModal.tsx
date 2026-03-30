@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
@@ -299,22 +300,18 @@ type TrelloDatePickerProps = {
     onChange: (value: string) => void;
     min?: string;
     disabled?: boolean;
+    locale: string;
+    i18n: DatePickerTranslations;
 };
 
-const monthOptions = [
-    { value: "0", label: "January" },
-    { value: "1", label: "February" },
-    { value: "2", label: "March" },
-    { value: "3", label: "April" },
-    { value: "4", label: "May" },
-    { value: "5", label: "June" },
-    { value: "6", label: "July" },
-    { value: "7", label: "August" },
-    { value: "8", label: "September" },
-    { value: "9", label: "October" },
-    { value: "10", label: "November" },
-    { value: "11", label: "December" }
-] as const;
+type DatePickerTranslations = {
+    selectDate: string;
+    today: string;
+    tomorrow: string;
+    nextWeek: string;
+    noDate: string;
+    months: string[];
+};
 
 const TASK_TITLE_MAX_LENGTH = 30;
 const TASK_DESCRIPTION_MAX_LENGTH = 200;
@@ -411,6 +408,7 @@ const MentionTextarea = React.forwardRef<
         onChange: (next: string) => void;
         members: MentionUser[];
         meId: string;
+        noResultsText?: string;
         placeholder?: string;
         className?: string;
         maxChars?: number;
@@ -418,7 +416,7 @@ const MentionTextarea = React.forwardRef<
         disabled?: boolean;
     }
 >(function MentionTextareaInner(
-    { value, onChange, members, meId, placeholder, className, maxChars = 500, onSubmit, disabled = false },
+    { value, onChange, members, meId, noResultsText, placeholder, className, maxChars = 500, onSubmit, disabled = false },
     ref
 ) {
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -802,7 +800,7 @@ const MentionTextarea = React.forwardRef<
                             })}
                         </div>
                     ) : (
-                        <div className="px-4 py-3 text-sm text-zinc-500">Không có thành viên để mention.</div>
+                        <div className="px-4 py-3 text-sm text-zinc-500">{noResultsText ?? "No members to mention."}</div>
                     )}
                 </div>,
                 document.body
@@ -1092,15 +1090,22 @@ function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function formatDateDisplay(value?: string) {
+function formatDateDisplay(
+    value: string | undefined,
+    locale: string,
+    i18n: Pick<DatePickerTranslations, "selectDate" | "today" | "tomorrow">
+) {
     const date = parseDateString(value);
-    if (!date) return "Select a date";
+    if (!date) return i18n.selectDate;
     const today = startOfDay(new Date());
     const target = startOfDay(date);
     const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
-    return new Intl.DateTimeFormat("en-US", {
+    if (diffDays === 0) return i18n.today;
+    if (diffDays === 1) return i18n.tomorrow;
+
+    const normalizedLocale = locale.includes("-") ? locale : locale === "vi" ? "vi-VN" : "en-US";
+
+    return new Intl.DateTimeFormat(normalizedLocale, {
         weekday: "short",
         month: "short",
         day: "numeric",
@@ -1127,7 +1132,7 @@ function getGroupIdFromParams(params: Record<string, string | string[] | undefin
     return firstKey ? readParam(params, firstKey) : null;
 }
 
-function TrelloDatePicker({ label, value, onChange, min, disabled = false }: TrelloDatePickerProps) {
+function TrelloDatePicker({ label, value, onChange, min, disabled = false, locale, i18n }: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
@@ -1270,9 +1275,9 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 value={month.getMonth()}
                                 onChange={handleMonthChange}
                                 className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-sm font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
+                                {i18n.months.map((monthLabel, monthIndex) => (
+                                    <option key={monthLabel} value={String(monthIndex)}>
+                                        {monthLabel}
                                     </option>
                                 ))}
                             </select>
@@ -1305,7 +1310,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             </button>
 
                             <div className="text-base font-bold text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                                {i18n.months[month.getMonth()]} {month.getFullYear()}
                             </div>
 
                             <button
@@ -1362,21 +1367,21 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                             type="button"
                             onClick={() => pickDate(new Date())}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Today
+                            {i18n.today}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Tomorrow
+                            {i18n.tomorrow}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            Next week
+                            {i18n.nextWeek}
                         </button>
 
                         <button
@@ -1386,7 +1391,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 setOpen(false);
                             }}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-rose-500 hover:bg-rose-50">
-                            No date
+                            {i18n.noDate}
                         </button>
                     </div>
                 </div>,
@@ -1433,7 +1438,7 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false }: Tre
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
                                 disabled && "text-zinc-500"
                             )}>
-                            {formatDateDisplay(value)}
+                            {formatDateDisplay(value, locale, i18n)}
                         </span>
                     </div>
                 </button>
@@ -1763,10 +1768,16 @@ type CommentActionProps = {
     canShowMenu: boolean;
     canDelete: boolean;
     deleting: boolean;
+    labels: {
+        moreActions: string;
+        reply: string;
+        deleting: string;
+        delete: string;
+    };
     size?: "sm" | "md";
 };
 
-function CommentActions({ onReply, onDelete, canShowMenu, canDelete, deleting, size = "sm" }: CommentActionProps) {
+function CommentActions({ onReply, onDelete, canShowMenu, canDelete, deleting, labels, size = "sm" }: CommentActionProps) {
     const buttonSize = size === "sm" ? "h-7 w-7" : "h-8 w-8";
     const iconSize = "h-4 w-4";
     const textSize = size === "sm" ? "text-xs" : "text-sm";
@@ -1783,7 +1794,7 @@ function CommentActions({ onReply, onDelete, canShowMenu, canDelete, deleting, s
                             "grid place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100",
                             buttonSize
                         )}
-                        aria-label="More actions">
+                        aria-label={labels.moreActions}>
                         <MoreHorizontal className={iconSize} />
                     </button>
                 </DropdownMenuTrigger>
@@ -1802,7 +1813,7 @@ function CommentActions({ onReply, onDelete, canShowMenu, canDelete, deleting, s
                             textSize
                         )}>
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        Reply
+                        {labels.reply}
                     </DropdownMenuItem>
 
                     {canDelete ? (
@@ -1817,7 +1828,7 @@ function CommentActions({ onReply, onDelete, canShowMenu, canDelete, deleting, s
                                 textSize
                             )}>
                             <Trash2 className="mr-2 h-4 w-4" />
-                            {deleting ? "Đang xóa..." : "Xóa"}
+                            {deleting ? labels.deleting : labels.delete}
                         </DropdownMenuItem>
                     ) : null}
                 </DropdownMenuContent>
@@ -1834,10 +1845,64 @@ export default function TaskDetailModal(props: {
     onSaved?: () => Promise<void> | void;
 }) {
     const { open, onClose, taskId, onSaved } = props;
+    const t = useTranslations("TaskDetailModal");
+    const locale = useLocale();
     const params = useParams<Record<string, string | string[] | undefined>>();
     const groupId = React.useMemo(() => getGroupIdFromParams(params ?? {}), [params]);
     const commentMentionRef = React.useRef<MentionTextareaHandle | null>(null);
     const [mounted, setMounted] = React.useState(false);
+
+    const datePickerI18n = React.useMemo<DatePickerTranslations>(() => ({
+        selectDate: t("datePicker.selectDate"),
+        today: t("datePicker.today"),
+        tomorrow: t("datePicker.tomorrow"),
+        nextWeek: t("datePicker.nextWeek"),
+        noDate: t("datePicker.noDate"),
+        months: [
+            t("datePicker.month1"),
+            t("datePicker.month2"),
+            t("datePicker.month3"),
+            t("datePicker.month4"),
+            t("datePicker.month5"),
+            t("datePicker.month6"),
+            t("datePicker.month7"),
+            t("datePicker.month8"),
+            t("datePicker.month9"),
+            t("datePicker.month10"),
+            t("datePicker.month11"),
+            t("datePicker.month12")
+        ]
+    }), [t]);
+
+    const priorityLabelByValue = React.useCallback(
+        (value: number) => {
+            if (value === 2) return t("priorityHigh");
+            if (value === 1) return t("priorityMedium");
+            return t("priorityLow");
+        },
+        [t]
+    );
+
+    const severityLabelByValue = React.useCallback(
+        (value: number) => {
+            if (value === 3) return t("severityCritical");
+            if (value === 2) return t("severityMajor");
+            if (value === 1) return t("severityModerate");
+            return t("severityMinor");
+        },
+        [t]
+    );
+
+    const progressLabelByValue = React.useCallback(
+        (value: number) => {
+            if (value === 0) return t("progressToDo");
+            if (value < 50) return t("progressStarted");
+            if (value < 75) return t("progressInProgress");
+            if (value < 100) return t("progressReview");
+            return t("progressDone");
+        },
+        [t]
+    );
 
     React.useEffect(() => {
         setMounted(true);
@@ -1990,7 +2055,7 @@ export default function TaskDetailModal(props: {
                 members
                     .map((m) => {
                         const id = String(m.userId ?? "").trim();
-                        const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email || "User";
+                        const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email || t("user");
                         return id ? [id, name] : null;
                     })
                     .filter(Boolean) as [string, string][]
@@ -2002,7 +2067,7 @@ export default function TaskDetailModal(props: {
         () =>
             members.map((m) => {
                 const id = String(m.userId ?? "").trim();
-                const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email || "User";
+                const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email || t("user");
 
                 return {
                     id,
@@ -2021,7 +2086,7 @@ export default function TaskDetailModal(props: {
         if (!(visibleText && taskId)) return;
 
         if (visibleText.length > TASK_COMMENT_MAX_LENGTH) {
-            setSendCommentError(`Comment chỉ được tối đa ${TASK_COMMENT_MAX_LENGTH} ký tự.`);
+            setSendCommentError(t("errors.commentMax", { max: TASK_COMMENT_MAX_LENGTH }));
             return;
         }
 
@@ -2042,7 +2107,7 @@ export default function TaskDetailModal(props: {
             setCommentDraft("");
             setReplyingTo(null);
         } catch (e: unknown) {
-            setSendCommentError(getErrorMessage(e, "Không gửi được comment"));
+            setSendCommentError(getErrorMessage(e, t("errors.sendCommentFailed")));
         } finally {
             setSendingComment(false);
         }
@@ -2062,7 +2127,7 @@ export default function TaskDetailModal(props: {
             await reloadComments();
             closeDeleteConfirm();
         } catch (e: unknown) {
-            setSendCommentError(getErrorMessage(e, "Không xóa được comment"));
+            setSendCommentError(getErrorMessage(e, t("errors.deleteCommentFailed")));
         } finally {
             setDeletingCommentId(null);
         }
@@ -2122,11 +2187,11 @@ export default function TaskDetailModal(props: {
             setDetailError(null);
         } catch (e: unknown) {
             if (!isAliveRef.current) return;
-            setDetailError(getErrorMessage(e, "Không tải được task detail"));
+            setDetailError(getErrorMessage(e, t("errors.loadTaskDetailFailed")));
         } finally {
             if (isAliveRef.current) setIsRefreshingDetail(false);
         }
-    }, [open, taskId, groupId]);
+    }, [open, taskId, groupId, t]);
 
     React.useEffect(() => {
         if (!(open && taskId)) return;
@@ -2137,7 +2202,7 @@ export default function TaskDetailModal(props: {
             setDetailError(null);
 
             try {
-                if (!groupId) throw new Error("Thiếu groupId từ route");
+                if (!groupId) throw new Error(t("errors.missingGroupIdFromRoute"));
                 const result = await apiGetTaskDetailFromGroup(groupId, taskId);
                 if (!alive) return;
                 setTask(result.task);
@@ -2145,7 +2210,7 @@ export default function TaskDetailModal(props: {
                 setCurrentUserRole(result.userRole);
             } catch (e: unknown) {
                 if (!alive) return;
-                setDetailError(getErrorMessage(e, "Không tải được task detail"));
+                setDetailError(getErrorMessage(e, t("errors.loadTaskDetailFailed")));
                 setTask(null);
                 setStatusOptions([]);
                 setCurrentUserRole("");
@@ -2157,7 +2222,7 @@ export default function TaskDetailModal(props: {
         return () => {
             alive = false;
         };
-    }, [open, taskId, groupId]);
+    }, [open, taskId, groupId, t]);
 
     React.useEffect(() => {
         if (!(open && taskId)) return;
@@ -2174,7 +2239,7 @@ export default function TaskDetailModal(props: {
                 setComments((list ?? []).filter((c) => !c?.isDeleted));
             } catch (e: unknown) {
                 if (!alive) return;
-                setCommentError(getErrorMessage(e, "Không tải được comments"));
+                setCommentError(getErrorMessage(e, t("errors.loadCommentsFailed")));
                 setComments([]);
             } finally {
                 if (alive) setLoadingComments(false);
@@ -2184,7 +2249,7 @@ export default function TaskDetailModal(props: {
         return () => {
             alive = false;
         };
-    }, [open, taskId]);
+    }, [open, taskId, t]);
 
     React.useEffect(() => {
         if (!(open && groupId)) return;
@@ -2206,7 +2271,7 @@ export default function TaskDetailModal(props: {
                 setMembers(filteredList);
             } catch (e: unknown) {
                 if (!alive) return;
-                setMembersError(getErrorMessage(e, "Không tải được danh sách thành viên"));
+                setMembersError(getErrorMessage(e, t("errors.loadMembersFailed")));
                 setMembers([]);
             }
         })();
@@ -2214,7 +2279,7 @@ export default function TaskDetailModal(props: {
         return () => {
             alive = false;
         };
-    }, [open, groupId]);
+    }, [open, groupId, t]);
 
     React.useEffect(() => {
         if (!open) return;
@@ -2264,11 +2329,11 @@ export default function TaskDetailModal(props: {
                 const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim();
                 return {
                     userId: String(m.userId ?? ""),
-                    label: name || m.email || "Unnamed",
+                    label: name || m.email || t("unnamed"),
                     avatarUrl: safeAvatarUrl(m.avatarUrl)
                 };
             }),
-        [members]
+        [members, t]
     );
 
     const selectedAssignee = React.useMemo(
@@ -2287,26 +2352,26 @@ export default function TaskDetailModal(props: {
             };
         }
 
-        return { userId: "", label: "Unassigned", avatarUrl: "" };
-    }, [selectedAssignee, task?.assigneeAvatarUrl, task?.assigneeId, task?.assigneeName]);
+        return { userId: "", label: t("unassigned"), avatarUrl: "" };
+    }, [selectedAssignee, task?.assigneeAvatarUrl, task?.assigneeId, task?.assigneeName, t]);
 
     const selectedStatusName = React.useMemo(() => {
         const hit = statusOptions.find((s) => s.statusId === statusId);
-        return hit?.statusName ?? task?.statusName ?? "—";
-    }, [statusId, statusOptions, task?.statusName]);
+        return hit?.statusName ?? task?.statusName ?? t("emptyStatus");
+    }, [statusId, statusOptions, task?.statusName, t]);
 
     const selectedPriorityValue = React.useMemo(() => normalizePriorityValue(Number(priority)), [priority]);
-    const selectedPriorityLabel = React.useMemo(() => priorityLabelOf(selectedPriorityValue), [selectedPriorityValue]);
+    const selectedPriorityLabel = React.useMemo(() => priorityLabelByValue(selectedPriorityValue), [selectedPriorityValue, priorityLabelByValue]);
 
     const selectedSeverityValue = React.useMemo(() => normalizeSeverityValue(Number(severity)), [severity]);
-    const selectedSeverityLabel = React.useMemo(() => severityLabelOf(selectedSeverityValue), [selectedSeverityValue]);
+    const selectedSeverityLabel = React.useMemo(() => severityLabelByValue(selectedSeverityValue), [selectedSeverityValue, severityLabelByValue]);
 
     const selectedProgressValue = React.useMemo(() => {
         if (progress === "") return 0;
         return normalizeProgressValue(Number(progress));
     }, [progress]);
 
-    const selectedProgressLabel = React.useMemo(() => progressLabelOf(selectedProgressValue), [selectedProgressValue]);
+    const selectedProgressLabel = React.useMemo(() => progressLabelByValue(selectedProgressValue), [selectedProgressValue, progressLabelByValue]);
     const descriptionLength = description.length;
     const commentLength = commentDraft.length;
 
@@ -2319,12 +2384,12 @@ export default function TaskDetailModal(props: {
         const descriptionTrimmed = description.trim().slice(0, TASK_DESCRIPTION_MAX_LENGTH);
 
         if (!taskNameTrimmed) {
-            setSaveError("Tên task là bắt buộc.");
+            setSaveError(t("errors.taskNameRequired"));
             return;
         }
 
         if (startDate && dueDate && startDate > dueDate) {
-            setSaveError("Start Date phải nhỏ hơn hoặc bằng Due Date.");
+            setSaveError(t("errors.startDateAfterDueDate"));
             return;
         }
 
@@ -2332,13 +2397,13 @@ export default function TaskDetailModal(props: {
         if (assigneeId) {
             const selectedMember = members.find((m) => String(m?.userId ?? "") === assigneeId);
             if (selectedMember && isRestrictedMemberRole(selectedMember.role)) {
-                setSaveError("Không thể giao công việc cho những thành viên có role Commenter hoặc Viewer.");
+                setSaveError(t("errors.restrictedAssignee"));
                 return;
             }
         }
 
         if (groupId == null || taskId == null) {
-            setSaveError("Thiếu groupId hoặc taskId.");
+            setSaveError(t("errors.missingGroupOrTask"));
             return;
         }
 
@@ -2382,7 +2447,7 @@ export default function TaskDetailModal(props: {
                     severityValue: selectedSeverityValue,
                     severityLabel: selectedSeverityLabel,
                     progressValue: normalizedProgressValue,
-                    progressLabel: progressLabelOf(normalizedProgressValue),
+                    progressLabel: progressLabelByValue(normalizedProgressValue),
                     startDateRaw: startDate ? toApiDateTimeOrNull(startDate) : null,
                     dueDateRaw: dueDate ? toApiDateTimeOrNull(dueDate) : null,
                     startDateFmt: startDate ? formatDisplayDate(startDate) : "",
@@ -2399,7 +2464,7 @@ export default function TaskDetailModal(props: {
 
             void Promise.allSettled([refreshTaskDetailSilently(), Promise.resolve(onSaved?.())]);
         } catch (e: unknown) {
-            setSaveError(getErrorMessage(e, "Không cập nhật được task"));
+            setSaveError(getErrorMessage(e, t("errors.updateTaskFailed")));
         } finally {
             setSubmitting(false);
         }
@@ -2421,7 +2486,7 @@ export default function TaskDetailModal(props: {
                     <div className="min-w-0 flex-1">
                         {loadingDetail ? (
                             <h2 className="min-w-0 truncate text-[26px] font-extrabold leading-none text-zinc-900">
-                                Loading...
+                                {t("loading")}
                             </h2>
                         ) : isEditing ? (
                             <div className="max-w-[560px]">
@@ -2429,7 +2494,7 @@ export default function TaskDetailModal(props: {
                                     value={taskName}
                                     maxLength={TASK_TITLE_MAX_LENGTH}
                                     onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
-                                    placeholder="Task name"
+                                    placeholder={t("taskName")}
                                     className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[24px] font-extrabold leading-none text-zinc-900 outline-none"
                                 />
                                 <div className="mt-2 text-right text-xs font-medium text-zinc-500">
@@ -2439,12 +2504,12 @@ export default function TaskDetailModal(props: {
                         ) : (
                             <div className="flex min-w-0 items-center gap-3">
                                 <h2 className="min-w-0 break-words text-[26px] font-extrabold leading-none text-zinc-900">
-                                    {taskName || "Task"}
+                                    {taskName || t("taskFallback")}
                                 </h2>
 
                                 {isRefreshingDetail ? (
                                     <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-[11px] font-semibold text-zinc-500">
-                                        Syncing...
+                                        {t("syncing")}
                                     </div>
                                 ) : null}
                             </div>
@@ -2455,7 +2520,7 @@ export default function TaskDetailModal(props: {
                         type="button"
                         onClick={onClose}
                         className="ml-4 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Close">
+                        aria-label={t("close")}>
                         <X className="h-5 w-5" />
                     </button>
                 </div>
@@ -2472,7 +2537,7 @@ export default function TaskDetailModal(props: {
                             {loadingDetail ? (
                                 <div className="mt-4 flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Đang tải…
+                                    {t("loading")}
                                 </div>
                             ) : null}
 
@@ -2490,7 +2555,7 @@ export default function TaskDetailModal(props: {
 
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                    <div className="text-lg font-bold text-zinc-900">Task information</div>
+                                    <div className="text-lg font-bold text-zinc-900">{t("taskInformation")}</div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -2501,7 +2566,7 @@ export default function TaskDetailModal(props: {
                                                 onClick={() => setIsEditing(true)}
                                                 disabled={loadingDetail || !!detailError || !task}
                                                 className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
-                                                Edit
+                                                {t("edit")}
                                             </button>
                                         ) : (
                                             <button
@@ -2511,7 +2576,7 @@ export default function TaskDetailModal(props: {
                                                 }}
                                                 disabled={submitting}
                                                 className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
-                                                {submitting ? "Saving..." : "Save change"}
+                                                {submitting ? t("saving") : t("saveChange")}
                                             </button>
                                         )
                                     ) : null}
@@ -2520,7 +2585,7 @@ export default function TaskDetailModal(props: {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Assignee</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("assignee")}</div>
                                     <Select
                                         value={assigneeId || "unassigned"}
                                         onValueChange={(v) => setAssigneeId(v === "unassigned" ? "" : v)}
@@ -2557,7 +2622,7 @@ export default function TaskDetailModal(props: {
                                                     <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
                                                         U
                                                     </div>
-                                                    <span>Unassigned</span>
+                                                    <span>{t("unassigned")}</span>
                                                 </div>
                                             </SelectItem>
 
@@ -2587,7 +2652,7 @@ export default function TaskDetailModal(props: {
                                 </div>
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Status</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("status")}</div>
                                     <Select
                                         value={statusId || "no-status"}
                                         onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}
@@ -2604,7 +2669,7 @@ export default function TaskDetailModal(props: {
                                             avoidCollisions
                                             className="z-[10010] min-w-[216px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                             <SelectItem value="no-status" className={selectItemClassName}>
-                                                No status
+                                                {t("noStatus")}
                                             </SelectItem>
 
                                             {statusOptions.map((s) => (
@@ -2616,7 +2681,7 @@ export default function TaskDetailModal(props: {
                                     </Select>
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Priority</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("priority")}</div>
                                     <Select
                                         value={String(selectedPriorityValue)}
                                         onValueChange={setPriority}
@@ -2636,19 +2701,19 @@ export default function TaskDetailModal(props: {
                                             avoidCollisions
                                             className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                             <SelectItem value="0" className={selectItemClassName}>
-                                                Low
+                                                {t("priorityLow")}
                                             </SelectItem>
                                             <SelectItem value="1" className={selectItemClassName}>
-                                                Medium
+                                                {t("priorityMedium")}
                                             </SelectItem>
                                             <SelectItem value="2" className={selectItemClassName}>
-                                                High
+                                                {t("priorityHigh")}
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Severity</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("severity")}</div>
                                     <Select
                                         value={String(selectedSeverityValue)}
                                         onValueChange={setSeverity}
@@ -2668,16 +2733,16 @@ export default function TaskDetailModal(props: {
                                             avoidCollisions
                                             className="z-[10010] min-w-[168px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                             <SelectItem value="0" className={selectItemClassName}>
-                                                Minor
+                                                {t("severityMinor")}
                                             </SelectItem>
                                             <SelectItem value="1" className={selectItemClassName}>
-                                                Moderate
+                                                {t("severityModerate")}
                                             </SelectItem>
                                             <SelectItem value="2" className={selectItemClassName}>
-                                                Major
+                                                {t("severityMajor")}
                                             </SelectItem>
                                             <SelectItem value="3" className={selectItemClassName}>
-                                                Critical
+                                                {t("severityCritical")}
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -2685,23 +2750,27 @@ export default function TaskDetailModal(props: {
 
 
                                 <TrelloDatePicker
-                                    label="Start Date"
+                                    label={t("startDate")}
                                     value={startDate}
                                     onChange={setStartDate}
                                     disabled={!isEditing}
+                                    locale={locale}
+                                    i18n={datePickerI18n}
                                 />
                                 <TrelloDatePicker
-                                    label="Due Date"
+                                    label={t("dueDate")}
                                     value={dueDate}
                                     onChange={setDueDate}
                                     min={startDate || undefined}
                                     disabled={!isEditing}
+                                    locale={locale}
+                                    i18n={datePickerI18n}
                                 />
 
 
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Estimated Hours</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("estimatedHours")}</div>
                                     <input
                                         type="number"
                                         min="0"
@@ -2724,7 +2793,7 @@ export default function TaskDetailModal(props: {
                                 </div>
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">Actual Hours</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("actualHours")}</div>
                                     <input
                                         type="number"
                                         min="0"
@@ -2747,7 +2816,7 @@ export default function TaskDetailModal(props: {
                                 </div>
 
                                 <div className="md:col-span-2 xl:col-span-2">
-                                    <div className="text-sm font-semibold text-zinc-600">Progress</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("progress")}</div>
 
                                     <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
                                         <div className="mb-3 flex items-center justify-between gap-3 text-sm">
@@ -2803,7 +2872,7 @@ export default function TaskDetailModal(props: {
 
                             <div className="mt-6">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <div className="text-sm font-semibold text-zinc-600">Description</div>
+                                    <div className="text-sm font-semibold text-zinc-600">{t("description")}</div>
                                     {isEditing ? (
                                         <div
                                             className={cn(
@@ -2817,7 +2886,7 @@ export default function TaskDetailModal(props: {
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
-                                    placeholder="(No description)"
+                                    placeholder={t("noDescription")}
                                     disabled={!isEditing}
                                     maxLength={TASK_DESCRIPTION_MAX_LENGTH}
                                     className="min-h-[110px] w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-600"
@@ -2829,7 +2898,7 @@ export default function TaskDetailModal(props: {
                             <div className="sticky top-0 z-10 bg-white pb-4">
                                 <div className="flex items-center gap-2">
                                     <MessageSquare className="h-4 w-4 text-zinc-700" />
-                                    <div className="text-xl font-extrabold text-zinc-900">Comments</div>
+                                    <div className="text-xl font-extrabold text-zinc-900">{t("comments")}</div>
                                     <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-600">
                                         {loadingComments ? "…" : comments.length}
                                     </span>
@@ -2838,13 +2907,13 @@ export default function TaskDetailModal(props: {
                                 {replyingTo ? (
                                     <div className="mt-3 flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm">
                                         <div className="min-w-0 text-zinc-700">
-                                            Đang trả lời <span className="font-semibold">{fullName(replyingTo.user) || "User"}</span>
+                                            {t("replyingTo")} <span className="font-semibold">{fullName(replyingTo.user) || t("user")}</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={cancelReply}
                                             className="ml-3 shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100">
-                                            Hủy
+                                            {t("cancel")}
                                         </button>
                                     </div>
                                 ) : null}
@@ -2864,14 +2933,14 @@ export default function TaskDetailModal(props: {
 
                             <div className="w-full max-w-full space-y-4 overflow-x-hidden pb-4">
                                 {loadingComments ? (
-                                    <div className="text-sm text-zinc-600">(Đang tải comments…)</div>
+                                    <div className="text-sm text-zinc-600">({t("loadingComments")})</div>
                                 ) : comments.length === 0 ? (
-                                    <div className="text-sm text-zinc-500">(Chưa có comment)</div>
+                                    <div className="text-sm text-zinc-500">({t("noComments")})</div>
                                 ) : (
                                     comments.map((c) => {
                                         const u = c.user;
                                         const name =
-                                            `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() || "User";
+                                            `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() || t("user");
                                         const when = c.createdAt ? relativeTimeOf(c.createdAt) : "";
                                         const replies = (c.replies ?? []).filter((r) => !r?.isDeleted);
 
@@ -2917,6 +2986,12 @@ export default function TaskDetailModal(props: {
                                                                     canShowMenu={canShowCommentMenu()}
                                                                     canDelete={canDeleteComment(c)}
                                                                     deleting={deletingCommentId === c.commentId}
+                                                                    labels={{
+                                                                        moreActions: t("moreActions"),
+                                                                        reply: t("reply"),
+                                                                        deleting: t("deleting"),
+                                                                        delete: t("delete")
+                                                                    }}
                                                                     size="sm"
                                                                 />
                                                             </div>
@@ -2930,7 +3005,7 @@ export default function TaskDetailModal(props: {
                                                             const ru = r.user;
                                                             const rname =
                                                                 `${(ru?.firstName ?? "").trim()} ${(ru?.lastName ?? "").trim()}`.trim() ||
-                                                                "User";
+                                                                t("user");
                                                             const rwhen = r.createdAt ? relativeTimeOf(r.createdAt) : "";
 
                                                             return (
@@ -2980,6 +3055,12 @@ export default function TaskDetailModal(props: {
                                                                                     canShowMenu={canShowCommentMenu()}
                                                                                     canDelete={canDeleteComment(r)}
                                                                                     deleting={deletingCommentId === r.commentId}
+                                                                                    labels={{
+                                                                                        moreActions: t("moreActions"),
+                                                                                        reply: t("reply"),
+                                                                                        deleting: t("deleting"),
+                                                                                        delete: t("delete")
+                                                                                    }}
                                                                                     size="sm"
                                                                                 />
                                                                             </div>
@@ -3002,7 +3083,7 @@ export default function TaskDetailModal(props: {
                                         {myAvatarUrl ? (
                                             <Image
                                                 src={myAvatarUrl}
-                                                alt={myFullName || "Me"}
+                                                alt={myFullName || t("me")}
                                                 width={36}
                                                 height={36}
                                                 unoptimized
@@ -3010,7 +3091,7 @@ export default function TaskDetailModal(props: {
                                             />
                                         ) : (
                                             <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">
-                                                {buildInitials(myFullName || "D")}
+                                                {buildInitials(myFullName || t("me"))}
                                             </div>
                                         )}
 
@@ -3026,7 +3107,8 @@ export default function TaskDetailModal(props: {
                                                         }}
                                                         members={mentionUsers}
                                                         meId={myUserId}
-                                                        placeholder={replyingTo ? "Write a reply..." : "Write a comment..."}
+                                                        noResultsText={t("noMembersToMention")}
+                                                        placeholder={replyingTo ? t("writeReply") : t("writeComment")}
                                                         maxChars={TASK_COMMENT_MAX_LENGTH}
                                                         disabled={!canComment || sendingComment}
                                                         onSubmit={() => {
@@ -3042,7 +3124,7 @@ export default function TaskDetailModal(props: {
                                                         void handleSendComment();
                                                     }}
                                                     className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f54a00] text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
-                                                    aria-label="Send"
+                                                    aria-label={t("send")}
                                                     disabled={!commentDraft.trim() || sendingComment || !canComment || !myUserId}>
                                                     {sendingComment ? (
                                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -3070,9 +3152,9 @@ export default function TaskDetailModal(props: {
                 <AlertDialog open={deleteOpen} onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
                     <AlertDialogContent className="z-[11000] rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-lg">Xác nhận xóa</AlertDialogTitle>
+                            <AlertDialogTitle className="text-lg">{t("confirmDeleteTitle")}</AlertDialogTitle>
                             <AlertDialogDescription className="text-sm leading-6 text-[#111827]">
-                                Bạn có chắc chắn muốn xóa bình luận này không? Hành động này không thể hoàn tác.
+                                {t("confirmDeleteDescription")}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
 
@@ -3085,7 +3167,7 @@ export default function TaskDetailModal(props: {
                                     "hover:bg-[#E5E7EB]",
                                     "focus-visible:ring-0"
                                 )}>
-                                Hủy
+                                {t("cancel")}
                             </AlertDialogCancel>
 
                             <AlertDialogAction
@@ -3095,7 +3177,7 @@ export default function TaskDetailModal(props: {
                                     void handleConfirmDeleteComment();
                                 }}
                                 className="rounded-xl bg-red-600 px-8 text-white hover:bg-red-700 focus-visible:ring-0">
-                                {deletingCommentId ? "Đang xóa..." : "Xóa"}
+                                {deletingCommentId ? t("deleting") : t("delete")}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

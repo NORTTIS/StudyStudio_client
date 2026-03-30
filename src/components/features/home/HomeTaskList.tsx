@@ -16,6 +16,7 @@ import {
     LayoutGrid
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DayPicker } from "react-day-picker";
@@ -55,6 +56,7 @@ type TrelloDatePickerProps = {
     onChange: (value: string) => void;
     min?: string;
     max?: string;
+    t?: (key: string) => string;
 };
 
 type GroupPreviewItem = {
@@ -93,6 +95,7 @@ type TaskListDetailLayerProps = {
     showDeadlineFilter: boolean;
     setPage: React.Dispatch<React.SetStateAction<number>>;
     handleTaskClick: (item: HomeTaskListItemResponse) => void;
+    t: (key: string) => string;
 };
 
 const monthOptions = [
@@ -139,16 +142,16 @@ function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function formatDateDisplay(value?: string) {
+function formatDateDisplay(value?: string, t?: (key: string) => string) {
     const date = parseDateString(value);
-    if (!date) return "Select a date";
+    if (!date) return t ? t("selectDate") : "Select a date";
 
     const today = startOfDay(new Date());
     const target = startOfDay(date);
     const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
 
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === 0) return t ? t("today") : "Today";
+    if (diffDays === 1) return t ? t("tomorrow") : "Tomorrow";
 
     return new Intl.DateTimeFormat("en-US", {
         weekday: "short",
@@ -225,29 +228,29 @@ function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
     return null;
 }
 
-function getSeverityLabel(value?: components["schemas"]["TaskSeverity"]) {
+function getSeverityLabel(value?: components["schemas"]["TaskSeverity"], t?: (key: string) => string) {
     switch (value) {
         case 0:
-            return "Thấp";
+            return t ? t("severityLow") : "Low";
         case 1:
-            return "Bình thường";
+            return t ? t("severityNormal") : "Normal";
         case 2:
-            return "Quan trọng";
+            return t ? t("severityImportant") : "Important";
         case 3:
-            return "Khẩn cấp";
+            return t ? t("severityCritical") : "Critical";
         default:
             return "-";
     }
 }
 
-function getPriorityLabel(value?: components["schemas"]["TaskPriority"]) {
+function getPriorityLabel(value?: components["schemas"]["TaskPriority"], t?: (key: string) => string) {
     switch (value) {
         case 0:
-            return "Low";
+            return t ? t("priorityLow") : "Low";
         case 1:
-            return "Medium";
+            return t ? t("priorityMedium") : "Medium";
         case 2:
-            return "High";
+            return t ? t("priorityHigh") : "High";
         default:
             return "-";
     }
@@ -280,8 +283,8 @@ function formatDueDate(value?: string | null) {
     return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
 }
 
-function getSourceLabel(item: HomeTaskListItemResponse) {
-    return item.groupName || item.sourceName || "Nhóm";
+function getSourceLabel(item: HomeTaskListItemResponse, t?: (key: string) => string) {
+    return item.groupName || item.sourceName || (t ? t("groupSource") : "Nhóm");
 }
 
 function buildTaskDetailHref(item: HomeTaskListItemResponse) {
@@ -326,7 +329,7 @@ function TableSkeleton() {
     );
 }
 
-function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePickerProps) {
+function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
@@ -576,21 +579,21 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             onClick={() => pickDate(new Date())}
                             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
                         >
-                            Today
+                            {t ? t("today") : "Today"}
                         </button>
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
                             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
                         >
-                            Tomorrow
+                            {t ? t("tomorrow") : "Tomorrow"}
                         </button>
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
                             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
                         >
-                            Next week
+                            {t ? t("nextWeek") : "Next week"}
                         </button>
                         <button
                             type="button"
@@ -600,7 +603,7 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             }}
                             className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
                         >
-                            No date
+                            {t ? t("noDate") : "No date"}
                         </button>
                     </div>
                 </motion.div>,
@@ -633,7 +636,7 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             <CalendarDays className="h-4 w-4" />
                         </div>
                         <span className={cn("truncate text-left", value ? "font-medium text-slate-900" : "text-slate-400")}>
-                            {formatDateDisplay(value)}
+                            {formatDateDisplay(value, t)}
                         </span>
                     </div>
                 </button>
@@ -643,20 +646,22 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
     );
 }
 
-function DeadlineRangePicker({ value, onChange }: { value: DeadlineFilter; onChange: (next: DeadlineFilter) => void }) {
+function DeadlineRangePicker({ value, onChange, t }: { value: DeadlineFilter; onChange: (next: DeadlineFilter) => void; t?: (key: string) => string }) {
     return (
         <div className="grid min-w-[360px] grid-cols-1 gap-4 rounded-[24px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl">
             <TrelloDatePicker
-                label="Từ ngày"
+                label={t ? t("fromDate") : "From date"}
                 value={value.startDate}
                 onChange={(v) => onChange({ ...value, startDate: v })}
                 max={value.endDate || undefined}
+                t={t}
             />
             <TrelloDatePicker
-                label="Đến ngày"
+                label={t ? t("toDate") : "To date"}
                 value={value.endDate}
                 onChange={(v) => onChange({ ...value, endDate: v })}
                 min={value.startDate || undefined}
+                t={t}
             />
             <div className="flex items-center justify-end gap-3 pt-2">
                 <button
@@ -664,7 +669,7 @@ function DeadlineRangePicker({ value, onChange }: { value: DeadlineFilter; onCha
                     onClick={() => onChange({ startDate: "", endDate: "" })}
                     className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
                 >
-                    Xóa chọn
+                    {t ? t("clearSelection") : "Clear selection"}
                 </button>
             </div>
         </div>
@@ -675,12 +680,14 @@ function DeadlineFilterPopover({
     open,
     value,
     onChange,
-    onClose
+    onClose,
+    t
 }: {
     open: boolean;
     value: DeadlineFilter;
     onChange: (next: DeadlineFilter) => void;
     onClose: () => void;
+    t?: (key: string) => string;
 }) {
     React.useEffect(() => {
         if (!open) return;
@@ -705,7 +712,7 @@ function DeadlineFilterPopover({
             className="absolute right-0 top-[calc(100%+12px)] z-30"
             onPointerDown={(e) => e.stopPropagation()}
         >
-            <DeadlineRangePicker value={value} onChange={onChange} />
+            <DeadlineRangePicker value={value} onChange={onChange} t={t} />
         </motion.div>
     );
 }
@@ -737,7 +744,8 @@ function TaskListDetailLayer({
     showExtraFilter,
     showDeadlineFilter,
     setPage,
-    handleTaskClick
+    handleTaskClick,
+    t
 }: TaskListDetailLayerProps) {
     React.useEffect(() => {
         if (!open) return;
@@ -775,11 +783,11 @@ function TaskListDetailLayer({
                             <div>
                                 <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
                                     <Sparkles className="h-3.5 w-3.5" />
-                                    Danh sách công việc chi tiết
+                                    {t("detailedTitle")}
                                 </div>
 
                                 <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                                    Công việc từ các nhóm
+                                    {t("detailedSubtitle")}
                                 </h2>
                             </div>
 
@@ -800,7 +808,7 @@ function TaskListDetailLayer({
                                         <input
                                             value={searchInput}
                                             onChange={(event) => setSearchInput(event.target.value)}
-                                            placeholder="Tìm kiếm công việc"
+                                            placeholder={t("searchPlaceholder")}
                                             className="h-[72px] w-full rounded-[24px] border-0 bg-transparent pl-14 pr-5 text-[18px] text-slate-900 outline-none placeholder:text-slate-400"
                                         />
                                     </div>
@@ -817,7 +825,7 @@ function TaskListDetailLayer({
                                                 }}
                                                 className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none"
                                             >
-                                                <option value="all">Tất cả</option>
+                                                <option value="all">{t("allGroups")}</option>
                                                 {groups.map((group) => (
                                                     <option key={group.groupId ?? group.groupName} value={group.groupId ?? ""}>
                                                         {group.groupName}
@@ -842,11 +850,11 @@ function TaskListDetailLayer({
                                                 }}
                                                 className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none"
                                             >
-                                                <option value="none">Không sắp xếp</option>
-                                                <option value="deadline">Sắp xếp theo hạn chót</option>
-                                                <option value="priority">Sắp xếp theo độ ưu tiên</option>
-                                                <option value="severity">Sắp xếp theo độ khẩn cấp</option>
-                                                <option value="status">Sắp xếp theo trạng thái</option>
+                                                <option value="none">{t("sortNone")}</option>
+                                                <option value="deadline">{t("sortDeadline")}</option>
+                                                <option value="priority">{t("sortPriority")}</option>
+                                                <option value="severity">{t("sortSeverity")}</option>
+                                                <option value="status">{t("sortStatus")}</option>
                                             </select>
                                             <ChevronsUpDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
                                         </div>
@@ -867,20 +875,20 @@ function TaskListDetailLayer({
                                                             onChange={(event) => setSortFilterValue(event.target.value)}
                                                             className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none"
                                                         >
-                                                            <option value="">Chọn bộ lọc</option>
+                                                            <option value="">{t("selectFilter")}</option>
                                                             {sortBy === "priority" && (
                                                                 <>
-                                                                    <option value="Low">Low</option>
-                                                                    <option value="Medium">Medium</option>
-                                                                    <option value="High">High</option>
+                                                                    <option value={t("priorityLow")}>{t("priorityLow")}</option>
+                                                                    <option value={t("priorityMedium")}>{t("priorityMedium")}</option>
+                                                                    <option value={t("priorityHigh")}>{t("priorityHigh")}</option>
                                                                 </>
                                                             )}
                                                             {sortBy === "severity" && (
                                                                 <>
-                                                                    <option value="Thấp">Thấp</option>
-                                                                    <option value="Bình thường">Bình thường</option>
-                                                                    <option value="Quan trọng">Quan trọng</option>
-                                                                    <option value="Khẩn cấp">Khẩn cấp</option>
+                                                                    <option value={t("severityLow")}>{t("severityLow")}</option>
+                                                                    <option value={t("severityNormal")}>{t("severityNormal")}</option>
+                                                                    <option value={t("severityImportant")}>{t("severityImportant")}</option>
+                                                                    <option value={t("severityCritical")}>{t("severityCritical")}</option>
                                                                 </>
                                                             )}
                                                             {sortBy === "status" &&
@@ -912,7 +920,7 @@ function TaskListDetailLayer({
                                                         className="flex h-[72px] w-full items-center justify-between rounded-[24px] px-7 text-[18px] text-slate-900 transition"
                                                     >
                                                         <span className={cn("truncate", !hasDeadlineFilter && "text-slate-400")}>
-                                                            {hasDeadlineFilter ? deadlineFilterLabel : "Chọn khoảng ngày"}
+                                                            {hasDeadlineFilter ? deadlineFilterLabel : t("selectDateRange")}
                                                         </span>
                                                         <CalendarDays className="h-5 w-5 text-slate-500" />
                                                     </button>
@@ -923,6 +931,7 @@ function TaskListDetailLayer({
                                                     value={deadlineFilter}
                                                     onChange={setDeadlineFilter}
                                                     onClose={() => setOpenDeadlineFilter(false)}
+                                                    t={t}
                                                 />
                                             </motion.div>
                                         )}
@@ -934,14 +943,14 @@ function TaskListDetailLayer({
                                 {sortBy !== "none" && (
                                     <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm">
                                         <SlidersHorizontal className="h-4 w-4 text-sky-600" />
-                                        <span>Sắp xếp: {sortBy}</span>
+                                        <span>{t("sortingBy")} {sortBy}</span>
                                     </div>
                                 )}
 
                                 {showDeadlineFilter && hasDeadlineFilter && (
                                     <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-700 shadow-sm">
                                         <Clock3 className="h-4 w-4" />
-                                        <span>{deadlineFilterLabel}</span>
+                                        <span>{t("filterDeadline")}: {deadlineFilterLabel}</span>
                                         <button
                                             type="button"
                                             onClick={() => setDeadlineFilter({ startDate: "", endDate: "" })}
@@ -958,12 +967,12 @@ function TaskListDetailLayer({
                                     <table className="min-w-full border-collapse">
                                         <thead>
                                             <tr className="border-b border-slate-200/80 bg-[linear-gradient(180deg,#F8FAFC_0%,#F1F5F9_100%)]">
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Công việc</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Nguồn</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Độ khẩn cấp</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Độ ưu tiên</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Trạng thái</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">Thời hạn đến</th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderTask")}</th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderSource")}</th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderSeverity")}</th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderPriority")}</th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderStatus")}</th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderDueDate")}</th>
                                             </tr>
                                         </thead>
 
@@ -981,9 +990,9 @@ function TaskListDetailLayer({
                                                             <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-violet-50 text-violet-600 shadow-sm">
                                                                 <FolderKanban className="h-8 w-8" />
                                                             </div>
-                                                            <p className="mt-4 text-lg font-semibold text-slate-800">Không có công việc nào</p>
+                                                            <p className="mt-4 text-lg font-semibold text-slate-800">{t("noTasks")}</p>
                                                             <p className="mt-1 text-sm text-slate-500">
-                                                                Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để xem thêm kết quả.
+                                                                {t("noTasksHint")}
                                                             </p>
                                                         </div>
                                                     </td>
@@ -1013,7 +1022,7 @@ function TaskListDetailLayer({
                                                         </td>
 
                                                         <td className="px-6 py-6 text-center text-[16px] font-medium text-slate-600">
-                                                            {getSourceLabel(item)}
+                                                            {getSourceLabel(item, t)}
                                                         </td>
 
                                                         <td className="px-6 py-6 text-center">
@@ -1023,7 +1032,7 @@ function TaskListDetailLayer({
                                                                     severityTone(item.taskSeverity)
                                                                 )}
                                                             >
-                                                                {getSeverityLabel(item.taskSeverity)}
+                                                                {getSeverityLabel(item.taskSeverity, t)}
                                                             </span>
                                                         </td>
 
@@ -1034,7 +1043,7 @@ function TaskListDetailLayer({
                                                                     priorityTone(item.taskPriority)
                                                                 )}
                                                             >
-                                                                {getPriorityLabel(item.taskPriority)}
+                                                                {getPriorityLabel(item.taskPriority, t)}
                                                             </span>
                                                         </td>
 
@@ -1063,7 +1072,7 @@ function TaskListDetailLayer({
                                         disabled={page === 1}
                                         className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        <ChevronLeft className="h-5 w-5" /> Previous
+                                        <ChevronLeft className="h-5 w-5" /> {t("previous")}
                                     </button>
 
                                     {paginationItems.map((item, index) => {
@@ -1102,7 +1111,7 @@ function TaskListDetailLayer({
                                         disabled={page === totalPages}
                                         className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        Next <ChevronRight className="h-5 w-5" />
+                                        {t("next")} <ChevronRight className="h-5 w-5" />
                                     </button>
                                 </div>
                             )}
@@ -1116,6 +1125,7 @@ function TaskListDetailLayer({
 
 export default function HomeTaskList() {
     const router = useRouter();
+    const t = useTranslations("HomeTaskList");
     const [data, setData] = React.useState<HomeTaskListResponse | null>(null);
     const [allGroups, setAllGroups] = React.useState<UserGroupDto[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
@@ -1234,10 +1244,10 @@ export default function HomeTaskList() {
         let result = [...sourceFilteredItems];
 
         if (sortBy === "priority" && sortFilterValue) {
-            result = result.filter((item) => getPriorityLabel(item.taskPriority) === sortFilterValue);
+            result = result.filter((item) => getPriorityLabel(item.taskPriority, t) === sortFilterValue);
         }
         if (sortBy === "severity" && sortFilterValue) {
-            result = result.filter((item) => getSeverityLabel(item.taskSeverity) === sortFilterValue);
+            result = result.filter((item) => getSeverityLabel(item.taskSeverity, t) === sortFilterValue);
         }
         if (sortBy === "status" && sortFilterValue) {
             result = result.filter((item) => (item.statusName ?? "") === sortFilterValue);
@@ -1290,7 +1300,7 @@ export default function HomeTaskList() {
             if (!item.groupId) return;
 
             const groupId = item.groupId;
-            const groupName = item.groupName || item.sourceName || "Nhóm";
+            const groupName = item.groupName || item.sourceName || t("groupSource");
 
             const existing = groupMap.get(groupId);
 
@@ -1351,8 +1361,8 @@ export default function HomeTaskList() {
     const showDeadlineFilter = sortBy === "deadline";
 
     const deadlineFilterLabel = [
-        deadlineFilter.startDate && `Từ ${formatFilterDateLabel(deadlineFilter.startDate)}`,
-        deadlineFilter.endDate && `Đến ${formatFilterDateLabel(deadlineFilter.endDate)}`
+        deadlineFilter.startDate && `${t("fromDate")} ${formatFilterDateLabel(deadlineFilter.startDate)}`,
+        deadlineFilter.endDate && `${t("toDate")} ${formatFilterDateLabel(deadlineFilter.endDate)}`
     ]
         .filter(Boolean)
         .join(" • ");
@@ -1384,17 +1394,17 @@ export default function HomeTaskList() {
                                 <div>
                                     <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
                                         <Sparkles className="h-3.5 w-3.5" />
-                                        Danh sách công việc
+                                        {t("badge")}
                                     </div>
 
                                     <h2 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-[32px] font-bold leading-tight tracking-[-0.02em] text-transparent md:text-[40px]">
-                                        Công việc từ các nhóm
+                                        {t("title")}
                                     </h2>
                                 </div>
 
                                 <div className="flex flex-wrap gap-3">
                                     <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
-                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">Tổng công việc</p>
+                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">{t("totalTasks")}</p>
                                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
                                             <FolderKanban className="h-4 w-4 text-violet-600" />
                                             {displayItems.length}
@@ -1402,7 +1412,7 @@ export default function HomeTaskList() {
                                     </div>
 
                                     <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
-                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">Nhóm khả dụng</p>
+                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">{t("availableGroups")}</p>
                                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
                                             <LayoutGrid className="h-4 w-4 text-sky-600" />
                                             {groupsWithTasks.length}
@@ -1434,9 +1444,9 @@ export default function HomeTaskList() {
                                             <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-violet-50 text-violet-600 shadow-sm">
                                                 <FolderKanban className="h-8 w-8" />
                                             </div>
-                                            <p className="mt-4 text-lg font-semibold text-slate-800">Không có nhóm nào</p>
+                                            <p className="mt-4 text-lg font-semibold text-slate-800">{t("noGroups")}</p>
                                             <p className="mt-1 text-sm text-slate-500">
-                                                Chưa có dữ liệu nhóm để hiển thị trong phần xem nhanh.
+                                                {t("noGroupsHint")}
                                             </p>
                                         </div>
                                     </div>
@@ -1453,12 +1463,12 @@ export default function HomeTaskList() {
                                             </p>
 
                                             <p className="mt-3 text-sm font-medium text-slate-500">
-                                                {group.taskCount} công việc
+                                                {group.taskCount} {t("taskCountLabel")}
                                             </p>
 
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                                                    Top nhóm
+                                                    {t("topGroup")}
                                                 </span>
 
                                                 {typeof group.highestSeverity !== "undefined" ? (
@@ -1468,7 +1478,7 @@ export default function HomeTaskList() {
                                                             severityTone(group.highestSeverity)
                                                         )}
                                                     >
-                                                        {getSeverityLabel(group.highestSeverity)}
+                                                        {getSeverityLabel(group.highestSeverity, t)}
                                                     </span>
                                                 ) : null}
 
@@ -1479,7 +1489,7 @@ export default function HomeTaskList() {
                                                             priorityTone(group.highestPriority)
                                                         )}
                                                     >
-                                                        {getPriorityLabel(group.highestPriority)}
+                                                        {getPriorityLabel(group.highestPriority, t)}
                                                     </span>
                                                 ) : null}
                                             </div>
@@ -1493,7 +1503,7 @@ export default function HomeTaskList() {
                                     onClick={handleOpenDetail}
                                     className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4"
                                 >
-                                    Xem chi tiết
+                                    {t("viewDetails")}
                                 </Button>
                             </div>
                         </div>
@@ -1529,6 +1539,7 @@ export default function HomeTaskList() {
                 showDeadlineFilter={showDeadlineFilter}
                 setPage={setPage}
                 handleTaskClick={handleTaskClick}
+                t={t}
             />
         </>
     );

@@ -142,7 +142,7 @@ export default function LandingGroup() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-10 xl:grid-cols-[0.92fr_1.08fr] xl:items-center">
                         <div className="landing-fade-up">
-                            <SectionLabel>Group collaboration</SectionLabel>
+                            <SectionLabel>{t("badge")}</SectionLabel>
 
                             <h1 className="landing-fade-up landing-delay-1 mt-6 max-w-3xl text-5xl font-extrabold leading-[1.05] tracking-tight text-[#261E33] md:text-6xl xl:text-7xl">
                                 {t("hero.title")}
@@ -153,8 +153,7 @@ export default function LandingGroup() {
                             </h1>
 
                             <p className="landing-fade-up landing-delay-2 mt-6 max-w-2xl text-lg leading-8 text-[#6F6B99] md:text-xl">
-                                Xây dựng không gian nhóm rõ ràng, phân công minh bạch, theo dõi tiến độ tập trung và
-                                cộng tác hiệu quả hơn trong cùng một nơi.
+                                {t("hero.description")}
                             </p>
 
                             <div className="landing-pop landing-delay-3 mt-8 flex flex-wrap gap-4">
@@ -202,8 +201,7 @@ export default function LandingGroup() {
                                 {t("howToUse.title")}
                             </h2>
                             <p className="mt-4 max-w-md text-[16px] leading-8 text-[#6F6B99]">
-                                Bắt đầu nhanh với quy trình ngắn gọn, rõ bước, phù hợp cho nhóm học tập, nhóm dự án
-                                và nhóm cộng tác dài hạn.
+                                {t("howToUse.description")}
                             </p>
                         </div>
 

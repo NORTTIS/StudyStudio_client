@@ -4,6 +4,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
+import { useLocale, useTranslations } from "next-intl";
 import "react-day-picker/dist/style.css";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { components } from "@/api/types";
@@ -46,18 +47,24 @@ function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function formatDateDisplay(value?: string) {
+function formatDateDisplay(
+    value: string | undefined,
+    locale: string,
+    i18n: Pick<DatePickerTranslations, "selectDate" | "today" | "tomorrow">
+) {
     const date = parseDateString(value);
-    if (!date) return "Chọn ngày";
+    if (!date) return i18n.selectDate;
 
     const today = startOfDay(new Date());
     const target = startOfDay(date);
     const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
 
-    if (diffDays === 0) return "Hôm nay";
-    if (diffDays === 1) return "Ngày mai";
+    if (diffDays === 0) return i18n.today;
+    if (diffDays === 1) return i18n.tomorrow;
 
-    return new Intl.DateTimeFormat("vi-VN", {
+    const normalizedLocale = locale.includes("-") ? locale : locale === "vi" ? "vi-VN" : "en-US";
+
+    return new Intl.DateTimeFormat(normalizedLocale, {
         weekday: "short",
         month: "short",
         day: "numeric",
@@ -103,36 +110,21 @@ function severityTone(value: TaskSeverity) {
     return "text-sky-600";
 }
 
-function priorityLabel(value: TaskPriority) {
-    if (value === 2) return "Cao";
-    if (value === 1) return "Trung bình";
-    return "Thấp";
+function priorityLabel(value: TaskPriority, t: (key: string) => string) {
+    if (value === 2) return t("priorityHigh");
+    if (value === 1) return t("priorityMedium");
+    return t("priorityLow");
 }
 
-function severityLabel(value: TaskSeverity) {
-    if (value === 3) return "Nghiêm trọng";
-    if (value === 2) return "Cao";
-    if (value === 1) return "Trung bình";
-    return "Thấp";
+function severityLabel(value: TaskSeverity, t: (key: string) => string) {
+    if (value === 3) return t("severityCritical");
+    if (value === 2) return t("severityHigh");
+    if (value === 1) return t("severityMedium");
+    return t("severityLow");
 }
 
 const selectItemClassName =
     "cursor-pointer rounded-xl px-3 py-2 text-sm text-zinc-900 outline-none data-highlighted:bg-zinc-100 hover:bg-zinc-100 focus:bg-zinc-100";
-
-const monthOptions = [
-    { value: "0", label: "Tháng 1" },
-    { value: "1", label: "Tháng 2" },
-    { value: "2", label: "Tháng 3" },
-    { value: "3", label: "Tháng 4" },
-    { value: "4", label: "Tháng 5" },
-    { value: "5", label: "Tháng 6" },
-    { value: "6", label: "Tháng 7" },
-    { value: "7", label: "Tháng 8" },
-    { value: "8", label: "Tháng 9" },
-    { value: "9", label: "Tháng 10" },
-    { value: "10", label: "Tháng 11" },
-    { value: "11", label: "Tháng 12" }
-] as const;
 
 const TASK_TITLE_MAX_LENGTH = 30;
 const TASK_DESCRIPTION_MAX_LENGTH = 200;
@@ -148,9 +140,20 @@ type TrelloDatePickerProps = {
     value: string;
     onChange: (value: string) => void;
     min?: string;
+    locale: string;
+    i18n: DatePickerTranslations;
 };
 
-function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps) {
+type DatePickerTranslations = {
+    selectDate: string;
+    today: string;
+    tomorrow: string;
+    nextWeek: string;
+    noDate: string;
+    months: string[];
+};
+
+function TrelloDatePicker({ label, value, onChange, min, locale, i18n }: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
@@ -316,9 +319,9 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 value={month.getMonth()}
                                 onChange={handleMonthChange}
                                 className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
+                                {i18n.months.map((monthLabel, monthIndex) => (
+                                    <option key={monthLabel} value={String(monthIndex)}>
+                                        {monthLabel}
                                     </option>
                                 ))}
                             </select>
@@ -351,7 +354,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                             </button>
 
                             <div className="font-bold text-[18px] text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                                {i18n.months[month.getMonth()]} {month.getFullYear()}
                             </div>
 
                             <button
@@ -414,21 +417,21 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                             type="button"
                             onClick={() => pickDate(new Date())}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                            Hôm nay
+                            {i18n.today}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                            Ngày mai
+                            {i18n.tomorrow}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                            Tuần sau
+                            {i18n.nextWeek}
                         </button>
 
                         <button
@@ -438,7 +441,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
                                 setOpen(false);
                             }}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                            Không chọn ngày
+                            {i18n.noDate}
                         </button>
                     </div>
                 </div>,
@@ -472,7 +475,7 @@ function TrelloDatePicker({ label, value, onChange, min }: TrelloDatePickerProps
 
                         <span
                             className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
-                            {formatDateDisplay(value)}
+                            {formatDateDisplay(value, locale, i18n)}
                         </span>
                     </div>
                 </button>
@@ -506,6 +509,8 @@ export default function TaskFormModal({
     defaultPriority = 0,
     defaultSeverity = 0
 }: Props) {
+    const t = useTranslations("TaskFormModal");
+    const locale = useLocale();
     const [mounted, setMounted] = React.useState(false);
 
     const [title, setTitle] = React.useState("");
@@ -591,22 +596,44 @@ export default function TaskFormModal({
 
     const selectedAssigneeDisplay = React.useMemo(() => {
         if (selectedAssignee) return selectedAssignee;
-        return { value: "unassigned", label: "Chưa giao", avatarUrl: null };
-    }, [selectedAssignee]);
+        return { value: "unassigned", label: t("unassigned"), avatarUrl: null };
+    }, [selectedAssignee, t]);
+
+    const datePickerI18n = React.useMemo<DatePickerTranslations>(() => ({
+        selectDate: t("datePicker.selectDate"),
+        today: t("datePicker.today"),
+        tomorrow: t("datePicker.tomorrow"),
+        nextWeek: t("datePicker.nextWeek"),
+        noDate: t("datePicker.noDate"),
+        months: [
+            t("datePicker.month1"),
+            t("datePicker.month2"),
+            t("datePicker.month3"),
+            t("datePicker.month4"),
+            t("datePicker.month5"),
+            t("datePicker.month6"),
+            t("datePicker.month7"),
+            t("datePicker.month8"),
+            t("datePicker.month9"),
+            t("datePicker.month10"),
+            t("datePicker.month11"),
+            t("datePicker.month12")
+        ]
+    }), [t]);
 
     const canSubmit = title.trim().length > 0 && !submitting;
 
     const handleSubmit = async () => {
-        const t = title.trim().slice(0, TASK_TITLE_MAX_LENGTH);
-        const d = description.trim().slice(0, TASK_DESCRIPTION_MAX_LENGTH);
+        const trimmedTitle = title.trim().slice(0, TASK_TITLE_MAX_LENGTH);
+        const trimmedDescription = description.trim().slice(0, TASK_DESCRIPTION_MAX_LENGTH);
 
-        if (!t) {
-            setError("Vui lòng nhập tên công việc.");
+        if (!trimmedTitle) {
+            setError(t("errors.taskTitleRequired"));
             return;
         }
 
         if (startDate && dueDate && startDate > dueDate) {
-            setError("Ngày bắt đầu phải nhỏ hơn hoặc bằng hạn hoàn thành.");
+            setError(t("errors.startDateAfterDueDate"));
             return;
         }
 
@@ -614,7 +641,7 @@ export default function TaskFormModal({
         if (assignees) {
             const selectedMember = members.find((m) => m.value === assignees);
             if (selectedMember && isRestrictedMemberRole(selectedMember.role)) {
-                setError("Không thể giao công việc cho những thành viên có role Commenter hoặc Viewer.");
+                setError(t("errors.restrictedAssignee"));
                 return;
             }
         }
@@ -624,8 +651,8 @@ export default function TaskFormModal({
             setError(null);
 
             const payload: CreateTaskSubmitValues = {
-                taskName: t,
-                taskDescription: d || null,
+                taskName: trimmedTitle,
+                taskDescription: trimmedDescription || null,
                 assignees: assignees || null,
                 groupStatusId: statusId || null,
                 taskPriority: priority,
@@ -645,7 +672,7 @@ export default function TaskFormModal({
             await onSubmit(payload);
             onClose();
         } catch (e: any) {
-            setError(e?.message ?? "Tạo công việc thất bại");
+            setError(e?.message ?? t("errors.createTaskFailed"));
         } finally {
             setSubmitting(false);
         }
@@ -671,7 +698,7 @@ export default function TaskFormModal({
                             setTitle(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH));
                             if (error) setError(null);
                         }}
-                        placeholder="Tên công việc"
+                        placeholder={t("titlePlaceholder")}
                         className="w-full max-w-[600px] rounded-xl border border-zinc-200 bg-white px-4 py-3 font-extrabold text-[30px] text-zinc-900 leading-none outline-none"
                     />
 
@@ -683,7 +710,7 @@ export default function TaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="absolute top-1/2 right-7 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50"
-                        aria-label="Đóng">
+                        aria-label={t("closeAriaLabel")}>
                         <X className="h-5 w-5" />
                     </button>
                 </div>
@@ -697,7 +724,7 @@ export default function TaskFormModal({
 
                     <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
                         <div>
-                            <div className="font-semibold text-sm text-zinc-600">Người được giao</div>
+                            <div className="font-semibold text-sm text-zinc-600">{t("assigneeLabel")}</div>
                             <Select
                                 value={assignees ?? "unassigned"}
                                 onValueChange={(v) => setAssignees(v === "unassigned" ? null : v)}>
@@ -730,7 +757,7 @@ export default function TaskFormModal({
                                             <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
                                                 U
                                             </div>
-                                            <span>Chưa giao</span>
+                                            <span>{t("unassigned")}</span>
                                         </div>
                                     </SelectItem>
 
@@ -757,10 +784,10 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="font-semibold text-sm text-zinc-600">Trạng thái</div>
+                            <div className="font-semibold text-sm text-zinc-600">{t("statusLabel")}</div>
                             <Select value={statusId || "no-status"} onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
-                                    <span className="truncate">{selectedStatusName || "Không có trạng thái"}</span>
+                                    <span className="truncate">{selectedStatusName || t("noStatus")}</span>
                                 </SelectTrigger>
 
                                 <SelectContent
@@ -771,7 +798,7 @@ export default function TaskFormModal({
                                     avoidCollisions
                                     className="z-[10010] min-w-54 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="no-status" className={selectItemClassName}>
-                                        Không có trạng thái
+                                        {t("noStatus")}
                                     </SelectItem>
 
                                     {statuses.map((s) => (
@@ -784,14 +811,14 @@ export default function TaskFormModal({
                         </div>
 
                         <div>
-                            <div className="font-semibold text-sm text-zinc-600">Mức ưu tiên</div>
+                            <div className="font-semibold text-sm text-zinc-600">{t("priorityLabel")}</div>
                             <Select
                                 value={String(priority)}
                                 onValueChange={(v) => setPriority(Number(v) as TaskPriority)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", priorityTone(priority))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
-                                        {priorityLabel(priority)}
+                                        {priorityLabel(priority, t)}
                                     </span>
                                 </SelectTrigger>
 
@@ -803,36 +830,44 @@ export default function TaskFormModal({
                                     avoidCollisions
                                     className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="0" className={selectItemClassName}>
-                                        Thấp
+                                        {t("priorityLow")}
                                     </SelectItem>
                                     <SelectItem value="1" className={selectItemClassName}>
-                                        Trung bình
+                                        {t("priorityMedium")}
                                     </SelectItem>
                                     <SelectItem value="2" className={selectItemClassName}>
-                                        Cao
+                                        {t("priorityHigh")}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <TrelloDatePicker label="Ngày bắt đầu" value={startDate} onChange={setStartDate} />
+                        <TrelloDatePicker
+                            label={t("startDateLabel")}
+                            value={startDate}
+                            onChange={setStartDate}
+                            locale={locale}
+                            i18n={datePickerI18n}
+                        />
 
                         <TrelloDatePicker
-                            label="Hạn hoàn thành"
+                            label={t("dueDateLabel")}
                             value={dueDate}
                             onChange={setDueDate}
                             min={startDate || undefined}
+                            locale={locale}
+                            i18n={datePickerI18n}
                         />
 
                         <div>
-                            <div className="font-semibold text-sm text-zinc-600">Mức độ</div>
+                            <div className="font-semibold text-sm text-zinc-600">{t("severityLabel")}</div>
                             <Select
                                 value={String(severity)}
                                 onValueChange={(v) => setSeverity(Number(v) as TaskSeverity)}>
                                 <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm">
                                     <span className={cn("inline-flex items-center gap-2", severityTone(severity))}>
                                         <span className="h-2 w-2 rounded-full bg-current" />
-                                        {severityLabel(severity)}
+                                        {severityLabel(severity, t)}
                                     </span>
                                 </SelectTrigger>
 
@@ -844,23 +879,23 @@ export default function TaskFormModal({
                                     avoidCollisions
                                     className="z-[10010] min-w-42 rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="0" className={selectItemClassName}>
-                                        Thấp
+                                        {t("severityLow")}
                                     </SelectItem>
                                     <SelectItem value="1" className={selectItemClassName}>
-                                        Trung bình
+                                        {t("severityMedium")}
                                     </SelectItem>
                                     <SelectItem value="2" className={selectItemClassName}>
-                                        Cao
+                                        {t("severityHigh")}
                                     </SelectItem>
                                     <SelectItem value="3" className={selectItemClassName}>
-                                        Nghiêm trọng
+                                        {t("severityCritical")}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div>
-                            <div className="font-semibold text-sm text-zinc-600">Giờ ước lượng</div>
+                            <div className="font-semibold text-sm text-zinc-600">{t("estimatedHoursLabel")}</div>
                             <input
                                 type="number"
                                 min="0"
@@ -876,13 +911,13 @@ export default function TaskFormModal({
                                         e.preventDefault();
                                     }
                                 }}
-                                placeholder="Ví dụ: 2.5"
+                                placeholder={t("estimatedHoursPlaceholder")}
                                 className="mt-2 flex h-11 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                         </div>
 
                         <div>
-                            <div className="font-semibold text-sm text-zinc-600">Giờ thực tế</div>
+                            <div className="font-semibold text-sm text-zinc-600">{t("actualHoursLabel")}</div>
                             <input
                                 type="number"
                                 min="0"
@@ -898,19 +933,19 @@ export default function TaskFormModal({
                                         e.preventDefault();
                                     }
                                 }}
-                                placeholder="Ví dụ: 3"
+                                placeholder={t("actualHoursPlaceholder")}
                                 className="mt-2 flex h-11 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                         </div>
                     </div>
 
                     <div className="mt-6">
-                        <div className="font-semibold text-sm text-zinc-600">Mô tả</div>
+                        <div className="font-semibold text-sm text-zinc-600">{t("descriptionLabel")}</div>
                         <textarea
                             value={description}
                             maxLength={TASK_DESCRIPTION_MAX_LENGTH}
                             onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
-                            placeholder="(Không có mô tả)"
+                            placeholder={t("descriptionPlaceholder")}
                             className="mt-2 min-h-30 w-full rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-800 outline-none"
                         />
                         <div className="mt-2 text-right font-medium text-xs text-zinc-500">
@@ -924,7 +959,7 @@ export default function TaskFormModal({
                         type="button"
                         onClick={onClose}
                         className="h-11 rounded-xl border border-zinc-300 bg-white px-8 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
-                        Hủy
+                        {t("cancelButton")}
                     </button>
 
                     <button
@@ -934,7 +969,7 @@ export default function TaskFormModal({
                         }}
                         disabled={!canSubmit}
                         className="h-11 rounded-xl bg-[#f54a00] px-8 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
-                        {submitting ? "Đang tạo..." : "Tạo công việc"}
+                        {submitting ? t("creatingButton") : t("createButton")}
                     </button>
                 </div>
             </div>

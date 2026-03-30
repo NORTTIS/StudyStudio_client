@@ -189,7 +189,7 @@ export default function LandingManagement() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid items-center gap-12 xl:grid-cols-[0.95fr_1.05fr]">
                         <div className="landing-fade-up relative z-10">
-                            <SectionBadge>Management workspace</SectionBadge>
+                            <SectionBadge>{t("badge")}</SectionBadge>
 
                             <h1 className="landing-fade-up landing-delay-1 mt-6 max-w-3xl text-5xl font-extrabold leading-[1.02] tracking-tight text-[#261E33] md:text-6xl xl:text-7xl">
                                 {t("hero.title")}
@@ -200,8 +200,7 @@ export default function LandingManagement() {
                             </h1>
 
                             <p className="landing-fade-up landing-delay-2 mt-6 max-w-2xl text-lg leading-8 text-[#6F6B99] md:text-xl">
-                                Quản lý nhóm, thành viên, phân quyền và toàn bộ tiến độ trong một không gian điều hành
-                                trực quan và mạnh mẽ hơn.
+                                {t("hero.description")}
                             </p>
 
                             <div className="landing-pop landing-delay-3 mt-8 flex flex-wrap items-center gap-4">
@@ -236,8 +235,8 @@ export default function LandingManagement() {
                                 </div>
 
                                 <div className="absolute bottom-6 left-6 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-lg backdrop-blur">
-                                    <p className="text-xs text-[#8B7768]">Executive view</p>
-                                    <p className="mt-1 font-semibold text-[#261E33] text-sm">Everything in one place</p>
+                                    <p className="text-xs text-[#8B7768]">{t("hero.executiveLabel")}</p>
+                                    <p className="mt-1 font-semibold text-[#261E33] text-sm">{t("hero.executiveCaption")}</p>
                                 </div>
                             </div>
                         </div>
@@ -256,8 +255,7 @@ export default function LandingManagement() {
                         </div>
 
                         <p className="max-w-xl text-[#6F6B99] text-[16px] leading-8">
-                            Bắt đầu quản lý nhanh với quy trình rõ ràng: tạo không gian, tổ chức thành viên, phân quyền
-                            và theo dõi hiệu quả trong thời gian thực.
+                            {t("howToUse.description")}
                         </p>
                     </div>
 

@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as echarts from "echarts";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
     CheckCircle2,
     Clock3,
@@ -695,6 +696,7 @@ function GitHubHeatmap({
 }
 
 export default function AnalysisHome() {
+    const t = useTranslations("AnalysisHome");
     const data = mockData;
     const [trendFilter, setTrendFilter] = React.useState<TrendFilter>("week");
 
@@ -1010,7 +1012,7 @@ export default function AnalysisHome() {
                                     </motion.div>
 
                                     <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#EA580C_55%,#C2410C_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[38px]">
-                                        Phân tích hiệu suất cá nhân
+                                        {t("title")}
                                     </h1>
 
                                     <div className="mt-4">
@@ -1024,23 +1026,23 @@ export default function AnalysisHome() {
                     <SectionReveal delay={0.04}>
                         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                             <SummaryCard
-                                title="Total Tasks"
+                                title={t("totalTasks")}
                                 value={data.totalTasks}
-                                note="Tổng số task hiện tại"
+                                note={t("totalTasksHint")}
                                 icon={<Target className="h-5 w-5" />}
                                 tone="accent"
                             />
                             <SummaryCard
-                                title="Completed"
+                                title={t("completed")}
                                 value={data.doneTasks}
-                                note="Task đã hoàn thành"
+                                note={t("completedHint")}
                                 icon={<CheckCircle2 className="h-5 w-5" />}
                                 tone="success"
                             />
                             <SummaryCard
-                                title="In Progress"
+                                title={t("inProgress")}
                                 value={data.inProgressTasks}
-                                note="Task đang thực hiện"
+                                note={t("inProgressHint")}
                                 icon={<Clock3 className="h-5 w-5" />}
                                 tone="warning"
                             />
@@ -1052,7 +1054,7 @@ export default function AnalysisHome() {
                             <div className="xl:col-span-4 rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                                 <div className="mb-5">
                                     <h2 className="text-lg font-semibold text-slate-900">
-                                        1. Task Status Distribution
+                                        {t("taskStatusDistribution")}
                                     </h2>
                                 </div>
 
@@ -1090,16 +1092,16 @@ export default function AnalysisHome() {
                                         <span className="h-5 w-5 shrink-0" aria-hidden="true" />
                                         <div>
                                             <h2 className="text-lg font-semibold text-slate-900">
-                                                2. Task Progress Over Time
+                                                {t("taskProgressOverTime")}
                                             </h2>
                                         </div>
                                     </div>
 
                                     <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
                                         {[
-                                            { key: "week", label: "Tuần" },
-                                            { key: "month", label: "Tháng" },
-                                            { key: "year", label: "Năm" }
+                                            { key: "week", label: t("week") },
+                                            { key: "month", label: t("month") },
+                                            { key: "year", label: t("year") }
                                         ].map((item) => (
                                             <button
                                                 key={item.key}
@@ -1128,7 +1130,7 @@ export default function AnalysisHome() {
                             <div className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                                 <div className="mb-5">
                                     <h2 className="text-lg font-semibold text-slate-900">
-                                        3. Workload by Group
+                                        {t("workloadByGroup")}
                                     </h2>
                                 </div>
                                 <EChart option={workloadBarOption} height={430} />
@@ -1137,7 +1139,7 @@ export default function AnalysisHome() {
                             <div className="rounded-[30px] border border-white/70 bg-white/85 p-8 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                                 <div className="mb-5">
                                     <h2 className="text-lg font-semibold text-slate-900">
-                                        4. Contribution Activity {selectedYear}
+                                        {t("contributionActivity")} {selectedYear}
                                     </h2>
                                 </div>
 

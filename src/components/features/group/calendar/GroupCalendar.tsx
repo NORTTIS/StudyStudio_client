@@ -1,6 +1,8 @@
 "use client";
 
 import dayGridPlugin from "@fullcalendar/daygrid";
+import enLocale from "@fullcalendar/core/locales/en-gb";
+import viLocale from "@fullcalendar/core/locales/vi";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -81,7 +83,7 @@ function getStartOfMonth(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-function getRangeLabel(date: Date, mode: CalendarViewMode, locale: string) {
+function getRangeLabel(date: Date, mode: CalendarViewMode, locale: string, monthPrefix: string) {
     if (mode === "week") {
         const start = getStartOfWeek(date);
         const end = getEndOfWeek(date);
@@ -90,9 +92,8 @@ function getRangeLabel(date: Date, mode: CalendarViewMode, locale: string) {
 
     if (mode === "month") {
         const start = getStartOfMonth(date);
-        return locale === "vi"
-            ? `Tháng ${pad2(start.getMonth() + 1)}/${start.getFullYear()}`
-            : `Month ${pad2(start.getMonth() + 1)}/${start.getFullYear()}`;
+        const safePrefix = String(monthPrefix ?? "").trim() || (locale === "vi" ? "Tháng" : "Month");
+        return `${safePrefix} ${pad2(start.getMonth() + 1)}/${start.getFullYear()}`;
     }
 
     return formatDate(date);
@@ -149,9 +150,9 @@ const okByJsonStatus = (obj: unknown) => {
     return s === "" || s === "success" || s === "ok" || s === "true";
 };
 
-const extractApiMessage = (text: string, json: unknown) => {
+const extractApiMessage = (text: string, json: unknown, fallback: string) => {
     const msg = String(asObject(json)?.message ?? "").trim();
-    return msg || text.trim() || "An error occurred";
+    return msg || text.trim() || fallback;
 };
 
 function severityColorOf(v?: TaskSeverity): string {
@@ -161,10 +162,10 @@ function severityColorOf(v?: TaskSeverity): string {
     return "#3b82f6";
 }
 
-async function apiGetGroupTasks(args: { groupId: string }) {
+async function apiGetGroupTasks(args: { groupId: string; fallbackMessage: string; missingApiBaseMessage: string }) {
     const base = getApiBase();
     const token = getAccessTokenOrNull();
-    if (!base) throw new Error("Missing NEXT_PUBLIC_API_BASE_URL.");
+    if (!base) throw new Error(args.missingApiBaseMessage);
 
     const query = new URLSearchParams();
     query.set("page", "1");
@@ -187,7 +188,7 @@ async function apiGetGroupTasks(args: { groupId: string }) {
     const { json } = parseMaybeJson(raw);
 
     if (!res.ok || (json && !okByJsonStatus(json))) {
-        throw new Error(extractApiMessage(raw, json));
+        throw new Error(extractApiMessage(raw, json, args.fallbackMessage));
     }
 
     return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
@@ -201,7 +202,8 @@ function CalendarToolbar({
     onNext,
     assigneeOptions,
     selectedAssigneeId,
-    onAssigneeChange
+    onAssigneeChange,
+    t
 }: {
     mode: CalendarViewMode;
     onModeChange: (mode: CalendarViewMode) => void;
@@ -211,11 +213,12 @@ function CalendarToolbar({
     assigneeOptions: AssigneeOption[];
     selectedAssigneeId: string | null;
     onAssigneeChange: (assigneeId: string | null) => void;
+    t: (key: string) => string;
 }) {
     const tabs: Array<{ key: CalendarViewMode; label: string }> = [
-        { key: "month", label: "Tháng" },
-        { key: "week", label: "Tuần" },
-        { key: "day", label: "Ngày" }
+        { key: "month", label: t("viewMonth") },
+        { key: "week", label: t("viewWeek") },
+        { key: "day", label: t("viewDay") }
     ];
 
     return (
@@ -269,7 +272,7 @@ function CalendarToolbar({
                 onChange={(e) => onAssigneeChange(e.target.value || null)}
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-                <option value="">Tất cả công việc</option>
+                <option value="">{t("allTasks")}</option>
                 {assigneeOptions.map((option) => (
                     <option key={option.id} value={option.id}>
                         {option.name}
@@ -282,7 +285,7 @@ function CalendarToolbar({
 
 export default function GroupCalendar() {
     const locale = useLocale();
-    const t = useTranslations("GroupTaskListPage");
+    const t = useTranslations("GroupCalendar");
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
@@ -331,7 +334,11 @@ export default function GroupCalendar() {
             setLoadError(null);
 
             try {
-                const res = await apiGetGroupTasks({ groupId });
+                const res = await apiGetGroupTasks({
+                    groupId,
+                    fallbackMessage: t("cannotLoad"),
+                    missingApiBaseMessage: t("missingApiBase")
+                });
                 const data = res?.data;
                 const tasks = data?.items ?? [];
 
@@ -342,7 +349,7 @@ export default function GroupCalendar() {
                             if (assignee.id && !assigneeMap.has(assignee.id)) {
                                 const firstName = assignee.firstName ?? "";
                                 const lastName = assignee.lastName ?? "";
-                                const name = `${firstName} ${lastName}`.trim() || "Unknown";
+                                const name = `${firstName} ${lastName}`.trim() || t("unknown");
                                 assigneeMap.set(assignee.id, { id: assignee.id, name });
                             }
                         });
@@ -410,8 +417,8 @@ export default function GroupCalendar() {
     }, [viewMode]);
 
     const rangeLabel = useMemo(() => {
-        return getRangeLabel(currentDate, viewMode, locale);
-    }, [currentDate, viewMode, locale]);
+        return getRangeLabel(currentDate, viewMode, locale, t("monthPrefix"));
+    }, [currentDate, viewMode, locale, t]);
 
     const syncCalendarState = () => {
         const api = calendarRef.current?.getApi();
@@ -448,6 +455,8 @@ export default function GroupCalendar() {
     const options = useMemo(
         () => ({
             plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+            locale: locale === "vi" ? "vi" : "en-gb",
+            locales: [viLocale, enLocale],
             initialView: calendarViewName,
             height: "auto",
             showNonCurrentDates: false,
@@ -478,9 +487,9 @@ export default function GroupCalendar() {
                     visible: true,
                     x: info.jsEvent.clientX,
                     y: info.jsEvent.clientY,
-                    title: info.event.title || "Không có tên task",
-                    assignees: assigneeNames || "Chưa có người được giao",
-                    status: info.event.extendedProps?.status || "Không có trạng thái"
+                    title: info.event.title || t("untitledTask"),
+                    assignees: assigneeNames || t("unassigned"),
+                    status: info.event.extendedProps?.status || t("noStatus")
                 });
             },
             eventMouseLeave: () => {
@@ -497,7 +506,7 @@ export default function GroupCalendar() {
                 syncCalendarState();
             }
         }),
-        [calendarViewName, events]
+        [calendarViewName, events, locale, t]
     );
 
     return (
@@ -540,6 +549,7 @@ export default function GroupCalendar() {
                                         assigneeOptions={assigneeOptions}
                                         selectedAssigneeId={selectedAssigneeId}
                                         onAssigneeChange={setSelectedAssigneeId}
+                                        t={t}
                                     />
 
                                     <div className="overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/80 p-2 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
@@ -568,11 +578,11 @@ export default function GroupCalendar() {
 
                     <div className="mt-2 space-y-1.5 text-xs leading-5 text-slate-200">
                         <div>
-                            <span className="font-medium text-slate-400">Người được giao:</span>{" "}
+                            <span className="font-medium text-slate-400">{t("assigneeLabel")}:</span>{" "}
                             <span>{tooltip.assignees}</span>
                         </div>
                         <div>
-                            <span className="font-medium text-slate-400">Trạng thái:</span>{" "}
+                            <span className="font-medium text-slate-400">{t("statusLabel")}:</span>{" "}
                             <span>{tooltip.status}</span>
                         </div>
                     </div>

@@ -14,6 +14,7 @@ import {
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useSWR from "swr";
+import { useTranslations } from "next-intl";
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
@@ -48,6 +49,8 @@ type OverviewCardProps = {
     description: string;
     tone?: "neutral" | "danger" | "success";
     index?: number;
+    subtitleLabel?: string;
+    quantityLabel?: string;
 };
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -262,7 +265,7 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
     );
 }
 
-function OverviewCard({ title, value, total, description, tone = "neutral", index = 0 }: OverviewCardProps) {
+function OverviewCard({ title, value, total, description, tone = "neutral", index = 0, subtitleLabel = "Current Overview", quantityLabel = "Quantity" }: OverviewCardProps) {
     const percent = total > 0 ? Math.round((value / total) * 100) : 0;
 
     const styles = {
@@ -318,7 +321,7 @@ function OverviewCard({ title, value, total, description, tone = "neutral", inde
 
                     <div>
                         <h3 className="font-semibold text-slate-900 text-sm">{title}</h3>
-                        <p className="text-slate-400 text-xs">Tổng quan hiện tại</p>
+                        <p className="text-slate-400 text-xs">{subtitleLabel}</p>
                     </div>
                 </div>
 
@@ -329,7 +332,7 @@ function OverviewCard({ title, value, total, description, tone = "neutral", inde
                     </div>
 
                     <div className="rounded-2xl border border-white/70 bg-white/70 px-3 py-2 text-right shadow-sm backdrop-blur">
-                        <p className="text-[11px] uppercase tracking-wide text-slate-400">số lượng</p>
+                        <p className="text-[11px] uppercase tracking-wide text-slate-400">{quantityLabel}</p>
                         <p className="mt-1 font-semibold text-slate-700 text-sm">
                             {value}/{total}
                         </p>
@@ -435,6 +438,7 @@ type DetailLayerProps = {
     completedDelta?: number;
     joinedGroupDelta?: number;
     totalTasks: number;
+    t: (key: string) => string;
 };
 
 function DetailLayer({
@@ -450,7 +454,8 @@ function DetailLayer({
     overdueDelta,
     completedDelta,
     joinedGroupDelta,
-    totalTasks
+    totalTasks,
+    t
 }: DetailLayerProps) {
     React.useEffect(() => {
         if (!open) return;
@@ -489,11 +494,11 @@ function DetailLayer({
                             <div>
                                 <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
                                     <Sparkles className="h-3.5 w-3.5" />
-                                    Tổng quan chi tiết
+                                    {t("detailedBadge")}
                                 </div>
 
                                 <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                                    Chi tiết công việc
+                                    {t("detailsTitle")}
                                 </h2>
                             </div>
 
@@ -533,8 +538,8 @@ function DetailLayer({
                                             <AlertTriangle className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <p className="font-semibold">Không tải được dữ liệu tổng quan.</p>
-                                            <p className="mt-1 text-red-400">Hãy kiểm tra kết nối hoặc thử tải lại sau.</p>
+                                            <p className="font-semibold">{t("loadingError")}</p>
+                                            <p className="mt-1 text-red-400">{t("loadingErrorHint")}</p>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -542,41 +547,41 @@ function DetailLayer({
                                 <div className="space-y-5">
                                     <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                                         <StatCard
-                                            label="Công việc còn lại"
+                                            label={t("remainingTasksLabel")}
                                             value={remainingTaskCount}
                                             delta={remainingDelta}
                                             icon={<Clock3 className="h-5 w-5" />}
-                                            note="Đang chờ xử lý"
+                                            note={t("remainingTasksNote")}
                                             tone="neutral"
                                             index={0}
                                         />
 
                                         <StatCard
-                                            label="Công việc quá hạn"
+                                            label={t("overdueTasksLabel")}
                                             value={overdueTaskCount}
                                             delta={overdueDelta}
                                             icon={<Flame className="h-5 w-5" />}
-                                            note="Cần ưu tiên ngay"
+                                            note={t("overdueTasksNote")}
                                             tone="danger"
                                             index={1}
                                         />
 
                                         <StatCard
-                                            label="Đã hoàn thành"
+                                            label={t("completedTasksLabel")}
                                             value={completedTaskCount}
                                             delta={completedDelta}
                                             icon={<CheckCircle2 className="h-5 w-5" />}
-                                            note="Đã xử lý xong"
+                                            note={t("completedTasksNote")}
                                             tone="success"
                                             index={2}
                                         />
 
                                         <StatCard
-                                            label="Số nhóm tham gia"
+                                            label={t("joinedGroupsLabel")}
                                             value={totalJoinedGroupCount}
                                             delta={joinedGroupDelta}
                                             icon={<Layers3 className="h-5 w-5" />}
-                                            note="Nhóm đang hoạt động"
+                                            note={t("joinedGroupsNote")}
                                             tone="violet"
                                             index={3}
                                         />
@@ -584,30 +589,36 @@ function DetailLayer({
 
                                     <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                         <OverviewCard
-                                            title="Hoàn thành"
+                                            title={t("completedCardTitle")}
                                             value={completedTaskCount}
                                             total={totalTasks}
-                                            description={`${completedTaskCount} trên ${totalTasks} công việc đã hoàn tất`}
+                                            description={`${completedTaskCount} ${t("completedDescriptionFallback").toLowerCase()}`}
                                             tone="success"
                                             index={0}
+                                            subtitleLabel={t("currentOverview")}
+                                            quantityLabel={t("quantity")}
                                         />
 
                                         <OverviewCard
-                                            title="Còn lại"
+                                            title={t("remainingCardTitle")}
                                             value={remainingTaskCount}
                                             total={totalTasks}
-                                            description={`${remainingTaskCount} công việc vẫn đang chờ xử lý`}
+                                            description={`${remainingTaskCount} ${t("remainingDescriptionFallback").toLowerCase()}`}
                                             tone="neutral"
                                             index={1}
+                                            subtitleLabel={t("currentOverview")}
+                                            quantityLabel={t("quantity")}
                                         />
 
                                         <OverviewCard
-                                            title="Quá hạn"
+                                            title={t("overdueCardTitle")}
                                             value={overdueTaskCount}
                                             total={totalTasks}
-                                            description={`${overdueTaskCount} công việc cần được ưu tiên`}
+                                            description={`${overdueTaskCount} ${t("overdueDescriptionFallback").toLowerCase()}`}
                                             tone="danger"
                                             index={2}
+                                            subtitleLabel={t("currentOverview")}
+                                            quantityLabel={t("quantity")}
                                         />
                                     </section>
                                 </div>
@@ -621,6 +632,7 @@ function DetailLayer({
 }
 
 export default function HomeSummary() {
+    const t = useTranslations("HomeSummary");
     const [cacheKey, setCacheKey] = React.useState(0);
     const [openDetail, setOpenDetail] = React.useState(false);
 
@@ -706,11 +718,11 @@ export default function HomeSummary() {
                                             className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm"
                                         >
                                             <Sparkles className="h-3.5 w-3.5" />
-                                            Dashboard tổng quan
+                                            {t("badge")}
                                         </motion.div>
 
                                         <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[38px]">
-                                            Tổng quan công việc
+                                            {t("title")}
                                         </h1>
 
                                         <div className="mt-4">
@@ -724,7 +736,7 @@ export default function HomeSummary() {
                                             className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur hover:bg-white"
                                         >
                                             <CalendarDays className="mr-2 h-4 w-4" />
-                                            Lịch
+                                            {t("calendar")}
                                         </Button>
                                     </div>
                                 </div>
@@ -750,8 +762,8 @@ export default function HomeSummary() {
                                                 <AlertTriangle className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <p className="font-semibold">Không tải được dữ liệu tổng quan.</p>
-                                                <p className="mt-1 text-red-400">Hãy kiểm tra kết nối hoặc thử tải lại sau.</p>
+                                                <p className="font-semibold">{t("loadingError")}</p>
+                                                <p className="mt-1 text-red-400">{t("loadingErrorHint")}</p>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -759,34 +771,34 @@ export default function HomeSummary() {
                                     <div className="space-y-5">
                                         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                             <StatCard
-                                                label="Công việc còn lại"
+                                                label={t("remainingTasksLabel")}
                                                 value={remainingTaskCount}
                                                 delta={remainingDelta?.value}
                                                 icon={<Clock3 className="h-5 w-5" />}
-                                                note="Đang chờ xử lý"
+                                                note={t("remainingTasksNote")}
                                                 tone="neutral"
                                                 index={0}
                                                 onClick={() => setOpenDetail(true)}
                                             />
 
                                             <StatCard
-                                                label="Công việc quá hạn"
+                                                label={t("overdueTasksLabel")}
                                                 value={overdueTaskCount}
                                                 delta={overdueDelta?.value}
                                                 icon={<Flame className="h-5 w-5" />}
                                                 tone="danger"
-                                                note="Cần ưu tiên ngay"
+                                                note={t("overdueTasksNote")}
                                                 index={1}
                                                 onClick={() => setOpenDetail(true)}
                                             />
 
                                             <StatCard
-                                                label="Đã hoàn thành"
+                                                label={t("completedTasksLabel")}
                                                 value={completedTaskCount}
                                                 delta={completedDelta?.value}
                                                 icon={<CheckCircle2 className="h-5 w-5" />}
                                                 tone="success"
-                                                note="Đã xử lý xong"
+                                                note={t("completedTasksNote")}
                                                 index={2}
                                                 onClick={() => setOpenDetail(true)}
                                             />
@@ -797,7 +809,7 @@ export default function HomeSummary() {
                                                 onClick={() => setOpenDetail(true)}
                                                 className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4"
                                             >
-                                                Xem chi tiết
+                                                {t("viewDetails")}
                                             </Button>
                                         </div>
                                     </div>
@@ -822,6 +834,7 @@ export default function HomeSummary() {
                 completedDelta={completedDelta?.value}
                 joinedGroupDelta={joinedGroupDelta?.value}
                 totalTasks={totalTasks}
+                t={t}
             />
         </>
     );

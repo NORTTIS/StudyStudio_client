@@ -427,7 +427,7 @@ export default function GroupAiQaPage() {
         <div className="w-full">
             <Container className="px-6">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="font-semibold text-[#261E33] text-xl">AI Q&A</h2>
+                    <h2 className="font-semibold text-[#261E33] text-xl">{t("title")}</h2>
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                         <div className="rounded-full border border-[#E8E8E8] bg-[#FAFAFA] px-4 py-1.5 text-[#6F6B99]">
                             {t("usedToday")}:{" "}
@@ -551,7 +551,7 @@ export default function GroupAiQaPage() {
                     type="button"
                     onClick={() => scrollToBottom("smooth")}
                     className="fixed right-8 bottom-8 z-20 h-11 w-11 rounded-full bg-[#261E33] p-0 text-white shadow-lg hover:bg-[#1f1830]"
-                    aria-label="Scroll to bottom">
+                    aria-label={t("scrollToBottom")}>
                     <ChevronDown className="h-5 w-5" />
                 </Button>
             )}

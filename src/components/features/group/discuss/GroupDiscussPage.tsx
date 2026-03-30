@@ -11,6 +11,7 @@ import {
     Trash2
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
@@ -97,6 +98,8 @@ type PopupPosition = {
     width: number;
 };
 
+type DiscussTranslate = (key: string, values?: Record<string, string | number>) => string;
+
 const MAX_CHARS = 500;
 
 const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
@@ -113,9 +116,9 @@ function initialsOf(name: string) {
     return (a + b).toUpperCase();
 }
 
-function safeInitials(name?: string) {
+function safeInitials(name: string | undefined, meLabel: string) {
     const n = String(name || "").trim();
-    if (!n || n === "Bạn") return "B";
+    if (!n || n === meLabel) return "B";
     return initialsOf(n);
 }
 
@@ -233,15 +236,15 @@ function expandMentionAll(
     return payloadText.replace(/@__all__\b/g, mentions).replace(/\s{2,}/g, " ").trim();
 }
 
-function timeAgoText(date: Date) {
+function timeAgoText(date: Date, t: DiscussTranslate) {
     const diff = Math.max(0, Date.now() - date.getTime());
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "Vừa xong";
-    if (mins < 60) return `${mins} phút trước`;
+    if (mins < 1) return t("justNow");
+    if (mins < 60) return t("minutesAgo", { count: mins });
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs} giờ trước`;
+    if (hrs < 24) return t("hoursAgo", { count: hrs });
     const days = Math.floor(hrs / 24);
-    return `${days} ngày trước`;
+    return t("daysAgo", { count: days });
 }
 
 function normalizeBaseUrl(raw: string) {
@@ -255,9 +258,9 @@ function buildHubUrl() {
     return base ? `${base}/hubs/group-discuss` : "";
 }
 
-function dtoToUserLite(userId?: string, user?: HubUserDto | null): UserLite {
+function dtoToUserLite(t: DiscussTranslate, userId?: string, user?: HubUserDto | null): UserLite {
     const name =
-        [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || "Ẩn danh";
+        [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || t("anonymous");
     return {
         id: user?.id || userId || "unknown-user",
         name,
@@ -266,31 +269,31 @@ function dtoToUserLite(userId?: string, user?: HubUserDto | null): UserLite {
     };
 }
 
-function dtoToReplyItem(dto: GroupMessageDto): ReplyItem | null {
+function dtoToReplyItem(dto: GroupMessageDto, t: DiscussTranslate): ReplyItem | null {
     if (!dto.messageId) return null;
     if (!dto.content) return null;
     if (!dto.createdAt) return null;
 
     return {
         id: dto.messageId,
-        author: dtoToUserLite(dto.userId, dto.user),
+        author: dtoToUserLite(t, dto.userId, dto.user),
         content: dto.content,
-        createdAtText: timeAgoText(new Date(dto.createdAt))
+        createdAtText: timeAgoText(new Date(dto.createdAt), t)
     };
 }
 
-function dtoToPostItem(dto: GroupMessageDto): PostItem | null {
+function dtoToPostItem(dto: GroupMessageDto, t: DiscussTranslate): PostItem | null {
     if (!dto.messageId) return null;
     if (!dto.content) return null;
     if (!dto.createdAt) return null;
 
     return {
         id: dto.messageId,
-        author: dtoToUserLite(dto.userId, dto.user),
+        author: dtoToUserLite(t, dto.userId, dto.user),
         content: dto.content,
-        createdAtText: timeAgoText(new Date(dto.createdAt)),
+        createdAtText: timeAgoText(new Date(dto.createdAt), t),
         replies: (dto.replies || [])
-            .map(dtoToReplyItem)
+            .map((reply) => dtoToReplyItem(reply, t))
             .filter((reply): reply is ReplyItem => reply !== null)
     };
 }
@@ -310,13 +313,13 @@ function mergeReply(post: PostItem, nextReply: ReplyItem) {
     return { ...post, replies: nextReplies };
 }
 
-function buildPostsFromMessages(messages?: GroupMessageDto[] | null) {
+function buildPostsFromMessages(messages: GroupMessageDto[] | null | undefined, t: DiscussTranslate) {
     const source = messages || [];
     const postMap = new Map<string, PostItem>();
 
     for (const message of source) {
         if (message.parentMessageId) continue;
-        const post = dtoToPostItem(message);
+        const post = dtoToPostItem(message, t);
         if (!post) continue;
         postMap.set(post.id, post);
     }
@@ -326,7 +329,7 @@ function buildPostsFromMessages(messages?: GroupMessageDto[] | null) {
         const parent = postMap.get(message.parentMessageId);
         if (!parent) continue;
 
-        const reply = dtoToReplyItem(message);
+        const reply = dtoToReplyItem(message, t);
         if (!reply) continue;
 
         postMap.set(parent.id, mergeReply(parent, reply));
@@ -369,15 +372,16 @@ function TextCounter({
     text: string;
     maxChars?: number;
 }) {
+    const t = useTranslations("GroupDiscussPage");
     const chars = (text || "").length;
     const words = countWords(text || "");
     const over = chars > maxChars;
 
     return (
         <div className="mt-2 flex items-center justify-end gap-2 text-xs">
-            <span className="text-[#6F6B99]">{words} từ</span>
+            <span className="text-[#6F6B99]">{t("wordsUnit", { count: words })}</span>
             <span className={twMerge("font-medium", over ? "text-red-600" : "text-[#6F6B99]")}>
-                {chars}/{maxChars} ký tự
+                {t("charsUnit", { count: chars, max: maxChars })}
             </span>
         </div>
     );
@@ -392,6 +396,7 @@ function RichTextWithMentions({
     membersById: Record<string, string>;
     authorId?: string;
 }) {
+    const t = useTranslations("GroupDiscussPage");
     const displayText = React.useMemo(
         () => compressAllMentionsForDisplay(text, membersById, authorId),
         [text, membersById, authorId]
@@ -413,7 +418,7 @@ function RichTextWithMentions({
         if (id === "__all__") {
             parts.push(
                 <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
-                    @mọi người
+                    @{t("mentionAllShort")}
                 </span>
             );
         } else {
@@ -440,8 +445,8 @@ function isWordChar(ch: string) {
     return /[\p{L}\p{N}._-]/u.test(ch);
 }
 
-function renderAllMentions(segment: string) {
-    const re = /@(all|mọi người)\b/g;
+function renderAllMentions(segment: string, mentionAllShort: string) {
+    const re = new RegExp(`@(?:all|mọi người|${escapeRegExp(mentionAllShort)})(?=\\s|$)`, "gi");
     const nodes: React.ReactNode[] = [];
     let last = 0;
 
@@ -508,6 +513,7 @@ const MentionTextarea = React.forwardRef<
     },
     ref
 ) {
+    const t = useTranslations("GroupDiscussPage");
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
     const popupRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -596,11 +602,12 @@ const MentionTextarea = React.forwardRef<
 
     const filtered = React.useMemo(() => {
         const q = query.trim().toLowerCase();
+        const mentionAllShort = t("mentionAllShort");
 
         const allOption: MentionUser = {
             id: "__all__",
-            name: "mọi người",
-            subtitle: "Nhắc đến mọi người trong cuộc trò chuyện này",
+            name: mentionAllShort,
+            subtitle: t("mentionAllSubtitle"),
             isAll: true
         };
 
@@ -615,7 +622,7 @@ const MentionTextarea = React.forwardRef<
                 return haystack.includes(q);
             })
             .slice(0, 8);
-    }, [members, meId, query]);
+    }, [members, meId, query, t]);
 
     const detectFromText = React.useCallback(
         (text: string, caret: number) => {
@@ -657,7 +664,7 @@ const MentionTextarea = React.forwardRef<
         const before = value.slice(0, anchor.start);
         const after = value.slice(anchor.end);
 
-        const visibleName = user.isAll ? "mọi người" : user.name;
+        const visibleName = user.isAll ? t("mentionAllShort") : user.name;
         const tokenVisible = `@${visibleName}`;
         const tokenInsert = `${tokenVisible} `;
         const next = before + tokenInsert + after;
@@ -773,11 +780,11 @@ const MentionTextarea = React.forwardRef<
             text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
         }
 
-        text = text.replace(/@mọi người\b/g, "@__all__");
+        text = text.replace(new RegExp(`@${escapeRegExp(t("mentionAllShort"))}\\b`, "g"), "@__all__");
         text = text.replace(/@all\b/g, "@__all__");
 
         return text;
-    }, [value]);
+    }, [t, value]);
 
     React.useImperativeHandle(ref, () => ({
         getPayloadText,
@@ -800,7 +807,7 @@ const MentionTextarea = React.forwardRef<
         for (const m of ms) {
             if (m.start > last) {
                 const seg = text.slice(last, m.start);
-                const segNodes = renderAllMentions(seg);
+                const segNodes = renderAllMentions(seg, t("mentionAllShort"));
                 if (Array.isArray(segNodes)) nodes.push(...segNodes);
                 else nodes.push(segNodes);
             }
@@ -815,13 +822,13 @@ const MentionTextarea = React.forwardRef<
         }
 
         if (last < text.length) {
-            const tail = renderAllMentions(text.slice(last));
+            const tail = renderAllMentions(text.slice(last), t("mentionAllShort"));
             if (Array.isArray(tail)) nodes.push(...tail);
             else nodes.push(tail);
         }
 
         return nodes.length ? nodes : text;
-    }, [value]);
+    }, [t, value]);
 
     const popup =
         mounted && open && !disabled && popupPosition
@@ -844,9 +851,9 @@ const MentionTextarea = React.forwardRef<
                         <div className="max-h-80 overflow-y-auto py-2">
                             {filtered.map((u, idx) => {
                                 const isActive = idx === activeIndex;
-                                const displayName = u.isAll ? "mọi người" : u.name;
+                                const displayName = u.isAll ? t("mentionAllShort") : u.name;
                                 const subtitle =
-                                    u.subtitle || (u.isAll ? "Nhắc đến mọi người trong cuộc trò chuyện này" : "");
+                                    u.subtitle || (u.isAll ? t("mentionAllSubtitle") : "");
 
                                 return (
                                     <button
@@ -899,7 +906,7 @@ const MentionTextarea = React.forwardRef<
                             })}
                         </div>
                     ) : (
-                        <div className="px-4 py-3 text-sm text-[#6F6B99]">Không có thành viên để mention.</div>
+                        <div className="px-4 py-3 text-sm text-[#6F6B99]">{t("noMembersToMention")}</div>
                     )}
                 </div>,
                 document.body
@@ -958,6 +965,7 @@ function ReplyComposer({
     members: MentionUser[];
     meId: string;
 }) {
+    const t = useTranslations("GroupDiscussPage");
     const [text, setText] = React.useState("");
     const mentionRef = React.useRef<MentionTextareaHandle | null>(null);
 
@@ -969,7 +977,7 @@ function ReplyComposer({
                 onChange={setText}
                 members={members}
                 meId={meId}
-                placeholder="Viết phản hồi... (gõ @ để mention)"
+                placeholder={t("writeReplyPlaceholder")}
                 maxChars={MAX_CHARS}
             />
 
@@ -977,7 +985,7 @@ function ReplyComposer({
 
             <div className="mt-3 flex items-center justify-end gap-2">
                 <Button variant="outline" onClick={onCancel} className="rounded-xl">
-                    Hủy
+                    {t("cancel")}
                 </Button>
                 <Button
                     onClick={() => {
@@ -991,7 +999,7 @@ function ReplyComposer({
                     className="rounded-xl bg-[#FF5722] text-white hover:bg-[#e24d1e]"
                 >
                     <SendHorizontal className="mr-2 h-4 w-4" />
-                    Trả lời
+                    {t("reply")}
                 </Button>
             </div>
         </div>
@@ -1011,6 +1019,7 @@ function ReplyItemView({
     onDelete: (id: string) => void;
     rolesById: Record<string, GroupRole>;
 }) {
+    const t = useTranslations("GroupDiscussPage");
     return (
         <div className="flex gap-3">
             <Avatar initials={r.author.initials} avatarUrl={r.author.avatarUrl} />
@@ -1046,7 +1055,7 @@ function ReplyItemView({
                                 <button
                                     type="button"
                                     className="rounded-lg p-2 text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                    aria-label="Thêm"
+                                    aria-label={t("more")}
                                 >
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
@@ -1066,7 +1075,7 @@ function ReplyItemView({
                                     onClick={() => onDelete(r.id)}
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Xóa
+                                    {t("delete")}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -1102,6 +1111,7 @@ function PostCard({
     canComment: boolean;
     rolesById: Record<string, GroupRole>;
 }) {
+    const t = useTranslations("GroupDiscussPage");
     const [replyOpen, setReplyOpen] = React.useState(false);
     const [repliesOpen, setRepliesOpen] = React.useState(true);
 
@@ -1153,7 +1163,7 @@ function PostCard({
                                 <button
                                     type="button"
                                     className="rounded-lg p-2 text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                    aria-label="Thêm"
+                                    aria-label={t("more")}
                                 >
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
@@ -1174,11 +1184,11 @@ function PostCard({
                                         onClick={() => onDelete(post.id)}
                                     >
                                         <Trash2 className="mr-2 h-4 w-4" />
-                                        Xóa
+                                        {t("delete")}
                                     </DropdownMenuItem>
                                 ) : (
                                     <DropdownMenuItem disabled className="text-[#9CA3AF]">
-                                        Không có hành động
+                                        {t("noActions")}
                                     </DropdownMenuItem>
                                 )}
                             </DropdownMenuContent>
@@ -1191,7 +1201,7 @@ function PostCard({
                                 type="button"
                                 onClick={() => setReplyOpen((v) => !v)}
                                 className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                aria-label="Trả lời"
+                                aria-label={t("replyAria")}
                             >
                                 <MessageCircle className="h-4 w-4" />
                                 <span>{post.replies.length}</span>
@@ -1211,11 +1221,11 @@ function PostCard({
                             >
                                 {repliesOpen ? (
                                     <>
-                                        <ChevronUp className="h-4 w-4" /> Ẩn phản hồi
+                                        <ChevronUp className="h-4 w-4" /> {t("hideReplies")}
                                     </>
                                 ) : (
                                     <>
-                                        <ChevronDown className="h-4 w-4" /> Hiện phản hồi
+                                        <ChevronDown className="h-4 w-4" /> {t("showReplies")}
                                     </>
                                 )}
                             </button>
@@ -1263,6 +1273,8 @@ function PostCard({
 }
 
 export default function GroupDiscussPage() {
+    const locale = useLocale();
+    const t = useTranslations("GroupDiscussPage");
     const pathname = usePathname();
     const groupId = extractGroupIdFromPath(pathname || "");
     const hubUrl = React.useMemo(() => buildHubUrl(), []);
@@ -1272,25 +1284,25 @@ export default function GroupDiscussPage() {
 
     const [me, setMe] = React.useState<UserLite>({
         id: "me",
-        name: "Bạn",
+        name: t("me"),
         initials: "B",
         avatarUrl: null
     });
 
     React.useEffect(() => {
         const user = getUserData();
-        const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || "Bạn";
+        const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || t("me");
         setMe({
             id: user?.id || "me",
             name: fullName,
-            initials: safeInitials(fullName),
+            initials: safeInitials(fullName, t("me")),
             avatarUrl: safeAvatarUrl(user?.avatarUrl ?? "")
         });
 
         // Fetch full profile to get avatar
         const fetchProfile = async () => {
             try {
-                const result = await getUserProfile("vi");
+                const result = await getUserProfile(locale);
                 if (result.status === "success" && result.data) {
                     setMe((prev) => ({
                         ...prev,
@@ -1302,7 +1314,7 @@ export default function GroupDiscussPage() {
         };
 
         void fetchProfile();
-    }, []);
+    }, [locale, t]);
 
     const [composerText, setComposerText] = React.useState("");
     const [posts, setPosts] = React.useState<PostItem[]>([]);
@@ -1365,7 +1377,7 @@ export default function GroupDiscussPage() {
 
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-            toast({ variant: "destructive", description: "Không thể xóa khi chưa kết nối" });
+            toast({ variant: "destructive", description: t("cannotDeleteWhenDisconnected") });
             closeDeleteConfirm();
             return;
         }
@@ -1377,7 +1389,7 @@ export default function GroupDiscussPage() {
         } catch (err: any) {
             toast({
                 variant: "destructive",
-                description: String(err?.message || err || "Vui lòng thử lại sau")
+                description: String(err?.message || err || t("tryAgainLater"))
             });
         } finally {
             setIsDeleting(false);
@@ -1396,8 +1408,7 @@ export default function GroupDiscussPage() {
             console.error("[GroupDiscussPage] Hub URL not configured - missing NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL");
             toast({
                 variant: "destructive",
-                description:
-                    "Không tìm thấy biến môi trường NEXT_PUBLIC_API_BASE_URL hoặc NEXT_PUBLIC_API_URL"
+                description: t("missingApiBase")
             });
             return;
         }
@@ -1409,7 +1420,7 @@ export default function GroupDiscussPage() {
             console.warn("[GroupDiscussPage] No access token found");
             toast({
                 variant: "destructive",
-                description: "Vui lòng đăng nhập lại để sử dụng tính năng thảo luận"
+                description: t("reloginForDiscuss")
             });
             return;
         }
@@ -1441,7 +1452,7 @@ export default function GroupDiscussPage() {
 
             if (response.status !== "success" || !response.data) return;
 
-            setPosts(buildPostsFromMessages(response.data.messages));
+            setPosts(buildPostsFromMessages(response.data.messages, t));
         };
 
         const toRole = (raw: any): GroupRole => {
@@ -1502,7 +1513,7 @@ export default function GroupDiscussPage() {
                         [m?.firstName, m?.lastName].filter(Boolean).join(" ").trim() ||
                         String(m?.userName || m?.username || "").trim() ||
                         (m?.email ? String(m.email).split("@")[0] : "") ||
-                        "User";
+                        t("userFallback");
 
                     const email = m?.email ?? m?.user?.email ?? null;
                     const avatarUrl = safeAvatarUrl(m?.avatarUrl ?? m?.user?.avatarUrl ?? "");
@@ -1542,7 +1553,7 @@ export default function GroupDiscussPage() {
 
         connection.on("ReceiveMessage", (message: GroupMessageDto) => {
             if (message.parentMessageId) return;
-            const nextPost = dtoToPostItem(message);
+            const nextPost = dtoToPostItem(message, t);
             if (!nextPost) return;
             setPosts((prev) => upsertPost(prev, nextPost));
         });
@@ -1553,7 +1564,7 @@ export default function GroupDiscussPage() {
             let parentExists = false;
 
             setPosts((prev) => {
-                const nextReply = dtoToReplyItem(reply);
+                const nextReply = dtoToReplyItem(reply, t);
                 if (!nextReply) return prev;
 
                 const nextPosts = prev.map((p) => {
@@ -1600,7 +1611,7 @@ export default function GroupDiscussPage() {
             } catch (err: any) {
                 if (isDisposed) return;
                 console.error("[GroupDiscussPage] Rejoin failed:", err?.message || err);
-                toast({ variant: "destructive", description: "Không thể tham gia lại phòng thảo luận" });
+                toast({ variant: "destructive", description: t("cannotRejoinRoom") });
             }
         });
 
@@ -1638,12 +1649,12 @@ export default function GroupDiscussPage() {
                 if (errorMsg.includes("negotiation") || errorMsg.includes("connection was stopped")) {
                     toast({
                         variant: "destructive",
-                        description: "Không thể kết nối đến thảo luận. Vui lòng tải lại trang."
+                        description: t("cannotConnectDiscuss")
                     });
                 } else {
                     toast({
                         variant: "destructive",
-                        description: "Vui lòng thử tải lại trang hoặc đăng nhập lại"
+                        description: t("reloadPageOrRelogin")
                     });
                 }
             }
@@ -1678,14 +1689,14 @@ export default function GroupDiscussPage() {
 
             void cleanup();
         };
-    }, [groupId, hubUrl]);
+    }, [groupId, hubUrl, t]);
 
     const onPost = async () => {
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
 
         if (!canComment) {
-            toast({ variant: "destructive", description: "Bạn chỉ có quyền xem thảo luận" });
+            toast({ variant: "destructive", description: t("viewerCannotComment") });
             return;
         }
 
@@ -1700,7 +1711,7 @@ export default function GroupDiscussPage() {
             setComposerText("");
             composerMentionRef.current?.reset?.();
         } catch {
-            toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
+            toast({ variant: "destructive", description: t("tryAgainLater") });
         }
     };
 
@@ -1711,12 +1722,12 @@ export default function GroupDiscussPage() {
     const onAddReply = async (postId: string, payloadText: string) => {
         const connection = connectionRef.current;
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-            toast({ variant: "destructive", description: "Không thể gửi phản hồi khi chưa kết nối" });
+            toast({ variant: "destructive", description: t("cannotSendReplyWhenDisconnected") });
             return;
         }
 
         if (!canComment) {
-            toast({ variant: "destructive", description: "Bạn chỉ có quyền xem thảo luận" });
+            toast({ variant: "destructive", description: t("viewerCannotComment") });
             return;
         }
 
@@ -1730,7 +1741,7 @@ export default function GroupDiscussPage() {
                 await connection.invoke("SendMessage", payload);
             }
         } catch {
-            toast({ variant: "destructive", description: "Vui lòng thử lại sau" });
+            toast({ variant: "destructive", description: t("tryAgainLater") });
         }
     };
 
@@ -1738,9 +1749,9 @@ export default function GroupDiscussPage() {
         <div className="w-full">
             <Container className="px-6">
                 <div className="mb-5">
-                    <p className="font-semibold text-[#261E33] text-sm">Thảo luận nhóm</p>
+                    <p className="font-semibold text-[#261E33] text-sm">{t("title")}</p>
                     <p className="mt-1 text-[#6F6B99] text-sm">
-                        Chia sẻ cập nhật, ý tưởng và trao đổi
+                        {t("subtitle")}
                     </p>
                 </div>
 
@@ -1755,7 +1766,7 @@ export default function GroupDiscussPage() {
                                     onChange={setComposerText}
                                     members={mentionUsers}
                                     meId={me.id}
-                                    placeholder="Viết gì đó để chia sẻ với mọi người... (gõ @ để mention)"
+                                    placeholder={t("composerPlaceholder")}
                                     maxChars={MAX_CHARS}
                                     onSubmit={() => {
                                         void onPost();
@@ -1771,14 +1782,14 @@ export default function GroupDiscussPage() {
                                         className="rounded-xl bg-[#FF5722] px-6 text-white hover:bg-[#e24d1e]"
                                     >
                                         <SendHorizontal className="mr-2 h-4 w-4" />
-                                        Đăng
+                                        {t("post")}
                                     </Button>
                                 </div>
                             </div>
                         </div>
                     ) : (
                         <div className="text-[#6F6B99] text-sm">
-                            Bạn chỉ có quyền xem thảo luận trong nhóm này.
+                            {t("viewerOnly")}
                         </div>
                     )}
                 </div>
@@ -1803,7 +1814,7 @@ export default function GroupDiscussPage() {
                         ))
                     ) : (
                         <div className="rounded-2xl border border-[#EDEDED] bg-white p-10 text-center text-[#6F6B99] text-sm">
-                            Chưa có thảo luận nào trong nhóm.
+                            {t("noDiscussions")}
                         </div>
                     )}
                 </div>
@@ -1816,10 +1827,9 @@ export default function GroupDiscussPage() {
                 >
                     <AlertDialogContent className="rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl">Xác nhận xóa</AlertDialogTitle>
+                            <AlertDialogTitle className="text-xl">{t("confirmDeleteTitle")}</AlertDialogTitle>
                             <AlertDialogDescription className="text-[#111827] text-base leading-6">
-                                Bạn có chắc chắn muốn xóa tin nhắn này không? Hành động này không thể
-                                hoàn tác.
+                                {t("confirmDeleteDescription")}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
 
@@ -1833,7 +1843,7 @@ export default function GroupDiscussPage() {
                                     "focus-visible:ring-0"
                                 )}
                             >
-                                Hủy
+                                {t("cancel")}
                             </AlertDialogCancel>
 
                             <AlertDialogAction
@@ -1844,7 +1854,7 @@ export default function GroupDiscussPage() {
                                 }}
                                 className="rounded-xl bg-red-600 px-8 text-white hover:bg-red-700 focus-visible:ring-0"
                             >
-                                {isDeleting ? "Đang xóa..." : "Xóa"}
+                                {isDeleting ? t("deleting") : t("deleteMessage")}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

@@ -3,6 +3,7 @@
 import * as echarts from "echarts";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Clock3, Layers3, MessageSquare, Plus, Users, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import type {
@@ -270,8 +271,8 @@ function EChart({ option, height = 320 }: { option: echarts.EChartsOption; heigh
     return <div ref={ref} style={{ width: "100%", height }} />;
 }
 
-function formatLastActivity(dateStr: string | null | undefined): string {
-    if (!dateStr) return "No activity";
+function formatLastActivity(dateStr: string | null | undefined, t: (key: string, values?: Record<string, string | number>) => string): string {
+    if (!dateStr) return t("formatLastActivity.noActivity");
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -279,9 +280,9 @@ function formatLastActivity(dateStr: string | null | undefined): string {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 60) return t("formatLastActivity.minutesAgo", { count: diffMins });
+    if (diffHours < 24) return t("formatLastActivity.hoursAgo", { count: diffHours });
+    if (diffDays < 7) return t("formatLastActivity.daysAgo", { count: diffDays });
     return formatDisplayDate(date);
 }
 
@@ -291,7 +292,8 @@ function GroupActivityHeatmap({
     anchorDate,
     onPrev,
     onNext,
-    onChangeRange
+    onChangeRange,
+    t
 }: {
     members: { id: string; name: string; activityByDate: DailyActivityPoint[] }[];
     range: HeatmapRangeFilter;
@@ -299,6 +301,7 @@ function GroupActivityHeatmap({
     onPrev: () => void;
     onNext: () => void;
     onChangeRange: (value: HeatmapRangeFilter) => void;
+    t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     const { start, end } = React.useMemo(() => {
         return range === "week" ? getWeekRange(anchorDate) : getMonthRange(anchorDate);
@@ -319,17 +322,17 @@ function GroupActivityHeatmap({
         <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                    <h2 className="font-semibold text-lg text-slate-900">5. Hoạt động nhóm</h2>
+                    <h2 className="font-semibold text-lg text-slate-900">{t("heatmap.title")}</h2>
                     <p className="mt-1 text-slate-500 text-sm">
-                        Heatmap hoạt động của {members.length} thành viên theo {range === "week" ? "tuần" : "tháng"}.
+                        {t("heatmap.subtitle", { count: members.length, period: range === "week" ? t("heatmap.week") : t("heatmap.month") })}
                     </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="inline-flex rounded-2xl bg-slate-100 p-1">
                         {[
-                            { key: "week", label: "Tuần" },
-                            { key: "month", label: "Tháng" }
+                            { key: "week", label: t("heatmap.week") },
+                            { key: "month", label: t("heatmap.month") }
                         ].map((item) => (
                             <button
                                 key={item.key}
@@ -442,7 +445,7 @@ function GroupActivityHeatmap({
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2 text-slate-500 text-sm">
-                    <span>Ít</span>
+                    <span>{t("heatmap.legend.low")}</span>
                     {[0, 1, 2, 3, 4].map((level) => (
                         <div
                             key={level}
@@ -450,9 +453,9 @@ function GroupActivityHeatmap({
                             style={{ backgroundColor: colorMap[level] }}
                         />
                     ))}
-                    <span>Nhiều</span>
+                    <span>{t("heatmap.legend.high")}</span>
                 </div>
-                <div className="text-slate-400 text-sm">Cập nhật: {new Date().toLocaleDateString("vi-VN")}</div>
+                <div className="text-slate-400 text-sm">{t("heatmap.updated")}: {new Date().toLocaleDateString("vi-VN")}</div>
             </div>
         </div>
     );
@@ -463,7 +466,10 @@ function getProgressPercent(completed: number, total: number) {
     return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
 }
 
-function getMemberStatus(percent: number): {
+function getMemberStatus(
+    percent: number,
+    t: (key: string) => string
+): {
     key: MemberProgressStatus;
     label: string;
     textClass: string;
@@ -473,7 +479,7 @@ function getMemberStatus(percent: number): {
     if (percent >= 70) {
         return {
             key: "on-track",
-            label: "Đúng tiến độ",
+            label: t("memberStatus.onTrack"),
             textClass: "text-emerald-600",
             dotClass: "bg-emerald-500",
             barClass: "bg-emerald-500"
@@ -482,7 +488,7 @@ function getMemberStatus(percent: number): {
     if (percent >= 30) {
         return {
             key: "warning",
-            label: "Cần chú ý",
+            label: t("memberStatus.needsAttention"),
             textClass: "text-orange-500",
             dotClass: "bg-orange-500",
             barClass: "bg-orange-500"
@@ -490,18 +496,18 @@ function getMemberStatus(percent: number): {
     }
     return {
         key: "delayed",
-        label: "Chậm tiến độ",
+        label: t("memberStatus.delayed"),
         textClass: "text-red-500",
         dotClass: "bg-red-500",
         barClass: "bg-red-500"
     };
 }
 
-function ProgressLegend() {
+function ProgressLegend({ t }: { t: (key: string, values?: Record<string, string | number>) => string }) {
     const items = [
-        { label: "Đúng tiến độ", dotClass: "bg-emerald-500" },
-        { label: "Cần chú ý", dotClass: "bg-orange-500" },
-        { label: "Chậm tiến độ", dotClass: "bg-red-500" }
+        { label: t("memberStatus.onTrack"), dotClass: "bg-emerald-500" },
+        { label: t("memberStatus.needsAttention"), dotClass: "bg-orange-500" },
+        { label: t("memberStatus.delayed"), dotClass: "bg-red-500" }
     ];
 
     return (
@@ -516,9 +522,9 @@ function ProgressLegend() {
     );
 }
 
-function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; onClick?: () => void }) {
+function MemberProgressCard({ member, t, onClick }: { member: MemberProgressItem; t: (key: string, values?: Record<string, string | number>) => string; onClick?: () => void }) {
     const percent = getProgressPercent(member.completedTasks, member.totalTasks);
-    const status = getMemberStatus(percent);
+    const status = getMemberStatus(percent, t);
 
     return (
         <div
@@ -552,7 +558,7 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
                 <div className="flex items-center gap-1.5">
                     <Layers3 className="h-3.5 w-3.5" />
                     <span>
-                        {member.completedTasks} / {member.totalTasks} tasks
+                        {member.completedTasks} / {member.totalTasks} {t("common.tasks")}
                     </span>
                 </div>
                 {member.contributionPercentage !== undefined && (
@@ -560,12 +566,12 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
                         <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
                             <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
-                        <span>Contribution: {member.contributionPercentage.toFixed(2)}%</span>
+                        <span>{t("memberProgressCard.contribution")}: {member.contributionPercentage.toFixed(2)}%</span>
                     </div>
                 )}
                 <div className="flex items-center gap-1.5">
                     <Clock3 className="h-3.5 w-3.5" />
-                    <span>last activity: {member.lastActivity}</span>
+                    <span>{t("memberProgressCard.lastActivity")}: {member.lastActivity}</span>
                 </div>
             </div>
         </div>
@@ -576,12 +582,14 @@ function TeamMemberProgressLayer({
     members,
     open,
     onClose,
-    onMemberClick
+    onMemberClick,
+    t
 }: {
     members: MemberProgressItem[];
     open: boolean;
     onClose: () => void;
     onMemberClick?: (member: MemberProgressItem) => void;
+    t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     React.useEffect(() => {
         if (!open) return;
@@ -624,6 +632,7 @@ function TeamMemberProgressLayer({
                                     <MemberProgressCard
                                         key={member.id}
                                         member={member}
+                                        t={t}
                                         onClick={onMemberClick ? () => onMemberClick(member) : undefined}
                                     />
                                 ))}
@@ -638,10 +647,12 @@ function TeamMemberProgressLayer({
 
 function TeamMemberProgressSection({
     members,
-    onMemberClick
+    onMemberClick,
+    t
 }: {
     members: MemberProgressItem[];
     onMemberClick?: (member: MemberProgressItem) => void;
+    t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     const [openLayer, setOpenLayer] = React.useState(false);
     const previewMembers = members.slice(0, 2);
@@ -651,10 +662,10 @@ function TeamMemberProgressSection({
             <section className="rounded-[24px] border border-white/70 bg-white/85 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-5">
                 <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <h2 className="font-semibold text-lg text-slate-900">6. Tiến độ thành viên</h2>
-                        <p className="mt-1 text-slate-500 text-sm">Xem chi tiết.</p>
+                        <h2 className="font-semibold text-lg text-slate-900">{t("memberProgress.title")}</h2>
+                        <p className="mt-1 text-slate-500 text-sm">{t("memberProgress.subtitle")}</p>
                     </div>
-                    <ProgressLegend />
+                    <ProgressLegend t={t} />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -662,6 +673,7 @@ function TeamMemberProgressSection({
                         <MemberProgressCard
                             key={member.id}
                             member={member}
+                            t={t}
                             onClick={onMemberClick ? () => onMemberClick(member) : undefined}
                         />
                     ))}
@@ -674,7 +686,7 @@ function TeamMemberProgressSection({
                             onClick={() => setOpenLayer(true)}
                             className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-2.5 font-medium text-sm text-white shadow-sm transition-all duration-300 hover:bg-orange-600 hover:shadow-md active:scale-[0.98]">
                             <Users className="h-4 w-4" />
-                            Xem chi tiết
+                            {t("memberProgress.seeDetails")}
                         </button>
                     </div>
                 )}
@@ -682,6 +694,7 @@ function TeamMemberProgressSection({
 
             <TeamMemberProgressLayer
                 members={members.slice(0, 10)}
+                t={t}
                 open={openLayer}
                 onClose={() => setOpenLayer(false)}
                 onMemberClick={onMemberClick}
@@ -695,11 +708,13 @@ function TeamMemberProgressSection({
 function MemberDetailModal({
     member,
     open,
-    onClose
+    onClose,
+    t
 }: {
     member: MemberProgressItem | null;
     open: boolean;
     onClose: () => void;
+    t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     React.useEffect(() => {
         if (!open) return;
@@ -717,7 +732,7 @@ function MemberDetailModal({
     if (!member) return null;
 
     const percent = getProgressPercent(member.completedTasks, member.totalTasks);
-    const status = getMemberStatus(percent);
+    const status = getMemberStatus(percent, t);
 
     return (
         <AnimatePresence>
@@ -759,7 +774,7 @@ function MemberDetailModal({
                             {/* Progress bar */}
                             <div>
                                 <div className="mb-2 flex items-center justify-between text-sm">
-                                    <span className="font-medium text-slate-700">Task Progress</span>
+                                    <span className="font-medium text-slate-700">{t("memberModal.taskProgress")}</span>
                                     <span className={cn("font-bold", status.textClass)}>{percent}%</span>
                                 </div>
                                 <div className="h-3 overflow-hidden rounded-full bg-slate-100">
@@ -772,7 +787,7 @@ function MemberDetailModal({
                                     />
                                 </div>
                                 <div className="mt-1 text-slate-500 text-xs">
-                                    {member.completedTasks} of {member.totalTasks} tasks completed
+                                    {t("memberModal.taskCount", { completed: member.completedTasks, total: member.totalTasks })}
                                 </div>
                             </div>
 
@@ -783,14 +798,14 @@ function MemberDetailModal({
                                     <div className="font-bold text-slate-900">
                                         {member.completedScore?.toFixed(1) ?? 0}
                                     </div>
-                                    <div className="text-slate-500 text-xs">Complete pts</div>
+                                    <div className="text-slate-500 text-xs">{t("memberModal.completePts")}</div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-blue-50/50 p-3 text-center">
                                     <Plus className="mx-auto mb-1.5 h-5 w-5 text-blue-500" />
                                     <div className="font-bold text-slate-900">
                                         {member.createdScore?.toFixed(1) ?? 0}
                                     </div>
-                                    <div className="text-slate-500 text-xs">Create pts</div>
+                                    <div className="text-slate-500 text-xs">{t("memberModal.createPts")}</div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-amber-50/50 p-3 text-center">
                                     <div className="mx-auto mb-1.5 flex h-5 w-5 items-center justify-center text-amber-500">
@@ -806,54 +821,54 @@ function MemberDetailModal({
                                     <div className="font-bold text-slate-900">
                                         {member.updatedScore?.toFixed(1) ?? 0}
                                     </div>
-                                    <div className="text-slate-500 text-xs">Update pts</div>
+                                    <div className="text-slate-500 text-xs">{t("memberModal.updatePts")}</div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-purple-50/50 p-3 text-center">
                                     <MessageSquare className="mx-auto mb-1.5 h-5 w-5 text-purple-500" />
                                     <div className="font-bold text-slate-900">{member.messagesSent ?? 0}</div>
-                                    <div className="text-slate-500 text-xs">Messages</div>
+                                    <div className="text-slate-500 text-xs">{t("memberModal.messages")}</div>
                                 </div>
                             </div>
 
                             {/* Detailed breakdown */}
                             <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
                                 <h4 className="mb-2 font-semibold text-slate-500 text-xs uppercase tracking-wider">
-                                    Activity Breakdown
+                                    {t("memberModal.activityBreakdown")}
                                 </h4>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-slate-600">Completed</span>
+                                        <span className="text-slate-600">{t("memberModal.activityItems.completed")}</span>
                                         <span className="font-mono text-slate-900">
                                             {member.tasksCompleted ?? 0} ×{" "}
                                             {(member.completedScore ?? 0) / (member.tasksCompleted || 1) || 0}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-slate-600">Created</span>
+                                        <span className="text-slate-600">{t("memberModal.activityItems.created")}</span>
                                         <span className="font-mono text-slate-900">
                                             {member.tasksCreated ?? 0} ×{" "}
                                             {(member.createdScore ?? 0) / (member.tasksCreated || 1) || 0}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-slate-600">Updated</span>
+                                        <span className="text-slate-600">{t("memberModal.activityItems.updated")}</span>
                                         <span className="font-mono text-slate-900">{member.tasksUpdated ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-slate-600">Assigned</span>
+                                        <span className="text-slate-600">{t("memberModal.activityItems.assigned")}</span>
                                         <span className="font-mono text-slate-900">{member.tasksAssigned ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-slate-600">Comments</span>
+                                        <span className="text-slate-600">{t("memberModal.activityItems.comments")}</span>
                                         <span className="font-mono text-slate-900">{member.commentsCreated ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-slate-600">Messages</span>
+                                        <span className="text-slate-600">{t("memberModal.activityItems.messages")}</span>
                                         <span className="font-mono text-slate-900">{member.messagesSent ?? 0}</span>
                                     </div>
                                 </div>
                                 <div className="mt-3 flex justify-between border-slate-200 border-t pt-3 font-semibold">
-                                    <span className="text-slate-700">Total Score</span>
+                                    <span className="text-slate-700">{t("memberModal.totalScore")}</span>
                                     <span className="font-mono text-orange-600">
                                         {member.totalScore?.toFixed(1) ?? 0}
                                     </span>
@@ -864,7 +879,7 @@ function MemberDetailModal({
                             {member.contributionPercentage !== undefined && (
                                 <div className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="font-medium text-slate-700 text-sm">Contribution Rate</span>
+                                        <span className="font-medium text-slate-700 text-sm">{t("memberModal.contributionRate")}</span>
                                         <span className="font-bold text-lg text-orange-600">
                                             {member.contributionPercentage.toFixed(2)}%
                                         </span>
@@ -881,7 +896,7 @@ function MemberDetailModal({
                             {/* Last activity */}
                             <div className="flex items-center gap-2 text-slate-500 text-sm">
                                 <Clock3 className="h-4 w-4" />
-                                <span>Last activity: {member.lastActivity}</span>
+                                <span>{t("memberModal.lastActivity")}: {member.lastActivity}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -894,6 +909,7 @@ function MemberDetailModal({
 // ==================== Main Component ====================
 
 export default function GroupMemberAnalyticsPage() {
+    const t = useTranslations("GroupAnalyticPage");
     const pathname = usePathname();
     const groupId = extractGroupIdFromPath(pathname || "");
 
@@ -1045,15 +1061,15 @@ export default function GroupMemberAnalyticsPage() {
         }
 
         const data = [
-            { name: "To do", value: currentMember.todoTasks ?? 0 },
-            { name: "In progress", value: currentMember.inProgressTasks ?? 0 },
-            { name: "Done", value: currentMember.doneTasks ?? 0 },
-            { name: "Overdue", value: currentMember.overdueTasks ?? 0 }
+            { name: t("taskStatus.todo"), value: currentMember.todoTasks ?? 0 },
+            { name: t("taskStatus.inProgress"), value: currentMember.inProgressTasks ?? 0 },
+            { name: t("taskStatus.done"), value: currentMember.doneTasks ?? 0 },
+            { name: t("taskStatus.overdue"), value: currentMember.overdueTasks ?? 0 }
         ];
         const total = data.reduce((sum, item) => sum + item.value, 0);
 
         return { data, total };
-    }, [summary, currentUserId]);
+    }, [summary, currentUserId, t]);
 
     // Group donut data
     const teamPieData = React.useMemo(() => {
@@ -1067,15 +1083,15 @@ export default function GroupMemberAnalyticsPage() {
         const sumOverdue = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.overdueTasks ?? 0), 0);
 
         const data = [
-            { name: "To do", value: sumTodo },
-            { name: "In progress", value: sumInProgress },
-            { name: "Done", value: sumDone },
-            { name: "Overdue", value: sumOverdue }
+            { name: t("taskStatus.todo"), value: sumTodo },
+            { name: t("taskStatus.inProgress"), value: sumInProgress },
+            { name: t("taskStatus.done"), value: sumDone },
+            { name: t("taskStatus.overdue"), value: sumOverdue }
         ];
         const total = data.reduce((sum, item) => sum + item.value, 0);
 
         return { data, total };
-    }, [summary]);
+    }, [summary, t]);
 
     // Line chart data
     const lineChartData = React.useMemo(() => {
@@ -1265,7 +1281,7 @@ export default function GroupMemberAnalyticsPage() {
                 name: member.userName ?? "Unknown",
                 completedTasks: member.completedTasks ?? 0,
                 totalTasks: member.totalTasks ?? 0,
-                lastActivity: formatLastActivity(member.lastActivityAt as unknown as string),
+                lastActivity: formatLastActivity(member.lastActivityAt as unknown as string, t),
                 // From memberContribution (weighted)
                 contributionPercentage: contribution?.contributionPercentage,
                 totalScore: contribution?.totalScore,
@@ -1283,7 +1299,7 @@ export default function GroupMemberAnalyticsPage() {
                 assignedScore: contribution?.assignedScore
             };
         });
-    }, [summary]);
+    }, [summary, t]);
 
     // ==================== Chart Options ====================
 
@@ -1364,7 +1380,7 @@ export default function GroupMemberAnalyticsPage() {
                     left: "center",
                     top: "56%",
                     style: {
-                        text: "My tasks",
+                        text: t("chart.myTasks"),
                         textAlign: "center",
                         fill: "#64748b",
                         fontSize: 13,
@@ -1374,7 +1390,7 @@ export default function GroupMemberAnalyticsPage() {
             ],
             series: [
                 {
-                    name: "Task status",
+                    name: t("chart.taskStatus"),
                     type: "pie",
                     radius: ["58%", "76%"],
                     center: ["50%", "48%"],
@@ -1401,7 +1417,7 @@ export default function GroupMemberAnalyticsPage() {
                 }
             ]
         };
-    }, [personalPieData]);
+    }, [personalPieData, t]);
 
     const teamStatusDonutOption = React.useMemo<echarts.EChartsOption>(() => {
         const { data, total } = teamPieData;
@@ -1438,7 +1454,7 @@ export default function GroupMemberAnalyticsPage() {
                     left: "center",
                     top: "56%",
                     style: {
-                        text: "Group tasks",
+                        text: t("chart.groupTasks"),
                         textAlign: "center",
                         fill: "#64748b",
                         fontSize: 13,
@@ -1448,7 +1464,7 @@ export default function GroupMemberAnalyticsPage() {
             ],
             series: [
                 {
-                    name: "Group task status",
+                    name: t("chart.groupTaskStatus"),
                     type: "pie",
                     radius: ["58%", "76%"],
                     center: ["50%", "48%"],
@@ -1475,7 +1491,7 @@ export default function GroupMemberAnalyticsPage() {
                 }
             ]
         };
-    }, [teamPieData]);
+    }, [teamPieData, t]);
 
     const compareLineOption = React.useMemo<echarts.EChartsOption>(() => {
         const { myData, groupData, labels } = lineChartData;
@@ -1517,7 +1533,7 @@ export default function GroupMemberAnalyticsPage() {
             },
             series: [
                 {
-                    name: "Tôi",
+                    name: t("chart.me"),
                     type: "line",
                     smooth: true,
                     symbol: "circle",
@@ -1541,7 +1557,7 @@ export default function GroupMemberAnalyticsPage() {
                     }
                 },
                 {
-                    name: "Nhóm",
+                    name: t("chart.group"),
                     type: "line",
                     smooth: true,
                     symbol: "circle",
@@ -1560,10 +1576,15 @@ export default function GroupMemberAnalyticsPage() {
                 }
             ]
         };
-    }, [trendData]);
+    }, [trendData, t]);
 
     const compareBarOption = React.useMemo<echarts.EChartsOption>(() => {
-        const categories = ["To do", "In progress", "Done", "Overdue"];
+        const categories = [
+            t("taskStatus.todo"),
+            t("taskStatus.inProgress"),
+            t("taskStatus.done"),
+            t("taskStatus.overdue")
+        ];
         const series: echarts.BarSeriesOption[] = barCompareMembers.map((member, index) => ({
             name: member.userName,
             type: "bar",
@@ -1625,7 +1646,7 @@ export default function GroupMemberAnalyticsPage() {
             },
             series
         };
-    }, [barCompareMembers]);
+    }, [barCompareMembers, t]);
 
     // ==================== Render ====================
 
@@ -1827,12 +1848,13 @@ export default function GroupMemberAnalyticsPage() {
                                 onPrev={handlePrevHeatmapRange}
                                 onNext={handleNextHeatmapRange}
                                 onChangeRange={setHeatmapRange}
+                                t={t}
                             />
                         </section>
                     </SectionReveal>
 
                     <SectionReveal delay={0.12}>
-                        <TeamMemberProgressSection members={memberProgressItems} onMemberClick={setSelectedMember} />
+                        <TeamMemberProgressSection members={memberProgressItems} onMemberClick={setSelectedMember} t={t} />
                     </SectionReveal>
 
                     {/* Member Detail Modal - Layer 2 */}
@@ -1840,6 +1862,7 @@ export default function GroupMemberAnalyticsPage() {
                         member={selectedMember}
                         open={selectedMember !== null}
                         onClose={() => setSelectedMember(null)}
+                        t={t}
                     />
 
                     {loading && <div className="text-slate-500 text-sm">Đang tải dữ liệu...</div>}

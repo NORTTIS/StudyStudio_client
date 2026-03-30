@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import type { components } from "@/api/types";
 import type { GroupHeatmapComparisonData } from "./types";
 
@@ -23,11 +24,14 @@ function getActivityColor(activityCount: number | undefined): string {
     return "bg-[#14532d]";
 }
 
-function formatDateShort(date: Date): string {
-    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+function formatDateShort(date: Date, locale: string): string {
+    const formatterLocale = locale === "vi" ? "vi-VN" : "en-US";
+    return date.toLocaleDateString(formatterLocale, { day: "2-digit", month: "2-digit" });
 }
 
 export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: ActivityHeatmapProps) {
+    const t = useTranslations("ActivityHeatmap");
+    const locale = useLocale();
     const today = useMemo(() => new Date(), []);
     const [offset, setOffset] = useState(0);
     const [tooltip, setTooltip] = useState<{
@@ -91,7 +95,7 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
         if (!dates.length) return "";
         const first = dates[0];
         const last = dates[dates.length - 1];
-        return `${formatDateShort(first)} - ${formatDateShort(last)}/${last.getFullYear()}`;
+        return `${formatDateShort(first, locale)} - ${formatDateShort(last, locale)}/${last.getFullYear()}`;
     }
 
     const showTooltip = useCallback(
@@ -108,10 +112,10 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                 groupName,
                 activityCount,
                 tasksCompleted,
-                date: date.toLocaleDateString("vi-VN")
+                date: date.toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US")
             });
         },
-        []
+        [locale]
     );
 
     const hideTooltip = useCallback(() => setTooltip(null), []);
@@ -120,7 +124,7 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
         <div ref={containerRef} className="relative rounded-xl border border-gray-200 bg-white p-5">
             {/* Header */}
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-semibold text-[#261E33]">Hoạt động nhóm</h3>
+                <h3 className="font-semibold text-[#261E33]">{t("title")}</h3>
 
                 {/* Date range picker — hidden while loading */}
                 {!loading && (
@@ -129,7 +133,7 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                             onClick={() => shiftWindow(-1)}
                             disabled={offset === 0}
                             className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-200 hover:text-[#261E33] disabled:cursor-not-allowed disabled:opacity-30"
-                            aria-label="Previous period">
+                            aria-label={t("actions.previousPeriod")}>
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                                 <path
                                     d="M7.5 9.5L4 6L7.5 2.5"
@@ -146,7 +150,7 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                         <button
                             onClick={() => shiftWindow(1)}
                             className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-200 hover:text-[#261E33]"
-                            aria-label="Next period">
+                            aria-label={t("actions.nextPeriod")}>
                             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                                 <path
                                     d="M4.5 9.5L8 6L4.5 2.5"
@@ -185,7 +189,7 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                         <rect x="20" y="24" width="6" height="6" rx="1" fill="currentColor" opacity="0.2" />
                         <rect x="28" y="24" width="6" height="6" rx="1" fill="currentColor" opacity="0.4" />
                     </svg>
-                    <span>Không có dữ liệu hoạt động nhóm</span>
+                    <span>{t("empty")}</span>
                 </div>
             )}
 
@@ -273,13 +277,13 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                             }}>
                             <div className="mb-1.5 font-semibold text-[#261E33] text-sm">{tooltip.groupName}</div>
                             <div className="flex items-center justify-between text-gray-500 text-xs">
-                                <span>Hoạt động</span>
+                                <span>{t("tooltip.activity")}</span>
                                 <span className="font-medium text-[#261E33]">{tooltip.activityCount}</span>
                             </div>
                             <div className="mt-1 flex items-center justify-between text-gray-500 text-xs">
-                                <span>Hoàn thành</span>
+                                <span>{t("tooltip.completed")}</span>
                                 <span className="font-medium text-[#261E33]">
-                                    {tooltip.tasksCompleted} task{tooltip.tasksCompleted !== 1 ? "s" : ""}
+                                    {tooltip.tasksCompleted} {t("tooltip.tasks")}
                                 </span>
                             </div>
                             <div className="mt-1.5 border-gray-100 border-t pt-1.5 text-gray-400 text-xs">
@@ -291,7 +295,7 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                     {/* Legend + footer */}
                     <div className="mt-4 flex items-center justify-between border-gray-100 border-t pt-4">
                         <div className="flex items-center gap-2 text-gray-500 text-xs">
-                            <span>Ít</span>
+                            <span>{t("legend.low")}</span>
                             <div className="flex gap-0.5">
                                 <div className="h-3 w-3 rounded-sm bg-[#f0fdf4]" />
                                 <div className="h-3 w-3 rounded-sm bg-[#bbf7d0]" />
@@ -300,9 +304,13 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                                 <div className="h-3 w-3 rounded-sm bg-[#15803d]" />
                                 <div className="h-3 w-3 rounded-sm bg-[#14532d]" />
                             </div>
-                            <span>Nhiều</span>
+                            <span>{t("legend.high")}</span>
                         </div>
-                        <div className="text-gray-400 text-xs">Cập nhật: {today.toLocaleDateString("vi-VN")}</div>
+                        <div className="text-gray-400 text-xs">
+                            {t("updatedAt", {
+                                date: today.toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US")
+                            })}
+                        </div>
                     </div>
                 </>
             )}
