@@ -38,7 +38,7 @@
         "systemNews": "Thông báo hệ thống",
         "newsroom": "Study Studio Newsroom",
         "loading": "Đang tải...",
-        "learningHub": "Learning Hub",
+        "learningHub": "Trung tâm học tập",
         "heroDescription": "Khám phá các thông báo mới nhất và cập nhật từ Study Studio. Luôn cập nhật với những tin tức mới și thông tin quan trọng.",
         "labelAnnouncements": "thông báo",
         "labelUnread": "chưa đọc",
@@ -85,6 +85,18 @@
         "architecture": {
             "title": "Kiến trúc không gian làm việc 3 tầng",
             "subtitle": "Chúng tôi cung cấp các không gian làm việc riêng biệt"
+        },
+        "badges": {
+            "productivityEcosystem": "Hệ sinh thái năng suất",
+            "management": "Quản lý",
+            "group": "Nhóm",
+            "personal": "Cá nhân"
+        },
+        "previews": {
+            "hero": "Xem trước khu vực nổi bật",
+            "management": "Xem trước không gian quản lý",
+            "group": "Xem trước không gian nhóm",
+            "personal": "Xem trước không gian cá nhân"
         },
         "management": {
             "title": "Không gian quản lý",
@@ -959,14 +971,17 @@
         "errorAcceptFailed": "Chấp nhận lời mời thất bại."
     },
     "LandingGroupPage": {
+        "badge": "Không gian nhóm",
         "hero": {
             "title": "Không gian làm việc chung cho",
             "titleHighlight": "học tập & dự án",
+            "description": "Phối hợp cùng nhóm, theo dõi tiến độ và hoàn thành mục tiêu nhanh hơn.",
             "createButton": "Tạo nhóm →",
             "imageAlt": "Group collaboration"
         },
         "howToUse": {
             "title": "Cách sử dụng",
+            "description": "Bắt đầu nhanh với quy trình rõ ràng để nhóm làm việc hiệu quả và minh bạch.",
             "step1": "Tạo mới một nhóm với template có sẵn",
             "step2": "Sau đó chia sẻ bảng với những người dùng khác",
             "step3": "Tạo công việc, giao nhiệm vụ cho thành viên",
@@ -1011,6 +1026,7 @@
         }
     },
     "LandingPersonalPage": {
+        "badge": "Không gian cá nhân",
         "hero": {
             "title": "Không gian làm việc",
             "titleHighlight": "dành riêng cho bạn",
@@ -1079,14 +1095,19 @@
         }
     },
     "LandingManagementPage": {
+        "badge": "Không gian quản lý",
         "hero": {
             "title": "Quản lý toàn bộ nhóm",
             "titleHighlight": "từ một nơi",
+            "description": "Điều phối nhiều nhóm, theo dõi tiến độ và ra quyết định nhanh hơn từ một bảng quản trị thống nhất.",
+            "executiveLabel": "Bảng điều hành",
+            "executiveCaption": "Theo dõi hiệu suất tổng thể theo thời gian thực",
             "createButton": "Bắt đầu quản lý →",
             "imageAlt": "Management Illustration"
         },
         "howToUse": {
             "title": "Cách sử dụng",
+            "description": "Thiết lập nhanh quy trình quản lý để theo dõi nhóm, phân quyền và đánh giá tiến độ rõ ràng.",
             "step1": {
                 "title": "Tạo Không gian quản lý",
                 "description": "Thiết lập không gian và cấu hình theo nhu cầu tổ chức của bạn"
@@ -1143,6 +1164,7 @@
         },
         "freePlan": {
             "title": "Gói miễn phí",
+            "tierBadge": "Gói cơ bản",
             "price": "0 VND",
             "description": "Phù hợp cho người dùng cá nhân và các\nnhóm nhỏ trải nghiệm",
             "registerButton": "Đăng ký",
@@ -1154,6 +1176,7 @@
         },
         "premiumPlan": {
             "title": "Gói nâng cấp",
+            "tierBadge": "Gói nâng cao",
             "price": "299.000 VND / Tháng",
             "description": "Phù hợp cho các nhóm lớn cần sự linh\nhoạt hơn",
             "registerButton": "Đăng ký",
@@ -1760,7 +1783,9 @@
         "collapse": "Thu gọn",
         "viewAll": "Xem tất cả",
         "emptyAreaHint": "Bắt đầu tạo nhóm hoặc tham gia nhóm hiện có",
-        "moreGroups": "nhóm khác"
+        "moreGroups": "nhóm khác",
+        "board": "Bảng",
+        "list": "Danh sách"
     },
     "GroupCard": {
         "removeFavorite": "Bỏ yêu thích",

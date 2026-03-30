@@ -7,7 +7,6 @@ import {
     Layers,
     ShieldCheck,
     Sparkles,
-    Star,
     User,
     Zap
 } from "lucide-react";
@@ -262,8 +261,7 @@ export default function LandingPlan() {
                                 </ul>
 
                                 <div className="mt-8 rounded-[24px] border border-orange-100 bg-white/85 p-4">
-                                    <div className="flex items-start gap-3">
-                                        <Star className="mt-0.5 h-5 w-5 text-orange-500" />
+                                    <div>
                                         <p className="text-sm leading-7 text-[#5F5A73]">
                                             {t("premiumPlan.recommendation")}
                                         </p>

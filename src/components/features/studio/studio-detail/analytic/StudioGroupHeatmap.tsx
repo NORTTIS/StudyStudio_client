@@ -183,8 +183,8 @@ export default function StudioGroupHeatmap({
                                 className={cn(
                                     "rounded-xl px-4 py-2 font-medium text-sm transition-all duration-300",
                                     range === item.key
-                                        ? "bg-white text-slate-900 shadow-sm"
-                                        : "text-slate-500 hover:bg-white/70 hover:text-slate-900"
+                                        ? "bg-white text-orange-600 shadow-sm"
+                                        : "text-slate-500 hover:text-orange-600"
                                 )}>
                                 {item.label}
                             </button>
