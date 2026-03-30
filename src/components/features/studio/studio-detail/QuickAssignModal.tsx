@@ -245,7 +245,7 @@ export function QuickAssignModal({
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-8 py-6">
                         {/* Scope */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">{t("scope.title")}</label>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("scope.title")}</h3>
                             <div className="mt-3 space-y-2">
                                 <label
                                     className={cn(
@@ -293,7 +293,7 @@ export function QuickAssignModal({
 
                         {/* Default Role */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">{t("defaultRole.title")}</label>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("defaultRole.title")}</h3>
                             <div className="mt-3">
                                 <select
                                     {...form.register("defaultRole")}
@@ -309,7 +309,7 @@ export function QuickAssignModal({
 
                         {/* Target Groups */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">{t("targetGroups.title")}</label>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("targetGroups.title")}</h3>
                             <p className="mt-1 mb-3 text-[#6B7280] text-xs">{t("targetGroups.hint")}</p>
                             {groups.length > 0 ? (
                                 <div className="max-h-[180px] space-y-2 overflow-y-auto rounded-xl border border-gray-200 p-3">
@@ -350,7 +350,7 @@ export function QuickAssignModal({
 
                         {/* Exclude Users */}
                         <div>
-                            <label className="font-semibold text-[#111827] text-base">{t("excludeMembers.title")}</label>
+                            <h3 className="font-semibold text-[#111827] text-base">{t("excludeMembers.title")}</h3>
                             <p className="mt-1 mb-3 text-[#6B7280] text-xs">
                                 {t("excludeMembers.hint")}
                             </p>

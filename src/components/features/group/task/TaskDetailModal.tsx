@@ -176,8 +176,11 @@ function safeInitialsFromName(name?: string | null) {
     return `${a}${b}`.toUpperCase() || "U";
 }
 
-function renderAllMentions(segment: string) {
-    const re = /@(all|mọi người)\b/g;
+function renderAllMentions(segment: string, mentionAllAliases: string[] = []) {
+    const aliases = mentionAllAliases.map((alias) => alias.trim()).filter(Boolean);
+    if (aliases.length === 0) return segment;
+
+    const re = new RegExp(`@(${aliases.map(escapeRegExp).join("|")})\\b`, "gi");
     const nodes: React.ReactNode[] = [];
     let last = 0;
 
@@ -338,11 +341,13 @@ function apiUrl(path: string) {
 function RichTextWithMentions({
     text,
     membersById,
-    authorId
+    authorId,
+    mentionAllLabel
 }: {
     text: string;
     membersById: Record<string, string>;
     authorId: string;
+    mentionAllLabel: string;
 }) {
     const displayText = React.useMemo(
         () => compressAllMentionsForDisplay(text, membersById, authorId),
@@ -363,7 +368,7 @@ function RichTextWithMentions({
         if (id === "__all__") {
             parts.push(
                 <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
-                    @mọi người
+                    @{mentionAllLabel}
                 </span>
             );
         } else {
@@ -409,6 +414,8 @@ const MentionTextarea = React.forwardRef<
         members: MentionUser[];
         meId: string;
         noResultsText?: string;
+        mentionAllLabel: string;
+        mentionAllSubtitle: string;
         placeholder?: string;
         className?: string;
         maxChars?: number;
@@ -416,7 +423,20 @@ const MentionTextarea = React.forwardRef<
         disabled?: boolean;
     }
 >(function MentionTextareaInner(
-    { value, onChange, members, meId, noResultsText, placeholder, className, maxChars = 500, onSubmit, disabled = false },
+    {
+        value,
+        onChange,
+        members,
+        meId,
+        noResultsText,
+        mentionAllLabel,
+        mentionAllSubtitle,
+        placeholder,
+        className,
+        maxChars = 500,
+        onSubmit,
+        disabled = false
+    },
     ref
 ) {
     const taRef = React.useRef<HTMLTextAreaElement | null>(null);
@@ -504,8 +524,8 @@ const MentionTextarea = React.forwardRef<
 
         const allOption: MentionUser = {
             id: "__all__",
-            name: "mọi người",
-            subtitle: "Nhắc đến mọi người trong cuộc trò chuyện này",
+            name: mentionAllLabel,
+            subtitle: mentionAllSubtitle,
             isAll: true
         };
 
@@ -520,7 +540,7 @@ const MentionTextarea = React.forwardRef<
                 return haystack.includes(q);
             })
             .slice(0, 8);
-    }, [members, meId, query]);
+    }, [members, meId, mentionAllLabel, mentionAllSubtitle, query]);
 
     const detectFromText = React.useCallback((text: string, caret: number) => {
         let i = caret - 1;
@@ -559,7 +579,7 @@ const MentionTextarea = React.forwardRef<
         const before = value.slice(0, anchor.start);
         const after = value.slice(anchor.end);
 
-        const visibleName = user.isAll ? "mọi người" : user.name;
+        const visibleName = user.isAll ? mentionAllLabel : user.name;
         const tokenVisible = `@${visibleName}`;
         const tokenInsert = `${tokenVisible} `;
         const next = before + tokenInsert + after;
@@ -679,13 +699,24 @@ const MentionTextarea = React.forwardRef<
             text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
         }
 
-        text = text.replace(/@mọi người\b/g, "@__all__");
-        text = text.replace(/@all\b/g, "@__all__");
+        const mentionAllAliases = [mentionAllLabel, "all"]
+            .map((alias) => alias.trim())
+            .filter(Boolean);
+
+        for (const alias of mentionAllAliases) {
+            const aliasRegex = new RegExp(`@${escapeRegExp(alias)}\\b`, "gi");
+            text = text.replace(aliasRegex, "@__all__");
+        }
 
         return text;
-    }, [value]);
+    }, [mentionAllLabel, value]);
 
     React.useImperativeHandle(ref, () => ({ getPayloadText }), [getPayloadText]);
+
+    const mentionAllAliases = React.useMemo(
+        () => [mentionAllLabel, "all"].map((alias) => alias.trim()).filter(Boolean),
+        [mentionAllLabel]
+    );
 
     const previewNodes = React.useMemo(() => {
         const text = value ?? "";
@@ -701,7 +732,7 @@ const MentionTextarea = React.forwardRef<
         for (const m of ms) {
             if (m.start > last) {
                 const seg = text.slice(last, m.start);
-                const segNodes = renderAllMentions(seg);
+                const segNodes = renderAllMentions(seg, mentionAllAliases);
                 if (Array.isArray(segNodes)) nodes.push(...segNodes);
                 else nodes.push(segNodes);
             }
@@ -716,13 +747,13 @@ const MentionTextarea = React.forwardRef<
         }
 
         if (last < text.length) {
-            const tail = renderAllMentions(text.slice(last));
+            const tail = renderAllMentions(text.slice(last), mentionAllAliases);
             if (Array.isArray(tail)) nodes.push(...tail);
             else nodes.push(tail);
         }
 
         return nodes.length ? nodes : text;
-    }, [value]);
+    }, [mentionAllAliases, value]);
 
     const popup =
         mounted && open && !disabled && popupPosition
@@ -745,9 +776,8 @@ const MentionTextarea = React.forwardRef<
                         <div className="max-h-80 overflow-y-auto py-2">
                             {filtered.map((u, idx) => {
                                 const isActive = idx === activeIndex;
-                                const displayName = u.isAll ? "mọi người" : u.name;
-                                const subtitle =
-                                    u.subtitle || (u.isAll ? "Nhắc đến mọi người trong cuộc trò chuyện này" : "");
+                                const displayName = u.isAll ? mentionAllLabel : u.name;
+                                const subtitle = u.subtitle || (u.isAll ? mentionAllSubtitle : "");
 
                                 return (
                                     <button
@@ -873,8 +903,25 @@ function parseMaybeJson(raw: string) {
     }
 }
 
+function shouldUseFallbackErrorMessage(message: string) {
+    const normalized = message.trim().toLowerCase();
+
+    return (
+        normalized === "thiếu next_public_api_base_url." ||
+        normalized === "missing next_public_api_base_url." ||
+        normalized === "không tìm thấy task trong group" ||
+        normalized === "task not found in group" ||
+        normalized === "đã xảy ra lỗi" ||
+        normalized === "an error occurred"
+    );
+}
+
 function getErrorMessage(e: unknown, fallback: string) {
-    if (e instanceof Error && e.message.trim()) return e.message;
+    if (e instanceof Error) {
+        const message = e.message.trim();
+        if (!(message && !shouldUseFallbackErrorMessage(message))) return fallback;
+        return message;
+    }
     return fallback;
 }
 
@@ -892,7 +939,7 @@ const extractApiMessage = (text: string, json: unknown) => {
     const msg = String(asObject(json)?.message ?? "").trim();
     if (msg) return msg;
     const t = (text ?? "").toString().trim();
-    return t || "Đã xảy ra lỗi";
+    return t || "";
 };
 
 function formatDisplayDate(input?: string | null) {
@@ -996,7 +1043,7 @@ function clampProgressInput(value: string) {
     return String(Math.min(Math.max(Math.floor(n), 0), 100));
 }
 
-function relativeTimeOf(input?: string | null) {
+function relativeTimeOf(input: string | null | undefined, locale: string) {
     const s = String(input ?? "").trim();
     if (!s) return "";
     const d = new Date(s);
@@ -1006,7 +1053,8 @@ function relativeTimeOf(input?: string | null) {
     const minute = 60 * 1000;
     const hour = 60 * minute;
     const day = 24 * hour;
-    const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+    const normalizedLocale = locale.includes("-") ? locale : locale === "vi" ? "vi" : "en";
+    const rtf = new Intl.RelativeTimeFormat(normalizedLocale, { numeric: "auto" });
     if (absMs < hour) return rtf.format(Math.round(diffMs / minute), "minute");
     if (absMs < day) return rtf.format(Math.round(diffMs / hour), "hour");
     return rtf.format(Math.round(diffMs / day), "day");
@@ -1847,6 +1895,8 @@ export default function TaskDetailModal(props: {
     const { open, onClose, taskId, onSaved } = props;
     const t = useTranslations("TaskDetailModal");
     const locale = useLocale();
+    const mentionAllLabel = t("mentionAll.label");
+    const mentionAllSubtitle = t("mentionAll.subtitle");
     const params = useParams<Record<string, string | string[] | undefined>>();
     const groupId = React.useMemo(() => getGroupIdFromParams(params ?? {}), [params]);
     const commentMentionRef = React.useRef<MentionTextareaHandle | null>(null);
@@ -2941,7 +2991,7 @@ export default function TaskDetailModal(props: {
                                         const u = c.user;
                                         const name =
                                             `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() || t("user");
-                                        const when = c.createdAt ? relativeTimeOf(c.createdAt) : "";
+                                        const when = c.createdAt ? relativeTimeOf(c.createdAt, locale) : "";
                                         const replies = (c.replies ?? []).filter((r) => !r?.isDeleted);
 
                                         return (
@@ -2977,6 +3027,7 @@ export default function TaskDetailModal(props: {
                                                                         text={String(c.content ?? "")}
                                                                         membersById={membersById}
                                                                         authorId={String(c.userId ?? c.user?.id ?? "")}
+                                                                        mentionAllLabel={mentionAllLabel}
                                                                     />
                                                                 </div>
 
@@ -3006,7 +3057,7 @@ export default function TaskDetailModal(props: {
                                                             const rname =
                                                                 `${(ru?.firstName ?? "").trim()} ${(ru?.lastName ?? "").trim()}`.trim() ||
                                                                 t("user");
-                                                            const rwhen = r.createdAt ? relativeTimeOf(r.createdAt) : "";
+                                                            const rwhen = r.createdAt ? relativeTimeOf(r.createdAt, locale) : "";
 
                                                             return (
                                                                 <div
@@ -3046,6 +3097,7 @@ export default function TaskDetailModal(props: {
                                                                                         text={String(r.content ?? "")}
                                                                                         membersById={membersById}
                                                                                         authorId={String(r.userId ?? r.user?.id ?? "")}
+                                                                                        mentionAllLabel={mentionAllLabel}
                                                                                     />
                                                                                 </p>
 
@@ -3108,6 +3160,8 @@ export default function TaskDetailModal(props: {
                                                         members={mentionUsers}
                                                         meId={myUserId}
                                                         noResultsText={t("noMembersToMention")}
+                                                        mentionAllLabel={mentionAllLabel}
+                                                        mentionAllSubtitle={mentionAllSubtitle}
                                                         placeholder={replyingTo ? t("writeReply") : t("writeComment")}
                                                         maxChars={TASK_COMMENT_MAX_LENGTH}
                                                         disabled={!canComment || sendingComment}

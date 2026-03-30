@@ -66,8 +66,8 @@ type Task = {
     description?: string | null;
     assigneeName?: string | null;
     statusName?: string | null;
-    priorityLabel?: string | null;
-    severityLabel?: string | null;
+    priority?: number | null;
+    severity?: number | null;
     progress?: number;
     estimatedHours?: number;
     actualHours?: number;
@@ -142,6 +142,7 @@ type ApiMessages = {
     invalidTaskId: string;
     invalidStatusId: string;
     enterStatusName: string;
+    genericApiError: string;
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -168,24 +169,23 @@ function priorityToStatusDot(priority?: number): Task["statusDot"] {
     return "green";
 }
 
-function priorityLabelOf(priority?: number) {
-    if (priority === 2) return "High";
-    if (priority === 1) return "Medium";
-    return "Low";
+function priorityLabelOf(priority: number | null | undefined, t: (key: string) => string) {
+    if (priority === 2) return t("high");
+    if (priority === 1) return t("medium");
+    return t("low");
 }
 
-function severityLabelOf(severity?: number) {
-    if (severity === 3) return "Critical";
-    if (severity === 2) return "Major";
-    if (severity === 1) return "Moderate";
-    return "Minor";
+function severityLabelOf(severity: number | null | undefined, t: (key: string) => string) {
+    if (severity === 3) return t("critical");
+    if (severity === 2) return t("major");
+    if (severity === 1) return t("moderate");
+    return t("minor");
 }
 
-function severityTone(label?: string | null) {
-    const v = String(label ?? "").toLowerCase();
-    if (v === "critical") return "border-rose-200 bg-rose-50 text-rose-700";
-    if (v === "major") return "border-orange-200 bg-orange-50 text-orange-700";
-    if (v === "moderate") return "border-amber-200 bg-amber-50 text-amber-700";
+function severityTone(severity: number | null | undefined) {
+    if (severity === 3) return "border-rose-200 bg-rose-50 text-rose-700";
+    if (severity === 2) return "border-orange-200 bg-orange-50 text-orange-700";
+    if (severity === 1) return "border-amber-200 bg-amber-50 text-amber-700";
     return "border-sky-200 bg-sky-50 text-sky-700";
 }
 
@@ -238,11 +238,11 @@ const okByJsonStatus = (obj: any) => {
     return s === "" || s === "success" || s === "ok" || s === "true";
 };
 
-const extractApiMessage = (text: string, json: any) => {
+const extractApiMessage = (text: string, json: any, fallback: string) => {
     const msg = (json?.message ?? "").toString().trim();
     if (msg) return msg;
     const t = (text ?? "").toString().trim();
-    return t || "An error occurred";
+    return t || fallback;
 };
 
 function getApiBase() {
@@ -300,13 +300,13 @@ function canDeleteByRole(role: string | null | undefined) {
     return r === "owner" || r === "moderator";
 }
 
-async function apiFetchJson<T>(input: RequestInfo, init: RequestInit): Promise<ApiResponse<T> | null> {
+async function apiFetchJson<T>(input: RequestInfo, init: RequestInit, messages: ApiMessages): Promise<ApiResponse<T> | null> {
     const res = await fetch(input, init);
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
 
     if (!res.ok || (json && !okByJsonStatus(json))) {
-        throw new Error(extractApiMessage(raw, json));
+        throw new Error(extractApiMessage(raw, json, messages.genericApiError));
     }
 
     return (json ?? null) as ApiResponse<T> | null;
@@ -364,7 +364,7 @@ async function apiGetGroupDetail(groupId: string, messages: ApiMessages) {
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         cache: "no-store"
-    });
+    }, messages);
 }
 
 async function apiGetGroupMembers(groupId: string, messages: ApiMessages) {
@@ -381,7 +381,7 @@ async function apiGetGroupMembers(groupId: string, messages: ApiMessages) {
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         cache: "no-store"
-    });
+    }, messages);
 
     return response;
 }
@@ -413,7 +413,7 @@ async function apiReorderGroupTaskStatus(args: {
             prevStatusId: args.prevStatusId,
             nextStatusId: args.nextStatusId
         })
-    });
+    }, messages);
 
     return true;
 }
@@ -455,7 +455,7 @@ async function apiReorderTask(args: {
     const { json } = parseMaybeJson(raw);
     const okJson = !json || okByJsonStatus(json);
 
-    if (!(res.ok && okJson)) throw new Error(extractApiMessage(raw, json));
+    if (!(res.ok && okJson)) throw new Error(extractApiMessage(raw, json, messages.genericApiError));
     return true;
 }
 
@@ -485,7 +485,7 @@ async function apiCreateGroupTaskStatus(
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify(payload)
-    });
+    }, messages);
 
     return (res ?? null) as ApiResponse<GroupTaskStatusData> | null;
 }
@@ -574,7 +574,7 @@ async function apiCreateTask(args: {
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify(payload)
-    });
+    }, messages);
 }
 
 async function apiDeleteTask(args: { groupId: string; taskId: string }, messages: ApiMessages) {
@@ -594,7 +594,7 @@ async function apiDeleteTask(args: { groupId: string; taskId: string }, messages
             Accept: "text/plain, application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
-    });
+    }, messages);
 
     return true;
 }
@@ -625,7 +625,7 @@ async function apiRenameGroupTaskStatus(args: {
             position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0,
             statusName: String(args.statusName ?? "").trim()
         })
-    });
+    }, messages);
 
     return true;
 }
@@ -648,7 +648,7 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
             Accept: "text/plain, application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
-    });
+    }, messages);
 
     return true;
 }
@@ -1025,6 +1025,7 @@ function TaskCard({
     const clickingActionRef = React.useRef(false);
     const done = isTaskDone(task);
     const showProgress = shouldShowProgress(task);
+    const severityLabel = task.severity != null ? severityLabelOf(task.severity, t) : null;
 
     React.useEffect(() => {
         if (isEditing) {
@@ -1210,21 +1211,21 @@ function TaskCard({
                         </div>
                     )}
 
-                    {task.due || task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                    {task.due || severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                            {severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {task.severityLabel ? (
+                                    {severityLabel ? (
                                         <span
                                             className={cn(
                                                 "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                                    : severityTone(task.severityLabel)
+                                                    : severityTone(task.severity)
                                             )}>
-                                            {task.severityLabel}
+                                            {severityLabel}
                                         </span>
                                     ) : null}
 
@@ -1260,6 +1261,7 @@ function GhostTaskCard({ task }: { task: Task }) {
     const done = isTaskDone(task);
     const showProgress = shouldShowProgress(task);
     const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
+    const severityLabel = task.severity != null ? severityLabelOf(task.severity, t) : null;
 
     return (
         <div className={cn("rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3")}>
@@ -1274,21 +1276,21 @@ function GhostTaskCard({ task }: { task: Task }) {
                         {task.title}
                     </p>
 
-                    {task.due || task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                    {task.due || severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {task.severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                            {severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
-                                    {task.severityLabel ? (
+                                    {severityLabel ? (
                                         <span
                                             className={cn(
                                                 "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                                 done
                                                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                                    : severityTone(task.severityLabel)
+                                                    : severityTone(task.severity)
                                             )}>
-                                            {task.severityLabel}
+                                            {severityLabel}
                                         </span>
                                     ) : null}
 
@@ -1857,6 +1859,7 @@ function TaskOverlay({ task }: { task: Task }) {
     const overdue = task.dueRaw ? isOverdue(task.dueRaw) : false;
     const done = isTaskDone(task);
     const showProgress = shouldShowProgress(task);
+    const severityLabel = task.severity != null ? severityLabelOf(task.severity, t) : null;
 
     return (
         <div className="min-w-[300px] rounded-xl border border-black/5 bg-white p-4 shadow-xl">
@@ -1870,21 +1873,21 @@ function TaskOverlay({ task }: { task: Task }) {
                 </Pill>
             </div>
 
-            {task.due || task.severityLabel || done || showProgress ? (
+            {task.due || severityLabel || done || showProgress ? (
                 <div className="mt-3 space-y-2">
                     {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                    {task.severityLabel || done || showProgress ? (
+                    {severityLabel || done || showProgress ? (
                         <div className="flex flex-wrap items-center gap-2">
-                            {task.severityLabel ? (
+                            {severityLabel ? (
                                 <span
                                     className={cn(
                                         "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
                                         done
                                             ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                            : severityTone(task.severityLabel)
+                                            : severityTone(task.severity)
                                     )}>
-                                    {task.severityLabel}
+                                    {severityLabel}
                                 </span>
                             ) : null}
 
@@ -1948,7 +1951,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
             invalidGroupId: t("invalidGroupId"),
             invalidTaskId: t("invalidTaskId"),
             invalidStatusId: t("invalidStatus"),
-            enterStatusName: t("enterStatusName")
+            enterStatusName: t("enterStatusName"),
+            genericApiError: t("errorOccurred")
         }),
         [t]
     );
@@ -2291,8 +2295,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                     title: String(apiTask.taskTitle ?? ""),
                     statusDot: priorityToStatusDot(apiTask.taskPriority),
                     assigneeName,
-                    priorityLabel: priorityLabelOf(apiTask.taskPriority),
-                    severityLabel: severityLabelOf(apiTask.taskSeverity),
+                    priority: apiTask.taskPriority ?? null,
+                    severity: apiTask.taskSeverity ?? null,
                     progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0
                 };
 

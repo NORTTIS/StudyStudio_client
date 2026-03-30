@@ -118,7 +118,7 @@ function initialsOf(name: string) {
 
 function safeInitials(name: string | undefined, meLabel: string) {
     const n = String(name || "").trim();
-    if (!n || n === meLabel) return "B";
+    if (!n || n === meLabel) return initialsOf(meLabel);
     return initialsOf(n);
 }
 
@@ -780,8 +780,10 @@ const MentionTextarea = React.forwardRef<
             text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
         }
 
-        text = text.replace(new RegExp(`@${escapeRegExp(t("mentionAllShort"))}\\b`, "g"), "@__all__");
-        text = text.replace(/@all\b/g, "@__all__");
+        text = text.replace(
+            new RegExp(`@(?:all|mọi người|${escapeRegExp(t("mentionAllShort"))})\\b`, "gi"),
+            "@__all__"
+        );
 
         return text;
     }, [t, value]);
@@ -1285,7 +1287,7 @@ export default function GroupDiscussPage() {
     const [me, setMe] = React.useState<UserLite>({
         id: "me",
         name: t("me"),
-        initials: "B",
+        initials: initialsOf(t("me")),
         avatarUrl: null
     });
 
@@ -1446,7 +1448,8 @@ export default function GroupDiscussPage() {
             const response = await apiFetch<GroupMessageListResponse>(
                 `${rawBase}/group-messages/${groupId}`,
                 {
-                    method: "GET"
+                    method: "GET",
+                    locale
                 }
             );
 
@@ -1472,7 +1475,8 @@ export default function GroupDiscussPage() {
 
             try {
                 const response = await apiFetch<GroupDetailResponse>(`${rawBase}/group/${groupId}/detail`, {
-                    method: "GET"
+                    method: "GET",
+                    locale
                 });
 
                 const roleRaw =
@@ -1491,7 +1495,8 @@ export default function GroupDiscussPage() {
 
             try {
                 const res = await apiFetch<any>(`${rawBase}/group/${groupId}/members`, {
-                    method: "GET"
+                    method: "GET",
+                    locale
                 });
 
                 const list: any[] = res?.data?.data?.members || res?.data?.members || res?.data || [];
@@ -1689,7 +1694,7 @@ export default function GroupDiscussPage() {
 
             void cleanup();
         };
-    }, [groupId, hubUrl, t]);
+    }, [groupId, hubUrl, locale, t]);
 
     const onPost = async () => {
         const connection = connectionRef.current;

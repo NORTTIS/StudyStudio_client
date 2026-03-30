@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as echarts from "echarts";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useMessages, useTranslations } from "next-intl";
 import {
     CheckCircle2,
     Clock3,
@@ -175,13 +175,17 @@ function getWeekStart(date: Date) {
 function getTrendDataByFilter(
     source: Array<{ date: string; completed: number }>,
     filter: TrendFilter,
-    year: number
+    year: number,
+    labels: {
+        weekdays: string[];
+        weeks: string[];
+        months: string[];
+    }
 ): DailyProgressPoint[] {
     const now = new Date(year, 10, 18);
 
     if (filter === "week") {
         const weekStart = getWeekStart(now);
-        const weekdays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
         return Array.from({ length: 7 }).map((_, index) => {
             const current = new Date(weekStart);
@@ -190,7 +194,7 @@ function getTrendDataByFilter(
             const found = source.find((item) => item.date === key);
 
             return {
-                label: weekdays[index],
+                label: labels.weekdays[index] ?? "",
                 completed: found?.completed ?? 0
             };
         });
@@ -203,13 +207,7 @@ function getTrendDataByFilter(
             return d.getFullYear() === year && d.getMonth() === month;
         });
 
-        const buckets = [
-            { label: "Tuần 1", completed: 0 },
-            { label: "Tuần 2", completed: 0 },
-            { label: "Tuần 3", completed: 0 },
-            { label: "Tuần 4", completed: 0 },
-            { label: "Tuần 5", completed: 0 }
-        ];
+        const buckets = labels.weeks.map((label) => ({ label, completed: 0 }));
 
         monthItems.forEach((item) => {
             const day = new Date(item.date).getDate();
@@ -220,12 +218,7 @@ function getTrendDataByFilter(
         return buckets;
     }
 
-    const monthNames = [
-        "T1", "T2", "T3", "T4", "T5", "T6",
-        "T7", "T8", "T9", "T10", "T11", "T12"
-    ];
-
-    return monthNames.map((label, monthIndex) => {
+    return labels.months.map((label, monthIndex) => {
         const total = source
             .filter((item) => {
                 const d = new Date(item.date);
@@ -442,7 +435,8 @@ function SummaryCard({
 
 function buildGithubCalendarHeatmap(
     year: number,
-    heatmapByDate: Record<string, number>
+    heatmapByDate: Record<string, number>,
+    monthNames: string[]
 ) {
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
@@ -481,7 +475,7 @@ function buildGithubCalendarHeatmap(
             if (!seenMonths.has(monthKey)) {
                 seenMonths.add(monthKey);
                 monthLabels.push({
-                    label: current.toLocaleString("en-US", { month: "short" }),
+                    label: monthNames[current.getMonth()] ?? "",
                     weekIndex: week
                 });
             }
@@ -497,14 +491,23 @@ function buildGithubCalendarHeatmap(
 
 function GitHubHeatmap({
     year,
-    heatmapByDate
+    heatmapByDate,
+    labels
 }: {
     year: number;
     heatmapByDate: Record<string, number>;
+    labels: {
+        days: { mon: string; wed: string; fri: string };
+        less: string;
+        more: string;
+        taskSingular: string;
+        taskPlural: string;
+        months: string[];
+    };
 }) {
     const { result, monthLabels, totalWeeks } = React.useMemo(
-        () => buildGithubCalendarHeatmap(year, heatmapByDate),
-        [year, heatmapByDate]
+        () => buildGithubCalendarHeatmap(year, heatmapByDate, labels.months),
+        [year, heatmapByDate, labels.months]
     );
 
     const colorMap: Record<number, string> = {
@@ -526,9 +529,9 @@ function GitHubHeatmap({
     }, [result]);
 
     const dayLabels = [
-        { label: "Mon", row: 0 },
-        { label: "Wed", row: 2 },
-        { label: "Fri", row: 4 }
+        { label: labels.days.mon, row: 0 },
+        { label: labels.days.wed, row: 2 },
+        { label: labels.days.fri, row: 4 }
     ];
 
     const wrapperRef = React.useRef<HTMLDivElement | null>(null);
@@ -652,7 +655,7 @@ function GitHubHeatmap({
                                             key={`${week}-${day}`}
                                             title={
                                                 !hidden
-                                                    ? `${date}: ${value} ${value === 1 ? "task" : "tasks"}`
+                                                    ? `${date}: ${value} ${value === 1 ? labels.taskSingular : labels.taskPlural}`
                                                     : ""
                                             }
                                             className="rounded-[4px] hover:scale-[1.08]"
@@ -674,7 +677,7 @@ function GitHubHeatmap({
                 </div>
 
                 <div className="mt-6 flex items-center justify-end gap-2 text-sm text-slate-500">
-                    <span>Less</span>
+                    <span>{labels.less}</span>
                     {[0, 1, 2, 3, 4].map((level) => (
                         <div
                             key={level}
@@ -688,7 +691,7 @@ function GitHubHeatmap({
                             }}
                         />
                     ))}
-                    <span>More</span>
+                    <span>{labels.more}</span>
                 </div>
             </div>
         </div>
@@ -697,12 +700,133 @@ function GitHubHeatmap({
 
 export default function AnalysisHome() {
     const t = useTranslations("AnalysisHome");
+    const locale = useLocale();
+    const messages = useMessages();
     const data = mockData;
     const [trendFilter, setTrendFilter] = React.useState<TrendFilter>("week");
 
+    const isVi = locale === "vi";
+
+    const fallbackMessages = React.useMemo(
+        () =>
+            isVi
+                ? {
+                    "hero.badge": "Phân tích cá nhân",
+                    "hero.title": "Phân tích hiệu suất cá nhân",
+                    "cards.totalTasks.title": "Tổng công việc",
+                    "cards.totalTasks.note": "Tổng số công việc hiện tại",
+                    "cards.completed.title": "Hoàn thành",
+                    "cards.completed.note": "Công việc đã hoàn thành",
+                    "cards.inProgress.title": "Đang thực hiện",
+                    "cards.inProgress.note": "Công việc đang thực hiện",
+                    "sections.statusDistribution": "1. Phân bố trạng thái công việc",
+                    "sections.progressOverTime": "2. Tiến độ công việc theo thời gian",
+                    "sections.workloadByGroup": "3. Khối lượng công việc theo nhóm",
+                    "sections.contributionActivity": "4. Hoạt động đóng góp {year}",
+                    "trend.week": "Tuần",
+                    "trend.month": "Tháng",
+                    "trend.year": "Năm",
+                    "status.todo": "Cần làm",
+                    "status.inProgress": "Đang thực hiện",
+                    "status.done": "Hoàn thành",
+                    "status.overdue": "Quá hạn",
+                    "chart.totalTasks": "Tổng công việc",
+                    "chart.taskStatus": "Trạng thái công việc",
+                    "chart.taskCompleted": "Công việc hoàn thành",
+                    "chart.workload": "Khối lượng",
+                    "chart.tasksUnit": "công việc"
+                }
+                : {
+                    "hero.badge": "Personal Analytics",
+                    "hero.title": "Personal Performance Analytics",
+                    "cards.totalTasks.title": "Total Tasks",
+                    "cards.totalTasks.note": "Total current tasks",
+                    "cards.completed.title": "Completed",
+                    "cards.completed.note": "Tasks completed",
+                    "cards.inProgress.title": "In Progress",
+                    "cards.inProgress.note": "Tasks in progress",
+                    "sections.statusDistribution": "1. Task Status Distribution",
+                    "sections.progressOverTime": "2. Task Progress Over Time",
+                    "sections.workloadByGroup": "3. Workload by Group",
+                    "sections.contributionActivity": "4. Contribution Activity {year}",
+                    "trend.week": "Week",
+                    "trend.month": "Month",
+                    "trend.year": "Year",
+                    "status.todo": "To do",
+                    "status.inProgress": "In progress",
+                    "status.done": "Done",
+                    "status.overdue": "Overdue",
+                    "chart.totalTasks": "Total tasks",
+                    "chart.taskStatus": "Task status",
+                    "chart.taskCompleted": "Task completed",
+                    "chart.workload": "Workload",
+                    "chart.tasksUnit": "tasks"
+                },
+        [isVi]
+    );
+
+    const tr = React.useCallback(
+        (key: string, values?: Record<string, string | number>) => {
+            const hasKey = key.split(".").reduce<unknown>((acc, part) => {
+                if (acc && typeof acc === "object" && part in (acc as Record<string, unknown>)) {
+                    return (acc as Record<string, unknown>)[part];
+                }
+
+                return undefined;
+            }, (messages as Record<string, unknown>).AnalysisHome);
+
+            if (typeof hasKey === "string") {
+                return t(key as never, values as never);
+            }
+
+            let message = fallbackMessages[key as keyof typeof fallbackMessages] ?? key;
+
+            if (values) {
+                Object.entries(values).forEach(([name, value]) => {
+                    message = message.replaceAll(`{${name}}`, String(value));
+                });
+            }
+
+            return message;
+        },
+        [fallbackMessages, messages, t]
+    );
+
+    const trendLabels = React.useMemo(
+        () =>
+            isVi
+                ? {
+                    weekdays: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+                    weeks: ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5"],
+                    months: ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"]
+                }
+                : {
+                    weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    weeks: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
+                    months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                },
+        [isVi]
+    );
+
+    const heatmapLabels = React.useMemo(
+        () => ({
+            days: {
+                mon: trendLabels.weekdays[0],
+                wed: trendLabels.weekdays[2],
+                fri: trendLabels.weekdays[4]
+            },
+            less: isVi ? "Ít" : "Less",
+            more: isVi ? "Nhiều" : "More",
+            taskSingular: isVi ? "công việc" : "task",
+            taskPlural: isVi ? "công việc" : "tasks",
+            months: trendLabels.months
+        }),
+        [isVi, trendLabels]
+    );
+
     const filteredTrendData = React.useMemo(() => {
-        return getTrendDataByFilter(dailyCompletionSource, trendFilter, selectedYear);
-    }, [trendFilter]);
+        return getTrendDataByFilter(dailyCompletionSource, trendFilter, selectedYear, trendLabels);
+    }, [trendFilter, trendLabels]);
 
     const workloadGroups = React.useMemo(
         () =>
@@ -716,12 +840,12 @@ export default function AnalysisHome() {
 
     const pieData = React.useMemo(
         () => [
-            { name: "To do", value: data.todoTasks },
-            { name: "In progress", value: data.inProgressTasks },
-            { name: "Done", value: data.doneTasks },
-            { name: "Overdue", value: data.overdueTasks }
+            { name: tr("status.todo"), value: data.todoTasks },
+            { name: tr("status.inProgress"), value: data.inProgressTasks },
+            { name: tr("status.done"), value: data.doneTasks },
+            { name: tr("status.overdue"), value: data.overdueTasks }
         ],
-        [data]
+        [data, tr]
     );
 
     const totalPie = React.useMemo(
@@ -742,7 +866,7 @@ export default function AnalysisHome() {
                 borderWidth: 0,
                 textStyle: { color: "#fff" },
                 formatter: (params: any) => {
-                    return `${params.name}<br/>${params.value} tasks (${params.percent}%)`;
+                    return `${params.name}<br/>${params.value} ${tr("chart.tasksUnit")} (${params.percent}%)`;
                 }
             },
             legend: { show: false },
@@ -764,7 +888,7 @@ export default function AnalysisHome() {
                     left: "center",
                     top: "54%",
                     style: {
-                        text: "Total tasks",
+                        text: tr("chart.totalTasks"),
                         textAlign: "center",
                         fill: "#64748b",
                         fontSize: 13,
@@ -774,7 +898,7 @@ export default function AnalysisHome() {
             ],
             series: [
                 {
-                    name: "Task status",
+                    name: tr("chart.taskStatus"),
                     type: "pie",
                     radius: ["62%", "82%"],
                     center: ["50%", "46%"],
@@ -801,7 +925,7 @@ export default function AnalysisHome() {
                 }
             ]
         }),
-        [pieData, totalPie]
+        [pieData, tr, totalPie]
     );
 
     const progressLineOption = React.useMemo<echarts.EChartsOption>(
@@ -843,7 +967,7 @@ export default function AnalysisHome() {
             },
             series: [
                 {
-                    name: "Task completed",
+                    name: tr("chart.taskCompleted"),
                     type: "line",
                     smooth: true,
                     symbol: "circle",
@@ -867,7 +991,7 @@ export default function AnalysisHome() {
                 }
             ]
         }),
-        [filteredTrendData]
+        [filteredTrendData, tr]
     );
 
     const workloadBarOption = React.useMemo<echarts.EChartsOption>(
@@ -892,7 +1016,7 @@ export default function AnalysisHome() {
                     formatter: (params: any) => {
                         const item = params?.[0];
                         if (!item) return "";
-                        return `${item.name}<br/>${item.value} tasks`;
+                        return `${item.name}<br/>${item.value} ${tr("chart.tasksUnit")}`;
                     }
                 },
                 grid: {
@@ -940,7 +1064,7 @@ export default function AnalysisHome() {
                 },
                 series: [
                     {
-                        name: "Workload",
+                        name: tr("chart.workload"),
                         type: "bar",
                         barWidth:
                             workloadGroups.length <= 4
@@ -981,7 +1105,7 @@ export default function AnalysisHome() {
                 ]
             };
         },
-        [workloadGroups]
+        [tr, workloadGroups]
     );
 
     return (
@@ -1008,11 +1132,11 @@ export default function AnalysisHome() {
                                         className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-orange-50/90 px-3 py-1.5 text-xs font-medium text-orange-700 shadow-sm"
                                     >
                                         <Sparkles className="h-3.5 w-3.5" />
-                                        Personal Analytics
+                                        {tr("hero.badge")}
                                     </motion.div>
 
                                     <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#EA580C_55%,#C2410C_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[38px]">
-                                        {t("title")}
+                                        {tr("hero.title")}
                                     </h1>
 
                                     <div className="mt-4">
@@ -1026,23 +1150,23 @@ export default function AnalysisHome() {
                     <SectionReveal delay={0.04}>
                         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                             <SummaryCard
-                                title={t("totalTasks")}
+                                title={tr("cards.totalTasks.title")}
                                 value={data.totalTasks}
-                                note={t("totalTasksHint")}
+                                note={tr("cards.totalTasks.note")}
                                 icon={<Target className="h-5 w-5" />}
                                 tone="accent"
                             />
                             <SummaryCard
-                                title={t("completed")}
+                                title={tr("cards.completed.title")}
                                 value={data.doneTasks}
-                                note={t("completedHint")}
+                                note={tr("cards.completed.note")}
                                 icon={<CheckCircle2 className="h-5 w-5" />}
                                 tone="success"
                             />
                             <SummaryCard
-                                title={t("inProgress")}
+                                title={tr("cards.inProgress.title")}
                                 value={data.inProgressTasks}
-                                note={t("inProgressHint")}
+                                note={tr("cards.inProgress.note")}
                                 icon={<Clock3 className="h-5 w-5" />}
                                 tone="warning"
                             />
@@ -1054,7 +1178,7 @@ export default function AnalysisHome() {
                             <div className="xl:col-span-4 rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                                 <div className="mb-5">
                                     <h2 className="text-lg font-semibold text-slate-900">
-                                        {t("taskStatusDistribution")}
+                                        {tr("sections.statusDistribution")}
                                     </h2>
                                 </div>
 
@@ -1092,16 +1216,16 @@ export default function AnalysisHome() {
                                         <span className="h-5 w-5 shrink-0" aria-hidden="true" />
                                         <div>
                                             <h2 className="text-lg font-semibold text-slate-900">
-                                                {t("taskProgressOverTime")}
+                                                {tr("sections.progressOverTime")}
                                             </h2>
                                         </div>
                                     </div>
 
                                     <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
                                         {[
-                                            { key: "week", label: t("week") },
-                                            { key: "month", label: t("month") },
-                                            { key: "year", label: t("year") }
+                                            { key: "week", label: tr("trend.week") },
+                                            { key: "month", label: tr("trend.month") },
+                                            { key: "year", label: tr("trend.year") }
                                         ].map((item) => (
                                             <button
                                                 key={item.key}
@@ -1130,7 +1254,7 @@ export default function AnalysisHome() {
                             <div className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                                 <div className="mb-5">
                                     <h2 className="text-lg font-semibold text-slate-900">
-                                        {t("workloadByGroup")}
+                                        {tr("sections.workloadByGroup")}
                                     </h2>
                                 </div>
                                 <EChart option={workloadBarOption} height={430} />
@@ -1139,13 +1263,14 @@ export default function AnalysisHome() {
                             <div className="rounded-[30px] border border-white/70 bg-white/85 p-8 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                                 <div className="mb-5">
                                     <h2 className="text-lg font-semibold text-slate-900">
-                                        {t("contributionActivity")} {selectedYear}
+                                        {tr("sections.contributionActivity", { year: selectedYear })}
                                     </h2>
                                 </div>
 
                                 <GitHubHeatmap
                                     year={selectedYear}
                                     heatmapByDate={data.heatmapByDate}
+                                    labels={heatmapLabels}
                                 />
                             </div>
                         </section>

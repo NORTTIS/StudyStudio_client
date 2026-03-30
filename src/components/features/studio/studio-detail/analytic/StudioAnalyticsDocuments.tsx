@@ -313,10 +313,14 @@ export default function StudioAnalyticsDocuments({
     };
 
     const tabs = groups
-        .filter((g) => (g.groupId ?? "") !== "")
-        .map((g) => ({ key: g.groupId ?? "", label: g.groupName ?? t("tabs.unnamedGroup") }));
+        .filter((g) => (g.groupId?.trim() ?? "") !== "")
+        .map((g) => ({
+            key: g.groupId?.trim() ?? "",
+            label: g.groupName?.trim() ? g.groupName.trim() : t("tabs.unnamedGroup")
+        }));
 
-    const currentGroupName = groups.find((g) => g.groupId === activeTab)?.groupName ?? t("tabs.unnamedGroup");
+    const currentGroupName =
+        groups.find((g) => g.groupId?.trim() === activeTab)?.groupName?.trim() || t("tabs.unnamedGroup");
 
     React.useEffect(() => {
         if (!tabs.length) return;
@@ -371,8 +375,8 @@ export default function StudioAnalyticsDocuments({
                         type="button"
                         onClick={() => setActiveTab(tab.key)}
                         className={`rounded-2xl px-4 py-2 font-medium text-sm transition-all duration-200 ${activeTab === tab.key
-                                ? "bg-orange-500 text-white shadow-sm"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            ? "bg-orange-500 text-white shadow-sm"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                             }`}>
                         {tab.label}
                     </button>
@@ -463,8 +467,8 @@ export default function StudioAnalyticsDocuments({
                         }}
                         onDrop={onDrop}
                         className={`flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 text-center transition-all duration-200 ${isDragActive
-                                ? "border-orange-400 bg-orange-50"
-                                : "border-slate-300 bg-white hover:border-orange-300"
+                            ? "border-orange-400 bg-orange-50"
+                            : "border-slate-300 bg-white hover:border-orange-300"
                             }`}>
                         <Upload className="mb-3 h-8 w-8 text-orange-500" />
                         <p className="font-semibold text-base text-slate-800">{t("upload.dropTitle")}</p>

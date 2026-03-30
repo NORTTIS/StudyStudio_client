@@ -293,6 +293,7 @@ function GroupActivityHeatmap({
     onPrev,
     onNext,
     onChangeRange,
+    locale,
     t
 }: {
     members: { id: string; name: string; activityByDate: DailyActivityPoint[] }[];
@@ -301,6 +302,7 @@ function GroupActivityHeatmap({
     onPrev: () => void;
     onNext: () => void;
     onChangeRange: (value: HeatmapRangeFilter) => void;
+    locale: string;
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     const { start, end } = React.useMemo(() => {
@@ -455,7 +457,7 @@ function GroupActivityHeatmap({
                     ))}
                     <span>{t("heatmap.legend.high")}</span>
                 </div>
-                <div className="text-slate-400 text-sm">{t("heatmap.updated")}: {new Date().toLocaleDateString("vi-VN")}</div>
+                <div className="text-slate-400 text-sm">{t("heatmap.updated")}: {new Date().toLocaleDateString(locale)}</div>
             </div>
         </div>
     );
@@ -910,6 +912,7 @@ function MemberDetailModal({
 
 export default function GroupMemberAnalyticsPage() {
     const t = useTranslations("GroupAnalyticPage");
+    const locale = useLocale();
     const pathname = usePathname();
     const groupId = extractGroupIdFromPath(pathname || "");
 
@@ -1848,6 +1851,7 @@ export default function GroupMemberAnalyticsPage() {
                                 onPrev={handlePrevHeatmapRange}
                                 onNext={handleNextHeatmapRange}
                                 onChangeRange={setHeatmapRange}
+                                locale={locale}
                                 t={t}
                             />
                         </section>

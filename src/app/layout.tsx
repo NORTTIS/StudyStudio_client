@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const interSans = Inter({
-    variable: "--font-sans",
+    variable: "--font-inter",
     subsets: ["latin", "latin-ext"]
 });
 

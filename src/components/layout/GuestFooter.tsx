@@ -73,7 +73,7 @@ export function GuestFooter({ className = "" }: GuestFooterProps) {
                                         ? "bg-orange-500 text-white"
                                         : "text-[#5F4A3A] hover:bg-orange-100"
                                         }`}
-                                    aria-label="Switch language to Vietnamese"
+                                    aria-label={t("switchToVietnamese")}
                                 >
                                     VI
                                 </button>
@@ -84,7 +84,7 @@ export function GuestFooter({ className = "" }: GuestFooterProps) {
                                         ? "bg-orange-500 text-white"
                                         : "text-[#5F4A3A] hover:bg-orange-100"
                                         }`}
-                                    aria-label="Switch language to English"
+                                    aria-label={t("switchToEnglish")}
                                 >
                                     EN
                                 </button>

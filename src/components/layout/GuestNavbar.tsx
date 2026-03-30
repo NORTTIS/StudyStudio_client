@@ -77,23 +77,23 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                             type="button"
                             onClick={() => changeLocale("vi")}
                             className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "vi"
-                                    ? "bg-orange-500 text-white"
-                                    : "text-gray-700 hover:bg-orange-100"
+                                ? "bg-orange-500 text-white"
+                                : "text-gray-700 hover:bg-orange-100"
                                 }`}
-                            aria-label="Switch language to Vietnamese"
+                            aria-label={t("switchToVietnamese")}
                         >
-                            VI
+                            {t("vietnameseShort")}
                         </button>
                         <button
                             type="button"
                             onClick={() => changeLocale("en")}
                             className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "en"
-                                    ? "bg-orange-500 text-white"
-                                    : "text-gray-700 hover:bg-orange-100"
+                                ? "bg-orange-500 text-white"
+                                : "text-gray-700 hover:bg-orange-100"
                                 }`}
-                            aria-label="Switch language to English"
+                            aria-label={t("switchToEnglish")}
                         >
-                            EN
+                            {t("englishShort")}
                         </button>
                     </div>
 
@@ -137,21 +137,23 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                                     type="button"
                                     onClick={() => changeLocale("vi")}
                                     className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "vi"
-                                            ? "bg-orange-500 text-white"
-                                            : "text-gray-700 hover:bg-orange-100"
+                                        ? "bg-orange-500 text-white"
+                                        : "text-gray-700 hover:bg-orange-100"
                                         }`}
+                                    aria-label={t("switchToVietnamese")}
                                 >
-                                    VI
+                                    {t("vietnameseShort")}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => changeLocale("en")}
                                     className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "en"
-                                            ? "bg-orange-500 text-white"
-                                            : "text-gray-700 hover:bg-orange-100"
+                                        ? "bg-orange-500 text-white"
+                                        : "text-gray-700 hover:bg-orange-100"
                                         }`}
+                                    aria-label={t("switchToEnglish")}
                                 >
-                                    EN
+                                    {t("englishShort")}
                                 </button>
                             </div>
 

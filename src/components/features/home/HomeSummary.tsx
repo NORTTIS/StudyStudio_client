@@ -438,7 +438,7 @@ type DetailLayerProps = {
     completedDelta?: number;
     joinedGroupDelta?: number;
     totalTasks: number;
-    t: (key: string) => string;
+    t: (key: string, values?: Record<string, string | number | Date>) => string;
 };
 
 function DetailLayer({
@@ -589,10 +589,10 @@ function DetailLayer({
 
                                     <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                                         <OverviewCard
-                                            title={t("completedCardTitle")}
+                                            title={t("overview.completedTitle")}
                                             value={completedTaskCount}
                                             total={totalTasks}
-                                            description={`${completedTaskCount} ${t("completedDescriptionFallback").toLowerCase()}`}
+                                            description={t("overview.completedDescription", { count: completedTaskCount, total: totalTasks })}
                                             tone="success"
                                             index={0}
                                             subtitleLabel={t("currentOverview")}
@@ -600,10 +600,10 @@ function DetailLayer({
                                         />
 
                                         <OverviewCard
-                                            title={t("remainingCardTitle")}
+                                            title={t("overview.remainingTitle")}
                                             value={remainingTaskCount}
                                             total={totalTasks}
-                                            description={`${remainingTaskCount} ${t("remainingDescriptionFallback").toLowerCase()}`}
+                                            description={t("overview.remainingDescription", { count: remainingTaskCount, total: totalTasks })}
                                             tone="neutral"
                                             index={1}
                                             subtitleLabel={t("currentOverview")}
@@ -611,10 +611,10 @@ function DetailLayer({
                                         />
 
                                         <OverviewCard
-                                            title={t("overdueCardTitle")}
+                                            title={t("overview.overdueTitle")}
                                             value={overdueTaskCount}
                                             total={totalTasks}
-                                            description={`${overdueTaskCount} ${t("overdueDescriptionFallback").toLowerCase()}`}
+                                            description={t("overview.overdueDescription", { count: overdueTaskCount, total: totalTasks })}
                                             tone="danger"
                                             index={2}
                                             subtitleLabel={t("currentOverview")}

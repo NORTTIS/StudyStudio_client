@@ -341,7 +341,7 @@
             "hintFirstName": "Your display first name",
             "hintLastName": "Your last name",
             "hintEmail": "Email cannot be changed",
-            "hintPhone": "10–11 digits, numbers only",
+            "hintPhone": "10â€“11 digits, numbers only",
             "placeholderFirstName": "Enter your first name",
             "placeholderLastName": "Enter your last name",
             "languageHint": "Page reloads on change",
@@ -350,7 +350,7 @@
             "statusOn": "Enabled",
             "statusOff": "Disabled",
             "deleteConfirmPlaceholder": "Type \"DELETE\" to confirm",
-            "deleteIrreversible": "⚠️  This action cannot be undone!"
+            "deleteIrreversible": "âš ï¸  This action cannot be undone!"
         },
         "security": {
             "comingSoon": "Security features coming soon"
@@ -411,12 +411,12 @@
             "fair": "Fair",
             "good": "Good",
             "strong": "Strong",
-            "reqLength": "10–20 characters",
-            "reqUpper": "Uppercase letter (A–Z)",
-            "reqLower": "Lowercase letter (a–z)",
-            "reqNumber": "Digit (0–9)"
+            "reqLength": "10â€“20 characters",
+            "reqUpper": "Uppercase letter (Aâ€“Z)",
+            "reqLower": "Lowercase letter (aâ€“z)",
+            "reqNumber": "Digit (0â€“9)"
         },
-        "matchOk": "Passwords match ✓",
+        "matchOk": "Passwords match âœ“",
         "matchFail": "Passwords do not match",
         "successTitle": "Password changed successfully!",
         "successMessage": "Your password has been securely updated.",
@@ -621,7 +621,7 @@
             "workspaceBadge": "Studio workspace",
             "memberAltFallback": "Member",
             "noGroupsSubtitle": "Create your first group to get started",
-            "notAvailable": "—",
+            "notAvailable": "â€”",
             "validation": {
                 "dateRangeError": "Start date must be less than or equal to end date"
             },
@@ -693,7 +693,7 @@
         "hero": {
             "title": "Shared workspace for",
             "titleHighlight": "learning & projects",
-            "createButton": "Create a group →",
+            "createButton": "Create a group â†’",
             "imageAlt": "Group collaboration",
             "description": "Build a clear group space, assign transparently, track progress in one focused flow, and collaborate more effectively in one place."
         },
@@ -750,7 +750,7 @@
             "titleHighlight": "just for you",
             "subtitle": "Organize notes, documents, and study plans.",
             "subtitleExtra": "All in one intuitive, easy-to-use personal space.",
-            "createButton": "Create your space →",
+            "createButton": "Create your space â†’",
             "imageAlt": "Landing illustration"
         },
         "howToUse": {
@@ -817,7 +817,7 @@
         "hero": {
             "title": "Manage all groups",
             "titleHighlight": "from one place",
-            "createButton": "Start managing →",
+            "createButton": "Start managing â†’",
             "imageAlt": "Management Illustration",
             "description": "Manage groups, members, permissions, and overall progress in a single control space that is both intuitive and powerful.",
             "executiveLabel": "Executive view",
@@ -949,7 +949,7 @@
         "uploadModalTitle": "Upload document",
         "dragDropTitle": "Drag & drop your file here",
         "dragDropSubtitle": "or click to browse",
-        "uploadHint": "Supported: PDF, DOCX, TXT, MD • Max 5MB • 1 file",
+        "uploadHint": "Supported: PDF, DOCX, TXT, MD â€¢ Max 5MB â€¢ 1 file",
         "browseFile": "Browse file",
         "loadingDocuments": "Loading documents...",
         "noDocuments": "No documents uploaded yet.",
@@ -1428,7 +1428,7 @@
         "maxLabel": "Max",
         "remainingLabel": "Remaining",
         "percentUsed": "% used",
-        "unlimitedText": "∞ unlimited",
+        "unlimitedText": "âˆž unlimited",
         "usageLevel": "Usage level",
         "limitReachedHint": "You are using {usage}/{max} groups. Please upgrade to create more groups.",
         "nearLimitHint": "You are using {usage}/{max} groups. You may need to upgrade soon to avoid reaching the limit.",
@@ -1889,7 +1889,7 @@
             "cancelFailed": "Unable to cancel payment",
             "cancelError": "An error occurred. Please try again!",
             "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to billing page...",
-            "emailSent": "📧 Payment confirmation email has been sent to your email address"
+            "emailSent": "ðŸ“§ Payment confirmation email has been sent to your email address"
         }
     },
     "GroupTaskListPage": {
@@ -1924,7 +1924,7 @@
         "cannotLoad": "Cannot load task list.",
         "untitledTask": "Untitled task",
         "unassigned": "Unassigned",
-        "pageInfo": "Page {page}/{totalPages} • {totalCount} tasks",
+        "pageInfo": "Page {page}/{totalPages} â€¢ {totalCount} tasks",
         "previous": "Previous",
         "next": "Next",
         "low": "Low",
@@ -2043,7 +2043,7 @@
         "createTask": "Create task",
         "noStatus": "No status",
         "noTasksInStatus": "No tasks yet",
-        "movingStatus": "Moving status…"
+        "movingStatus": "Moving statusâ€¦"
     },
     "HomeSummary": {
         "badge": "Dashboard Overview",
@@ -2124,6 +2124,13 @@
         "missingStatus": "Missing status",
         "invalidStatus": "Status is invalid",
         "invalidTaskId": "Task ID is invalid",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "minor": "Minor",
+        "moderate": "Moderate",
+        "major": "Major",
+        "critical": "Critical",
         "unnamed": "Unnamed"
     },
     "TaskFormModal": {
@@ -2364,7 +2371,7 @@
             "noData": "No matching tasks found."
         },
         "pagination": {
-            "summary": "{count} items • Page {page}/{totalPages}",
+            "summary": "{count} items â€¢ Page {page}/{totalPages}",
             "previous": "Previous",
             "next": "Next"
         },
@@ -2555,7 +2562,7 @@
             "high": "High"
         },
         "tooltip": {
-            "cell": "{name} • {date}\nTasks: {tasks} | Score: {score} | {level}"
+            "cell": "{name} â€¢ {date}\nTasks: {tasks} | Score: {score} | {level}"
         }
     },
     "GroupProgressChart": {
@@ -2647,7 +2654,7 @@
     },
     "StudioDateRange": {
         "title": "Project timeline",
-        "notAvailable": "—",
+        "notAvailable": "â€”",
         "days": "{count} days",
         "status": {
             "overdue": "Overdue",
