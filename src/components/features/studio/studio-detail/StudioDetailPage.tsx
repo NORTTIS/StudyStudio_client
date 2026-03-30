@@ -316,10 +316,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
     if (membersLoading) {
         return (
-            <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)]">
-                <div className="flex min-h-screen">
+            <div className="h-screen overflow-hidden bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)]">
+                <div className="flex h-full">
                     <DashboardSidebar />
-                    <main className="flex-1">
+                    <main className="h-screen flex-1 overflow-y-auto overflow-x-hidden">
                         <Header userProfile={userProfile} />
                         <div className="flex items-center justify-center py-24">
                             <div className="relative">
@@ -335,10 +335,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
     if (!studio) {
         return (
-            <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)]">
-                <div className="flex min-h-screen">
+            <div className="h-screen overflow-hidden bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)]">
+                <div className="flex h-full">
                     <DashboardSidebar />
-                    <main className="flex-1">
+                    <main className="h-screen flex-1 overflow-y-auto overflow-x-hidden">
                         <Header userProfile={userProfile} />
                         <div className="flex items-center justify-center py-24">
                             <EmptyBlock title={t("detail.studioNotFound")} subtitle={t("detail.studioNotFoundSubtitle")} />
@@ -350,11 +350,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     }
 
     return (
-        <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
-            <div className="flex min-h-screen">
+        <div className="h-screen overflow-hidden bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
+            <div className="flex h-full">
                 <DashboardSidebar />
 
-                <main className="relative flex-1 overflow-hidden">
+                <main className="relative h-screen flex-1 overflow-y-auto overflow-x-hidden">
                     <FloatingOrb className="left-[-120px] top-[-40px] h-72 w-72 bg-orange-200/25" />
                     <FloatingOrb className="right-[-100px] top-[12%] h-80 w-80 bg-violet-200/20" />
                     <FloatingOrb className="bottom-[-120px] left-[15%] h-80 w-80 bg-sky-200/15" />

@@ -159,10 +159,14 @@ function SectionSkeleton() {
 
 function SegmentedView({
     view,
-    onChange
+    onChange,
+    boardLabel,
+    listLabel
 }: {
     view: "grid" | "list";
     onChange: (value: "grid" | "list") => void;
+    boardLabel: string;
+    listLabel: string;
 }) {
     return (
         <div className="flex w-fit items-center rounded-2xl border border-white/70 bg-white/65 p-1.5 shadow-[0_10px_25px_rgba(15,23,42,0.06)] backdrop-blur-xl">
@@ -183,7 +187,7 @@ function SegmentedView({
                     />
                 )}
                 <LayoutGrid className="relative z-10 h-4 w-4" />
-                <span className="relative z-10">Board</span>
+                <span className="relative z-10">{boardLabel}</span>
             </button>
 
             <button
@@ -203,7 +207,7 @@ function SegmentedView({
                     />
                 )}
                 <List className="relative z-10 h-4 w-4" />
-                <span className="relative z-10">List</span>
+                <span className="relative z-10">{listLabel}</span>
             </button>
         </div>
     );
@@ -373,7 +377,12 @@ export function GroupsPage() {
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-3">
-                                        <SegmentedView view={view} onChange={setView} />
+                                        <SegmentedView
+                                            view={view}
+                                            onChange={setView}
+                                            boardLabel={t("board")}
+                                            listLabel={t("list")}
+                                        />
 
                                         <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
                                             <Button

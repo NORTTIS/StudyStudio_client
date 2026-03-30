@@ -22,7 +22,7 @@ export function RegisterLayout() {
                     </Link>
                 </div>
 
-                <div className="absolute bottom-50 space-y-3 px-10 text-center">
+                <div className="absolute bottom-20 space-y-3 px-10 text-center">
                     <h2 className="font-semibold text-black text-xl">Quản lý học tập. Kết nối đội nhóm</h2>
 
                     <p className="mx-auto max-w-md text-gray-600 text-sm leading-relaxed">

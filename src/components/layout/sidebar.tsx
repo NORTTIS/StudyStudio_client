@@ -25,9 +25,15 @@ export function DashboardSidebar() {
     const t = useTranslations("Sidebar");
 
     const [isAdmin, setIsAdmin] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [collapsed, setCollapsed] = useState(false);
-    const [mounted, setMounted] = useState(false);
+    const [collapsed, setCollapsed] = useState(() => {
+        if (typeof window === "undefined") return false;
+
+        try {
+            return localStorage.getItem("dashboard-sidebar-collapsed") === "true";
+        } catch {
+            return false;
+        }
+    });
 
     const userNavigation = [
         { name: t("home"), href: "/home", icon: LayoutDashboard },
@@ -46,25 +52,12 @@ export function DashboardSidebar() {
     ];
 
     useEffect(() => {
-        setMounted(true);
-        try {
-            const saved = localStorage.getItem("dashboard-sidebar-collapsed");
-            if (saved !== null) {
-                setCollapsed(saved === "true");
-            }
-        } catch (error) {
-            console.error("Failed to read sidebar state from localStorage:", error);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!mounted) return;
         try {
             localStorage.setItem("dashboard-sidebar-collapsed", String(collapsed));
         } catch (error) {
             console.error("Failed to save sidebar state to localStorage:", error);
         }
-    }, [collapsed, mounted]);
+    }, [collapsed]);
 
     useEffect(() => {
         const checkAdminStatus = async () => {
@@ -75,8 +68,6 @@ export function DashboardSidebar() {
                 }
             } catch (error) {
                 console.error("Failed to fetch user profile:", error);
-            } finally {
-                setIsLoading(false);
             }
         };
 
@@ -149,27 +140,6 @@ export function DashboardSidebar() {
         );
     };
 
-    if (isLoading) {
-        return (
-            <aside
-                className={twMerge(
-                    "hidden h-screen shrink-0 overflow-hidden border-r border-[#E5E5E5] bg-[#F8F8F8] transition-[width] duration-300 ease-in-out lg:block",
-                    collapsed ? "w-24" : "w-72"
-                )}>
-                <div className="flex h-full flex-col border-r border-orange-100/60 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
-                    {renderHeader()}
-
-                    <div className="flex flex-1 items-center justify-center p-8">
-                        <div className="flex items-center gap-2 text-base text-[#6F6B99]">
-                            <span className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-                            <span className="transition-all duration-200">{collapsed ? "..." : "Loading..."}</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        );
-    }
-
     return (
         <aside
             className={twMerge(
@@ -190,9 +160,6 @@ export function DashboardSidebar() {
                                     key={item.name}
                                     href={fullHref}
                                     title={collapsed ? item.name : undefined}
-                                    onClick={() => {
-                                        if (collapsed) setCollapsed(false);
-                                    }}
                                     className={twMerge(
                                         "group relative flex overflow-hidden rounded-2xl transition-all duration-300 ease-out",
                                         collapsed ? "justify-center px-3 py-3.5" : "items-center gap-4 px-4 py-3.5",

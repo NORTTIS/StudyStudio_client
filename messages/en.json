@@ -1620,7 +1620,9 @@
         "collapse": "Collapse",
         "viewAll": "View all",
         "emptyAreaHint": "Start creating or joining existing groups",
-        "moreGroups": "more groups"
+        "moreGroups": "more groups",
+        "board": "Board",
+        "list": "List"
     },
     "GroupCard": {
         "removeFavorite": "Remove from favorites",
