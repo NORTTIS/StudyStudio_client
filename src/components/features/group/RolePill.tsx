@@ -1,5 +1,7 @@
-import type { Translator } from "next-intl";
+import { useTranslations } from "next-intl";
 import type { GroupRole } from "./types";
+
+type Translator = ReturnType<typeof useTranslations>;
 
 const ROLE_LABELS: Record<GroupRole, string> = {
     owner: "Owner",

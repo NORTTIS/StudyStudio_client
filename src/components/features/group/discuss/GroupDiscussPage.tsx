@@ -2,14 +2,7 @@
 
 import * as signalR from "@microsoft/signalr";
 import Image from "next/image";
-import {
-    ChevronDown,
-    ChevronUp,
-    MessageCircle,
-    MoreHorizontal,
-    SendHorizontal,
-    Trash2
-} from "lucide-react";
+import { ChevronDown, ChevronUp, MessageCircle, MoreHorizontal, SendHorizontal, Trash2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
@@ -138,18 +131,16 @@ function safeAvatarUrl(input?: string | null) {
 }
 
 function normalizeUserId(value?: string | null) {
-    return String(value ?? "").trim().toLowerCase();
+    return String(value ?? "")
+        .trim()
+        .toLowerCase();
 }
 
 function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function compressAllMentionsForDisplay(
-    text: string,
-    membersById: Record<string, string>,
-    authorId?: string
-) {
+function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId?: string) {
     const allMemberIds = Object.keys(membersById)
         .map((id) => String(id).trim())
         .filter(Boolean);
@@ -157,9 +148,7 @@ function compressAllMentionsForDisplay(
     if (allMemberIds.length === 0) return text;
 
     const normalizedAuthorId = normalizeUserId(authorId);
-    const expectedAllIds = allMemberIds.filter(
-        (id) => normalizeUserId(id) !== normalizedAuthorId
-    );
+    const expectedAllIds = allMemberIds.filter((id) => normalizeUserId(id) !== normalizedAuthorId);
 
     // Detect all mentions in the text
     const mentionRegex = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
@@ -169,11 +158,12 @@ function compressAllMentionsForDisplay(
         mentionedIds.add(normalizeUserId(match[1]));
     }
 
-    const expectedNormalizedIds = new Set(expectedAllIds.map(id => normalizeUserId(id)));
+    const expectedNormalizedIds = new Set(expectedAllIds.map((id) => normalizeUserId(id)));
 
-    const isAllMentioned = expectedNormalizedIds.size > 0 &&
+    const isAllMentioned =
+        expectedNormalizedIds.size > 0 &&
         expectedNormalizedIds.size === mentionedIds.size &&
-        Array.from(expectedNormalizedIds).every(id => mentionedIds.has(id));
+        Array.from(expectedNormalizedIds).every((id) => mentionedIds.has(id));
 
     if (!isAllMentioned) return text;
 
@@ -211,16 +201,10 @@ function compressAllMentionsForDisplay(
     return output;
 }
 
-function expandMentionAll(
-    payloadText: string,
-    membersById: Record<string, string>,
-    excludedIds: string[] = []
-) {
+function expandMentionAll(payloadText: string, membersById: Record<string, string>, excludedIds: string[] = []) {
     if (!payloadText.includes("@__all__")) return payloadText;
 
-    const excludedSet = new Set(
-        excludedIds.map((id) => normalizeUserId(id)).filter(Boolean)
-    );
+    const excludedSet = new Set(excludedIds.map((id) => normalizeUserId(id)).filter(Boolean));
 
     const memberIds = Object.keys(membersById).filter((id) => {
         const normalizedId = normalizeUserId(id);
@@ -228,12 +212,18 @@ function expandMentionAll(
     });
 
     if (memberIds.length === 0) {
-        return payloadText.replace(/@__all__\b/g, "").replace(/\s{2,}/g, " ").trim();
+        return payloadText
+            .replace(/@__all__\b/g, "")
+            .replace(/\s{2,}/g, " ")
+            .trim();
     }
 
     const mentions = memberIds.map((id) => `@${id}`).join(" ");
 
-    return payloadText.replace(/@__all__\b/g, mentions).replace(/\s{2,}/g, " ").trim();
+    return payloadText
+        .replace(/@__all__\b/g, mentions)
+        .replace(/\s{2,}/g, " ")
+        .trim();
 }
 
 function timeAgoText(date: Date, t: DiscussTranslate) {
@@ -252,15 +242,13 @@ function normalizeBaseUrl(raw: string) {
 }
 
 function buildHubUrl() {
-    const rawBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+    const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
     const base = normalizeBaseUrl(rawBase);
     return base ? `${base}/hubs/group-discuss` : "";
 }
 
 function dtoToUserLite(t: DiscussTranslate, userId?: string, user?: HubUserDto | null): UserLite {
-    const name =
-        [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || t("anonymous");
+    const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || t("anonymous");
     return {
         id: user?.id || userId || "unknown-user",
         name,
@@ -365,13 +353,7 @@ function countWords(text: string) {
     return t.split(/\s+/).filter(Boolean).length;
 }
 
-function TextCounter({
-    text,
-    maxChars = MAX_CHARS
-}: {
-    text: string;
-    maxChars?: number;
-}) {
+function TextCounter({ text, maxChars = MAX_CHARS }: { text: string; maxChars?: number }) {
     const t = useTranslations("GroupDiscussPage");
     const chars = (text || "").length;
     const words = countWords(text || "");
@@ -402,8 +384,7 @@ function RichTextWithMentions({
         [text, membersById, authorId]
     );
 
-    const re =
-        /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
+    const re = /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
 
     const parts: React.ReactNode[] = [];
     let last = 0;
@@ -788,12 +769,16 @@ const MentionTextarea = React.forwardRef<
         return text;
     }, [t, value]);
 
-    React.useImperativeHandle(ref, () => ({
-        getPayloadText,
-        reset: () => {
-            mentionsRef.current = [];
-        }
-    }), [getPayloadText]);
+    React.useImperativeHandle(
+        ref,
+        () => ({
+            getPayloadText,
+            reset: () => {
+                mentionsRef.current = [];
+            }
+        }),
+        [getPayloadText]
+    );
 
     const previewNodes = React.useMemo(() => {
         const text = value ?? "";
@@ -835,84 +820,81 @@ const MentionTextarea = React.forwardRef<
     const popup =
         mounted && open && !disabled && popupPosition
             ? createPortal(
-                <div
-                    ref={popupRef}
-                    className="fixed z-[22000] overflow-hidden rounded-2xl border border-[#EDEDED] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
-                    style={{
-                        left: popupPosition.left,
-                        top: popupPosition.top,
-                        width: popupPosition.width,
-                        maxHeight: 320,
-                        transform:
-                            popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
-                                ? "translateY(-100%)"
-                                : undefined
-                    }}
-                >
-                    {filtered.length > 0 ? (
-                        <div className="max-h-80 overflow-y-auto py-2">
-                            {filtered.map((u, idx) => {
-                                const isActive = idx === activeIndex;
-                                const displayName = u.isAll ? t("mentionAllShort") : u.name;
-                                const subtitle =
-                                    u.subtitle || (u.isAll ? t("mentionAllSubtitle") : "");
+                  <div
+                      ref={popupRef}
+                      className="fixed z-[22000] overflow-hidden rounded-2xl border border-[#EDEDED] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                      style={{
+                          left: popupPosition.left,
+                          top: popupPosition.top,
+                          width: popupPosition.width,
+                          maxHeight: 320,
+                          transform:
+                              popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
+                                  ? "translateY(-100%)"
+                                  : undefined
+                      }}>
+                      {filtered.length > 0 ? (
+                          <div className="max-h-80 overflow-y-auto py-2">
+                              {filtered.map((u, idx) => {
+                                  const isActive = idx === activeIndex;
+                                  const displayName = u.isAll ? t("mentionAllShort") : u.name;
+                                  const subtitle = u.subtitle || (u.isAll ? t("mentionAllSubtitle") : "");
 
-                                return (
-                                    <button
-                                        key={u.id}
-                                        type="button"
-                                        onMouseDown={(ev) => {
-                                            ev.preventDefault();
-                                            insertMention(u);
-                                        }}
-                                        className={twMerge(
-                                            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
-                                            isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
-                                        )}
-                                    >
-                                        <div className="shrink-0">
-                                            {u.isAll ? (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
-                                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
-                                                        <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                                                    </svg>
-                                                </div>
-                                            ) : u.avatarUrl ? (
-                                                <Image
-                                                    src={u.avatarUrl}
-                                                    alt={displayName}
-                                                    width={40}
-                                                    height={40}
-                                                    unoptimized
-                                                    className="h-10 w-10 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
-                                                    {safeInitialsFromName(displayName)}
-                                                </div>
-                                            )}
-                                        </div>
+                                  return (
+                                      <button
+                                          key={u.id}
+                                          type="button"
+                                          onMouseDown={(ev) => {
+                                              ev.preventDefault();
+                                              insertMention(u);
+                                          }}
+                                          className={twMerge(
+                                              "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
+                                              isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
+                                          )}>
+                                          <div className="shrink-0">
+                                              {u.isAll ? (
+                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
+                                                      <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                                                          <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                                      </svg>
+                                                  </div>
+                                              ) : u.avatarUrl ? (
+                                                  <Image
+                                                      src={u.avatarUrl}
+                                                      alt={displayName}
+                                                      width={40}
+                                                      height={40}
+                                                      unoptimized
+                                                      className="h-10 w-10 rounded-full object-cover"
+                                                  />
+                                              ) : (
+                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
+                                                      {safeInitialsFromName(displayName)}
+                                                  </div>
+                                              )}
+                                          </div>
 
-                                        <div className="min-w-0 flex-1">
-                                            <div className="truncate text-[15px] font-medium leading-5 text-[#261E33]">
-                                                {displayName}
-                                            </div>
-                                            {subtitle ? (
-                                                <div className="truncate pt-0.5 text-[13px] leading-5 text-[#6F6B99]">
-                                                    {subtitle}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="px-4 py-3 text-sm text-[#6F6B99]">{t("noMembersToMention")}</div>
-                    )}
-                </div>,
-                document.body
-            )
+                                          <div className="min-w-0 flex-1">
+                                              <div className="truncate text-[15px] font-medium leading-5 text-[#261E33]">
+                                                  {displayName}
+                                              </div>
+                                              {subtitle ? (
+                                                  <div className="truncate pt-0.5 text-[13px] leading-5 text-[#6F6B99]">
+                                                      {subtitle}
+                                                  </div>
+                                              ) : null}
+                                          </div>
+                                      </button>
+                                  );
+                              })}
+                          </div>
+                      ) : (
+                          <div className="px-4 py-3 text-sm text-[#6F6B99]">{t("noMembersToMention")}</div>
+                      )}
+                  </div>,
+                  document.body
+              )
             : null;
 
     return (
@@ -926,8 +908,7 @@ const MentionTextarea = React.forwardRef<
                             disabled && "opacity-60",
                             previewClassName
                         )}
-                        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
-                    >
+                        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
                         {value ? <>{previewNodes}</> : <span className="text-[#9CA3AF]">{placeholder}</span>}
                     </div>
 
@@ -998,8 +979,7 @@ function ReplyComposer({
                         onSubmit(payload);
                         setText("");
                     }}
-                    className="rounded-xl bg-[#FF5722] text-white hover:bg-[#e24d1e]"
-                >
+                    className="rounded-xl bg-[#FF5722] text-white hover:bg-[#e24d1e]">
                     <SendHorizontal className="mr-2 h-4 w-4" />
                     {t("reply")}
                 </Button>
@@ -1030,24 +1010,22 @@ function ReplyItemView({
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <p className="font-semibold text-[#261E33] text-sm">{r.author.name}</p>
-                            {rolesById[r.author.id] && (() => {
-                                const colors = getRoleColor(rolesById[r.author.id]);
-                                return (
-                                    <div className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${colors.bg} ${colors.text} ${colors.border}`}>
-                                        {getRoleIcon(rolesById[r.author.id])}
-                                        <span>{roleDisplayText[rolesById[r.author.id]]}</span>
-                                    </div>
-                                );
-                            })()}
+                            {rolesById[r.author.id] &&
+                                (() => {
+                                    const colors = getRoleColor(rolesById[r.author.id]);
+                                    return (
+                                        <div
+                                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${colors.bg} ${colors.text} ${colors.border}`}>
+                                            {getRoleIcon(rolesById[r.author.id])}
+                                            <span>{roleDisplayText[rolesById[r.author.id]]}</span>
+                                        </div>
+                                    );
+                                })()}
                             <span className="text-[#9CA3AF] text-xs">• {r.createdAtText}</span>
                         </div>
 
                         <p className="mt-1 whitespace-pre-wrap text-[#261E33] text-sm">
-                            <RichTextWithMentions
-                                text={r.content}
-                                membersById={membersById}
-                                authorId={r.author.id}
-                            />
+                            <RichTextWithMentions text={r.content} membersById={membersById} authorId={r.author.id} />
                         </p>
                     </div>
 
@@ -1057,8 +1035,7 @@ function ReplyItemView({
                                 <button
                                     type="button"
                                     className="rounded-lg p-2 text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                    aria-label={t("more")}
-                                >
+                                    aria-label={t("more")}>
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
                             </DropdownMenuTrigger>
@@ -1070,12 +1047,10 @@ function ReplyItemView({
                                     "z-[9999] w-40",
                                     "bg-white opacity-100 backdrop-blur-none",
                                     "border border-[#EDEDED] shadow-xl"
-                                )}
-                            >
+                                )}>
                                 <DropdownMenuItem
                                     className="text-red-600 focus:text-red-600"
-                                    onClick={() => onDelete(r.id)}
-                                >
+                                    onClick={() => onDelete(r.id)}>
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     {t("delete")}
                                 </DropdownMenuItem>
@@ -1121,9 +1096,7 @@ function PostCard({
     const isMeModerator = userRole === "moderator";
 
     const canDeletePost =
-        post.author.id === currentUserId ||
-        isMeOwner ||
-        (isMeModerator && !isOwnerId(post.author.id));
+        post.author.id === currentUserId || isMeOwner || (isMeModerator && !isOwnerId(post.author.id));
 
     return (
         <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
@@ -1134,21 +1107,19 @@ function PostCard({
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <p className="truncate font-semibold text-[#261E33] text-sm">
-                                    {post.author.name}
-                                </p>
-                                {rolesById[post.author.id] && (() => {
-                                    const colors = getRoleColor(rolesById[post.author.id]);
-                                    return (
-                                        <div className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${colors.bg} ${colors.text} ${colors.border}`}>
-                                            {getRoleIcon(rolesById[post.author.id])}
-                                            <span>{roleDisplayText[rolesById[post.author.id]]}</span>
-                                        </div>
-                                    );
-                                })()}
-                                <span className="text-[#9CA3AF] text-xs">
-                                    • {post.createdAtText}
-                                </span>
+                                <p className="truncate font-semibold text-[#261E33] text-sm">{post.author.name}</p>
+                                {rolesById[post.author.id] &&
+                                    (() => {
+                                        const colors = getRoleColor(rolesById[post.author.id]);
+                                        return (
+                                            <div
+                                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${colors.bg} ${colors.text} ${colors.border}`}>
+                                                {getRoleIcon(rolesById[post.author.id])}
+                                                <span>{roleDisplayText[rolesById[post.author.id]]}</span>
+                                            </div>
+                                        );
+                                    })()}
+                                <span className="text-[#9CA3AF] text-xs">• {post.createdAtText}</span>
                             </div>
 
                             <p className="mt-2 whitespace-pre-wrap text-[#261E33] text-[15px] leading-relaxed">
@@ -1165,8 +1136,7 @@ function PostCard({
                                 <button
                                     type="button"
                                     className="rounded-lg p-2 text-[#6F6B99] transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                    aria-label={t("more")}
-                                >
+                                    aria-label={t("more")}>
                                     <MoreHorizontal className="h-5 w-5" />
                                 </button>
                             </DropdownMenuTrigger>
@@ -1178,13 +1148,11 @@ function PostCard({
                                     "z-[9999] w-40",
                                     "bg-white opacity-100 backdrop-blur-none",
                                     "border border-[#EDEDED] shadow-xl"
-                                )}
-                            >
+                                )}>
                                 {canDeletePost ? (
                                     <DropdownMenuItem
                                         className="text-red-600 focus:text-red-600"
-                                        onClick={() => onDelete(post.id)}
-                                    >
+                                        onClick={() => onDelete(post.id)}>
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         {t("delete")}
                                     </DropdownMenuItem>
@@ -1203,8 +1171,7 @@ function PostCard({
                                 type="button"
                                 onClick={() => setReplyOpen((v) => !v)}
                                 className="inline-flex items-center gap-2 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                                aria-label={t("replyAria")}
-                            >
+                                aria-label={t("replyAria")}>
                                 <MessageCircle className="h-4 w-4" />
                                 <span>{post.replies.length}</span>
                             </button>
@@ -1219,8 +1186,7 @@ function PostCard({
                             <button
                                 type="button"
                                 onClick={() => setRepliesOpen((v) => !v)}
-                                className="ml-1 inline-flex items-center gap-1 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]"
-                            >
+                                className="ml-1 inline-flex items-center gap-1 rounded-lg px-2 py-1 font-medium text-[#6F6B99] text-xs transition hover:bg-[#FAFAFA] hover:text-[#261E33]">
                                 {repliesOpen ? (
                                     <>
                                         <ChevronUp className="h-4 w-4" /> {t("hideReplies")}
@@ -1311,8 +1277,7 @@ export default function GroupDiscussPage() {
                         avatarUrl: safeAvatarUrl(result.data?.avatarUrl)
                     }));
                 }
-            } catch { }
-
+            } catch {}
         };
 
         void fetchProfile();
@@ -1407,7 +1372,9 @@ export default function GroupDiscussPage() {
         }
 
         if (!hubUrl) {
-            console.error("[GroupDiscussPage] Hub URL not configured - missing NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL");
+            console.error(
+                "[GroupDiscussPage] Hub URL not configured - missing NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_API_URL"
+            );
             toast({
                 variant: "destructive",
                 description: t("missingApiBase")
@@ -1439,19 +1406,15 @@ export default function GroupDiscussPage() {
 
         connectionRef.current = connection;
 
-        const rawBase =
-            process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
+        const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
 
         const loadHistory = async () => {
             if (!rawBase) return;
 
-            const response = await apiFetch<GroupMessageListResponse>(
-                `${rawBase}/group-messages/${groupId}`,
-                {
-                    method: "GET",
-                    locale
-                }
-            );
+            const response = await apiFetch<GroupMessageListResponse>(`${rawBase}/group-messages/${groupId}`, {
+                method: "GET",
+                locale
+            });
 
             if (response.status !== "success" || !response.data) return;
 
@@ -1532,12 +1495,7 @@ export default function GroupDiscussPage() {
                     });
 
                     const rawRole =
-                        m?.role ??
-                        m?.groupRole ??
-                        m?.userRole ??
-                        m?.memberRole ??
-                        m?.groupMemberRole ??
-                        m?.roles?.[0];
+                        m?.role ?? m?.groupRole ?? m?.userRole ?? m?.memberRole ?? m?.groupMemberRole ?? m?.roles?.[0];
 
                     roleMap[id] = toRole(rawRole);
                 }
@@ -1674,19 +1632,23 @@ export default function GroupDiscussPage() {
             const cleanup = async () => {
                 try {
                     if (startPromiseRef.current) {
-                        await startPromiseRef.current.catch(() => { });
+                        await startPromiseRef.current.catch(() => {});
                     }
 
                     const state = connection.state;
-                    if (state !== signalR.HubConnectionState.Disconnected && state !== signalR.HubConnectionState.Disconnecting) {
+                    if (
+                        state !== signalR.HubConnectionState.Disconnected &&
+                        state !== signalR.HubConnectionState.Disconnecting
+                    ) {
                         try {
                             if (state === signalR.HubConnectionState.Connected) {
                                 await connection.invoke("LeaveGroup", groupId);
                             }
-                        } catch { }
+                        } catch {}
                         await connection.stop();
                     }
-                } catch { } finally {
+                } catch {
+                } finally {
                     if (connectionRef.current === connection) connectionRef.current = null;
                     setIsConnected(false);
                 }
@@ -1755,9 +1717,7 @@ export default function GroupDiscussPage() {
             <Container className="px-6">
                 <div className="mb-5">
                     <p className="font-semibold text-[#261E33] text-sm">{t("title")}</p>
-                    <p className="mt-1 text-[#6F6B99] text-sm">
-                        {t("subtitle")}
-                    </p>
+                    <p className="mt-1 text-[#6F6B99] text-sm">{t("subtitle")}</p>
                 </div>
 
                 <div className="rounded-2xl border border-[#EDEDED] bg-white p-5 shadow-sm">
@@ -1784,8 +1744,7 @@ export default function GroupDiscussPage() {
                                     <Button
                                         onClick={onPost}
                                         disabled={isComposerDisabled}
-                                        className="rounded-xl bg-[#FF5722] px-6 text-white hover:bg-[#e24d1e]"
-                                    >
+                                        className="rounded-xl bg-[#FF5722] px-6 text-white hover:bg-[#e24d1e]">
                                         <SendHorizontal className="mr-2 h-4 w-4" />
                                         {t("post")}
                                     </Button>
@@ -1793,9 +1752,7 @@ export default function GroupDiscussPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="text-[#6F6B99] text-sm">
-                            {t("viewerOnly")}
-                        </div>
+                        <div className="text-[#6F6B99] text-sm">{t("viewerOnly")}</div>
                     )}
                 </div>
 
@@ -1826,10 +1783,7 @@ export default function GroupDiscussPage() {
 
                 <div className="h-10" />
 
-                <AlertDialog
-                    open={deleteOpen}
-                    onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}
-                >
+                <AlertDialog open={deleteOpen} onOpenChange={(v) => (v ? setDeleteOpen(true) : closeDeleteConfirm())}>
                     <AlertDialogContent className="rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl">{t("confirmDeleteTitle")}</AlertDialogTitle>
@@ -1846,8 +1800,7 @@ export default function GroupDiscussPage() {
                                     "border-0 shadow-none",
                                     "hover:bg-[#E5E7EB]",
                                     "focus-visible:ring-0"
-                                )}
-                            >
+                                )}>
                                 {t("cancel")}
                             </AlertDialogCancel>
 
@@ -1857,8 +1810,7 @@ export default function GroupDiscussPage() {
                                     e.preventDefault();
                                     void confirmDelete();
                                 }}
-                                className="rounded-xl bg-red-600 px-8 text-white hover:bg-red-700 focus-visible:ring-0"
-                            >
+                                className="rounded-xl bg-red-600 px-8 text-white hover:bg-red-700 focus-visible:ring-0">
                                 {isDeleting ? t("deleting") : t("deleteMessage")}
                             </AlertDialogAction>
                         </AlertDialogFooter>

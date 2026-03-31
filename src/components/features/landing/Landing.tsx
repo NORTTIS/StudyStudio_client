@@ -11,15 +11,7 @@ function FloatingOrb({ className }: { className: string }) {
     return <div className={`pointer-events-none absolute rounded-full blur-3xl ${className}`} />;
 }
 
-function PreviewFrame({
-    src,
-    alt,
-    tone = "light"
-}: {
-    src: string;
-    alt: string;
-    tone?: "light" | "warm" | "glass";
-}) {
+function PreviewFrame({ src, alt, tone = "light" }: { src: string; alt: string; tone?: "light" | "warm" | "glass" }) {
     const tones = {
         light: "bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] border-gray-200",
         warm: "bg-[linear-gradient(180deg,#FFF9F2_0%,#FFF2E8_100%)] border-orange-200/70",
@@ -63,26 +55,13 @@ function HeroPreviewFrame({ src, alt }: { src: string; alt: string }) {
     );
 }
 
-function AICard({
-    title,
-    description,
-    delay = ""
-}: {
-    title: string;
-    description: string;
-    delay?: string;
-}) {
+function AICard({ title, description, delay = "" }: { title: string; description: string; delay?: string }) {
     return (
         <div
-            className={`landing-pop ${delay} flex h-full flex-col rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]`}
-        >
-            <h4 className="text-[18px] font-semibold leading-8 text-gray-800">
-                {title}
-            </h4>
+            className={`landing-pop ${delay} flex h-full flex-col rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]`}>
+            <h4 className="text-[18px] font-semibold leading-8 text-gray-800">{title}</h4>
 
-            <p className="mt-2 text-[15px] leading-7 text-gray-600">
-                {description}
-            </p>
+            <p className="mt-2 text-[15px] leading-7 text-gray-600">{description}</p>
 
             <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5 md:mt-auto">
                 <div className="space-y-3">
@@ -290,17 +269,9 @@ export default function LandingPage() {
                     </h3>
 
                     <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <AICard
-                            title={t("ai.feature1")}
-                            description={t("ai.feature1Description")}
-                            delay={delay1}
-                        />
+                        <AICard title={t("ai.feature1")} description={t("ai.feature1Description")} delay={delay1} />
 
-                        <AICard
-                            title={t("ai.feature2")}
-                            description={t("ai.feature2Description")}
-                            delay={delay2}
-                        />
+                        <AICard title={t("ai.feature2")} description={t("ai.feature2Description")} delay={delay2} />
                     </div>
                 </div>
             </section>

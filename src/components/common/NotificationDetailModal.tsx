@@ -15,12 +15,7 @@ import {
 } from "lucide-react";
 
 import { getNotificationDetail, type Notification } from "@/api/notifications";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -34,12 +29,7 @@ interface NotificationDetailModalProps {
     locale: string;
 }
 
-export function NotificationDetailModal({
-    isOpen,
-    onClose,
-    notification,
-    locale
-}: NotificationDetailModalProps) {
+export function NotificationDetailModal({ isOpen, onClose, notification, locale }: NotificationDetailModalProps) {
     const t = useTranslations("Notifications");
     const [detail, setDetail] = useState<Notification | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -88,8 +78,7 @@ export function NotificationDetailModal({
             case "success":
                 return {
                     icon: CheckCircle2,
-                    badgeClass:
-                        "border-emerald-200 bg-emerald-100 text-emerald-700",
+                    badgeClass: "border-emerald-200 bg-emerald-100 text-emerald-700",
                     iconWrapperClass: "bg-emerald-100 text-emerald-600",
                     label: t("typeSuccess")
                 };
@@ -110,8 +99,7 @@ export function NotificationDetailModal({
             default:
                 return {
                     icon: Bell,
-                    badgeClass:
-                        "border-violet-200 bg-violet-100 text-violet-700",
+                    badgeClass: "border-violet-200 bg-violet-100 text-violet-700",
                     iconWrapperClass: "bg-violet-100 text-violet-600",
                     label: t("typeSystem")
                 };
@@ -225,11 +213,7 @@ export function NotificationDetailModal({
         if (!detail) return null;
 
         if (isMentionLikeNotification) {
-            return (
-                detail.originalMessage?.trim() ||
-                splitMentionDescription.message ||
-                null
-            );
+            return detail.originalMessage?.trim() || splitMentionDescription.message || null;
         }
 
         return detail.description?.trim() || null;
@@ -276,12 +260,8 @@ export function NotificationDetailModal({
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                 <XCircle className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-base font-semibold text-foreground">
-                {t("notFound")}
-            </h3>
-            <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                {t("notFoundDescription")}
-            </p>
+            <h3 className="text-base font-semibold text-foreground">{t("notFound")}</h3>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">{t("notFoundDescription")}</p>
         </div>
     );
 
@@ -303,9 +283,7 @@ export function NotificationDetailModal({
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="space-y-2">
-                                <h3 className="text-xl font-semibold leading-snug text-foreground">
-                                    {detail.title}
-                                </h3>
+                                <h3 className="text-xl font-semibold leading-snug text-foreground">{detail.title}</h3>
 
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <CalendarDays className="h-4 w-4" />
@@ -334,19 +312,11 @@ export function NotificationDetailModal({
                         {getMainContentTitle()}
                     </h4>
 
-                    {contentSummary && (
-                        <p className="text-sm text-muted-foreground">
-                            {contentSummary}
-                        </p>
-                    )}
+                    {contentSummary && <p className="text-sm text-muted-foreground">{contentSummary}</p>}
 
                     <div className="rounded-2xl border bg-muted/30 p-4 sm:p-5">
                         <div className="space-y-3 text-sm leading-7 text-foreground/90">
-                            {renderParagraphs(mainContent) ?? (
-                                <p className="text-muted-foreground">
-                                    {t("noContent")}
-                                </p>
-                            )}
+                            {renderParagraphs(mainContent) ?? <p className="text-muted-foreground">{t("noContent")}</p>}
                         </div>
                     </div>
                 </div>
@@ -365,9 +335,7 @@ export function NotificationDetailModal({
                                         <p className="text-xs uppercase tracking-wide text-muted-foreground">
                                             {t("from")}
                                         </p>
-                                        <p className="text-sm font-medium text-foreground">
-                                            {detail.senderName}
-                                        </p>
+                                        <p className="text-sm font-medium text-foreground">{detail.senderName}</p>
                                     </div>
                                 )}
 
@@ -386,9 +354,7 @@ export function NotificationDetailModal({
             <DialogContent className="max-h-[90vh] w-[calc(100%-24px)] max-w-3xl overflow-hidden rounded-2xl border bg-background p-0 shadow-2xl [&>button]:hidden">
                 <DialogHeader className="relative border-b px-6 py-5 pr-20">
                     <div className="flex items-center justify-between gap-4">
-                        <DialogTitle className="text-left text-xl font-semibold">
-                            {t("detailTitle")}
-                        </DialogTitle>
+                        <DialogTitle className="text-left text-xl font-semibold">{t("detailTitle")}</DialogTitle>
                     </div>
 
                     <button
@@ -406,10 +372,7 @@ export function NotificationDetailModal({
 
                 <div className="border-t bg-muted/20 px-6 py-4">
                     <div className="flex justify-end">
-                        <Button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded-xl px-5">
+                        <Button type="button" onClick={onClose} className="rounded-xl px-5">
                             {t("close")}
                         </Button>
                     </div>

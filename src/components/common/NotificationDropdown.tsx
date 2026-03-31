@@ -1,14 +1,6 @@
 "use client";
 
-import {
-    AlertTriangle,
-    Bell,
-    CheckCheck,
-    CheckCircle2,
-    Info,
-    RefreshCw,
-    Trash2
-} from "lucide-react";
+import { AlertTriangle, Bell, CheckCheck, CheckCircle2, Info, RefreshCw, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -134,12 +126,7 @@ function isNotificationNotFoundMessage(message?: string) {
 }
 
 function resolveNotificationActionId(notification: RawNotification): string {
-    return (
-        notification.userAnnouncementId ||
-        notification.announcementId ||
-        notification._id ||
-        notification.id
-    );
+    return notification.userAnnouncementId || notification.announcementId || notification._id || notification.id;
 }
 
 function BellButton({ unreadCount }: { unreadCount: number }) {
@@ -351,9 +338,7 @@ export function NotificationDropdown() {
         if (!notification.read) {
             saveReadNotificationId(notification.actionId);
 
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
-            );
+            setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
 
             if (!notification.isFallback) {
                 try {

@@ -38,8 +38,7 @@ export function AnnouncementsPage() {
     const t = useTranslations("Announcements");
     const { toast } = useToast();
 
-    const isMentionType = (type: string) =>
-        type === "Mention" || type === "mention" || type === "4";
+    const isMentionType = (type: string) => type === "Mention" || type === "mention" || type === "4";
 
     const [publicAnnouncements, setPublicAnnouncements] = useState<Announcement[]>([]);
     const [userAnnouncements, setUserAnnouncements] = useState<UserAnnouncement[]>([]);
@@ -139,7 +138,7 @@ export function AnnouncementsPage() {
             }
 
             // Lấy chi tiết từ API
-            const actualId = (localData && "announcementId" in localData) ? localData.announcementId : id;
+            const actualId = localData && "announcementId" in localData ? localData.announcementId : id;
             if (!actualId) return;
 
             const result = await getAnnouncementById(actualId, locale);
@@ -160,9 +159,7 @@ export function AnnouncementsPage() {
             if (result.status === "success") {
                 // Cập nhật trạng thái đã đọc cho userAnnouncements
                 setUserAnnouncements((prev) =>
-                    prev.map((ann) =>
-                        ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann
-                    )
+                    prev.map((ann) => (ann.userAnnouncementId === userAnnouncementId ? { ...ann, isRead: true } : ann))
                 );
 
                 if (showMsg) {
@@ -429,10 +426,11 @@ export function AnnouncementsPage() {
                                                 whileHover={{ y: -1 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 transition={{ duration: 0.15 }}
-                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${active
-                                                    ? "text-white shadow-md shadow-orange-200"
-                                                    : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
-                                                    }`}>
+                                                className={`group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200 ${
+                                                    active
+                                                        ? "text-white shadow-md shadow-orange-200"
+                                                        : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                                }`}>
                                                 {active ? (
                                                     <motion.div
                                                         layoutId="activeAnnouncementTab"
@@ -446,10 +444,11 @@ export function AnnouncementsPage() {
                                                 ) : null}
 
                                                 <span
-                                                    className={`relative z-10 transition-colors duration-200 ${active
-                                                        ? "text-white"
-                                                        : "text-[#8C8C8C] group-hover:text-[#EA580C]"
-                                                        }`}>
+                                                    className={`relative z-10 transition-colors duration-200 ${
+                                                        active
+                                                            ? "text-white"
+                                                            : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                    }`}>
                                                     {tab.icon}
                                                 </span>
 
@@ -457,10 +456,11 @@ export function AnnouncementsPage() {
 
                                                 {"badge" in tab && tab.badge ? (
                                                     <span
-                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${active
-                                                            ? "bg-white/20 text-white"
-                                                            : "bg-orange-100 text-orange-700"
-                                                            }`}>
+                                                        className={`relative z-10 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 font-bold text-[11px] ${
+                                                            active
+                                                                ? "bg-white/20 text-white"
+                                                                : "bg-orange-100 text-orange-700"
+                                                        }`}>
                                                         {tab.badge}
                                                     </span>
                                                 ) : null}
@@ -486,12 +486,8 @@ export function AnnouncementsPage() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="newest">
-                                            {t("sortNewest")}
-                                        </SelectItem>
-                                        <SelectItem value="oldest">
-                                            {t("sortOldest")}
-                                        </SelectItem>
+                                        <SelectItem value="newest">{t("sortNewest")}</SelectItem>
+                                        <SelectItem value="oldest">{t("sortOldest")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -519,9 +515,11 @@ export function AnnouncementsPage() {
                                 <div className="grid gap-4">
                                     {currentItems.map((ann) => (
                                         <AnnouncementCard
-                                            key={activeTab === "public"
-                                                ? (ann as Announcement).announcementId
-                                                : (ann as UserAnnouncement).userAnnouncementId}
+                                            key={
+                                                activeTab === "public"
+                                                    ? (ann as Announcement).announcementId
+                                                    : (ann as UserAnnouncement).userAnnouncementId
+                                            }
                                             item={ann}
                                             isUserAnn={activeTab === "personal"}
                                             onClick={() =>
@@ -706,8 +704,9 @@ function AnnouncementCard({
                     </div>
 
                     <h4
-                        className={`mb-2 text-lg leading-7 ${isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
-                            }`}>
+                        className={`mb-2 text-lg leading-7 ${
+                            isUnread ? "font-extrabold text-[#261E33]" : "font-bold text-slate-800"
+                        }`}>
                         {item.title}
                     </h4>
 
@@ -762,12 +761,8 @@ function EmptyState({
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-orange-50">
                 <SoundOutlined className="text-4xl text-orange-300" />
             </div>
-            <h4 className="mb-2 font-extrabold text-[#261E33] text-xl">
-                {isSearch ? noResultTitle : emptyTitle}
-            </h4>
-            <p className="text-[#7C6A5A]">
-                {isSearch ? noResultDescription : emptyDescription}
-            </p>
+            <h4 className="mb-2 font-extrabold text-[#261E33] text-xl">{isSearch ? noResultTitle : emptyTitle}</h4>
+            <p className="text-[#7C6A5A]">{isSearch ? noResultDescription : emptyDescription}</p>
         </div>
     );
 }

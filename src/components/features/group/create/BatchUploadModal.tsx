@@ -52,16 +52,19 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [open, onClose]);
 
-    const validateFile = useCallback((file: File): string | null => {
-        const extension = "." + file.name.split(".").pop()?.toLowerCase();
-        if (!ALLOWED_EXTENSIONS.includes(extension)) {
-            return t("selectError.invalidFormat");
-        }
-        if (file.size > MAX_FILE_SIZE) {
-            return t("selectError.fileTooLarge");
-        }
-        return null;
-    }, [t]);
+    const validateFile = useCallback(
+        (file: File): string | null => {
+            const extension = "." + file.name.split(".").pop()?.toLowerCase();
+            if (!ALLOWED_EXTENSIONS.includes(extension)) {
+                return t("selectError.invalidFormat");
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                return t("selectError.fileTooLarge");
+            }
+            return null;
+        },
+        [t]
+    );
 
     const handleFileSelect = useCallback(
         (file: File) => {
@@ -180,12 +183,8 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                     {/* Header */}
                     <div className="flex items-start justify-between gap-4 px-8 py-6 sm:px-10">
                         <div>
-                            <h2 className="font-bold text-2xl text-[#2A2438] tracking-tight">
-                                {t("title")}
-                            </h2>
-                            <p className="mt-2 text-[#6F6B99] text-sm">
-                                {t("subtitle")}
-                            </p>
+                            <h2 className="font-bold text-2xl text-[#2A2438] tracking-tight">{t("title")}</h2>
+                            <p className="mt-2 text-[#6F6B99] text-sm">{t("subtitle")}</p>
                         </div>
 
                         <button
@@ -207,10 +206,11 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${dragOver
+                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${
+                                        dragOver
                                             ? "border-orange-400 bg-orange-50"
                                             : "border-[#E6E6E6] bg-[#FAFAFF] hover:border-[#CFCFCF]"
-                                        }`}>
+                                    }`}>
                                     <input
                                         ref={fileInputRef}
                                         type="file"
@@ -223,9 +223,7 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                         <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white shadow-sm">
                                             <UploadCloud className="h-8 w-8 text-[#6F6B99]" />
                                         </div>
-                                        <p className="mt-4 font-medium text-[#2A2438] text-sm">
-                                            {t("dropzone.text")}
-                                        </p>
+                                        <p className="mt-4 font-medium text-[#2A2438] text-sm">{t("dropzone.text")}</p>
                                         <p className="mt-2 text-[#6F6B99] text-xs">{t("dropzone.maxSize")}</p>
                                     </div>
                                 </div>

@@ -234,11 +234,8 @@ function CalendarToolbar({
                             onClick={() => onModeChange(tab.key)}
                             className={cn(
                                 "rounded-xl px-4 py-2 text-sm font-medium transition",
-                                active
-                                    ? "bg-white text-orange-600 shadow-sm"
-                                    : "text-slate-500 hover:text-orange-600"
-                            )}
-                        >
+                                active ? "bg-white text-orange-600 shadow-sm" : "text-slate-500 hover:text-orange-600"
+                            )}>
                             {tab.label}
                         </button>
                     );
@@ -249,8 +246,7 @@ function CalendarToolbar({
                 <button
                     type="button"
                     onClick={onPrev}
-                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
-                >
+                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900">
                     <ChevronLeft className="h-4 w-4" />
                 </button>
 
@@ -261,8 +257,7 @@ function CalendarToolbar({
                 <button
                     type="button"
                     onClick={onNext}
-                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900"
-                >
+                    className="rounded-xl px-3 py-2 text-slate-500 transition hover:bg-white hover:text-slate-900">
                     <ChevronRight className="h-4 w-4" />
                 </button>
             </div>
@@ -270,8 +265,7 @@ function CalendarToolbar({
             <select
                 value={selectedAssigneeId || ""}
                 onChange={(e) => onAssigneeChange(e.target.value || null)}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
                 <option value="">{t("allTasks")}</option>
                 {assigneeOptions.map((option) => (
                     <option key={option.id} value={option.id}>
@@ -533,8 +527,7 @@ export default function GroupCalendar() {
                                     <button
                                         type="button"
                                         onClick={() => window.location.reload()}
-                                        className="rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
-                                    >
+                                        className="rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100">
                                         {t("reload")}
                                     </button>
                                 </div>
@@ -568,11 +561,8 @@ export default function GroupCalendar() {
                     style={{
                         left: tooltip.x + 14,
                         top: tooltip.y + 14
-                    }}
-                >
-                    <div className="text-sm font-semibold leading-5 text-white">
-                        {tooltip.title}
-                    </div>
+                    }}>
+                    <div className="text-sm font-semibold leading-5 text-white">{tooltip.title}</div>
 
                     <div className="mt-2 h-px w-full bg-white/10" />
 

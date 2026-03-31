@@ -113,14 +113,15 @@ export function MemberList({
                                     />
                                 ) : (
                                     <div
-                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${index % 4 === 0
-                                            ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                            : index % 4 === 1
-                                                ? "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                : index % 4 === 2
+                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white text-xs ${
+                                            index % 4 === 0
+                                                ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                : index % 4 === 1
+                                                  ? "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                  : index % 4 === 2
                                                     ? "bg-gradient-to-br from-blue-400 to-indigo-500"
                                                     : "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                            }`}>
+                                        }`}>
                                         {getInitials(member.userName)}
                                     </div>
                                 )}

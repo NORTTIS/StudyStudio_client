@@ -144,7 +144,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch { }
+            } catch {}
             return;
         }
 
@@ -153,7 +153,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch { }
+            } catch {}
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -167,8 +167,7 @@ function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; del
         <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-        >
+            transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}>
             {children}
         </motion.div>
     );
@@ -226,8 +225,7 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
                 "group relative w-full overflow-hidden rounded-[28px] border p-5 text-left shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]",
                 onClick && "cursor-pointer",
                 s.card
-            )}
-        >
+            )}>
             <div className={cx("absolute inset-x-0 top-0 h-24 bg-gradient-to-b opacity-90", s.glow)} />
             <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/60 blur-3xl opacity-70" />
 
@@ -240,8 +238,7 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
                                 className={cx(
                                     "rounded-full px-2 py-0.5 text-[11px] font-semibold",
                                     isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-                                )}
-                            >
+                                )}>
                                 {isPositive ? `+${delta}` : `${delta}`}
                             </span>
                         ) : null}
@@ -256,8 +253,7 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
                     className={cx(
                         "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
                         s.iconWrap
-                    )}
-                >
+                    )}>
                     {icon}
                 </motion.div>
             </div>
@@ -265,7 +261,16 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
     );
 }
 
-function OverviewCard({ title, value, total, description, tone = "neutral", index = 0, subtitleLabel = "Current Overview", quantityLabel = "Quantity" }: OverviewCardProps) {
+function OverviewCard({
+    title,
+    value,
+    total,
+    description,
+    tone = "neutral",
+    index = 0,
+    subtitleLabel = "Current Overview",
+    quantityLabel = "Quantity"
+}: OverviewCardProps) {
     const percent = total > 0 ? Math.round((value / total) * 100) : 0;
 
     const styles = {
@@ -309,8 +314,7 @@ function OverviewCard({ title, value, total, description, tone = "neutral", inde
             className={cx(
                 "relative overflow-hidden rounded-[30px] border p-6 shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]",
                 s.card
-            )}
-        >
+            )}>
             <div className={cx("absolute inset-x-0 top-0 h-28 bg-gradient-to-b opacity-90", s.glow)} />
 
             <div className="relative">
@@ -378,9 +382,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-            status?: string;
-            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-        }
+              status?: string;
+              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+          }
         | null
         | undefined;
 
@@ -480,15 +484,13 @@ function DetailLayer({
                     className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[3px]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
+                    exit={{ opacity: 0 }}>
                     <motion.div
                         initial={{ opacity: 0, y: 28, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
                         transition={{ duration: 0.25 }}
-                        className="relative flex max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.20)]"
-                    >
+                        className="relative flex max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
                         {/* Layer 1: Header */}
                         <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5 md:px-8">
                             <div>
@@ -505,8 +507,7 @@ function DetailLayer({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
-                            >
+                                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -531,8 +532,7 @@ function DetailLayer({
                                 <motion.div
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm"
-                                >
+                                    className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm">
                                     <div className="flex items-center gap-3">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                                             <AlertTriangle className="h-5 w-5" />
@@ -592,7 +592,10 @@ function DetailLayer({
                                             title={t("overview.completedTitle")}
                                             value={completedTaskCount}
                                             total={totalTasks}
-                                            description={t("overview.completedDescription", { count: completedTaskCount, total: totalTasks })}
+                                            description={t("overview.completedDescription", {
+                                                count: completedTaskCount,
+                                                total: totalTasks
+                                            })}
                                             tone="success"
                                             index={0}
                                             subtitleLabel={t("currentOverview")}
@@ -603,7 +606,10 @@ function DetailLayer({
                                             title={t("overview.remainingTitle")}
                                             value={remainingTaskCount}
                                             total={totalTasks}
-                                            description={t("overview.remainingDescription", { count: remainingTaskCount, total: totalTasks })}
+                                            description={t("overview.remainingDescription", {
+                                                count: remainingTaskCount,
+                                                total: totalTasks
+                                            })}
                                             tone="neutral"
                                             index={1}
                                             subtitleLabel={t("currentOverview")}
@@ -614,7 +620,10 @@ function DetailLayer({
                                             title={t("overview.overdueTitle")}
                                             value={overdueTaskCount}
                                             total={totalTasks}
-                                            description={t("overview.overdueDescription", { count: overdueTaskCount, total: totalTasks })}
+                                            description={t("overview.overdueDescription", {
+                                                count: overdueTaskCount,
+                                                total: totalTasks
+                                            })}
                                             tone="danger"
                                             index={2}
                                             subtitleLabel={t("currentOverview")}
@@ -640,7 +649,11 @@ export default function HomeSummary() {
         setCacheKey((prev) => prev + 1);
     }, []);
 
-    const { data: summary, isLoading, error } = useSWR(["home-summary", cacheKey], fetchHomeSummary, {
+    const {
+        data: summary,
+        isLoading,
+        error
+    } = useSWR(["home-summary", cacheKey], fetchHomeSummary, {
         refreshInterval: 0,
         revalidateOnFocus: false,
         revalidateOnReconnect: true,
@@ -680,7 +693,7 @@ export default function HomeSummary() {
                     localStorage.removeItem(key);
                 }
             });
-        } catch { }
+        } catch {}
     }, [accountKey, hasSummary]);
 
     const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);
@@ -694,8 +707,7 @@ export default function HomeSummary() {
         <>
             <div
                 id="home-summary-section"
-                className="relative overflow-hidden scroll-mt-24 bg-[linear-gradient(180deg,#F8FAFC_0%,#F8F7FF_34%,#F4F7FB_66%,#F1F5F9_100%)]"
-            >
+                className="relative overflow-hidden scroll-mt-24 bg-[linear-gradient(180deg,#F8FAFC_0%,#F8F7FF_34%,#F4F7FB_66%,#F1F5F9_100%)]">
                 <div className="pointer-events-none absolute inset-0">
                     <div className="absolute left-[-80px] top-[-40px] h-72 w-72 rounded-full bg-violet-200/25 blur-3xl" />
                     <div className="absolute right-[-80px] top-[18%] h-80 w-80 rounded-full bg-sky-200/20 blur-3xl" />
@@ -711,7 +723,6 @@ export default function HomeSummary() {
 
                                 <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="min-w-0">
-
                                         <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[38px]">
                                             {t("title")}
                                         </h1>
@@ -724,8 +735,7 @@ export default function HomeSummary() {
                                     <div className="flex items-center gap-3">
                                         <Button
                                             variant="outline"
-                                            className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur hover:bg-white"
-                                        >
+                                            className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur hover:bg-white">
                                             <CalendarDays className="mr-2 h-4 w-4" />
                                             {t("calendar")}
                                         </Button>
@@ -746,8 +756,7 @@ export default function HomeSummary() {
                                     <motion.div
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm"
-                                    >
+                                        className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                                                 <AlertTriangle className="h-5 w-5" />
@@ -798,8 +807,7 @@ export default function HomeSummary() {
                                         <div className="flex justify-end">
                                             <Button
                                                 onClick={() => setOpenDetail(true)}
-                                                className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4"
-                                            >
+                                                className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4">
                                                 {t("viewDetails")}
                                             </Button>
                                         </div>

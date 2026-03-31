@@ -40,22 +40,12 @@ function StepCard({
 
             <h3 className="mt-6 text-2xl font-bold text-[#261E33] md:text-[28px]">{title}</h3>
 
-            <p className="mt-3 whitespace-pre-line text-[16px] leading-8 text-[#6F6B99] md:text-lg">
-                {description}
-            </p>
+            <p className="mt-3 whitespace-pre-line text-[16px] leading-8 text-[#6F6B99] md:text-lg">{description}</p>
         </div>
     );
 }
 
-function FeatureCard({
-    title,
-    description,
-    delayClass
-}: {
-    title: string;
-    description: string;
-    delayClass: string;
-}) {
+function FeatureCard({ title, description, delayClass }: { title: string; description: string; delayClass: string }) {
     return (
         <div
             className={`landing-pop group rounded-[30px] border border-orange-100/80 bg-[linear-gradient(180deg,#FFF1EC_0%,#FFE1D7_100%)] p-8 shadow-[0_18px_40px_rgba(249,115,22,0.08)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_60px_rgba(249,115,22,0.12)] ${delayClass}`}>
@@ -70,15 +60,7 @@ function FeatureCard({
     );
 }
 
-function AudienceCard({
-    title,
-    description,
-    delayClass
-}: {
-    title: string;
-    description: string;
-    delayClass: string;
-}) {
+function AudienceCard({ title, description, delayClass }: { title: string; description: string; delayClass: string }) {
     return (
         <div
             className={`landing-pop rounded-[32px] border border-orange-100/70 bg-[linear-gradient(180deg,#FFE7C7_0%,#FAD7A7_100%)] px-10 py-9 shadow-[0_18px_40px_rgba(245,158,11,0.10)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_60px_rgba(245,158,11,0.14)] ${delayClass}`}>
@@ -98,12 +80,7 @@ export default function LandingPage() {
     const locale = useLocale();
 
     const stepDelayClasses = ["landing-delay-1", "landing-delay-2", "landing-delay-3"];
-    const featureDelayClasses = [
-        "landing-delay-1",
-        "landing-delay-2",
-        "landing-delay-3",
-        "landing-delay-4"
-    ];
+    const featureDelayClasses = ["landing-delay-1", "landing-delay-2", "landing-delay-3", "landing-delay-4"];
 
     const handleScrollToFeatures = () => {
         const section = document.getElementById("features");

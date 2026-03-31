@@ -893,8 +893,8 @@
                 "quickStatsTitle": "Thống kê nhanh",
                 "quickStatsSubtitle": "Tổng quan hiệu suất",
                 "created": "Ngày tạo"
+            }
         }
-    }
     },
     "MemberList": {
         "groupRole": {
@@ -2692,5 +2692,24 @@
             "description": "Hãy tải tài liệu đầu tiên lên để bắt đầu"
         },
         "a": "tệp"
+    },
+    "StudioDateRange": {
+        "title": "Khoảng thời gian",
+        "notAvailable": "Chưa có thông tin thời gian",
+        "labels": {
+            "start": "Bắt đầu",
+            "end": "Kết thúc",
+            "remaining": "Còn lại",
+            "overdue": "Quá hạn"
+        },
+        "days": "{count} ngày",
+        "status": {
+            "overdue": "Quá hạn",
+            "upcoming": "Sắp tới"
+        },
+        "progress": {
+            "title": "Tiến độ",
+            "elapsed": "Đã trôi qua {elapsed} / {total} ngày"
+        }
     }
 }

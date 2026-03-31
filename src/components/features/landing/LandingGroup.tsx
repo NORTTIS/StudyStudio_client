@@ -20,15 +20,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     );
 }
 
-function StepRailCard({
-    index,
-    text,
-    delayClass
-}: {
-    index: number;
-    text: string;
-    delayClass: string;
-}) {
+function StepRailCard({ index, text, delayClass }: { index: number; text: string; delayClass: string }) {
     return (
         <div
             className={`landing-pop group relative rounded-[28px] border border-white/80 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_26px_50px_rgba(15,23,42,0.08)] ${delayClass}`}>
@@ -63,15 +55,7 @@ function FeatureSplitCard({
     );
 }
 
-function UseCaseCard({
-    title,
-    description,
-    delayClass
-}: {
-    title: string;
-    description: string;
-    delayClass: string;
-}) {
+function UseCaseCard({ title, description, delayClass }: { title: string; description: string; delayClass: string }) {
     return (
         <div
             className={`landing-pop group relative overflow-hidden rounded-[32px] border border-orange-100/70 bg-[linear-gradient(180deg,#FFE9CB_0%,#FAD7A7_100%)] px-10 py-10 shadow-[0_18px_40px_rgba(245,158,11,0.10)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_60px_rgba(245,158,11,0.14)] ${delayClass}`}>
@@ -85,20 +69,11 @@ function UseCaseCard({
     );
 }
 
-function AIPreviewCard({
-    title,
-    delayClass
-}: {
-    title: string;
-    delayClass: string;
-}) {
+function AIPreviewCard({ title, delayClass }: { title: string; delayClass: string }) {
     return (
         <div
-            className={`landing-pop ${delayClass} flex h-full flex-col rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]`}
-        >
-            <h4 className="min-h-[56px] text-[18px] font-semibold leading-7 text-gray-800 md:min-h-[64px]">
-                {title}
-            </h4>
+            className={`landing-pop ${delayClass} flex h-full flex-col rounded-[28px] border border-white/80 bg-white/82 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]`}>
+            <h4 className="min-h-[56px] text-[18px] font-semibold leading-7 text-gray-800 md:min-h-[64px]">{title}</h4>
 
             <div className="mt-6 rounded-[24px] border border-dashed border-gray-300 bg-[linear-gradient(180deg,#FAFAFA_0%,#F4F4F5_100%)] p-5 md:mt-auto">
                 <div className="space-y-3">
@@ -208,12 +183,7 @@ export default function LandingGroup() {
                         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                             {[t("howToUse.step1"), t("howToUse.step2"), t("howToUse.step3"), t("howToUse.step4")].map(
                                 (text, i) => (
-                                    <StepRailCard
-                                        key={i}
-                                        index={i}
-                                        text={text}
-                                        delayClass={stepDelayClasses[i]}
-                                    />
+                                    <StepRailCard key={i} index={i} text={text} delayClass={stepDelayClasses[i]} />
                                 )
                             )}
                         </div>
@@ -223,8 +193,7 @@ export default function LandingGroup() {
 
             <section
                 id="features"
-                className="landing-fade-up relative bg-[linear-gradient(180deg,#FFF4E8_0%,#FFF9F4_100%)] py-24 scroll-mt-24"
-            >
+                className="landing-fade-up relative bg-[linear-gradient(180deg,#FFF4E8_0%,#FFF9F4_100%)] py-24 scroll-mt-24">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="mb-14 text-center">
                         <SectionLabel>{t("features.title")}</SectionLabel>

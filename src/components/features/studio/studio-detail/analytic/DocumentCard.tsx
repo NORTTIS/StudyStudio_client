@@ -1,8 +1,8 @@
 "use client";
 
 import { Download, FileText, MoreHorizontal, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
-import type { Translator } from "next-intl";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,7 +29,7 @@ export interface DocumentCardProps {
     onDownload: (attachmentId: string) => void;
     onDelete: (attachmentId: string) => void;
     isDeleting?: boolean;
-    t: Translator;
+    t: ReturnType<typeof useTranslations>;
 }
 
 function getExt(name: string) {

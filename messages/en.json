@@ -1523,7 +1523,16 @@
         "close": "Close",
         "loading": "Loading...",
         "notFound": "Notification not found",
-        "notFoundDescription": "This notification may have been deleted or does not exist."
+        "notFoundDescription": "This notification may have been deleted or does not exist.",
+        "announcement": "Announcement",
+        "mentionedInChat": "You were mentioned in chat",
+        "mentionedInComment": "You were mentioned in a comment",
+        "chatMessage": "Message sent to you",
+        "notificationContent": "Notification content",
+        "messageContent": "Message content",
+        "commentContent": "Comment content",
+        "from": "From",
+        "noContent": "No content"
     },
     "BillingHistoryTab": {
         "search": {
@@ -2592,6 +2601,25 @@
             "cancelError": "An error occurred. Please try again!",
             "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to plan management...",
             "emailSent": "Payment confirmation email has been sent to your email address"
+        }
+    },
+    "StudioDateRange": {
+        "title": "Time Range",
+        "notAvailable": "No time information available",
+        "labels": {
+            "start": "Start",
+            "end": "End",
+            "remaining": "Remaining",
+            "overdue": "Overdue"
+        },
+        "days": "{count} days",
+        "status": {
+            "overdue": "Overdue",
+            "upcoming": "Upcoming"
+        },
+        "progress": {
+            "title": "Progress",
+            "elapsed": "Elapsed {elapsed} / {total} days"
         }
     }
 }

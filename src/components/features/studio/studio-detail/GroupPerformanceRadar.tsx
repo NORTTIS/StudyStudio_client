@@ -18,10 +18,19 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
     // Transform data for radar chart
     const chartData = data[0]
         ? [
-            { metric: t("metrics.completedTasks"), ...Object.fromEntries(data.map((d) => [d.groupId, d.completedTasks])) },
-            { metric: t("metrics.discussions"), ...Object.fromEntries(data.map((d) => [d.groupId, d.discussionMessages])) },
-            { metric: t("metrics.collaboration"), ...Object.fromEntries(data.map((d) => [d.groupId, d.collaboration])) }
-        ]
+              {
+                  metric: t("metrics.completedTasks"),
+                  ...Object.fromEntries(data.map((d) => [d.groupId, d.completedTasks]))
+              },
+              {
+                  metric: t("metrics.discussions"),
+                  ...Object.fromEntries(data.map((d) => [d.groupId, d.discussionMessages]))
+              },
+              {
+                  metric: t("metrics.collaboration"),
+                  ...Object.fromEntries(data.map((d) => [d.groupId, d.collaboration]))
+              }
+          ]
         : [];
 
     const toggleGroup = (groupId: string) => {
@@ -47,10 +56,11 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
                         key={group.groupId}
                         type="button"
                         onClick={() => toggleGroup(group.groupId)}
-                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs transition-colors ${selectedGroups.has(group.groupId)
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs transition-colors ${
+                            selectedGroups.has(group.groupId)
                                 ? "text-white"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                        }`}
                         style={{
                             backgroundColor: selectedGroups.has(group.groupId)
                                 ? colors[index % colors.length]

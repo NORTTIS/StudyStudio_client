@@ -20,13 +20,7 @@ function SectionBadge({ children }: { children: React.ReactNode }) {
     );
 }
 
-function HeroStat({
-    label,
-    value
-}: {
-    label: string;
-    value: string;
-}) {
+function HeroStat({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-[22px] border border-white/80 bg-white/78 p-4 text-center shadow-[0_14px_28px_rgba(15,23,42,0.05)] backdrop-blur-xl">
             <p className="text-xs text-[#8B7768]">{label}</p>
@@ -90,15 +84,7 @@ function FeaturePanel({
     );
 }
 
-function UseCaseCard({
-    title,
-    desc,
-    delayClass
-}: {
-    title: string;
-    desc: string;
-    delayClass: string;
-}) {
+function UseCaseCard({ title, desc, delayClass }: { title: string; desc: string; delayClass: string }) {
     return (
         <div
             className={`landing-pop relative overflow-hidden rounded-[34px] border border-orange-100/70 bg-[linear-gradient(180deg,#FFE7C7_0%,#FAD7A7_100%)] px-10 py-10 shadow-[0_18px_40px_rgba(245,158,11,0.10)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_rgba(245,158,11,0.14)] ${delayClass}`}>
@@ -236,7 +222,9 @@ export default function LandingManagement() {
 
                                 <div className="absolute bottom-6 left-6 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 shadow-lg backdrop-blur">
                                     <p className="text-xs text-[#8B7768]">{t("hero.executiveLabel")}</p>
-                                    <p className="mt-1 font-semibold text-[#261E33] text-sm">{t("hero.executiveCaption")}</p>
+                                    <p className="mt-1 font-semibold text-[#261E33] text-sm">
+                                        {t("hero.executiveCaption")}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -254,9 +242,7 @@ export default function LandingManagement() {
                             </h2>
                         </div>
 
-                        <p className="max-w-xl text-[#6F6B99] text-[16px] leading-8">
-                            {t("howToUse.description")}
-                        </p>
+                        <p className="max-w-xl text-[#6F6B99] text-[16px] leading-8">{t("howToUse.description")}</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -329,16 +315,8 @@ export default function LandingManagement() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                        <UseCaseCard
-                            title={users[0].title}
-                            desc={users[0].desc}
-                            delayClass="landing-delay-2"
-                        />
-                        <UseCaseCard
-                            title={users[1].title}
-                            desc={users[1].desc}
-                            delayClass="landing-delay-3"
-                        />
+                        <UseCaseCard title={users[0].title} desc={users[0].desc} delayClass="landing-delay-2" />
+                        <UseCaseCard title={users[1].title} desc={users[1].desc} delayClass="landing-delay-3" />
                     </div>
                 </div>
             </section>

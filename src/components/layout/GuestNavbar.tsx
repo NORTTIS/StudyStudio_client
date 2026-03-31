@@ -63,8 +63,9 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                         <Link
                             key={link.key}
                             href={link.href}
-                            className={`cursor-pointer px-6 font-medium transition hover:text-orange-500 ${isActive(link.href) ? "font-semibold text-orange-500" : "text-gray-800"
-                                }`}>
+                            className={`cursor-pointer px-6 font-medium transition hover:text-orange-500 ${
+                                isActive(link.href) ? "font-semibold text-orange-500" : "text-gray-800"
+                            }`}>
                             {link.label}
                         </Link>
                     ))}
@@ -76,23 +77,19 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                         <button
                             type="button"
                             onClick={() => changeLocale("vi")}
-                            className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "vi"
-                                ? "bg-orange-500 text-white"
-                                : "text-gray-700 hover:bg-orange-100"
-                                }`}
-                            aria-label={t("switchToVietnamese")}
-                        >
+                            className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${
+                                locale === "vi" ? "bg-orange-500 text-white" : "text-gray-700 hover:bg-orange-100"
+                            }`}
+                            aria-label={t("switchToVietnamese")}>
                             {t("vietnameseShort")}
                         </button>
                         <button
                             type="button"
                             onClick={() => changeLocale("en")}
-                            className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "en"
-                                ? "bg-orange-500 text-white"
-                                : "text-gray-700 hover:bg-orange-100"
-                                }`}
-                            aria-label={t("switchToEnglish")}
-                        >
+                            className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${
+                                locale === "en" ? "bg-orange-500 text-white" : "text-gray-700 hover:bg-orange-100"
+                            }`}
+                            aria-label={t("switchToEnglish")}>
                             {t("englishShort")}
                         </button>
                     </div>
@@ -124,8 +121,9 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                             <Link
                                 key={link.key}
                                 href={link.href}
-                                className={`cursor-pointer rounded-lg px-4 py-3 font-medium text-base transition hover:bg-orange-50 ${isActive(link.href) ? "bg-orange-50 text-orange-500" : "text-gray-800"
-                                    }`}
+                                className={`cursor-pointer rounded-lg px-4 py-3 font-medium text-base transition hover:bg-orange-50 ${
+                                    isActive(link.href) ? "bg-orange-50 text-orange-500" : "text-gray-800"
+                                }`}
                                 onClick={() => setMobileMenuOpen(false)}>
                                 {link.label}
                             </Link>
@@ -136,23 +134,23 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                                 <button
                                     type="button"
                                     onClick={() => changeLocale("vi")}
-                                    className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "vi"
-                                        ? "bg-orange-500 text-white"
-                                        : "text-gray-700 hover:bg-orange-100"
-                                        }`}
-                                    aria-label={t("switchToVietnamese")}
-                                >
+                                    className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${
+                                        locale === "vi"
+                                            ? "bg-orange-500 text-white"
+                                            : "text-gray-700 hover:bg-orange-100"
+                                    }`}
+                                    aria-label={t("switchToVietnamese")}>
                                     {t("vietnameseShort")}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => changeLocale("en")}
-                                    className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "en"
-                                        ? "bg-orange-500 text-white"
-                                        : "text-gray-700 hover:bg-orange-100"
-                                        }`}
-                                    aria-label={t("switchToEnglish")}
-                                >
+                                    className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${
+                                        locale === "en"
+                                            ? "bg-orange-500 text-white"
+                                            : "text-gray-700 hover:bg-orange-100"
+                                    }`}
+                                    aria-label={t("switchToEnglish")}>
                                     {t("englishShort")}
                                 </button>
                             </div>

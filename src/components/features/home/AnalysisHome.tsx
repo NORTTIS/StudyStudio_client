@@ -174,7 +174,9 @@ function BenchmarkTooltip() {
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
                     <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl">
-                        <p className="mb-3 font-bold text-slate-700 text-xs uppercase tracking-wide">Công thức tính Benchmark</p>
+                        <p className="mb-3 font-bold text-slate-700 text-xs uppercase tracking-wide">
+                            Công thức tính Benchmark
+                        </p>
 
                         <div className="space-y-3">
                             {/* Bạn */}
@@ -184,12 +186,22 @@ function BenchmarkTooltip() {
                                     <span className="font-semibold text-slate-700 text-xs">Bạn — Điểm tuần này</span>
                                 </div>
                                 <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
-                                    <span className="font-medium text-orange-600">Hoàn thành task</span> → 10 × Priority × Severity<br />
-                                    <span className="font-medium text-orange-600">Tạo task</span> → +3 điểm (flat)<br />
-                                    <span className="font-medium text-orange-600">Cập nhật task</span> → +1 điểm (flat)<br />
-                                    <span className="font-medium text-orange-600">Comment / Tin nhắn nhóm</span> → +1 điểm (flat)<br />
-                                    <span className="mt-1 block text-slate-400 italic">Priority: Low=1.0, Med=1.5, High=2.0</span>
-                                    <span className="text-slate-400 italic">Severity: Minor=1.0, Mod=1.2, Major=1.5, Critical=2.0</span>
+                                    <span className="font-medium text-orange-600">Hoàn thành task</span> → 10 × Priority
+                                    × Severity
+                                    <br />
+                                    <span className="font-medium text-orange-600">Tạo task</span> → +3 điểm (flat)
+                                    <br />
+                                    <span className="font-medium text-orange-600">Cập nhật task</span> → +1 điểm (flat)
+                                    <br />
+                                    <span className="font-medium text-orange-600">Comment / Tin nhắn nhóm</span> → +1
+                                    điểm (flat)
+                                    <br />
+                                    <span className="mt-1 block text-slate-400 italic">
+                                        Priority: Low=1.0, Med=1.5, High=2.0
+                                    </span>
+                                    <span className="text-slate-400 italic">
+                                        Severity: Minor=1.0, Mod=1.2, Major=1.5, Critical=2.0
+                                    </span>
                                 </div>
                             </div>
 
@@ -197,11 +209,13 @@ function BenchmarkTooltip() {
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
-                                    <span className="font-semibold text-slate-700 text-xs">TB nhóm — Trung bình cộng</span>
+                                    <span className="font-semibold text-slate-700 text-xs">
+                                        TB nhóm — Trung bình cộng
+                                    </span>
                                 </div>
                                 <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
-                                    Tổng điểm tất cả thành viên trong nhóm<br />
-                                    ÷ Số thành viên của nhóm
+                                    Tổng điểm tất cả thành viên trong nhóm
+                                    <br />÷ Số thành viên của nhóm
                                 </div>
                             </div>
 
@@ -209,7 +223,9 @@ function BenchmarkTooltip() {
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
-                                    <span className="font-semibold text-slate-700 text-xs">Xu hướng — Trung bình 3 tuần</span>
+                                    <span className="font-semibold text-slate-700 text-xs">
+                                        Xu hướng — Trung bình 3 tuần
+                                    </span>
                                 </div>
                                 <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
                                     Trung bình cộng điểm của bạn trong 3 tuần gần nhất (bao gồm tuần hiện tại)
@@ -226,10 +242,13 @@ function BenchmarkTooltip() {
 // ─── Card Shell ─────────────────────────────────────────────
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
     return (
-        <div className={cn(
-            "rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl",
-            className
-        )}>{children}</div>
+        <div
+            className={cn(
+                "rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl",
+                className
+            )}>
+            {children}
+        </div>
     );
 }
 
@@ -818,16 +837,14 @@ export default function AnalysisHome() {
     const trendMaxY = Math.max(
         10,
         Math.ceil(
-            Math.max(
-                ...trendPoints.map((p) => p.completed ?? 0),
-                ...trendPoints.map((p) => p.overdue ?? 0)
-            ) / 10
+            Math.max(...trendPoints.map((p) => p.completed ?? 0), ...trendPoints.map((p) => p.overdue ?? 0)) / 10
         ) * 10
     );
     // Average completed per day for reference line
-    const trendAvg = trendPoints.length > 0
-        ? Math.round(trendPoints.reduce((sum, p) => sum + (p.completed ?? 0), 0) / trendPoints.length)
-        : 0;
+    const trendAvg =
+        trendPoints.length > 0
+            ? Math.round(trendPoints.reduce((sum, p) => sum + (p.completed ?? 0), 0) / trendPoints.length)
+            : 0;
     const priorityItems = priorityData?.distribution ?? [];
     const urgencyItems = urgencyData?.distribution ?? [];
 

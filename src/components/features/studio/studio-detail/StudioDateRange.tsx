@@ -123,14 +123,15 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                         <div
-                            className={`h-full transition-all ${dateInfo.isOverdue
+                            className={`h-full transition-all ${
+                                dateInfo.isOverdue
                                     ? "bg-red-500"
                                     : dateInfo.progressPercent > 75
-                                        ? "bg-green-500"
-                                        : dateInfo.progressPercent > 50
-                                            ? "bg-blue-500"
-                                            : "bg-orange-500"
-                                }`}
+                                      ? "bg-green-500"
+                                      : dateInfo.progressPercent > 50
+                                        ? "bg-blue-500"
+                                        : "bg-orange-500"
+                            }`}
                             style={{ width: `${dateInfo.progressPercent}%` }}
                         />
                     </div>

@@ -58,8 +58,8 @@ export function InviteMemberModal({
     const effectiveRole: InviteRole = isStudioVariant
         ? "Member"
         : hasModerator && role === "Moderator"
-            ? "Member"
-            : role;
+          ? "Member"
+          : role;
 
     const inviteEmailSchema = z
         .string()
@@ -155,8 +155,8 @@ export function InviteMemberModal({
         const safeRole: InviteRole = isStudioVariant
             ? "Member"
             : hasModerator && effectiveRole === "Moderator"
-                ? "Member"
-                : effectiveRole;
+              ? "Member"
+              : effectiveRole;
 
         setSending(true);
         try {
@@ -189,7 +189,7 @@ export function InviteMemberModal({
                 document.execCommand("copy");
                 document.body.removeChild(ta);
                 setCopied(true);
-            } catch { }
+            } catch {}
         }
     };
 
@@ -206,8 +206,8 @@ export function InviteMemberModal({
         const safeRole: InviteRole = isStudioVariant
             ? "Member"
             : hasModerator && effectiveRole === "Moderator"
-                ? "Member"
-                : effectiveRole;
+              ? "Member"
+              : effectiveRole;
 
         setCreatingLink(true);
         try {

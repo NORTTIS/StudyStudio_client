@@ -270,7 +270,10 @@ function EChart({ option, height = 320 }: { option: echarts.EChartsOption; heigh
     return <div ref={ref} style={{ width: "100%", height }} />;
 }
 
-function formatLastActivity(dateStr: string | null | undefined, t: (key: string, values?: Record<string, string | number>) => string): string {
+function formatLastActivity(
+    dateStr: string | null | undefined,
+    t: (key: string, values?: Record<string, string | number>) => string
+): string {
     if (!dateStr) return t("formatLastActivity.noActivity");
     const date = new Date(dateStr);
     const now = new Date();
@@ -325,7 +328,10 @@ function GroupActivityHeatmap({
                 <div>
                     <h2 className="font-semibold text-lg text-slate-900">{t("heatmap.title")}</h2>
                     <p className="mt-1 text-slate-500 text-sm">
-                        {t("heatmap.subtitle", { count: members.length, period: range === "week" ? t("heatmap.week") : t("heatmap.month") })}
+                        {t("heatmap.subtitle", {
+                            count: members.length,
+                            period: range === "week" ? t("heatmap.week") : t("heatmap.month")
+                        })}
                     </p>
                 </div>
 
@@ -456,7 +462,9 @@ function GroupActivityHeatmap({
                     ))}
                     <span>{t("heatmap.legend.high")}</span>
                 </div>
-                <div className="text-slate-400 text-sm">{t("heatmap.updated")}: {new Date().toLocaleDateString(locale)}</div>
+                <div className="text-slate-400 text-sm">
+                    {t("heatmap.updated")}: {new Date().toLocaleDateString(locale)}
+                </div>
             </div>
         </div>
     );
@@ -523,7 +531,15 @@ function ProgressLegend({ t }: { t: (key: string, values?: Record<string, string
     );
 }
 
-function MemberProgressCard({ member, t, onClick }: { member: MemberProgressItem; t: (key: string, values?: Record<string, string | number>) => string; onClick?: () => void }) {
+function MemberProgressCard({
+    member,
+    t,
+    onClick
+}: {
+    member: MemberProgressItem;
+    t: (key: string, values?: Record<string, string | number>) => string;
+    onClick?: () => void;
+}) {
     const percent = getProgressPercent(member.completedTasks, member.totalTasks);
     const status = getMemberStatus(percent, t);
 
@@ -567,12 +583,16 @@ function MemberProgressCard({ member, t, onClick }: { member: MemberProgressItem
                         <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
                             <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
-                        <span>{t("memberProgressCard.contribution")}: {member.contributionScoreRate.toFixed(2)}%</span>
+                        <span>
+                            {t("memberProgressCard.contribution")}: {member.contributionScoreRate.toFixed(2)}%
+                        </span>
                     </div>
                 )}
                 <div className="flex items-center gap-1.5">
                     <Clock3 className="h-3.5 w-3.5" />
-                    <span>{t("memberProgressCard.lastActivity")}: {member.lastActivity}</span>
+                    <span>
+                        {t("memberProgressCard.lastActivity")}: {member.lastActivity}
+                    </span>
                 </div>
             </div>
         </div>
@@ -788,7 +808,10 @@ function MemberDetailModal({
                                     />
                                 </div>
                                 <div className="mt-1 text-slate-500 text-xs">
-                                    {t("memberModal.taskCount", { completed: member.completedTasks, total: member.totalTasks })}
+                                    {t("memberModal.taskCount", {
+                                        completed: member.completedTasks,
+                                        total: member.totalTasks
+                                    })}
                                 </div>
                             </div>
 
@@ -827,18 +850,29 @@ function MemberDetailModal({
                                 <div className="rounded-xl border border-slate-100 bg-red-50/50 p-3 text-center">
                                     <div className="mx-auto mb-1.5 flex h-5 w-5 items-center justify-center text-red-400">
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            />
                                         </svg>
                                     </div>
                                     <div className="font-bold text-slate-900">
                                         {member.deletedScore?.toFixed(1) ?? 0}
                                     </div>
-                                    <div className="text-slate-500 text-xs">{t("memberModal.activityItems.deleted")} pts</div>
+                                    <div className="text-slate-500 text-xs">
+                                        {t("memberModal.activityItems.deleted")} pts
+                                    </div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-purple-50/50 p-3 text-center">
                                     <MessageSquare className="mx-auto mb-1.5 h-5 w-5 text-purple-500" />
-                                    <div className="font-bold text-slate-900">{(member.messagesSent ?? 0) + (member.commentsCreated ?? 0)}</div>
-                                    <div className="text-slate-500 text-xs">{t("memberModal.activityItems.messages")}</div>
+                                    <div className="font-bold text-slate-900">
+                                        {(member.messagesSent ?? 0) + (member.commentsCreated ?? 0)}
+                                    </div>
+                                    <div className="text-slate-500 text-xs">
+                                        {t("memberModal.activityItems.messages")}
+                                    </div>
                                 </div>
                             </div>
 
@@ -856,7 +890,9 @@ function MemberDetailModal({
                             {member.contributionScoreRate !== undefined && (
                                 <div className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="font-medium text-slate-700 text-sm">{t("memberModal.contributionRate")}</span>
+                                        <span className="font-medium text-slate-700 text-sm">
+                                            {t("memberModal.contributionRate")}
+                                        </span>
                                         <span className="font-bold text-lg text-orange-600">
                                             {member.contributionScoreRate.toFixed(2)}%
                                         </span>
@@ -873,7 +909,9 @@ function MemberDetailModal({
                             {/* Last activity */}
                             <div className="flex items-center gap-2 text-slate-500 text-sm">
                                 <Clock3 className="h-4 w-4" />
-                                <span>{t("memberModal.lastActivity")}: {member.lastActivity}</span>
+                                <span>
+                                    {t("memberModal.lastActivity")}: {member.lastActivity}
+                                </span>
                             </div>
                         </div>
                     </motion.div>
@@ -1081,8 +1119,8 @@ export default function GroupMemberAnalyticsPage() {
             trendFilter === "week"
                 ? getWeekRange(trendAnchorDate)
                 : trendFilter === "month"
-                    ? getMonthRange(trendAnchorDate)
-                    : {
+                  ? getMonthRange(trendAnchorDate)
+                  : {
                         start: new Date(trendAnchorDate.getFullYear(), 0, 1),
                         end: new Date(trendAnchorDate.getFullYear(), 11, 31)
                     };
@@ -1093,11 +1131,11 @@ export default function GroupMemberAnalyticsPage() {
         const labels = Array.isArray(rawLabels)
             ? rawLabels.map((label) => String(label))
             : typeof rawLabels === "string"
-                ? rawLabels
+              ? rawLabels
                     .split(",")
                     .map((label) => label.trim())
                     .filter(Boolean)
-                : [];
+              : [];
 
         // Current user's trend
         const currentUserTrend = trendData?.find((m) => m.userId === currentUserId) ?? trendData?.[0];
@@ -1742,9 +1780,7 @@ export default function GroupMemberAnalyticsPage() {
                                                 ? t("chart.progressOverTime")
                                                 : t("chart.progressOverTime")}
                                         </h2>
-                                        <p className="mt-1 text-slate-500 text-sm">
-                                            {t("chart.progressOverTimeDesc")}
-                                        </p>
+                                        <p className="mt-1 text-slate-500 text-sm">{t("chart.progressOverTimeDesc")}</p>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-3">
@@ -1834,7 +1870,11 @@ export default function GroupMemberAnalyticsPage() {
                     </SectionReveal>
 
                     <SectionReveal delay={0.12}>
-                        <TeamMemberProgressSection members={memberProgressItems} onMemberClick={setSelectedMember} t={t} />
+                        <TeamMemberProgressSection
+                            members={memberProgressItems}
+                            onMemberClick={setSelectedMember}
+                            t={t}
+                        />
                     </SectionReveal>
 
                     {/* Member Detail Modal - Layer 2 */}

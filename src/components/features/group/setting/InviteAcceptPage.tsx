@@ -248,8 +248,8 @@ export function InviteAcceptPage() {
             <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
                 <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
                     <Logo />
-                    <h1 className="mb-2 font-bold text-2xl">{t("invitation")}</h1>
-                    <p className="mb-6 text-muted-foreground text-sm">{t("loading")}</p>
+                    <h1 className="mb-2 text-2xl font-bold">{t("invitation")}</h1>
+                    <p className="mb-6 text-sm text-muted-foreground">{t("loading")}</p>
                 </div>
             </div>
         );
@@ -265,13 +265,13 @@ export function InviteAcceptPage() {
 
                 {status === "accepted" ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">{t("successTitle")}</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">{t("redirecting")}</p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("successTitle")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("redirecting")}</p>
                     </>
                 ) : status === "already" ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">{t("notice")}</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">{t("alreadyMember")}</p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("notice")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("alreadyMember")}</p>
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={() => router.push(`/${locale}/group`)}>
@@ -284,15 +284,13 @@ export function InviteAcceptPage() {
                     </>
                 ) : status === "submitting" ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">{t("submittingTitle")}</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">{t("checking")}</p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("submittingTitle")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("checking")}</p>
                     </>
                 ) : needLogin ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">{t("notLoggedIn")}</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">
-                            {t("loginPrompt")}
-                        </p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("notLoggedIn")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("loginPrompt")}</p>
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={goLogin}>
@@ -305,20 +303,18 @@ export function InviteAcceptPage() {
                     </>
                 ) : (
                     <>
-                        <h1 className=”mb-2 font-bold text-2xl”>{t(“invitation”)}</h1>
-                        <p className=”mb-6 text-muted-foreground text-sm”>
-                            {t(“acceptPrompt”)}
-                        </p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("invitation")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("acceptPrompt")}</p>
 
-                        {status === “error” && error ? <p className=”mb-4 text-red-600 text-sm”>{error}</p> : null}
+                        {status === "error" && error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
 
-                        <div className=”space-y-3”>
-                            <Button className=”w-full” onClick={acceptInvite} disabled={!canAccept}>
-                                {t(“accept”)}
+                        <div className="space-y-3">
+                            <Button className="w-full" onClick={acceptInvite} disabled={!canAccept}>
+                                {t("accept")}
                             </Button>
 
-                            <Button variant=”outline” className=”w-full” onClick={onBackHome}>
-                                {t(“backHome”)}
+                            <Button variant="outline" className="w-full" onClick={onBackHome}>
+                                {t("backHome")}
                             </Button>
                         </div>
                     </>
@@ -335,7 +331,7 @@ function Logo() {
                 <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
                 <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
             </svg>
-            <span className="font-bold text-3xl text-orange-500 leading-tight">
+            <span className="text-3xl font-bold leading-tight text-orange-500">
                 Study <br /> Studio
             </span>
         </div>
