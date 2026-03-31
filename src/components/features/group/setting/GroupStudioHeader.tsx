@@ -57,10 +57,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-        | {
-            role?: string | null;
-        }[]
-        | null;
+            | {
+                  role?: string | null;
+              }[]
+            | null;
     } | null;
 };
 
@@ -144,11 +144,31 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         () => [
             { key: "board", label: t("tabs.board"), icon: LayoutGrid, href: (l, id) => `/${l}/group/${id}` },
             { key: "list", label: t("tabs.list"), icon: List, href: (l, id) => `/${l}/group/${id}/list` },
-            { key: "calendar", label: t("tabs.calendar"), icon: Calendar, href: (l, id) => `/${l}/group/${id}/calendar` },
-            { key: "documents", label: t("tabs.documents"), icon: FileText, href: (l, id) => `/${l}/group/${id}/documents` },
+            {
+                key: "calendar",
+                label: t("tabs.calendar"),
+                icon: Calendar,
+                href: (l, id) => `/${l}/group/${id}/calendar`
+            },
+            {
+                key: "documents",
+                label: t("tabs.documents"),
+                icon: FileText,
+                href: (l, id) => `/${l}/group/${id}/documents`
+            },
             { key: "ai-qa", label: tCommon("aiQATab"), icon: Sparkles, href: (l, id) => `/${l}/group/${id}/ai-qa` },
-            { key: "discuss", label: t("tabs.discuss"), icon: MessageSquare, href: (l, id) => `/${l}/group/${id}/discuss` },
-            { key: "analytic", label: t("tabs.analytic"), icon: BarChart3, href: (l, id) => `/${l}/group/${id}/analytic` },
+            {
+                key: "discuss",
+                label: t("tabs.discuss"),
+                icon: MessageSquare,
+                href: (l, id) => `/${l}/group/${id}/discuss`
+            },
+            {
+                key: "analytic",
+                label: t("tabs.analytic"),
+                icon: BarChart3,
+                href: (l, id) => `/${l}/group/${id}/analytic`
+            },
             { key: "setting", label: t("tabs.setting"), icon: Settings, href: (l, id) => `/${l}/group/${id}/setting` },
             { key: "trashed", label: t("tabs.trashed"), icon: Trash2, href: (l, id) => `/${l}/group/${id}/trashed` }
         ],
@@ -180,7 +200,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch { }
+                } catch {}
 
                 if (!res.ok) {
                     const msg = json?.message || text || `${t("errors.fetchDetailFailed")} (${res.status})`;
@@ -220,7 +240,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch { }
+                    } catch {}
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -319,7 +339,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && json && okByJsonStatus(json)) {
                 const url = String(json?.data?.inviteUrl ?? "").trim();
@@ -362,7 +382,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
             let json: any = null;
             try {
                 json = text ? JSON.parse(text) : null;
-            } catch { }
+            } catch {}
 
             if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -412,7 +432,11 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                             <div className="mt-2 flex items-start gap-3">
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-orange-500 via-orange-500 to-red-600 shadow-md shadow-orange-200">
                                     {groupAvatarUrl ? (
-                                        <img src={groupAvatarUrl} alt="Group Avatar" className="h-full w-full object-cover" />
+                                        <img
+                                            src={groupAvatarUrl}
+                                            alt="Group Avatar"
+                                            className="h-full w-full object-cover"
+                                        />
                                     ) : (
                                         <Users className="h-6 w-6 text-white" />
                                     )}

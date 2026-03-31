@@ -1,14 +1,22 @@
+import { useTranslations } from "next-intl";
 import type { GroupRole } from "./types";
 
-const roleText: Record<GroupRole, string> = {
-    owner: "Chủ sở hữu",
-    moderator: "Điều phối viên",
-    member: "Thành viên",
-    commenter: "Người bình luận",
-    viewer: "Người xem"
+type Translator = ReturnType<typeof useTranslations>;
+
+const ROLE_LABELS: Record<GroupRole, string> = {
+    owner: "Owner",
+    moderator: "Moderator",
+    member: "Member",
+    commenter: "Commenter",
+    viewer: "Viewer"
 };
 
-export function RolePill({ role }: { role: GroupRole }) {
+interface RolePillProps {
+    role: GroupRole;
+    t?: Translator;
+}
+
+export function RolePill({ role, t }: RolePillProps) {
     const cls =
         role === "owner"
             ? "border-orange-500/60 text-orange-600 bg-orange-50"
@@ -22,9 +30,11 @@ export function RolePill({ role }: { role: GroupRole }) {
                     ? "border-gray-400/60 text-gray-500 bg-gray-100"
                     : "border-slate-300 text-slate-600 bg-slate-50";
 
+    const label = t ? t("GroupStudioHeader.roles." + role, { defaultValue: ROLE_LABELS[role] }) : ROLE_LABELS[role];
+
     return (
         <span className={`inline-flex items-center rounded-md border px-2 py-0.5 font-medium text-xs ${cls}`}>
-            {roleText[role]}
+            {label}
         </span>
     );
 }

@@ -80,8 +80,7 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.35 }}
-            className="mb-5 flex items-center justify-between gap-3"
-        >
+            className="mb-5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
                 <h2 className="text-[22px] font-semibold text-[#261E33]">{title}</h2>
                 <span className="rounded-full border border-[#ECE7E2] bg-white px-3 py-1 text-sm text-[#6F6B99] shadow-sm">
@@ -140,8 +139,7 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                     e.preventDefault();
                     onClick();
                 }
-            }}
-        >
+            }}>
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.24),rgba(255,255,255,0.04))]" />
 
             <div className="relative h-36 overflow-visible px-5 pt-5" style={{ background: gradient }}>
@@ -161,11 +159,11 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                     {studio.studioRole !== undefined && (
                         <motion.span
                             whileHover={{ scale: 1.04 }}
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm ${isOwner
-                                ? "bg-gradient-to-r from-orange-500 to-red-500"
-                                : "bg-gradient-to-r from-teal-500 to-cyan-500"
-                                }`}
-                        >
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm ${
+                                isOwner
+                                    ? "bg-gradient-to-r from-orange-500 to-red-500"
+                                    : "bg-gradient-to-r from-teal-500 to-cyan-500"
+                            }`}>
                             {isOwner ? t("roles.owner") : t("roles.member")}
                         </motion.span>
                     )}
@@ -173,8 +171,7 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
 
                 <motion.div
                     whileHover={{ rotate: -2, scale: 1.04 }}
-                    className="absolute bottom-[-24px] left-5 z-10 overflow-hidden rounded-[20px] border border-white/85 bg-white shadow-[0_14px_28px_rgba(15,23,42,0.14)]"
-                >
+                    className="absolute bottom-[-24px] left-5 z-10 overflow-hidden rounded-[20px] border border-white/85 bg-white shadow-[0_14px_28px_rgba(15,23,42,0.14)]">
                     {studio.avatarUrl ? (
                         <img src={studio.avatarUrl} alt={studio.name} className="h-16 w-16 object-cover" />
                     ) : (
@@ -198,8 +195,7 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                         <motion.div
                             initial={false}
                             animate={{ opacity: isHovered ? 1 : 0.55, y: isHovered ? 0 : 2 }}
-                            className="flex shrink-0 gap-2 transition-all duration-200"
-                        >
+                            className="flex shrink-0 gap-2 transition-all duration-200">
                             <motion.button
                                 whileHover={{ y: -2, scale: 1.04 }}
                                 whileTap={{ scale: 0.96 }}
@@ -209,9 +205,12 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                                     onEdit();
                                 }}
                                 className="rounded-xl border border-gray-200 bg-white/95 p-2 shadow-sm transition hover:bg-gray-50"
-                                title="Edit"
-                            >
-                                <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                title="Edit">
+                                <svg
+                                    className="h-4 w-4 text-gray-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -230,9 +229,12 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                                     onDelete();
                                 }}
                                 className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50"
-                                title="Delete"
-                            >
-                                <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                title="Delete">
+                                <svg
+                                    className="h-4 w-4 text-red-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -248,8 +250,7 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                 <div className="mt-5 grid grid-cols-2 gap-3">
                     <motion.div
                         whileHover={{ y: -2 }}
-                        className="rounded-[20px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm"
-                    >
+                        className="rounded-[20px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm">
                         <div className="flex items-center gap-2 text-xs text-[#6F6B99]">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
@@ -266,8 +267,7 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
 
                     <motion.div
                         whileHover={{ y: -2 }}
-                        className="rounded-[20px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm"
-                    >
+                        className="rounded-[20px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 shadow-sm">
                         <div className="flex items-center gap-2 text-xs text-[#6F6B99]">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
@@ -292,13 +292,11 @@ function EmptyState({ message }: { message: string }) {
         <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-[34px] border border-white/80 bg-white/82 p-16 text-center shadow-sm backdrop-blur"
-        >
+            className="rounded-[34px] border border-white/80 bg-white/82 p-16 text-center shadow-sm backdrop-blur">
             <motion.div
                 className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#FFF1EC_0%,#F5F0FF_100%)]"
                 animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-            >
+                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}>
                 <svg className="h-9 w-9 text-[#9B8CA8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                         strokeLinecap="round"
@@ -581,8 +579,7 @@ export default function MasterPageClient({
                                 initial={{ opacity: 0, y: 18 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.35 }}
-                                className="relative mb-6 overflow-hidden rounded-[38px] border border-white/70 bg-white/72 px-6 py-7 shadow-[0_28px_90px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:px-8 sm:py-8"
-                            >
+                                className="relative mb-6 overflow-hidden rounded-[38px] border border-white/70 bg-white/72 px-6 py-7 shadow-[0_28px_90px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:px-8 sm:py-8">
                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.20),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.68),rgba(255,248,242,0.56))]" />
                                 <div className="absolute inset-x-0 top-0 h-px bg-white/90" />
 
@@ -592,8 +589,7 @@ export default function MasterPageClient({
                                             initial={{ opacity: 0, y: 8 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.05 }}
-                                            className="inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm"
-                                        >
+                                            className="inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm">
                                             {t("detail.workspaceBadge")}
                                         </motion.div>
 
@@ -601,8 +597,7 @@ export default function MasterPageClient({
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.08 }}
-                                            className="mt-4 bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#FF5F3D_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-[40px]"
-                                        >
+                                            className="mt-4 bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#FF5F3D_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-[40px]">
                                             {t("title")}
                                         </motion.h1>
 
@@ -610,8 +605,7 @@ export default function MasterPageClient({
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.12 }}
-                                            className="mt-3 max-w-2xl text-[15px] leading-7 text-[#6F6B99]"
-                                        >
+                                            className="mt-3 max-w-2xl text-[15px] leading-7 text-[#6F6B99]">
                                             {t("subtitle")}
                                         </motion.p>
                                     </div>
@@ -619,24 +613,25 @@ export default function MasterPageClient({
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[520px]">
                                         <motion.div
                                             whileHover={{ y: -3 }}
-                                            className="rounded-[24px] border border-white/80 bg-white/84 p-4 shadow-sm"
-                                        >
+                                            className="rounded-[24px] border border-white/80 bg-white/84 p-4 shadow-sm">
                                             <p className="text-xs text-[#8B7768]">{t("yourStudios")}</p>
-                                            <p className="mt-2 text-[28px] font-semibold text-[#261E33]">{ownedStudios.length}</p>
+                                            <p className="mt-2 text-[28px] font-semibold text-[#261E33]">
+                                                {ownedStudios.length}
+                                            </p>
                                         </motion.div>
 
                                         <motion.div
                                             whileHover={{ y: -3 }}
-                                            className="rounded-[24px] border border-white/80 bg-white/84 p-4 shadow-sm"
-                                        >
+                                            className="rounded-[24px] border border-white/80 bg-white/84 p-4 shadow-sm">
                                             <p className="text-xs text-[#8B7768]">{t("joinedStudios")}</p>
-                                            <p className="mt-2 text-[28px] font-semibold text-[#261E33]">{joinedStudios.length}</p>
+                                            <p className="mt-2 text-[28px] font-semibold text-[#261E33]">
+                                                {joinedStudios.length}
+                                            </p>
                                         </motion.div>
 
                                         <motion.div
                                             whileHover={{ y: -3 }}
-                                            className="rounded-[24px] border border-orange-200/80 bg-[linear-gradient(180deg,rgba(255,247,241,0.98),rgba(255,236,224,0.92))] p-4 shadow-sm"
-                                        >
+                                            className="rounded-[24px] border border-orange-200/80 bg-[linear-gradient(180deg,rgba(255,247,241,0.98),rgba(255,236,224,0.92))] p-4 shadow-sm">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div>
                                                     <p className="text-xs text-[#8B7768]">{t("studiosUsed")}</p>
@@ -675,8 +670,7 @@ export default function MasterPageClient({
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.08, duration: 0.35 }}
-                                className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
-                            >
+                                className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="relative flex-1 lg:max-w-xl">
                                     <Input
                                         type="text"
@@ -689,8 +683,7 @@ export default function MasterPageClient({
                                         className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
                                         fill="none"
                                         stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
+                                        viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
@@ -703,8 +696,7 @@ export default function MasterPageClient({
                                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                                     <Button
                                         onClick={handleOpenCreateModal}
-                                        className="h-14 rounded-[22px] bg-[linear-gradient(135deg,#D93F21_0%,#F24E2E_55%,#FF603A_100%)] px-6 font-semibold text-white shadow-[0_18px_36px_rgba(217,63,33,0.38)] transition-all duration-200 hover:scale-[1.02] hover:brightness-110 hover:shadow-[0_24px_44px_rgba(217,63,33,0.46)] active:scale-[0.98]"
-                                    >
+                                        className="h-14 rounded-[22px] bg-[linear-gradient(135deg,#D93F21_0%,#F24E2E_55%,#FF603A_100%)] px-6 font-semibold text-white shadow-[0_18px_36px_rgba(217,63,33,0.38)] transition-all duration-200 hover:scale-[1.02] hover:brightness-110 hover:shadow-[0_24px_44px_rgba(217,63,33,0.46)] active:scale-[0.98]">
                                         {t("createButton")}
                                     </Button>
                                 </motion.div>
@@ -716,8 +708,7 @@ export default function MasterPageClient({
                                         key="loading"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                    >
+                                        exit={{ opacity: 0 }}>
                                         <LoadingState />
                                     </motion.div>
                                 ) : hasNoResults ? (
@@ -725,8 +716,7 @@ export default function MasterPageClient({
                                         key="empty"
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
-                                    >
+                                        exit={{ opacity: 0, y: -8 }}>
                                         <EmptyState message={searchQuery ? t("noSearchResults") : t("noStudios")} />
                                     </motion.div>
                                 ) : (
@@ -734,8 +724,7 @@ export default function MasterPageClient({
                                         key="content"
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
-                                    >
+                                        exit={{ opacity: 0, y: -8 }}>
                                         {renderStudioSection(t("yourStudios"), filteredOwnedStudios)}
                                         {renderStudioSection(t("joinedStudios"), filteredJoinedStudios)}
                                     </motion.div>

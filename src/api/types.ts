@@ -2072,7 +2072,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/user/dashboard": {
+    "/api/analytics/user/{userId}/benchmark": {
         parameters: {
             query?: never;
             header?: never;
@@ -2082,11 +2082,13 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    endDate?: string;
-                    startDate?: string;
+                    groupId?: string;
+                    weeks?: number;
                 };
                 header?: never;
-                path?: never;
+                path: {
+                    userId: string;
+                };
                 cookie?: never;
             };
             requestBody?: never;
@@ -2097,9 +2099,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["UserDashboardResponseApiResponse"];
-                        "text/json": components["schemas"]["UserDashboardResponseApiResponse"];
-                        "text/plain": components["schemas"]["UserDashboardResponseApiResponse"];
+                        "application/json": components["schemas"]["UserBenchmarkResponseApiResponse"];
+                        "text/json": components["schemas"]["UserBenchmarkResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserBenchmarkResponseApiResponse"];
                     };
                 };
             };
@@ -2112,7 +2114,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/user/deadline-performance": {
+    "/api/analytics/user/{userId}/group-rankings": {
         parameters: {
             query?: never;
             header?: never;
@@ -2123,7 +2125,9 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    userId: string;
+                };
                 cookie?: never;
             };
             requestBody?: never;
@@ -2134,9 +2138,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["DeadlinePerformanceDataApiResponse"];
-                        "text/json": components["schemas"]["DeadlinePerformanceDataApiResponse"];
-                        "text/plain": components["schemas"]["DeadlinePerformanceDataApiResponse"];
+                        "application/json": components["schemas"]["UserGroupRankingsResponseApiResponse"];
+                        "text/json": components["schemas"]["UserGroupRankingsResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserGroupRankingsResponseApiResponse"];
                     };
                 };
             };
@@ -2149,7 +2153,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/user/heatmap": {
+    "/api/analytics/user/{userId}/kpi-summary": {
         parameters: {
             query?: never;
             header?: never;
@@ -2158,11 +2162,11 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: {
-                    days?: number;
-                };
+                query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    userId: string;
+                };
                 cookie?: never;
             };
             requestBody?: never;
@@ -2173,9 +2177,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["ActivityHeatmapDataListApiResponse"];
-                        "text/json": components["schemas"]["ActivityHeatmapDataListApiResponse"];
-                        "text/plain": components["schemas"]["ActivityHeatmapDataListApiResponse"];
+                        "application/json": components["schemas"]["UserKpiSummaryResponseApiResponse"];
+                        "text/json": components["schemas"]["UserKpiSummaryResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserKpiSummaryResponseApiResponse"];
                     };
                 };
             };
@@ -2188,7 +2192,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/analytics/user/trends": {
+    "/api/analytics/user/{userId}/on-time-overview": {
         parameters: {
             query?: never;
             header?: never;
@@ -2197,11 +2201,11 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: {
-                    days?: number;
-                };
+                query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    userId: string;
+                };
                 cookie?: never;
             };
             requestBody?: never;
@@ -2212,9 +2216,208 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["TaskCompletionTrendDataListApiResponse"];
-                        "text/json": components["schemas"]["TaskCompletionTrendDataListApiResponse"];
-                        "text/plain": components["schemas"]["TaskCompletionTrendDataListApiResponse"];
+                        "application/json": components["schemas"]["UserOnTimeOverviewResponseApiResponse"];
+                        "text/json": components["schemas"]["UserOnTimeOverviewResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserOnTimeOverviewResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/user/{userId}/priority-distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserPriorityDistributionResponseApiResponse"];
+                        "text/json": components["schemas"]["UserPriorityDistributionResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserPriorityDistributionResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/user/{userId}/productivity-trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    period?: number;
+                };
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserProductivityTrendResponseApiResponse"];
+                        "text/json": components["schemas"]["UserProductivityTrendResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserProductivityTrendResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/user/{userId}/risk-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserRiskAlertsResponseApiResponse"];
+                        "text/json": components["schemas"]["UserRiskAlertsResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserRiskAlertsResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/user/{userId}/task-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserTaskStatusResponseApiResponse"];
+                        "text/json": components["schemas"]["UserTaskStatusResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserTaskStatusResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/user/{userId}/urgency-distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserUrgencyDistributionResponseApiResponse"];
+                        "text/json": components["schemas"]["UserUrgencyDistributionResponseApiResponse"];
+                        "text/plain": components["schemas"]["UserUrgencyDistributionResponseApiResponse"];
                     };
                 };
             };
@@ -6208,18 +6411,6 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        ActivityHeatmapData: {
-            /** Format: int32 */
-            activityCount?: number;
-            /** Format: date */
-            date?: string;
-        };
-        ActivityHeatmapDataListApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["ActivityHeatmapData"][] | null;
-            message?: string | null;
-            status?: string | null;
-        };
         AddFavouriteRequest: {
             /** Format: uuid */
             groupId: string;
@@ -6336,6 +6527,15 @@ export interface components {
             reason?: string | null;
             /** Format: int32 */
             row?: number;
+        };
+        BenchmarkPoint: {
+            /** Format: int32 */
+            groupAvg?: number;
+            /** Format: int32 */
+            trend?: number;
+            /** Format: int32 */
+            user?: number;
+            week?: string | null;
         };
         /**
          * Format: int32
@@ -6537,20 +6737,6 @@ export interface components {
             completedTasks?: number;
             /** Format: date */
             date?: string;
-        };
-        DeadlinePerformanceData: {
-            /** Format: int32 */
-            lateCount?: number;
-            /** Format: int32 */
-            onTimeCount?: number;
-            /** Format: double */
-            onTimePercentage?: number;
-        };
-        DeadlinePerformanceDataApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["DeadlinePerformanceData"];
-            message?: string | null;
-            status?: string | null;
         };
         DocumentDownloadUrlResponse: {
             /** Format: uuid */
@@ -6833,6 +7019,19 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        GroupRankingItem: {
+            /** Format: int32 */
+            contributionRate?: number;
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: int32 */
+            rank?: number;
+            /** Format: int32 */
+            score?: number;
+            /** Format: int32 */
+            userRankWithinGroup?: number;
+        };
         /**
          * Format: int32
          * @enum {integer}
@@ -7042,7 +7241,7 @@ export interface components {
             /** Format: int32 */
             completedTasks?: number;
             /** Format: double */
-            contributionPercentage?: number;
+            contributionCountRate?: number;
             /** Format: int32 */
             inProgressTasks?: number;
             /** Format: date-time */
@@ -7066,14 +7265,14 @@ export interface components {
             userId?: string;
         };
         MemberContributionData: {
-            /** Format: double */
-            assignedScore?: number;
             /** Format: int32 */
             commentsCreated?: number;
             /** Format: double */
+            commentsScore?: number;
+            /** Format: double */
             completedScore?: number;
             /** Format: double */
-            contributionPercentage?: number;
+            contributionScoreRate?: number;
             /** Format: double */
             createdScore?: number;
             /** Format: double */
@@ -7137,7 +7336,9 @@ export interface components {
         };
         MemberTaskBreakdownData: {
             /** Format: double */
-            contributionPercentage?: number;
+            contributionCountRate?: number;
+            /** Format: double */
+            contributionScoreRate?: number;
             /** Format: int32 */
             doneTasks?: number;
             /** Format: int32 */
@@ -7285,6 +7486,27 @@ export interface components {
             /** Format: int32 */
             transactionCount?: number;
             trend?: string | null;
+        };
+        PriorityDistributionItem: {
+            /** Format: int32 */
+            completed?: number;
+            /** Format: int32 */
+            inProgress?: number;
+            /** Format: int32 */
+            overdue?: number;
+            priority?: string | null;
+            /** Format: int32 */
+            todo?: number;
+            /** Format: int32 */
+            total?: number;
+        };
+        ProductivityTrendPoint: {
+            /** Format: int32 */
+            completed?: number;
+            date?: string | null;
+            /** Format: int32 */
+            overdue?: number;
+            overdueTaskIds?: string[] | null;
         };
         RandomAssignRequest: {
             defaultRole: components["schemas"]["GroupRole"];
@@ -7630,6 +7852,15 @@ export interface components {
             data?: components["schemas"]["RevenueTrendsResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        RiskAlertItem: {
+            description?: string | null;
+            dueDate?: string | null;
+            group?: string | null;
+            /** Format: uuid */
+            taskId?: string | null;
+            title?: string | null;
+            type?: string | null;
         };
         SendInviteEmailRequest: {
             /** Format: email */
@@ -8037,20 +8268,6 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        TaskCompletionTrendData: {
-            /** Format: date */
-            date?: string;
-            /** Format: int32 */
-            tasksCompleted?: number;
-            /** Format: int32 */
-            tasksCreated?: number;
-        };
-        TaskCompletionTrendDataListApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["TaskCompletionTrendData"][] | null;
-            message?: string | null;
-            status?: string | null;
-        };
         TaskDeleteResponse: {
             /** Format: uuid */
             deletedBy?: string;
@@ -8159,6 +8376,12 @@ export interface components {
             /** Format: uuid */
             statusId?: string;
             statusName?: string | null;
+        };
+        TaskStatusSegment: {
+            color?: string | null;
+            name?: string | null;
+            /** Format: int32 */
+            value?: number;
         };
         TemplateListResponse: {
             subscription?: components["schemas"]["SubscriptionQuota"];
@@ -8443,6 +8666,20 @@ export interface components {
         UpdateUserStatusRequest: {
             status?: string | null;
         };
+        UrgencyDistributionItem: {
+            accentColor?: string | null;
+            /** Format: int32 */
+            completed?: number;
+            /** Format: int32 */
+            inProgress?: number;
+            /** Format: int32 */
+            overdue?: number;
+            /** Format: int32 */
+            todo?: number;
+            /** Format: int32 */
+            total?: number;
+            urgency?: string | null;
+        };
         UserAnnouncementResponse: {
             /** Format: uuid */
             announcementId?: string;
@@ -8467,16 +8704,12 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
-        UserDashboardResponse: {
-            activityHeatmap?: components["schemas"]["ActivityHeatmapData"][] | null;
-            deadlinePerformance?: components["schemas"]["DeadlinePerformanceData"];
-            /** Format: double */
-            productivityScore?: number;
-            taskCompletionTrend?: components["schemas"]["TaskCompletionTrendData"][] | null;
+        UserBenchmarkResponse: {
+            benchmark?: components["schemas"]["BenchmarkPoint"][] | null;
         };
-        UserDashboardResponseApiResponse: {
+        UserBenchmarkResponseApiResponse: {
             code?: string | null;
-            data?: components["schemas"]["UserDashboardResponse"];
+            data?: components["schemas"]["UserBenchmarkResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -8544,6 +8777,37 @@ export interface components {
             groupId?: string;
             groupName?: string | null;
         };
+        UserGroupRankingsResponse: {
+            rankings?: components["schemas"]["GroupRankingItem"][] | null;
+        };
+        UserGroupRankingsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserGroupRankingsResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        UserKpiSummaryResponse: {
+            /** Format: double */
+            avgCompletionTimeDays?: number;
+            /** Format: int32 */
+            completed?: number;
+            /** Format: int32 */
+            completionRate?: number;
+            /** Format: int32 */
+            inProgress?: number;
+            /** Format: int32 */
+            overdueTasks?: number;
+            /** Format: int32 */
+            totalChangePercent?: number;
+            /** Format: int32 */
+            totalTasks?: number;
+        };
+        UserKpiSummaryResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserKpiSummaryResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         UserListItem: {
             /** Format: date-time */
             createdAt?: string;
@@ -8592,6 +8856,33 @@ export interface components {
             /** Format: int32 */
             totalUsers?: number;
         };
+        UserOnTimeOverviewResponse: {
+            segments?: components["schemas"]["TaskStatusSegment"][] | null;
+        };
+        UserOnTimeOverviewResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserOnTimeOverviewResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        UserPriorityDistributionResponse: {
+            distribution?: components["schemas"]["PriorityDistributionItem"][] | null;
+        };
+        UserPriorityDistributionResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserPriorityDistributionResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        UserProductivityTrendResponse: {
+            trend?: components["schemas"]["ProductivityTrendPoint"][] | null;
+        };
+        UserProductivityTrendResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserProductivityTrendResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         UserProfileResponse: {
             /** Format: int32 */
             aiDailyLimit?: number;
@@ -8624,6 +8915,15 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        UserRiskAlertsResponse: {
+            alerts?: components["schemas"]["RiskAlertItem"][] | null;
+        };
+        UserRiskAlertsResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserRiskAlertsResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         UserStatistics: {
             /** Format: double */
             conversionRate?: number;
@@ -8639,6 +8939,24 @@ export interface components {
          * @enum {integer}
          */
         UserStatus: 0 | 1 | 2;
+        UserTaskStatusResponse: {
+            segments?: components["schemas"]["TaskStatusSegment"][] | null;
+        };
+        UserTaskStatusResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserTaskStatusResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        UserUrgencyDistributionResponse: {
+            distribution?: components["schemas"]["UrgencyDistributionItem"][] | null;
+        };
+        UserUrgencyDistributionResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["UserUrgencyDistributionResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         Webhook: {
             code?: string | null;
             data?: components["schemas"]["WebhookData"];

@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, FileText, MoreHorizontal, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 import {
     DropdownMenu,
@@ -28,6 +29,7 @@ export interface DocumentCardProps {
     onDownload: (attachmentId: string) => void;
     onDelete: (attachmentId: string) => void;
     isDeleting?: boolean;
+    t: ReturnType<typeof useTranslations>;
 }
 
 function getExt(name: string) {
@@ -63,11 +65,12 @@ function formatDate(createdAt?: string): string {
     });
 }
 
-export function DocumentCardComponent({ document, canDelete, onDownload, onDelete, isDeleting }: DocumentCardProps) {
+export function DocumentCardComponent({ document, canDelete, onDownload, onDelete, isDeleting, t }: DocumentCardProps) {
     const ext = getExt(document.fileName);
     const fileType = niceType(ext);
     const uploaderName =
-        [document.uploadedBy?.firstName, document.uploadedBy?.lastName].filter(Boolean).join(" ") || "Unknown";
+        [document.uploadedBy?.firstName, document.uploadedBy?.lastName].filter(Boolean).join(" ") ||
+        t("unknownUploader");
     const uploadedText = document.createdAt ? `${uploaderName} • ${formatDate(document.createdAt)}` : uploaderName;
 
     return (
@@ -108,7 +111,7 @@ export function DocumentCardComponent({ document, canDelete, onDownload, onDelet
                             onClick={() => onDownload(document.attachmentId)}
                             className="cursor-pointer text-slate-700 hover:bg-slate-50">
                             <Download className="mr-2 h-4 w-4" />
-                            Tải xuống
+                            {t("download.action")}
                         </DropdownMenuItem>
                         {canDelete && (
                             <>
@@ -118,7 +121,7 @@ export function DocumentCardComponent({ document, canDelete, onDownload, onDelet
                                     disabled={isDeleting}
                                     className="cursor-pointer text-red-600 hover:bg-red-50 focus:text-red-600">
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Xóa
+                                    {t("delete.action")}
                                 </DropdownMenuItem>
                             </>
                         )}

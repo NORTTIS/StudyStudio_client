@@ -272,7 +272,10 @@ export function GroupSettingView() {
             const last = (m.lastName ?? "").trim();
             const uid = m.userId ?? `${idx}`;
             const role = toMemberRole(m.role);
-            const avatarUrl = String(m.avatarUrl ?? "").trim().replace("localhost", "127.0.0.1") || null;
+            const avatarUrl =
+                String(m.avatarUrl ?? "")
+                    .trim()
+                    .replace("localhost", "127.0.0.1") || null;
 
             return {
                 id: String(uid),
@@ -360,10 +363,11 @@ export function GroupSettingView() {
         setInitialIconEmoji(data.iconEmoji ?? "");
 
         // Template field - check for isTemplate, template, or isTemplateGroup fields
-        const templateValue = (data as Record<string, unknown>).isTemplate
-            ?? (data as Record<string, unknown>).template
-            ?? (data as Record<string, unknown>).isTemplateGroup
-            ?? false;
+        const templateValue =
+            (data as Record<string, unknown>).isTemplate ??
+            (data as Record<string, unknown>).template ??
+            (data as Record<string, unknown>).isTemplateGroup ??
+            false;
         const templateBool = Boolean(templateValue);
         setIsTemplate(templateBool);
         setInitialIsTemplate(templateBool);
@@ -958,9 +962,7 @@ export function GroupSettingView() {
                                 <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                                     <div>
                                         <div className="font-semibold text-gray-700 text-xs">{t("template.label")}</div>
-                                        <div className="mt-0.5 text-gray-500 text-xs">
-                                            {t("template.description")}
-                                        </div>
+                                        <div className="mt-0.5 text-gray-500 text-xs">{t("template.description")}</div>
                                     </div>
                                     <Switch
                                         checked={isTemplate}
@@ -1135,7 +1137,9 @@ export function GroupSettingView() {
                             <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                     <div>
-                                        <div className="font-bold text-red-700 text-sm">{t("dangerZone.deleteGroup.label")}</div>
+                                        <div className="font-bold text-red-700 text-sm">
+                                            {t("dangerZone.deleteGroup.label")}
+                                        </div>
                                         <div className="mt-1 text-red-600 text-xs">
                                             {t("dangerZone.deleteGroup.description")}
                                         </div>
@@ -1153,14 +1157,18 @@ export function GroupSettingView() {
 
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>{t("dangerZone.deleteGroup.confirmTitle")}</AlertDialogTitle>
+                                                <AlertDialogTitle>
+                                                    {t("dangerZone.deleteGroup.confirmTitle")}
+                                                </AlertDialogTitle>
                                                 <AlertDialogDescription>
                                                     {t("dangerZone.deleteGroup.confirmDescription")}
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
 
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel disabled={deleteLoading}>{t("removeMember.cancelButton")}</AlertDialogCancel>
+                                                <AlertDialogCancel disabled={deleteLoading}>
+                                                    {t("removeMember.cancelButton")}
+                                                </AlertDialogCancel>
                                                 <AlertDialogAction
                                                     disabled={deleteLoading || !canDelete}
                                                     className="bg-red-600 hover:bg-red-700"
@@ -1168,7 +1176,9 @@ export function GroupSettingView() {
                                                         e.preventDefault();
                                                         void handleDelete();
                                                     }}>
-                                                    {deleteLoading ? t("dangerZone.deleteGroup.deleting") : t("dangerZone.deleteGroup.confirmButton")}
+                                                    {deleteLoading
+                                                        ? t("dangerZone.deleteGroup.deleting")
+                                                        : t("dangerZone.deleteGroup.confirmButton")}
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>

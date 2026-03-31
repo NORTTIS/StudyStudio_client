@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -92,6 +92,7 @@ async function requestWithAutoMethod(url: string, payload?: AnyObj) {
 }
 
 export function InviteAcceptPage() {
+    const t = useTranslations("GroupStudioHeader.inviteAcceptPage");
     const params = useParams<{ token?: string | string[] }>();
     const token = normalizeToken(params?.token);
 
@@ -152,7 +153,7 @@ export function InviteAcceptPage() {
 
             if (!token) {
                 setStatus("error");
-                setError("Missing invitation token.");
+                setError(t("missingToken"));
                 return;
             }
 
@@ -232,7 +233,7 @@ export function InviteAcceptPage() {
             );
         } catch (e: any) {
             setStatus("error");
-            setError(e?.message || "Accept invitation failed.");
+            setError(e?.message || t("serverError"));
         }
     };
 
@@ -247,8 +248,8 @@ export function InviteAcceptPage() {
             <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
                 <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
                     <Logo />
-                    <h1 className="mb-2 font-bold text-2xl">Invitation</h1>
-                    <p className="mb-6 text-muted-foreground text-sm">Đang tải...</p>
+                    <h1 className="mb-2 text-2xl font-bold">{t("invitation")}</h1>
+                    <p className="mb-6 text-sm text-muted-foreground">{t("loading")}</p>
                 </div>
             </div>
         );
@@ -264,60 +265,56 @@ export function InviteAcceptPage() {
 
                 {status === "accepted" ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">Bạn đã tham gia nhóm thành công</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">Đang chuyển hướng...</p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("successTitle")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("redirecting")}</p>
                     </>
                 ) : status === "already" ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">Thông báo</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">Bạn đã là thành viên của nhóm này rồi.</p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("notice")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("alreadyMember")}</p>
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={() => router.push(`/${locale}/group`)}>
-                                Đi tới Groups
+                                {t("goToGroups")}
                             </Button>
                             <Button variant="outline" className="w-full" onClick={onBackHome}>
-                                Về trang chủ
+                                {t("backHome")}
                             </Button>
                         </div>
                     </>
                 ) : status === "submitting" ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">Invitation</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">Đang kiểm tra lời mời...</p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("submittingTitle")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("checking")}</p>
                     </>
                 ) : needLogin ? (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">Bạn chưa đăng nhập</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">
-                            Vui lòng đăng nhập để chấp nhận lời mời vào nhóm.
-                        </p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("notLoggedIn")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("loginPrompt")}</p>
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={goLogin}>
-                                Đăng nhập để tiếp tục
+                                {t("loginToContinue")}
                             </Button>
                             <Button variant="outline" className="w-full" onClick={onBackHome}>
-                                Về trang chủ
+                                {t("backHome")}
                             </Button>
                         </div>
                     </>
                 ) : (
                     <>
-                        <h1 className="mb-2 font-bold text-2xl">Invitation</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">
-                            Nhấn “Chấp nhận gia nhập” để tham gia nhóm.
-                        </p>
+                        <h1 className="mb-2 text-2xl font-bold">{t("invitation")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("acceptPrompt")}</p>
 
-                        {status === "error" && error ? <p className="mb-4 text-red-600 text-sm">{error}</p> : null}
+                        {status === "error" && error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={acceptInvite} disabled={!canAccept}>
-                                Chấp nhận gia nhập
+                                {t("accept")}
                             </Button>
 
                             <Button variant="outline" className="w-full" onClick={onBackHome}>
-                                Về trang chủ
+                                {t("backHome")}
                             </Button>
                         </div>
                     </>
@@ -334,7 +331,7 @@ function Logo() {
                 <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
                 <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
             </svg>
-            <span className="font-bold text-3xl text-orange-500 leading-tight">
+            <span className="text-3xl font-bold leading-tight text-orange-500">
                 Study <br /> Studio
             </span>
         </div>

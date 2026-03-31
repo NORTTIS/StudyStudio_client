@@ -1216,6 +1216,54 @@
             "createLinkFailed": "Create link failed: unable to create invite link. Please try again."
         }
     },
+    "CreateGroupModal": {
+        "title": "Create new group",
+        "subtitle": "Configure your group information and choose an optional template.",
+        "close": "Close",
+        "createModeLabel": "Creation mode",
+        "createModeSingle": "Single group",
+        "createModeBatch": "Batch groups",
+        "groupTypeLabel": "Group type",
+        "groupTypeIndependent": "Independent",
+        "groupTypeManaged": "Managed (in studio)",
+        "ownerStudiosLabel": "Your studios",
+        "noOwnerStudios": "No owned studios found",
+        "untitledStudio": "Untitled studio",
+        "groupNameLabel": "Group name",
+        "groupNamePlaceholder": "Enter group name...",
+        "colorAndIconLabel": "Color and icon",
+        "groupPrefixLabel": "Group prefix",
+        "groupPrefixPlaceholder": "Enter group prefix...",
+        "groupPrefixHint": "Groups will be named like \"{prefix} 1\", \"{prefix} 2\", ...",
+        "prefixFallback": "Group",
+        "groupCountLabel": "Number of groups",
+        "groupCountPlaceholder": "Enter number of groups",
+        "groupCountMaxHint": "You can create up to {remaining} group(s) now.",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Enter group description...",
+        "batchFromFileTitle": "Batch create from file",
+        "batchFromFileSubtitle": "Download the CSV template, fill it, then upload to create members quickly.",
+        "downloadTemplate": "Download template",
+        "uploadFile": "Upload file",
+        "templatesTitle": "Templates",
+        "templatesSubtitle": "Choose a template to prefill group settings.",
+        "loadingTemplates": "Loading templates...",
+        "emptyTemplatesTitle": "No templates available",
+        "emptyTemplatesSubtitle": "Create a template first to reuse your setup faster.",
+        "templateFallbackName": "Untitled template",
+        "noDescription": "No description",
+        "cancel": "Cancel",
+        "create": "Create",
+        "creating": "Creating...",
+        "limitReached": "You have reached your plan limit ({limit} groups).",
+        "errors": {
+            "loadUser": "Unable to load user information.",
+            "loadStudios": "Unable to load studios.",
+            "loadTemplates": "Unable to load templates.",
+            "loadData": "Unable to load required data.",
+            "createFailed": "Unable to create group. Please try again."
+        }
+    },
     "AdminSubscriptions": {
         "title": "Subscription Plans Management",
         "subtitle": "Manage subscription tiers and their limits",
@@ -1475,7 +1523,16 @@
         "close": "Close",
         "loading": "Loading...",
         "notFound": "Notification not found",
-        "notFoundDescription": "This notification may have been deleted or does not exist."
+        "notFoundDescription": "This notification may have been deleted or does not exist.",
+        "announcement": "Announcement",
+        "mentionedInChat": "You were mentioned in chat",
+        "mentionedInComment": "You were mentioned in a comment",
+        "chatMessage": "Message sent to you",
+        "notificationContent": "Notification content",
+        "messageContent": "Message content",
+        "commentContent": "Comment content",
+        "from": "From",
+        "noContent": "No content"
     },
     "BillingHistoryTab": {
         "search": {
@@ -1824,5 +1881,745 @@
         "createStatus": "Create status",
         "enterStatusName": "Enter status name",
         "confirmDeleteTask": "Confirm delete task"
+    },
+    "GroupStudioHeader": {
+        "roles": {
+            "owner": "Owner",
+            "moderator": "Moderator",
+            "member": "Member",
+            "commenter": "Commenter",
+            "viewer": "Viewer"
+        },
+        "tabs": {
+            "board": "Board",
+            "list": "List",
+            "calendar": "Calendar",
+            "documents": "Documents",
+            "discuss": "Discussion",
+            "analytic": "Analytics",
+            "setting": "Settings",
+            "trashed": "Trash"
+        },
+        "errors": {
+            "fetchDetailFailed": "Unable to load group information"
+        },
+        "inviteAcceptPage": {
+            "invitation": "Invitation",
+            "loading": "Loading...",
+            "successTitle": "You have joined the group successfully",
+            "redirecting": "Redirecting...",
+            "notice": "Notice",
+            "alreadyMember": "You are already a member of this group.",
+            "goToGroups": "Go to Groups",
+            "backHome": "Back to home",
+            "submittingTitle": "Invitation",
+            "checking": "Checking invitation...",
+            "notLoggedIn": "You are not logged in",
+            "loginPrompt": "Please log in to accept the group invitation.",
+            "loginToContinue": "Log in to continue",
+            "acceptPrompt": "Press \"Accept\" to join the group.",
+            "accept": "Accept",
+            "missingToken": "Missing invitation token.",
+            "serverError": "Accept invitation failed."
+        }
+    },
+    "GroupBoardScreen": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "critical": "Critical",
+        "major": "Major",
+        "moderate": "Moderate",
+        "minor": "Minor",
+        "done": "Done",
+        "overdue": "Overdue",
+        "menu": "Menu",
+        "editName": "Edit name",
+        "delete": "Delete",
+        "assignee": "Assignee",
+        "notAssigned": "Unassigned",
+        "save": "Save",
+        "cancel": "Cancel",
+        "estimatedHours": "estimated hours",
+        "actualHours": "actual hours",
+        "enterStatusName": "Please enter status name",
+        "createStatusFailed": "Failed to create status",
+        "createStatus": "Create status",
+        "statusNamePlaceholder": "Enter status name",
+        "addStatus": "Add status",
+        "addTask": "Add task",
+        "columnMenu": "Column menu",
+        "editStatusName": "Edit status name",
+        "deleteStatus": "Delete status",
+        "noTasks": "No tasks",
+        "addTaskHint": "Add new task",
+        "movingStatus": "Moving status",
+        "emptyStatus": "Empty status",
+        "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
+        "invalidGroupId": "Invalid groupId",
+        "invalidTaskId": "Invalid taskId",
+        "invalidStatus": "Invalid statusId",
+        "errorOccurred": "An error occurred",
+        "permissionDenied": "You do not have permission",
+        "notification": "Notification",
+        "noPermissionDeleteTask": "You do not have permission to delete this task",
+        "deleteTaskFailed": "Failed to delete task",
+        "unnamed": "Untitled",
+        "failedLoadData": "Unable to load board data",
+        "statusNameExists": "Status name already exists",
+        "noPermissionDeleteStatus": "You do not have permission to delete this status",
+        "missingGroupId": "Missing groupId",
+        "missingStatus": "Missing status",
+        "loadingBoard": "Loading board...",
+        "reload": "Reload",
+        "confirmDeleteStatus": "Confirm delete status",
+        "confirmDeleteStatusDesc": "Are you sure you want to delete status \"{title}\"?",
+        "deleteStatusButton": "Delete status",
+        "confirmDeleteTask": "Confirm delete task",
+        "confirmDeleteTaskDesc": "Are you sure you want to delete task \"{title}\"?",
+        "deleteTaskButton": "Delete task",
+        "close": "Close"
+    },
+    "TaskFormModal": {
+        "priorityLow": "Low",
+        "priorityMedium": "Medium",
+        "priorityHigh": "High",
+        "severityLow": "Minor",
+        "severityMedium": "Moderate",
+        "severityHigh": "Major",
+        "severityCritical": "Critical",
+        "unassigned": "Unassigned",
+        "titlePlaceholder": "Enter task name",
+        "closeAriaLabel": "Close",
+        "assigneeLabel": "Assignee",
+        "statusLabel": "Status",
+        "noStatus": "No status",
+        "priorityLabel": "Priority",
+        "startDateLabel": "Start date",
+        "dueDateLabel": "Due date",
+        "severityLabel": "Severity",
+        "estimatedHoursLabel": "Estimated hours",
+        "estimatedHoursPlaceholder": "Example: 8",
+        "actualHoursLabel": "Actual hours",
+        "actualHoursPlaceholder": "Example: 4",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Enter task description...",
+        "cancelButton": "Cancel",
+        "creatingButton": "Creating...",
+        "createButton": "Create task",
+        "datePicker": {
+            "selectDate": "Select date",
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "nextWeek": "Next week",
+            "noDate": "No date",
+            "month1": "January",
+            "month2": "February",
+            "month3": "March",
+            "month4": "April",
+            "month5": "May",
+            "month6": "June",
+            "month7": "July",
+            "month8": "August",
+            "month9": "September",
+            "month10": "October",
+            "month11": "November",
+            "month12": "December"
+        },
+        "errors": {
+            "taskTitleRequired": "Please enter task name",
+            "startDateAfterDueDate": "Start date cannot be after due date",
+            "restrictedAssignee": "Cannot assign to this role",
+            "createTaskFailed": "Failed to create task"
+        }
+    },
+    "GroupCalendar": {
+        "viewMonth": "Month",
+        "viewWeek": "Week",
+        "viewDay": "Day",
+        "allTasks": "All tasks",
+        "missingGroupId": "Missing groupId in URL",
+        "invalidGroupId": "Invalid groupId",
+        "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
+        "cannotLoad": "Unable to load calendar data",
+        "unknown": "Unknown",
+        "untitledTask": "Untitled task",
+        "monthPrefix": "Month",
+        "unassigned": "Unassigned",
+        "noStatus": "No status",
+        "loading": "Loading...",
+        "reload": "Reload",
+        "assigneeLabel": "Assignee",
+        "statusLabel": "Status"
+    },
+    "GroupAnalyticPage": {
+        "common": {
+            "tasks": "tasks"
+        },
+        "formatLastActivity": {
+            "noActivity": "No activity yet",
+            "minutesAgo": "{count} minutes ago",
+            "hoursAgo": "{count} hours ago",
+            "daysAgo": "{count} days ago"
+        },
+        "heatmap": {
+            "title": "Member activity heatmap",
+            "subtitle": "Track {count} members' activity in {period}",
+            "week": "Last 7 days",
+            "month": "Last 30 days",
+            "legend": {
+                "low": "Low",
+                "high": "High"
+            },
+            "updated": "Updated"
+        },
+        "memberStatus": {
+            "onTrack": "On track",
+            "needsAttention": "Needs attention",
+            "delayed": "Delayed"
+        },
+        "memberProgressCard": {
+            "contribution": "Contribution",
+            "lastActivity": "Last activity"
+        },
+        "memberProgress": {
+            "title": "Progress by member",
+            "subtitle": "Details of each member's completion and contribution",
+            "seeDetails": "See details"
+        },
+        "memberModal": {
+            "taskProgress": "Task progress",
+            "completePts": "Completion points",
+            "createPts": "Creation points",
+            "updatePts": "Update points",
+            "messages": "Messages",
+            "activityBreakdown": "Activity breakdown",
+            "activityItems": {
+                "completed": "Completed",
+                "created": "Created",
+                "updated": "Updated",
+                "deleted": "Deleted",
+                "assigned": "Assigned",
+                "comments": "Comments",
+                "messages": "Messages"
+            },
+            "totalScore": "Total score",
+            "contributionRate": "Contribution rate",
+            "lastActivity": "Last activity"
+        },
+        "taskStatus": {
+            "todo": "To do",
+            "inProgress": "In progress",
+            "done": "Done",
+            "overdue": "Overdue"
+        },
+        "chart": {
+            "myTasks": "My tasks",
+            "taskStatus": "Task status",
+            "groupTasks": "Group tasks",
+            "groupTaskStatus": "Group task status",
+            "me": "Me",
+            "group": "Group",
+            "myTaskDistribution": "My Task Status Distribution",
+            "myTaskDistributionDesc": "Personal task status in the current group.",
+            "groupTaskDistribution": "Group Task Status Overview",
+            "groupTaskDistributionDesc": "Overview of task status across all groups.",
+            "progressOverTime": "Task Progress Over Time",
+            "progressOverTimeDesc": "Compare total completed tasks over time.",
+            "compareByMember": "Compare Task Status by Member",
+            "compareByMemberDesc": "View task distribution by each member."
+        },
+        "timeLabels": {
+            "week": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "month": ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
+            "year": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        },
+        "chartFilterLabels": {
+            "week": "Week",
+            "month": "Month",
+            "year": "Year"
+        }
+    },
+    "GroupSettingView": {
+        "validation": {
+            "groupNameRequired": "Group name is required",
+            "groupNameMax": "Group name exceeds maximum length",
+            "descriptionMax": "Description exceeds maximum length"
+        },
+        "errors": {
+            "missingToken": "Missing access token",
+            "loadMembersFailed": "Unable to load member list",
+            "loadGroupFailed": "Unable to load group information"
+        },
+        "loading": {
+            "error": "An error occurred while loading data",
+            "loading": "Loading...",
+            "noGroupId": "GroupId not found",
+            "notFound": "Group not found"
+        },
+        "general": {
+            "title": "General settings",
+            "subtitle": "Update basic group information",
+            "cancelButton": "Cancel",
+            "saveButton": "Save changes",
+            "editButton": "Edit"
+        },
+        "groupInfo": {
+            "nameLabel": "Group name",
+            "descriptionLabel": "Description",
+            "masterStudioLabel": "Managing Studio"
+        },
+        "template": {
+            "label": "Group template",
+            "description": "Template currently applied to this group"
+        },
+        "members": {
+            "title": "Members",
+            "subtitle": "Manage member roles and permissions",
+            "addButton": "Add member",
+            "tableHeaders": {
+                "member": "Member",
+                "role": "Role",
+                "action": "Action"
+            },
+            "ownerRole": "Owner",
+            "selectPlaceholder": "Select role",
+            "emptyState": "No members yet",
+            "oneModeratorError": "Group must have at least one moderator"
+        },
+        "dangerZone": {
+            "title": "Danger zone",
+            "subtitle": "Actions below may cause data loss",
+            "deleteGroup": {
+                "label": "Delete group",
+                "description": "Permanently delete group and related data",
+                "button": "Delete group",
+                "confirmTitle": "Confirm group deletion",
+                "confirmDescription": "Are you sure you want to delete this group? This action cannot be undone.",
+                "deleting": "Deleting...",
+                "confirmButton": "Confirm deletion",
+                "onlyOwner": "Only the owner can delete the group"
+            }
+        },
+        "removeMember": {
+            "confirmTitle": "Confirm member removal",
+            "confirmDescription": "Are you sure you want to remove {name} from the group?",
+            "cancelButton": "Cancel",
+            "deleting": "Removing...",
+            "confirmButton": "Remove member"
+        }
+    },
+    "TrashedPage": {
+        "title": "Trash",
+        "search": {
+            "placeholder": "Search deleted tasks..."
+        },
+        "actions": {
+            "reload": "Reload",
+            "restore": "Restore",
+            "deletePermanently": "Delete permanently",
+            "moreOptions": "More options"
+        },
+        "common": {
+            "cancel": "Cancel",
+            "back": "Back"
+        },
+        "confirm": {
+            "restore": {
+                "title": "Restore task",
+                "description": "Are you sure you want to restore \"{taskName}\"?"
+            },
+            "delete": {
+                "title": "Permanently delete task",
+                "description": "Are you sure you want to permanently delete \"{taskName}\"? This action cannot be undone."
+            }
+        },
+        "datePicker": {
+            "selectDate": "Select date",
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "nextWeek": "Next week",
+            "noDate": "No date"
+        },
+        "filters": {
+            "title": "Filters",
+            "ariaLabel": "Open filters",
+            "clearAll": "Clear all",
+            "deletedBy": {
+                "label": "Deleted by",
+                "searchPlaceholder": "Search by name or email...",
+                "me": "Me",
+                "all": "All",
+                "selectTitle": "Select deleted by"
+            },
+            "deletedDate": {
+                "label": "Deleted date",
+                "selectTitle": "Select deleted date range",
+                "fromDate": "From date",
+                "toDate": "To date",
+                "clearSelection": "Clear selection",
+                "apply": "Apply"
+            },
+            "dateRange": {
+                "fromDate": "From date",
+                "toDate": "To date"
+            }
+        },
+        "chips": {
+            "deletedBy": "Deleted by: {name}",
+            "deletedDate": "Deleted date: {dateRange}"
+        },
+        "table": {
+            "headers": {
+                "name": "Name",
+                "type": "Type",
+                "deletedTime": "Deleted at",
+                "deletedBy": "Deleted by"
+            },
+            "noData": "No data"
+        },
+        "pagination": {
+            "summary": "{count} items • Page {page}/{totalPages}",
+            "previous": "Previous",
+            "next": "Next"
+        },
+        "errors": {
+            "unknown": "An unknown error occurred",
+            "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
+            "invalidGroupId": "Invalid groupId",
+            "invalidTaskId": "Invalid taskId",
+            "missingGroupId": "Missing groupId",
+            "cannotLoadTrash": "Unable to load trash list",
+            "cannotRestoreTask": "Unable to restore task",
+            "cannotRefreshList": "Unable to refresh list",
+            "cannotDeleteTaskPermanently": "Unable to permanently delete task"
+        },
+        "fallbacks": {
+            "unknown": "Unknown",
+            "untitledTask": "Untitled task"
+        }
+    },
+    "GroupDiscussPage": {
+        "title": "Group discussion",
+        "subtitle": "Discuss with group members",
+        "composerPlaceholder": "Write discussion content...",
+        "writeReplyPlaceholder": "Write a reply...",
+        "post": "Post",
+        "reply": "Reply",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "deleting": "Deleting...",
+        "deleteMessage": "Delete message",
+        "confirmDeleteTitle": "Confirm deletion",
+        "confirmDeleteDescription": "Are you sure you want to delete this content?",
+        "showReplies": "Show replies",
+        "hideReplies": "Hide replies",
+        "replyAria": "Open replies",
+        "more": "See more",
+        "noActions": "No actions",
+        "noDiscussions": "No discussions yet",
+        "noMembersToMention": "No members to mention.",
+        "mentionAllShort": "everyone",
+        "mentionAllSubtitle": "Mention all members in the conversation",
+        "viewerOnly": "View only",
+        "viewerCannotComment": "Your current role cannot comment",
+        "cannotConnectDiscuss": "Unable to connect to discussion room",
+        "cannotSendReplyWhenDisconnected": "Cannot send reply when disconnected",
+        "cannotDeleteWhenDisconnected": "Cannot delete when disconnected",
+        "cannotRejoinRoom": "Unable to rejoin discussion room",
+        "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
+        "reloginForDiscuss": "Please log in again to continue discussing",
+        "reloadPageOrRelogin": "Please reload the page or log in again",
+        "tryAgainLater": "Please try again later",
+        "userFallback": "User",
+        "me": "Me",
+        "justNow": "Just now",
+        "minutesAgo": "{count} minutes ago",
+        "hoursAgo": "{count} hours ago",
+        "daysAgo": "{count} days ago",
+        "wordsUnit": "words",
+        "charsUnit": "characters",
+        "anonymous": "Anonymous",
+        "@": "@"
+    },
+    "AnalyticMaster": {
+        "common": {
+            "close": "Close",
+            "done": "Done",
+            "notAvailable": "No data"
+        },
+        "time": {
+            "week": "Week",
+            "month": "Month",
+            "year": "Year",
+            "monthPrefix": "Month",
+            "yearPrefix": "Year"
+        },
+        "timeLabels": {
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat",
+            "sun": "Sun",
+            "week1": "Week 1",
+            "week2": "Week 2",
+            "week3": "Week 3",
+            "week4": "Week 4",
+            "month1": "Jan",
+            "month2": "Feb",
+            "month3": "Mar",
+            "month4": "Apr",
+            "month5": "May",
+            "month6": "Jun",
+            "month7": "Jul",
+            "month8": "Aug",
+            "month9": "Sep",
+            "month10": "Oct",
+            "month11": "Nov",
+            "month12": "Dec"
+        },
+        "sections": {
+            "overview": {
+                "title": "Overview"
+            },
+            "comparison": {
+                "title": "Group comparison"
+            },
+            "memberProgress": {
+                "title": "Member progress",
+                "description": "Track each member's contribution and performance"
+            },
+            "taskStatus": {
+                "title": "Task status",
+                "noData": "No status data yet"
+            }
+        },
+        "compare": {
+            "title": "Compare groups",
+            "description": "Select groups to compare performance",
+            "triggerLabel": "Select groups",
+            "selectedCount": "{count} selected",
+            "topFourDefault": "Showing 4 groups by default",
+            "keepOneGroup": "Keep at least one group",
+            "moreGroups": "and {count} more groups",
+            "noGroupSelected": "No groups selected"
+        },
+        "groupSelect": {
+            "selectGroup": "Select group",
+            "selected": "Selected"
+        },
+        "member": {
+            "listTitle": "Member list",
+            "detail": "Detail",
+            "tasks": "Tasks",
+            "completedTasks": "Completed tasks",
+            "taskProgress": "Task progress",
+            "contribution": "Contribution",
+            "contributionRate": "Contribution rate",
+            "contributionScore": "Contribution score",
+            "lastActivity": "Last activity",
+            "totalScore": "Total score",
+            "score": {
+                "completed": "Completion score",
+                "created": "Creation score",
+                "updated": "Update score",
+                "messages": "Interaction score"
+            }
+        },
+        "statusFallback": "Unknown status"
+    },
+    "GroupProgressChart": {
+        "title": "Group progress",
+        "status": {
+            "onTrack": "On track",
+            "atRisk": "At risk",
+            "behind": "Behind schedule",
+            "notStarted": "Not started"
+        },
+        "taskInfo": {
+            "tasks": "tasks",
+            "overdue": "overdue",
+            "lastActivity": "Last activity"
+        }
+    },
+    "StudioGroupHeatmap": {
+        "common": {
+            "notAvailable": "No data"
+        },
+        "header": {
+            "title": "Group activity heatmap",
+            "description": "Activity density by day across groups"
+        },
+        "range": {
+            "week": "Week",
+            "month": "Month"
+        },
+        "legend": {
+            "groups": "Groups",
+            "activityLevel": "Activity level",
+            "low": "Low",
+            "high": "High"
+        },
+        "levels": {
+            "inactive": "Inactive",
+            "veryLow": "Very low",
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High"
+        },
+        "tooltip": {
+            "cell": "{name} • {date}: {tasks} tasks, score {score} ({level})"
+        }
+    },
+    "StudioAnalyticsDocuments": {
+        "section": {
+            "title": "Documents in studio",
+            "description": "Manage shared documents for groups"
+        },
+        "tabs": {
+            "unnamedGroup": "Unnamed group"
+        },
+        "documents": {
+            "untitled": "Untitled document"
+        },
+        "storage": {
+            "title": "Storage",
+            "remaining": "Remaining storage"
+        },
+        "upload": {
+            "button": "Upload",
+            "modalTitle": "Upload document",
+            "dropTitle": "Drag and drop file here",
+            "dropDescription": "or click to select file",
+            "chooseFile": "Choose file",
+            "accepted": "Supported: PDF, DOCX, TXT, MD",
+            "targetGroup": "Target group",
+            "selectGroupFirst": "Please select group first",
+            "onlyOneFile": "Only one file can be uploaded",
+            "fileTooLarge": "File exceeds allowed size",
+            "invalidExtension": "Invalid file format",
+            "loading": "Uploading...",
+            "success": "File uploaded successfully",
+            "failed": "Upload failed"
+        },
+        "download": {
+            "action": "Download",
+            "failed": "Download failed"
+        },
+        "delete": {
+            "action": "Delete",
+            "title": "Delete document",
+            "description": "Are you sure you want to delete this document?",
+            "cancel": "Cancel",
+            "confirm": "Delete",
+            "processing": "Deleting...",
+            "success": "Document deleted successfully",
+            "failed": "Delete failed"
+        },
+        "empty": {
+            "title": "No documents yet",
+            "description": "Upload your first document to get started"
+        },
+        "a": "file"
+    },
+    "StudioAiPage": {
+        "usedToday": "AI requests used today",
+        "remainingRequests": "Remaining requests",
+        "dailyLimit": "Daily limit",
+        "unknown": "Unknown",
+        "startConversation": "Start a conversation",
+        "description": "Ask me about Studio status, compare groups, analyze risks, and suggest improvements.",
+        "inputPlaceholder": "Enter your question for AI...",
+        "cannotDetectStudioId": "Cannot detect studioId from URL",
+        "aiThinking": "AI is thinking...",
+        "emptyAiAnswer": "AI has not returned an answer yet.",
+        "aiResponseError": "Unable to receive response from AI",
+        "quickActions": {
+            "summary": {
+                "label": "Studio Overview",
+                "prompt": "Please summarize and analyze the overall status of the Studio based on current groups and tasks.\n\nProvide:\n1. Overview of number of groups, members, tasks\n2. Overall completion rate\n3. Best and worst performing groups\n4. Number of overdue tasks\n5. Assessment and suggestions for Studio improvement"
+            },
+            "risk": {
+                "label": "Risk Analysis",
+                "prompt": "Please identify and analyze at-risk groups in the Studio.\n\nFor each at-risk group, provide:\n1. Group name and risk level (HIGH/MEDIUM/LOW)\n2. Specific risk factors (low completion rate, many overdue tasks, no recent activity)\n3. Specific corrective action recommendations"
+            },
+            "report": {
+                "label": "Progress Report",
+                "prompt": "Please generate a detailed report on group progress in the Studio.\n\nInclude:\n1. Comparison table of groups by completion rate\n2. Number of tasks: completed / in progress / not started / overdue\n3. Best performing groups and reasons\n4. Groups needing improvement and specific issues\n5. Work coordination recommendations"
+            },
+            "deadline": {
+                "label": "Upcoming Deadlines",
+                "prompt": "Please summarize deadline status in the Studio.\n\nProvide:\n1. Total number of overdue and upcoming tasks\n2. Which groups have the most overdue tasks\n3. Groups that are on track and on schedule\n4. Recommendations for reasonable work allocation"
+            }
+        }
+    },
+    "PaymentHistoryPage": {
+        "title": "Payment history",
+        "subtitle": "View all your payment transactions",
+        "backButton": "Go back",
+        "loading": "Loading...",
+        "empty": {
+            "title": "No transactions yet",
+            "description": "You have not made any payment transactions",
+            "upgradeButton": "Upgrade plan now"
+        },
+        "table": {
+            "paymentId": "Payment ID",
+            "plan": "Subscription plan",
+            "status": "Status",
+            "date": "Payment date",
+            "actions": "Actions",
+            "viewDetails": "View details"
+        }
+    },
+    "PaymentStatusPage": {
+        "title": "Payment details",
+        "subtitle": "Transaction details",
+        "backButton": "Go back",
+        "loading": "Loading...",
+        "notFound": {
+            "title": "Payment not found",
+            "description": "Invalid or deleted payment ID"
+        },
+        "details": {
+            "title": "Payment information",
+            "plan": "Subscription plan",
+            "amount": "Amount",
+            "createdAt": "Created at",
+            "paidAt": "Payment date"
+        },
+        "actions": {
+            "cancel": "Cancel payment",
+            "cancelling": "Cancelling...",
+            "backToBilling": "Back to subscription page"
+        },
+        "messages": {
+            "cancelSuccess": "Payment cancelled successfully",
+            "cancelFailed": "Unable to cancel payment",
+            "cancelError": "An error occurred. Please try again!",
+            "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to plan management...",
+            "emailSent": "Payment confirmation email has been sent to your email address"
+        }
+    },
+    "StudioDateRange": {
+        "title": "Time Range",
+        "notAvailable": "No time information available",
+        "labels": {
+            "start": "Start",
+            "end": "End",
+            "remaining": "Remaining",
+            "overdue": "Overdue"
+        },
+        "days": "{count} days",
+        "status": {
+            "overdue": "Overdue",
+            "upcoming": "Upcoming"
+        },
+        "progress": {
+            "title": "Progress",
+            "elapsed": "Elapsed {elapsed} / {total} days"
+        }
     }
 }

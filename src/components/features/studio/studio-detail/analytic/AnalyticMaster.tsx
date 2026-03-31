@@ -36,11 +36,11 @@ const _STATUS_META: Array<{
     label: string;
     color: string;
 }> = [
-        { key: "todo", label: "To do", color: "#3b82f6" },
-        { key: "inProgress", label: "In progress", color: "#f59e0b" },
-        { key: "done", label: "Done", color: "#10b981" },
-        { key: "overdue", label: "Overdue", color: "#ef4444" }
-    ];
+    { key: "todo", label: "To do", color: "#3b82f6" },
+    { key: "inProgress", label: "In progress", color: "#f59e0b" },
+    { key: "done", label: "Done", color: "#10b981" },
+    { key: "overdue", label: "Overdue", color: "#ef4444" }
+];
 
 // Consistent colors for groups across all charts
 const GROUP_COLORS = [
@@ -559,7 +559,7 @@ type MemberProgressItem = {
     completedTasks: number;
     totalTasks: number;
     lastActivity: string;
-    contributionPercentage?: number;
+    contributionScoreRate?: number;
     totalScore?: number;
     completedScore?: number;
     createdScore?: number;
@@ -573,8 +573,10 @@ function getPercent(completed: number, total: number) {
 }
 
 function getMemberStatus(percent: number) {
-    if (percent >= 70) return { labelKey: "member.status.onTrack", textClass: "text-emerald-600", barClass: "bg-emerald-500" };
-    if (percent >= 40) return { labelKey: "member.status.needAttention", textClass: "text-orange-500", barClass: "bg-orange-500" };
+    if (percent >= 70)
+        return { labelKey: "member.status.onTrack", textClass: "text-emerald-600", barClass: "bg-emerald-500" };
+    if (percent >= 40)
+        return { labelKey: "member.status.needAttention", textClass: "text-orange-500", barClass: "bg-orange-500" };
     return { labelKey: "member.status.behindSchedule", textClass: "text-red-500", barClass: "bg-red-500" };
 }
 
@@ -618,12 +620,12 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
                         {member.completedTasks} / {member.totalTasks} {t("member.tasks")}
                     </span>
                 </div>
-                {member.contributionPercentage !== undefined && (
+                {member.contributionScoreRate !== undefined && (
                     <div className="flex items-center gap-1.5">
                         <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
                             <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
-                        <span>{t("member.contribution", { value: member.contributionPercentage.toFixed(2) })}</span>
+                        <span>Contribution: {member.contributionScoreRate.toFixed(2)}%</span>
                     </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -709,9 +711,11 @@ function MemberDetailModal({
                     </div>
 
                     {/* Weighted scores */}
-                    {(member.totalScore !== undefined || member.contributionPercentage !== undefined) && (
+                    {(member.totalScore !== undefined || member.contributionScoreRate !== undefined) && (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                            <div className="mb-3 font-semibold text-slate-700 text-sm">{t("member.contributionScore")}</div>
+                            <div className="mb-3 font-semibold text-slate-700 text-sm">
+                                {t("member.contributionScore")}
+                            </div>
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                 {[
                                     {
@@ -751,16 +755,16 @@ function MemberDetailModal({
                     )}
 
                     {/* Contribution */}
-                    {member.contributionPercentage !== undefined && (
+                    {member.contributionScoreRate !== undefined && (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                             <div className="mb-2 flex items-center justify-between text-sm">
-                                <span className="font-semibold text-slate-700">{t("member.contributionRate")}</span>
-                                <span className="font-bold text-orange-600">{member.contributionPercentage}%</span>
+                                <span className="font-semibold text-slate-700">Tỷ lệ đóng góp</span>
+                                <span className="font-bold text-orange-600">{member.contributionScoreRate}%</span>
                             </div>
                             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
                                 <div
                                     className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-                                    style={{ width: `${member.contributionPercentage}%` }}
+                                    style={{ width: `${member.contributionScoreRate}%` }}
                                 />
                             </div>
                         </div>
@@ -936,7 +940,9 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                     ? Math.round((g.totalCompletedTasks / Math.max(g.totalTasks ?? 1, 1)) * 100)
                     : Math.round(g.completionRate ?? 0),
             isOverdue: (g.overdueTasks ?? 0) > 0,
-            lastActivity: g.lastActivityDateTime ? formatRelativeTime(g.lastActivityDateTime) : t("common.notAvailable"),
+            lastActivity: g.lastActivityDateTime
+                ? formatRelativeTime(g.lastActivityDateTime)
+                : t("common.notAvailable"),
             overdueCount: g.overdueTasks ?? 0
         }),
         [t]
@@ -1016,10 +1022,31 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
         if (!data.length) return {};
         const labels =
             lineMode === "week"
-                ? [t("timeLabels.mon"), t("timeLabels.tue"), t("timeLabels.wed"), t("timeLabels.thu"), t("timeLabels.fri"), t("timeLabels.sat"), t("timeLabels.sun")]
+                ? [
+                      t("timeLabels.mon"),
+                      t("timeLabels.tue"),
+                      t("timeLabels.wed"),
+                      t("timeLabels.thu"),
+                      t("timeLabels.fri"),
+                      t("timeLabels.sat"),
+                      t("timeLabels.sun")
+                  ]
                 : lineMode === "month"
-                    ? [t("timeLabels.week1"), t("timeLabels.week2"), t("timeLabels.week3"), t("timeLabels.week4")]
-                    : [t("timeLabels.month1"), t("timeLabels.month2"), t("timeLabels.month3"), t("timeLabels.month4"), t("timeLabels.month5"), t("timeLabels.month6"), t("timeLabels.month7"), t("timeLabels.month8"), t("timeLabels.month9"), t("timeLabels.month10"), t("timeLabels.month11"), t("timeLabels.month12")];
+                  ? [t("timeLabels.week1"), t("timeLabels.week2"), t("timeLabels.week3"), t("timeLabels.week4")]
+                  : [
+                        t("timeLabels.month1"),
+                        t("timeLabels.month2"),
+                        t("timeLabels.month3"),
+                        t("timeLabels.month4"),
+                        t("timeLabels.month5"),
+                        t("timeLabels.month6"),
+                        t("timeLabels.month7"),
+                        t("timeLabels.month8"),
+                        t("timeLabels.month9"),
+                        t("timeLabels.month10"),
+                        t("timeLabels.month11"),
+                        t("timeLabels.month12")
+                    ];
         return {
             animationDuration: 700,
             animationEasing: "cubicOut",
@@ -1096,8 +1123,8 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                 name: a.userName ?? "",
                 completedTasks: a.completedTasks ?? 0,
                 totalTasks: a.totalTasks ?? 0,
-                lastActivity: a.lastActivityAt ? formatRelativeTime(a.lastActivityAt) : t("common.notAvailable"),
-                contributionPercentage: c?.contributionPercentage,
+                lastActivity: a.lastActivityAt ? formatRelativeTime(a.lastActivityAt) : "N/A",
+                contributionScoreRate: c?.contributionScoreRate,
                 totalScore: c?.totalScore,
                 completedScore: c?.completedScore,
                 createdScore: c?.createdScore,

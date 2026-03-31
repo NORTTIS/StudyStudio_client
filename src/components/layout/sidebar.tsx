@@ -199,7 +199,9 @@ export function DashboardSidebar() {
                                         className={twMerge(
                                             "relative z-10 overflow-hidden whitespace-nowrap text-[15px] font-medium transition-all duration-300 ease-out",
                                             active ? "text-white" : "",
-                                            collapsed ? "w-0 translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+                                            collapsed
+                                                ? "w-0 translate-x-2 opacity-0"
+                                                : "w-auto translate-x-0 opacity-100"
                                         )}>
                                         {item.name}
                                     </span>
@@ -210,8 +212,8 @@ export function DashboardSidebar() {
                                             collapsed
                                                 ? "h-0 w-0 opacity-0"
                                                 : active
-                                                    ? "h-2.5 w-2.5 bg-white opacity-100"
-                                                    : "h-2 w-2 scale-75 bg-orange-300 opacity-0 group-hover:scale-100 group-hover:opacity-100"
+                                                  ? "h-2.5 w-2.5 bg-white opacity-100"
+                                                  : "h-2 w-2 scale-75 bg-orange-300 opacity-0 group-hover:scale-100 group-hover:opacity-100"
                                         )}
                                     />
                                 </Link>

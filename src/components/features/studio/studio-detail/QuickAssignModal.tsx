@@ -226,9 +226,7 @@ export function QuickAssignModal({
                     <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-gray-100 border-b bg-white px-8 pt-7 pb-5">
                         <div className="flex items-center gap-3">
                             <div>
-                                <h2 className="font-semibold text-2xl text-[#111827] tracking-tight">
-                                    {t("title")}
-                                </h2>
+                                <h2 className="font-semibold text-2xl text-[#111827] tracking-tight">{t("title")}</h2>
                                 <p className="text-[#6B7280] text-sm">{t("subtitle")}</p>
                             </div>
                         </div>
@@ -285,7 +283,9 @@ export function QuickAssignModal({
                                     />
                                     <div className="flex-1">
                                         <span className="font-medium text-[#111827]">{scopeLabels[1]}</span>
-                                        <p className="mt-0.5 text-[#6B7280] text-sm">{t("scope.allMembersDescription")}</p>
+                                        <p className="mt-0.5 text-[#6B7280] text-sm">
+                                            {t("scope.allMembersDescription")}
+                                        </p>
                                     </div>
                                 </label>
                             </div>
@@ -351,9 +351,7 @@ export function QuickAssignModal({
                         {/* Exclude Users */}
                         <div>
                             <h3 className="font-semibold text-[#111827] text-base">{t("excludeMembers.title")}</h3>
-                            <p className="mt-1 mb-3 text-[#6B7280] text-xs">
-                                {t("excludeMembers.hint")}
-                            </p>
+                            <p className="mt-1 mb-3 text-[#6B7280] text-xs">{t("excludeMembers.hint")}</p>
 
                             {/* Member multi-select */}
                             {excludeableMembers.filter((m) => m.userId).length > 0 ? (

@@ -135,13 +135,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             style={{ border: "none", background: "transparent", fontSize: 14 }}
                         />
                     </div>
-
-                    
                 </aside>
 
                 {/* ─────────── MAIN ─────────── */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-                    
                     {/* Top header bar */}
                     <div
                         style={{
@@ -157,8 +154,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             top: 0,
                             zIndex: 10
                         }}>
-                            {/* Back to Dashboard — prominent button */}
-                         <div style={{ borderTop: `1px solid ${BORDER}` }}>
+                        {/* Back to Dashboard — prominent button */}
+                        <div style={{ borderTop: `1px solid ${BORDER}` }}>
                             <Link
                                 href={`/${locale}/home`}
                                 style={{

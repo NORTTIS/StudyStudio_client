@@ -304,7 +304,11 @@ function canDeleteByRole(role: string | null | undefined) {
     return r === "owner" || r === "moderator";
 }
 
-async function apiFetchJson<T>(input: RequestInfo, init: RequestInit, messages: ApiMessages): Promise<ApiResponse<T> | null> {
+async function apiFetchJson<T>(
+    input: RequestInfo,
+    init: RequestInit,
+    messages: ApiMessages
+): Promise<ApiResponse<T> | null> {
     const res = await fetch(input, init);
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
@@ -373,15 +377,19 @@ async function apiGetGroupDetail(groupId: string, messages: ApiMessages) {
     if (!apiBase) throw new Error(messages.missingApiBase);
     const url = apiUrl(`/group/${encodeURIComponent(groupId)}/detail`);
 
-    return apiFetchJson<GroupDetailResponse>(url, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+    return apiFetchJson<GroupDetailResponse>(
+        url,
+        {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            },
+            cache: "no-store"
         },
-        cache: "no-store"
-    }, messages);
+        messages
+    );
 }
 
 async function apiGetGroupMembers(groupId: string, messages: ApiMessages) {
@@ -390,25 +398,32 @@ async function apiGetGroupMembers(groupId: string, messages: ApiMessages) {
     if (!apiBase) throw new Error(messages.missingApiBase);
     const url = apiUrl(`/group/${encodeURIComponent(groupId)}/members`);
 
-    const response = await apiFetchJson<GroupMemberListResponse>(url, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+    const response = await apiFetchJson<GroupMemberListResponse>(
+        url,
+        {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            },
+            cache: "no-store"
         },
-        cache: "no-store"
-    }, messages);
+        messages
+    );
 
     return response;
 }
 
-async function apiReorderGroupTaskStatus(args: {
-    groupId: string;
-    statusId: string;
-    prevStatusId: string | null;
-    nextStatusId: string | null;
-}, messages: ApiMessages) {
+async function apiReorderGroupTaskStatus(
+    args: {
+        groupId: string;
+        statusId: string;
+        prevStatusId: string | null;
+        nextStatusId: string | null;
+    },
+    messages: ApiMessages
+) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
 
@@ -417,31 +432,38 @@ async function apiReorderGroupTaskStatus(args: {
 
     const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.groupId)}/reorder`);
 
-    await apiFetchJson<unknown>(url, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+    await apiFetchJson<unknown>(
+        url,
+        {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                "Content-Type": "application/json",
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            },
+            body: JSON.stringify({
+                statusId: args.statusId,
+                prevStatusId: args.prevStatusId,
+                nextStatusId: args.nextStatusId
+            })
         },
-        body: JSON.stringify({
-            statusId: args.statusId,
-            prevStatusId: args.prevStatusId,
-            nextStatusId: args.nextStatusId
-        })
-    }, messages);
+        messages
+    );
 
     return true;
 }
 
-async function apiReorderTask(args: {
-    groupId: string;
-    taskId: string;
-    targetStatusId: string;
-    prevTaskId: string | null;
-    nextTaskId: string | null;
-}, messages: ApiMessages) {
+async function apiReorderTask(
+    args: {
+        groupId: string;
+        taskId: string;
+        targetStatusId: string;
+        prevTaskId: string | null;
+        nextTaskId: string | null;
+    },
+    messages: ApiMessages
+) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
 
@@ -493,16 +515,20 @@ async function apiCreateGroupTaskStatus(
 
     if (!payload.statusName) throw new Error(messages.enterStatusName);
 
-    const res = await apiFetchJson<GroupTaskStatusData>(url, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+    const res = await apiFetchJson<GroupTaskStatusData>(
+        url,
+        {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                "Content-Type": "application/json",
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            },
+            body: JSON.stringify(payload)
         },
-        body: JSON.stringify(payload)
-    }, messages);
+        messages
+    );
 
     return (res ?? null) as ApiResponse<GroupTaskStatusData> | null;
 }
@@ -529,20 +555,23 @@ function toIsoOrNull(input: unknown): string | null {
     return null;
 }
 
-async function apiCreateTask(args: {
-    groupId: string;
-    groupStatusId: string;
-    taskName: string;
-    assigneeId?: string | null;
-    dueDate?: unknown;
-    startDate?: unknown;
-    dueDateSelected?: boolean;
-    startDateSelected?: boolean;
-    estimatedHours?: number;
-    actualHours?: number;
-    priority?: string | components["schemas"]["TaskPriority"];
-    severity?: string | components["schemas"]["TaskSeverity"];
-}, messages: ApiMessages) {
+async function apiCreateTask(
+    args: {
+        groupId: string;
+        groupStatusId: string;
+        taskName: string;
+        assigneeId?: string | null;
+        dueDate?: unknown;
+        startDate?: unknown;
+        dueDateSelected?: boolean;
+        startDateSelected?: boolean;
+        estimatedHours?: number;
+        actualHours?: number;
+        priority?: string | components["schemas"]["TaskPriority"];
+        severity?: string | components["schemas"]["TaskSeverity"];
+    },
+    messages: ApiMessages
+) {
     const apiBase = getApiBase();
     const accessToken = getAccessTokenOrNull();
 
@@ -582,16 +611,20 @@ async function apiCreateTask(args: {
         payload.taskSeverity = SEVERITY_MAP[args.severity];
     }
 
-    return apiFetchJson<TaskItemResponse>(url, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+    return apiFetchJson<TaskItemResponse>(
+        url,
+        {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                "Content-Type": "application/json",
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+            },
+            body: JSON.stringify(payload)
         },
-        body: JSON.stringify(payload)
-    }, messages);
+        messages
+    );
 }
 
 async function apiDeleteTask(args: { groupId: string; taskId: string }, messages: ApiMessages) {
@@ -604,24 +637,31 @@ async function apiDeleteTask(args: { groupId: string; taskId: string }, messages
 
     const url = apiUrl(`/Task/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.taskId)}`);
 
-    await apiFetchJson<unknown>(url, {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-    }, messages);
+    await apiFetchJson<unknown>(
+        url,
+        {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+        },
+        messages
+    );
 
     return true;
 }
 
-async function apiRenameGroupTaskStatus(args: {
-    groupId: string;
-    statusId: string;
-    statusName: string;
-    position: number;
-}, messages: ApiMessages) {
+async function apiRenameGroupTaskStatus(
+    args: {
+        groupId: string;
+        statusId: string;
+        statusName: string;
+        position: number;
+    },
+    messages: ApiMessages
+) {
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
     if (!apiBase) throw new Error(messages.missingApiBase);
@@ -630,19 +670,23 @@ async function apiRenameGroupTaskStatus(args: {
 
     const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.statusId)}`);
 
-    await apiFetchJson<unknown>(url, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
+    await apiFetchJson<unknown>(
+        url,
+        {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+                position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0,
+                statusName: String(args.statusName ?? "").trim()
+            })
         },
-        body: JSON.stringify({
-            position: Number.isFinite(args.position) ? Math.max(0, Math.trunc(args.position)) : 0,
-            statusName: String(args.statusName ?? "").trim()
-        })
-    }, messages);
+        messages
+    );
 
     return true;
 }
@@ -658,14 +702,18 @@ async function apiDeleteGroupTaskStatus(args: { groupId: string; statusId: strin
         `/GroupTaskStatus/${encodeURIComponent(args.statusId)}/group/${encodeURIComponent(args.groupId)}`
     );
 
-    await apiFetchJson<unknown>(url, {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-            Accept: "text/plain, application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
-    }, messages);
+    await apiFetchJson<unknown>(
+        url,
+        {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                Accept: "text/plain, application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+        },
+        messages
+    );
 
     return true;
 }
@@ -700,8 +748,8 @@ function applyTaskDrop(args: {
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-            ? overRaw.replace(END_PREFIX, "")
-            : overRaw;
+          ? overRaw.replace(END_PREFIX, "")
+          : overRaw;
 
     const fromCol = findColumnOfTask(board, columns, activeTaskId);
     if (!fromCol) return null;
@@ -795,8 +843,8 @@ function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?:
                 done
                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                     : overdue
-                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                      ? "border-rose-200 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
@@ -1228,11 +1276,20 @@ function TaskCard({
                         </div>
                     )}
 
-                    {task.due || severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                    {task.due ||
+                    severityLabel ||
+                    done ||
+                    showProgress ||
+                    task.estimatedHours != null ||
+                    task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                            {severityLabel ||
+                            done ||
+                            showProgress ||
+                            task.estimatedHours != null ||
+                            task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {severityLabel ? (
                                         <span
@@ -1293,11 +1350,20 @@ function GhostTaskCard({ task }: { task: Task }) {
                         {task.title}
                     </p>
 
-                    {task.due || severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                    {task.due ||
+                    severityLabel ||
+                    done ||
+                    showProgress ||
+                    task.estimatedHours != null ||
+                    task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
-                            {severityLabel || done || showProgress || task.estimatedHours != null || task.actualHours != null ? (
+                            {severityLabel ||
+                            done ||
+                            showProgress ||
+                            task.estimatedHours != null ||
+                            task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {severityLabel ? (
                                         <span
@@ -1718,9 +1784,7 @@ function ColumnView({
                                 {tasks.length === 0 ? (
                                     <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
                                         <div className="font-semibold text-sm text-zinc-700">{t("noTasks")}</div>
-                                        <div className="mt-1 text-xs text-zinc-500">
-                                            {t("addTaskHint")}
-                                        </div>
+                                        <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
                                     </div>
                                 ) : null}
 
@@ -1901,9 +1965,7 @@ function TaskOverlay({ task }: { task: Task }) {
                                 <span
                                     className={cn(
                                         "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                        done
-                                            ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                            : severityTone(task.severity)
+                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                                     )}>
                                     {severityLabel}
                                 </span>
@@ -2285,54 +2347,57 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    const syncColumnsFromDetail = React.useCallback((detail: GroupDetailResponse | undefined) => {
-        const statuses = (detail?.taskStatuses ?? [])
-            .filter((s) => typeof s?.statusId === "string" && !!s.statusId && typeof s?.statusName === "string")
-            .map((s) => ({
-                id: String(s.statusId),
-                title: String(s.statusName ?? ""),
-                position: typeof s.position === "number" && Number.isFinite(s.position) ? s.position : 0,
-                taskList: s.taskList ?? []
-            }))
-            .sort((a, b) => a.position - b.position);
+    const syncColumnsFromDetail = React.useCallback(
+        (detail: GroupDetailResponse | undefined) => {
+            const statuses = (detail?.taskStatuses ?? [])
+                .filter((s) => typeof s?.statusId === "string" && !!s.statusId && typeof s?.statusName === "string")
+                .map((s) => ({
+                    id: String(s.statusId),
+                    title: String(s.statusName ?? ""),
+                    position: typeof s.position === "number" && Number.isFinite(s.position) ? s.position : 0,
+                    taskList: s.taskList ?? []
+                }))
+                .sort((a, b) => a.position - b.position);
 
-        setColumns(statuses.map(({ id, title, position }) => ({ id, title, position })));
+            setColumns(statuses.map(({ id, title, position }) => ({ id, title, position })));
 
-        const nextBoard: Record<string, Task[]> = {};
-        for (const s of statuses) {
-            const apiTasks = (s.taskList ?? []).slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-            nextBoard[s.id] = apiTasks.map((apiTask) => {
-                const dueRaw = apiTask.dueDate ? String(apiTask.dueDate) : "";
-                const startRaw = apiTask.startDate ? String(apiTask.startDate) : "";
-                const assigneeName = formatAssigneeName(apiTask.assignee);
+            const nextBoard: Record<string, Task[]> = {};
+            for (const s of statuses) {
+                const apiTasks = (s.taskList ?? []).slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+                nextBoard[s.id] = apiTasks.map((apiTask) => {
+                    const dueRaw = apiTask.dueDate ? String(apiTask.dueDate) : "";
+                    const startRaw = apiTask.startDate ? String(apiTask.startDate) : "";
+                    const assigneeName = formatAssigneeName(apiTask.assignee);
 
-                const dueFmt = dueRaw ? formatDueCompact(dueRaw, locale) : "";
-                const startFmt = startRaw ? formatDueCompact(startRaw, locale) : "";
+                    const dueFmt = dueRaw ? formatDueCompact(dueRaw, locale) : "";
+                    const startFmt = startRaw ? formatDueCompact(startRaw, locale) : "";
 
-                const base: Task = {
-                    id: String(apiTask.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
-                    title: String(apiTask.taskTitle ?? ""),
-                    statusDot: priorityToStatusDot(apiTask.taskPriority),
-                    assigneeName,
-                    priority: apiTask.taskPriority ?? null,
-                    severity: apiTask.taskSeverity ?? null,
-                    progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0
-                };
+                    const base: Task = {
+                        id: String(apiTask.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
+                        title: String(apiTask.taskTitle ?? ""),
+                        statusDot: priorityToStatusDot(apiTask.taskPriority),
+                        assigneeName,
+                        priority: apiTask.taskPriority ?? null,
+                        severity: apiTask.taskSeverity ?? null,
+                        progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0
+                    };
 
-                if (startFmt) base.start = startFmt;
-                if (startRaw) base.startRaw = startRaw;
+                    if (startFmt) base.start = startFmt;
+                    if (startRaw) base.startRaw = startRaw;
 
-                if (dueFmt) base.due = dueFmt;
-                if (dueRaw) base.dueRaw = dueRaw;
-                if (apiTask.estimatedHours != null) base.estimatedHours = apiTask.estimatedHours;
-                if (apiTask.actualHours != null) base.actualHours = apiTask.actualHours;
+                    if (dueFmt) base.due = dueFmt;
+                    if (dueRaw) base.dueRaw = dueRaw;
+                    if (apiTask.estimatedHours != null) base.estimatedHours = apiTask.estimatedHours;
+                    if (apiTask.actualHours != null) base.actualHours = apiTask.actualHours;
 
-                return base;
-            });
-        }
+                    return base;
+                });
+            }
 
-        setBoard(nextBoard);
-    }, [locale]);
+            setBoard(nextBoard);
+        },
+        [locale]
+    );
 
     const fetchBoardData = React.useCallback(async () => {
         if (!groupId) throw new Error(t("missingGroupId"));
@@ -2458,8 +2523,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-                ? overId.replace(END_PREFIX, "")
-                : overId;
+              ? overId.replace(END_PREFIX, "")
+              : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -2529,12 +2594,15 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         setColumns((prev) => prev.map((c) => (c.id === id ? { ...c, title: next } : c)));
 
         try {
-            await apiRenameGroupTaskStatus({
-                groupId,
-                statusId: id,
-                statusName: next,
-                position: col.position
-            }, apiMessages);
+            await apiRenameGroupTaskStatus(
+                {
+                    groupId,
+                    statusId: id,
+                    statusName: next,
+                    position: col.position
+                },
+                apiMessages
+            );
             cancelEditColumn();
             await refreshSilently();
         } catch (e: unknown) {
@@ -2683,8 +2751,14 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         const normalizeFormValues = (values: unknown) => {
             const obj = asObject(values) ?? {};
-            const taskPriority = typeof obj.taskPriority === "number" || (typeof obj.taskPriority === "string" && obj.taskPriority) ? obj.taskPriority : undefined;
-            const taskSeverity = typeof obj.taskSeverity === "number" || (typeof obj.taskSeverity === "string" && obj.taskSeverity) ? obj.taskSeverity : undefined;
+            const taskPriority =
+                typeof obj.taskPriority === "number" || (typeof obj.taskPriority === "string" && obj.taskPriority)
+                    ? obj.taskPriority
+                    : undefined;
+            const taskSeverity =
+                typeof obj.taskSeverity === "number" || (typeof obj.taskSeverity === "string" && obj.taskSeverity)
+                    ? obj.taskSeverity
+                    : undefined;
             return {
                 statusId: String(obj.statusId ?? obj.groupStatusId ?? "").trim(),
                 title: String(obj.title ?? obj.taskName ?? "").trim(),
@@ -2711,20 +2785,23 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         setCreatingTask(true);
         try {
-            await apiCreateTask({
-                groupId,
-                groupStatusId: columnId,
-                taskName: normalized.title,
-                assigneeId: normalized.assigneeId ? String(normalized.assigneeId) : null,
-                dueDate: rawDue,
-                startDate: rawStart,
-                dueDateSelected: dueSelected,
-                startDateSelected: startSelected,
-                estimatedHours: normalized.estimatedHours,
-                actualHours: normalized.actualHours,
-                priority: normalized.taskPriority,
-                severity: normalized.taskSeverity
-            }, apiMessages);
+            await apiCreateTask(
+                {
+                    groupId,
+                    groupStatusId: columnId,
+                    taskName: normalized.title,
+                    assigneeId: normalized.assigneeId ? String(normalized.assigneeId) : null,
+                    dueDate: rawDue,
+                    startDate: rawStart,
+                    dueDateSelected: dueSelected,
+                    startDateSelected: startSelected,
+                    estimatedHours: normalized.estimatedHours,
+                    actualHours: normalized.actualHours,
+                    priority: normalized.taskPriority,
+                    severity: normalized.taskSeverity
+                },
+                apiMessages
+            );
 
             await refreshSilently();
             closeCreateTask();
@@ -2791,13 +2868,16 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
             void (async () => {
                 try {
-                    await apiReorderTask({
-                        groupId,
-                        taskId: activeId,
-                        targetStatusId: dropped.toCol,
-                        prevTaskId: dropped.prevTaskId,
-                        nextTaskId: dropped.nextTaskId
-                    }, apiMessages);
+                    await apiReorderTask(
+                        {
+                            groupId,
+                            taskId: activeId,
+                            targetStatusId: dropped.toCol,
+                            prevTaskId: dropped.prevTaskId,
+                            nextTaskId: dropped.nextTaskId
+                        },
+                        apiMessages
+                    );
                 } catch {
                     setBoard(prevBoard);
                 }
@@ -2839,12 +2919,15 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
             void (async () => {
                 try {
-                    await apiReorderGroupTaskStatus({
-                        groupId,
-                        statusId: activeColId,
-                        prevStatusId,
-                        nextStatusId
-                    }, apiMessages);
+                    await apiReorderGroupTaskStatus(
+                        {
+                            groupId,
+                            statusId: activeColId,
+                            prevStatusId,
+                            nextStatusId
+                        },
+                        apiMessages
+                    );
                 } catch {
                     setColumns(prevCols);
                 }

@@ -213,11 +213,22 @@ function extractTaskListData(payload: unknown): HomeTaskListResponse | null {
 
     const firstLayer = source?.data;
 
-    if (firstLayer && typeof firstLayer === "object" && "items" in firstLayer && "page" in firstLayer && "pageSize" in firstLayer) {
+    if (
+        firstLayer &&
+        typeof firstLayer === "object" &&
+        "items" in firstLayer &&
+        "page" in firstLayer &&
+        "pageSize" in firstLayer
+    ) {
         return firstLayer as HomeTaskListResponse;
     }
 
-    if (firstLayer && typeof firstLayer === "object" && "data" in firstLayer && (firstLayer as HomeTaskListResponseApiResponse).data) {
+    if (
+        firstLayer &&
+        typeof firstLayer === "object" &&
+        "data" in firstLayer &&
+        (firstLayer as HomeTaskListResponseApiResponse).data
+    ) {
         return (firstLayer as HomeTaskListResponseApiResponse).data ?? null;
     }
 
@@ -308,8 +319,7 @@ function FilterField({ children, className }: { children: React.ReactNode; class
             className={cn(
                 "relative overflow-hidden rounded-[24px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.90),rgba(248,250,252,0.82))] shadow-[0_10px_28px_rgba(15,23,42,0.05)] backdrop-blur-xl",
                 className
-            )}
-        >
+            )}>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_32%)]" />
             <div className="relative">{children}</div>
         </div>
@@ -364,7 +374,8 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
         let top = shouldOpenUp ? rect.top - popupHeight - gap : rect.bottom + gap;
         let left = rect.left;
 
-        if (left + popupWidth > window.innerWidth - viewportPadding) left = window.innerWidth - popupWidth - viewportPadding;
+        if (left + popupWidth > window.innerWidth - viewportPadding)
+            left = window.innerWidth - popupWidth - viewportPadding;
         if (left < viewportPadding) left = viewportPadding;
         if (top < viewportPadding) top = viewportPadding;
         if (top + popupHeight > window.innerHeight - viewportPadding) {
@@ -459,156 +470,150 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    ref={rootRef}
-                    className="fixed z-[20000] rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl"
-                    style={{ top: popupPosition.top, left: popupPosition.left, width: popupPosition.width }}
-                >
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                value={month.getMonth()}
-                                onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400"
-                            >
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
-                        </div>
+                  <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      ref={rootRef}
+                      className="fixed z-[20000] rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl"
+                      style={{ top: popupPosition.top, left: popupPosition.left, width: popupPosition.width }}>
+                      <div className="mb-4 flex items-center gap-3">
+                          <div className="relative flex-1">
+                              <select
+                                  value={month.getMonth()}
+                                  onChange={handleMonthChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400">
+                                  {monthOptions.map((item) => (
+                                      <option key={item.value} value={item.value}>
+                                          {item.label}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
+                          </div>
 
-                        <div className="relative w-[140px]">
-                            <select
-                                value={month.getFullYear()}
-                                onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400"
-                            >
-                                {yearOptions.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
-                        </div>
-                    </div>
+                          <div className="relative w-[140px]">
+                              <select
+                                  value={month.getFullYear()}
+                                  onChange={handleYearChange}
+                                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400">
+                                  {yearOptions.map((year) => (
+                                      <option key={year} value={year}>
+                                          {year}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
+                          </div>
+                      </div>
 
-                    <div className="rounded-[22px] border border-slate-200 bg-white/80 p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={goPrevMonth}
-                                disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
+                      <div className="rounded-[22px] border border-slate-200 bg-white/80 p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                              <button
+                                  type="button"
+                                  onClick={goPrevMonth}
+                                  disabled={isPrevDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronLeft className="h-5 w-5" />
+                              </button>
 
-                            <div className="text-[18px] font-bold text-slate-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                            </div>
+                              <div className="text-[18px] font-bold text-slate-900">
+                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                              </div>
 
-                            <button
-                                type="button"
-                                onClick={goNextMonth}
-                                disabled={isNextDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                              <button
+                                  type="button"
+                                  onClick={goNextMonth}
+                                  disabled={isNextDisabled}
+                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronRight className="h-5 w-5" />
+                              </button>
+                          </div>
 
-                        <DayPicker
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={selectedDate}
-                            onSelect={pickDate}
-                            disabled={
-                                maxDate && minDate
-                                    ? { before: minDate, after: maxDate }
-                                    : maxDate
+                          <DayPicker
+                              mode="single"
+                              month={month}
+                              onMonthChange={setMonth}
+                              selected={selectedDate}
+                              onSelect={pickDate}
+                              disabled={
+                                  maxDate && minDate
+                                      ? { before: minDate, after: maxDate }
+                                      : maxDate
                                         ? { after: maxDate }
                                         : minDate
-                                            ? { before: minDate }
-                                            : undefined
-                            }
-                            showOutsideDays
-                            className="w-full"
-                            styles={{ day: { outline: "none", boxShadow: "none" }, button: { outline: "none", boxShadow: "none" } }}
-                            classNames={{
-                                months: "flex w-full flex-col",
-                                month: "w-full space-y-3",
-                                month_caption: "hidden",
-                                caption: "hidden",
-                                caption_label: "hidden",
-                                nav: "hidden",
-                                table: "w-full border-collapse",
-                                month_grid: "w-full border-collapse",
-                                tbody: "w-full",
-                                weekdays: "flex w-full justify-between",
-                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-slate-500",
-                                weeks: "w-full",
-                                week: "mt-2 flex w-full justify-between",
-                                day: "h-10 w-10 p-0 text-center",
-                                cell: "h-10 w-10 p-0 text-center",
-                                day_button:
-                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-slate-800 shadow-none outline-none ring-0 transition hover:bg-violet-50 focus:outline-none focus:ring-0",
-                                selected: "!rounded-xl !bg-violet-500 !text-white",
-                                day_selected: "!rounded-xl !bg-violet-500 !text-white hover:!bg-violet-500",
-                                today: "font-bold text-violet-600",
-                                day_today: "font-bold text-violet-600",
-                                outside: "opacity-30",
-                                day_outside: "opacity-30",
-                                disabled: "cursor-not-allowed opacity-30",
-                                day_disabled: "cursor-not-allowed opacity-30",
-                                hidden: "invisible",
-                                day_hidden: "invisible"
-                            }}
-                        />
-                    </div>
+                                          ? { before: minDate }
+                                          : undefined
+                              }
+                              showOutsideDays
+                              className="w-full"
+                              styles={{
+                                  day: { outline: "none", boxShadow: "none" },
+                                  button: { outline: "none", boxShadow: "none" }
+                              }}
+                              classNames={{
+                                  months: "flex w-full flex-col",
+                                  month: "w-full space-y-3",
+                                  month_caption: "hidden",
+                                  caption: "hidden",
+                                  caption_label: "hidden",
+                                  nav: "hidden",
+                                  table: "w-full border-collapse",
+                                  month_grid: "w-full border-collapse",
+                                  tbody: "w-full",
+                                  weekdays: "flex w-full justify-between",
+                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-slate-500",
+                                  weeks: "w-full",
+                                  week: "mt-2 flex w-full justify-between",
+                                  day: "h-10 w-10 p-0 text-center",
+                                  cell: "h-10 w-10 p-0 text-center",
+                                  day_button:
+                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-slate-800 shadow-none outline-none ring-0 transition hover:bg-violet-50 focus:outline-none focus:ring-0",
+                                  selected: "!rounded-xl !bg-violet-500 !text-white",
+                                  day_selected: "!rounded-xl !bg-violet-500 !text-white hover:!bg-violet-500",
+                                  today: "font-bold text-violet-600",
+                                  day_today: "font-bold text-violet-600",
+                                  outside: "opacity-30",
+                                  day_outside: "opacity-30",
+                                  disabled: "cursor-not-allowed opacity-30",
+                                  day_disabled: "cursor-not-allowed opacity-30",
+                                  hidden: "invisible",
+                                  day_hidden: "invisible"
+                              }}
+                          />
+                      </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                            {t ? t("today") : "Today"}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                            {t ? t("tomorrow") : "Tomorrow"}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                            {t ? t("nextWeek") : "Next week"}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50"
-                        >
-                            {t ? t("noDate") : "No date"}
-                        </button>
-                    </div>
-                </motion.div>,
-                document.body
-            )
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                              type="button"
+                              onClick={() => pickDate(new Date())}
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                              {t ? t("today") : "Today"}
+                          </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 1))}
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                              {t ? t("tomorrow") : "Tomorrow"}
+                          </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 7))}
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                              {t ? t("nextWeek") : "Next week"}
+                          </button>
+                          <button
+                              type="button"
+                              onClick={() => {
+                                  onChange("");
+                                  setOpen(false);
+                              }}
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
+                              {t ? t("noDate") : "No date"}
+                          </button>
+                      </div>
+                  </motion.div>,
+                  document.body
+              )
             : null;
 
     return (
@@ -624,18 +629,20 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                         open
                             ? "border-violet-400 bg-violet-50 text-slate-900 ring-2 ring-violet-100"
                             : "border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50"
-                    )}
-                >
+                    )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
                             className={cn(
                                 "grid h-7 w-7 shrink-0 place-items-center rounded-md",
                                 open ? "bg-violet-100 text-violet-600" : "bg-slate-100 text-slate-500"
-                            )}
-                        >
+                            )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
-                        <span className={cn("truncate text-left", value ? "font-medium text-slate-900" : "text-slate-400")}>
+                        <span
+                            className={cn(
+                                "truncate text-left",
+                                value ? "font-medium text-slate-900" : "text-slate-400"
+                            )}>
                             {formatDateDisplay(value, t)}
                         </span>
                     </div>
@@ -646,7 +653,15 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
     );
 }
 
-function DeadlineRangePicker({ value, onChange, t }: { value: DeadlineFilter; onChange: (next: DeadlineFilter) => void; t?: (key: string) => string }) {
+function DeadlineRangePicker({
+    value,
+    onChange,
+    t
+}: {
+    value: DeadlineFilter;
+    onChange: (next: DeadlineFilter) => void;
+    t?: (key: string) => string;
+}) {
     return (
         <div className="grid min-w-[360px] grid-cols-1 gap-4 rounded-[24px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl">
             <TrelloDatePicker
@@ -667,8 +682,7 @@ function DeadlineRangePicker({ value, onChange, t }: { value: DeadlineFilter; on
                 <button
                     type="button"
                     onClick={() => onChange({ startDate: "", endDate: "" })}
-                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-                >
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
                     {t ? t("clearSelection") : "Clear selection"}
                 </button>
             </div>
@@ -710,8 +724,7 @@ function DeadlineFilterPopover({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className="absolute right-0 top-[calc(100%+12px)] z-30"
-            onPointerDown={(e) => e.stopPropagation()}
-        >
+            onPointerDown={(e) => e.stopPropagation()}>
             <DeadlineRangePicker value={value} onChange={onChange} t={t} />
         </motion.div>
     );
@@ -770,15 +783,13 @@ function TaskListDetailLayer({
                     className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[3px]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
+                    exit={{ opacity: 0 }}>
                     <motion.div
                         initial={{ opacity: 0, y: 28, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
                         transition={{ duration: 0.25 }}
-                        className="relative flex max-h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.20)]"
-                    >
+                        className="relative flex max-h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
                         <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5 md:px-8">
                             <div>
                                 <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
@@ -794,8 +805,7 @@ function TaskListDetailLayer({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
-                            >
+                                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -823,11 +833,12 @@ function TaskListDetailLayer({
                                                     setSelectedSource(event.target.value);
                                                     setPage(1);
                                                 }}
-                                                className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none"
-                                            >
+                                                className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
                                                 <option value="all">{t("allGroups")}</option>
                                                 {groups.map((group) => (
-                                                    <option key={group.groupId ?? group.groupName} value={group.groupId ?? ""}>
+                                                    <option
+                                                        key={group.groupId ?? group.groupName}
+                                                        value={group.groupId ?? ""}>
                                                         {group.groupName}
                                                     </option>
                                                 ))}
@@ -848,8 +859,7 @@ function TaskListDetailLayer({
                                                     setOpenDeadlineFilter(false);
                                                     setPage(1);
                                                 }}
-                                                className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none"
-                                            >
+                                                className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
                                                 <option value="none">{t("sortNone")}</option>
                                                 <option value="deadline">{t("sortDeadline")}</option>
                                                 <option value="priority">{t("sortPriority")}</option>
@@ -866,29 +876,41 @@ function TaskListDetailLayer({
                                                 initial={{ opacity: 0, y: 8 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -8 }}
-                                                className="sm:col-span-2"
-                                            >
+                                                className="sm:col-span-2">
                                                 <FilterField>
                                                     <div className="relative">
                                                         <select
                                                             value={sortFilterValue}
                                                             onChange={(event) => setSortFilterValue(event.target.value)}
-                                                            className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none"
-                                                        >
+                                                            className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
                                                             <option value="">{t("selectFilter")}</option>
                                                             {sortBy === "priority" && (
                                                                 <>
-                                                                    <option value={t("priorityLow")}>{t("priorityLow")}</option>
-                                                                    <option value={t("priorityMedium")}>{t("priorityMedium")}</option>
-                                                                    <option value={t("priorityHigh")}>{t("priorityHigh")}</option>
+                                                                    <option value={t("priorityLow")}>
+                                                                        {t("priorityLow")}
+                                                                    </option>
+                                                                    <option value={t("priorityMedium")}>
+                                                                        {t("priorityMedium")}
+                                                                    </option>
+                                                                    <option value={t("priorityHigh")}>
+                                                                        {t("priorityHigh")}
+                                                                    </option>
                                                                 </>
                                                             )}
                                                             {sortBy === "severity" && (
                                                                 <>
-                                                                    <option value={t("severityLow")}>{t("severityLow")}</option>
-                                                                    <option value={t("severityNormal")}>{t("severityNormal")}</option>
-                                                                    <option value={t("severityImportant")}>{t("severityImportant")}</option>
-                                                                    <option value={t("severityCritical")}>{t("severityCritical")}</option>
+                                                                    <option value={t("severityLow")}>
+                                                                        {t("severityLow")}
+                                                                    </option>
+                                                                    <option value={t("severityNormal")}>
+                                                                        {t("severityNormal")}
+                                                                    </option>
+                                                                    <option value={t("severityImportant")}>
+                                                                        {t("severityImportant")}
+                                                                    </option>
+                                                                    <option value={t("severityCritical")}>
+                                                                        {t("severityCritical")}
+                                                                    </option>
                                                                 </>
                                                             )}
                                                             {sortBy === "status" &&
@@ -911,16 +933,20 @@ function TaskListDetailLayer({
                                                 initial={{ opacity: 0, y: 8 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -8 }}
-                                                className="relative sm:col-span-2"
-                                            >
+                                                className="relative sm:col-span-2">
                                                 <FilterField>
                                                     <button
                                                         type="button"
                                                         onClick={() => setOpenDeadlineFilter((prev) => !prev)}
-                                                        className="flex h-[72px] w-full items-center justify-between rounded-[24px] px-7 text-[18px] text-slate-900 transition"
-                                                    >
-                                                        <span className={cn("truncate", !hasDeadlineFilter && "text-slate-400")}>
-                                                            {hasDeadlineFilter ? deadlineFilterLabel : t("selectDateRange")}
+                                                        className="flex h-[72px] w-full items-center justify-between rounded-[24px] px-7 text-[18px] text-slate-900 transition">
+                                                        <span
+                                                            className={cn(
+                                                                "truncate",
+                                                                !hasDeadlineFilter && "text-slate-400"
+                                                            )}>
+                                                            {hasDeadlineFilter
+                                                                ? deadlineFilterLabel
+                                                                : t("selectDateRange")}
                                                         </span>
                                                         <CalendarDays className="h-5 w-5 text-slate-500" />
                                                     </button>
@@ -943,19 +969,22 @@ function TaskListDetailLayer({
                                 {sortBy !== "none" && (
                                     <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm">
                                         <SlidersHorizontal className="h-4 w-4 text-sky-600" />
-                                        <span>{t("sortingBy")} {sortBy}</span>
+                                        <span>
+                                            {t("sortingBy")} {sortBy}
+                                        </span>
                                     </div>
                                 )}
 
                                 {showDeadlineFilter && hasDeadlineFilter && (
                                     <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-700 shadow-sm">
                                         <Clock3 className="h-4 w-4" />
-                                        <span>{t("filterDeadline")}: {deadlineFilterLabel}</span>
+                                        <span>
+                                            {t("filterDeadline")}: {deadlineFilterLabel}
+                                        </span>
                                         <button
                                             type="button"
                                             onClick={() => setDeadlineFilter({ startDate: "", endDate: "" })}
-                                            className="rounded-full p-0.5 hover:bg-violet-100"
-                                        >
+                                            className="rounded-full p-0.5 hover:bg-violet-100">
                                             <X className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -967,12 +996,24 @@ function TaskListDetailLayer({
                                     <table className="min-w-full border-collapse">
                                         <thead>
                                             <tr className="border-b border-slate-200/80 bg-[linear-gradient(180deg,#F8FAFC_0%,#F1F5F9_100%)]">
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderTask")}</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderSource")}</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderSeverity")}</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderPriority")}</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderStatus")}</th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">{t("tableHeaderDueDate")}</th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                    {t("tableHeaderTask")}
+                                                </th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                    {t("tableHeaderSource")}
+                                                </th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                    {t("tableHeaderSeverity")}
+                                                </th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                    {t("tableHeaderPriority")}
+                                                </th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                    {t("tableHeaderStatus")}
+                                                </th>
+                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                    {t("tableHeaderDueDate")}
+                                                </th>
                                             </tr>
                                         </thead>
 
@@ -990,7 +1031,9 @@ function TaskListDetailLayer({
                                                             <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-violet-50 text-violet-600 shadow-sm">
                                                                 <FolderKanban className="h-8 w-8" />
                                                             </div>
-                                                            <p className="mt-4 text-lg font-semibold text-slate-800">{t("noTasks")}</p>
+                                                            <p className="mt-4 text-lg font-semibold text-slate-800">
+                                                                {t("noTasks")}
+                                                            </p>
                                                             <p className="mt-1 text-sm text-slate-500">
                                                                 {t("noTasksHint")}
                                                             </p>
@@ -1005,8 +1048,7 @@ function TaskListDetailLayer({
                                                         transition={{ duration: 0.25, delay: index * 0.03 }}
                                                         key={item.taskId}
                                                         onClick={() => handleTaskClick(item)}
-                                                        className="group cursor-pointer border-b border-slate-200/70 transition last:border-b-0 hover:bg-[linear-gradient(180deg,#FCFCFF_0%,#F8FAFC_100%)]"
-                                                    >
+                                                        className="group cursor-pointer border-b border-slate-200/70 transition last:border-b-0 hover:bg-[linear-gradient(180deg,#FCFCFF_0%,#F8FAFC_100%)]">
                                                         <td className="px-6 py-6 text-center text-[18px] font-semibold text-slate-900">
                                                             <button
                                                                 type="button"
@@ -1014,9 +1056,10 @@ function TaskListDetailLayer({
                                                                     e.stopPropagation();
                                                                     handleTaskClick(item);
                                                                 }}
-                                                                className="inline-flex items-center gap-2 hover:text-violet-700"
-                                                            >
-                                                                <span className="hover:underline">{item.taskTitle || "-"}</span>
+                                                                className="inline-flex items-center gap-2 hover:text-violet-700">
+                                                                <span className="hover:underline">
+                                                                    {item.taskTitle || "-"}
+                                                                </span>
                                                                 <ArrowUpRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
                                                             </button>
                                                         </td>
@@ -1030,8 +1073,7 @@ function TaskListDetailLayer({
                                                                 className={cn(
                                                                     "inline-flex rounded-full border px-3 py-1.5 text-[14px] font-semibold shadow-sm",
                                                                     severityTone(item.taskSeverity)
-                                                                )}
-                                                            >
+                                                                )}>
                                                                 {getSeverityLabel(item.taskSeverity, t)}
                                                             </span>
                                                         </td>
@@ -1041,8 +1083,7 @@ function TaskListDetailLayer({
                                                                 className={cn(
                                                                     "inline-flex rounded-full border px-3 py-1.5 text-[14px] font-semibold shadow-sm",
                                                                     priorityTone(item.taskPriority)
-                                                                )}
-                                                            >
+                                                                )}>
                                                                 {getPriorityLabel(item.taskPriority, t)}
                                                             </span>
                                                         </td>
@@ -1070,8 +1111,7 @@ function TaskListDetailLayer({
                                         type="button"
                                         onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                                         disabled={page === 1}
-                                        className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
+                                        className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50">
                                         <ChevronLeft className="h-5 w-5" /> {t("previous")}
                                     </button>
 
@@ -1080,8 +1120,7 @@ function TaskListDetailLayer({
                                             return (
                                                 <span
                                                     key={`ellipsis-${index}`}
-                                                    className="flex h-12 min-w-12 items-center justify-center px-2 text-[16px] font-medium text-slate-400"
-                                                >
+                                                    className="flex h-12 min-w-12 items-center justify-center px-2 text-[16px] font-medium text-slate-400">
                                                     ...
                                                 </span>
                                             );
@@ -1098,8 +1137,7 @@ function TaskListDetailLayer({
                                                     isActive
                                                         ? "border-[#F97316] bg-[#F97316] text-white shadow-[0_10px_20px_rgba(249,115,22,0.22)]"
                                                         : "border-[#E2E8F0] bg-white/80 text-[#261E33] hover:border-[#FDBA74] hover:bg-[#FFF7ED]"
-                                                )}
-                                            >
+                                                )}>
                                                 {item}
                                             </button>
                                         );
@@ -1109,8 +1147,7 @@ function TaskListDetailLayer({
                                         type="button"
                                         onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                                         disabled={page === totalPages}
-                                        className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
+                                        className="inline-flex items-center gap-2 rounded-xl border border-[#FED7AA] bg-white px-4 py-2 text-[15px] font-medium text-[#9A3412] shadow-sm hover:bg-[#FFF7ED] disabled:cursor-not-allowed disabled:opacity-50">
                                         {t("next")} <ChevronRight className="h-5 w-5" />
                                     </button>
                                 </div>
@@ -1204,14 +1241,11 @@ export default function HomeTaskList() {
     const rawItems = data?.items ?? [];
 
     const groups = React.useMemo(() => {
-        const sourceGroups: UserGroupDto[] = allGroups.length ? allGroups : data?.userGroups ?? [];
+        const sourceGroups: UserGroupDto[] = allGroups.length ? allGroups : (data?.userGroups ?? []);
         return sourceGroups.filter((group) => !!group.groupId);
     }, [allGroups, data?.userGroups]);
 
-    const validGroupIds = React.useMemo(
-        () => new Set(groups.map((group) => group.groupId).filter(Boolean)),
-        [groups]
-    );
+    const validGroupIds = React.useMemo(() => new Set(groups.map((group) => group.groupId).filter(Boolean)), [groups]);
 
     const sanitizedItems = React.useMemo(
         () => rawItems.filter((item) => !!item.groupId && validGroupIds.has(item.groupId)),
@@ -1219,9 +1253,7 @@ export default function HomeTaskList() {
     );
 
     const groupsWithTasks = React.useMemo(() => {
-        const groupIdsWithTasks = new Set(
-            sanitizedItems.map((item) => item.groupId).filter(Boolean)
-        );
+        const groupIdsWithTasks = new Set(sanitizedItems.map((item) => item.groupId).filter(Boolean));
 
         return groups.filter((group) => group.groupId && groupIdsWithTasks.has(group.groupId));
     }, [groups, sanitizedItems]);
@@ -1260,14 +1292,7 @@ export default function HomeTaskList() {
     }, [sourceFilteredItems, sortBy, sortFilterValue, deadlineFilter]);
 
     const statusOptions = React.useMemo(
-        () =>
-            Array.from(
-                new Set(
-                    sanitizedItems
-                        .map((item) => (item.statusName ?? "").trim())
-                        .filter(Boolean)
-                )
-            ),
+        () => Array.from(new Set(sanitizedItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean))),
         [sanitizedItems]
     );
 
@@ -1289,7 +1314,8 @@ export default function HomeTaskList() {
     const paginationItems = React.useMemo<(number | "...")[]>(() => {
         if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
         if (page <= 4) return [1, 2, 3, 4, 5, "...", totalPages];
-        if (page >= totalPages - 3) return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        if (page >= totalPages - 3)
+            return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
         return [1, "...", page - 1, page, page + 1, "...", totalPages];
     }, [page, totalPages]);
 
@@ -1373,8 +1399,7 @@ export default function HomeTaskList() {
         <>
             <div
                 id="home-group-task-section"
-                className="relative overflow-hidden scroll-mt-24 bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_36%,#F3F7FB_100%)]"
-            >
+                className="relative overflow-hidden scroll-mt-24 bg-[linear-gradient(180deg,#F8FAFC_0%,#F7F7FF_36%,#F3F7FB_100%)]">
                 <div className="pointer-events-none absolute inset-0">
                     <div className="absolute left-[-80px] top-[-30px] h-72 w-72 rounded-full bg-violet-200/20 blur-3xl" />
                     <div className="absolute right-[-60px] top-[20%] h-80 w-80 rounded-full bg-sky-200/18 blur-3xl" />
@@ -1385,18 +1410,12 @@ export default function HomeTaskList() {
                     <motion.div
                         initial={{ opacity: 0, y: 18 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="relative rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.68))] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:p-8"
-                    >
+                        className="relative rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.68))] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:p-8">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.10),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(251,146,60,0.08),transparent_30%)]" />
 
                         <div className="relative">
                             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                                 <div>
-                                    <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
-                                        <Sparkles className="h-3.5 w-3.5" />
-                                        {t("badge")}
-                                    </div>
-
                                     <h2 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-[32px] font-bold leading-tight tracking-[-0.02em] text-transparent md:text-[40px]">
                                         {t("title")}
                                     </h2>
@@ -1404,7 +1423,9 @@ export default function HomeTaskList() {
 
                                 <div className="flex flex-wrap gap-3">
                                     <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
-                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">{t("totalTasks")}</p>
+                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                                            {t("totalTasks")}
+                                        </p>
                                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
                                             <FolderKanban className="h-4 w-4 text-violet-600" />
                                             {displayItems.length}
@@ -1412,7 +1433,9 @@ export default function HomeTaskList() {
                                     </div>
 
                                     <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
-                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">{t("availableGroups")}</p>
+                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                                            {t("availableGroups")}
+                                        </p>
                                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
                                             <LayoutGrid className="h-4 w-4 text-sky-600" />
                                             {groupsWithTasks.length}
@@ -1426,8 +1449,7 @@ export default function HomeTaskList() {
                                     Array.from({ length: 3 }).map((_, index) => (
                                         <div
                                             key={index}
-                                            className="rounded-[24px] border border-slate-200/80 bg-white/80 p-4 shadow-sm"
-                                        >
+                                            className="rounded-[24px] border border-slate-200/80 bg-white/80 p-4 shadow-sm">
                                             <div className="animate-pulse space-y-3">
                                                 <div className="h-5 w-3/4 rounded bg-slate-200" />
                                                 <div className="h-4 w-1/2 rounded bg-slate-100" />
@@ -1445,9 +1467,7 @@ export default function HomeTaskList() {
                                                 <FolderKanban className="h-8 w-8" />
                                             </div>
                                             <p className="mt-4 text-lg font-semibold text-slate-800">{t("noGroups")}</p>
-                                            <p className="mt-1 text-sm text-slate-500">
-                                                {t("noGroupsHint")}
-                                            </p>
+                                            <p className="mt-1 text-sm text-slate-500">{t("noGroupsHint")}</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -1456,8 +1476,7 @@ export default function HomeTaskList() {
                                             key={group.groupId}
                                             type="button"
                                             onClick={() => handleOpenDetailByGroup(group.groupId)}
-                                            className="rounded-[24px] border border-slate-200/80 bg-white/80 p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                                        >
+                                            className="rounded-[24px] border border-slate-200/80 bg-white/80 p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md">
                                             <p className="line-clamp-1 text-xl font-semibold text-slate-900">
                                                 {group.groupName}
                                             </p>
@@ -1476,8 +1495,7 @@ export default function HomeTaskList() {
                                                         className={cn(
                                                             "inline-flex rounded-full border px-3 py-1 text-xs font-semibold",
                                                             severityTone(group.highestSeverity)
-                                                        )}
-                                                    >
+                                                        )}>
                                                         {getSeverityLabel(group.highestSeverity, t)}
                                                     </span>
                                                 ) : null}
@@ -1487,8 +1505,7 @@ export default function HomeTaskList() {
                                                         className={cn(
                                                             "inline-flex rounded-full border px-3 py-1 text-xs font-semibold",
                                                             priorityTone(group.highestPriority)
-                                                        )}
-                                                    >
+                                                        )}>
                                                         {getPriorityLabel(group.highestPriority, t)}
                                                     </span>
                                                 ) : null}
@@ -1501,8 +1518,7 @@ export default function HomeTaskList() {
                             <div className="mt-6 flex justify-end">
                                 <Button
                                     onClick={handleOpenDetail}
-                                    className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4"
-                                >
+                                    className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4">
                                     {t("viewDetails")}
                                 </Button>
                             </div>

@@ -1,15 +1,6 @@
 "use client";
 
-import {
-    ArrowRight,
-    Check,
-    Crown,
-    Layers,
-    ShieldCheck,
-    Sparkles,
-    User,
-    Zap
-} from "lucide-react";
+import { ArrowRight, Check, Crown, Layers, ShieldCheck, Sparkles, User, Zap } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -44,9 +35,7 @@ function FreePricingFeature({
             <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FFF1E7] text-[#F08A24]">
                 {icon}
             </span>
-            <span className="font-medium text-[#3B3348]">
-                {children}
-            </span>
+            <span className="font-medium text-[#3B3348]">{children}</span>
         </li>
     );
 }
@@ -63,14 +52,12 @@ function PremiumPricingFeature({
     return (
         <li className="flex items-start gap-3 leading-7">
             <span
-                className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${highlight ? "bg-orange-100 text-orange-600" : "bg-[#F7F4F1] text-[#8B7768]"
-                    }`}
-            >
+                className={`mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                    highlight ? "bg-orange-100 text-orange-600" : "bg-[#F7F4F1] text-[#8B7768]"
+                }`}>
                 {icon}
             </span>
-            <span className={highlight ? "font-medium text-[#261E33]" : "text-[#5F5A73]"}>
-                {children}
-            </span>
+            <span className={highlight ? "font-medium text-[#261E33]" : "text-[#5F5A73]"}>{children}</span>
         </li>
     );
 }
@@ -190,9 +177,7 @@ export default function LandingPlan() {
                             </ul>
 
                             <div className="mt-8 rounded-[24px] border border-[#EFE4D8] bg-[#FFFCF9] p-4">
-                                <p className="text-sm leading-8 text-[#7C78A0]">
-                                    {t("freePlanRecommendation")}
-                                </p>
+                                <p className="text-sm leading-8 text-[#7C78A0]">{t("freePlanRecommendation")}</p>
                             </div>
                         </div>
 
@@ -272,9 +257,7 @@ export default function LandingPlan() {
                     </div>
 
                     <div className="mx-auto mt-12 max-w-4xl text-center">
-                        <p className="text-sm leading-7 text-[#6F6B99]">
-                            {t("landingCta")}
-                        </p>
+                        <p className="text-sm leading-7 text-[#6F6B99]">{t("landingCta")}</p>
                     </div>
                 </section>
 

@@ -461,7 +461,9 @@ export default function GroupAiQaPage() {
                             <h3 className="font-semibold text-[#2B2118] text-[31px] md:text-[40px]">
                                 {t("startConversation")}
                             </h3>
-                            <p className="mx-auto mt-3 max-w-2xl text-[#7A6858] text-base leading-7">{t("description")}</p>
+                            <p className="mx-auto mt-3 max-w-2xl text-[#7A6858] text-base leading-7">
+                                {t("description")}
+                            </p>
                         </div>
 
                         <div className="relative mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -539,7 +541,11 @@ export default function GroupAiQaPage() {
                                 type="submit"
                                 disabled={isSending || !input.trim()}
                                 className="h-10 w-10 rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 flex items-center justify-center shrink-0">
-                                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                {isSending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Send className="h-4 w-4" />
+                                )}
                             </Button>
                         </div>
                     </div>

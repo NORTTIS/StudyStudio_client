@@ -1,14 +1,6 @@
 "use client";
 
-import {
-    ChevronDown,
-    ChevronLeft,
-    ChevronRight,
-    Filter,
-    Search,
-    AlertTriangle,
-    ListTodo
-} from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Filter, Search, AlertTriangle, ListTodo } from "lucide-react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -151,7 +143,7 @@ function buildInitials(name: string) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
+    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
     return `${first}${last}`.toUpperCase() || "U";
 }
 
@@ -223,10 +215,7 @@ function TableSkeleton() {
     return (
         <div className="space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                    key={i}
-                    className="h-20 animate-pulse rounded-2xl border border-zinc-200/80 bg-white/70"
-                />
+                <div key={i} className="h-20 animate-pulse rounded-2xl border border-zinc-200/80 bg-white/70" />
             ))}
         </div>
     );
@@ -599,13 +588,13 @@ export function GroupListScreen() {
                                                     className={cn(
                                                         "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
                                                         row.severityClass === "text-red-600" &&
-                                                        "border-red-200 bg-red-50 text-red-600",
+                                                            "border-red-200 bg-red-50 text-red-600",
                                                         row.severityClass === "text-orange-600" &&
-                                                        "border-orange-200 bg-orange-50 text-orange-600",
+                                                            "border-orange-200 bg-orange-50 text-orange-600",
                                                         row.severityClass === "text-amber-600" &&
-                                                        "border-amber-200 bg-amber-50 text-amber-600",
+                                                            "border-amber-200 bg-amber-50 text-amber-600",
                                                         row.severityClass === "text-sky-600" &&
-                                                        "border-sky-200 bg-sky-50 text-sky-600"
+                                                            "border-sky-200 bg-sky-50 text-sky-600"
                                                     )}>
                                                     {row.severityLabel}
                                                 </span>
@@ -616,11 +605,11 @@ export function GroupListScreen() {
                                                     className={cn(
                                                         "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
                                                         row.priorityClass === "text-rose-600" &&
-                                                        "border-rose-200 bg-rose-50 text-rose-600",
+                                                            "border-rose-200 bg-rose-50 text-rose-600",
                                                         row.priorityClass === "text-amber-700" &&
-                                                        "border-amber-200 bg-amber-50 text-amber-700",
+                                                            "border-amber-200 bg-amber-50 text-amber-700",
                                                         row.priorityClass === "text-emerald-700" &&
-                                                        "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                            "border-emerald-200 bg-emerald-50 text-emerald-700"
                                                     )}>
                                                     {row.priorityLabel}
                                                 </span>

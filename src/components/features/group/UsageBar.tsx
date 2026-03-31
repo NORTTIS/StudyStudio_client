@@ -20,22 +20,22 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
     const tone =
         status === "full"
             ? {
-                shell: "from-[#FFF6EF] via-[#FFF8F4] to-[#FFF3EC]",
-                border: "border-orange-200/80",
-                badge: "bg-orange-100 text-orange-700 ring-orange-200/80",
-                glowA: "bg-orange-200/40",
-                glowB: "bg-rose-200/30",
-                progressWrap: "bg-orange-100/80",
-                progressBar: "from-orange-500 via-orange-500 to-rose-500",
-                progressGlow: "shadow-[0_0_24px_rgba(249,115,22,0.35)]",
-                statBox: "border-orange-200/70 bg-white/78",
-                title: t("limitReached"),
-                hint: t("limitReachedHint", { usage: current, max }),
-                cta: "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
-                soft: "bg-orange-50/90 text-orange-700"
-            }
+                  shell: "from-[#FFF6EF] via-[#FFF8F4] to-[#FFF3EC]",
+                  border: "border-orange-200/80",
+                  badge: "bg-orange-100 text-orange-700 ring-orange-200/80",
+                  glowA: "bg-orange-200/40",
+                  glowB: "bg-rose-200/30",
+                  progressWrap: "bg-orange-100/80",
+                  progressBar: "from-orange-500 via-orange-500 to-rose-500",
+                  progressGlow: "shadow-[0_0_24px_rgba(249,115,22,0.35)]",
+                  statBox: "border-orange-200/70 bg-white/78",
+                  title: t("limitReached"),
+                  hint: t("limitReachedHint", { usage: current, max }),
+                  cta: "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
+                  soft: "bg-orange-50/90 text-orange-700"
+              }
             : status === "near"
-                ? {
+              ? {
                     shell: "from-[#FFF9ED] via-[#FFF8F1] to-[#FFFDF8]",
                     border: "border-amber-200/80",
                     badge: "bg-amber-100 text-amber-700 ring-amber-200/80",
@@ -50,40 +50,46 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                     cta: "from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600",
                     soft: "bg-amber-50/90 text-amber-700"
                 }
-                : status === "unlimited"
-                    ? {
-                        shell: "from-[#F1FFF8] via-[#F5FFFB] to-[#F8FFFC]",
-                        border: "border-emerald-200/80",
-                        badge: "bg-emerald-100 text-emerald-700 ring-emerald-200/80",
-                        glowA: "bg-emerald-200/35",
-                        glowB: "bg-teal-200/25",
-                        progressWrap: "bg-emerald-100/80",
-                        progressBar: "from-emerald-400 via-emerald-500 to-teal-500",
-                        progressGlow: "shadow-[0_0_24px_rgba(16,185,129,0.28)]",
-                        statBox: "border-emerald-200/70 bg-white/78",
-                        title: t("unlimited"),
-                        hint: t("unlimitedHint"),
-                        cta: "",
-                        soft: "bg-emerald-50/90 text-emerald-700"
-                    }
-                    : {
-                        shell: "from-[#FAF7F2] via-[#FBF8F5] to-[#FFF8F1]",
-                        border: "border-[#E9DED2]",
-                        badge: "bg-orange-100 text-orange-700 ring-orange-200/80",
-                        glowA: "bg-orange-100/35",
-                        glowB: "bg-rose-100/20",
-                        progressWrap: "bg-[#E9E2DA]",
-                        progressBar: "from-orange-400 via-orange-400 to-rose-500",
-                        progressGlow: "shadow-[0_0_20px_rgba(251,146,60,0.22)]",
-                        statBox: "border-[#E7DED4] bg-white/82",
-                        title: t("usage"),
-                        hint: t("normalHint", { usage: current, max }),
-                        cta: "from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700",
-                        soft: "bg-orange-50/90 text-orange-700"
-                    };
+              : status === "unlimited"
+                ? {
+                      shell: "from-[#F1FFF8] via-[#F5FFFB] to-[#F8FFFC]",
+                      border: "border-emerald-200/80",
+                      badge: "bg-emerald-100 text-emerald-700 ring-emerald-200/80",
+                      glowA: "bg-emerald-200/35",
+                      glowB: "bg-teal-200/25",
+                      progressWrap: "bg-emerald-100/80",
+                      progressBar: "from-emerald-400 via-emerald-500 to-teal-500",
+                      progressGlow: "shadow-[0_0_24px_rgba(16,185,129,0.28)]",
+                      statBox: "border-emerald-200/70 bg-white/78",
+                      title: t("unlimited"),
+                      hint: t("unlimitedHint"),
+                      cta: "",
+                      soft: "bg-emerald-50/90 text-emerald-700"
+                  }
+                : {
+                      shell: "from-[#FAF7F2] via-[#FBF8F5] to-[#FFF8F1]",
+                      border: "border-[#E9DED2]",
+                      badge: "bg-orange-100 text-orange-700 ring-orange-200/80",
+                      glowA: "bg-orange-100/35",
+                      glowB: "bg-rose-100/20",
+                      progressWrap: "bg-[#E9E2DA]",
+                      progressBar: "from-orange-400 via-orange-400 to-rose-500",
+                      progressGlow: "shadow-[0_0_20px_rgba(251,146,60,0.22)]",
+                      statBox: "border-[#E7DED4] bg-white/82",
+                      title: t("usage"),
+                      hint: t("normalHint", { usage: current, max }),
+                      cta: "from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700",
+                      soft: "bg-orange-50/90 text-orange-700"
+                  };
 
     const badgeText =
-        status === "full" ? t("badgeFull") : status === "near" ? t("badgeNear") : status === "unlimited" ? t("badgeUnlimited") : t("badgeInUse");
+        status === "full"
+            ? t("badgeFull")
+            : status === "near"
+              ? t("badgeNear")
+              : status === "unlimited"
+                ? t("badgeUnlimited")
+                : t("badgeInUse");
 
     const remaining = !isUnlimited ? Math.max(0, max - current) : null;
 
@@ -104,8 +110,18 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                 tone.shell,
                 tone.border
             ].join(" ")}>
-            <div className={["pointer-events-none absolute -left-8 top-0 h-28 w-28 rounded-full blur-3xl", tone.glowA].join(" ")} />
-            <div className={["pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full blur-3xl", tone.glowB].join(" ")} />
+            <div
+                className={[
+                    "pointer-events-none absolute -left-8 top-0 h-28 w-28 rounded-full blur-3xl",
+                    tone.glowA
+                ].join(" ")}
+            />
+            <div
+                className={[
+                    "pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full blur-3xl",
+                    tone.glowB
+                ].join(" ")}
+            />
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/90" />
 
             <div className="relative flex flex-col gap-5">
@@ -122,7 +138,9 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
 
                             <div>
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <p className="font-semibold text-[#1F2937] text-[15px] md:text-base">{tone.title}</p>
+                                    <p className="font-semibold text-[#1F2937] text-[15px] md:text-base">
+                                        {tone.title}
+                                    </p>
                                     <span
                                         className={[
                                             "inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-[11px] ring-1 ring-inset shadow-sm",
@@ -187,13 +205,9 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                         {isUnlimited ? (
                             <>{t("canCreateMessage")}</>
                         ) : isFull ? (
-                            <>
-                                {t("fullGroupsMessage", { max })}
-                            </>
+                            <>{t("fullGroupsMessage", { max })}</>
                         ) : (
-                            <>
-                                {t("remainingGroupsMessage", { remaining: remaining ?? 0 })}
-                            </>
+                            <>{t("remainingGroupsMessage", { remaining: remaining ?? 0 })}</>
                         )}
                     </div>
 
@@ -219,9 +233,7 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="rounded-[22px] border border-orange-200/70 bg-white/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur">
-                        <p className="text-[#5F6C7B] text-sm leading-6">
-                            {t("usageNote")}
-                        </p>
+                        <p className="text-[#5F6C7B] text-sm leading-6">{t("usageNote")}</p>
                     </motion.div>
                 ) : null}
             </div>

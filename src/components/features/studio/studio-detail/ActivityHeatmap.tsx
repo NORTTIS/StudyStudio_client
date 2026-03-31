@@ -249,10 +249,10 @@ export function ActivityHeatmap({ data, loading = false, onDateRangeChange }: Ac
                                                     setTooltip((prev) =>
                                                         prev
                                                             ? {
-                                                                ...prev,
-                                                                x: e.clientX,
-                                                                y: e.clientY
-                                                            }
+                                                                  ...prev,
+                                                                  x: e.clientX,
+                                                                  y: e.clientY
+                                                              }
                                                             : prev
                                                     );
                                                 }}

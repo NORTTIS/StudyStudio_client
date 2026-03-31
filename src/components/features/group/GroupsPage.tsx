@@ -1,17 +1,6 @@
 "use client";
 
-import {
-    ChevronDown,
-    FolderKanban,
-    Layers,
-    LayoutGrid,
-    List,
-    Plus,
-    Sparkles,
-    Star,
-    Users,
-    Users2
-} from "lucide-react";
+import { ChevronDown, FolderKanban, Layers, LayoutGrid, List, Plus, Sparkles, Star, Users, Users2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -71,13 +60,7 @@ function uniqueByIdKeepFirst(list: GroupCardDto[]) {
     return out;
 }
 
-function SectionReveal({
-    children,
-    delay = 0
-}: {
-    children: React.ReactNode;
-    delay?: number;
-}) {
+function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 22 }}
@@ -273,24 +256,14 @@ export function GroupsPage() {
         [favorites, managed, independent]
     );
 
-    const ownedGroups = useMemo(
-        () => allGroups.filter((g) => mapRole(g.role) === "owner"),
-        [allGroups]
-    );
+    const ownedGroups = useMemo(() => allGroups.filter((g) => mapRole(g.role) === "owner"), [allGroups]);
 
-    const ownedManaged = useMemo(
-        () => managed.filter((g) => mapRole(g.role) === "owner"),
-        [managed]
-    );
+    const ownedManaged = useMemo(() => managed.filter((g) => mapRole(g.role) === "owner"), [managed]);
 
-    const ownedIndependent = useMemo(
-        () => independent.filter((g) => mapRole(g.role) === "owner"),
-        [independent]
-    );
+    const ownedIndependent = useMemo(() => independent.filter((g) => mapRole(g.role) === "owner"), [independent]);
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
-    const currentGroupsCount =
-        usage.current > 0 ? usage.current : ownedGroups.length;
+    const currentGroupsCount = usage.current > 0 ? usage.current : ownedGroups.length;
     const limitReached = currentGroupsCount >= maxGroups;
 
     const onToggleStar = async (groupIdRaw: string) => {
@@ -333,8 +306,6 @@ export function GroupsPage() {
         }
     };
 
-
-
     return (
         <>
             <div className="relative -mt-px min-h-screen overflow-hidden bg-white px-3 pt-0 pb-4 md:px-4 xl:px-5">
@@ -370,9 +341,7 @@ export function GroupsPage() {
                                                 </span>
                                             </div>
 
-                                            <p className="mt-1 text-[#7C6A58] text-sm leading-6">
-                                                {t("subtitle")}
-                                            </p>
+                                            <p className="mt-1 text-[#7C6A58] text-sm leading-6">{t("subtitle")}</p>
                                         </div>
                                     </div>
 
@@ -667,8 +636,18 @@ function GroupsSection({
                 className
             )}>
             <div className="pointer-events-none absolute inset-0 rounded-[34px] bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(255,255,255,0.18))]" />
-            <div className={cn("pointer-events-none absolute -left-8 top-10 h-28 w-28 rounded-full blur-3xl", theme.glowA)} />
-            <div className={cn("pointer-events-none absolute right-[-20px] top-[-10px] h-40 w-40 rounded-full blur-3xl", theme.glowB)} />
+            <div
+                className={cn(
+                    "pointer-events-none absolute -left-8 top-10 h-28 w-28 rounded-full blur-3xl",
+                    theme.glowA
+                )}
+            />
+            <div
+                className={cn(
+                    "pointer-events-none absolute right-[-20px] top-[-10px] h-40 w-40 rounded-full blur-3xl",
+                    theme.glowB
+                )}
+            />
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/95" />
             <div className="pointer-events-none absolute inset-y-0 right-0 w-[35%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.30),transparent_70%)] opacity-70" />
 
@@ -682,7 +661,10 @@ function GroupsSection({
                         <motion.div
                             whileHover={{ rotate: 5, scale: 1.06 }}
                             transition={{ duration: 0.22 }}
-                            className={cn("rounded-[22px] ring-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]", theme.ring)}>
+                            className={cn(
+                                "rounded-[22px] ring-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)]",
+                                theme.ring
+                            )}>
                             <IconBadge variant={iconVariant} size="sm" className="h-11 w-11 rounded-[18px]">
                                 <Icon className="h-4.5 w-4.5 text-white drop-shadow-sm" />
                             </IconBadge>
@@ -708,9 +690,7 @@ function GroupsSection({
                                     {count > 0 ? t("active") : t("noGroups")}
                                 </span>
                                 <p className="truncate text-[#94867B] text-xs">
-                                    {count > 0
-                                        ? `${count} ${t("cardsShowing")}`
-                                        : t("addGroupsHint")}
+                                    {count > 0 ? `${count} ${t("cardsShowing")}` : t("addGroupsHint")}
                                 </p>
                             </div>
                         </div>
@@ -727,19 +707,13 @@ function GroupsSection({
                                 theme.buttonHover
                             )}>
                             <span>{expanded ? t("collapse") : t("viewAll")}</span>
-                            <ChevronDown
-                                className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")}
-                            />
+                            <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />
                         </motion.button>
                     )}
                 </div>
             </div>
 
-            <motion.div
-                className={cn(
-                    "relative px-5 py-5 md:px-6",
-                    theme.content
-                )}>
+            <motion.div className={cn("relative px-5 py-5 md:px-6", theme.content)}>
                 {loading ? (
                     <SectionSkeleton />
                 ) : visibleItems.length === 0 ? (
@@ -748,7 +722,12 @@ function GroupsSection({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
                         className="relative overflow-hidden rounded-[28px] border border-white/80 border-dashed bg-white/72 px-6 py-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_14px_34px_rgba(15,23,42,0.04)] backdrop-blur-xl">
-                        <div className={cn("pointer-events-none absolute -top-10 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full blur-3xl", theme.glowA)} />
+                        <div
+                            className={cn(
+                                "pointer-events-none absolute -top-10 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full blur-3xl",
+                                theme.glowA
+                            )}
+                        />
                         <div
                             className={cn(
                                 "mx-auto flex h-16 w-16 items-center justify-center rounded-full shadow-sm ring-1 ring-white/80",
@@ -758,9 +737,7 @@ function GroupsSection({
                         </div>
                         <div className="mt-4 space-y-1.5">
                             <p className="font-semibold text-[#544A42] text-sm">{emptyText}</p>
-                            <p className="text-[#9B8F84] text-xs">
-                                {t("emptyAreaHint")}
-                            </p>
+                            <p className="text-[#9B8F84] text-xs">{t("emptyAreaHint")}</p>
                         </div>
                     </motion.div>
                 ) : (
@@ -786,7 +763,10 @@ function GroupsSection({
                                             ease: [0.22, 1, 0.36, 1]
                                         }}
                                         whileHover={{ y: -6, scale: 1.01 }}
-                                        className={cn("group/card relative", view === "list" ? "w-full" : "self-start")}>
+                                        className={cn(
+                                            "group/card relative",
+                                            view === "list" ? "w-full" : "self-start"
+                                        )}>
                                         <div className="pointer-events-none absolute inset-0 rounded-[26px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_42%)] opacity-0 blur-xl transition duration-300 group-hover/card:opacity-100" />
                                         <div className="pointer-events-none absolute inset-0 rounded-[26px] shadow-[0_24px_44px_rgba(15,23,42,0.00)] transition duration-300 group-hover/card:shadow-[0_24px_44px_rgba(15,23,42,0.12)]" />
                                         <div className="relative rounded-[26px]">

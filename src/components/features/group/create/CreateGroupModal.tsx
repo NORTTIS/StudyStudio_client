@@ -383,9 +383,7 @@ export function CreateGroupModal({
                     <div className="flex items-start justify-between gap-6 px-8 py-7 sm:px-10">
                         <div className="min-w-0">
                             <h2 className="font-bold text-3xl text-[#2A2438] tracking-tight">{t("title")}</h2>
-                            <p className="mt-2 text-[#6F6B99] text-sm">
-                                {t("subtitle")}
-                            </p>
+                            <p className="mt-2 text-[#6F6B99] text-sm">{t("subtitle")}</p>
                         </div>
 
                         <button
@@ -425,7 +423,9 @@ export function CreateGroupModal({
                             <div className="min-h-0 space-y-7 overflow-y-auto pr-2">
                                 <div className="grid gap-6 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <div className="font-semibold text-[#2A2438] text-base">{t("createModeLabel")}</div>
+                                        <div className="font-semibold text-[#2A2438] text-base">
+                                            {t("createModeLabel")}
+                                        </div>
                                         <div className="relative mt-3">
                                             <select
                                                 value={createMode}
@@ -451,7 +451,9 @@ export function CreateGroupModal({
 
                                     {variant !== "studio" ? (
                                         <div className="sm:col-span-2">
-                                            <div className="font-semibold text-[#2A2438] text-base">{t("groupTypeLabel")}</div>
+                                            <div className="font-semibold text-[#2A2438] text-base">
+                                                {t("groupTypeLabel")}
+                                            </div>
                                             <div className="relative mt-3">
                                                 <select
                                                     value={type}
@@ -616,7 +618,9 @@ export function CreateGroupModal({
                                                 />
                                                 <div className="mt-2 flex items-center justify-between gap-3">
                                                     <p className="text-[#6F6B99] text-xs">
-                                                        {t("groupPrefixHint", { prefix: groupPrefix || t("prefixFallback") })}
+                                                        {t("groupPrefixHint", {
+                                                            prefix: groupPrefix || t("prefixFallback")
+                                                        })}
                                                     </p>
                                                     <div className="shrink-0 text-[#6F6B99] text-xs">
                                                         {groupPrefix.length}/{GROUP_NAME_MAX_LENGTH}
@@ -744,9 +748,7 @@ export function CreateGroupModal({
                             <div className="min-h-0 min-w-0 overflow-y-auto pr-2">
                                 <div className="mb-3">
                                     <div className="font-semibold text-[#2A2438] text-base">{t("templatesTitle")}</div>
-                                    <div className="mt-1 text-[#6F6B99] text-sm">
-                                        {t("templatesSubtitle")}
-                                    </div>
+                                    <div className="mt-1 text-[#6F6B99] text-sm">{t("templatesSubtitle")}</div>
                                 </div>
 
                                 {loadingOptions ? (
@@ -780,12 +782,15 @@ export function CreateGroupModal({
                                             <button
                                                 key={template.id}
                                                 type="button"
-                                                onClick={() => setTemplateId((prev) => (prev === template.id ? "" : template.id))}
+                                                onClick={() =>
+                                                    setTemplateId((prev) => (prev === template.id ? "" : template.id))
+                                                }
                                                 disabled={creating}
-                                                className={`overflow-hidden rounded-2xl border text-left transition ${selected
+                                                className={`overflow-hidden rounded-2xl border text-left transition ${
+                                                    selected
                                                         ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
                                                         : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
-                                                    }`}
+                                                }`}
                                                 title={`${template.name}\n\n${template.desc || ""}`}>
                                                 <div className="flex items-center justify-center bg-white py-8">
                                                     <div className="grid h-14 w-14 place-items-center rounded-xl border border-[#E6E6E6] bg-white text-[#6F6B99]">

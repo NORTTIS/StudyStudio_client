@@ -83,10 +83,7 @@ export async function getStudioCompletionTrend(
  * @param studioId - The studio UUID
  * @param options - startDate, endDate (YYYY-MM-DD)
  */
-export async function getStudioGroupActivity(
-    studioId: string,
-    options?: { startDate?: string; endDate?: string }
-) {
+export async function getStudioGroupActivity(studioId: string, options?: { startDate?: string; endDate?: string }) {
     const params = new URLSearchParams();
     if (options?.startDate) params.set("startDate", options.startDate);
     if (options?.endDate) params.set("endDate", options.endDate);
@@ -129,11 +126,7 @@ export async function getGroupAnalytics(
     if (endDate) params.set("endDate", endDate);
     const query = params.toString();
 
-    return apiGet<GroupAnalyticsResponse>(
-        `/analytics/group/${groupId}${query ? `?${query}` : ""}`,
-        locale,
-        false
-    );
+    return apiGet<GroupAnalyticsResponse>(`/analytics/group/${groupId}${query ? `?${query}` : ""}`, locale, false);
 }
 
 /**
@@ -166,9 +159,7 @@ export async function getGroupTrend(
     if (options?.endDate) params.set("endDate", options.endDate);
     const query = params.toString();
 
-    return apiGet<MemberProgressTrendData[]>(
-        `/analytics/group/${groupId}/trend${query ? `?${query}` : ""}`
-    );
+    return apiGet<MemberProgressTrendData[]>(`/analytics/group/${groupId}/trend${query ? `?${query}` : ""}`);
 }
 
 /**
@@ -189,7 +180,5 @@ export async function getGroupHeatmap(
     if (options?.endDate) params.set("endDate", options.endDate);
     const query = params.toString();
 
-    return apiGet<MemberHeatmapData[]>(
-        `/analytics/group/${groupId}/heatmap${query ? `?${query}` : ""}`
-    );
+    return apiGet<MemberHeatmapData[]>(`/analytics/group/${groupId}/heatmap${query ? `?${query}` : ""}`);
 }

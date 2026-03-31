@@ -68,8 +68,7 @@ const ChevronDownIcon = ({ open = false }: { open?: boolean }) => (
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={`transition-transform duration-300 ease-out ${open ? "rotate-180" : "rotate-0"}`}
-    >
+        className={`transition-transform duration-300 ease-out ${open ? "rotate-180" : "rotate-0"}`}>
         <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
@@ -136,10 +135,6 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
-
-
-
-
 
     const userData = useMemo(() => {
         if (userProfile) {
@@ -219,14 +214,15 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                         <button
                             type="button"
                             onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                            className="group flex items-center gap-2 rounded-xl px-2.5 py-2 transition-all duration-300 ease-out hover:bg-[#F4F5FA] hover:shadow-sm"
-                        >
+                            className="group flex items-center gap-2 rounded-xl px-2.5 py-2 transition-all duration-300 ease-out hover:bg-[#F4F5FA] hover:shadow-sm">
                             <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gray-200 ring-2 ring-transparent transition-all duration-300 ease-out group-hover:ring-[#FFE1CC]">
                                 <Image src={userData.avatar} alt={userData.name} fill className="object-cover" />
                             </div>
 
                             <div className="hidden max-w-[220px] text-left md:block">
-                                <p className="truncate text-sm font-semibold leading-5 text-[#261E33]">{userData.name}</p>
+                                <p className="truncate text-sm font-semibold leading-5 text-[#261E33]">
+                                    {userData.name}
+                                </p>
                                 <p className="truncate text-xs leading-4 text-[#9CA3AF]">{userData.email}</p>
                             </div>
 
@@ -236,11 +232,11 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                         </button>
 
                         <div
-                            className={`absolute right-0 top-full z-50 mt-2 w-60 origin-top-right rounded-2xl border border-[#E5E5E5] bg-white shadow-[0_18px_50px_rgba(38,30,51,0.16)] transition-all duration-200 ease-out ${isUserMenuOpen
-                                ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                                : "pointer-events-none -translate-y-2 scale-[0.98] opacity-0"
-                                }`}
-                        >
+                            className={`absolute right-0 top-full z-50 mt-2 w-60 origin-top-right rounded-2xl border border-[#E5E5E5] bg-white shadow-[0_18px_50px_rgba(38,30,51,0.16)] transition-all duration-200 ease-out ${
+                                isUserMenuOpen
+                                    ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                                    : "pointer-events-none -translate-y-2 scale-[0.98] opacity-0"
+                            }`}>
                             <div className="border-b border-[#E5E5E5] px-4 py-3">
                                 <p className="truncate text-sm font-semibold text-[#261E33]">{userData.name}</p>
                                 <p className="truncate text-xs text-[#9CA3AF]">{userData.email}</p>
@@ -251,8 +247,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                                     <Link
                                         href={`/${locale}/settings`}
                                         onClick={() => setIsUserMenuOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]"
-                                    >
+                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]">
                                         <SettingsIcon />
                                         <span>{t("settings")}</span>
                                     </Link>
@@ -260,8 +255,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                                     <Link
                                         href={`/${locale}/profile`}
                                         onClick={() => setIsUserMenuOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]"
-                                    >
+                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]">
                                         <UserIcon />
                                         <span>{t("profile")}</span>
                                     </Link>
@@ -273,8 +267,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                                     type="button"
                                     onClick={handleLogout}
                                     disabled={isLoggingOut}
-                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 transition-all duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
+                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 transition-all duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50">
                                     <LogoutIcon />
                                     <span>{isLoggingOut ? t("loggingOut") : t("logout")}</span>
                                 </button>

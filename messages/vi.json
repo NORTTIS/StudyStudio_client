@@ -2,7 +2,7 @@
     "Common": {
         "loading": "Đang tải...",
         "checkingAuth": "Đang kiểm tra xác thực...",
-        "aiQATab": "AI Q&A",
+        "aiQATab": "Hỏi đáp AI",
         "missingAccessToken": "Thiếu access token",
         "missingInviteUrl": "thiếu inviteUrl",
         "inviteCreateFailed": "Tạo link thất bại",
@@ -598,7 +598,7 @@
     "Sidebar": {
         "home": "Trang chủ",
         "groups": "Nhóm",
-        "master": "Master",
+        "master": "Quản lý",
         "announcements": "Thông báo",
         "dashboard": "Bảng điều khiển",
         "users": "Người dùng",
@@ -778,17 +778,17 @@
         }
     },
     "MasterPage": {
-        "title": "Master",
+        "title": "Quản lý",
         "subtitle": "Quản lý các studio và không gian làm việc của bạn",
         "searchPlaceholder": "Tìm kiếm studio, công việc...",
         "createButton": "Không gian mới",
         "infoBanner": "Tạo và quản lý các studio để tổ chức công việc của bạn hiệu quả hơn.",
-        "studiosUsed": "studios đã sử dụng",
+        "studiosUsed": "không gian đã sử dụng",
         "personal": "Cá nhân",
         "group": "Nhóm",
         "groups": "Nhóm",
         "members": "thành viên",
-        "videos": "videos",
+        "videos": "video",
         "noStudios": "Chưa có studio nào. Tạo studio đầu tiên của bạn!",
         "noSearchResults": "Không tìm thấy studio nào phù hợp",
         "error": "Lỗi",
@@ -828,7 +828,7 @@
         "detailModal": {
             "description": "Mô tả",
             "members": "Thành viên",
-            "videos": "Videos",
+            "videos": "Video",
             "created": "Ngày tạo",
             "updated": "Cập nhật lần cuối",
             "close": "Đóng",
@@ -838,7 +838,7 @@
         "deleteModal": {
             "title": "Xóa Studio",
             "message": "Bạn có chắc chắn muốn xóa",
-            "warning": "Cảnh báo: Tất cả các nhóm (groups) bên trong studio này cũng sẽ bị xóa. Hành động này không thể hoàn tác.",
+            "warning": "Cảnh báo: Tất cả các nhóm bên trong không gian này cũng sẽ bị xóa. Hành động này không thể hoàn tác.",
             "cancel": "Hủy",
             "confirm": "Xóa",
             "success": "Xóa studio thành công!",
@@ -893,8 +893,8 @@
                 "quickStatsTitle": "Thống kê nhanh",
                 "quickStatsSubtitle": "Tổng quan hiệu suất",
                 "created": "Ngày tạo"
+            }
         }
-    }
     },
     "MemberList": {
         "groupRole": {
@@ -977,7 +977,7 @@
             "titleHighlight": "học tập & dự án",
             "description": "Phối hợp cùng nhóm, theo dõi tiến độ và hoàn thành mục tiêu nhanh hơn.",
             "createButton": "Tạo nhóm →",
-            "imageAlt": "Group collaboration"
+            "imageAlt": "Hợp tác nhóm"
         },
         "howToUse": {
             "title": "Cách sử dụng",
@@ -1033,7 +1033,7 @@
             "subtitle": "Tổ chức ghi chú, tài liệu và kế hoạch học tập.",
             "subtitleExtra": "Tất cả trong một Không gian cá nhân trực quan, dễ sử dụng.",
             "createButton": "Tạo không gian của bạn →",
-            "imageAlt": "Landing illustration"
+            "imageAlt": "Minh họa không gian cá nhân"
         },
         "howToUse": {
             "title": "Cách sử dụng",
@@ -1043,7 +1043,7 @@
             },
             "step2": {
                 "title": "Thêm ghi chú, tài liệu",
-                "description": "Thêm văn bản, hình ảnh, link và file\nTất cả gọn gàng trên một bảng"
+                "description": "Thêm văn bản, hình ảnh, đường dẫn và tệp\nTất cả gọn gàng trên một bảng"
             },
             "step3": {
                 "title": "Lập kế hoạch học tập",
@@ -1058,11 +1058,11 @@
             "title": "Bạn có thể làm gì?",
             "smartNotes": {
                 "title": "Ghi chú thông minh",
-                "description": "Tạo và ghi chú với văn bản,\nhình ảnh, link"
+                "description": "Tạo và ghi chú với văn bản,\nhình ảnh, đường dẫn"
             },
             "tasks": {
                 "title": "Công việc, mục tiêu",
-                "description": "Lập danh sách việc cần làm\nđặt deadline và theo dõi tiến độ\nmỗi ngày"
+                "description": "Lập danh sách việc cần làm\nđặt hạn chót và theo dõi tiến độ\nmỗi ngày"
             },
             "documents": {
                 "title": "Tổ chức tài liệu",
@@ -1103,7 +1103,7 @@
             "executiveLabel": "Bảng điều hành",
             "executiveCaption": "Theo dõi hiệu suất tổng thể theo thời gian thực",
             "createButton": "Bắt đầu quản lý →",
-            "imageAlt": "Management Illustration"
+            "imageAlt": "Minh họa không gian quản lý"
         },
         "howToUse": {
             "title": "Cách sử dụng",
@@ -1201,6 +1201,8 @@
         "more": "Thêm",
         "untitled": "Không có tên",
         "unknownStatus": "không rõ",
+        "unknownUploader": "Người tải lên không xác định",
+        "uploadedBy": "Tải lên bởi {name}",
         "cannotLoadDocuments": "Không thể tải danh sách tài liệu",
         "cannotDetectGroupId": "Không xác định được groupId từ URL",
         "invalidFiles": "Tệp không hợp lệ: {names}",
@@ -1368,6 +1370,54 @@
             "copyFailed": "Sao chép thất bại: không thể sao chép liên kết mời. Vui lòng sao chép thủ công.",
             "createLinkFailedEmpty": "Tạo liên kết thất bại: không nhận được liên kết mời. Vui lòng thử lại.",
             "createLinkFailed": "Tạo liên kết thất bại: không thể tạo liên kết mời. Vui lòng thử lại."
+        }
+    },
+    "CreateGroupModal": {
+        "title": "Tạo nhóm mới",
+        "subtitle": "Thiết lập thông tin nhóm và chọn mẫu nếu cần.",
+        "close": "Đóng",
+        "createModeLabel": "Chế độ tạo",
+        "createModeSingle": "Một nhóm",
+        "createModeBatch": "Hàng loạt",
+        "groupTypeLabel": "Loại nhóm",
+        "groupTypeIndependent": "Độc lập",
+        "groupTypeManaged": "Thuộc studio",
+        "ownerStudiosLabel": "Studio của bạn",
+        "noOwnerStudios": "Không tìm thấy studio bạn sở hữu",
+        "untitledStudio": "Studio chưa đặt tên",
+        "groupNameLabel": "Tên nhóm",
+        "groupNamePlaceholder": "Nhập tên nhóm...",
+        "colorAndIconLabel": "Màu sắc và biểu tượng",
+        "groupPrefixLabel": "Tiền tố nhóm",
+        "groupPrefixPlaceholder": "Nhập tiền tố nhóm...",
+        "groupPrefixHint": "Tên nhóm sẽ theo dạng \"{prefix} 1\", \"{prefix} 2\", ...",
+        "prefixFallback": "Nhóm",
+        "groupCountLabel": "Số lượng nhóm",
+        "groupCountPlaceholder": "Nhập số lượng nhóm",
+        "groupCountMaxHint": "Hiện bạn có thể tạo tối đa {remaining} nhóm.",
+        "descriptionLabel": "Mô tả",
+        "descriptionPlaceholder": "Nhập mô tả nhóm...",
+        "batchFromFileTitle": "Tạo hàng loạt từ file",
+        "batchFromFileSubtitle": "Tải file CSV mẫu, điền dữ liệu rồi tải lên để tạo thành viên nhanh.",
+        "downloadTemplate": "Tải mẫu",
+        "uploadFile": "Tải file lên",
+        "templatesTitle": "Mẫu nhóm",
+        "templatesSubtitle": "Chọn mẫu để điền sẵn thiết lập cho nhóm.",
+        "loadingTemplates": "Đang tải mẫu...",
+        "emptyTemplatesTitle": "Chưa có mẫu nào",
+        "emptyTemplatesSubtitle": "Hãy tạo mẫu trước để tái sử dụng cấu hình nhanh hơn.",
+        "templateFallbackName": "Mẫu chưa đặt tên",
+        "noDescription": "Không có mô tả",
+        "cancel": "Hủy",
+        "create": "Tạo",
+        "creating": "Đang tạo...",
+        "limitReached": "Bạn đã đạt giới hạn gói hiện tại ({limit} nhóm).",
+        "errors": {
+            "loadUser": "Không thể tải thông tin người dùng.",
+            "loadStudios": "Không thể tải danh sách studio.",
+            "loadTemplates": "Không thể tải danh sách mẫu.",
+            "loadData": "Không thể tải dữ liệu cần thiết.",
+            "createFailed": "Không thể tạo nhóm. Vui lòng thử lại."
         }
     },
     "AdminSubscriptions": {
@@ -1665,6 +1715,19 @@
             "actions": "Hành động"
         }
     },
+    "currentPlan": {
+        "title": "Gói hiện tại",
+        "subtitle": "Bạn đang sử dụng",
+        "active": "Đang hoạt động",
+        "changePlan": "Đổi gói",
+        "cancelPlan": "Hủy đăng ký",
+        "currentButton": "Gói hiện tại"
+    },
+    "invoiceInfo": {
+        "editButton": "Sửa thông tin hóa đơn",
+        "updateButton": "Cập nhật thông tin hóa đơn",
+        "visaText": "Visa ****1234"
+    },
     "PaymentPage": {
         "title": "Gói đăng ký",
         "subtitle": "Chọn gói phù hợp với nhu cầu của bạn",
@@ -1831,10 +1894,10 @@
         "sortDesc": "Giảm dần",
         "dateFilterButton": "Lọc theo ngày",
         "dateFilterTitle": "Lọc theo ngày",
-        "startFrom": "Start date từ",
-        "startTo": "Start date đến",
-        "dueFrom": "Due date từ",
-        "dueTo": "Due date đến",
+        "startFrom": "Ngày bắt đầu từ",
+        "startTo": "Ngày bắt đầu đến",
+        "dueFrom": "Ngày hết hạn từ",
+        "dueTo": "Ngày hết hạn đến",
         "clearFilter": "Xóa bộ lọc",
         "applyFilter": "Lọc",
         "cancel": "Hủy",
@@ -1989,6 +2052,13 @@
         "confirmDeleteTask": "Xác nhận xóa công việc"
     },
     "GroupStudioHeader": {
+        "roles": {
+            "owner": "Chủ sở hữu",
+            "moderator": "Điều phối viên",
+            "member": "Thành viên",
+            "commenter": "Người bình luận",
+            "viewer": "Người xem"
+        },
         "tabs": {
             "board": "Bảng",
             "list": "Danh sách",
@@ -2001,6 +2071,25 @@
         },
         "errors": {
             "fetchDetailFailed": "Không thể tải thông tin nhóm"
+        },
+        "inviteAcceptPage": {
+            "invitation": "Lời mời",
+            "loading": "Đang tải...",
+            "successTitle": "Bạn đã tham gia nhóm thành công",
+            "redirecting": "Đang chuyển hướng...",
+            "notice": "Thông báo",
+            "alreadyMember": "Bạn đã là thành viên của nhóm này rồi.",
+            "goToGroups": "Đi tới Groups",
+            "backHome": "Về trang chủ",
+            "submittingTitle": "Lời mời",
+            "checking": "Đang kiểm tra lời mời...",
+            "notLoggedIn": "Bạn chưa đăng nhập",
+            "loginPrompt": "Vui lòng đăng nhập để chấp nhận lời mời vào nhóm.",
+            "loginToContinue": "Đăng nhập để tiếp tục",
+            "acceptPrompt": "Nhấn \"Chấp nhận gia nhập\" để tham gia nhóm.",
+            "accept": "Chấp nhận gia nhập",
+            "missingToken": "Missing invitation token.",
+            "serverError": "Chấp nhận lời mời thất bại."
         }
     },
     "GroupBoardScreen": {
@@ -2178,6 +2267,7 @@
                 "completed": "Hoàn thành",
                 "created": "Tạo mới",
                 "updated": "Cập nhật",
+                "deleted": "Đã xóa",
                 "assigned": "Được giao",
                 "comments": "Bình luận",
                 "messages": "Tin nhắn"
@@ -2198,7 +2288,25 @@
             "groupTasks": "Công việc của nhóm",
             "groupTaskStatus": "Trạng thái công việc nhóm",
             "me": "Tôi",
-            "group": "Nhóm"
+            "group": "Nhóm",
+            "myTaskDistribution": "Phân bổ trạng thái công việc cá nhân",
+            "myTaskDistributionDesc": "Trạng thái công việc cá nhân trong nhóm hiện tại.",
+            "groupTaskDistribution": "Tổng quan trạng thái công việc nhóm",
+            "groupTaskDistributionDesc": "Tổng quan trạng thái công việc của toàn bộ nhóm.",
+            "progressOverTime": "Tiến độ công việc theo thời gian",
+            "progressOverTimeDesc": "So sánh tổng số công việc hoàn thành theo thời gian.",
+            "compareByMember": "So sánh trạng thái công việc theo thành viên",
+            "compareByMemberDesc": "Xem phân bổ công việc theo từng thành viên."
+        },
+        "timeLabels": {
+            "week": ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+            "month": ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5"],
+            "year": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"]
+        },
+        "chartFilterLabels": {
+            "week": "Tuần",
+            "month": "Tháng",
+            "year": "Năm"
         }
     },
     "GroupSettingView": {
@@ -2566,9 +2674,11 @@
             "failed": "Tải tệp thất bại"
         },
         "download": {
+            "action": "Tải xuống",
             "failed": "Tải xuống thất bại"
         },
         "delete": {
+            "action": "Xóa",
             "title": "Xóa tài liệu",
             "description": "Bạn có chắc chắn muốn xóa tài liệu này không?",
             "cancel": "Hủy",
@@ -2581,6 +2691,25 @@
             "title": "Chưa có tài liệu",
             "description": "Hãy tải tài liệu đầu tiên lên để bắt đầu"
         },
-        "a": "a"
+        "a": "tệp"
+    },
+    "StudioDateRange": {
+        "title": "Khoảng thời gian",
+        "notAvailable": "Chưa có thông tin thời gian",
+        "labels": {
+            "start": "Bắt đầu",
+            "end": "Kết thúc",
+            "remaining": "Còn lại",
+            "overdue": "Quá hạn"
+        },
+        "days": "{count} ngày",
+        "status": {
+            "overdue": "Quá hạn",
+            "upcoming": "Sắp tới"
+        },
+        "progress": {
+            "title": "Tiến độ",
+            "elapsed": "Đã trôi qua {elapsed} / {total} ngày"
+        }
     }
 }

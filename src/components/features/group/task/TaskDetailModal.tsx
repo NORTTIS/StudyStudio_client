@@ -207,11 +207,7 @@ function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function compressAllMentionsForDisplay(
-    text: string,
-    membersById: Record<string, string>,
-    authorId?: string
-) {
+function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId?: string) {
     const allMemberIds = Object.keys(membersById)
         .map((id) => String(id).trim())
         .filter(Boolean);
@@ -219,9 +215,7 @@ function compressAllMentionsForDisplay(
     if (allMemberIds.length === 0) return text;
 
     const normalizedAuthorId = normalizeUserId(authorId);
-    const expectedAllIds = allMemberIds.filter(
-        (id) => normalizeUserId(id) !== normalizedAuthorId
-    );
+    const expectedAllIds = allMemberIds.filter((id) => normalizeUserId(id) !== normalizedAuthorId);
 
     if (expectedAllIds.length === 0) return text;
 
@@ -261,19 +255,15 @@ function compressAllMentionsForDisplay(
 }
 
 function normalizeUserId(value?: string | null) {
-    return String(value ?? "").trim().toLowerCase();
+    return String(value ?? "")
+        .trim()
+        .toLowerCase();
 }
 
-function expandMentionAll(
-    payloadText: string,
-    membersById: Record<string, string>,
-    excludedIds: string[] = []
-) {
+function expandMentionAll(payloadText: string, membersById: Record<string, string>, excludedIds: string[] = []) {
     if (!payloadText.includes("@__all__")) return payloadText;
 
-    const excludedSet = new Set(
-        excludedIds.map((id) => normalizeUserId(id)).filter(Boolean)
-    );
+    const excludedSet = new Set(excludedIds.map((id) => normalizeUserId(id)).filter(Boolean));
 
     const memberIds = Object.keys(membersById).filter((id) => {
         const normalizedId = normalizeUserId(id);
@@ -281,12 +271,18 @@ function expandMentionAll(
     });
 
     if (memberIds.length === 0) {
-        return payloadText.replace(/@__all__\b/g, "").replace(/\s{2,}/g, " ").trim();
+        return payloadText
+            .replace(/@__all__\b/g, "")
+            .replace(/\s{2,}/g, " ")
+            .trim();
     }
 
     const mentions = memberIds.map((id) => `@${id}`).join(" ");
 
-    return payloadText.replace(/@__all__\b/g, mentions).replace(/\s{2,}/g, " ").trim();
+    return payloadText
+        .replace(/@__all__\b/g, mentions)
+        .replace(/\s{2,}/g, " ")
+        .trim();
 }
 
 type UpdateTaskRequest = components["schemas"]["UpdateTaskRequest"];
@@ -542,35 +538,38 @@ const MentionTextarea = React.forwardRef<
             .slice(0, 8);
     }, [members, meId, mentionAllLabel, mentionAllSubtitle, query]);
 
-    const detectFromText = React.useCallback((text: string, caret: number) => {
-        let i = caret - 1;
+    const detectFromText = React.useCallback(
+        (text: string, caret: number) => {
+            let i = caret - 1;
 
-        if (i >= 0 && /\s/.test(text[i])) {
+            if (i >= 0 && /\s/.test(text[i])) {
+                setOpen(false);
+                setAnchor(null);
+                setQuery("");
+                return;
+            }
+
+            while (i >= 0 && isWordChar(text[i])) i--;
+
+            if (i >= 0 && text[i] === "@") {
+                const q = text.slice(i + 1, caret);
+                setQuery(q);
+                setAnchor({ start: i, end: caret });
+                setOpen(true);
+                setActiveIndex(0);
+
+                requestAnimationFrame(() => {
+                    updatePopupPosition();
+                });
+                return;
+            }
+
             setOpen(false);
             setAnchor(null);
             setQuery("");
-            return;
-        }
-
-        while (i >= 0 && isWordChar(text[i])) i--;
-
-        if (i >= 0 && text[i] === "@") {
-            const q = text.slice(i + 1, caret);
-            setQuery(q);
-            setAnchor({ start: i, end: caret });
-            setOpen(true);
-            setActiveIndex(0);
-
-            requestAnimationFrame(() => {
-                updatePopupPosition();
-            });
-            return;
-        }
-
-        setOpen(false);
-        setAnchor(null);
-        setQuery("");
-    }, [updatePopupPosition]);
+        },
+        [updatePopupPosition]
+    );
 
     const insertMention = (user: MentionUser) => {
         const el = taRef.current;
@@ -699,9 +698,7 @@ const MentionTextarea = React.forwardRef<
             text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
         }
 
-        const mentionAllAliases = [mentionAllLabel, "all"]
-            .map((alias) => alias.trim())
-            .filter(Boolean);
+        const mentionAllAliases = [mentionAllLabel, "all"].map((alias) => alias.trim()).filter(Boolean);
 
         for (const alias of mentionAllAliases) {
             const aliasRegex = new RegExp(`@${escapeRegExp(alias)}\\b`, "gi");
@@ -758,83 +755,83 @@ const MentionTextarea = React.forwardRef<
     const popup =
         mounted && open && !disabled && popupPosition
             ? createPortal(
-                <div
-                    ref={popupRef}
-                    className="fixed z-[22000] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
-                    style={{
-                        left: popupPosition.left,
-                        top: popupPosition.top,
-                        width: popupPosition.width,
-                        maxHeight: 320,
-                        transform:
-                            popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
-                                ? "translateY(-100%)"
-                                : undefined
-                    }}
-                >
-                    {filtered.length > 0 ? (
-                        <div className="max-h-80 overflow-y-auto py-2">
-                            {filtered.map((u, idx) => {
-                                const isActive = idx === activeIndex;
-                                const displayName = u.isAll ? mentionAllLabel : u.name;
-                                const subtitle = u.subtitle || (u.isAll ? mentionAllSubtitle : "");
+                  <div
+                      ref={popupRef}
+                      className="fixed z-[22000] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                      style={{
+                          left: popupPosition.left,
+                          top: popupPosition.top,
+                          width: popupPosition.width,
+                          maxHeight: 320,
+                          transform:
+                              popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
+                                  ? "translateY(-100%)"
+                                  : undefined
+                      }}>
+                      {filtered.length > 0 ? (
+                          <div className="max-h-80 overflow-y-auto py-2">
+                              {filtered.map((u, idx) => {
+                                  const isActive = idx === activeIndex;
+                                  const displayName = u.isAll ? mentionAllLabel : u.name;
+                                  const subtitle = u.subtitle || (u.isAll ? mentionAllSubtitle : "");
 
-                                return (
-                                    <button
-                                        key={u.id}
-                                        type="button"
-                                        onMouseDown={(ev) => {
-                                            ev.preventDefault();
-                                            insertMention(u);
-                                        }}
-                                        className={cn(
-                                            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
-                                            isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
-                                        )}
-                                    >
-                                        <div className="shrink-0">
-                                            {u.isAll ? (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
-                                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
-                                                        <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                                                    </svg>
-                                                </div>
-                                            ) : u.avatarUrl ? (
-                                                <Image
-                                                    src={u.avatarUrl}
-                                                    alt={displayName}
-                                                    width={40}
-                                                    height={40}
-                                                    unoptimized
-                                                    className="h-10 w-10 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
-                                                    {safeInitialsFromName(displayName)}
-                                                </div>
-                                            )}
-                                        </div>
+                                  return (
+                                      <button
+                                          key={u.id}
+                                          type="button"
+                                          onMouseDown={(ev) => {
+                                              ev.preventDefault();
+                                              insertMention(u);
+                                          }}
+                                          className={cn(
+                                              "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
+                                              isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
+                                          )}>
+                                          <div className="shrink-0">
+                                              {u.isAll ? (
+                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
+                                                      <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                                                          <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                                      </svg>
+                                                  </div>
+                                              ) : u.avatarUrl ? (
+                                                  <Image
+                                                      src={u.avatarUrl}
+                                                      alt={displayName}
+                                                      width={40}
+                                                      height={40}
+                                                      unoptimized
+                                                      className="h-10 w-10 rounded-full object-cover"
+                                                  />
+                                              ) : (
+                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
+                                                      {safeInitialsFromName(displayName)}
+                                                  </div>
+                                              )}
+                                          </div>
 
-                                        <div className="min-w-0 flex-1">
-                                            <div className="truncate text-[17px] font-medium leading-5 text-zinc-900">
-                                                {displayName}
-                                            </div>
-                                            {subtitle ? (
-                                                <div className="truncate pt-0.5 text-[15px] leading-5 text-zinc-500">
-                                                    {subtitle}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="px-4 py-3 text-sm text-zinc-500">{noResultsText ?? "No members to mention."}</div>
-                    )}
-                </div>,
-                document.body
-            )
+                                          <div className="min-w-0 flex-1">
+                                              <div className="truncate text-[17px] font-medium leading-5 text-zinc-900">
+                                                  {displayName}
+                                              </div>
+                                              {subtitle ? (
+                                                  <div className="truncate pt-0.5 text-[15px] leading-5 text-zinc-500">
+                                                      {subtitle}
+                                                  </div>
+                                              ) : null}
+                                          </div>
+                                      </button>
+                                  );
+                              })}
+                          </div>
+                      ) : (
+                          <div className="px-4 py-3 text-sm text-zinc-500">
+                              {noResultsText ?? "No members to mention."}
+                          </div>
+                      )}
+                  </div>,
+                  document.body
+              )
             : null;
 
     return (
@@ -847,8 +844,7 @@ const MentionTextarea = React.forwardRef<
                             "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap break-words text-sm leading-6 text-zinc-900",
                             disabled && "opacity-60"
                         )}
-                        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
-                    >
+                        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
                         {value ? <>{previewNodes}</> : <span className="text-zinc-400">{placeholder}</span>}
                     </div>
 
@@ -1307,144 +1303,144 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false, local
     const popup =
         mounted && open && popupPosition && portalTarget
             ? createPortal(
-                <div
-                    ref={rootRef}
-                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                    style={{
-                        top: popupPosition.top,
-                        left: popupPosition.left,
-                        width: popupPosition.width,
-                        maxHeight: "calc(100vh - 40px)",
-                        overflowY: "auto"
-                    }}>
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                value={month.getMonth()}
-                                onChange={handleMonthChange}
-                                className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-sm font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {i18n.months.map((monthLabel, monthIndex) => (
-                                    <option key={monthLabel} value={String(monthIndex)}>
-                                        {monthLabel}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
+                  <div
+                      ref={rootRef}
+                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                      style={{
+                          top: popupPosition.top,
+                          left: popupPosition.left,
+                          width: popupPosition.width,
+                          maxHeight: "calc(100vh - 40px)",
+                          overflowY: "auto"
+                      }}>
+                      <div className="mb-4 flex items-center gap-3">
+                          <div className="relative flex-1">
+                              <select
+                                  value={month.getMonth()}
+                                  onChange={handleMonthChange}
+                                  className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-sm font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {i18n.months.map((monthLabel, monthIndex) => (
+                                      <option key={monthLabel} value={String(monthIndex)}>
+                                          {monthLabel}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
 
-                        <div className="relative w-[140px]">
-                            <select
-                                value={month.getFullYear()}
-                                onChange={handleYearChange}
-                                className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-sm font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {yearOptions.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                        </div>
-                    </div>
+                          <div className="relative w-[140px]">
+                              <select
+                                  value={month.getFullYear()}
+                                  onChange={handleYearChange}
+                                  className="h-11 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 text-sm font-semibold text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
+                                  {yearOptions.map((year) => (
+                                      <option key={year} value={year}>
+                                          {year}
+                                      </option>
+                                  ))}
+                              </select>
+                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                          </div>
+                      </div>
 
-                    <div className="rounded-[20px] border border-zinc-200 p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={goPrevMonth}
-                                disabled={isPrevDisabled}
-                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
+                      <div className="rounded-[20px] border border-zinc-200 p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                              <button
+                                  type="button"
+                                  onClick={goPrevMonth}
+                                  disabled={isPrevDisabled}
+                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronLeft className="h-5 w-5" />
+                              </button>
 
-                            <div className="text-base font-bold text-zinc-900">
-                                {i18n.months[month.getMonth()]} {month.getFullYear()}
-                            </div>
+                              <div className="text-base font-bold text-zinc-900">
+                                  {i18n.months[month.getMonth()]} {month.getFullYear()}
+                              </div>
 
-                            <button
-                                type="button"
-                                onClick={goNextMonth}
-                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                              <button
+                                  type="button"
+                                  onClick={goNextMonth}
+                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                  <ChevronRight className="h-5 w-5" />
+                              </button>
+                          </div>
 
-                        <DayPicker
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={selectedDate}
-                            onSelect={pickDate}
-                            disabled={minDate ? { before: minDate } : undefined}
-                            showOutsideDays
-                            className="w-full"
-                            styles={{
-                                day: { outline: "none", boxShadow: "none" },
-                                button: { outline: "none", boxShadow: "none" }
-                            }}
-                            classNames={{
-                                months: "flex w-full flex-col",
-                                month: "w-full space-y-3",
-                                caption: "hidden",
-                                table: "w-full border-collapse",
-                                tbody: "w-full",
-                                head_row: "flex w-full justify-between",
-                                head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
-                                row: "mt-2 flex w-full justify-between",
-                                cell: "h-10 w-10 p-0 text-center",
-                                day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                day_button:
-                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                selected: "!bg-orange-500 !text-white",
-                                day_selected:
-                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
-                                today: "text-orange-600 font-bold",
-                                day_today: "text-orange-600 font-bold",
-                                outside: "text-zinc-300",
-                                day_outside: "text-zinc-300",
-                                disabled: "text-zinc-300 opacity-40",
-                                day_disabled: "text-zinc-300 opacity-40",
-                                hidden: "invisible",
-                                day_hidden: "invisible"
-                            }}
-                        />
-                    </div>
+                          <DayPicker
+                              mode="single"
+                              month={month}
+                              onMonthChange={setMonth}
+                              selected={selectedDate}
+                              onSelect={pickDate}
+                              disabled={minDate ? { before: minDate } : undefined}
+                              showOutsideDays
+                              className="w-full"
+                              styles={{
+                                  day: { outline: "none", boxShadow: "none" },
+                                  button: { outline: "none", boxShadow: "none" }
+                              }}
+                              classNames={{
+                                  months: "flex w-full flex-col",
+                                  month: "w-full space-y-3",
+                                  caption: "hidden",
+                                  table: "w-full border-collapse",
+                                  tbody: "w-full",
+                                  head_row: "flex w-full justify-between",
+                                  head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
+                                  row: "mt-2 flex w-full justify-between",
+                                  cell: "h-10 w-10 p-0 text-center",
+                                  day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                  day_button:
+                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                  selected: "!bg-orange-500 !text-white",
+                                  day_selected:
+                                      "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                  today: "text-orange-600 font-bold",
+                                  day_today: "text-orange-600 font-bold",
+                                  outside: "text-zinc-300",
+                                  day_outside: "text-zinc-300",
+                                  disabled: "text-zinc-300 opacity-40",
+                                  day_disabled: "text-zinc-300 opacity-40",
+                                  hidden: "invisible",
+                                  day_hidden: "invisible"
+                              }}
+                          />
+                      </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            {i18n.today}
-                        </button>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                              type="button"
+                              onClick={() => pickDate(new Date())}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                              {i18n.today}
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            {i18n.tomorrow}
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 1))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                              {i18n.tomorrow}
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            {i18n.nextWeek}
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 7))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+                              {i18n.nextWeek}
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-rose-500 hover:bg-rose-50">
-                            {i18n.noDate}
-                        </button>
-                    </div>
-                </div>,
-                portalTarget
-            )
+                          <button
+                              type="button"
+                              onClick={() => {
+                                  onChange("");
+                                  setOpen(false);
+                              }}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-rose-500 hover:bg-rose-50">
+                              {i18n.noDate}
+                          </button>
+                      </div>
+                  </div>,
+                  portalTarget
+              )
             : null;
 
     return (
@@ -1464,8 +1460,8 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false, local
                         disabled
                             ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70"
                             : open
-                                ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
-                                : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
+                              ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
+                              : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
                     )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
@@ -1474,8 +1470,8 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false, local
                                 disabled
                                     ? "bg-zinc-100 text-zinc-400"
                                     : open
-                                        ? "bg-orange-100 text-orange-600"
-                                        : "bg-zinc-100 text-zinc-500"
+                                      ? "bg-orange-100 text-orange-600"
+                                      : "bg-zinc-100 text-zinc-500"
                             )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
@@ -1825,7 +1821,15 @@ type CommentActionProps = {
     size?: "sm" | "md";
 };
 
-function CommentActions({ onReply, onDelete, canShowMenu, canDelete, deleting, labels, size = "sm" }: CommentActionProps) {
+function CommentActions({
+    onReply,
+    onDelete,
+    canShowMenu,
+    canDelete,
+    deleting,
+    labels,
+    size = "sm"
+}: CommentActionProps) {
     const buttonSize = size === "sm" ? "h-7 w-7" : "h-8 w-8";
     const iconSize = "h-4 w-4";
     const textSize = size === "sm" ? "text-xs" : "text-sm";
@@ -1902,27 +1906,30 @@ export default function TaskDetailModal(props: {
     const commentMentionRef = React.useRef<MentionTextareaHandle | null>(null);
     const [mounted, setMounted] = React.useState(false);
 
-    const datePickerI18n = React.useMemo<DatePickerTranslations>(() => ({
-        selectDate: t("datePicker.selectDate"),
-        today: t("datePicker.today"),
-        tomorrow: t("datePicker.tomorrow"),
-        nextWeek: t("datePicker.nextWeek"),
-        noDate: t("datePicker.noDate"),
-        months: [
-            t("datePicker.month1"),
-            t("datePicker.month2"),
-            t("datePicker.month3"),
-            t("datePicker.month4"),
-            t("datePicker.month5"),
-            t("datePicker.month6"),
-            t("datePicker.month7"),
-            t("datePicker.month8"),
-            t("datePicker.month9"),
-            t("datePicker.month10"),
-            t("datePicker.month11"),
-            t("datePicker.month12")
-        ]
-    }), [t]);
+    const datePickerI18n = React.useMemo<DatePickerTranslations>(
+        () => ({
+            selectDate: t("datePicker.selectDate"),
+            today: t("datePicker.today"),
+            tomorrow: t("datePicker.tomorrow"),
+            nextWeek: t("datePicker.nextWeek"),
+            noDate: t("datePicker.noDate"),
+            months: [
+                t("datePicker.month1"),
+                t("datePicker.month2"),
+                t("datePicker.month3"),
+                t("datePicker.month4"),
+                t("datePicker.month5"),
+                t("datePicker.month6"),
+                t("datePicker.month7"),
+                t("datePicker.month8"),
+                t("datePicker.month9"),
+                t("datePicker.month10"),
+                t("datePicker.month11"),
+                t("datePicker.month12")
+            ]
+        }),
+        [t]
+    );
 
     const priorityLabelByValue = React.useCallback(
         (value: number) => {
@@ -2411,17 +2418,26 @@ export default function TaskDetailModal(props: {
     }, [statusId, statusOptions, task?.statusName, t]);
 
     const selectedPriorityValue = React.useMemo(() => normalizePriorityValue(Number(priority)), [priority]);
-    const selectedPriorityLabel = React.useMemo(() => priorityLabelByValue(selectedPriorityValue), [selectedPriorityValue, priorityLabelByValue]);
+    const selectedPriorityLabel = React.useMemo(
+        () => priorityLabelByValue(selectedPriorityValue),
+        [selectedPriorityValue, priorityLabelByValue]
+    );
 
     const selectedSeverityValue = React.useMemo(() => normalizeSeverityValue(Number(severity)), [severity]);
-    const selectedSeverityLabel = React.useMemo(() => severityLabelByValue(selectedSeverityValue), [selectedSeverityValue, severityLabelByValue]);
+    const selectedSeverityLabel = React.useMemo(
+        () => severityLabelByValue(selectedSeverityValue),
+        [selectedSeverityValue, severityLabelByValue]
+    );
 
     const selectedProgressValue = React.useMemo(() => {
         if (progress === "") return 0;
         return normalizeProgressValue(Number(progress));
     }, [progress]);
 
-    const selectedProgressLabel = React.useMemo(() => progressLabelByValue(selectedProgressValue), [selectedProgressValue, progressLabelByValue]);
+    const selectedProgressLabel = React.useMemo(
+        () => progressLabelByValue(selectedProgressValue),
+        [selectedProgressValue, progressLabelByValue]
+    );
     const descriptionLength = description.length;
     const commentLength = commentDraft.length;
 
@@ -2677,7 +2693,10 @@ export default function TaskDetailModal(props: {
                                             </SelectItem>
 
                                             {assigneeOptions.map((m) => (
-                                                <SelectItem key={m.userId} value={m.userId} className={selectItemClassName}>
+                                                <SelectItem
+                                                    key={m.userId}
+                                                    value={m.userId}
+                                                    className={selectItemClassName}>
                                                     <div className="flex items-center gap-2">
                                                         {m.avatarUrl ? (
                                                             <Image
@@ -2723,7 +2742,10 @@ export default function TaskDetailModal(props: {
                                             </SelectItem>
 
                                             {statusOptions.map((s) => (
-                                                <SelectItem key={s.statusId} value={s.statusId} className={selectItemClassName}>
+                                                <SelectItem
+                                                    key={s.statusId}
+                                                    value={s.statusId}
+                                                    className={selectItemClassName}>
                                                     {s.statusName}
                                                 </SelectItem>
                                             ))}
@@ -2737,7 +2759,11 @@ export default function TaskDetailModal(props: {
                                         onValueChange={setPriority}
                                         disabled={!isEditing}>
                                         <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
-                                            <span className={cn("inline-flex items-center gap-2", priorityTone(selectedPriorityLabel))}>
+                                            <span
+                                                className={cn(
+                                                    "inline-flex items-center gap-2",
+                                                    priorityTone(selectedPriorityLabel)
+                                                )}>
                                                 <span className="h-2 w-2 rounded-full bg-current" />
                                                 {selectedPriorityLabel}
                                             </span>
@@ -2769,7 +2795,11 @@ export default function TaskDetailModal(props: {
                                         onValueChange={setSeverity}
                                         disabled={!isEditing}>
                                         <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
-                                            <span className={cn("inline-flex items-center gap-2", severityTone(selectedSeverityLabel))}>
+                                            <span
+                                                className={cn(
+                                                    "inline-flex items-center gap-2",
+                                                    severityTone(selectedSeverityLabel)
+                                                )}>
                                                 <span className="h-2 w-2 rounded-full bg-current" />
                                                 {selectedSeverityLabel}
                                             </span>
@@ -2798,7 +2828,6 @@ export default function TaskDetailModal(props: {
                                     </Select>
                                 </div>
 
-
                                 <TrelloDatePicker
                                     label={t("startDate")}
                                     value={startDate}
@@ -2816,8 +2845,6 @@ export default function TaskDetailModal(props: {
                                     locale={locale}
                                     i18n={datePickerI18n}
                                 />
-
-
 
                                 <div>
                                     <div className="text-sm font-semibold text-zinc-600">{t("estimatedHours")}</div>
@@ -2927,7 +2954,9 @@ export default function TaskDetailModal(props: {
                                         <div
                                             className={cn(
                                                 "text-xs font-medium",
-                                                descriptionLength >= TASK_DESCRIPTION_MAX_LENGTH ? "text-rose-500" : "text-zinc-500"
+                                                descriptionLength >= TASK_DESCRIPTION_MAX_LENGTH
+                                                    ? "text-rose-500"
+                                                    : "text-zinc-500"
                                             )}>
                                             {descriptionLength}/{TASK_DESCRIPTION_MAX_LENGTH}
                                         </div>
@@ -2935,7 +2964,9 @@ export default function TaskDetailModal(props: {
                                 </div>
                                 <textarea
                                     value={description}
-                                    onChange={(e) => setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))}
+                                    onChange={(e) =>
+                                        setDescription(e.target.value.slice(0, TASK_DESCRIPTION_MAX_LENGTH))
+                                    }
                                     placeholder={t("noDescription")}
                                     disabled={!isEditing}
                                     maxLength={TASK_DESCRIPTION_MAX_LENGTH}
@@ -2957,7 +2988,10 @@ export default function TaskDetailModal(props: {
                                 {replyingTo ? (
                                     <div className="mt-3 flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm">
                                         <div className="min-w-0 text-zinc-700">
-                                            {t("replyingTo")} <span className="font-semibold">{fullName(replyingTo.user) || t("user")}</span>
+                                            {t("replyingTo")}{" "}
+                                            <span className="font-semibold">
+                                                {fullName(replyingTo.user) || t("user")}
+                                            </span>
                                         </div>
                                         <button
                                             type="button"
@@ -2990,7 +3024,8 @@ export default function TaskDetailModal(props: {
                                     comments.map((c) => {
                                         const u = c.user;
                                         const name =
-                                            `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() || t("user");
+                                            `${(u?.firstName ?? "").trim()} ${(u?.lastName ?? "").trim()}`.trim() ||
+                                            t("user");
                                         const when = c.createdAt ? relativeTimeOf(c.createdAt, locale) : "";
                                         const replies = (c.replies ?? []).filter((r) => !r?.isDeleted);
 
@@ -3018,7 +3053,9 @@ export default function TaskDetailModal(props: {
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="flex items-baseline gap-3">
-                                                                    <div className="text-sm font-bold text-zinc-900">{name}</div>
+                                                                    <div className="text-sm font-bold text-zinc-900">
+                                                                        {name}
+                                                                    </div>
                                                                     <div className="text-xs text-zinc-400">{when}</div>
                                                                 </div>
 
@@ -3057,11 +3094,16 @@ export default function TaskDetailModal(props: {
                                                             const rname =
                                                                 `${(ru?.firstName ?? "").trim()} ${(ru?.lastName ?? "").trim()}`.trim() ||
                                                                 t("user");
-                                                            const rwhen = r.createdAt ? relativeTimeOf(r.createdAt, locale) : "";
+                                                            const rwhen = r.createdAt
+                                                                ? relativeTimeOf(r.createdAt, locale)
+                                                                : "";
 
                                                             return (
                                                                 <div
-                                                                    key={r.commentId ?? `${r.userId ?? "u"}-${r.createdAt ?? "t"}`}
+                                                                    key={
+                                                                        r.commentId ??
+                                                                        `${r.userId ?? "u"}-${r.createdAt ?? "t"}`
+                                                                    }
                                                                     className="flex gap-3">
                                                                     {safeAvatarUrl(ru?.avatarUrl) ? (
                                                                         <Image
@@ -3092,21 +3134,35 @@ export default function TaskDetailModal(props: {
 
                                                                                 <p
                                                                                     className="mt-1 max-w-full whitespace-pre-wrap break-words text-sm text-zinc-800"
-                                                                                    style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+                                                                                    style={{
+                                                                                        overflowWrap: "anywhere",
+                                                                                        wordBreak: "break-word"
+                                                                                    }}>
                                                                                     <RichTextWithMentions
                                                                                         text={String(r.content ?? "")}
                                                                                         membersById={membersById}
-                                                                                        authorId={String(r.userId ?? r.user?.id ?? "")}
-                                                                                        mentionAllLabel={mentionAllLabel}
+                                                                                        authorId={String(
+                                                                                            r.userId ?? r.user?.id ?? ""
+                                                                                        )}
+                                                                                        mentionAllLabel={
+                                                                                            mentionAllLabel
+                                                                                        }
                                                                                     />
                                                                                 </p>
 
                                                                                 <CommentActions
-                                                                                    onReply={() => handleReplyComment(r)}
-                                                                                    onDelete={() => openDeleteConfirm(r)}
+                                                                                    onReply={() =>
+                                                                                        handleReplyComment(r)
+                                                                                    }
+                                                                                    onDelete={() =>
+                                                                                        openDeleteConfirm(r)
+                                                                                    }
                                                                                     canShowMenu={canShowCommentMenu()}
                                                                                     canDelete={canDeleteComment(r)}
-                                                                                    deleting={deletingCommentId === r.commentId}
+                                                                                    deleting={
+                                                                                        deletingCommentId ===
+                                                                                        r.commentId
+                                                                                    }
                                                                                     labels={{
                                                                                         moreActions: t("moreActions"),
                                                                                         reply: t("reply"),
@@ -3179,7 +3235,12 @@ export default function TaskDetailModal(props: {
                                                     }}
                                                     className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f54a00] text-white hover:bg-[#f54a00]/80 disabled:opacity-60"
                                                     aria-label={t("send")}
-                                                    disabled={!commentDraft.trim() || sendingComment || !canComment || !myUserId}>
+                                                    disabled={
+                                                        !commentDraft.trim() ||
+                                                        sendingComment ||
+                                                        !canComment ||
+                                                        !myUserId
+                                                    }>
                                                     {sendingComment ? (
                                                         <Loader2 className="h-4 w-4 animate-spin" />
                                                     ) : (
@@ -3191,7 +3252,9 @@ export default function TaskDetailModal(props: {
                                             <div
                                                 className={cn(
                                                     "mt-2 text-right text-xs font-medium",
-                                                    commentLength >= TASK_COMMENT_MAX_LENGTH ? "text-rose-500" : "text-zinc-500"
+                                                    commentLength >= TASK_COMMENT_MAX_LENGTH
+                                                        ? "text-rose-500"
+                                                        : "text-zinc-500"
                                                 )}>
                                                 {commentLength}/{TASK_COMMENT_MAX_LENGTH}
                                             </div>

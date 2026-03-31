@@ -31,7 +31,7 @@ type MemberProgressItem = {
     totalTasks: number;
     lastActivity: string;
     // From MemberContributionData (weighted scoring)
-    contributionPercentage?: number;
+    contributionScoreRate?: number;
     totalScore?: number;
     tasksCompleted?: number;
     tasksCreated?: number;
@@ -44,7 +44,6 @@ type MemberProgressItem = {
     createdScore?: number;
     updatedScore?: number;
     deletedScore?: number;
-    assignedScore?: number;
 };
 
 type UserProfileLike = {
@@ -271,7 +270,10 @@ function EChart({ option, height = 320 }: { option: echarts.EChartsOption; heigh
     return <div ref={ref} style={{ width: "100%", height }} />;
 }
 
-function formatLastActivity(dateStr: string | null | undefined, t: (key: string, values?: Record<string, string | number>) => string): string {
+function formatLastActivity(
+    dateStr: string | null | undefined,
+    t: (key: string, values?: Record<string, string | number>) => string
+): string {
     if (!dateStr) return t("formatLastActivity.noActivity");
     const date = new Date(dateStr);
     const now = new Date();
@@ -326,7 +328,10 @@ function GroupActivityHeatmap({
                 <div>
                     <h2 className="font-semibold text-lg text-slate-900">{t("heatmap.title")}</h2>
                     <p className="mt-1 text-slate-500 text-sm">
-                        {t("heatmap.subtitle", { count: members.length, period: range === "week" ? t("heatmap.week") : t("heatmap.month") })}
+                        {t("heatmap.subtitle", {
+                            count: members.length,
+                            period: range === "week" ? t("heatmap.week") : t("heatmap.month")
+                        })}
                     </p>
                 </div>
 
@@ -457,7 +462,9 @@ function GroupActivityHeatmap({
                     ))}
                     <span>{t("heatmap.legend.high")}</span>
                 </div>
-                <div className="text-slate-400 text-sm">{t("heatmap.updated")}: {new Date().toLocaleDateString(locale)}</div>
+                <div className="text-slate-400 text-sm">
+                    {t("heatmap.updated")}: {new Date().toLocaleDateString(locale)}
+                </div>
             </div>
         </div>
     );
@@ -524,7 +531,15 @@ function ProgressLegend({ t }: { t: (key: string, values?: Record<string, string
     );
 }
 
-function MemberProgressCard({ member, t, onClick }: { member: MemberProgressItem; t: (key: string, values?: Record<string, string | number>) => string; onClick?: () => void }) {
+function MemberProgressCard({
+    member,
+    t,
+    onClick
+}: {
+    member: MemberProgressItem;
+    t: (key: string, values?: Record<string, string | number>) => string;
+    onClick?: () => void;
+}) {
     const percent = getProgressPercent(member.completedTasks, member.totalTasks);
     const status = getMemberStatus(percent, t);
 
@@ -563,17 +578,21 @@ function MemberProgressCard({ member, t, onClick }: { member: MemberProgressItem
                         {member.completedTasks} / {member.totalTasks} {t("common.tasks")}
                     </span>
                 </div>
-                {member.contributionPercentage !== undefined && (
+                {member.contributionScoreRate !== undefined && (
                     <div className="flex items-center gap-1.5">
                         <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
                             <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
-                        <span>{t("memberProgressCard.contribution")}: {member.contributionPercentage.toFixed(2)}%</span>
+                        <span>
+                            {t("memberProgressCard.contribution")}: {member.contributionScoreRate.toFixed(2)}%
+                        </span>
                     </div>
                 )}
                 <div className="flex items-center gap-1.5">
                     <Clock3 className="h-3.5 w-3.5" />
-                    <span>{t("memberProgressCard.lastActivity")}: {member.lastActivity}</span>
+                    <span>
+                        {t("memberProgressCard.lastActivity")}: {member.lastActivity}
+                    </span>
                 </div>
             </div>
         </div>
@@ -789,7 +808,10 @@ function MemberDetailModal({
                                     />
                                 </div>
                                 <div className="mt-1 text-slate-500 text-xs">
-                                    {t("memberModal.taskCount", { completed: member.completedTasks, total: member.totalTasks })}
+                                    {t("memberModal.taskCount", {
+                                        completed: member.completedTasks,
+                                        total: member.totalTasks
+                                    })}
                                 </div>
                             </div>
 
@@ -825,50 +847,37 @@ function MemberDetailModal({
                                     </div>
                                     <div className="text-slate-500 text-xs">{t("memberModal.updatePts")}</div>
                                 </div>
+                                <div className="rounded-xl border border-slate-100 bg-red-50/50 p-3 text-center">
+                                    <div className="mx-auto mb-1.5 flex h-5 w-5 items-center justify-center text-red-400">
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div className="font-bold text-slate-900">
+                                        {member.deletedScore?.toFixed(1) ?? 0}
+                                    </div>
+                                    <div className="text-slate-500 text-xs">
+                                        {t("memberModal.activityItems.deleted")} pts
+                                    </div>
+                                </div>
                                 <div className="rounded-xl border border-slate-100 bg-purple-50/50 p-3 text-center">
                                     <MessageSquare className="mx-auto mb-1.5 h-5 w-5 text-purple-500" />
-                                    <div className="font-bold text-slate-900">{member.messagesSent ?? 0}</div>
-                                    <div className="text-slate-500 text-xs">{t("memberModal.messages")}</div>
+                                    <div className="font-bold text-slate-900">
+                                        {(member.messagesSent ?? 0) + (member.commentsCreated ?? 0)}
+                                    </div>
+                                    <div className="text-slate-500 text-xs">
+                                        {t("memberModal.activityItems.messages")}
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Detailed breakdown */}
                             <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                                <h4 className="mb-2 font-semibold text-slate-500 text-xs uppercase tracking-wider">
-                                    {t("memberModal.activityBreakdown")}
-                                </h4>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">{t("memberModal.activityItems.completed")}</span>
-                                        <span className="font-mono text-slate-900">
-                                            {member.tasksCompleted ?? 0} ×{" "}
-                                            {(member.completedScore ?? 0) / (member.tasksCompleted || 1) || 0}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">{t("memberModal.activityItems.created")}</span>
-                                        <span className="font-mono text-slate-900">
-                                            {member.tasksCreated ?? 0} ×{" "}
-                                            {(member.createdScore ?? 0) / (member.tasksCreated || 1) || 0}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">{t("memberModal.activityItems.updated")}</span>
-                                        <span className="font-mono text-slate-900">{member.tasksUpdated ?? 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">{t("memberModal.activityItems.assigned")}</span>
-                                        <span className="font-mono text-slate-900">{member.tasksAssigned ?? 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">{t("memberModal.activityItems.comments")}</span>
-                                        <span className="font-mono text-slate-900">{member.commentsCreated ?? 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">{t("memberModal.activityItems.messages")}</span>
-                                        <span className="font-mono text-slate-900">{member.messagesSent ?? 0}</span>
-                                    </div>
-                                </div>
                                 <div className="mt-3 flex justify-between border-slate-200 border-t pt-3 font-semibold">
                                     <span className="text-slate-700">{t("memberModal.totalScore")}</span>
                                     <span className="font-mono text-orange-600">
@@ -878,18 +887,20 @@ function MemberDetailModal({
                             </div>
 
                             {/* Contribution rate */}
-                            {member.contributionPercentage !== undefined && (
+                            {member.contributionScoreRate !== undefined && (
                                 <div className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="font-medium text-slate-700 text-sm">{t("memberModal.contributionRate")}</span>
+                                        <span className="font-medium text-slate-700 text-sm">
+                                            {t("memberModal.contributionRate")}
+                                        </span>
                                         <span className="font-bold text-lg text-orange-600">
-                                            {member.contributionPercentage.toFixed(2)}%
+                                            {member.contributionScoreRate.toFixed(2)}%
                                         </span>
                                     </div>
                                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-orange-100">
                                         <div
                                             className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-                                            style={{ width: `${Math.min(100, member.contributionPercentage)}%` }}
+                                            style={{ width: `${Math.min(100, member.contributionScoreRate)}%` }}
                                         />
                                     </div>
                                 </div>
@@ -898,7 +909,9 @@ function MemberDetailModal({
                             {/* Last activity */}
                             <div className="flex items-center gap-2 text-slate-500 text-sm">
                                 <Clock3 className="h-4 w-4" />
-                                <span>{t("memberModal.lastActivity")}: {member.lastActivity}</span>
+                                <span>
+                                    {t("memberModal.lastActivity")}: {member.lastActivity}
+                                </span>
                             </div>
                         </div>
                     </motion.div>
@@ -1106,19 +1119,23 @@ export default function GroupMemberAnalyticsPage() {
             trendFilter === "week"
                 ? getWeekRange(trendAnchorDate)
                 : trendFilter === "month"
-                    ? getMonthRange(trendAnchorDate)
-                    : {
+                  ? getMonthRange(trendAnchorDate)
+                  : {
                         start: new Date(trendAnchorDate.getFullYear(), 0, 1),
                         end: new Date(trendAnchorDate.getFullYear(), 11, 31)
                     };
 
         const dates = getDatesInRange(start, end);
-        const labels =
-            trendFilter === "week"
-                ? ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
-                : trendFilter === "month"
-                    ? ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4", "Tuần 5"]
-                    : ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+        const labelKey = trendFilter === "week" ? "week" : trendFilter === "month" ? "month" : "year";
+        const rawLabels = t.raw(`timeLabels.${labelKey}`);
+        const labels = Array.isArray(rawLabels)
+            ? rawLabels.map((label) => String(label))
+            : typeof rawLabels === "string"
+              ? rawLabels
+                    .split(",")
+                    .map((label) => label.trim())
+                    .filter(Boolean)
+              : [];
 
         // Current user's trend
         const currentUserTrend = trendData?.find((m) => m.userId === currentUserId) ?? trendData?.[0];
@@ -1197,7 +1214,7 @@ export default function GroupMemberAnalyticsPage() {
         }
 
         return { myData, groupData, labels };
-    }, [trendData, currentUserId, trendFilter, trendAnchorDate]);
+    }, [trendData, currentUserId, trendFilter, trendAnchorDate, t]);
 
     // Bar chart data
     const barCompareMembers = React.useMemo(() => {
@@ -1211,7 +1228,7 @@ export default function GroupMemberAnalyticsPage() {
             inProgressTasks: member.inProgressTasks ?? 0,
             todoTasks: member.todoTasks ?? 0,
             overdueTasks: member.overdueTasks ?? 0,
-            contributionPercentage: member.contributionPercentage ?? 0,
+            contributionScoreRate: member.contributionCountRate ?? 0,
             messagesSent: member.messagesSent ?? 0,
             colorSeed: index
         }));
@@ -1240,7 +1257,7 @@ export default function GroupMemberAnalyticsPage() {
         const contributionMap = new Map<
             string,
             {
-                contributionPercentage: number;
+                contributionScoreRate: number;
                 totalScore: number;
                 tasksCompleted: number;
                 tasksCreated: number;
@@ -1253,13 +1270,12 @@ export default function GroupMemberAnalyticsPage() {
                 createdScore: number;
                 updatedScore: number;
                 deletedScore: number;
-                assignedScore: number;
             }
         >();
         summary.memberContribution?.forEach((c) => {
             if (c.userId) {
                 contributionMap.set(c.userId, {
-                    contributionPercentage: c.contributionPercentage ?? 0,
+                    contributionScoreRate: c.contributionScoreRate ?? 0,
                     totalScore: c.totalScore ?? 0,
                     tasksCompleted: c.tasksCompleted ?? 0,
                     tasksCreated: c.tasksCreated ?? 0,
@@ -1271,8 +1287,7 @@ export default function GroupMemberAnalyticsPage() {
                     completedScore: c.completedScore ?? 0,
                     createdScore: c.createdScore ?? 0,
                     updatedScore: c.updatedScore ?? 0,
-                    deletedScore: c.deletedScore ?? 0,
-                    assignedScore: c.assignedScore ?? 0
+                    deletedScore: c.deletedScore ?? 0
                 });
             }
         });
@@ -1286,7 +1301,7 @@ export default function GroupMemberAnalyticsPage() {
                 totalTasks: member.totalTasks ?? 0,
                 lastActivity: formatLastActivity(member.lastActivityAt as unknown as string, t),
                 // From memberContribution (weighted)
-                contributionPercentage: contribution?.contributionPercentage,
+                contributionScoreRate: contribution?.contributionScoreRate,
                 totalScore: contribution?.totalScore,
                 tasksCompleted: contribution?.tasksCompleted,
                 tasksCreated: contribution?.tasksCreated,
@@ -1298,8 +1313,7 @@ export default function GroupMemberAnalyticsPage() {
                 completedScore: contribution?.completedScore,
                 createdScore: contribution?.createdScore,
                 updatedScore: contribution?.updatedScore,
-                deletedScore: contribution?.deletedScore,
-                assignedScore: contribution?.assignedScore
+                deletedScore: contribution?.deletedScore
             };
         });
     }, [summary, t]);
@@ -1675,10 +1689,10 @@ export default function GroupMemberAnalyticsPage() {
                                     <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                         <div className="mb-5">
                                             <h2 className="font-semibold text-lg text-slate-900">
-                                                1. My Task Status Distribution
+                                                {t("chart.myTaskDistribution")}
                                             </h2>
                                             <p className="mt-1 text-slate-500 text-sm">
-                                                Trạng thái task cá nhân trong group hiện tại.
+                                                {t("chart.myTaskDistributionDesc")}
                                             </p>
                                         </div>
 
@@ -1718,11 +1732,11 @@ export default function GroupMemberAnalyticsPage() {
                                     <div className="mb-5">
                                         <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
-                                                ? "2. Group Task Status Distribution"
-                                                : "1. Group Task Status Distribution"}
+                                                ? t("chart.groupTaskDistribution")
+                                                : t("chart.groupTaskDistribution")}
                                         </h2>
                                         <p className="mt-1 text-slate-500 text-sm">
-                                            Tổng quan trạng thái task của toàn bộ nhóm.
+                                            {t("chart.groupTaskDistributionDesc")}
                                         </p>
                                     </div>
 
@@ -1763,20 +1777,18 @@ export default function GroupMemberAnalyticsPage() {
                                     <div>
                                         <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
-                                                ? "3. Task Progress Over Time"
-                                                : "2. Task Progress Over Time"}
+                                                ? t("chart.progressOverTime")
+                                                : t("chart.progressOverTime")}
                                         </h2>
-                                        <p className="mt-1 text-slate-500 text-sm">
-                                            So sánh tổng số task hoàn thành của bạn với toàn bộ nhóm theo thời gian.
-                                        </p>
+                                        <p className="mt-1 text-slate-500 text-sm">{t("chart.progressOverTimeDesc")}</p>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-3">
                                         <div className="inline-flex rounded-2xl bg-slate-100 p-1">
                                             {[
-                                                { key: "week", label: "Tuần" },
-                                                { key: "month", label: "Tháng" },
-                                                { key: "year", label: "Năm" }
+                                                { key: "week", label: t("chartFilterLabels.week") },
+                                                { key: "month", label: t("chartFilterLabels.month") },
+                                                { key: "year", label: t("chartFilterLabels.year") }
                                             ].map((item) => (
                                                 <button
                                                     key={item.key}
@@ -1835,8 +1847,8 @@ export default function GroupMemberAnalyticsPage() {
                                     <div>
                                         <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
-                                                ? "4. Compare Task Status by Member"
-                                                : "3. Compare Task Status by Member"}
+                                                ? t("chart.compareByMember")
+                                                : t("chart.compareByMember")}
                                         </h2>
                                     </div>
                                 </div>
@@ -1858,7 +1870,11 @@ export default function GroupMemberAnalyticsPage() {
                     </SectionReveal>
 
                     <SectionReveal delay={0.12}>
-                        <TeamMemberProgressSection members={memberProgressItems} onMemberClick={setSelectedMember} t={t} />
+                        <TeamMemberProgressSection
+                            members={memberProgressItems}
+                            onMemberClick={setSelectedMember}
+                            t={t}
+                        />
                     </SectionReveal>
 
                     {/* Member Detail Modal - Layer 2 */}

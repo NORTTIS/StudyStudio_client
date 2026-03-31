@@ -96,7 +96,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     const favorites = ((sections?.favorites || []) as GroupCardDto[]).filter(Boolean);
     const managed = ((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean);
     const independent = ((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean);
-    
+
     // Filter for joined groups (where user is not the owner)
     const allGroups = [...favorites, ...managed, ...independent];
     const joined = allGroups.filter((g) => {
@@ -367,9 +367,12 @@ type ParsedSseBlock = {
     };
 };
 
-export function parseSseBlock(block: string, options?: {
-    onMetadata?: (metadata: { remainingRequests: number | null; dailyLimit: number | null }) => void;
-}): ParsedSseBlock {
+export function parseSseBlock(
+    block: string,
+    options?: {
+        onMetadata?: (metadata: { remainingRequests: number | null; dailyLimit: number | null }) => void;
+    }
+): ParsedSseBlock {
     if (!block.trim()) return { chunk: "", done: false };
 
     const dataLines = block
