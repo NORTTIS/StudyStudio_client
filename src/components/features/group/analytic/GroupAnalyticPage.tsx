@@ -30,7 +30,7 @@ type MemberProgressItem = {
     totalTasks: number;
     lastActivity: string;
     // From MemberContributionData (weighted scoring)
-    contributionPercentage?: number;
+    contributionScoreRate?: number;
     totalScore?: number;
     tasksCompleted?: number;
     tasksCreated?: number;
@@ -43,7 +43,6 @@ type MemberProgressItem = {
     createdScore?: number;
     updatedScore?: number;
     deletedScore?: number;
-    assignedScore?: number;
 };
 
 type UserProfileLike = {
@@ -555,12 +554,12 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
                         {member.completedTasks} / {member.totalTasks} tasks
                     </span>
                 </div>
-                {member.contributionPercentage !== undefined && (
+                {member.contributionScoreRate !== undefined && (
                     <div className="flex items-center gap-1.5">
                         <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
                             <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
-                        <span>Contribution: {member.contributionPercentage.toFixed(2)}%</span>
+                        <span>Contribution: {member.contributionScoreRate.toFixed(2)}%</span>
                     </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -808,50 +807,26 @@ function MemberDetailModal({
                                     </div>
                                     <div className="text-slate-500 text-xs">Update pts</div>
                                 </div>
+                                <div className="rounded-xl border border-slate-100 bg-red-50/50 p-3 text-center">
+                                    <div className="mx-auto mb-1.5 flex h-5 w-5 items-center justify-center text-red-400">
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </div>
+                                    <div className="font-bold text-slate-900">
+                                        {member.deletedScore?.toFixed(1) ?? 0}
+                                    </div>
+                                    <div className="text-slate-500 text-xs">Delete pts</div>
+                                </div>
                                 <div className="rounded-xl border border-slate-100 bg-purple-50/50 p-3 text-center">
                                     <MessageSquare className="mx-auto mb-1.5 h-5 w-5 text-purple-500" />
-                                    <div className="font-bold text-slate-900">{member.messagesSent ?? 0}</div>
+                                    <div className="font-bold text-slate-900">{(member.messagesSent ?? 0) + (member.commentsCreated ?? 0)}</div>
                                     <div className="text-slate-500 text-xs">Messages</div>
                                 </div>
                             </div>
 
                             {/* Detailed breakdown */}
                             <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                                <h4 className="mb-2 font-semibold text-slate-500 text-xs uppercase tracking-wider">
-                                    Activity Breakdown
-                                </h4>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Completed</span>
-                                        <span className="font-mono text-slate-900">
-                                            {member.tasksCompleted ?? 0} ×{" "}
-                                            {(member.completedScore ?? 0) / (member.tasksCompleted || 1) || 0}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Created</span>
-                                        <span className="font-mono text-slate-900">
-                                            {member.tasksCreated ?? 0} ×{" "}
-                                            {(member.createdScore ?? 0) / (member.tasksCreated || 1) || 0}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Updated</span>
-                                        <span className="font-mono text-slate-900">{member.tasksUpdated ?? 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Assigned</span>
-                                        <span className="font-mono text-slate-900">{member.tasksAssigned ?? 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Comments</span>
-                                        <span className="font-mono text-slate-900">{member.commentsCreated ?? 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-600">Messages</span>
-                                        <span className="font-mono text-slate-900">{member.messagesSent ?? 0}</span>
-                                    </div>
-                                </div>
                                 <div className="mt-3 flex justify-between border-slate-200 border-t pt-3 font-semibold">
                                     <span className="text-slate-700">Total Score</span>
                                     <span className="font-mono text-orange-600">
@@ -861,18 +836,18 @@ function MemberDetailModal({
                             </div>
 
                             {/* Contribution rate */}
-                            {member.contributionPercentage !== undefined && (
+                            {member.contributionScoreRate !== undefined && (
                                 <div className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
                                     <div className="flex items-center justify-between">
                                         <span className="font-medium text-slate-700 text-sm">Contribution Rate</span>
                                         <span className="font-bold text-lg text-orange-600">
-                                            {member.contributionPercentage.toFixed(2)}%
+                                            {member.contributionScoreRate.toFixed(2)}%
                                         </span>
                                     </div>
                                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-orange-100">
                                         <div
                                             className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-                                            style={{ width: `${Math.min(100, member.contributionPercentage)}%` }}
+                                            style={{ width: `${Math.min(100, member.contributionScoreRate)}%` }}
                                         />
                                     </div>
                                 </div>
@@ -1192,7 +1167,7 @@ export default function GroupMemberAnalyticsPage() {
             inProgressTasks: member.inProgressTasks ?? 0,
             todoTasks: member.todoTasks ?? 0,
             overdueTasks: member.overdueTasks ?? 0,
-            contributionPercentage: member.contributionPercentage ?? 0,
+            contributionScoreRate: member.contributionCountRate ?? 0,
             messagesSent: member.messagesSent ?? 0,
             colorSeed: index
         }));
@@ -1221,7 +1196,7 @@ export default function GroupMemberAnalyticsPage() {
         const contributionMap = new Map<
             string,
             {
-                contributionPercentage: number;
+                contributionScoreRate: number;
                 totalScore: number;
                 tasksCompleted: number;
                 tasksCreated: number;
@@ -1234,13 +1209,12 @@ export default function GroupMemberAnalyticsPage() {
                 createdScore: number;
                 updatedScore: number;
                 deletedScore: number;
-                assignedScore: number;
             }
         >();
         summary.memberContribution?.forEach((c) => {
             if (c.userId) {
                 contributionMap.set(c.userId, {
-                    contributionPercentage: c.contributionPercentage ?? 0,
+                    contributionScoreRate: c.contributionScoreRate ?? 0,
                     totalScore: c.totalScore ?? 0,
                     tasksCompleted: c.tasksCompleted ?? 0,
                     tasksCreated: c.tasksCreated ?? 0,
@@ -1252,8 +1226,7 @@ export default function GroupMemberAnalyticsPage() {
                     completedScore: c.completedScore ?? 0,
                     createdScore: c.createdScore ?? 0,
                     updatedScore: c.updatedScore ?? 0,
-                    deletedScore: c.deletedScore ?? 0,
-                    assignedScore: c.assignedScore ?? 0
+                    deletedScore: c.deletedScore ?? 0
                 });
             }
         });
@@ -1267,7 +1240,7 @@ export default function GroupMemberAnalyticsPage() {
                 totalTasks: member.totalTasks ?? 0,
                 lastActivity: formatLastActivity(member.lastActivityAt as unknown as string),
                 // From memberContribution (weighted)
-                contributionPercentage: contribution?.contributionPercentage,
+                contributionScoreRate: contribution?.contributionScoreRate,
                 totalScore: contribution?.totalScore,
                 tasksCompleted: contribution?.tasksCompleted,
                 tasksCreated: contribution?.tasksCreated,
@@ -1279,8 +1252,7 @@ export default function GroupMemberAnalyticsPage() {
                 completedScore: contribution?.completedScore,
                 createdScore: contribution?.createdScore,
                 updatedScore: contribution?.updatedScore,
-                deletedScore: contribution?.deletedScore,
-                assignedScore: contribution?.assignedScore
+                deletedScore: contribution?.deletedScore
             };
         });
     }, [summary]);

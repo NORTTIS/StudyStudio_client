@@ -699,15 +699,6 @@ export default function HomeSummary() {
 
                                 <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="min-w-0">
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.96 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ duration: 0.35 }}
-                                            className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm"
-                                        >
-                                            <Sparkles className="h-3.5 w-3.5" />
-                                            Dashboard tổng quan
-                                        </motion.div>
 
                                         <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[38px]">
                                             Tổng quan công việc

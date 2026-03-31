@@ -1382,10 +1382,6 @@ export default function HomeTaskList() {
                         <div className="relative">
                             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                                 <div>
-                                    <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
-                                        <Sparkles className="h-3.5 w-3.5" />
-                                        Danh sách công việc
-                                    </div>
 
                                     <h2 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-[32px] font-bold leading-tight tracking-[-0.02em] text-transparent md:text-[40px]">
                                         Công việc từ các nhóm

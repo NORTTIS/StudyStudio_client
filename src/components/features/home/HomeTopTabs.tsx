@@ -49,7 +49,7 @@ export default function HomeTopTabs() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-[#F3E4D7] bg-[#FFFCF8] p-1.5 shadow-sm"
+            className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-[#F3E4D7] bg-white/90 p-1.5 shadow-sm"
         >
             {tabs.map((tab) => {
                 const Icon = tab.icon;

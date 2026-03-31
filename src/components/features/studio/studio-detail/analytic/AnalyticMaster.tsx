@@ -554,7 +554,7 @@ type MemberProgressItem = {
     completedTasks: number;
     totalTasks: number;
     lastActivity: string;
-    contributionPercentage?: number;
+    contributionScoreRate?: number;
     totalScore?: number;
     completedScore?: number;
     createdScore?: number;
@@ -612,12 +612,12 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
                         {member.completedTasks} / {member.totalTasks} tasks
                     </span>
                 </div>
-                {member.contributionPercentage !== undefined && (
+                {member.contributionScoreRate !== undefined && (
                     <div className="flex items-center gap-1.5">
                         <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
                             <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
-                        <span>Contribution: {member.contributionPercentage.toFixed(2)}%</span>
+                        <span>Contribution: {member.contributionScoreRate.toFixed(2)}%</span>
                     </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -699,7 +699,7 @@ function MemberDetailModal({
                     </div>
 
                     {/* Weighted scores */}
-                    {(member.totalScore !== undefined || member.contributionPercentage !== undefined) && (
+                    {(member.totalScore !== undefined || member.contributionScoreRate !== undefined) && (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                             <div className="mb-3 font-semibold text-slate-700 text-sm">Điểm đóng góp</div>
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -741,16 +741,16 @@ function MemberDetailModal({
                     )}
 
                     {/* Contribution */}
-                    {member.contributionPercentage !== undefined && (
+                    {member.contributionScoreRate !== undefined && (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                             <div className="mb-2 flex items-center justify-between text-sm">
                                 <span className="font-semibold text-slate-700">Tỷ lệ đóng góp</span>
-                                <span className="font-bold text-orange-600">{member.contributionPercentage}%</span>
+                                <span className="font-bold text-orange-600">{member.contributionScoreRate}%</span>
                             </div>
                             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
                                 <div
                                     className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-                                    style={{ width: `${member.contributionPercentage}%` }}
+                                    style={{ width: `${member.contributionScoreRate}%` }}
                                 />
                             </div>
                         </div>
@@ -1085,7 +1085,7 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                 completedTasks: a.completedTasks ?? 0,
                 totalTasks: a.totalTasks ?? 0,
                 lastActivity: a.lastActivityAt ? formatRelativeTime(a.lastActivityAt) : "N/A",
-                contributionPercentage: c?.contributionPercentage,
+                contributionScoreRate: c?.contributionScoreRate,
                 totalScore: c?.totalScore,
                 completedScore: c?.completedScore,
                 createdScore: c?.createdScore,

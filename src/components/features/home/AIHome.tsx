@@ -393,15 +393,6 @@ export default function AIHome() {
                             <div className="absolute inset-x-0 top-0 h-px bg-white/90" />
 
                             <div className="relative px-6 py-8 md:px-8 md:py-9">
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.94 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.45 }}
-                                    className="inline-flex items-center gap-2 rounded-full border border-orange-100/90 bg-white/85 px-3 py-1.5 text-xs font-medium text-orange-700 shadow-[0_8px_20px_rgba(249,115,22,0.10)] backdrop-blur"
-                                >
-                                    <Sparkles className="h-3.5 w-3.5" />
-                                    Personal AI
-                                </motion.div>
 
                                 <div className="mt-5 max-w-3xl">
                                     <h1 className="bg-[linear-gradient(135deg,#2B2118_0%,#7C3AED_55%,#0F766E_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[44px]">
