@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 
 type HeatmapRangeFilter = "week" | "month";
@@ -37,12 +38,12 @@ const HEATMAP_COLOR_MAP: Record<number, string> = {
     4: "#166534" // high
 };
 
-const LEVEL_LABELS: Record<number, string> = {
-    0: "Không hoạt động",
-    1: "Rất thấp",
-    2: "Thấp",
-    3: "Trung bình",
-    4: "Cao"
+const LEVEL_KEY_MAP: Record<number, "inactive" | "veryLow" | "low" | "medium" | "high"> = {
+    0: "inactive",
+    1: "veryLow",
+    2: "low",
+    3: "medium",
+    4: "high"
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -97,6 +98,8 @@ export default function StudioGroupHeatmap({
     onNext,
     onChangeRange
 }: StudioGroupHeatmapProps) {
+    const t = useTranslations("StudioGroupHeatmap");
+
     const { start, end } = React.useMemo(() => {
         return range === "week" ? getWeekRange(anchorDate) : getMonthRange(anchorDate);
     }, [anchorDate, range]);
@@ -113,13 +116,13 @@ export default function StudioGroupHeatmap({
             for (const g of row.groups) {
                 if (!g.groupId || map.has(g.groupId)) continue;
                 map.set(g.groupId, {
-                    name: g.groupName ?? "N/A",
+                    name: g.groupName ?? t("common.notAvailable"),
                     color: g.groupColor ?? "#94a3b8"
                 });
             }
         }
         return map;
-    }, [data]);
+    }, [data, t]);
 
     // Get unique group IDs sorted by first appearance
     const groupIds = React.useMemo(() => {
@@ -155,9 +158,12 @@ export default function StudioGroupHeatmap({
             {/* Header */}
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                    <h2 className="font-semibold text-lg text-slate-900">4. Hoạt động nhóm</h2>
+                    <h2 className="font-semibold text-lg text-slate-900">{t("header.title")}</h2>
                     <p className="mt-1 text-slate-500 text-sm">
-                        Heatmap hoạt động của {groupIds.length} nhóm theo {range === "week" ? "tuần" : "tháng"}.
+                        {t("header.description", {
+                            count: groupIds.length,
+                            range: range === "week" ? t("range.week") : t("range.month")
+                        })}
                     </p>
                 </div>
 
@@ -166,8 +172,8 @@ export default function StudioGroupHeatmap({
                     <div className="inline-flex rounded-2xl bg-slate-100 p-1">
                         {(
                             [
-                                { key: "week", label: "Tuần" },
-                                { key: "month", label: "Tháng" }
+                                { key: "week", label: t("range.week") },
+                                { key: "month", label: t("range.month") }
                             ] as const
                         ).map((item) => (
                             <button
@@ -177,8 +183,8 @@ export default function StudioGroupHeatmap({
                                 className={cn(
                                     "rounded-xl px-4 py-2 font-medium text-sm transition-all duration-300",
                                     range === item.key
-                                        ? "bg-white text-slate-900 shadow-sm"
-                                        : "text-slate-500 hover:bg-white/70 hover:text-slate-900"
+                                        ? "bg-white text-orange-600 shadow-sm"
+                                        : "text-slate-500 hover:text-orange-600"
                                 )}>
                                 {item.label}
                             </button>
@@ -273,11 +279,18 @@ export default function StudioGroupHeatmap({
                                             const level = item?.activityLevel ?? 0;
                                             const score = item?.activityScore ?? 0;
                                             const tasks = item?.tasksCompleted ?? 0;
+                                            const levelKey = LEVEL_KEY_MAP[level] ?? "inactive";
 
                                             return (
                                                 <motion.div
                                                     key={`${groupId}-${dateKey}`}
-                                                    title={`${meta.name} • ${dateKey}\nTasks: ${tasks} | Score: ${score} | ${LEVEL_LABELS[level]}`}
+                                                    title={t("tooltip.cell", {
+                                                        name: meta.name,
+                                                        date: dateKey,
+                                                        tasks,
+                                                        score,
+                                                        level: t(`levels.${levelKey}`)
+                                                    })}
                                                     initial={{ opacity: 0, scale: 0.9 }}
                                                     animate={{ opacity: 1, scale: 1 }}
                                                     transition={{
@@ -305,7 +318,7 @@ export default function StudioGroupHeatmap({
                 {/* Group colors legend */}
                 {groupIds.length > 0 && (
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                        <span className="text-slate-400 text-xs">Nhóm:</span>
+                        <span className="text-slate-400 text-xs">{t("legend.groups")}</span>
                         {groupIds.slice(0, 6).map((groupId) => {
                             const meta = groupMetaMap.get(groupId);
                             if (!meta) return null;
@@ -325,18 +338,18 @@ export default function StudioGroupHeatmap({
 
                 {/* Activity level legend — fixed green scale */}
                 <div className="flex items-center gap-2 text-slate-400 text-xs">
-                    <span>Mức hoạt động:</span>
+                    <span>{t("legend.activityLevel")}</span>
                     <div className="flex items-center gap-0.5">
-                        <span className="text-[10px]">Ít</span>
+                        <span className="text-[10px]">{t("legend.low")}</span>
                         {([0, 1, 2, 3, 4] as const).map((level) => (
                             <div
                                 key={level}
                                 className="h-2.5 w-2.5 rounded-[3px]"
                                 style={{ backgroundColor: HEATMAP_COLOR_MAP[level] }}
-                                title={LEVEL_LABELS[level]}
+                                title={t(`levels.${LEVEL_KEY_MAP[level]}`)}
                             />
                         ))}
-                        <span className="text-[10px]">Nhiều</span>
+                        <span className="text-[10px]">{t("legend.high")}</span>
                     </div>
                 </div>
             </div>

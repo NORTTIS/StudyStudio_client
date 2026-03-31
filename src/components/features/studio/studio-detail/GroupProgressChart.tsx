@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, Clock3, Layers } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { calculateScheduleStatus, type GroupProgress } from "./types";
 
 interface GroupProgressChartProps {
@@ -10,6 +11,8 @@ interface GroupProgressChartProps {
 }
 
 export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: GroupProgressChartProps) {
+    const t = useTranslations("GroupProgressChart");
+
     const getStatusColor = (status: "on-track" | "at-risk" | "behind") => {
         switch (status) {
             case "on-track":
@@ -32,22 +35,29 @@ export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: G
         }
     };
 
+    const getStatusLabel = (scheduleStatus: { status: "on-track" | "at-risk" | "behind"; message: string }) => {
+        if (scheduleStatus.message === "Chưa bắt đầu") return t("status.notStarted");
+        if (scheduleStatus.status === "on-track") return t("status.onTrack");
+        if (scheduleStatus.status === "at-risk") return t("status.atRisk");
+        return t("status.behind");
+    };
+
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-semibold text-[#261E33]">Tiến độ nhóm</h3>
+                <h3 className="font-semibold text-[#261E33]">{t("title")}</h3>
                 <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1">
                         <div className="h-2 w-2 rounded-full bg-green-500" />
-                        <span className="text-gray-500">Đúng tiến độ</span>
+                        <span className="text-gray-500">{t("status.onTrack")}</span>
                     </div>
                     <div className="flex items-center gap-1">
                         <div className="h-2 w-2 rounded-full bg-orange-500" />
-                        <span className="text-gray-500">Cần chú ý</span>
+                        <span className="text-gray-500">{t("status.atRisk")}</span>
                     </div>
                     <div className="flex items-center gap-1">
                         <div className="h-2 w-2 rounded-full bg-red-500" />
-                        <span className="text-gray-500">Chậm tiến độ</span>
+                        <span className="text-gray-500">{t("status.behind")}</span>
                     </div>
                 </div>
             </div>
@@ -64,7 +74,7 @@ export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: G
                                     <span className="font-medium text-[#261E33]">{group.groupName}</span>
                                 </div>
                                 <span className={`font-medium text-xs ${getStatusTextColor(scheduleStatus.status)}`}>
-                                    {scheduleStatus.message}
+                                    {getStatusLabel(scheduleStatus)}
                                 </span>
                             </div>
 
@@ -109,20 +119,20 @@ export function GroupProgressChart({ groups, studioStartDate, studioDueDate }: G
                                 <div className="flex items-center gap-1">
                                     <Layers className="h-3.5 w-3.5" />
                                     <span>
-                                        {group.completedTasks} / {group.totalTasks} tasks
+                                        {group.completedTasks} / {group.totalTasks} {t("taskInfo.tasks")}
                                     </span>
                                 </div>
 
                                 {group.overdueCount > 0 && (
                                     <div className="flex items-center gap-1 text-red-500">
                                         <AlertCircle className="h-3.5 w-3.5" />
-                                        <span>{group.overdueCount} overdue</span>
+                                        <span>{t("taskInfo.overdue", { count: group.overdueCount })}</span>
                                     </div>
                                 )}
 
                                 <div className="flex items-center gap-1">
                                     <Clock3 className="h-3.5 w-3.5" />
-                                    <span>last activity: {group.lastActivity}</span>
+                                    <span>{t("taskInfo.lastActivity", { value: group.lastActivity })}</span>
                                 </div>
                             </div>
                         </div>

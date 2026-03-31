@@ -2,7 +2,7 @@
 
 import { Download, FileText, MoreHorizontal, Trash2, Upload } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
 import { Container, Modal } from "@/components/common";
@@ -91,11 +91,20 @@ function isAllowedFile(file: File) {
     return ACCEPTED_CONTENT_TYPES.has(contentType);
 }
 
-function formatUpdatedText(createdAt?: string, firstName?: string | null, lastName?: string | null) {
-    const uploaderName = [firstName, lastName].filter(Boolean).join(" ").trim() || "Unknown";
-    if (!createdAt) return `Uploaded by ${uploaderName}`;
+type GroupDocumentsTranslate = (key: string, values?: Record<string, string | number>) => string;
+
+function formatUpdatedText(
+    t: GroupDocumentsTranslate,
+    locale: string,
+    createdAt?: string,
+    firstName?: string | null,
+    lastName?: string | null
+) {
+    const uploaderName = [firstName, lastName].filter(Boolean).join(" ").trim() || t("unknownUploader");
+    if (!createdAt) return t("uploadedBy", { name: uploaderName });
     const date = new Date(createdAt);
-    const formatted = Number.isNaN(date.getTime()) ? createdAt : date.toLocaleString("vi-VN");
+    const dateLocale = locale === "vi" ? "vi-VN" : "en-US";
+    const formatted = Number.isNaN(date.getTime()) ? createdAt : date.toLocaleString(dateLocale);
     return `${uploaderName} • ${formatted}`;
 }
 
@@ -153,6 +162,7 @@ function DocumentCard({
 }
 
 export default function GroupDocumentsPage() {
+    const locale = useLocale();
     const t = useTranslations("GroupDocumentsPage");
     const pathname = usePathname();
     const groupId = extractGroupIdFromPath(pathname || "");
@@ -180,6 +190,8 @@ export default function GroupDocumentsPage() {
                     id: item.attachmentId || `${fileName}_${item.createdAt || Date.now()}`,
                     name: fileName,
                     updatedText: formatUpdatedText(
+                        t,
+                        locale,
                         item.createdAt,
                         item.uploadedBy?.firstName,
                         item.uploadedBy?.lastName
@@ -197,7 +209,7 @@ export default function GroupDocumentsPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [groupId, toast, t]);
+    }, [groupId, locale, toast, t]);
 
     React.useEffect(() => {
         void loadDocuments();
@@ -223,7 +235,7 @@ export default function GroupDocumentsPage() {
         });
 
         if (!uploadRes.ok) {
-            throw new Error(`Upload failed: ${file.name} (${uploadRes.status})`);
+            throw new Error(t("uploadHttpFailed", { name: file.name, status: uploadRes.status }));
         }
 
         await completeDocumentUpload(requested.attachmentId as string);

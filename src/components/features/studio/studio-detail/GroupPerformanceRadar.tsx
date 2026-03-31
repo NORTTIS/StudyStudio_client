@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 import { type GroupPerformance } from "./types";
 
@@ -9,6 +10,7 @@ interface GroupPerformanceRadarProps {
 }
 
 export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
+    const t = useTranslations("GroupPerformanceRadar");
     const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set(data.map((d) => d.groupId)));
 
     const colors = ["#FF5F3D", "#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#00BCD4"];
@@ -16,10 +18,10 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
     // Transform data for radar chart
     const chartData = data[0]
         ? [
-              { metric: "Hoàn thành task", ...Object.fromEntries(data.map((d) => [d.groupId, d.completedTasks])) },
-              { metric: "Thảo luận", ...Object.fromEntries(data.map((d) => [d.groupId, d.discussionMessages])) },
-              { metric: "Hợp tác", ...Object.fromEntries(data.map((d) => [d.groupId, d.collaboration])) }
-          ]
+            { metric: t("metrics.completedTasks"), ...Object.fromEntries(data.map((d) => [d.groupId, d.completedTasks])) },
+            { metric: t("metrics.discussions"), ...Object.fromEntries(data.map((d) => [d.groupId, d.discussionMessages])) },
+            { metric: t("metrics.collaboration"), ...Object.fromEntries(data.map((d) => [d.groupId, d.collaboration])) }
+        ]
         : [];
 
     const toggleGroup = (groupId: string) => {
@@ -32,15 +34,10 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
         setSelectedGroups(newSelected);
     };
 
-    const getGroupColor = (groupId: string, index: number) => {
-        const groupIndex = data.findIndex((d) => d.groupId === groupId);
-        return colors[groupIndex % colors.length];
-    };
-
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-semibold text-[#261E33]">So sánh hiệu suất nhóm</h3>
+                <h3 className="font-semibold text-[#261E33]">{t("title")}</h3>
             </div>
 
             {/* Group selector */}
@@ -50,11 +47,10 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
                         key={group.groupId}
                         type="button"
                         onClick={() => toggleGroup(group.groupId)}
-                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs transition-all ${
-                            selectedGroups.has(group.groupId)
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs transition-colors ${selectedGroups.has(group.groupId)
                                 ? "text-white"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
+                            }`}
                         style={{
                             backgroundColor: selectedGroups.has(group.groupId)
                                 ? colors[index % colors.length]
@@ -133,20 +129,20 @@ export function GroupPerformanceRadar({ data }: GroupPerformanceRadarProps) {
                                 </div>
                                 <div className="space-y-1 text-gray-500 text-xs">
                                     <div className="flex justify-between">
-                                        <span>Task:</span>
+                                        <span>{t("labels.task")}</span>
                                         <span className="font-medium text-[#261E33]">{group.completedTasks}%</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Thảo luận:</span>
+                                        <span>{t("labels.discussions")}</span>
                                         <span className="font-medium text-[#261E33]">{group.discussionMessages}%</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span>Hợp tác:</span>
+                                        <span>{t("labels.collaboration")}</span>
                                         <span className="font-medium text-[#261E33]">{group.collaboration}%</span>
                                     </div>
                                     <div className="mt-1 border-gray-200 border-t pt-1">
                                         <div className="flex justify-between font-medium">
-                                            <span>TB:</span>
+                                            <span>{t("labels.average")}</span>
                                             <span style={{ color: colors[index % colors.length] }}>
                                                 {group.averageScore.toFixed(1)}%
                                             </span>

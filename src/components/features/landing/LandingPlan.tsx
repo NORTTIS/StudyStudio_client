@@ -7,7 +7,6 @@ import {
     Layers,
     ShieldCheck,
     Sparkles,
-    Star,
     User,
     Zap
 } from "lucide-react";
@@ -139,7 +138,7 @@ export default function LandingPlan() {
                                 <div>
                                     <div className="inline-flex items-center gap-2 rounded-full bg-[#F4F1ED] px-3 py-1 text-xs font-semibold text-[#8A7A6A]">
                                         <ShieldCheck className="h-3.5 w-3.5" />
-                                        Starter
+                                        {t("freePlan.tierBadge")}
                                     </div>
                                     <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#261E33]">
                                         {t("freePlan.title")}
@@ -209,7 +208,7 @@ export default function LandingPlan() {
                                     <div>
                                         <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
                                             <Crown className="h-3.5 w-3.5" />
-                                            Premium
+                                            {t("premiumPlan.tierBadge")}
                                         </div>
                                         <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-[#261E33]">
                                             {t("premiumPlan.title")}
@@ -262,8 +261,7 @@ export default function LandingPlan() {
                                 </ul>
 
                                 <div className="mt-8 rounded-[24px] border border-orange-100 bg-white/85 p-4">
-                                    <div className="flex items-start gap-3">
-                                        <Star className="mt-0.5 h-5 w-5 text-orange-500" />
+                                    <div>
                                         <p className="text-sm leading-7 text-[#5F5A73]">
                                             {t("premiumPlan.recommendation")}
                                         </p>

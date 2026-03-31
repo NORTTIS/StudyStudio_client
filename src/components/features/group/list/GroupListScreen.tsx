@@ -83,9 +83,9 @@ const okByJsonStatus = (obj: unknown) => {
     return s === "" || s === "success" || s === "ok" || s === "true";
 };
 
-const extractApiMessage = (text: string, json: unknown) => {
+const extractApiMessage = (text: string, json: unknown, fallback: string) => {
     const msg = String(asObject(json)?.message ?? "").trim();
-    return msg || text.trim() || "An error occurred";
+    return msg || text.trim() || fallback;
 };
 
 function getApiBase() {
@@ -178,10 +178,12 @@ async function apiGetGroupTasks(args: {
     sortAscending?: boolean;
     page?: number;
     pageSize?: number;
+    fallbackMessage: string;
+    missingApiBaseMessage: string;
 }) {
     const base = getApiBase();
     const token = getAccessTokenOrNull();
-    if (!base) throw new Error("Thieu NEXT_PUBLIC_API_BASE_URL.");
+    if (!base) throw new Error(args.missingApiBaseMessage);
 
     const query = new URLSearchParams();
     if (args.search) query.set("search", args.search);
@@ -211,7 +213,7 @@ async function apiGetGroupTasks(args: {
     const raw = await readText(res);
     const { json } = parseMaybeJson(raw);
     if (!res.ok || (json && !okByJsonStatus(json))) {
-        throw new Error(extractApiMessage(raw, json));
+        throw new Error(extractApiMessage(raw, json, args.fallbackMessage));
     }
 
     return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
@@ -399,7 +401,9 @@ export function GroupListScreen() {
                 sortBy: "dueDate",
                 sortAscending: sortByDeadline === "asc",
                 page,
-                pageSize
+                pageSize,
+                fallbackMessage: t("cannotLoad"),
+                missingApiBaseMessage: t("missingApiBase")
             });
 
             const data = res?.data;

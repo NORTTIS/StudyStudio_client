@@ -564,11 +564,11 @@ export default function MasterPageClient({
     const hasNoResults = !(hasOwnedStudios || hasJoinedStudios);
 
     return (
-        <div className="min-h-screen bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
-            <div className="flex min-h-screen">
+        <div className="h-screen overflow-hidden bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
+            <div className="flex h-full">
                 <DashboardSidebar />
 
-                <main className="relative flex-1 overflow-hidden">
+                <main className="relative h-screen flex-1 overflow-y-auto overflow-x-hidden">
                     <FloatingOrb className="left-[-120px] top-[-40px] h-72 w-72 bg-orange-200/25" />
                     <FloatingOrb className="right-[-100px] top-[12%] h-80 w-80 bg-violet-200/20" />
                     <FloatingOrb className="bottom-[-120px] left-[15%] h-80 w-80 bg-sky-200/15" />
@@ -594,7 +594,7 @@ export default function MasterPageClient({
                                             transition={{ delay: 0.05 }}
                                             className="inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm"
                                         >
-                                            Studio workspace
+                                            {t("detail.workspaceBadge")}
                                         </motion.div>
 
                                         <motion.h1

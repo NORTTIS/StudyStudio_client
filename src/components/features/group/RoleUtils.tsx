@@ -12,8 +12,8 @@ export const roleDisplayText: Record<GroupRole, string> = {
     viewer: "Người xem"
 };
 
-export function getRoleIcon(role: MemberRole | GroupRole): React.ReactNode {
-    const iconProps = { className: "h-4 w-4" };
+export function getRoleIcon(role: MemberRole | GroupRole, className = "h-4 w-4"): React.ReactNode {
+    const iconProps = { className };
 
     const rolesLower = String(role).toLowerCase();
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarDays, Clock3 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 interface StudioDateRangeProps {
@@ -10,6 +11,9 @@ interface StudioDateRangeProps {
 }
 
 export function StudioDateRange({ startDate, dueDate, showProgress = true }: StudioDateRangeProps) {
+    const locale = useLocale();
+    const t = useTranslations("StudioDateRange");
+
     const dateInfo = useMemo(() => {
         // Guard: if either date is missing, show placeholder
         if (!startDate || !dueDate) {
@@ -29,10 +33,11 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
 
         const isOverdue = now > due;
         const overdueDays = isOverdue ? elapsedDays - totalDays : 0;
+        const localeTag = locale === "vi" ? "vi-VN" : "en-US";
 
         return {
-            startDate: start.toLocaleDateString("vi-VN", { day: "numeric", month: "short", year: "numeric" }),
-            dueDate: due.toLocaleDateString("vi-VN", { day: "numeric", month: "short", year: "numeric" }),
+            startDate: start.toLocaleDateString(localeTag, { day: "numeric", month: "short", year: "numeric" }),
+            dueDate: due.toLocaleDateString(localeTag, { day: "numeric", month: "short", year: "numeric" }),
             totalDays,
             elapsedDays,
             remainingDays: isOverdue ? 0 : remainingDays,
@@ -41,13 +46,13 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
             isOverdue,
             isFuture: now < start
         };
-    }, [startDate, dueDate]);
+    }, [startDate, dueDate, locale]);
 
     if (!dateInfo) {
         return (
             <div className="rounded-xl border border-gray-200 bg-white p-5">
-                <h3 className="mb-4 font-semibold text-[#261E33]">Thời gian dự án</h3>
-                <div className="flex items-center justify-center py-6 text-gray-400 text-sm">—</div>
+                <h3 className="mb-4 font-semibold text-[#261E33]">{t("title")}</h3>
+                <div className="flex items-center justify-center py-6 text-gray-400 text-sm">{t("notAvailable")}</div>
             </div>
         );
     }
@@ -55,15 +60,15 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-semibold text-[#261E33]">Thời gian dự án</h3>
+                <h3 className="font-semibold text-[#261E33]">{t("title")}</h3>
                 {dateInfo.isOverdue && (
                     <span className="rounded-full bg-red-100 px-2 py-1 font-medium text-red-600 text-xs">
-                        Đã quá hạn
+                        {t("status.overdue")}
                     </span>
                 )}
                 {dateInfo.isFuture && (
                     <span className="rounded-full bg-blue-100 px-2 py-1 font-medium text-blue-600 text-xs">
-                        Sắp bắt đầu
+                        {t("status.upcoming")}
                     </span>
                 )}
             </div>
@@ -74,7 +79,7 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
                         <CalendarDays className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
-                        <p className="text-gray-500 text-xs">Bắt đầu</p>
+                        <p className="text-gray-500 text-xs">{t("labels.start")}</p>
                         <p className="font-medium text-[#261E33]">{dateInfo.startDate}</p>
                     </div>
                 </div>
@@ -86,7 +91,7 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
                         <Clock3 className="h-5 w-5 text-orange-600" />
                     </div>
                     <div>
-                        <p className="text-gray-500 text-xs">Kết thúc</p>
+                        <p className="text-gray-500 text-xs">{t("labels.end")}</p>
                         <p className="font-medium text-[#261E33]">{dateInfo.dueDate}</p>
                     </div>
                 </div>
@@ -99,10 +104,12 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
                     </div>
                     <div>
                         <p className="text-gray-500 text-xs">
-                            {dateInfo.isOverdue ? "Quá hạn" : dateInfo.isFuture ? "Còn lại" : "Còn lại"}
+                            {dateInfo.isOverdue ? t("labels.overdue") : t("labels.remaining")}
                         </p>
                         <p className={`font-medium ${dateInfo.isOverdue ? "text-red-600" : "text-[#261E33]"}`}>
-                            {dateInfo.isOverdue ? `${dateInfo.overdueDays} ngày` : `${dateInfo.remainingDays} ngày`}
+                            {dateInfo.isOverdue
+                                ? t("days", { count: dateInfo.overdueDays })
+                                : t("days", { count: dateInfo.remainingDays })}
                         </p>
                     </div>
                 </div>
@@ -111,25 +118,24 @@ export function StudioDateRange({ startDate, dueDate, showProgress = true }: Stu
             {showProgress && (
                 <div>
                     <div className="mb-2 flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Tiến độ thời gian</span>
+                        <span className="text-gray-500">{t("progress.title")}</span>
                         <span className="font-medium text-[#261E33]">{dateInfo.progressPercent}%</span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                         <div
-                            className={`h-full transition-all ${
-                                dateInfo.isOverdue
+                            className={`h-full transition-all ${dateInfo.isOverdue
                                     ? "bg-red-500"
                                     : dateInfo.progressPercent > 75
-                                      ? "bg-green-500"
-                                      : dateInfo.progressPercent > 50
-                                        ? "bg-blue-500"
-                                        : "bg-orange-500"
-                            }`}
+                                        ? "bg-green-500"
+                                        : dateInfo.progressPercent > 50
+                                            ? "bg-blue-500"
+                                            : "bg-orange-500"
+                                }`}
                             style={{ width: `${dateInfo.progressPercent}%` }}
                         />
                     </div>
                     <p className="mt-2 text-gray-500 text-xs">
-                        Đã trôi qua {dateInfo.elapsedDays} / {dateInfo.totalDays} ngày
+                        {t("progress.elapsed", { elapsed: dateInfo.elapsedDays, total: dateInfo.totalDays })}
                     </p>
                 </div>
             )}

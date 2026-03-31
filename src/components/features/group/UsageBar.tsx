@@ -1,9 +1,10 @@
 import { ArrowUpRight, Infinity, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export function UsageBar({ current, max }: { current: number; max: number }) {
+    const t = useTranslations("UsageBar");
     const router = useRouter();
     const locale = useLocale();
     const isUnlimited = max <= 0;
@@ -28,8 +29,8 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                 progressBar: "from-orange-500 via-orange-500 to-rose-500",
                 progressGlow: "shadow-[0_0_24px_rgba(249,115,22,0.35)]",
                 statBox: "border-orange-200/70 bg-white/78",
-                title: "Đã đạt giới hạn nhóm",
-                hint: `Bạn đang sử dụng ${current}/${max} nhóm. Hãy nâng cấp để tạo thêm nhóm mới.`,
+                title: t("limitReached"),
+                hint: t("limitReachedHint", { usage: current, max }),
                 cta: "from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
                 soft: "bg-orange-50/90 text-orange-700"
             }
@@ -44,8 +45,8 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                     progressBar: "from-amber-400 via-orange-400 to-orange-500",
                     progressGlow: "shadow-[0_0_24px_rgba(245,158,11,0.30)]",
                     statBox: "border-amber-200/70 bg-white/78",
-                    title: "Sắp chạm giới hạn nhóm",
-                    hint: `Bạn đang sử dụng ${current}/${max} nhóm. Có thể cần nâng cấp sớm để tránh bị giới hạn.`,
+                    title: t("nearLimit"),
+                    hint: t("nearLimitHint", { usage: current, max }),
                     cta: "from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600",
                     soft: "bg-amber-50/90 text-amber-700"
                 }
@@ -60,8 +61,8 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                         progressBar: "from-emerald-400 via-emerald-500 to-teal-500",
                         progressGlow: "shadow-[0_0_24px_rgba(16,185,129,0.28)]",
                         statBox: "border-emerald-200/70 bg-white/78",
-                        title: "Không giới hạn nhóm",
-                        hint: "Gói hiện tại cho phép bạn tạo nhóm không giới hạn.",
+                        title: t("unlimited"),
+                        hint: t("unlimitedHint"),
                         cta: "",
                         soft: "bg-emerald-50/90 text-emerald-700"
                     }
@@ -75,21 +76,21 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                         progressBar: "from-orange-400 via-orange-400 to-rose-500",
                         progressGlow: "shadow-[0_0_20px_rgba(251,146,60,0.22)]",
                         statBox: "border-[#E7DED4] bg-white/82",
-                        title: "Tình trạng sử dụng",
-                        hint: `Bạn đang sử dụng ${current}/${max} nhóm. Bạn có thể nâng cấp để tăng giới hạn.`,
+                        title: t("usage"),
+                        hint: t("normalHint", { usage: current, max }),
                         cta: "from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700",
                         soft: "bg-orange-50/90 text-orange-700"
                     };
 
     const badgeText =
-        status === "full" ? "Đã đầy" : status === "near" ? "Gần đầy" : status === "unlimited" ? "PRO" : "Đang dùng";
+        status === "full" ? t("badgeFull") : status === "near" ? t("badgeNear") : status === "unlimited" ? t("badgeUnlimited") : t("badgeInUse");
 
     const remaining = !isUnlimited ? Math.max(0, max - current) : null;
 
     const stats = [
-        { label: "Hiện có", value: current },
-        { label: "Tối đa", value: isUnlimited ? "∞" : max },
-        ...(isUnlimited ? [] : [{ label: "Còn trống", value: remaining }])
+        { label: t("currentLabel"), value: current },
+        { label: t("maxLabel"), value: isUnlimited ? "∞" : max },
+        ...(isUnlimited ? [] : [{ label: t("remainingLabel"), value: remaining }])
     ];
 
     return (
@@ -137,7 +138,7 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
 
                     <div className="shrink-0">
                         <div className="inline-flex items-center rounded-full border border-white/80 bg-white/80 px-3 py-1.5 font-semibold text-[#5B4A3E] text-xs shadow-sm backdrop-blur">
-                            {isUnlimited ? "∞ không giới hạn" : `${pct}% đã dùng`}
+                            {isUnlimited ? t("unlimitedText") : `${pct}${t("percentUsed")}`}
                         </div>
                     </div>
                 </div>
@@ -162,8 +163,8 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
 
                 <div className="space-y-3">
                     <div className="flex items-center justify-between text-xs text-[#8A7A6D]">
-                        <span>Mức sử dụng</span>
-                        <span>{isUnlimited ? "Không giới hạn" : `${current}/${max} nhóm`}</span>
+                        <span>{t("usageLevel")}</span>
+                        <span>{isUnlimited ? t("unlimitedText") : t("usageAmount", { current, max })}</span>
                     </div>
 
                     <div className={["relative h-4 w-full overflow-hidden rounded-full", tone.progressWrap].join(" ")}>
@@ -184,14 +185,14 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div className="rounded-2xl border border-white/70 bg-white/60 px-4 py-3 text-sm text-[#5F6C7B] shadow-sm backdrop-blur">
                         {isUnlimited ? (
-                            <>Bạn có thể tạo thêm nhóm bất kỳ lúc nào.</>
+                            <>{t("canCreateMessage")}</>
                         ) : isFull ? (
                             <>
-                                Bạn đã dùng hết <span className="font-semibold text-[#111827]">{max}</span> nhóm trong gói hiện tại.
+                                {t("fullGroupsMessage", { max })}
                             </>
                         ) : (
                             <>
-                                Bạn còn <span className="font-semibold text-[#111827]">{remaining}</span> nhóm có thể tạo.
+                                {t("remainingGroupsMessage", { remaining: remaining ?? 0 })}
                             </>
                         )}
                     </div>
@@ -207,7 +208,7 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                                 "shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition focus:outline-none focus:ring-4",
                                 tone.cta
                             ].join(" ")}>
-                            Nâng cấp gói
+                            {t("upgradeButton")}
                             <ArrowUpRight className="ml-2 h-4 w-4" />
                         </motion.button>
                     ) : null}
@@ -219,7 +220,7 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                         animate={{ opacity: 1, y: 0 }}
                         className="rounded-[22px] border border-orange-200/70 bg-white/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur">
                         <p className="text-[#5F6C7B] text-sm leading-6">
-                            Nâng cấp để tăng giới hạn nhóm và mở rộng thêm không gian học tập mới.
+                            {t("usageNote")}
                         </p>
                     </motion.div>
                 ) : null}

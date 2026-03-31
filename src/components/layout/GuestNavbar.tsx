@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FaBars, FaXmark } from "react-icons/fa6";
@@ -16,6 +16,7 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
     const t = useTranslations("GuestNavbar");
     const locale = useLocale();
     const pathname = usePathname();
+    const router = useRouter();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const navLinks = [
@@ -43,6 +44,11 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
 
     const isActive = (href: string) => pathname === href;
 
+    const changeLocale = (nextLocale: "en" | "vi") => {
+        const pathWithoutLocale = (pathname || "").replace(/^\/[a-z]{2}(?=\/|$)/i, "");
+        router.push(`/${nextLocale}${pathWithoutLocale}`);
+    };
+
     return (
         <header className={`sticky top-0 z-50 bg-white shadow-md ${className}`}>
             <div className="flex items-center justify-between px-4 py-4 md:px-8">
@@ -57,9 +63,8 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                         <Link
                             key={link.key}
                             href={link.href}
-                            className={`cursor-pointer px-6 font-medium transition hover:text-orange-500 ${
-                                isActive(link.href) ? "font-semibold text-orange-500" : "text-gray-800"
-                            }`}>
+                            className={`cursor-pointer px-6 font-medium transition hover:text-orange-500 ${isActive(link.href) ? "font-semibold text-orange-500" : "text-gray-800"
+                                }`}>
                             {link.label}
                         </Link>
                     ))}
@@ -67,6 +72,31 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
 
                 {/* Auth Buttons - Desktop */}
                 <div className="hidden gap-2 md:flex">
+                    <div className="flex items-center rounded-full border border-orange-200 bg-orange-50 p-1">
+                        <button
+                            type="button"
+                            onClick={() => changeLocale("vi")}
+                            className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "vi"
+                                ? "bg-orange-500 text-white"
+                                : "text-gray-700 hover:bg-orange-100"
+                                }`}
+                            aria-label={t("switchToVietnamese")}
+                        >
+                            {t("vietnameseShort")}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => changeLocale("en")}
+                            className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "en"
+                                ? "bg-orange-500 text-white"
+                                : "text-gray-700 hover:bg-orange-100"
+                                }`}
+                            aria-label={t("switchToEnglish")}
+                        >
+                            {t("englishShort")}
+                        </button>
+                    </div>
+
                     <Link href={`/${locale}/login`} className="cursor-pointer">
                         <Button variant="ghost">{t("login")}</Button>
                     </Link>
@@ -94,15 +124,39 @@ export function GuestNavbar({ className = "" }: GuestNavbarProps) {
                             <Link
                                 key={link.key}
                                 href={link.href}
-                                className={`cursor-pointer rounded-lg px-4 py-3 font-medium text-base transition hover:bg-orange-50 ${
-                                    isActive(link.href) ? "bg-orange-50 text-orange-500" : "text-gray-800"
-                                }`}
+                                className={`cursor-pointer rounded-lg px-4 py-3 font-medium text-base transition hover:bg-orange-50 ${isActive(link.href) ? "bg-orange-50 text-orange-500" : "text-gray-800"
+                                    }`}
                                 onClick={() => setMobileMenuOpen(false)}>
                                 {link.label}
                             </Link>
                         ))}
 
                         <div className="flex flex-col gap-2 border-gray-200 border-t pt-4">
+                            <div className="mb-2 flex items-center justify-center rounded-full border border-orange-200 bg-orange-50 p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => changeLocale("vi")}
+                                    className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "vi"
+                                        ? "bg-orange-500 text-white"
+                                        : "text-gray-700 hover:bg-orange-100"
+                                        }`}
+                                    aria-label={t("switchToVietnamese")}
+                                >
+                                    {t("vietnameseShort")}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => changeLocale("en")}
+                                    className={`rounded-full px-3 py-1 font-semibold text-xs transition-colors ${locale === "en"
+                                        ? "bg-orange-500 text-white"
+                                        : "text-gray-700 hover:bg-orange-100"
+                                        }`}
+                                    aria-label={t("switchToEnglish")}
+                                >
+                                    {t("englishShort")}
+                                </button>
+                            </div>
+
                             <Link
                                 href={`/${locale}/login`}
                                 className="cursor-pointer"

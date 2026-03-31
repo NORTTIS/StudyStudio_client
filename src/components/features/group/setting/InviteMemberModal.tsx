@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Copy, Link2, Users, X } from "lucide-react";
+import { AlertCircle, Copy, Link2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getRoleIcon } from "@/components/features/group/RoleUtils";
 import { cn } from "@/lib/utils";
 
 export type InviteRole = "Moderator" | "Member" | "Commenter" | "Viewer";
@@ -57,8 +58,8 @@ export function InviteMemberModal({
     const effectiveRole: InviteRole = isStudioVariant
         ? "Member"
         : hasModerator && role === "Moderator"
-          ? "Member"
-          : role;
+            ? "Member"
+            : role;
 
     const inviteEmailSchema = z
         .string()
@@ -154,8 +155,8 @@ export function InviteMemberModal({
         const safeRole: InviteRole = isStudioVariant
             ? "Member"
             : hasModerator && effectiveRole === "Moderator"
-              ? "Member"
-              : effectiveRole;
+                ? "Member"
+                : effectiveRole;
 
         setSending(true);
         try {
@@ -188,7 +189,7 @@ export function InviteMemberModal({
                 document.execCommand("copy");
                 document.body.removeChild(ta);
                 setCopied(true);
-            } catch {}
+            } catch { }
         }
     };
 
@@ -205,8 +206,8 @@ export function InviteMemberModal({
         const safeRole: InviteRole = isStudioVariant
             ? "Member"
             : hasModerator && effectiveRole === "Moderator"
-              ? "Member"
-              : effectiveRole;
+                ? "Member"
+                : effectiveRole;
 
         setCreatingLink(true);
         try {
@@ -305,8 +306,8 @@ export function InviteMemberModal({
 
                             <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                                 <div className="flex min-w-0 items-start gap-4">
-                                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#F3F4F6] text-[#6B7280]">
-                                        <Users className="h-6 w-6" />
+                                    <div className="shrink-0 pt-1 text-[#6B7280]">
+                                        {getRoleIcon(effectiveRole, "h-10 w-10")}
                                     </div>
 
                                     <div className="min-w-0">
@@ -332,7 +333,7 @@ export function InviteMemberModal({
                                                     disabled={!canManage || sending || creatingLink}>
                                                     <SelectTrigger className="inline-flex h-auto w-fit items-center gap-2 border-0 bg-transparent p-0 shadow-none focus:outline-none focus:ring-0 [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-[#6B7280]">
                                                         <span className="font-semibold text-2xl text-[#111827] leading-none">
-                                                            <SelectValue />
+                                                            {t(`roles.${effectiveRole}.label`)}
                                                         </span>
                                                     </SelectTrigger>
 
@@ -345,7 +346,7 @@ export function InviteMemberModal({
                                                                 key={r}
                                                                 value={r}
                                                                 className="rounded-xl px-3 py-2.5 text-[#111827] text-[15px] focus:bg-[#F3F4F6] data-[state=checked]:bg-[#F3F4F6]">
-                                                                {t(`roles.${r}.label`)}
+                                                                <span>{t(`roles.${r}.label`)}</span>
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>

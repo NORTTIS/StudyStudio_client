@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLocale, useMessages, useTranslations } from "next-intl";
 import {
     Activity,
     AlertCircle,

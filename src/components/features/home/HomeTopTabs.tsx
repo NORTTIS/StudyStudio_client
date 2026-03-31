@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Home, Sparkles, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -20,23 +20,24 @@ const stripLocale = (p: string) => p.replace(/^\/[a-z]{2}(?=\/)/i, "");
 export default function HomeTopTabs() {
     const locale = useLocale();
     const pathname = usePathname();
+    const t = useTranslations("HomeTopTabs");
 
     const tabs: Tab[] = [
         {
             key: "home",
-            label: "Trang chủ",
+            label: t("home"),
             icon: Home,
             href: (l) => `/${l}/home`
         },
         {
             key: "analysis",
-            label: "Phân tích",
+            label: t("analysis"),
             icon: BarChart3,
             href: (l) => `/${l}/analysis`
         },
         {
             key: "ai",
-            label: "AI",
+            label: t("ai"),
             icon: Sparkles,
             href: (l) => `/${l}/ai`
         }

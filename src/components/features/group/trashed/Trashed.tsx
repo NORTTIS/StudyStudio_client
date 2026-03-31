@@ -11,6 +11,7 @@ import {
     Trash2,
     X
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
@@ -47,16 +48,16 @@ function startOfDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function formatDateDisplay(value?: string) {
+function formatDateDisplay(value?: string, labels?: { selectDate: string; today: string; tomorrow: string }) {
     const date = parseDateString(value);
-    if (!date) return "Select a date";
+    if (!date) return labels?.selectDate || "Select a date";
 
     const today = startOfDay(new Date());
     const target = startOfDay(date);
     const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
 
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === 0) return labels?.today || "Today";
+    if (diffDays === 1) return labels?.tomorrow || "Tomorrow";
 
     return new Intl.DateTimeFormat("en-US", {
         weekday: "short",
@@ -153,7 +154,7 @@ const extractApiMessage = (text: string, json: any) => {
     const msg = (json?.message ?? "").toString().trim();
     if (msg) return msg;
     const t = (text ?? "").toString().trim();
-    return t || "Đã xảy ra lỗi";
+    return t || "UNKNOWN_ERROR";
 };
 
 function getApiBase() {
@@ -191,9 +192,9 @@ async function apiPermanentDeleteTask(args: { groupId: string; taskId: string })
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
 
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ.");
-    if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("taskId không hợp lệ.");
+    if (!apiBase) throw new Error("MISSING_API_BASE");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("INVALID_GROUP_ID");
+    if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("INVALID_TASK_ID");
 
     const url = apiUrl(`/Task/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.taskId)}/permanent`);
 
@@ -213,8 +214,8 @@ async function apiGetDeletedTasks(groupId: string) {
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
 
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!(groupId && isUuidLike(groupId))) throw new Error("groupId không hợp lệ.");
+    if (!apiBase) throw new Error("MISSING_API_BASE");
+    if (!(groupId && isUuidLike(groupId))) throw new Error("INVALID_GROUP_ID");
 
     const url = apiUrl(`/Task/${encodeURIComponent(groupId)}/deleted-task`);
 
@@ -233,8 +234,8 @@ async function apiGetGroupMembers(groupId: string) {
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
 
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!(groupId && isUuidLike(groupId))) throw new Error("groupId không hợp lệ.");
+    if (!apiBase) throw new Error("MISSING_API_BASE");
+    if (!(groupId && isUuidLike(groupId))) throw new Error("INVALID_GROUP_ID");
 
     const url = apiUrl(`/group/${encodeURIComponent(groupId)}/members`);
 
@@ -253,9 +254,9 @@ async function apiRestoreTask(args: { groupId: string; taskId: string }) {
     const apiBase = getApiBase();
     const token = getAccessTokenOrNull();
 
-    if (!apiBase) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
-    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("groupId không hợp lệ.");
-    if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("taskId không hợp lệ.");
+    if (!apiBase) throw new Error("MISSING_API_BASE");
+    if (!(args.groupId && isUuidLike(args.groupId))) throw new Error("INVALID_GROUP_ID");
+    if (!(args.taskId && isUuidLike(args.taskId))) throw new Error("INVALID_TASK_ID");
 
     const url = apiUrl(`/Task/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.taskId)}/restore`);
 
@@ -355,20 +356,7 @@ function pickAvatarTone(seed: string) {
     return avatarTones[Math.abs(hash) % avatarTones.length];
 }
 
-const monthOptions = [
-    { value: "0", label: "January" },
-    { value: "1", label: "February" },
-    { value: "2", label: "March" },
-    { value: "3", label: "April" },
-    { value: "4", label: "May" },
-    { value: "5", label: "June" },
-    { value: "6", label: "July" },
-    { value: "7", label: "August" },
-    { value: "8", label: "September" },
-    { value: "9", label: "October" },
-    { value: "10", label: "November" },
-    { value: "11", label: "December" }
-] as const;
+const monthOptions = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"] as const;
 
 type PopupPosition = {
     top: number;
@@ -385,6 +373,7 @@ type TrelloDatePickerProps = {
 };
 
 function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePickerProps) {
+    const t = useTranslations("TrashedPage");
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
@@ -533,9 +522,9 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                                 value={month.getMonth()}
                                 onChange={handleMonthChange}
                                 className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {monthOptions.map((item) => (
-                                    <option key={item.value} value={item.value}>
-                                        {item.label}
+                                {monthOptions.map((item, index) => (
+                                    <option key={item} value={item}>
+                                        {t(`datePicker.month${index + 1}`)}
                                     </option>
                                 ))}
                             </select>
@@ -568,7 +557,7 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             </button>
 
                             <div className="font-bold text-[18px] text-zinc-900">
-                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                                {t(`datePicker.month${month.getMonth() + 1}`)} {month.getFullYear()}
                             </div>
 
                             <button
@@ -641,21 +630,21 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                             type="button"
                             onClick={() => pickDate(new Date())}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                            Today
+                            {t("datePicker.today")}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                            Tomorrow
+                            {t("datePicker.tomorrow")}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                            Next week
+                            {t("datePicker.nextWeek")}
                         </button>
 
                         <button
@@ -665,7 +654,7 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                                 setOpen(false);
                             }}
                             className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                            No date
+                            {t("datePicker.noDate")}
                         </button>
                     </div>
                 </div>,
@@ -699,7 +688,11 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
 
                         <span
                             className={cn("truncate text-left", value ? "font-medium text-zinc-900" : "text-zinc-400")}>
-                            {formatDateDisplay(value)}
+                            {formatDateDisplay(value, {
+                                selectDate: t("datePicker.selectDate"),
+                                today: t("datePicker.today"),
+                                tomorrow: t("datePicker.tomorrow")
+                            })}
                         </span>
                     </div>
                 </button>
@@ -717,16 +710,18 @@ function DeletedDateRangePicker({
     value: DeletedDateFilter;
     onChange: (next: DeletedDateFilter) => void;
 }) {
+    const t = useTranslations("TrashedPage");
+
     return (
         <div className="flex flex-col gap-4 p-4">
             <TrelloDatePicker
-                label="Từ ngày"
+                label={t("filters.dateRange.fromDate")}
                 value={value.startDate}
                 onChange={(v) => onChange({ ...value, startDate: v })}
                 max={value.endDate || undefined}
             />
             <TrelloDatePicker
-                label="Đến ngày"
+                label={t("filters.dateRange.toDate")}
                 value={value.endDate}
                 onChange={(v) => onChange({ ...value, endDate: v })}
                 min={value.startDate || undefined}
@@ -750,8 +745,8 @@ function ConfirmModal({
     open,
     title,
     description,
-    confirmLabel = "Xác nhận",
-    cancelLabel = "Hủy",
+    confirmLabel = "Confirm",
+    cancelLabel = "Cancel",
     onConfirm,
     onCancel,
     confirmTone = "indigo"
@@ -820,6 +815,8 @@ function RowMenu({
     onRestore: () => void;
     onDelete: () => void;
 }) {
+    const t = useTranslations("TrashedPage");
+
     React.useEffect(() => {
         if (!open) return;
 
@@ -848,7 +845,7 @@ function RowMenu({
                 onClick={onRestore}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-semibold text-sm text-zinc-800 hover:bg-zinc-100">
                 <RotateCcw className="h-5 w-5" />
-                Khôi phục
+                {t("actions.restore")}
             </button>
 
             <button
@@ -856,7 +853,7 @@ function RowMenu({
                 onClick={onDelete}
                 className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-semibold text-red-500 text-sm hover:bg-red-50">
                 <Trash2 className="h-5 w-5" />
-                Xóa vĩnh viễn
+                {t("actions.deletePermanently")}
             </button>
         </div>
     );
@@ -871,6 +868,7 @@ function DeletedByPicker({
     selectedId: string | null;
     onSelect: (value: string | null) => void;
 }) {
+    const t = useTranslations("TrashedPage");
     const [localSearch, setLocalSearch] = React.useState("");
 
     const q = normalizeText(localSearch);
@@ -886,7 +884,7 @@ function DeletedByPicker({
                     <input
                         value={localSearch}
                         onChange={(e) => setLocalSearch(e.target.value)}
-                        placeholder="Search or enter email..."
+                        placeholder={t("filters.deletedBy.searchPlaceholder")}
                         className="h-11 w-full border-none bg-transparent pl-12 text-[18px] text-zinc-900 outline-none placeholder:text-zinc-400"
                     />
                 </div>
@@ -901,9 +899,9 @@ function DeletedByPicker({
                         selectedId === null && "bg-zinc-100"
                     )}>
                     <div className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-emerald-500 font-bold text-[18px] text-white">
-                        Me
+                        {t("filters.deletedBy.me")}
                     </div>
-                    <div className="font-semibold text-[20px] text-zinc-900">Tất cả người xóa</div>
+                    <div className="font-semibold text-[20px] text-zinc-900">{t("filters.deletedBy.all")}</div>
                 </button>
 
                 {filtered.map((option) => {
@@ -965,6 +963,8 @@ function FilterPopover({
     onChangeDeletedDate: (next: DeletedDateFilter) => void;
     onClose: () => void;
 }) {
+    const t = useTranslations("TrashedPage");
+
     React.useEffect(() => {
         if (!open) return;
         const onKeyDown = (e: KeyboardEvent) => {
@@ -990,14 +990,14 @@ function FilterPopover({
             {view === "root" && (
                 <>
                     <div className="border-zinc-200 border-b px-6 py-4 font-medium text-[20px] text-zinc-400">
-                        Filter by
+                        {t("filters.title")}
                     </div>
                     <div className="p-3">
                         <button
                             type="button"
                             onClick={() => onChangeView("deletedBy")}
                             className="flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left font-semibold text-[18px] text-zinc-900 hover:bg-zinc-100">
-                            <span>Người xóa</span>
+                            <span>{t("filters.deletedBy.label")}</span>
                             <ChevronRight className="h-5 w-5 text-zinc-400" />
                         </button>
 
@@ -1005,7 +1005,7 @@ function FilterPopover({
                             type="button"
                             onClick={() => onChangeView("deletedDate")}
                             className="mt-2 flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left font-semibold text-[18px] text-zinc-900 hover:bg-zinc-100">
-                            <span>Ngày xóa</span>
+                            <span>{t("filters.deletedDate.label")}</span>
                             <ChevronRight className="h-5 w-5 text-zinc-400" />
                         </button>
                     </div>
@@ -1019,9 +1019,9 @@ function FilterPopover({
                             type="button"
                             onClick={() => onChangeView("root")}
                             className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
-                            ←
+                            {t("common.back")}
                         </button>
-                        <div className="font-semibold text-[18px] text-zinc-900">Chọn người xóa</div>
+                        <div className="font-semibold text-[18px] text-zinc-900">{t("filters.deletedBy.selectTitle")}</div>
                     </div>
                     <DeletedByPicker
                         options={deletedByOptions}
@@ -1041,9 +1041,9 @@ function FilterPopover({
                             type="button"
                             onClick={() => onChangeView("root")}
                             className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
-                            ←
+                            {t("common.back")}
                         </button>
-                        <div className="font-semibold text-[18px] text-zinc-900">Chọn ngày xóa</div>
+                        <div className="font-semibold text-[18px] text-zinc-900">{t("filters.deletedDate.selectTitle")}</div>
                     </div>
 
                     <DeletedDateRangePicker value={deletedDateFilter} onChange={onChangeDeletedDate} />
@@ -1053,13 +1053,13 @@ function FilterPopover({
                             type="button"
                             onClick={() => onChangeDeletedDate({ startDate: "", endDate: "" })}
                             className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
-                            Xóa chọn
+                            {t("filters.deletedDate.clearSelection")}
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
                             className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white hover:bg-orange-700">
-                            Áp dụng
+                            {t("filters.deletedDate.apply")}
                         </button>
                     </div>
                 </>
@@ -1071,6 +1071,20 @@ function FilterPopover({
 const ITEMS_PER_PAGE = 10;
 
 export default function Trashed() {
+    const t = useTranslations("TrashedPage");
+    const mapErrorMessage = React.useCallback(
+        (message?: string | null) => {
+            const code = String(message ?? "").trim();
+            if (!code) return t("errors.unknown");
+            if (code === "MISSING_API_BASE") return t("errors.missingApiBase");
+            if (code === "INVALID_GROUP_ID") return t("errors.invalidGroupId");
+            if (code === "INVALID_TASK_ID") return t("errors.invalidTaskId");
+            if (code === "UNKNOWN_ERROR") return t("errors.unknown");
+            return code;
+        },
+        [t]
+    );
+
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
 
@@ -1108,13 +1122,13 @@ export default function Trashed() {
     const refresh = React.useCallback(async () => {
         if (!groupId) {
             setLoading(false);
-            setError("Thiếu groupId trong route.");
+            setError(t("errors.missingGroupId"));
             return;
         }
 
         if (!isUuidLike(groupId)) {
             setLoading(false);
-            setError("groupId không hợp lệ.");
+            setError(t("errors.invalidGroupId"));
             return;
         }
 
@@ -1135,7 +1149,7 @@ export default function Trashed() {
                 const userId = String(member?.userId ?? "").trim();
                 if (!userId) continue;
                 const fullName = buildFullName(member?.firstName, member?.lastName, member?.email);
-                nextMemberNameMap[userId] = fullName || member?.email || "Không rõ";
+                nextMemberNameMap[userId] = fullName || member?.email || t("fallbacks.unknown");
                 nextMemberAvatarMap[userId] = member?.avatarUrl ?? null;
             }
 
@@ -1151,7 +1165,7 @@ export default function Trashed() {
                 const id = String(x.deleteTaskId ?? "").trim();
                 const deletedOnRaw = x.deletedOn ?? "";
                 const deletedBy = x.deletedBy ?? null;
-                const name = String(x.taskName ?? "").trim() || "Untitled task";
+                const name = String(x.taskName ?? "").trim() || t("fallbacks.untitledTask");
                 const deletedByName = deletedBy ? (nextMemberNameMap[String(deletedBy)] ?? null) : null;
 
                 return {
@@ -1168,12 +1182,12 @@ export default function Trashed() {
 
             setItems(dedupeTrashItems(mapped.filter((x) => x.id)));
         } catch (e: any) {
-            setError(e?.message ?? "Không tải được danh sách thùng rác.");
+            setError(mapErrorMessage(e?.message) || t("errors.cannotLoadTrash"));
             setItems([]);
         } finally {
             setLoading(false);
         }
-    }, [groupId]);
+    }, [groupId, t, mapErrorMessage]);
 
     React.useEffect(() => {
         void refresh();
@@ -1188,7 +1202,7 @@ export default function Trashed() {
         items.forEach((item) => {
             const id = String(item.deletedBy ?? "").trim();
             if (!id) return;
-            const name = item.deletedByName || memberNameMap[id] || "Không rõ";
+            const name = item.deletedByName || memberNameMap[id] || t("fallbacks.unknown");
             const avatarUrl = memberAvatarMap[id] ?? null;
             map.set(id, { name, avatarUrl });
         });
@@ -1238,11 +1252,25 @@ export default function Trashed() {
 
     const selectedDeletedByName =
         deletedByOptions.find((x) => x.id === deletedByFilter)?.name ||
-        (deletedByFilter ? memberNameMap[deletedByFilter] || "Không rõ" : "");
+        (deletedByFilter ? memberNameMap[deletedByFilter] || t("fallbacks.unknown") : "");
 
     const deletedDateLabel = [
-        deletedDateFilter.startDate && `từ ${formatDateDisplay(deletedDateFilter.startDate)}`,
-        deletedDateFilter.endDate && `đến ${formatDateDisplay(deletedDateFilter.endDate)}`
+        deletedDateFilter.startDate &&
+        t("filters.deletedDate.fromDate", {
+            date: formatDateDisplay(deletedDateFilter.startDate, {
+                selectDate: t("datePicker.selectDate"),
+                today: t("datePicker.today"),
+                tomorrow: t("datePicker.tomorrow")
+            })
+        }),
+        deletedDateFilter.endDate &&
+        t("filters.deletedDate.toDate", {
+            date: formatDateDisplay(deletedDateFilter.endDate, {
+                selectDate: t("datePicker.selectDate"),
+                today: t("datePicker.today"),
+                tomorrow: t("datePicker.tomorrow")
+            })
+        })
     ]
         .filter(Boolean)
         .join(" ");
@@ -1279,7 +1307,7 @@ export default function Trashed() {
             await apiRestoreTask({ groupId, taskId });
         } catch (e: any) {
             setItems(prev);
-            setError(e?.message ?? "Không thể khôi phục task.");
+            setError(mapErrorMessage(e?.message) || t("errors.cannotRestoreTask"));
             setProcessingId(null);
             return;
         }
@@ -1288,7 +1316,7 @@ export default function Trashed() {
             await refresh();
         } catch (e: any) {
             // Restore succeeded but refresh failed - don't rollback, just log
-            setError(e?.message ?? "Không thể làm mới danh sách.");
+            setError(mapErrorMessage(e?.message) || t("errors.cannotRefreshList"));
         } finally {
             setProcessingId(null);
         }
@@ -1308,7 +1336,7 @@ export default function Trashed() {
             await apiPermanentDeleteTask({ groupId, taskId });
         } catch (e: any) {
             setItems(prev);
-            setError(e?.message ?? "Không thể xóa vĩnh viễn task.");
+            setError(mapErrorMessage(e?.message) || t("errors.cannotDeleteTaskPermanently"));
             setProcessingId(null);
             return;
         }
@@ -1317,7 +1345,7 @@ export default function Trashed() {
             await refresh();
         } catch (e: any) {
             // Delete succeeded but refresh failed - don't rollback, just log
-            setError(e?.message ?? "Không thể làm mới danh sách.");
+            setError(mapErrorMessage(e?.message) || t("errors.cannotRefreshList"));
         } finally {
             setProcessingId(null);
         }
@@ -1354,7 +1382,7 @@ export default function Trashed() {
                                 type="button"
                                 onClick={() => void refresh()}
                                 className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
-                                Tải lại
+                                {t("actions.reload")}
                             </button>
                         </div>
                     </div>
@@ -1367,10 +1395,10 @@ export default function Trashed() {
         <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
             <ConfirmModal
                 open={confirmRestore.open}
-                title="Khôi phục task"
-                description={`Bạn có chắc muốn khôi phục "${confirmRestore.taskName}" không?`}
-                confirmLabel="Khôi phục"
-                cancelLabel="Hủy"
+                title={t("confirm.restore.title")}
+                description={t("confirm.restore.description", { taskName: confirmRestore.taskName })}
+                confirmLabel={t("actions.restore")}
+                cancelLabel={t("common.cancel")}
                 confirmTone="orange"
                 onConfirm={() => void handleConfirmRestore()}
                 onCancel={() => setConfirmRestore({ open: false, taskId: null, taskName: "" })}
@@ -1378,10 +1406,10 @@ export default function Trashed() {
 
             <ConfirmModal
                 open={confirmDelete.open}
-                title="Xóa vĩnh viễn task"
-                description={`Bạn có chắc muốn xóa vĩnh viễn "${confirmDelete.taskName}" không?`}
-                confirmLabel="Xóa vĩnh viễn"
-                cancelLabel="Hủy"
+                title={t("confirm.delete.title")}
+                description={t("confirm.delete.description", { taskName: confirmDelete.taskName })}
+                confirmLabel={t("actions.deletePermanently")}
+                cancelLabel={t("common.cancel")}
                 confirmTone="orange"
                 onConfirm={() => void handleConfirmDelete()}
                 onCancel={() => setConfirmDelete({ open: false, taskId: null, taskName: "" })}
@@ -1390,7 +1418,7 @@ export default function Trashed() {
             <Container>
                 <div className="pt-8 pb-8">
                     <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
-                        <h1 className="font-bold text-[40px] text-zinc-900 tracking-tight">Trash</h1>
+                        <h1 className="font-bold text-[40px] text-zinc-900 tracking-tight">{t("title")}</h1>
 
                         <div className="mt-8 flex items-center gap-3">
                             <div className="relative w-full max-w-[680px]">
@@ -1398,7 +1426,7 @@ export default function Trashed() {
                                 <input
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="Tìm kiếm"
+                                    placeholder={t("search.placeholder")}
                                     className="h-11 w-full rounded-xl border border-zinc-200 bg-white pr-4 pl-11 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-300"
                                 />
                             </div>
@@ -1411,7 +1439,7 @@ export default function Trashed() {
                                         setFilterView("root");
                                     }}
                                     className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                                    aria-label="Bộ lọc">
+                                    aria-label={t("filters.ariaLabel")}>
                                     <Filter className="h-5 w-5" />
                                     {activeFilterCount > 0 ? (
                                         <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-orange-500 px-1 font-bold text-[10px] text-white">
@@ -1438,7 +1466,7 @@ export default function Trashed() {
                             <div className="mt-4 flex flex-wrap items-center gap-2">
                                 {deletedByFilter ? (
                                     <div className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-sm text-zinc-700">
-                                        <span>Người xóa: {selectedDeletedByName}</span>
+                                        <span>{t("chips.deletedBy", { name: selectedDeletedByName })}</span>
                                         <button
                                             type="button"
                                             onClick={() => setDeletedByFilter(null)}
@@ -1450,7 +1478,7 @@ export default function Trashed() {
 
                                 {(deletedDateFilter.startDate || deletedDateFilter.endDate) && (
                                     <div className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-sm text-zinc-700">
-                                        <span>Ngày xóa: {deletedDateLabel}</span>
+                                        <span>{t("chips.deletedDate", { dateRange: deletedDateLabel })}</span>
                                         <button
                                             type="button"
                                             onClick={() => setDeletedDateFilter({ startDate: "", endDate: "" })}
@@ -1467,7 +1495,7 @@ export default function Trashed() {
                                         setDeletedDateFilter({ startDate: "", endDate: "" });
                                     }}
                                     className="font-semibold text-sm text-zinc-600 hover:text-zinc-900">
-                                    Xóa tất cả bộ lọc
+                                    {t("filters.clearAll")}
                                 </button>
                             </div>
                         )}
@@ -1477,16 +1505,16 @@ export default function Trashed() {
                                 <thead>
                                     <tr>
                                         <th className="w-[20%] border-zinc-200 border-b px-8 py-4 text-center font-bold text-xs text-zinc-500 uppercase tracking-wide">
-                                            Tên
+                                            {t("table.headers.name")}
                                         </th>
                                         <th className="w-[10%] border-zinc-200 border-b px-4 py-4 text-center font-bold text-xs text-zinc-500 uppercase tracking-wide">
-                                            Loại
+                                            {t("table.headers.type")}
                                         </th>
                                         <th className="w-[28%] border-zinc-200 border-b px-4 py-4 text-center font-bold text-xs text-zinc-500 uppercase tracking-wide">
-                                            Thời gian xóa
+                                            {t("table.headers.deletedTime")}
                                         </th>
                                         <th className="w-[34%] border-zinc-200 border-b px-4 py-4 text-center font-bold text-xs text-zinc-500 uppercase tracking-wide">
-                                            Người xóa
+                                            {t("table.headers.deletedBy")}
                                         </th>
                                         <th className="w-[8%] border-zinc-200 border-b px-4 py-4" />
                                     </tr>
@@ -1496,7 +1524,7 @@ export default function Trashed() {
                                     {paginatedItems.length === 0 ? (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-12 text-center text-sm text-zinc-500">
-                                                Không có task nào phù hợp.
+                                                {t("table.noData")}
                                             </td>
                                         </tr>
                                     ) : (
@@ -1504,7 +1532,7 @@ export default function Trashed() {
                                             const displayDeletedBy =
                                                 item.deletedByName ||
                                                 memberNameMap[String(item.deletedBy ?? "")] ||
-                                                "Không rõ";
+                                                t("fallbacks.unknown");
 
                                             const initials = getInitials(displayDeletedBy);
                                             const tone = pickAvatarTone(displayDeletedBy || item.rowKey);
@@ -1564,7 +1592,7 @@ export default function Trashed() {
                                                                     )
                                                                 }
                                                                 className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100 disabled:opacity-50"
-                                                                aria-label="Tùy chọn">
+                                                                aria-label={t("actions.moreOptions")}>
                                                                 <MoreHorizontal className="h-5 w-5" />
                                                             </button>
 
@@ -1588,7 +1616,7 @@ export default function Trashed() {
                             <div className="flex items-center gap-2 text-xs text-zinc-500">
                                 <Trash2 className="h-4 w-4" />
                                 <span>
-                                    {filteredItems.length} mục • Trang {page}/{totalPages}
+                                    {t("pagination.summary", { count: filteredItems.length, page, totalPages })}
                                 </span>
                             </div>
 
@@ -1598,7 +1626,7 @@ export default function Trashed() {
                                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                                     disabled={page <= 1}
                                     className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 font-semibold text-sm text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
-                                    Trước
+                                    {t("pagination.previous")}
                                 </button>
 
                                 <button
@@ -1606,7 +1634,7 @@ export default function Trashed() {
                                     onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                                     disabled={page >= totalPages}
                                     className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 font-semibold text-sm text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
-                                    Sau
+                                    {t("pagination.next")}
                                 </button>
                             </div>
                         </div>
