@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { hexToGradient } from "@/lib/utils";
+import { Search } from "lucide-react";
 import AIMaster from "./AIMaster";
 import AnalyticMaster from "./analytic/AnalyticMaster";
 import { MemberDetailModal } from "./MemberDetailModal";
@@ -42,6 +43,9 @@ import { QuickAssignModal } from "./QuickAssignModal";
 
 type StudioResponse = components["schemas"]["StudioResponse"];
 type GroupCardDto = components["schemas"]["GroupCardDto"];
+
+const STUDIO_NAME_MAX_LENGTH = 30;
+const STUDIO_DESCRIPTION_MAX_LENGTH = 200;
 
 interface TransformedGroup {
     id: string;
@@ -78,11 +82,10 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
             type="button"
             onClick={onClick}
             whileTap={{ scale: 0.98 }}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                active
-                    ? "bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_16px_32px_rgba(230,73,45,0.28)]"
-                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-            }`}>
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-300 ${active
+                ? "bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_16px_32px_rgba(230,73,45,0.28)]"
+                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}>
             {children}
         </motion.button>
     );
@@ -114,6 +117,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const params = useParams();
     const router = useRouter();
     const t = useTranslations("MasterPage");
+    const groupT = useTranslations("GroupsPage");
     const locale = useLocale();
     const { toast } = useToast();
 
@@ -126,9 +130,32 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
     const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"groups" | "ai" | "analytics" | "settings">("groups");
+    const [groupSearchQuery, setGroupSearchQuery] = useState("");
+    const [panelView, setPanelView] = useState<"members" | "approvals">("members");
+    const [pendingApprovals, setPendingApprovals] = useState<any[]>([
+        {
+            id: "approval-1",
+            fullName: "Nguyễn Văn A",
+            email: "vana@example.com",
+            requestedRole: "Member",
+            requestedAt: "2026-04-01T09:30:00Z",
+            note: "Muốn tham gia để theo dõi task thiết kế.",
+            colorHex: "#FF7A59",
+            status: "pending"
+        },
+        {
+            id: "approval-2",
+            fullName: "Trần Thị B",
+            email: "thib@example.com",
+            requestedRole: "Member",
+            requestedAt: "2026-04-01T10:00:00Z",
+            note: "Cần quyền quản lý để điều phối team.",
+            colorHex: "#7C3AED",
+            status: "pending"
+        }
+    ]);
+    const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
     const isStudioOwner = initialStudio?.studioRole === 0;
-
-    const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState("");
@@ -138,6 +165,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editLoading, setEditLoading] = useState(false);
     const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
     const [editColorHex, setEditColorHex] = useState("#FF5F3D");
+
+    const clampStudioName = useCallback((value: string) => value.slice(0, STUDIO_NAME_MAX_LENGTH), []);
+    const clampStudioDescription = useCallback((value: string) => value.slice(0, STUDIO_DESCRIPTION_MAX_LENGTH), []);
 
     const formatDateForInput = useCallback((iso: string) => {
         if (!iso) return "";
@@ -181,6 +211,18 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         }));
     }, [initialGroups]);
 
+    const filteredGroups = useMemo(() => {
+        const query = groupSearchQuery.trim().toLowerCase();
+        if (!query) return groups;
+
+        return groups.filter((group) => {
+            return [group.name, group.description, group.code]
+                .join(" ")
+                .toLowerCase()
+                .includes(query);
+        });
+    }, [groupSearchQuery, groups]);
+
     const loadData = useCallback(async () => {
         setMembersLoading(true);
         try {
@@ -216,13 +258,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     useEffect(() => {
         if (!studio || isEditing) return;
 
-        setEditName(studio.name);
-        setEditDescription(studio.description);
+        setEditName(clampStudioName(studio.name));
+        setEditDescription(clampStudioDescription(studio.description));
         setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
         setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
         setEditAvatarUrl(studio.avatarUrl ?? null);
         setEditColorHex(studio.colorHex ?? "#FF5F3D");
-    }, [studio, isEditing, formatDateForInput]);
+    }, [clampStudioDescription, clampStudioName, studio, isEditing, formatDateForInput]);
 
     const handleDeleteStudio = async () => {
         if (!studio) return;
@@ -244,8 +286,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
     const handleStartEdit = () => {
         if (studio) {
-            setEditName(studio.name);
-            setEditDescription(studio.description);
+            setEditName(clampStudioName(studio.name));
+            setEditDescription(clampStudioDescription(studio.description));
             setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
             setEditAvatarUrl(studio.avatarUrl ?? null);
@@ -256,8 +298,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
     const handleCancelEdit = () => {
         if (studio) {
-            setEditName(studio.name);
-            setEditDescription(studio.description);
+            setEditName(clampStudioName(studio.name));
+            setEditDescription(clampStudioDescription(studio.description));
             setEditStartDate(studio.startDate ? formatDateForInput(studio.startDate) : "");
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
             setEditAvatarUrl(studio.avatarUrl ?? null);
@@ -269,6 +311,14 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const handleSaveEdit = async () => {
         if (!studio) return;
 
+        const normalizedName = clampStudioName(editName.trim());
+        const normalizedDescription = clampStudioDescription(editDescription.trim());
+
+        if (!normalizedName) {
+            toast({ description: t("modal.nameRequired") || t("modal.name") || "Studio name is required", variant: "destructive" });
+            return;
+        }
+
         if (editStartDate && editEndDate && editStartDate > editEndDate) {
             toast({ description: t("detail.validation.dateRangeError"), variant: "destructive" });
             return;
@@ -279,8 +329,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             const result = await updateStudio(
                 studio.id,
                 {
-                    name: editName,
-                    description: editDescription,
+                    name: normalizedName,
+                    description: normalizedDescription,
                     type: "group",
                     startDate: editStartDate || null,
                     endDate: editEndDate || null,
@@ -291,7 +341,6 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             );
 
             if (result.status === "success") {
-                toast({ description: t("modal.editSuccess"), variant: "success" });
                 setIsEditing(false);
                 router.refresh();
             } else {
@@ -505,27 +554,58 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                 )}
                             </div>
 
-                            <div className="flex w-full justify-end xl:w-auto">
-                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <Button
-                                        type="button"
-                                        className="h-14 rounded-[22px] bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] px-6 font-semibold text-white shadow-[0_18px_36px_rgba(230,73,45,0.34)] transition-all duration-200 hover:brightness-110 hover:shadow-[0_22px_40px_rgba(230,73,45,0.42)] active:scale-[0.98]"
-                                        onClick={() => setIsCreateGroupModalOpen(true)}>
-                                        <svg
-                                            className="mr-2 h-4 w-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M12 4v16m8-8H4"
-                                            />
-                                        </svg>
-                                        {t("detail.addGroupButton")}
-                                    </Button>
-                                </motion.div>
+                            <div className="flex w-full flex-col gap-3 xl:w-auto xl:flex-row xl:items-center xl:justify-end">
+                                {activeTab === "groups" && (
+                                    <div className="relative w-full xl:w-[260px] xl:flex-none">
+                                        <div className="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center text-slate-500">
+                                            <Search className="h-4 w-4" />
+                                        </div>
+                                        <Input
+                                            value={groupSearchQuery}
+                                            onChange={(e) => setGroupSearchQuery(e.target.value)}
+                                            placeholder={groupT("searchGroups")}
+                                            className="h-12 rounded-[20px] border border-slate-200/80 bg-slate-50/80 pl-12 pr-11 text-[#261E33] shadow-[0_10px_22px_rgba(15,23,42,0.04)] backdrop-blur focus-visible:border-orange-400 focus-visible:ring-orange-400"
+                                        />
+                                        {groupSearchQuery ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setGroupSearchQuery("")}
+                                                className="absolute inset-y-0 right-4 flex items-center text-slate-500 hover:text-slate-700">
+                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        ) : null}
+                                    </div>
+                                )}
+
+                                <div className="flex w-full justify-end xl:w-auto">
+                                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                        <Button
+                                            type="button"
+                                            className="h-12 rounded-[20px] bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] px-6 font-semibold text-white shadow-[0_18px_36px_rgba(230,73,45,0.34)] transition-all duration-200 hover:brightness-110 hover:shadow-[0_22px_40px_rgba(230,73,45,0.42)] active:scale-[0.98]"
+                                            onClick={() => setIsCreateGroupModalOpen(true)}>
+                                            <svg
+                                                className="mr-2 h-4 w-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                            {t("detail.addGroupButton")}
+                                        </Button>
+                                    </motion.div>
+                                </div>
                             </div>
                         </motion.div>
 
@@ -539,8 +619,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                                     <div className="min-w-0 lg:col-span-8">
                                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                                            {groups.length > 0 ? (
-                                                groups.map((group) => (
+                                            {filteredGroups.length > 0 ? (
+                                                filteredGroups.map((group) => (
                                                     <motion.div
                                                         key={group.id}
                                                         layout
@@ -660,17 +740,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                         return (
                                                                             <div
                                                                                 key={`${group.id}-avatar-${i}`}
-                                                                                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[9px] font-medium text-white shadow-sm ${
-                                                                                    member?.avatarUrl
-                                                                                        ? ""
-                                                                                        : i % 4 === 0
-                                                                                          ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                                          : i % 4 === 1
+                                                                                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[9px] font-medium text-white shadow-sm ${member?.avatarUrl
+                                                                                    ? ""
+                                                                                    : i % 4 === 0
+                                                                                        ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                                                        : i % 4 === 1
                                                                                             ? "bg-gradient-to-br from-blue-400 to-indigo-500"
                                                                                             : i % 4 === 2
-                                                                                              ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                              : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                                }`}>
+                                                                                                ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                                                : "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                                                    }`}>
                                                                                 {member?.avatarUrl ? (
                                                                                     <img
                                                                                         src={member.avatarUrl}
@@ -702,7 +781,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 <div className="col-span-2">
                                                     <EmptyBlock
                                                         title={t("noGroups")}
-                                                        subtitle={t("detail.noGroupsSubtitle")}
+                                                        subtitle={groupSearchQuery ? t("detail.noGroupsSubtitle") : t("detail.noGroupsSubtitle")}
                                                     />
                                                 </div>
                                             )}
@@ -710,130 +789,47 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </div>
 
                                     <div className="flex min-w-0 justify-end lg:col-span-4">
-                                        <motion.aside
-                                            animate={{
-                                                width: isRightPanelCollapsed ? 96 : 380
-                                            }}
-                                            transition={{ duration: 0.28, ease: "easeInOut" }}
-                                            className="h-fit max-w-full shrink-0 overflow-hidden rounded-[30px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
-                                            <div
-                                                className={`flex border-b border-[#F3F0F7] px-4 py-4 ${
-                                                    isRightPanelCollapsed
-                                                        ? "justify-center"
-                                                        : "items-center justify-between"
-                                                }`}>
-                                                {!isRightPanelCollapsed ? (
-                                                    <div className="min-w-0">
-                                                        <h3 className="truncate text-base font-semibold text-slate-800">
-                                                            {t("detail.panel.title")}
-                                                        </h3>
-                                                        <p className="mt-0.5 text-xs text-slate-500">
-                                                            {t("detail.panel.subtitle")}
-                                                        </p>
-                                                    </div>
-                                                ) : null}
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setIsRightPanelCollapsed((prev) => !prev)}
-                                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600"
-                                                    title={
-                                                        isRightPanelCollapsed
-                                                            ? t("detail.panel.expand")
-                                                            : t("detail.panel.collapse")
-                                                    }>
-                                                    <motion.svg
-                                                        animate={{ rotate: isRightPanelCollapsed ? 0 : 180 }}
-                                                        transition={{ duration: 0.22 }}
-                                                        className="h-5 w-5"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M15 19l-7-7 7-7"
-                                                        />
-                                                    </motion.svg>
-                                                </button>
+                                        <aside className="h-fit w-full max-w-[380px] shrink-0 overflow-hidden rounded-[30px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
+                                            <div className="items-center justify-between border-b border-[#F3F0F7] px-4 py-4">
+                                                <div className="min-w-0">
+                                                    <h3 className="truncate text-base font-semibold text-slate-800">
+                                                        {t("detail.panel.title")}
+                                                    </h3>
+                                                    <p className="mt-0.5 text-xs text-slate-500">
+                                                        {t("detail.panel.subtitle")}
+                                                    </p>
+                                                </div>
                                             </div>
 
-                                            <AnimatePresence mode="wait" initial={false}>
-                                                {isRightPanelCollapsed ? (
-                                                    <motion.div
-                                                        key="collapsed-panel"
-                                                        initial={{ opacity: 0, scale: 0.96 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.96 }}
-                                                        className="flex flex-col items-center gap-4 px-3 py-5">
+                                            <motion.div
+                                                key="expanded-panel"
+                                                initial={{ opacity: 0, x: 8 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                className="space-y-6 px-5 py-5">
+                                                <section className="min-w-0">
+                                                    <div className="mb-4 flex items-center gap-2 border-b border-[#F3F0F7]">
                                                         <button
                                                             type="button"
-                                                            onClick={() => setIsInviteModalOpen(true)}
-                                                            className="group flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-orange-100 hover:shadow-md"
-                                                            title={t("members")}>
-                                                            <svg
-                                                                className="h-5 w-5 transition-transform group-hover:scale-110"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                viewBox="0 0 24 24">
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={2}
-                                                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                                                                />
-                                                            </svg>
+                                                            onClick={() => setPanelView("members")}
+                                                            className={`px-3 py-2.5 text-sm font-semibold transition-all ${panelView === "members"
+                                                                ? "border-b-2 border-orange-600 text-orange-600"
+                                                                : "text-slate-500 hover:text-slate-700"
+                                                                }`}>
+                                                            {t("detail.panel.memberListTitle")}
                                                         </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPanelView("approvals")}
+                                                            className={`px-3 py-2.5 text-sm font-semibold transition-all ${panelView === "approvals"
+                                                                ? "border-b-2 border-orange-600 text-orange-600"
+                                                                : "text-slate-500 hover:text-slate-700"
+                                                                }`}>
+                                                            Phê duyệt
+                                                        </button>
+                                                    </div>
 
-                                                        {isStudioOwner && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setActiveTab("analytics")}
-                                                                className={`group flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
-                                                                    (
-                                                                        activeTab as
-                                                                            | "groups"
-                                                                            | "ai"
-                                                                            | "analytics"
-                                                                            | "settings"
-                                                                    ) === "analytics"
-                                                                        ? "border-violet-200 bg-violet-100 text-violet-700"
-                                                                        : "border-violet-100 bg-violet-50 text-violet-600 hover:bg-violet-100"
-                                                                }`}
-                                                                title={t("detail.tabs.analytics")}>
-                                                                <svg
-                                                                    className="h-5 w-5 transition-transform group-hover:scale-110"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={2}
-                                                                        d="M9 17v-6m4 6V7m4 10v-3M5 21h14"
-                                                                    />
-                                                                </svg>
-                                                            </button>
-                                                        )}
-                                                    </motion.div>
-                                                ) : (
-                                                    <motion.div
-                                                        key="expanded-panel"
-                                                        initial={{ opacity: 0, x: 8 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, x: -8 }}
-                                                        className="space-y-6 px-5 py-5">
-                                                        <section className="min-w-0">
-                                                            <div className="mb-3 flex items-center justify-between gap-3">
-                                                                <h4 className="text-sm font-semibold text-slate-800">
-                                                                    {t("detail.panel.memberListTitle")}
-                                                                </h4>
-                                                                <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-600">
-                                                                    {members.length}
-                                                                </span>
-                                                            </div>
-
+                                                    {panelView === "members" && (
+                                                        <>
                                                             <div className="min-w-0">
                                                                 <MemberList
                                                                     members={members}
@@ -851,78 +847,156 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     }
                                                                 />
                                                             </div>
-                                                        </section>
+                                                        </>
+                                                    )}
 
-                                                        <section className="border-t border-[#F3F0F7] pt-5">
-                                                            <div className="mb-3 flex items-center gap-3">
-                                                                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F8F5FF] text-violet-600">
-                                                                    <svg
-                                                                        className="h-4 w-4"
-                                                                        fill="none"
-                                                                        stroke="currentColor"
-                                                                        viewBox="0 0 24 24">
-                                                                        <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            strokeWidth={2}
-                                                                            d="M9 17v-6m4 6V7m4 10v-3M5 21h14"
-                                                                        />
-                                                                    </svg>
-                                                                </div>
-                                                                <div>
-                                                                    <h4 className="text-sm font-semibold text-slate-800">
-                                                                        {t("detail.panel.quickStatsTitle")}
-                                                                    </h4>
-                                                                    <p className="text-xs text-slate-500">
-                                                                        {t("detail.panel.quickStatsSubtitle")}
+                                                    {panelView === "approvals" && (
+                                                        <div className="space-y-3">
+                                                            {pendingApprovals.length === 0 ? (
+                                                                <div className="rounded-2xl border border-gray-100 bg-white p-4 py-6 text-center shadow-sm">
+                                                                    <p className="text-slate-600 text-sm">
+                                                                        Chưa có yêu cầu phê duyệt nào
+                                                                    </p>
+                                                                    <p className="mt-1 text-slate-400 text-xs">
+                                                                        Những yêu cầu mới sẽ hiển thị tại đây
                                                                     </p>
                                                                 </div>
-                                                            </div>
+                                                            ) : (
+                                                                pendingApprovals.map((item) => {
+                                                                    const isApproving = approvingIds.has(item.id);
+                                                                    return (
+                                                                        <div
+                                                                            key={item.id}
+                                                                            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                                                                            <div className="flex items-start gap-3 mb-3">
+                                                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white text-xs font-semibold" style={{
+                                                                                    background: hexToGradient(item.colorHex ?? "#FF5F3D")
+                                                                                }}>
+                                                                                    {item.fullName.charAt(0)}
+                                                                                </div>
+                                                                                <div className="min-w-0 flex-1">
+                                                                                    <p className="font-semibold text-gray-900 text-sm truncate">{item.fullName}</p>
+                                                                                    <p className="text-gray-500 text-xs truncate">{item.email}</p>
+                                                                                    <div className="mt-1 inline-block rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+                                                                                        {item.requestedRole}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex gap-2">
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    disabled={isApproving}
+                                                                                    onClick={() => {
+                                                                                        setApprovingIds(prev => {
+                                                                                            const next = new Set(prev);
+                                                                                            next.delete(item.id);
+                                                                                            return next;
+                                                                                        });
+                                                                                        setPendingApprovals(prev =>
+                                                                                            prev.filter(a => a.id !== item.id)
+                                                                                        );
+                                                                                        toast({
+                                                                                            description: `Phê duyệt ${item.fullName} thành công`,
+                                                                                            variant: "success"
+                                                                                        });
+                                                                                    }}
+                                                                                    className="h-8 flex-1 rounded-lg bg-orange-600 px-3 text-xs font-medium text-white hover:bg-orange-700">
+                                                                                    Phê duyệt
+                                                                                </Button>
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    variant="outline"
+                                                                                    disabled={isApproving}
+                                                                                    onClick={() => {
+                                                                                        setApprovingIds(prev => {
+                                                                                            const next = new Set(prev);
+                                                                                            next.delete(item.id);
+                                                                                            return next;
+                                                                                        });
+                                                                                        setPendingApprovals(prev =>
+                                                                                            prev.filter(a => a.id !== item.id)
+                                                                                        );
+                                                                                    }}
+                                                                                    className="h-8 flex-1 rounded-lg border-red-200 px-3 text-xs font-medium text-red-600 hover:bg-red-50">
+                                                                                    Từ chối
+                                                                                </Button>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </section>
 
-                                                            <div className="space-y-3">
-                                                                <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
-                                                                    <span className="text-slate-500">
-                                                                        {t("groups")}
-                                                                    </span>
-                                                                    <span className="font-semibold text-slate-800">
-                                                                        {groups.length}
-                                                                    </span>
-                                                                </div>
+                                                <section className="border-t border-[#F3F0F7] pt-5">
+                                                    <div className="mb-3 flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F8F5FF] text-violet-600">
+                                                            <svg
+                                                                className="h-4 w-4"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth={2}
+                                                                    d="M9 17v-6m4 6V7m4 10v-3M5 21h14"
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="text-sm font-semibold text-slate-800">
+                                                                {t("detail.panel.quickStatsTitle")}
+                                                            </h4>
+                                                            <p className="text-xs text-slate-500">
+                                                                {t("detail.panel.quickStatsSubtitle")}
+                                                            </p>
+                                                        </div>
+                                                    </div>
 
-                                                                <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
-                                                                    <span className="text-slate-500">
-                                                                        {t("members")}
-                                                                    </span>
-                                                                    <span className="font-semibold text-slate-800">
-                                                                        {members.length}
-                                                                    </span>
-                                                                </div>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
+                                                            <span className="text-slate-500">
+                                                                {t("groups")}
+                                                            </span>
+                                                            <span className="font-semibold text-slate-800">
+                                                                {groups.length}
+                                                            </span>
+                                                        </div>
 
-                                                                <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
-                                                                    <span className="text-slate-500">
-                                                                        {t("detail.panel.created")}
-                                                                    </span>
-                                                                    <span className="font-semibold text-slate-800">
-                                                                        {studio.createdAt
-                                                                            ? new Date(
-                                                                                  studio.createdAt
-                                                                              ).toLocaleDateString(
-                                                                                  locale === "vi" ? "vi-VN" : "en-US",
-                                                                                  {
-                                                                                      month: "numeric",
-                                                                                      day: "numeric",
-                                                                                      year: "numeric"
-                                                                                  }
-                                                                              )
-                                                                            : t("detail.notAvailable")}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </section>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </motion.aside>
+                                                        <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
+                                                            <span className="text-slate-500">
+                                                                {t("members")}
+                                                            </span>
+                                                            <span className="font-semibold text-slate-800">
+                                                                {members.length}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between rounded-[18px] border border-[#F1EBE6] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBFAF8_100%)] px-4 py-3 text-sm shadow-sm">
+                                                            <span className="text-slate-500">
+                                                                {t("detail.panel.created")}
+                                                            </span>
+                                                            <span className="font-semibold text-slate-800">
+                                                                {studio.createdAt
+                                                                    ? new Date(
+                                                                        studio.createdAt
+                                                                    ).toLocaleDateString(
+                                                                        locale === "vi" ? "vi-VN" : "en-US",
+                                                                        {
+                                                                            month: "numeric",
+                                                                            day: "numeric",
+                                                                            year: "numeric"
+                                                                        }
+                                                                    )
+                                                                    : t("detail.notAvailable")}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                            </motion.div>
+                                        </aside>
                                     </div>
                                 </motion.div>
                             )}
@@ -1009,8 +1083,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     {editLoading
                                                         ? t("detail.settings.saving")
                                                         : isEditing
-                                                          ? t("detail.settings.saveChanges")
-                                                          : t("detail.settings.edit")}
+                                                            ? t("detail.settings.saveChanges")
+                                                            : t("detail.settings.edit")}
                                                 </Button>
                                             </div>
                                         </div>
@@ -1051,9 +1125,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         id="studio-name-input"
                                                         disabled={!isEditing}
                                                         value={editName}
-                                                        onChange={(e) => setEditName(e.target.value)}
+                                                        onChange={(e) => setEditName(clampStudioName(e.target.value))}
                                                         className="mt-2 h-11 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                                        maxLength={STUDIO_NAME_MAX_LENGTH}
                                                     />
+                                                    <div className="mt-1 text-right text-[11px] text-gray-500">
+                                                        {editName.length}/{STUDIO_NAME_MAX_LENGTH}
+                                                    </div>
                                                 </div>
 
                                                 <div>
@@ -1066,10 +1144,14 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         id="studio-description-input"
                                                         disabled={!isEditing}
                                                         value={editDescription}
-                                                        onChange={(e) => setEditDescription(e.target.value)}
+                                                        onChange={(e) => setEditDescription(clampStudioDescription(e.target.value))}
                                                         className="mt-2 min-h-28 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                                         placeholder={t("modal.descriptionPlaceholder")}
+                                                        maxLength={STUDIO_DESCRIPTION_MAX_LENGTH}
                                                     />
+                                                    <div className="mt-1 text-right text-[11px] text-gray-500">
+                                                        {editDescription.length}/{STUDIO_DESCRIPTION_MAX_LENGTH}
+                                                    </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1142,13 +1224,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                             value={
                                                                 studio.createdAt
                                                                     ? new Date(studio.createdAt).toLocaleDateString(
-                                                                          locale === "vi" ? "vi-VN" : "en-US",
-                                                                          {
-                                                                              day: "numeric",
-                                                                              month: "long",
-                                                                              year: "numeric"
-                                                                          }
-                                                                      )
+                                                                        locale === "vi" ? "vi-VN" : "en-US",
+                                                                        {
+                                                                            day: "numeric",
+                                                                            month: "long",
+                                                                            year: "numeric"
+                                                                        }
+                                                                    )
                                                                     : t("detail.notAvailable")
                                                             }
                                                             readOnly

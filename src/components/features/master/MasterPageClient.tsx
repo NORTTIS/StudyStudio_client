@@ -159,11 +159,10 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                     {studio.studioRole !== undefined && (
                         <motion.span
                             whileHover={{ scale: 1.04 }}
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm ${
-                                isOwner
-                                    ? "bg-gradient-to-r from-orange-500 to-red-500"
-                                    : "bg-gradient-to-r from-teal-500 to-cyan-500"
-                            }`}>
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm ${isOwner
+                                ? "bg-gradient-to-r from-orange-500 to-red-500"
+                                : "bg-gradient-to-r from-teal-500 to-cyan-500"
+                                }`}>
                             {isOwner ? t("roles.owner") : t("roles.member")}
                         </motion.span>
                     )}
@@ -377,7 +376,6 @@ export default function MasterPageClient({
     const studioLimit = subscriptionInfo?.studioLimit ?? 3;
     const studioCreated = subscriptionInfo?.studioCreated ?? studios.length;
     const totalStudios = studioCreated;
-    const usagePercent = Math.min(100, (totalStudios / studioLimit) * 100);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -472,7 +470,6 @@ export default function MasterPageClient({
             );
 
             if (result.status === "success") {
-                toast({ description: t("modal.editSuccess"), variant: "success" });
                 setIsCreateModalOpen(false);
                 setSelectedStudio(null);
                 loadData();
@@ -632,34 +629,11 @@ export default function MasterPageClient({
                                         <motion.div
                                             whileHover={{ y: -3 }}
                                             className="rounded-[24px] border border-orange-200/80 bg-[linear-gradient(180deg,rgba(255,247,241,0.98),rgba(255,236,224,0.92))] p-4 shadow-sm">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <p className="text-xs text-[#8B7768]">{t("studiosUsed")}</p>
-                                                    <p className="mt-2 text-[28px] font-semibold text-[#261E33]">
-                                                        {totalStudios}/{studioLimit}
-                                                    </p>
-                                                </div>
-                                                <div className="relative h-12 w-12 shrink-0">
-                                                    <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
-                                                        <path
-                                                            d="M18 2.5a15.5 15.5 0 1 1 0 31a15.5 15.5 0 1 1 0-31"
-                                                            fill="none"
-                                                            stroke="rgba(255,255,255,0.7)"
-                                                            strokeWidth="3"
-                                                        />
-                                                        <path
-                                                            d="M18 2.5a15.5 15.5 0 1 1 0 31a15.5 15.5 0 1 1 0-31"
-                                                            fill="none"
-                                                            stroke="#FF5F3D"
-                                                            strokeWidth="3"
-                                                            strokeDasharray={`${usagePercent}, 100`}
-                                                            strokeLinecap="round"
-                                                        />
-                                                    </svg>
-                                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-[#261E33]">
-                                                        {Math.round(usagePercent)}%
-                                                    </span>
-                                                </div>
+                                            <div>
+                                                <p className="text-xs text-[#8B7768]">{t("studiosUsed")}</p>
+                                                <p className="mt-2 text-[28px] font-semibold text-[#261E33]">
+                                                    {totalStudios}/{studioLimit}
+                                                </p>
                                             </div>
                                         </motion.div>
                                     </div>
@@ -671,16 +645,16 @@ export default function MasterPageClient({
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.08, duration: 0.35 }}
                                 className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                                <div className="relative flex-1 lg:max-w-xl">
+                                <div className="relative flex-1 rounded-[22px] border border-slate-200/80 bg-slate-50/80 lg:max-w-xl">
                                     <Input
                                         type="text"
                                         placeholder={t("searchPlaceholder")}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="h-14 rounded-[22px] border-white/80 bg-white/82 pl-12 pr-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur transition-all duration-200 focus:scale-[1.01] focus:shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
+                                        className="h-14 rounded-[22px] border-transparent bg-transparent pl-12 pr-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur transition-all duration-200 focus:scale-[1.01] focus:shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
                                     />
                                     <svg
-                                        className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+                                        className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24">
