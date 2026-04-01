@@ -7,6 +7,8 @@ import type { StudioUI } from "@/api/studios";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
+import { BannerUpload } from "@/components/ui/banner-upload";
+import { LogoUpload } from "@/components/ui/logo-upload";
 
 const STUDIO_NAME_MAX_LENGTH = 30;
 const STUDIO_DESCRIPTION_MAX_LENGTH = 200;
@@ -100,6 +102,11 @@ interface StudioModalProps {
         startDate?: string | null;
         endDate?: string | null;
         colorHex?: string | null;
+        avatarUrl?: string | null;
+        bannerUrl?: string | null;
+        logoUrl?: string | null;
+        tagline?: string | null;
+        alias?: string | null;
     }) => void;
     studio?: StudioUI | null;
     mode: "create" | "edit";
@@ -116,6 +123,10 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         endDate: "",
         colorHex: "#FF5F3D"
     });
+    const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [tagline, setTagline] = useState("");
+    const [alias, setAlias] = useState("");
     const [errors, setErrors] = useState({
         name: "",
         description: "",
@@ -173,6 +184,10 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     endDate: studio.endDate ?? "",
                     colorHex: studio.colorHex ?? "#FF5F3D"
                 });
+                setBannerUrl((studio as Record<string, unknown>).bannerUrl as string | null ?? null);
+                setLogoUrl((studio as Record<string, unknown>).logoUrl as string | null ?? null);
+                setTagline((studio as Record<string, unknown>).tagline as string ?? "");
+                setAlias((studio as Record<string, unknown>).alias as string ?? "");
             } else {
                 setFormData({
                     name: "",
@@ -182,6 +197,10 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     endDate: "",
                     colorHex: "#FF5F3D"
                 });
+                setBannerUrl(null);
+                setLogoUrl(null);
+                setTagline("");
+                setAlias("");
             }
             setErrors({ name: "", description: "", startDate: "", endDate: "" });
             setTouched({ name: false, description: false, startDate: false, endDate: false });
@@ -255,13 +274,21 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                 ...formData,
                 startDate: formData.startDate || null,
                 endDate: formData.endDate || null,
-                colorHex: formData.colorHex || null
+                colorHex: formData.colorHex || null,
+                bannerUrl: bannerUrl || null,
+                logoUrl: logoUrl || null,
+                tagline: tagline.trim() || null,
+                alias: alias.trim() || null
             });
         }
     };
 
     const handleClose = () => {
         setFormData({ name: "", description: "", type: "group", startDate: "", endDate: "", colorHex: "#FF5F3D" });
+        setBannerUrl(null);
+        setLogoUrl(null);
+        setTagline("");
+        setAlias("");
         setErrors({ name: "", description: "", startDate: "", endDate: "" });
         setTouched({ name: false, description: false, startDate: false, endDate: false });
         onClose();
@@ -292,6 +319,66 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                         <ColorPicker
                             value={formData.colorHex}
                             onChange={(hex) => setFormData((f) => ({ ...f, colorHex: hex }))}
+                        />
+                    </div>
+
+                    {/* Banner */}
+                    {studio?.id && (
+                        <div>
+                            <label className="mb-2 block font-medium text-[#261E33] text-sm">Banner</label>
+                            <BannerUpload
+                                entityType="studio"
+                                entityId={studio.id}
+                                bannerUrl={bannerUrl}
+                                colorHex={formData.colorHex}
+                                onUploadSuccess={(url) => setBannerUrl(url)}
+                                onDeleteSuccess={() => setBannerUrl(null)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Logo */}
+                    {studio?.id && (
+                        <div>
+                            <label className="mb-2 block font-medium text-[#261E33] text-sm">Logo</label>
+                            <LogoUpload
+                                studioId={studio.id}
+                                logoUrl={logoUrl}
+                                colorHex={formData.colorHex}
+                                onUploadSuccess={(url) => setLogoUrl(url)}
+                                onDeleteSuccess={() => setLogoUrl(null)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Alias */}
+                    <div>
+                        <label htmlFor="studio-alias" className="mb-2 block font-medium text-[#261E33] text-sm">Biệt danh</label>
+                        <Input
+                            id="studio-alias"
+                            type="text"
+                            value={alias}
+                            onChange={(e) => setAlias(e.target.value.slice(0, 50))}
+                            placeholder="VD: THPT Hoang Dieu"
+                            className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
+                        />
+                        {alias.length > 0 && (
+                            <div className="mt-1.5">
+                                <span className="inline-flex items-center rounded-full border border-orange-300 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">{alias}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Tagline */}
+                    <div>
+                        <label htmlFor="studio-tagline" className="mb-2 block font-medium text-[#261E33] text-sm">Slogan</label>
+                        <Input
+                            id="studio-tagline"
+                            type="text"
+                            value={tagline}
+                            onChange={(e) => setTagline(e.target.value.slice(0, 200))}
+                            placeholder="Nhập slogan ngắn gọn"
+                            className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
                         />
                     </div>
 

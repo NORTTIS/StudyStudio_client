@@ -111,6 +111,18 @@
             "feature1Description": "AI helps you summarize, analyze, and get action suggestions faster in each workspace.",
             "feature2": "Answer questions about information provided in groups",
             "feature2Description": "Smarter interactions with data, tasks, groups, and schedules to speed up daily decisions."
+        },
+        "badges": {
+            "productivityEcosystem": "Productivity Ecosystem",
+            "management": "Management",
+            "group": "Group",
+            "personal": "Personal"
+        },
+        "previews": {
+            "hero": "Hero area preview",
+            "management": "Management workspace preview",
+            "group": "Group workspace preview",
+            "personal": "Personal workspace preview"
         }
     },
     "HomeSummary": {
@@ -130,9 +142,91 @@
             "label": "everyone",
             "subtitle": "Mention everyone in this conversation"
         },
+        "datePicker": {
+            "selectDate": "Select date",
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "nextWeek": "Next week",
+            "noDate": "No date",
+            "month1": "January",
+            "month2": "February",
+            "month3": "March",
+            "month4": "April",
+            "month5": "May",
+            "month6": "June",
+            "month7": "July",
+            "month8": "August",
+            "month9": "September",
+            "month10": "October",
+            "month11": "November",
+            "month12": "December"
+        },
+        "priorityLow": "Low",
+        "priorityMedium": "Medium",
+        "priorityHigh": "High",
+        "severityMinor": "Minor",
+        "severityModerate": "Moderate",
+        "severityMajor": "Major",
+        "severityCritical": "Critical",
+        "progressToDo": "To Do",
+        "progressStarted": "Started",
+        "progressInProgress": "In Progress",
+        "progressReview": "Review",
+        "progressDone": "Done",
+        "user": "User",
+        "unnamed": "Untitled",
+        "unassigned": "Unassigned",
+        "emptyStatus": "No status",
+        "loading": "Loading...",
+        "taskName": "Task name",
+        "taskFallback": "Untitled task",
+        "syncing": "Syncing...",
+        "close": "Close",
+        "taskInformation": "Task information",
+        "edit": "Edit",
+        "saving": "Saving...",
+        "saveChange": "Save changes",
+        "assignee": "Assignee",
+        "status": "Status",
+        "noStatus": "No status",
+        "priority": "Priority",
+        "severity": "Severity",
+        "startDate": "Start date",
+        "dueDate": "Due date",
+        "estimatedHours": "Estimated hours",
+        "actualHours": "Actual hours",
+        "progress": "Progress",
+        "description": "Description",
+        "noDescription": "No description",
+        "comments": "Comments",
+        "replyingTo": "Replying to",
+        "cancel": "Cancel",
+        "loadingComments": "Loading comments",
+        "noComments": "No comments yet",
+        "moreActions": "More actions",
+        "reply": "Reply",
+        "deleting": "Deleting...",
+        "delete": "Delete",
+        "me": "Me",
+        "send": "Send",
+        "confirmDeleteTitle": "Confirm delete comment",
+        "confirmDeleteDescription": "Are you sure you want to delete this comment?",
         "writeReply": "Write a reply...",
         "writeComment": "Write a comment...",
-        "noMembersToMention": "No members to mention."
+        "noMembersToMention": "No members to mention.",
+        "errors": {
+            "sendCommentFailed": "Failed to send comment",
+            "deleteCommentFailed": "Failed to delete comment",
+            "loadTaskDetailFailed": "Failed to load task details",
+            "missingGroupIdFromRoute": "Missing groupId from route",
+            "loadCommentsFailed": "Failed to load comments",
+            "loadMembersFailed": "Failed to load members",
+            "taskNameRequired": "Task name is required",
+            "startDateAfterDueDate": "Start date cannot be after due date",
+            "restrictedAssignee": "Cannot assign to this role",
+            "missingGroupOrTask": "Missing group or task information",
+            "updateTaskFailed": "Failed to update task"
+        }
     },
     "AIHome": {
         "badge": "Personal AI",
@@ -248,7 +342,18 @@
     },
     "HomePage": {
         "title": "Home",
-        "description": "Home page of the application"
+        "description": "Home page of the application",
+        "meta": {
+            "title": "Home - StudyStudio",
+            "description": "Welcome to StudyStudio"
+        },
+        "features": {
+            "title": "Features",
+            "item1": "Feature 1",
+            "item2": "Feature 2",
+            "item3": "Feature 3"
+        },
+        "footer": "© 2024 StudyStudio. All rights reserved."
     },
     "LoginPage": {
         "title": "Welcome back",
@@ -753,6 +858,7 @@
             "tasks": "tasks",
             "progress": "Work Progress",
             "workspaceBadge": "Workspace",
+            "notAvailable": "No data available",
             "tabs": {
                 "groups": "Groups",
                 "ai": "AI",
@@ -768,6 +874,36 @@
                 "quickStatsTitle": "Quick Stats",
                 "quickStatsSubtitle": "Performance Overview",
                 "created": "Created Date"
+            },
+            "noGroupsSubtitle": "Create your first group to start collaborating",
+            "memberAltFallback": "Member",
+            "groupCreatedSuccess": "Group created successfully!",
+            "invite": {
+                "createLinkError": "Failed to create invite link. Please try again."
+            },
+            "settings": {
+                "title": "Studio settings",
+                "subtitle": "Adjust studio information and configuration",
+                "edit": "Edit",
+                "saving": "Saving...",
+                "saveChanges": "Save changes",
+                "primaryColor": "Primary color",
+                "bannerLabel": "Background image",
+                "aliasLabel": "Nickname",
+                "aliasPlaceholder": "e.g. Hoang Dieu High School",
+                "taglineLabel": "Tagline",
+                "taglinePlaceholder": "Enter a short slogan",
+                "startDate": "Start date",
+                "endDate": "End date",
+                "createdDate": "Created date",
+                "groupCount": "Number of groups"
+            },
+            "danger": {
+                "title": "Danger zone",
+                "deleteDescription": "Deleting the studio will also delete all groups and related data.",
+                "confirmTitle": "Confirm studio deletion",
+                "confirmDescription": "Are you sure you want to delete this studio? This action cannot be undone.",
+                "confirmDelete": "Confirm deletion"
             }
         }
     },
@@ -846,14 +982,17 @@
         "errorAcceptFailed": "Failed to accept invitation."
     },
     "LandingGroupPage": {
+        "badge": "Group Workspace",
         "hero": {
             "title": "Shared workspace for",
             "titleHighlight": "learning & projects",
+            "description": "Collaborate with your team, track progress, and achieve goals faster together.",
             "createButton": "Create a group →",
             "imageAlt": "Group collaboration"
         },
         "howToUse": {
             "title": "How to use",
+            "description": "Get started quickly with a clear process for effective and transparent teamwork.",
             "step1": "Create a new group with available templates",
             "step2": "Then share the board with other users",
             "step3": "Create tasks, assign members",
@@ -898,6 +1037,7 @@
         }
     },
     "LandingPersonalPage": {
+        "badge": "Personal Workspace",
         "hero": {
             "title": "Workspace",
             "titleHighlight": "just for you",
@@ -966,14 +1106,19 @@
         }
     },
     "LandingManagementPage": {
+        "badge": "Management Workspace",
         "hero": {
             "title": "Manage all groups",
             "titleHighlight": "from one place",
+            "description": "Coordinate multiple groups, track progress, and make faster decisions from a unified dashboard.",
+            "executiveLabel": "Executive Dashboard",
+            "executiveCaption": "Monitor overall performance in real-time",
             "createButton": "Start managing →",
             "imageAlt": "Management Illustration"
         },
         "howToUse": {
             "title": "How to use",
+            "description": "Quickly set up a management process to track groups, assign roles, and evaluate progress clearly.",
             "step1": {
                 "title": "Create management space",
                 "description": "Set up space and configure according to your organization's needs"
@@ -1030,6 +1175,7 @@
         },
         "freePlan": {
             "title": "Free plan",
+            "tierBadge": "Basic Plan",
             "price": "0 VND",
             "description": "Suitable for individuals and\nsmall groups to try out",
             "registerButton": "Sign up",
@@ -1041,6 +1187,7 @@
         },
         "premiumPlan": {
             "title": "Premium plan",
+            "tierBadge": "Premium Plan",
             "price": "299,000 VND / Month",
             "description": "Suitable for large groups needing\nmore flexibility",
             "registerButton": "Sign up",
@@ -1112,6 +1259,7 @@
         "deleteDocument": "Delete document"
     },
     "GroupAiQaPage": {
+        "title": "AI Group Q&A",
         "usedToday": "Used today",
         "remainingRequests": "Remaining requests",
         "dailyLimit": "Daily limit",
@@ -1121,6 +1269,7 @@
         "inputPlaceholder": "Ask AI a question...",
         "cannotDetectGroupId": "Cannot detect groupId from URL",
         "aiThinking": "AI is thinking...",
+        "scrollToBottom": "Scroll to bottom",
         "emptyAiAnswer": "AI did not return an answer. Try asking a more specific question.",
         "aiResponseError": "Cannot get AI response",
         "quickActions": {
@@ -1232,6 +1381,11 @@
         "groupNameLabel": "Group name",
         "groupNamePlaceholder": "Enter group name...",
         "colorAndIconLabel": "Color and icon",
+        "bannerLabel": "Background image",
+        "aliasLabel": "Nickname",
+        "aliasPlaceholder": "e.g. Hoang Dieu High School",
+        "taglineLabel": "Tagline",
+        "taglinePlaceholder": "Enter a short slogan",
         "groupPrefixLabel": "Group prefix",
         "groupPrefixPlaceholder": "Enter group prefix...",
         "groupPrefixHint": "Groups will be named like \"{prefix} 1\", \"{prefix} 2\", ...",
@@ -2167,7 +2321,12 @@
         "groupInfo": {
             "nameLabel": "Group name",
             "descriptionLabel": "Description",
-            "masterStudioLabel": "Managing Studio"
+            "masterStudioLabel": "Managing Studio",
+            "bannerLabel": "Background image",
+            "aliasLabel": "Nickname",
+            "aliasPlaceholder": "e.g. Hoang Dieu High School",
+            "taglineLabel": "Tagline",
+            "taglinePlaceholder": "Enter a short slogan"
         },
         "template": {
             "label": "Group template",
