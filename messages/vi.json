@@ -866,6 +866,11 @@
                 "saving": "Đang lưu...",
                 "saveChanges": "Lưu thay đổi",
                 "primaryColor": "Màu chủ đạo",
+                "bannerLabel": "Ảnh nền",
+                "aliasLabel": "Biệt danh",
+                "aliasPlaceholder": "VD: THPT Hoang Dieu",
+                "taglineLabel": "Tagline",
+                "taglinePlaceholder": "VD: Học là thích - Yêu là nhớ",
                 "startDate": "Ngày bắt đầu",
                 "endDate": "Ngày kết thúc",
                 "createdDate": "Ngày tạo",
@@ -893,6 +898,12 @@
                 "quickStatsTitle": "Thống kê nhanh",
                 "quickStatsSubtitle": "Tổng quan hiệu suất",
                 "created": "Ngày tạo"
+            },
+            "noGroupsSubtitle": "Tạo nhóm đầu tiên để bắt đầu cộng tác",
+            "memberAltFallback": "Thành viên",
+            "groupCreatedSuccess": "Nhóm đã được tạo thành công!",
+            "invite": {
+                "createLinkError": "Không thể tạo liên kết mời. Vui lòng thử lại."
             }
         }
     },
@@ -1388,6 +1399,11 @@
         "groupNameLabel": "Tên nhóm",
         "groupNamePlaceholder": "Nhập tên nhóm...",
         "colorAndIconLabel": "Màu sắc và biểu tượng",
+        "bannerLabel": "Ảnh nền",
+        "aliasLabel": "Biệt danh",
+        "aliasPlaceholder": "VD: THPT Hoang Dieu",
+        "taglineLabel": "Slogan",
+        "taglinePlaceholder": "Nhập slogan ngắn gọn",
         "groupPrefixLabel": "Tiền tố nhóm",
         "groupPrefixPlaceholder": "Nhập tiền tố nhóm...",
         "groupPrefixHint": "Tên nhóm sẽ theo dạng \"{prefix} 1\", \"{prefix} 2\", ...",
@@ -2336,7 +2352,12 @@
         "groupInfo": {
             "nameLabel": "Tên nhóm",
             "descriptionLabel": "Mô tả",
-            "masterStudioLabel": "Studio quản lý"
+            "masterStudioLabel": "Studio quản lý",
+            "bannerLabel": "Ảnh nền",
+            "aliasLabel": "Biệt danh",
+            "aliasPlaceholder": "VD: THPT Hoang Dieu",
+            "taglineLabel": "Slogan",
+            "taglinePlaceholder": "Nhập slogan ngắn gọn"
         },
         "template": {
             "label": "Mẫu nhóm",

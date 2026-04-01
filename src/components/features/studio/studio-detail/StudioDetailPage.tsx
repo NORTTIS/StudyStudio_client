@@ -28,9 +28,11 @@ import {
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { BannerUpload } from "@/components/ui/banner-upload";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
+import { AliasInput } from "@/components/ui/alias-input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { hexToGradient } from "@/lib/utils";
@@ -138,6 +140,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editLoading, setEditLoading] = useState(false);
     const [editAvatarUrl, setEditAvatarUrl] = useState<string | null>(null);
     const [editColorHex, setEditColorHex] = useState("#FF5F3D");
+    const [editBannerUrl, setEditBannerUrl] = useState<string | null>(null);
+    const [editTagline, setEditTagline] = useState("");
+    const [editAlias, setEditAlias] = useState("");
 
     const formatDateForInput = useCallback((iso: string) => {
         if (!iso) return "";
@@ -161,7 +166,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             startDate: initialStudio.startDate,
             endDate: initialStudio.endDate,
             avatarUrl: initialStudio.avatarUrl ?? null,
-            colorHex: initialStudio.colorHex ?? null
+            colorHex: initialStudio.colorHex ?? null,
+            bannerUrl: initialStudio.bannerUrl ?? null,
+            tagline: initialStudio.tagline ?? null,
+            alias: initialStudio.alias ?? null
         };
     }, [initialStudio]);
 
@@ -222,6 +230,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
         setEditAvatarUrl(studio.avatarUrl ?? null);
         setEditColorHex(studio.colorHex ?? "#FF5F3D");
+        setEditBannerUrl(studio.bannerUrl ?? null);
+        setEditTagline(studio.tagline ?? "");
+        setEditAlias(studio.alias ?? "");
     }, [studio, isEditing, formatDateForInput]);
 
     const handleDeleteStudio = async () => {
@@ -250,6 +261,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
             setEditAvatarUrl(studio.avatarUrl ?? null);
             setEditColorHex(studio.colorHex ?? "#FF5F3D");
+            setEditBannerUrl(studio.bannerUrl ?? null);
+            setEditTagline(studio.tagline ?? "");
+            setEditAlias(studio.alias ?? "");
         }
         setIsEditing(true);
     };
@@ -262,6 +276,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             setEditEndDate(studio.endDate ? formatDateForInput(studio.endDate) : "");
             setEditAvatarUrl(studio.avatarUrl ?? null);
             setEditColorHex(studio.colorHex ?? "#FF5F3D");
+            setEditBannerUrl(studio.bannerUrl ?? null);
+            setEditTagline(studio.tagline ?? "");
+            setEditAlias(studio.alias ?? "");
         }
         setIsEditing(false);
     };
@@ -285,7 +302,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                     startDate: editStartDate || null,
                     endDate: editEndDate || null,
                     avatarUrl: editAvatarUrl,
-                    colorHex: editColorHex
+                    colorHex: editColorHex,
+                    bannerUrl: editBannerUrl,
+                    tagline: editTagline || null,
+                    alias: editAlias || null
                 },
                 locale
             );
@@ -360,76 +380,74 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="relative mb-6 overflow-hidden rounded-[36px] border border-white/70 bg-white/72 px-6 py-7 shadow-[0_28px_90px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+                            {/* Gradient fallback */}
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.20),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.68),rgba(255,248,242,0.56))]" />
-                            <div className="absolute inset-x-0 top-0 h-px bg-white/90" />
 
-                            <div className="relative">
-                                <div className="mb-5 flex items-start gap-4">
-                                    <motion.button
-                                        whileHover={{ x: -2 }}
-                                        whileTap={{ scale: 0.96 }}
-                                        type="button"
-                                        onClick={() => router.push(`/${locale}/master`)}
-                                        className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600">
-                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M15 19l-7-7 7-7"
-                                            />
-                                        </svg>
-                                    </motion.button>
+                            <div className="relative z-10">
+                                <motion.button
+                                    whileHover={{ x: -2 }}
+                                    whileTap={{ scale: 0.96 }}
+                                    type="button"
+                                    onClick={() => router.push(`/${locale}/master`)}
+                                    className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600">
+                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M15 19l-7-7 7-7"
+                                        />
+                                    </svg>
+                                </motion.button>
 
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-4">
-                                            <motion.div
-                                                whileHover={{ rotate: -2, scale: 1.04 }}
-                                                className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/80 shadow-[0_16px_30px_rgba(255,95,61,0.18)]">
-                                                {studio.avatarUrl ? (
-                                                    <img
-                                                        src={studio.avatarUrl}
-                                                        alt={studio.name}
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div
-                                                        className="flex h-full w-full items-center justify-center text-white"
-                                                        style={{
-                                                            background: hexToGradient(studio.colorHex ?? "#FF5F3D")
-                                                        }}>
-                                                        <svg
-                                                            className="h-6 w-6"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth={2}
-                                                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                                                            />
-                                                        </svg>
-                                                    </div>
-                                                )}
-                                            </motion.div>
-
-                                            <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-3">
-                                                    <h1 className="truncate text-2xl font-bold text-[#261E33] sm:text-[30px]">
-                                                        {studio.name}
-                                                    </h1>
-                                                    <span className="rounded-full border border-orange-100/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700 shadow-sm">
-                                                        {t("detail.workspaceBadge")}
-                                                    </span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-4">
+                                        <motion.div
+                                            whileHover={{ rotate: -2, scale: 1.04 }}
+                                            className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/80 shadow-[0_16px_30px_rgba(255,95,61,0.18)]">
+                                            {studio.avatarUrl ? (
+                                                <img
+                                                    src={studio.avatarUrl}
+                                                    alt={studio.name}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="flex h-full w-full items-center justify-center text-white"
+                                                    style={{
+                                                        background: hexToGradient(studio.colorHex ?? "#FF5F3D")
+                                                    }}>
+                                                    <svg
+                                                        className="h-6 w-6"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                                        />
+                                                    </svg>
                                                 </div>
+                                            )}
+                                        </motion.div>
 
-                                                {studio.description?.trim() ? (
-                                                    <p className="mt-2 max-w-3xl text-sm leading-7 text-[#6F6B99]">
-                                                        {studio.description}
-                                                    </p>
-                                                ) : null}
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <h1 className="truncate text-2xl font-bold text-[#261E33] sm:text-[30px]">
+                                                    {studio.name}
+                                                </h1>
+                                                <span className="rounded-full border border-orange-100/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700 shadow-sm">
+                                                    {t("detail.workspaceBadge")}
+                                                </span>
                                             </div>
+
+                                            {studio.description?.trim() ? (
+                                                <p className="mt-2 max-w-3xl text-sm leading-7 text-[#6F6B99]">
+                                                    {studio.description}
+                                                </p>
+                                            ) : null}
                                         </div>
                                     </div>
                                 </div>
@@ -957,6 +975,25 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
                                     className="space-y-6">
+                                    {/* Banner thumbnail strip */}
+                                    <div className="overflow-hidden rounded-[28px] border border-white/80 bg-white/88 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
+                                        <p className="mb-2 text-xs font-semibold text-gray-700">
+                                            {t("detail.settings.bannerLabel") ?? "Ảnh bìa"}
+                                        </p>
+                                        <BannerUpload
+                                            entityType="studio"
+                                            entityId={studio.id}
+                                            bannerUrl={isEditing ? editBannerUrl : studio.bannerUrl}
+                                            colorHex={editColorHex}
+                                            onUploadSuccess={(url) => setEditBannerUrl(url)}
+                                            onDeleteSuccess={() => setEditBannerUrl(null)}
+                                            onError={(msg) =>
+                                                toast({ description: msg, variant: "destructive" })
+                                            }
+                                            disabled={!isEditing}
+                                        />
+                                    </div>
+
                                     <section className="overflow-hidden rounded-[28px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
                                         <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
                                             <div className="flex items-start gap-3">
@@ -1016,7 +1053,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         </div>
 
                                         <div className="px-6 py-6">
-                                            <div className="mb-6 flex flex-col gap-6 lg:flex-row lg:items-end">
+                                            {/* Avatar + Color row */}
+                                            <div className="mb-6 flex items-end gap-4">
                                                 <AvatarUpload
                                                     entityType="studio"
                                                     entityId={studio.id}
@@ -1028,7 +1066,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     }
                                                     disabled={!isEditing}
                                                 />
-                                                <div className="flex-1 rounded-[24px] border border-[#F1EDF7] bg-[#FCFBFE] p-4 shadow-sm">
+                                                <div className="rounded-[24px] border border-[#F1EDF7] bg-[#FCFBFE] p-4 shadow-sm">
                                                     <ColorPicker
                                                         label={t("detail.settings.primaryColor")}
                                                         value={
@@ -1070,6 +1108,33 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                         className="mt-2 min-h-28 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
                                                         placeholder={t("modal.descriptionPlaceholder")}
                                                     />
+                                                </div>
+
+                                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                    <AliasInput
+                                                        value={editAlias}
+                                                        onChange={isEditing ? setEditAlias : undefined}
+                                                        disabled={!isEditing}
+                                                        label={t("detail.settings.aliasLabel") ?? "Biệt danh"}
+                                                        placeholder={t("detail.settings.aliasPlaceholder") ?? "VD: THPT Hoang Dieu"}
+                                                    />
+
+                                                    <div>
+                                                        <label
+                                                            htmlFor="studio-tagline-input"
+                                                            className="text-xs font-semibold text-gray-700">
+                                                            {t("detail.settings.taglineLabel") ?? "Tagline"}
+                                                        </label>
+                                                        <Input
+                                                            id="studio-tagline-input"
+                                                            disabled={!isEditing}
+                                                            value={editTagline}
+                                                            onChange={(e) => setEditTagline(e.target.value)}
+                                                            maxLength={200}
+                                                            placeholder={t("detail.settings.taglinePlaceholder") ?? "VD: Học là thích - Yêu là nhớ"}
+                                                            className="mt-2 h-11 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
