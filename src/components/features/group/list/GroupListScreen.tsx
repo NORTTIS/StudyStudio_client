@@ -454,10 +454,10 @@ export function GroupListScreen() {
     };
 
     return (
-        <div className="bg-white pb-8">
+        <div className="pb-8">
             <TaskDetailModal open={detailOpen} onClose={closeTaskDetail} taskId={detailTaskId} onSaved={refresh} />
 
-            <Container>
+            <Container className="bg-transparent">
                 <section className="mt-6 space-y-5">
                     <div className="rounded-[30px] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
                         <div className="grid gap-3 lg:grid-cols-[1.5fr_0.75fr_0.8fr_auto]">

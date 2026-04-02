@@ -136,6 +136,8 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const [memberCount, setMemberCount] = React.useState<number>(0);
     const [userRole, setUserRole] = React.useState<GroupRole>("member");
     const [error, setError] = React.useState<string>("");
+    const [groupTagline, setGroupTagline] = React.useState<string>("");
+    const [groupAlias, setGroupAlias] = React.useState<string>("");
 
     const [inviteOpen, setInviteOpen] = React.useState(false);
     const [hasModerator, setHasModerator] = React.useState(false);
@@ -223,6 +225,8 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 setGroupAvatarUrl(data?.avatarUrl || null);
                 setGroupDesc(data?.description || "");
                 setStudioName(data?.studioName || "");
+                setGroupTagline(data?.tagline || "");
+                setGroupAlias(data?.alias || "");
 
                 const c = Number(data?.memberCount ?? 0);
                 setMemberCount(Number.isFinite(c) ? c : 0);
@@ -397,22 +401,17 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     };
 
     return (
-        <Container>
+        <Container className="bg-transparent">
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="w-full rounded-3xl border border-[#F3E4D7] bg-gradient-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6">
+                className="relative w-full overflow-hidden rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6">
                 <div className="mb-6 flex flex-col justify-between gap-4">
-                    <div>
-                        <Link
-                            href={`/${locale}/group`}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-gradient-to-r hover:from-orange-500 hover:to-red-600 hover:text-white hover:shadow-md hover:shadow-orange-200">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                    </div>
+                    
 
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        
                         <div className="min-w-0">
                             <AnimatePresence mode="wait">
                                 {studioName ? (
@@ -430,7 +429,14 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                             </AnimatePresence>
 
                             <div className="mt-2 flex items-start gap-3">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-orange-500 via-orange-500 to-red-600 shadow-md shadow-orange-200">
+                                <div>
+                                    <Link
+                                        href={`/${locale}/group`}
+                                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-linear-to-r hover:from-orange-500 hover:to-red-600 hover:text-white hover:shadow-md hover:shadow-orange-200">
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Link>
+                                    </div>
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-orange-500 via-orange-500 to-red-600 shadow-md shadow-orange-200">
                                     {groupAvatarUrl ? (
                                         <img
                                             src={groupAvatarUrl}
@@ -451,10 +457,35 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                             {groupName}
                                         </motion.h1>
 
+                                        {groupAlias ? (
+                                            <motion.span
+                                                layout
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ type: "spring", stiffness: 280, damping: 26 }}
+                                                className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">
+                                                {groupAlias}
+                                            </motion.span>
+                                        ) : null}
+
                                         <motion.div layout transition={{ type: "spring", stiffness: 280, damping: 26 }}>
                                             <RolePill role={userRole} />
                                         </motion.div>
                                     </div>
+
+                                    <AnimatePresence mode="wait">
+                                        {groupTagline ? (
+                                            <motion.p
+                                                key={groupTagline}
+                                                initial={{ opacity: 0, y: 6 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -6 }}
+                                                transition={{ duration: 0.22 }}
+                                                className="mt-1 italic text-[#9B8CA8] text-sm">
+                                                {groupTagline}
+                                            </motion.p>
+                                        ) : null}
+                                    </AnimatePresence>
 
                                     <AnimatePresence mode="wait">
                                         {groupDesc ? (
@@ -464,7 +495,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -6 }}
                                                 transition={{ duration: 0.22 }}
-                                                className="mt-1.5 max-w-3xl text-[#7C6A5A] text-sm leading-6 lg:text-[15px]">
+                                                className="mt-1 max-w-3xl text-[#7C6A5A] text-sm leading-6 lg:text-[15px]">
                                                 {groupDesc}
                                             </motion.p>
                                         ) : null}
@@ -513,7 +544,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                     whileHover={{ y: -2 }}
                                     whileTap={{ scale: 0.98 }}
                                     transition={{ duration: 0.18 }}
-                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-orange-500 hover:to-red-700 hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
+                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-red-600 px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-orange-500 hover:to-red-700 hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
                                     <UserPlus className="h-4 w-4" />
                                     {tCommon("addMember")}
                                 </motion.button>
@@ -553,7 +584,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         {active ? (
                                             <motion.div
                                                 layoutId="activeGroupTab"
-                                                className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500 to-red-600"
+                                                className="absolute inset-0 rounded-xl bg-linear-to-r from-orange-500 to-red-600"
                                                 transition={{
                                                     type: "spring",
                                                     stiffness: 380,

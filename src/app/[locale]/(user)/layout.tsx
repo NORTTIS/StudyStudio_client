@@ -12,7 +12,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
                     <DashboardSidebar />
                 </div>
 
-                <div className="flex min-w-0 flex-1 flex-col">
+                <div className="relative z-30 flex min-w-0 flex-1 flex-col">
                     <div className="sticky top-0 z-50 bg-white">
                         <div className="h-16 border-[#E5E5E5] border-b">
                             <Header />

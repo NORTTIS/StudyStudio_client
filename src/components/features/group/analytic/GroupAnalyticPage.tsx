@@ -1668,7 +1668,7 @@ export default function GroupMemberAnalyticsPage() {
     // ==================== Render ====================
 
     return (
-        <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#FFF7ED_34%,#FFFBF5_66%,#F8FAFC_100%)]">
+        <div className="relative overflow-hidden bg-transparent px-8 py-6">
             <div className="pointer-events-none absolute inset-0">
                 <div className="absolute top-[-40px] left-[-80px] h-72 w-72 rounded-full bg-orange-200/25 blur-3xl" />
                 <div className="absolute top-[18%] right-[-80px] h-80 w-80 rounded-full bg-amber-200/20 blur-3xl" />
@@ -1676,7 +1676,7 @@ export default function GroupMemberAnalyticsPage() {
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
             </div>
 
-            <Container className="relative pt-8 pb-6">
+            <Container className="relative pt-8 pb-6 rounded-3xl border border-[#F3E4D7]">
                 <div className="space-y-5">
                     <SectionReveal delay={0.04}>
                         <section className="space-y-4">

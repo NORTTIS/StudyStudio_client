@@ -7,6 +7,7 @@ import { apiGet, apiPost } from "@/api/api-client";
 import { downloadBatchAssignTemplate } from "@/api/studios";
 import type { components } from "@/api/types";
 import { Button } from "@/components/common/Button";
+import { BannerUpload } from "@/components/ui/banner-upload";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -94,6 +95,9 @@ export function CreateGroupModal({
     const [templateId, setTemplateId] = useState<string>("");
     const [colorHex, setColorHex] = useState("#FF5F3D");
     const [iconEmoji, setIconEmoji] = useState("");
+    const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+    const [tagline, setTagline] = useState("");
+    const [alias, setAlias] = useState("");
 
     const [loadingOptions, setLoadingOptions] = useState(false);
     const [optionsError, setOptionsError] = useState("");
@@ -218,6 +222,9 @@ export function CreateGroupModal({
         setTemplateId("");
         setColorHex("#FF5F3D");
         setIconEmoji("");
+        setBannerUrl(null);
+        setTagline("");
+        setAlias("");
         setOwnerStudios([]);
         setTemplates([]);
         setOptionsError("");
@@ -339,7 +346,10 @@ export function CreateGroupModal({
                     description: description.trim(),
                     templateId: templateId ? templateId : null,
                     colorHex: colorHex || null,
-                    iconEmoji: iconEmoji || null
+                    iconEmoji: iconEmoji || null,
+                    bannerUrl: bannerUrl || null,
+                    tagline: tagline.trim() || null,
+                    alias: alias.trim() || null
                 };
                 res = await apiPost(buildApiUrl("/api/group"), payload);
             }
@@ -585,6 +595,48 @@ export function CreateGroupModal({
                                                     />
                                                 </div>
                                             </div>
+                                        </Field>
+
+                                        {/* Banner */}
+                                        <Field label={t("bannerLabel") || "Banner"}>
+                                            <BannerUpload
+                                                entityType="group"
+                                                entityId="__temp__"
+                                                bannerUrl={bannerUrl}
+                                                colorHex={colorHex}
+                                                onUploadSuccess={(url) => setBannerUrl(url)}
+                                                onDeleteSuccess={() => setBannerUrl(null)}
+                                                disabled={loadingOptions || creating}
+                                            />
+                                        </Field>
+
+                                        {/* Alias */}
+                                        <Field label={t("aliasLabel") || "Biệt danh"}>
+                                            <input
+                                                value={alias}
+                                                onChange={(e) => setAlias(e.target.value.slice(0, 50))}
+                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                placeholder={t("aliasPlaceholder") || "VD: THPT Hoang Dieu"}
+                                                disabled={loadingOptions || creating}
+                                            />
+                                            {alias.length > 0 && (
+                                                <div className="mt-2">
+                                                    <span className="inline-flex items-center rounded-full border border-orange-300 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">
+                                                        {alias}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </Field>
+
+                                        {/* Tagline */}
+                                        <Field label={t("taglineLabel") || "Slogan"}>
+                                            <input
+                                                value={tagline}
+                                                onChange={(e) => setTagline(e.target.value.slice(0, 200))}
+                                                className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                                                placeholder={t("taglinePlaceholder") || "Nhập slogan ngắn gọn"}
+                                                disabled={loadingOptions || creating}
+                                            />
                                         </Field>
                                     </>
                                 ) : (

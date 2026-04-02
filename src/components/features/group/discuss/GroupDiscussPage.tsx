@@ -822,7 +822,7 @@ const MentionTextarea = React.forwardRef<
             ? createPortal(
                   <div
                       ref={popupRef}
-                      className="fixed z-[22000] overflow-hidden rounded-2xl border border-[#EDEDED] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                      className="fixed z-22000 overflow-hidden rounded-2xl border border-[#EDEDED] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
                       style={{
                           left: popupPosition.left,
                           top: popupPosition.top,
@@ -904,7 +904,7 @@ const MentionTextarea = React.forwardRef<
                     <div
                         aria-hidden
                         className={twMerge(
-                            "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap break-words rounded-md border border-[#EDEDED] bg-white px-3 py-2 text-sm leading-6 text-[#261E33]",
+                            "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap wrap-break-word rounded-md border border-[#EDEDED] bg-white px-3 py-2 text-sm leading-6 text-[#261E33]",
                             disabled && "opacity-60",
                             previewClassName
                         )}
@@ -923,7 +923,7 @@ const MentionTextarea = React.forwardRef<
                         maxLength={maxChars}
                         className={twMerge(
                             "relative z-10 block w-full max-w-full resize-none overflow-hidden rounded-md border border-[#EDEDED] bg-transparent px-3 py-2 text-sm leading-6 text-transparent caret-[#261E33] outline-none selection:bg-blue-200",
-                            "min-h-[110px]",
+                            "min-h-27.5",
                             "disabled:cursor-not-allowed disabled:caret-transparent",
                             textareaClassName
                         )}
@@ -1044,7 +1044,7 @@ function ReplyItemView({
                                 align="end"
                                 sideOffset={6}
                                 className={twMerge(
-                                    "z-[9999] w-40",
+                                    "z-9999 w-40",
                                     "bg-white opacity-100 backdrop-blur-none",
                                     "border border-[#EDEDED] shadow-xl"
                                 )}>
@@ -1145,7 +1145,7 @@ function PostCard({
                                 align="end"
                                 sideOffset={6}
                                 className={twMerge(
-                                    "z-[9999] w-40",
+                                    "z-9999 w-40",
                                     "bg-white opacity-100 backdrop-blur-none",
                                     "border border-[#EDEDED] shadow-xl"
                                 )}>
@@ -1713,8 +1713,8 @@ export default function GroupDiscussPage() {
     };
 
     return (
-        <div className="w-full">
-            <Container className="px-6">
+        <div className="min-h-screen w-full bg-transparent py-6 px-8">
+            <Container className="rounded-2xl border border-[#EDEDED] bg-white px-6 py-4 shadow-sm">
                 <div className="mb-5">
                     <p className="font-semibold text-[#261E33] text-sm">{t("title")}</p>
                     <p className="mt-1 text-[#6F6B99] text-sm">{t("subtitle")}</p>

@@ -24,6 +24,7 @@ import {
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { BannerUpload } from "@/components/ui/banner-upload";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
@@ -178,9 +179,15 @@ export function GroupSettingView() {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [colorHex, setColorHex] = useState("#FF5F3D");
     const [iconEmoji, setIconEmoji] = useState("");
+    const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+    const [tagline, setTagline] = useState("");
+    const [alias, setAlias] = useState("");
     const [initialAvatarUrl, setInitialAvatarUrl] = useState<string | null>(null);
     const [initialColorHex, setInitialColorHex] = useState("#FF5F3D");
     const [initialIconEmoji, setInitialIconEmoji] = useState("");
+    const [initialBannerUrl, setInitialBannerUrl] = useState<string | null>(null);
+    const [initialTagline, setInitialTagline] = useState("");
+    const [initialAlias, setInitialAlias] = useState("");
 
     const [isTemplate, setIsTemplate] = useState(false);
     const [initialIsTemplate, setInitialIsTemplate] = useState(false);
@@ -311,9 +318,15 @@ export function GroupSettingView() {
             setAvatarUrl(null);
             setColorHex("#FF5F3D");
             setIconEmoji("");
+            setBannerUrl(null);
+            setTagline("");
+            setAlias("");
             setInitialAvatarUrl(null);
             setInitialColorHex("#FF5F3D");
             setInitialIconEmoji("");
+            setInitialBannerUrl(null);
+            setInitialTagline("");
+            setInitialAlias("");
             setIsTemplate(false);
             setInitialIsTemplate(false);
             return false;
@@ -339,9 +352,15 @@ export function GroupSettingView() {
             setAvatarUrl(null);
             setColorHex("#FF5F3D");
             setIconEmoji("");
+            setBannerUrl(null);
+            setTagline("");
+            setAlias("");
             setInitialAvatarUrl(null);
             setInitialColorHex("#FF5F3D");
             setInitialIconEmoji("");
+            setInitialBannerUrl(null);
+            setInitialTagline("");
+            setInitialAlias("");
             setIsTemplate(false);
             setInitialIsTemplate(false);
             return false;
@@ -364,9 +383,15 @@ export function GroupSettingView() {
         setAvatarUrl(data.avatarUrl ?? null);
         setColorHex(data.colorHex ?? "#FF5F3D");
         setIconEmoji(data.iconEmoji ?? "");
+        setBannerUrl(data.bannerUrl ?? null);
+        setTagline(data.tagline ?? "");
+        setAlias(data.alias ?? "");
         setInitialAvatarUrl(data.avatarUrl ?? null);
         setInitialColorHex(data.colorHex ?? "#FF5F3D");
         setInitialIconEmoji(data.iconEmoji ?? "");
+        setInitialBannerUrl(data.bannerUrl ?? null);
+        setInitialTagline(data.tagline ?? "");
+        setInitialAlias(data.alias ?? "");
 
         const templateValue =
             (data as Record<string, unknown>).isTemplate ??
@@ -478,7 +503,10 @@ export function GroupSettingView() {
                     avatarUrl: avatarUrl,
                     colorHex: colorHex,
                     iconEmoji: iconEmoji || null,
-                    isTemplate: isTemplate
+                    isTemplate: isTemplate,
+                    bannerUrl: bannerUrl,
+                    tagline: tagline || null,
+                    alias: alias || null
                 })
             });
 
@@ -505,6 +533,9 @@ export function GroupSettingView() {
             setInitialAvatarUrl(avatarUrl);
             setInitialColorHex(colorHex);
             setInitialIconEmoji(iconEmoji);
+            setInitialBannerUrl(bannerUrl);
+            setInitialTagline(tagline);
+            setInitialAlias(alias);
             setInitialIsTemplate(isTemplate);
 
             setIsEditing(false);
@@ -520,6 +551,9 @@ export function GroupSettingView() {
         setAvatarUrl(initialAvatarUrl);
         setColorHex(initialColorHex);
         setIconEmoji(initialIconEmoji);
+        setBannerUrl(initialBannerUrl);
+        setTagline(initialTagline);
+        setAlias(initialAlias);
         setIsTemplate(initialIsTemplate);
         setGeneralError("");
         setIsEditing(false);
@@ -819,9 +853,12 @@ export function GroupSettingView() {
     const hasModerator = members.some((m) => m.role === "Moderator");
 
     return (
-        <div className="w-full">
-            <Container>
+        <div className="min-h-screen w-full px-8 py-6 bg-transparent">
+            <Container className="rounded-2xl border border-gray-200 bg-white px-6 py-4 shadow-sm">
                 <div className="space-y-6 pb-10">
+                    
+                    
+
                     <section className="rounded-2xl border bg-white shadow-sm">
                         <div className="flex items-start justify-between border-b px-6 py-5">
                             <div className="flex items-start gap-3">
@@ -853,31 +890,54 @@ export function GroupSettingView() {
 
                         <div className="px-6 py-6">
                             <div className="mb-6 flex items-end gap-6">
-                                <AvatarUpload
-                                    entityType="group"
-                                    entityId={groupId ?? ""}
-                                    avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
-                                    colorHex={isEditing ? colorHex : initialColorHex}
-                                    iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
-                                    onUploadSuccess={(url) => setAvatarUrl(url)}
-                                    onError={(msg) => setGeneralError(msg)}
+                                {/* Identity strip */}
+                    <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row sm:items-start">
+                        {/* Banner thumbnail */}
+                        
+
+                        {/* Avatar + Color/Emoji */}
+                        <div className="flex items-end gap-3 sm:flex-col sm:items-start">
+                            <AvatarUpload
+                                entityType="group"
+                                entityId={groupId ?? ""}
+                                avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
+                                colorHex={isEditing ? colorHex : initialColorHex}
+                                iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
+                                onUploadSuccess={(url) => setAvatarUrl(url)}
+                                onError={(msg) => setGeneralError(msg)}
+                                disabled={!isEditing}
+                            />
+                            <div className="flex items-center gap-2">
+                                <ColorPicker
+                                    label="Màu"
+                                    value={isEditing ? colorHex : initialColorHex}
+                                    onChange={isEditing ? setColorHex : undefined}
                                     disabled={!isEditing}
                                 />
-                                <div className="flex items-center gap-3">
-                                    <EmojiPicker
-                                        value={isEditing ? iconEmoji : initialIconEmoji}
-                                        onChange={isEditing ? setIconEmoji : undefined}
-                                        disabled={!isEditing}
-                                    />
-                                    <div className="flex-1">
-                                        <ColorPicker
-                                            label="Màu nhóm"
-                                            value={isEditing ? colorHex : initialColorHex}
-                                            onChange={isEditing ? setColorHex : undefined}
-                                            disabled={!isEditing}
-                                        />
-                                    </div>
-                                </div>
+                                <EmojiPicker
+                                    label="icon"
+                                    value={isEditing ? iconEmoji : initialIconEmoji}
+                                    onChange={isEditing ? setIconEmoji : undefined}
+                                    disabled={!isEditing}
+                                />
+                            </div>
+                        </div>
+                        <div className="w-full sm:flex-1">
+                            <p className="mb-2 text-xs font-semibold text-gray-700">
+                                {t("groupInfo.bannerLabel") || "Ảnh bìa"}
+                            </p>
+                            <BannerUpload
+                                entityType="group"
+                                entityId={groupId ?? ""}
+                                bannerUrl={isEditing ? bannerUrl : initialBannerUrl}
+                                colorHex={isEditing ? colorHex : initialColorHex}
+                                onUploadSuccess={(url) => setBannerUrl(url)}
+                                onDeleteSuccess={() => setBannerUrl(null)}
+                                onError={(msg) => setGeneralError(msg)}
+                                disabled={!isEditing}
+                            />
+                        </div>
+                    </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-5">
@@ -978,6 +1038,55 @@ export function GroupSettingView() {
                                     </div>
                                 ) : null}
 
+                                {/* Alias */}
+                                <div>
+                                    <label
+                                        htmlFor="group-alias-input"
+                                        className="font-semibold text-gray-700 text-xs">
+                                        {t("groupInfo.aliasLabel") || "Biệt danh"}
+                                    </label>
+                                    <Input
+                                        id="group-alias-input"
+                                        disabled={!isEditing}
+                                        value={isEditing ? alias : initialAlias}
+                                        onChange={(e) => {
+                                            setAlias(e.target.value);
+                                            if (generalError) setGeneralError("");
+                                        }}
+                                        maxLength={50}
+                                        placeholder={t("groupInfo.aliasPlaceholder") || "VD: THPT Hoang Dieu"}
+                                        className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                    />
+                                    {alias.length > 0 && isEditing && (
+                                        <div className="mt-1.5">
+                                            <span className="inline-flex items-center rounded-full border border-orange-300 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">
+                                                {alias}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Tagline */}
+                                <div>
+                                    <label
+                                        htmlFor="group-tagline-input"
+                                        className="font-semibold text-gray-700 text-xs">
+                                        {t("groupInfo.taglineLabel") || "Slogan"}
+                                    </label>
+                                    <Input
+                                        id="group-tagline-input"
+                                        disabled={!isEditing}
+                                        value={isEditing ? tagline : initialTagline}
+                                        onChange={(e) => {
+                                            setTagline(e.target.value);
+                                            if (generalError) setGeneralError("");
+                                        }}
+                                        maxLength={200}
+                                        placeholder={t("groupInfo.taglinePlaceholder") || "Nhập slogan ngắn gọn"}
+                                        className="mt-2 h-10 rounded-xl border-gray-200 focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                    />
+                                </div>
+
                                 <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                                     <div>
                                         <div className="font-semibold text-gray-700 text-xs">{t("template.label")}</div>
@@ -1044,7 +1153,7 @@ export function GroupSettingView() {
                                     return (
                                         <div
                                             key={m.id}
-                                            className="grid grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-gray-50/80 md:grid-cols-12 md:items-center">
+                                            className="grid grid-cols-1 gap-3 px-4 py-4 transition-colors hover:bg-gray-50 md:grid-cols-12 md:items-center">
                                             <div className="md:col-span-6">
                                                 <div className="flex items-center gap-3">
                                                     {m.avatarUrl ? (

@@ -424,8 +424,8 @@ export default function GroupAiQaPage() {
     );
 
     return (
-        <div className="w-full">
-            <Container className="px-6">
+        <div className="w-full px-8 py-6">
+            <Container className="rounded-2xl border border-[#EDEDED] bg-white px-6 py-4 shadow-sm">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <h2 className="font-semibold text-[#261E33] text-xl">{t("title")}</h2>
                     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -451,11 +451,10 @@ export default function GroupAiQaPage() {
                 </div>
 
                 {messages.length === 0 ? (
-                    <div className="relative overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.70),rgba(255,246,241,0.68))] px-8 py-10 shadow-[0_24px_70px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,188,140,0.12),transparent_30%)]"></div>
+                    <div className="relative overflow-hidden rounded-4xl border border-[#EDEDED] bg-white px-8 py-10 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
 
                         <div className="relative mx-auto max-w-3xl text-center">
-                            <div className="mx-auto mb-5 flex h-18 w-18 items-center justify-center rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,#FFF4EA_0%,#FFE5D1_100%)] shadow-[0_20px_40px_rgba(255,107,53,0.14),inset_0_1px_0_rgba(255,255,255,0.95)]">
+                            <div className="mx-auto mb-5 flex h-18 w-18 items-center justify-center rounded-[28px] border border-[#F5D9C6] bg-[linear-gradient(180deg,#FFF4EA_0%,#FFE5D1_100%)] shadow-[0_20px_40px_rgba(255,107,53,0.14),inset_0_1px_0_rgba(255,255,255,0.95)]">
                                 <Sparkles className="h-8 w-8 text-[#FF8A65]" />
                             </div>
                             <h3 className="font-semibold text-[#2B2118] text-[31px] md:text-[40px]">
@@ -474,7 +473,7 @@ export default function GroupAiQaPage() {
                                     variant="outline"
                                     disabled={isSending}
                                     onClick={() => void onQuickActionClick(action)}
-                                    className="rounded-full border-white/70 bg-white/80 text-[#5E4E42] shadow-sm backdrop-blur transition hover:bg-white/90">
+                                    className="rounded-full border border-[#E8E2DC] bg-white text-[#5E4E42] shadow-sm transition hover:bg-[#F8F4F1]">
                                     {action.label}
                                 </Button>
                             ))}
@@ -493,8 +492,8 @@ export default function GroupAiQaPage() {
                                 <div
                                     className={
                                         m.role === "user"
-                                            ? "rounded-[24px] rounded-br-md border border-[#4A2E25] bg-[linear-gradient(135deg,#432818_0%,#7C2D12_45%,#7C3AED_100%)] px-4 py-3 text-white shadow-[0_18px_32px_rgba(43,33,24,0.22)]"
-                                            : "rounded-[24px] rounded-bl-md border border-[#EFE6DE] bg-[linear-gradient(135deg,#FFFDFC_0%,#FFF7F2_58%,#F5F3FF_100%)] px-4 py-3 text-[#2B2118] shadow-[0_14px_28px_rgba(15,23,42,0.04)]"
+                                            ? "rounded-3xl rounded-br-md border border-[#4A2E25] bg-[linear-gradient(135deg,#432818_0%,#7C2D12_45%,#7C3AED_100%)] px-4 py-3 text-white shadow-[0_18px_32px_rgba(43,33,24,0.22)]"
+                                            : "rounded-3xl rounded-bl-md border border-[#EFE6DE] bg-[linear-gradient(135deg,#FFFDFC_0%,#FFF7F2_58%,#F5F3FF_100%)] px-4 py-3 text-[#2B2118] shadow-[0_14px_28px_rgba(15,23,42,0.04)]"
                                     }>
                                     {m.role === "assistant" && !m.content.trim() && isSending ? (
                                         <div className="flex items-center gap-2 text-[#6F6B99] text-sm">
@@ -528,14 +527,13 @@ export default function GroupAiQaPage() {
                             </Button>
                         ))}
                     </div>
-                    <div className="relative overflow-hidden rounded-[32px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(248,244,255,0.72))] p-3 backdrop-blur-2xl">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,196,160,0.18),transparent_32%)]"></div>
+                    <div className="relative overflow-hidden rounded-4xl border border-[#EDEDED] bg-white p-3">
                         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center">
                             <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 placeholder={t("inputPlaceholder")}
-                                className="min-h-[50px] max-h-[200px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
+                                className="min-h-12.5 max-h-50 w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
                             />
                             <Button
                                 type="submit"

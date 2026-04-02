@@ -53,10 +53,14 @@ export type StudioUI = {
     createdAt: string;
     updatedAt: string;
     studioRole?: 0 | 1; // 0 = Owner, 1 = Member
-    startDate?: string | null; // NEW
-    endDate?: string | null; // NEW
-    avatarUrl?: string | null; // NEW
-    colorHex?: string | null; // NEW
+    startDate?: string | null;
+    endDate?: string | null;
+    avatarUrl?: string | null;
+    colorHex?: string | null;
+    // Personalization fields
+    bannerUrl?: string | null;
+    tagline?: string | null;
+    alias?: string | null;
 };
 
 export type CreateStudioRequest = {
@@ -65,18 +69,26 @@ export type CreateStudioRequest = {
     type: "personal" | "group";
     startDate?: string | null;
     endDate?: string | null;
-    avatarUrl?: string | null; // NEW
-    colorHex?: string | null; // NEW
+    avatarUrl?: string | null;
+    colorHex?: string | null;
+    // Personalization fields
+    bannerUrl?: string | null;
+    tagline?: string | null;
+    alias?: string | null;
 };
 
 export type UpdateStudioRequest = {
     name?: string;
     description?: string;
     type?: "personal" | "group";
-    startDate?: string | null; // NEW
-    endDate?: string | null; // NEW
-    avatarUrl?: string | null; // NEW
-    colorHex?: string | null; // NEW
+    startDate?: string | null;
+    endDate?: string | null;
+    avatarUrl?: string | null;
+    colorHex?: string | null;
+    // Personalization fields
+    bannerUrl?: string | null;
+    tagline?: string | null;
+    alias?: string | null;
 };
 
 // Helper: convert ISO datetime string to YYYY-MM-DD for <input type="date">
@@ -207,8 +219,11 @@ export async function updateStudio(id: string, data: UpdateStudioRequest, locale
             description,
             startDate: data.startDate ?? null,
             endDate: data.endDate ?? null,
-            avatarUrl: data.avatarUrl ?? null, // NEW
-            colorHex: data.colorHex ?? null // NEW
+            avatarUrl: data.avatarUrl ?? null,
+            colorHex: data.colorHex ?? null,
+            bannerUrl: data.bannerUrl ?? null,
+            tagline: data.tagline ?? null,
+            alias: data.alias ?? null
         }),
         locale
     });

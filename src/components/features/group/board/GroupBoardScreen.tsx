@@ -31,7 +31,6 @@ import { CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "l
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { Container } from "@/components/common";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
 import { mapRole } from "@/components/features/group/group.api";
@@ -111,6 +110,8 @@ type GroupDetailResponse = {
     groupId?: string;
     userRole?: string | null;
     taskStatuses?: TaskStatusDto[] | null;
+    bannerUrl?: string | null;
+    colorHex?: string | null;
 };
 
 type GroupTaskStatusData = {
@@ -1478,8 +1479,8 @@ function AddColumnInline({
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left font-semibold text-sm text-white shadow-sm",
-                    "transition hover:bg-[#f54a00]/80"
+                    "w-full rounded-xl border-2 border-dashed border-zinc-300 bg-white/40 px-4 py-3 text-left font-semibold text-sm text-zinc-700 backdrop-blur-sm",
+                    "transition hover:border-zinc-400 hover:bg-white/60"
                 )}>
                 + {t("createStatus")}
             </button>
@@ -1487,7 +1488,7 @@ function AddColumnInline({
     }
 
     return (
-        <div className="rounded-xl bg-white p-3 shadow-sm">
+        <div className="rounded-xl border border-zinc-200/60 bg-white/40 p-3 backdrop-blur-sm">
             <input
                 ref={inputRef}
                 value={title}
@@ -1544,10 +1545,9 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 font-semibold text-sm",
-                "bg-[#f54a00] text-white",
-                "transition hover:bg-[#f54a00]/80",
-                disabled && "pointer-events-none opacity-60"
+                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 bg-white/40 px-3 py-2 font-semibold text-sm text-zinc-600 backdrop-blur-sm",
+                "transition hover:border-zinc-400 hover:bg-white/60",
+                disabled && "pointer-events-none opacity-40"
             )}>
             <Plus className="h-4 w-4" />
             {t("addTask")}
@@ -1639,14 +1639,14 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div className="rounded-xl bg-[#f1f2f4]">
+        <div className="rounded-xl border border-zinc-200/60 bg-white/40">
             <div
                 ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
                 {...(headerDragProps?.attributes ?? {})}
                 {...(headerDragProps?.listeners ?? {})}
                 style={{ touchAction: "none" }}
                 className={cn(
-                    "sticky top-0 z-10 rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2",
+                    "sticky top-0 z-10 rounded-t-xl bg-white/60 px-3 pt-3 pb-2",
                     "cursor-grab select-none active:cursor-grabbing"
                 )}>
                 <div className="flex items-center gap-3">
@@ -1753,7 +1753,7 @@ function ColumnView({
             <div className="px-2 pb-2">
                 <div
                     ref={setDroppableRef}
-                    className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}>
+                    className={cn("rounded-b-xl transition", isOver && "bg-blue-50/40")}>
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                             <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -1782,7 +1782,7 @@ function ColumnView({
                                 })}
 
                                 {tasks.length === 0 ? (
-                                    <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
+                                    <div className="rounded-xl border border-zinc-300 border-dashed bg-white/70 px-3 py-8 text-center backdrop-blur-sm">
                                         <div className="font-semibold text-sm text-zinc-700">{t("noTasks")}</div>
                                         <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
                                     </div>
@@ -1986,13 +1986,13 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     const t = useTranslations("GroupBoardScreen");
     return (
         <div className="min-w-[300px] max-w-[300px]">
-            <div className="rounded-xl bg-[#f1f2f4] shadow-xl">
-                <div className="rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2">
+            <div className="rounded-xl border border-zinc-200/60 bg-white/40 backdrop-blur-sm shadow-xl">
+                <div className="rounded-t-xl bg-white/60 px-3 pt-3 pb-2">
                     <p className="truncate font-bold text-sm text-zinc-900">{col.title}</p>
                     <p className="text-[11px] text-zinc-500">{t("movingStatus")}</p>
                 </div>
                 <div className="px-2 pb-2">
-                    <div className="rounded-b-xl bg-[#f1f2f4]">
+                    <div className="rounded-b-xl">
                         {tasks.slice(0, 3).map((t) => (
                             <div key={t.id} className="mb-2 last:mb-0">
                                 <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
@@ -2007,7 +2007,7 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
                             </div>
                         ))}
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                            <div className="rounded-xl border border-zinc-300 border-dashed bg-white/70 px-3 py-8 text-center text-sm text-zinc-500 backdrop-blur-sm">
                                 {t("emptyStatus")}
                             </div>
                         ) : null}
@@ -2950,32 +2950,32 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
     if (loading) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-[#fafbfc]">
-                <Container>
-                    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-4 py-4 text-sm text-zinc-700">
+            <div className="relative z-10 min-h-screen">
+                <div className="px-4 pt-6 sm:px-6 lg:px-8">
+                    <div className="rounded-2xl border border-zinc-200 bg-white/70 backdrop-blur-sm px-4 py-4 text-sm text-zinc-700">
                         {t("loadingBoard")}
                     </div>
-                </Container>
+                </div>
             </div>
         );
     }
 
     if (loadError) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-[#fafbfc]">
-                <Container>
-                    <div className="mt-6 rounded-2xl border border-rose-200 bg-white px-4 py-4 text-rose-700 text-sm">
+            <div className="relative z-10 min-h-screen">
+                <div className="px-4 pt-6 sm:px-6 lg:px-8">
+                    <div className="rounded-2xl border border-rose-200 bg-white/70 backdrop-blur-sm px-4 py-4 text-rose-700 text-sm">
                         {loadError}
                     </div>
-                    <div className="mt-3">
+                    <div className="mt-3 px-4 sm:px-6 lg:px-8">
                         <button
                             type="button"
                             onClick={() => void refresh()}
-                            className="rounded-xl border border-zinc-200 bg-white px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
+                            className="rounded-xl border border-zinc-200 bg-white/70 backdrop-blur-sm px-3 py-2 font-semibold text-sm text-zinc-900 hover:bg-white/80">
                             {t("reload")}
                         </button>
                     </div>
-                </Container>
+                </div>
             </div>
         );
     }
@@ -2994,7 +2994,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     };
 
     return (
-        <div className="min-h-[calc(100vh-0px)] bg-[#fafbfc]">
+        <div className="relative z-10 min-h-screen">
             <TaskFormModal
                 open={taskFormOpen}
                 onClose={closeCreateTask}
@@ -3042,10 +3042,10 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 hideCancel
             />
 
-            <Container>
-                {/* FIX 2: Move top scrollbar ABOVE the board, change sticky bottom-0 → top-0 */}
+            <div className="px-4 pt-2 sm:px-6 lg:px-8">
+                {/* FIX 2: Move top scrollbar ABOVE the board */}
                 {showTopScrollbar ? (
-                    <div className="sticky top-0 z-30 bg-[#fafbfc] pb-2">
+                    <div className="sticky top-0 z-30 pb-2">
                         <div
                             ref={topScrollRef}
                             onScroll={handleTopScroll}
@@ -3157,7 +3157,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                         </DragOverlay>
                     </DndContext>
                 )}
-            </Container>
+            </div>
         </div>
     );
 }

@@ -13,6 +13,7 @@ import {
 import { mapRole } from "./group.api";
 import { RolePill } from "./RolePill";
 import type { GroupCardDto } from "./types";
+import { hexToGradient } from "@/lib/utils";
 
 export function GroupCard({
     group,
@@ -80,30 +81,65 @@ export function GroupCard({
                     goBoard();
                 }
             }}
-            className="cursor-pointer rounded-xl border border-[#E5E5E5] bg-white p-3 shadow-sm transition hover:bg-[#FAFAFA]">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F4F5FA] ring-1 ring-[#E5E5E5]">
-                            {group.avatarUrl ? (
-                                <Image
-                                    src={group.avatarUrl}
-                                    alt={displayTitle}
-                                    fill
-                                    className="object-cover"
-                                    sizes="32px"
-                                />
-                            ) : group.iconEmoji ? (
-                                <span className="text-base leading-none">{group.iconEmoji}</span>
-                            ) : (
-                                <Users2 className="h-4 w-4 text-[#6F6B99]" />
-                            )}
-                        </div>
+            className="cursor-pointer overflow-hidden rounded-xl border border-[#E5E5E5] bg-white shadow-sm transition hover:bg-[#FAFAFA]">
+            {/* Banner cover */}
+            {group.bannerUrl ? (
+                <div className="relative h-16 w-full overflow-hidden bg-[#F4F5FA]">
+                    <img
+                        src={group.bannerUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                    />
+                </div>
+            ) : (
+                <div
+                    className="h-16 w-full"
+                    style={{
+                        background: hexToGradient(
+                            typeof group.colorHex === "string" ? group.colorHex : "#FF5F3D"
+                        )
+                    }}
+                />
+            )}
+
+            <div className="p-3">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Avatar */}
+                            <div className="relative -mt-8 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-2 ring-white">
+                                {group.avatarUrl ? (
+                                    <Image
+                                        src={group.avatarUrl}
+                                        alt={displayTitle}
+                                        fill
+                                        className="object-cover"
+                                        sizes="32px"
+                                    />
+                                ) : group.iconEmoji ? (
+                                    <span className="text-base leading-none">{group.iconEmoji}</span>
+                                ) : (
+                                    <Users2 className="h-4 w-4 text-[#6F6B99]" />
+                                )}
+                            </div>
 
                         <h3 className="truncate font-semibold text-[#261E33]">{displayTitle}</h3>
+                        {group.alias ? (
+                            <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+                                {group.alias}
+                            </span>
+                        ) : null}
                         <RolePill role={mapRole(group.role)} />
+                        </div>
                     </div>
                 </div>
+
+                {/* Tagline */}
+                {group.tagline ? (
+                    <p className="mt-1 line-clamp-1 text-[#9B8CA8] text-xs italic">
+                        {group.tagline}
+                    </p>
+                ) : null}
 
                 <div className="flex items-center gap-2">
                     {group.studio?.name && (

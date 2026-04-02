@@ -3,7 +3,7 @@ import GroupCalendar from "@/components/features/group/calendar/GroupCalendar";
 
 export default function Page() {
     return (
-        <Container>
+        <Container className="bg-transparent">
             <GroupCalendar />
         </Container>
     );

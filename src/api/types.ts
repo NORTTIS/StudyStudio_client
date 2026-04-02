@@ -3040,6 +3040,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/avatar/group/{groupId}/banner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/group/{groupId}/banner/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "application/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "text/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/group/{groupId}/banner/request-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "application/json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "text/json": components["schemas"]["RequestAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/avatar/group/{groupId}/complete": {
         parameters: {
             query?: never;
@@ -3152,6 +3269,123 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/studio/{studioId}/banner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/studio/{studioId}/banner/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "application/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                    "text/json": components["schemas"]["CompleteAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/avatar/studio/{studioId}/banner/request-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "application/json": components["schemas"]["RequestAvatarUploadRequest"];
+                    "text/json": components["schemas"]["RequestAvatarUploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6597,17 +6831,24 @@ export interface components {
             type: components["schemas"]["AnnouncementType"];
         };
         CreateGroupRequest: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             description?: string | null;
             groupName: string;
             iconEmoji?: string | null;
             /** Format: uuid */
             studioId?: string | null;
+            tagline?: string | null;
             /** Format: uuid */
             templateId?: string | null;
         };
         CreateGroupResponse: {
+            alias?: string | null;
+            avatarUrl?: string | null;
+            bannerUrl?: string | null;
+            colorHex?: string | null;
             /** Format: date-time */
             createdAt?: string;
             /** Format: uuid */
@@ -6617,8 +6858,10 @@ export interface components {
             groupId?: string;
             groupName?: string | null;
             groupType?: string | null;
+            iconEmoji?: string | null;
             /** Format: uuid */
             studioId?: string | null;
+            tagline?: string | null;
         };
         CreateGroupResponseApiResponse: {
             code?: string | null;
@@ -6708,6 +6951,10 @@ export interface components {
             status?: string | null;
         };
         CreateStudioRequest: {
+            alias?: string | null;
+            avatarUrl?: string | null;
+            bannerUrl?: string | null;
+            colorHex?: string | null;
             /** Format: date-time */
             createdAt?: string;
             description?: string | null;
@@ -6718,6 +6965,7 @@ export interface components {
             /** Format: date-time */
             startDate?: string | null;
             studioName?: string | null;
+            tagline?: string | null;
             /** Format: date-time */
             updatedAt?: string;
         };
@@ -6823,7 +7071,9 @@ export interface components {
             members?: components["schemas"]["MemberAssignmentDetail"][] | null;
         };
         GroupCardDto: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             createdBy?: components["schemas"]["UserDto"];
             description?: string | null;
@@ -6839,6 +7089,7 @@ export interface components {
             name?: string | null;
             role?: string | null;
             studio?: components["schemas"]["StudioDto"];
+            tagline?: string | null;
             /** Format: int32 */
             taskCount?: number;
         };
@@ -6872,7 +7123,9 @@ export interface components {
             reason?: string | null;
         };
         GroupDetailResponse: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             /** Format: date-time */
             createdAt?: string;
@@ -6890,6 +7143,7 @@ export interface components {
             /** Format: uuid */
             studioId?: string | null;
             studioName?: string | null;
+            tagline?: string | null;
             /** Format: int32 */
             taskCount?: number;
             taskStatuses?: components["schemas"]["TaskStatusDto"][] | null;
@@ -8062,7 +8316,9 @@ export interface components {
             status?: string | null;
         };
         StudioResponse: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             /** Format: date-time */
             createdAt?: string;
@@ -8079,6 +8335,7 @@ export interface components {
             studioId?: string;
             studioName?: string | null;
             studioRole?: components["schemas"]["StudioRole"];
+            tagline?: string | null;
             /** Format: date-time */
             updatedAt?: string;
         };
@@ -8528,7 +8785,9 @@ export interface components {
             type: components["schemas"]["AnnouncementType"];
         };
         UpdateGroupRequest: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             description?: string | null;
             /** Format: uuid */
@@ -8536,9 +8795,12 @@ export interface components {
             groupName: string;
             iconEmoji?: string | null;
             isTemplate?: boolean;
+            tagline?: string | null;
         };
         UpdateGroupResponse: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             description?: string | null;
             /** Format: uuid */
@@ -8549,6 +8811,7 @@ export interface components {
             isTemplate?: boolean;
             /** Format: uuid */
             studioId?: string | null;
+            tagline?: string | null;
             /** Format: uuid */
             templateId?: string | null;
             /** Format: date-time */
@@ -8589,7 +8852,9 @@ export interface components {
             status?: components["schemas"]["ReportStatus"];
         };
         UpdateStudioRequest: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             description?: string | null;
             /** Format: date-time */
@@ -8599,9 +8864,12 @@ export interface components {
             /** Format: date-time */
             startDate?: string | null;
             studioName?: string | null;
+            tagline?: string | null;
         };
         UpdateStudioResponse: {
+            alias?: string | null;
             avatarUrl?: string | null;
+            bannerUrl?: string | null;
             colorHex?: string | null;
             description?: string | null;
             /** Format: date-time */
@@ -8609,6 +8877,7 @@ export interface components {
             /** Format: date-time */
             startDate?: string | null;
             studioName?: string | null;
+            tagline?: string | null;
             /** Format: date-time */
             updatedAt?: string;
         };

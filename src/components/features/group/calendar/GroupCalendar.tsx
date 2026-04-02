@@ -574,10 +574,10 @@ export default function GroupCalendar() {
     );
 
     return (
-        <div className="min-h-screen w-full bg-[#f8f9fa]">
-            <Container className="px-4 pb-8 pt-6 md:px-6 lg:px-8">
+        <div className="min-h-screen w-full">
+            <Container className="px-4 pb-8 pt-6 md:px-6 lg:px-8 bg-white rounded-3xl border border-[#dadce0] shadow-sm">
                 <section>
-                    <div className="relative rounded-3xl border border-[#dadce0] bg-white p-4 shadow-[0_1px_2px_rgba(60,64,67,0.12),0_1px_3px_1px_rgba(60,64,67,0.08)] sm:p-6 lg:p-7">
+                    <div className="relative rounded-3xl border border-[#dadce0]  p-4 shadow-[0_1px_2px_rgba(60,64,67,0.12),0_1px_3px_1px_rgba(60,64,67,0.08)] sm:p-6 lg:p-7">
                         <div className="relative">
                             {loading ? (
                                 <div className="flex min-h-[620px] flex-col items-center justify-center gap-3 rounded-[28px] border border-dashed border-slate-200 bg-white/70">
