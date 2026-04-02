@@ -597,19 +597,6 @@ export function CreateGroupModal({
                                             </div>
                                         </Field>
 
-                                        {/* Banner */}
-                                        <Field label={t("bannerLabel") || "Banner"}>
-                                            <BannerUpload
-                                                entityType="group"
-                                                entityId="__temp__"
-                                                bannerUrl={bannerUrl}
-                                                colorHex={colorHex}
-                                                onUploadSuccess={(url) => setBannerUrl(url)}
-                                                onDeleteSuccess={() => setBannerUrl(null)}
-                                                disabled={loadingOptions || creating}
-                                            />
-                                        </Field>
-
                                         {/* Alias */}
                                         <Field label={t("aliasLabel") || "Biệt danh"}>
                                             <input

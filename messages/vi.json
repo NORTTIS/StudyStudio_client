@@ -824,7 +824,19 @@
             "editError": "Không thể cập nhật studio",
             "limitReached": "Bạn đã đạt giới hạn 3 studio. Vui lòng nâng cấp gói đăng ký hoặc xóa studio cũ để tạo mới.",
             "upgradeButton": "Nâng cấp gói",
-            "duplicateName": "Tên studio đã tồn tại. Vui lòng chọn tên khác."
+            "duplicateName": "Tên studio đã tồn tại. Vui lòng chọn tên khác.",
+            "colorLabel": "Màu chủ đạo",
+            "bannerLabel": "Ảnh nền",
+            "avatarLabel": "Ảnh đại diện",
+            "aliasPlaceholder": "VD: THPT Hoang Dieu",
+            "taglineLabel": "Slogan",
+            "taglinePlaceholder": "Nhập slogan ngắn gọn",
+            "startDate": "Ngày bắt đầu",
+            "endDate": "Ngày kết thúc"
+        },
+        "studioLimit": {
+            "title": "Đã đạt giới hạn studio",
+            "close": "Đóng"
         },
         "detailModal": {
             "description": "Mô tả",
@@ -871,8 +883,8 @@
                 "bannerLabel": "Ảnh nền",
                 "aliasLabel": "Biệt danh",
                 "aliasPlaceholder": "VD: THPT Hoang Dieu",
-                "taglineLabel": "Tagline",
-                "taglinePlaceholder": "VD: Học là thích - Yêu là nhớ",
+                "taglineLabel": "Slogan",
+                "taglinePlaceholder": "VD: Học đi đôi với cọc",
                 "startDate": "Ngày bắt đầu",
                 "endDate": "Ngày kết thúc",
                 "createdDate": "Ngày tạo",
@@ -2426,6 +2438,20 @@
             "cancelButton": "Hủy",
             "deleting": "Đang xóa...",
             "confirmButton": "Xóa thành viên"
+        },
+        "approveMember": {
+            "title": "Phê duyệt thành viên",
+            "subtitle": "Duyệt hoặc từ chối các yêu cầu tham gia nhóm",
+            "pendingCount": "{count} chờ duyệt",
+            "loading": "Đang tải danh sách chờ phê duyệt...",
+            "empty": "Hiện không có thành viên nào chờ phê duyệt",
+            "requestedRole": "Vai trò: {role}",
+            "requestedAt": "Yêu cầu lúc: {time}",
+            "approve": "Phê duyệt",
+            "approving": "Đang phê duyệt...",
+            "reject": "Từ chối",
+            "rejecting": "Đang từ chối...",
+            "error": "Không tải được danh sách chờ phê duyệt"
         }
     },
     "TrashedPage": {
@@ -2760,6 +2786,92 @@
         "progress": {
             "title": "Tiến độ",
             "elapsed": "Đã trôi qua {elapsed} / {total} ngày"
+        }
+    },
+    "BatchUploadModal": {
+        "title": "Tải lên danh sách thành viên",
+        "subtitle": "Tải lên file CSV/XLSX để thêm nhiều thành viên vào nhóm",
+        "closeButton": "Đóng",
+        "selectError": {
+            "invalidFormat": "Định dạng không hỗ trợ. Vui lòng tải lên file CSV hoặc XLSX.",
+            "fileTooLarge": "File quá lớn. Kích thước tối đa là 5MB."
+        },
+        "errors": {
+            "uploadFailed": "Tải lên thất bại. Vui lòng thử lại."
+        },
+        "downloadErrorsFilename": "lich-su-loi-import.tsv",
+        "fileSize": {
+            "bytes": "bytes",
+            "kb": "KB",
+            "mb": "MB"
+        },
+        "dropzone": {
+            "text": "Kéo thả file hoặc nhấn để chọn",
+            "maxSize": "File tối đa 5MB • CSV, XLSX"
+        },
+        "buttons": {
+            "cancel": "Hủy",
+            "upload": "Tải lên",
+            "downloadErrors": "Tải xuống lỗi",
+            "close": "Đóng",
+            "tryAgain": "Thử lại"
+        },
+        "uploading": {
+            "title": "Đang tải lên...",
+            "hint": "Vui lòng chờ trong giây lát"
+        },
+        "success": {
+            "title": "Tải lên thành công!",
+            "subtitle": "Đã thêm {totalRows} thành viên"
+        },
+        "stats": {
+            "success": "Thành công",
+            "skipped": "Bỏ qua",
+            "error": "Lỗi"
+        },
+        "errorList": {
+            "title": "Danh sách lỗi ({count})"
+        },
+        "table": {
+            "row": "STT",
+            "email": "Email",
+            "group": "Nhóm",
+            "reason": "Lý do"
+        },
+        "error": {
+            "title": "Tải lên thất bại"
+        }
+    },
+    "ActivityHeatmap": {
+        "title": "Hoạt động",
+        "actions": {
+            "previousPeriod": "Kỳ trước",
+            "nextPeriod": "Kỳ sau"
+        },
+        "empty": "Chưa có dữ liệu hoạt động",
+        "tooltip": {
+            "activity": "Hoạt động",
+            "completed": "Đã hoàn thành",
+            "tasks": "công việc"
+        },
+        "legend": {
+            "low": "Thấp",
+            "high": "Cao"
+        },
+        "updatedAt": "Cập nhật: {time}"
+    },
+    "GroupPerformanceRadar": {
+        "title": "Hiệu suất nhóm",
+        "metrics": {
+            "completedTasks": "Công việc hoàn thành",
+            "discussions": "Thảo luận",
+            "collaboration": "Cộng tác"
+        },
+        "labels": {
+            "task": "Công việc",
+            "discussions": "Thảo luận",
+            "collaboration": "Cộng tác",
+            "average": "Trung bình"
         }
     }
 }

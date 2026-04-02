@@ -34,12 +34,16 @@ export type Studio = {
     createdAt: string;
     updatedAt: string;
     groupCount: number;
-    completionProgress?: number; // Tiến độ hoàn thiện trung bình (%)
+    memberCount: number;
+    completionProgress?: number; 
     studioRole?: 0 | 1; // 0 = Owner, 1 = Member
-    startDate?: string | null; // NEW
-    endDate?: string | null; // NEW
-    avatarUrl?: string | null; // NEW
-    colorHex?: string | null; // NEW
+    startDate?: string | null;
+    endDate?: string | null;
+    avatarUrl?: string | null;
+    colorHex?: string | null;
+    bannerUrl?: string | null;
+    tagline?: string | null;
+    alias?: string | null;
 };
 
 // Map API response to UI format
@@ -107,7 +111,7 @@ function mapStudioToUI(studio: Studio): StudioUI {
         name: studio.studioName,
         description: studio.description,
         type: "group", // API không có type, mặc định là group
-        memberCount: 0, // Sẽ được tính từ tổng members trong các groups
+        memberCount: studio.memberCount ?? 0,
         groupCount: studio.groupCount,
         completionProgress: studio.completionProgress || 0, // Tiến độ hoàn thiện từ API
         createdAt: studio.createdAt,
@@ -116,7 +120,10 @@ function mapStudioToUI(studio: Studio): StudioUI {
         startDate: toDateInputValue(studio.startDate), // NEW — YYYY-MM-DD for <input type="date">
         endDate: toDateInputValue(studio.endDate), // NEW — YYYY-MM-DD for <input type="date">
         avatarUrl: studio.avatarUrl ?? null, // NEW
-        colorHex: studio.colorHex ?? null // NEW
+        colorHex: studio.colorHex ?? null, // NEW
+        bannerUrl: studio.bannerUrl ?? null,
+        tagline: studio.tagline ?? null,
+        alias: studio.alias ?? null
     };
 }
 

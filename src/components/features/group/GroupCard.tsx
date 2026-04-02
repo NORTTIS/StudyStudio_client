@@ -143,7 +143,13 @@ export function GroupCard({
                             <h3 className="truncate font-semibold text-[#261E33]">{displayTitle}</h3>
 
                             {group.alias ? (
-                                <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+                                <span
+                                    className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+                                    style={{
+                                        backgroundColor: `${group.colorHex ?? "#FF5F3D"}18`,
+                                        borderColor: `${group.colorHex ?? "#FF5F3D"}40`,
+                                        color: group.colorHex ?? "#FF5F3D"
+                                    }}>
                                     {group.alias}
                                 </span>
                             ) : null}

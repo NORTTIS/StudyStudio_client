@@ -824,7 +824,19 @@
             "editError": "Failed to update studio",
             "limitReached": "You have reached the limit of 3 studios. Please upgrade your subscription plan or delete an old studio to create a new one.",
             "upgradeButton": "Upgrade Plan",
-            "duplicateName": "Studio name already exists. Please choose a different name."
+            "duplicateName": "Studio name already exists. Please choose a different name.",
+            "colorLabel": "Primary Color",
+            "bannerLabel": "Banner",
+            "avatarLabel": "Avatar",
+            "aliasPlaceholder": "Ex: THPT Hoang Dieu",
+            "taglineLabel": "Slogan",
+            "taglinePlaceholder": "Enter a short slogan",
+            "startDate": "Start Date",
+            "endDate": "End Date"
+        },
+        "studioLimit": {
+            "title": "Studio limit reached",
+            "close": "Close"
         },
         "detailModal": {
             "description": "Description",
@@ -902,7 +914,7 @@
                 "bannerLabel": "Background image",
                 "aliasLabel": "Nickname",
                 "aliasPlaceholder": "e.g. Hoang Dieu High School",
-                "taglineLabel": "Tagline",
+                "taglineLabel": "Slogan",
                 "taglinePlaceholder": "Enter a short slogan",
                 "startDate": "Start date",
                 "endDate": "End date",
@@ -1395,7 +1407,7 @@
         "bannerLabel": "Background image",
         "aliasLabel": "Nickname",
         "aliasPlaceholder": "e.g. Hoang Dieu High School",
-        "taglineLabel": "Tagline",
+        "taglineLabel": "Slogan",
         "taglinePlaceholder": "Enter a short slogan",
         "groupPrefixLabel": "Group prefix",
         "groupPrefixPlaceholder": "Enter group prefix...",
@@ -2347,7 +2359,7 @@
             "bannerLabel": "Background image",
             "aliasLabel": "Nickname",
             "aliasPlaceholder": "e.g. Hoang Dieu High School",
-            "taglineLabel": "Tagline",
+            "taglineLabel": "Slogan",
             "taglinePlaceholder": "Enter a short slogan"
         },
         "template": {
@@ -2395,6 +2407,20 @@
             "cancelButton": "Cancel",
             "deleting": "Removing...",
             "confirmButton": "Remove member"
+        },
+        "approveMember": {
+            "title": "Approve members",
+            "subtitle": "Approve or reject group membership requests",
+            "pendingCount": "{count} pending",
+            "loading": "Loading pending approvals...",
+            "empty": "No pending member requests",
+            "requestedRole": "Role: {role}",
+            "requestedAt": "Requested at: {time}",
+            "approve": "Approve",
+            "approving": "Approving...",
+            "reject": "Reject",
+            "rejecting": "Rejecting...",
+            "error": "Failed to load pending approvals"
         }
     },
     "TrashedPage": {
@@ -2808,6 +2834,92 @@
         "progress": {
             "title": "Progress",
             "elapsed": "Elapsed {elapsed} / {total} days"
+        }
+    },
+    "BatchUploadModal": {
+        "title": "Upload Member List",
+        "subtitle": "Upload a CSV/XLSX file to add multiple members to groups",
+        "closeButton": "Close",
+        "selectError": {
+            "invalidFormat": "Unsupported format. Please upload a CSV or XLSX file.",
+            "fileTooLarge": "File too large. Maximum size is 5MB."
+        },
+        "errors": {
+            "uploadFailed": "Upload failed. Please try again."
+        },
+        "downloadErrorsFilename": "import-errors.tsv",
+        "fileSize": {
+            "bytes": "bytes",
+            "kb": "KB",
+            "mb": "MB"
+        },
+        "dropzone": {
+            "text": "Drag and drop file or click to select",
+            "maxSize": "Max 5MB • CSV, XLSX"
+        },
+        "buttons": {
+            "cancel": "Cancel",
+            "upload": "Upload",
+            "downloadErrors": "Download Errors",
+            "close": "Close",
+            "tryAgain": "Try Again"
+        },
+        "uploading": {
+            "title": "Uploading...",
+            "hint": "Please wait a moment"
+        },
+        "success": {
+            "title": "Upload Successful!",
+            "subtitle": "{totalRows} members added"
+        },
+        "stats": {
+            "success": "Success",
+            "skipped": "Skipped",
+            "error": "Error"
+        },
+        "errorList": {
+            "title": "Error List ({count})"
+        },
+        "table": {
+            "row": "#",
+            "email": "Email",
+            "group": "Group",
+            "reason": "Reason"
+        },
+        "error": {
+            "title": "Upload Failed"
+        }
+    },
+    "ActivityHeatmap": {
+        "title": "Activity",
+        "actions": {
+            "previousPeriod": "Previous Period",
+            "nextPeriod": "Next Period"
+        },
+        "empty": "No activity data yet",
+        "tooltip": {
+            "activity": "Activity",
+            "completed": "Completed",
+            "tasks": "tasks"
+        },
+        "legend": {
+            "low": "Low",
+            "high": "High"
+        },
+        "updatedAt": "Updated: {time}"
+    },
+    "GroupPerformanceRadar": {
+        "title": "Group Performance",
+        "metrics": {
+            "completedTasks": "Completed Tasks",
+            "discussions": "Discussions",
+            "collaboration": "Collaboration"
+        },
+        "labels": {
+            "task": "Tasks",
+            "discussions": "Discussions",
+            "collaboration": "Collaboration",
+            "average": "Average"
         }
     }
 }

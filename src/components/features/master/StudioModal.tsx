@@ -4,14 +4,22 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import type { StudioUI } from "@/api/studios";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
 import { BannerUpload } from "@/components/ui/banner-upload";
-import { LogoUpload } from "@/components/ui/logo-upload";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 const STUDIO_NAME_MAX_LENGTH = 30;
 const STUDIO_DESCRIPTION_MAX_LENGTH = 200;
+
+const DEFAULT_COLORS = [
+    "#FF5F3D", "#FF8C42", "#F59E0B", "#10B981",
+    "#3B82F6", "#8B5CF6", "#EC4899", "#EF4444"
+];
+const getRandomDefaultColor = () =>
+    DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)];
 
 type StudioFormData = {
     name: string;
@@ -121,7 +129,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
         type: "group",
         startDate: "",
         endDate: "",
-        colorHex: "#FF5F3D"
+        colorHex: getRandomDefaultColor()
     });
     const [bannerUrl, setBannerUrl] = useState<string | null>(null);
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -195,7 +203,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     type: "group",
                     startDate: "",
                     endDate: "",
-                    colorHex: "#FF5F3D"
+                    colorHex: getRandomDefaultColor()
                 });
                 setBannerUrl(null);
                 setLogoUrl(null);
@@ -308,14 +316,22 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
             onKeyDown={(e) => {
                 if (e.key === "Escape") onClose();
             }}>
-            <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h2 id="studio-modal-title" className="mb-4 font-bold text-2xl text-[#261E33]">
-                    {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
-                </h2>
+            <div className="w-[600px] max-h-[800px] rounded-xl bg-white p-6 shadow-xl overflow-y-scroll">
+                <div className="mb-4 flex items-center justify-between">
+                    <h2 id="studio-modal-title" className="font-bold text-2xl text-[#261E33]">
+                        {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={handleClose}
+                        className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-orange-200 text-[#2A2438] hover:bg-orange-50">
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">Màu chủ đạo</label>
+                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.colorLabel")}</label>
                         <ColorPicker
                             value={formData.colorHex}
                             onChange={(hex) => setFormData((f) => ({ ...f, colorHex: hex }))}
@@ -325,7 +341,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     {/* Banner */}
                     {studio?.id && (
                         <div>
-                            <label className="mb-2 block font-medium text-[#261E33] text-sm">Banner</label>
+                            <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.bannerLabel")}</label>
                             <BannerUpload
                                 entityType="studio"
                                 entityId={studio.id}
@@ -337,13 +353,14 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                         </div>
                     )}
 
-                    {/* Logo */}
+                    {/* Avatar */}
                     {studio?.id && (
                         <div>
-                            <label className="mb-2 block font-medium text-[#261E33] text-sm">Logo</label>
-                            <LogoUpload
-                                studioId={studio.id}
-                                logoUrl={logoUrl}
+                            <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.avatarLabel")}</label>
+                            <AvatarUpload
+                                entityType="studio"
+                                entityId={studio.id}
+                                avatarUrl={logoUrl}
                                 colorHex={formData.colorHex}
                                 onUploadSuccess={(url) => setLogoUrl(url)}
                                 onDeleteSuccess={() => setLogoUrl(null)}
@@ -353,33 +370,45 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
 
                     {/* Alias */}
                     <div>
-                        <label htmlFor="studio-alias" className="mb-2 block font-medium text-[#261E33] text-sm">Biệt danh</label>
+                        <label htmlFor="studio-alias" className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.name")}</label>
                         <Input
                             id="studio-alias"
                             type="text"
                             value={alias}
-                            onChange={(e) => setAlias(e.target.value.slice(0, 50))}
-                            placeholder="VD: THPT Hoang Dieu"
+                            onChange={(e) => setAlias(e.target.value.slice(0, 10))}
+                            maxLength={10}
+                            placeholder={t("modal.aliasPlaceholder")}
                             className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
                         />
-                        {alias.length > 0 && (
-                            <div className="mt-1.5">
-                                <span className="inline-flex items-center rounded-full border border-orange-300 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">{alias}</span>
-                            </div>
-                        )}
+                        <div className="flex items-center justify-between mt-1">
+                            {alias.length > 0 ? (
+                                <span
+                                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                                    style={{
+                                        backgroundColor: `${formData.colorHex}18`,
+                                        borderColor: `${formData.colorHex}40`,
+                                        color: formData.colorHex
+                                    }}>
+                                    {alias}
+                                </span>
+                            ) : <span />}
+                            <span className="text-gray-400 text-xs ml-auto">{alias.length}/10</span>
+                        </div>
                     </div>
 
                     {/* Tagline */}
                     <div>
-                        <label htmlFor="studio-tagline" className="mb-2 block font-medium text-[#261E33] text-sm">Slogan</label>
+                        <label htmlFor="studio-tagline" className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.taglineLabel")}</label>
                         <Input
                             id="studio-tagline"
                             type="text"
                             value={tagline}
-                            onChange={(e) => setTagline(e.target.value.slice(0, 200))}
-                            placeholder="Nhập slogan ngắn gọn"
+                            onChange={(e) => setTagline(e.target.value.slice(0, 50))}
+                            maxLength={50}
+                            placeholder={t("modal.taglinePlaceholder")}
                             className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
                         />
+                        <p className="mt-1 text-right text-gray-400 text-xs">{tagline.length}/50</p>
                     </div>
 
                     <div>
@@ -436,7 +465,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="studio-startDate" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                Ngày bắt đầu
+                                {t("modal.startDate")}
                             </label>
                             <Input
                                 type="date"
@@ -458,7 +487,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
 
                         <div>
                             <label htmlFor="studio-endDate" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                Ngày kết thúc
+                                {t("modal.endDate")}
                             </label>
                             <Input
                                 type="date"
