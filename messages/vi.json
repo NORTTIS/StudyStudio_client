@@ -904,6 +904,15 @@
             "groupCreatedSuccess": "Nhóm đã được tạo thành công!",
             "invite": {
                 "createLinkError": "Không thể tạo liên kết mời. Vui lòng thử lại."
+            },
+            "leave": {
+                "button": "Rời studio",
+                "leaving": "Đang rời...",
+                "confirmTitle": "Xác nhận rời studio",
+                "confirmDescription": "Bạn sẽ rời studio này và rời toàn bộ nhóm thuộc studio. Hành động này có thể tham gia lại nếu được mời.",
+                "confirmButton": "Xác nhận rời",
+                "success": "Đã rời studio thành công.",
+                "error": "Không thể rời studio. Vui lòng thử lại."
             }
         }
     },
@@ -1871,6 +1880,12 @@
         "addFavorite": "Thêm vào yêu thích",
         "menuLabel": "Menu tùy chọn",
         "leaveGroup": "Rời khỏi nhóm",
+        "leaveConfirmTitle": "Xác nhận rời nhóm",
+        "leaveConfirmDescription": "Bạn có chắc muốn rời khỏi nhóm \"{groupName}\" không?",
+        "confirmLeave": "Rời khỏi",
+        "thisGroup": "nhóm này",
+        "cancel": "Hủy",
+        "leaving": "Đang rời...",
         "createdBy": "Tạo bởi",
         "members": "thành viên",
         "tasks": "công việc"

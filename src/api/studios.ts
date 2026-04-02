@@ -9,6 +9,7 @@ import type { components } from "./types";
 
 export type StudioMemberResponse = components["schemas"]["StudioMemberResponse"];
 export type GroupInfoItem = components["schemas"]["GroupInfoItem"];
+export type LeaveStudioResponse = components["schemas"]["LeaveStudioResponse"];
 
 // Subscription info from /studio API response
 export type StudioListSubscription = {
@@ -228,6 +229,16 @@ export async function updateStudio(id: string, data: UpdateStudioRequest, locale
  */
 export async function deleteStudio(id: string, locale = "vi") {
     return apiFetch<null>(`/studio/${id}`, {
+        method: "DELETE",
+        locale
+    });
+}
+
+/**
+ * Leave studio
+ */
+export async function leaveStudio(studioId: string, locale = "vi") {
+    return apiFetch<LeaveStudioResponse>(`/studio/${studioId}/leave`, {
         method: "DELETE",
         locale
     });

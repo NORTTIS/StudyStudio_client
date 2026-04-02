@@ -4,29 +4,43 @@ import { CheckSquare2, MoreVertical, Star, Users, Users2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { hexToGradient } from "@/lib/utils";
 import { mapRole } from "./group.api";
 import { RolePill } from "./RolePill";
 import type { GroupCardDto } from "./types";
-import { hexToGradient } from "@/lib/utils";
 
 export function GroupCard({
     group,
     onToggleStar,
+    onLeaveGroup,
     view = "grid"
 }: {
     group: GroupCardDto;
     onToggleStar: () => Promise<void>;
+    onLeaveGroup: () => Promise<void>;
     view?: "grid" | "list";
 }) {
     const t = useTranslations("GroupCard");
     const router = useRouter();
     const locale = useLocale();
+    const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+    const [isLeaving, setIsLeaving] = useState(false);
     const groupRole = mapRole(group.role);
     const isOwner = groupRole === "owner";
 
@@ -35,15 +49,20 @@ export function GroupCard({
         router.push(`/${locale}/group/${String(group.id)}`);
     };
 
+    const handleConfirmLeave = async () => {
+        try {
+            setIsLeaving(true);
+            await onLeaveGroup();
+            setShowLeaveDialog(false);
+        } finally {
+            setIsLeaving(false);
+        }
+    };
+
     const starred = !!group.isFavorite;
     const visibleTasksCount = Number(group.taskCount ?? 0);
-
     const title = group.name ?? "";
-    const rawDescription = group.description ?? "";
-
-    // Giới hạn độ dài mô tả ở dạng list
-    const description =
-        view === "list" && rawDescription.length > 120 ? `${rawDescription.slice(0, 120)}...` : rawDescription;
+    const description = group.description ?? "";
 
     const createdByInitials = (() => {
         const f = (group.createdBy?.firstName || "").trim();
@@ -82,7 +101,6 @@ export function GroupCard({
                 }
             }}
             className="cursor-pointer overflow-hidden rounded-xl border border-[#E5E5E5] bg-white shadow-sm transition hover:bg-[#FAFAFA]">
-            {/* Banner cover */}
             {group.bannerUrl ? (
                 <div className="relative h-16 w-full overflow-hidden bg-[#F4F5FA]">
                     <img
@@ -106,7 +124,6 @@ export function GroupCard({
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                            {/* Avatar */}
                             <div className="relative -mt-8 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-2 ring-white">
                                 {group.avatarUrl ? (
                                     <Image
@@ -123,143 +140,169 @@ export function GroupCard({
                                 )}
                             </div>
 
-                        <h3 className="truncate font-semibold text-[#261E33]">{displayTitle}</h3>
-                        {group.alias ? (
-                            <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
-                                {group.alias}
-                            </span>
-                        ) : null}
-                        <RolePill role={mapRole(group.role)} />
+                            <h3 className="truncate font-semibold text-[#261E33]">{displayTitle}</h3>
+
+                            {group.alias ? (
+                                <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
+                                    {group.alias}
+                                </span>
+                            ) : null}
+
+                            <RolePill role={groupRole} />
+
+                            {group.studio?.name ? (
+                                <span className="inline-flex shrink-0 items-center rounded-md border border-purple-500/60 bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-600">
+                                    {group.studio.name}
+                                </span>
+                            ) : null}
                         </div>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                await onToggleStar();
+                            }}
+                            className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
+                            aria-label={starred ? t("removeFavorite") : t("addFavorite")}>
+                            <Star
+                                className={`h-4 w-4 transition ${starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-yellow-500"}`}
+                                fill={starred ? "currentColor" : "transparent"}
+                            />
+                        </button>
+
+                        {!isOwner ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
+                                        aria-label={t("menuLabel")}>
+                                        <MoreVertical className="h-4 w-4 text-[#6F6B99] hover:text-[#261E33]" />
+                                    </button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="z-50 w-48 rounded-md border border-gray-200 bg-white shadow-lg"
+                                    onClick={(e) => e.stopPropagation()}>
+                                    <DropdownMenuItem
+                                        className="text-red-600 focus:text-red-600"
+                                        onSelect={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setShowLeaveDialog(true);
+                                        }}>
+                                        {t("leaveGroup")}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : null}
                     </div>
                 </div>
 
-                {/* Tagline */}
                 {group.tagline ? (
-                    <p className="mt-1 line-clamp-1 text-[#9B8CA8] text-xs italic">
+                    <p className="mt-1 line-clamp-1 text-xs italic text-[#9B8CA8]">
                         {group.tagline}
                     </p>
                 ) : null}
+            </div>
 
-                <div className="flex items-center gap-2">
-                    {group.studio?.name && (
-                        <span className="hidden sm:inline-flex items-center rounded-md border border-purple-500/60 px-2 py-0.5 font-medium text-xs text-purple-600 bg-purple-50 shrink-0">
-                            {group.studio.name}
-                        </span>
-                    )}
-                    <button
-                        type="button"
-                        onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            await onToggleStar();
-                        }}
-                        className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
-                        aria-label={starred ? t("removeFavorite") : t("addFavorite")}>
-                        <Star
-                            className={`h-4 w-4 transition ${starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-yellow-500"}`}
-                            fill={starred ? "currentColor" : "transparent"}
-                        />
-                    </button>
+            <div className="px-3 pb-3">
+                <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-sm text-[#6F6B99]">
+                    {description}
+                </p>
 
-                    {!isOwner && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                    }}
-                                    className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
-                                    aria-label={t("menuLabel")}>
-                                    <MoreVertical className="h-4 w-4 text-[#6F6B99] hover:text-[#261E33]" />
-                                </button>
-                            </DropdownMenuTrigger>
+                <div className="mt-3 border-t border-[#E5E5E5] pt-2">
+                    <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 text-[#6F6B99]">
+                            <span className="text-xs">{t("createdBy")}</span>
+                            {group.createdBy?.avatarUrl ? (
+                                <div className="relative h-6 w-6 overflow-hidden rounded-full ring-1 ring-[#E5E5E5]">
+                                    <Image
+                                        src={group.createdBy.avatarUrl}
+                                        alt={createdByInitials}
+                                        fill
+                                        className="object-cover"
+                                        sizes="24px"
+                                    />
+                                </div>
+                            ) : (
+                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#F4F5FA] text-xs font-semibold text-[#261E33]">
+                                    {createdByInitials}
+                                </span>
+                            )}
+                        </div>
 
-                            <DropdownMenuContent
-                                align="end"
-                                className="w-48 bg-white border border-gray-200 shadow-lg rounded-md z-50"
-                                onClick={(e) => e.stopPropagation()}>
-                                <DropdownMenuItem
-                                    className="text-red-600 focus:text-red-600"
-                                    onSelect={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        console.warn("[GroupCard] Leave group not yet implemented - needs backend API");
-                                    }}>
-                                    {t("leaveGroup")}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                        <div className="flex items-center gap-3 text-[#6F6B99]">
+                            <span className="inline-flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                <span>
+                                    {group.memberCount ?? 0} {t("members")}
+                                </span>
+                            </span>
+
+                            <span className="inline-flex items-center gap-1">
+                                <CheckSquare2 className="h-4 w-4" />
+                                <span>
+                                    {visibleTasksCount} {t("tasks")}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+
+                    {memberAvatarsToShow.length > 0 ? (
+                        <div className="mt-2 flex items-center">
+                            {memberAvatarsToShow.map((avatarUrl, idx) => (
+                                <div
+                                    key={avatarUrl || `avatar-${idx}`}
+                                    className={`relative h-7 w-7 overflow-hidden rounded-full ring-2 ring-white ${idx === 0 ? "" : "-ml-1"}`}>
+                                    <Image
+                                        src={avatarUrl}
+                                        alt={`Member ${idx + 1}`}
+                                        fill
+                                        className="object-cover"
+                                        sizes="28px"
+                                    />
+                                </div>
+                            ))}
+
+                            {memberAvatarsToShow.length < memberInitialsToShow.length ? (
+                                <span className="-ml-1 inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F4F5FA] px-2 text-xs font-semibold text-[#261E33] ring-2 ring-white">
+                                    +{memberInitialsToShow.length - memberAvatarsToShow.length}
+                                </span>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
-            <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-[#6F6B99] text-sm">{description}</p>
-
-            <div className="mt-3 border-[#E5E5E5] border-t pt-2">
-                <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-[#6F6B99]">
-                        <span className="text-xs">{t("createdBy")}</span>
-                        {group.createdBy?.avatarUrl ? (
-                            <div className="relative h-6 w-6 overflow-hidden rounded-full ring-1 ring-[#E5E5E5]">
-                                <Image
-                                    src={group.createdBy.avatarUrl}
-                                    alt={createdByInitials}
-                                    fill
-                                    className="object-cover"
-                                    sizes="24px"
-                                />
-                            </div>
-                        ) : (
-                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#F4F5FA] font-semibold text-[#261E33] text-xs">
-                                {createdByInitials}
-                            </span>
-                        )}
+            <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t("leaveConfirmTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t("leaveConfirmDescription", { groupName: group.name ?? "" })}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex justify-end gap-3">
+                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmLeave}
+                            disabled={isLeaving}
+                            className="bg-red-600 hover:bg-red-700">
+                            {isLeaving ? t("leaving") : t("confirmLeave")}
+                        </AlertDialogAction>
                     </div>
-
-                    <div className="flex items-center gap-3 text-[#6F6B99]">
-                        <span className="inline-flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            <span>
-                                {group.memberCount ?? 0} {t("members")}
-                            </span>
-                        </span>
-
-                        <span className="inline-flex items-center gap-1">
-                            <CheckSquare2 className="h-4 w-4" />
-                            <span>
-                                {visibleTasksCount} {t("tasks")}
-                            </span>
-                        </span>
-                    </div>
-                </div>
-
-                {memberAvatarsToShow.length > 0 && (
-                    <div className="mt-2 flex items-center gap-2">
-                        {memberAvatarsToShow.map((avatarUrl, idx) => (
-                            <div
-                                key={avatarUrl || `avatar-${idx}`}
-                                className="relative h-7 w-7 overflow-hidden rounded-full ring-2 ring-white">
-                                <Image
-                                    src={avatarUrl}
-                                    alt={`Member ${idx + 1}`}
-                                    fill
-                                    className="object-cover"
-                                    sizes="28px"
-                                />
-                            </div>
-                        ))}
-
-                        {memberAvatarsToShow.length < memberInitialsToShow.length && (
-                            <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[#F4F5FA] px-2 font-semibold text-[#261E33] text-xs">
-                                +{memberInitialsToShow.length - memberAvatarsToShow.length}
-                            </span>
-                        )}
-                    </div>
-                )}
-            </div>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

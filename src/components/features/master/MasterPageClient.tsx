@@ -15,6 +15,7 @@ import {
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { Container } from "@/components/common";
 import { DeleteConfirmModal } from "@/components/features/master/DeleteConfirmModal";
+import { RolePill } from "@/components/features/group/RolePill";
 import { StudioLimitModal } from "@/components/features/master/StudioLimitModal";
 import { StudioModal } from "@/components/features/master/StudioModal";
 import { Header } from "@/components/layout/Header";
@@ -157,15 +158,9 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                     </div>
 
                     {studio.studioRole !== undefined && (
-                        <motion.span
-                            whileHover={{ scale: 1.04 }}
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm ${
-                                isOwner
-                                    ? "bg-gradient-to-r from-orange-500 to-red-500"
-                                    : "bg-gradient-to-r from-teal-500 to-cyan-500"
-                            }`}>
-                            {isOwner ? t("roles.owner") : t("roles.member")}
-                        </motion.span>
+                        <motion.div whileHover={{ scale: 1.04 }}>
+                            <RolePill role={isOwner ? "owner" : "member"} />
+                        </motion.div>
                     )}
                 </div>
 

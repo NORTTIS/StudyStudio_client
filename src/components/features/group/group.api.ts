@@ -35,6 +35,11 @@ type AIAskResponseApi =
     | paths["/api/ai/group/ask"]["post"]["responses"][200]["content"]["text/json"]
     | paths["/api/ai/group/ask"]["post"]["responses"][200]["content"]["text/plain"];
 
+type LeaveGroupResponseApi =
+    | paths["/api/group/member/{groupId}/leave"]["delete"]["responses"][200]["content"]["application/json"]
+    | paths["/api/group/member/{groupId}/leave"]["delete"]["responses"][200]["content"]["text/json"]
+    | paths["/api/group/member/{groupId}/leave"]["delete"]["responses"][200]["content"]["text/plain"];
+
 type AIAskStreamRequest = NonNullable<
     paths["/api/ai/group/ask/stream"]["post"]["requestBody"]
 >["content"]["application/json"];
@@ -151,6 +156,34 @@ export async function addFavourite(groupId: string) {
 
 export async function removeFavourite(groupId: string) {
     return apiFetch("/favourite/remove", "DELETE", { groupId });
+}
+
+export async function leaveGroup(groupId: string) {
+    const baseUrl = getBaseUrl();
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/group/member/${encodeURIComponent(groupId)}/leave`, {
+        method: "DELETE",
+        headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(
+            res.status === 401
+                ? "Unauthorized: thiếu token hoặc token hết hạn"
+                : text || `Request failed: ${res.status}`
+        );
+    }
+
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) return null;
+
+    return (await res.json()) as LeaveGroupResponseApi;
 }
 
 export async function requestDocumentUpload(payload: RequestDocumentUploadRequest) {

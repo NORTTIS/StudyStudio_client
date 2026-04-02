@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { GroupCard } from "./GroupCard";
-import { addFavourite, fetchGroupsPageData, mapRole, removeFavourite } from "./group.api";
+import { addFavourite, fetchGroupsPageData, leaveGroup, mapRole, removeFavourite } from "./group.api";
 import type { GroupsPageData, GroupCardDto } from "./types";
 import { UsageBar } from "./UsageBar";
 
@@ -306,6 +306,28 @@ export function GroupsPage() {
         }
     };
 
+    const onLeaveGroup = async (groupIdRaw: string) => {
+        const groupId = normId(groupIdRaw);
+        if (!groupId) return;
+
+        const snapshot = data;
+
+        setData((prev) => ({
+            ...prev,
+            favorites: prev.favorites.filter((g) => getGroupId(g) !== groupId),
+            managed: prev.managed.filter((g) => getGroupId(g) !== groupId),
+            independent: prev.independent.filter((g) => getGroupId(g) !== groupId),
+            joined: prev.joined.filter((g) => getGroupId(g) !== groupId)
+        }));
+
+        try {
+            await leaveGroup(groupId);
+        } catch (e: unknown) {
+            setData(snapshot);
+            setError(e instanceof Error ? e.message : "Leave group failed");
+        }
+    };
+
     return (
         <>
             <div className="relative -mt-px min-h-screen overflow-hidden bg-white px-3 pt-0 pb-4 md:px-4 xl:px-5">
@@ -420,6 +442,7 @@ export function GroupsPage() {
                                     expanded={expandFav}
                                     onToggle={() => setExpandFav((v) => !v)}
                                     onToggleStar={onToggleStar}
+                                    onLeaveGroup={onLeaveGroup}
                                     emptyText={t("favoritesEmpty")}
                                     loading={loading}
                                     t={t}
@@ -439,6 +462,7 @@ export function GroupsPage() {
                                     expanded={expandAll}
                                     onToggle={() => setExpandAll((v) => !v)}
                                     onToggleStar={onToggleStar}
+                                    onLeaveGroup={onLeaveGroup}
                                     emptyText={t("createdEmpty")}
                                     loading={loading}
                                     t={t}
@@ -458,6 +482,7 @@ export function GroupsPage() {
                                     expanded={expandManaged}
                                     onToggle={() => setExpandManaged((v) => !v)}
                                     onToggleStar={onToggleStar}
+                                    onLeaveGroup={onLeaveGroup}
                                     emptyText={t("managedEmpty")}
                                     loading={loading}
                                     t={t}
@@ -477,6 +502,7 @@ export function GroupsPage() {
                                     expanded={expandIndependent}
                                     onToggle={() => setExpandIndependent((v) => !v)}
                                     onToggleStar={onToggleStar}
+                                    onLeaveGroup={onLeaveGroup}
                                     emptyText={t("independentEmpty")}
                                     loading={loading}
                                     t={t}
@@ -496,6 +522,7 @@ export function GroupsPage() {
                                     expanded={expandJoined}
                                     onToggle={() => setExpandJoined((v) => !v)}
                                     onToggleStar={onToggleStar}
+                                    onLeaveGroup={onLeaveGroup}
                                     emptyText={t("joinedEmpty")}
                                     loading={loading}
                                     t={t}
@@ -529,6 +556,7 @@ function GroupsSection({
     expanded,
     onToggle,
     onToggleStar,
+    onLeaveGroup,
     emptyText,
     loading = false,
     t
@@ -543,6 +571,7 @@ function GroupsSection({
     expanded: boolean;
     onToggle: () => void;
     onToggleStar: (groupId: string) => Promise<void>;
+    onLeaveGroup: (groupId: string) => Promise<void>;
     emptyText: string;
     loading?: boolean;
     t: (key: string) => string;
@@ -773,6 +802,7 @@ function GroupsSection({
                                             <GroupCard
                                                 group={g}
                                                 onToggleStar={() => onToggleStar(getGroupId(g))}
+                                                onLeaveGroup={() => onLeaveGroup(getGroupId(g))}
                                                 view={view}
                                             />
                                         </div>

@@ -6,7 +6,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
-import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
+import {
+    deleteStudio,
+    getStudioMembers,
+    leaveStudio,
+    type StudioMemberResponse,
+    type StudioUI,
+    updateStudio
+} from "@/api/studios";
 import type { components } from "@/api/types";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
@@ -80,11 +87,10 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
             type="button"
             onClick={onClick}
             whileTap={{ scale: 0.98 }}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                active
-                    ? "bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_16px_32px_rgba(230,73,45,0.28)]"
-                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
-            }`}>
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-300 ${active
+                ? "bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_16px_32px_rgba(230,73,45,0.28)]"
+                : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                }`}>
             {children}
         </motion.button>
     );
@@ -129,6 +135,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [isQuickAssignOpen, setIsQuickAssignOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"groups" | "ai" | "analytics" | "settings">("groups");
     const isStudioOwner = initialStudio?.studioRole === 0;
+    const canLeaveStudio = initialStudio?.studioRole === 1;
 
     const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
@@ -143,6 +150,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editBannerUrl, setEditBannerUrl] = useState<string | null>(null);
     const [editTagline, setEditTagline] = useState("");
     const [editAlias, setEditAlias] = useState("");
+    const [isLeavingStudio, setIsLeavingStudio] = useState(false);
 
     const formatDateForInput = useCallback((iso: string) => {
         if (!iso) return "";
@@ -250,6 +258,28 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         } catch (error) {
             console.error("Delete studio failed:", error);
             toast({ description: t("deleteModal.error"), variant: "destructive" });
+        }
+    };
+
+    const handleLeaveStudio = async () => {
+        if (!studio || isLeavingStudio || !canLeaveStudio) return;
+
+        setIsLeavingStudio(true);
+        try {
+            const result = await leaveStudio(studio.id, locale);
+
+            if (result.status === "success") {
+                toast({ description: t("detail.leave.success"), variant: "success" });
+                router.push(`/${locale}/master`);
+                return;
+            }
+
+            toast({ description: t("detail.leave.error"), variant: "destructive" });
+        } catch (error) {
+            console.error("Leave studio failed:", error);
+            toast({ description: t("detail.leave.error"), variant: "destructive" });
+        } finally {
+            setIsLeavingStudio(false);
         }
     };
 
@@ -384,24 +414,24 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.20),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.68),rgba(255,248,242,0.56))]" />
 
                             <div className="relative z-10">
-                                <motion.button
-                                    whileHover={{ x: -2 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    type="button"
-                                    onClick={() => router.push(`/${locale}/master`)}
-                                    className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600">
-                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M15 19l-7-7 7-7"
-                                        />
-                                    </svg>
-                                </motion.button>
+                                <div className="mt-1 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                    <div className="min-w-0 flex flex-1 items-center gap-4">
+                                        <motion.button
+                                            whileHover={{ x: -2 }}
+                                            whileTap={{ scale: 0.96 }}
+                                            type="button"
+                                            onClick={() => router.push(`/${locale}/master`)}
+                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600">
+                                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M15 19l-7-7 7-7"
+                                                />
+                                            </svg>
+                                        </motion.button>
 
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-4">
                                         <motion.div
                                             whileHover={{ rotate: -2, scale: 1.04 }}
                                             className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/80 shadow-[0_16px_30px_rgba(255,95,61,0.18)]">
@@ -438,9 +468,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 <h1 className="truncate text-2xl font-bold text-[#261E33] sm:text-[30px]">
                                                     {studio.name}
                                                 </h1>
-                                                <span className="rounded-full border border-orange-100/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700 shadow-sm">
-                                                    {t("detail.workspaceBadge")}
-                                                </span>
+                                                <RolePill role={isStudioOwner ? "owner" : "member"} />
                                             </div>
 
                                             {studio.description?.trim() ? (
@@ -450,6 +478,57 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             ) : null}
                                         </div>
                                     </div>
+
+                                    {canLeaveStudio && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="h-10 shrink-0 rounded-2xl border-red-200 bg-white/90 px-4 text-red-600 shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                                                    disabled={isLeavingStudio}>
+                                                    <svg
+                                                        className="mr-2 h-4 w-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M17 16l4-4m0 0l-4-4m4 4H9m4 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"
+                                                        />
+                                                    </svg>
+                                                    {isLeavingStudio
+                                                        ? t("detail.leave.leaving")
+                                                        : t("detail.leave.button")}
+                                                </Button>
+                                            </AlertDialogTrigger>
+
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>
+                                                        {t("detail.leave.confirmTitle")}
+                                                    </AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        {t("detail.leave.confirmDescription")}
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>{t("deleteModal.cancel")}</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        className="bg-red-600 hover:bg-red-700"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleLeaveStudio();
+                                                        }}>
+                                                        {t("detail.leave.confirmButton")}
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
@@ -678,17 +757,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                         return (
                                                                             <div
                                                                                 key={`${group.id}-avatar-${i}`}
-                                                                                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[9px] font-medium text-white shadow-sm ${
-                                                                                    member?.avatarUrl
-                                                                                        ? ""
-                                                                                        : i % 4 === 0
-                                                                                          ? "bg-gradient-to-br from-orange-400 to-red-500"
-                                                                                          : i % 4 === 1
+                                                                                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[9px] font-medium text-white shadow-sm ${member?.avatarUrl
+                                                                                    ? ""
+                                                                                    : i % 4 === 0
+                                                                                        ? "bg-gradient-to-br from-orange-400 to-red-500"
+                                                                                        : i % 4 === 1
                                                                                             ? "bg-gradient-to-br from-blue-400 to-indigo-500"
                                                                                             : i % 4 === 2
-                                                                                              ? "bg-gradient-to-br from-teal-400 to-cyan-500"
-                                                                                              : "bg-gradient-to-br from-pink-400 to-rose-500"
-                                                                                }`}>
+                                                                                                ? "bg-gradient-to-br from-teal-400 to-cyan-500"
+                                                                                                : "bg-gradient-to-br from-pink-400 to-rose-500"
+                                                                                    }`}>
                                                                                 {member?.avatarUrl ? (
                                                                                     <img
                                                                                         src={member.avatarUrl}
@@ -735,11 +813,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             transition={{ duration: 0.28, ease: "easeInOut" }}
                                             className="h-fit max-w-full shrink-0 overflow-hidden rounded-[30px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
                                             <div
-                                                className={`flex border-b border-[#F3F0F7] px-4 py-4 ${
-                                                    isRightPanelCollapsed
-                                                        ? "justify-center"
-                                                        : "items-center justify-between"
-                                                }`}>
+                                                className={`flex border-b border-[#F3F0F7] px-4 py-4 ${isRightPanelCollapsed
+                                                    ? "justify-center"
+                                                    : "items-center justify-between"
+                                                    }`}>
                                                 {!isRightPanelCollapsed ? (
                                                     <div className="min-w-0">
                                                         <h3 className="truncate text-base font-semibold text-slate-800">
@@ -808,17 +885,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setActiveTab("analytics")}
-                                                                className={`group flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
-                                                                    (
-                                                                        activeTab as
-                                                                            | "groups"
-                                                                            | "ai"
-                                                                            | "analytics"
-                                                                            | "settings"
-                                                                    ) === "analytics"
-                                                                        ? "border-violet-200 bg-violet-100 text-violet-700"
-                                                                        : "border-violet-100 bg-violet-50 text-violet-600 hover:bg-violet-100"
-                                                                }`}
+                                                                className={`group flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${(
+                                                                    activeTab as
+                                                                    | "groups"
+                                                                    | "ai"
+                                                                    | "analytics"
+                                                                    | "settings"
+                                                                ) === "analytics"
+                                                                    ? "border-violet-200 bg-violet-100 text-violet-700"
+                                                                    : "border-violet-100 bg-violet-50 text-violet-600 hover:bg-violet-100"
+                                                                    }`}
                                                                 title={t("detail.tabs.analytics")}>
                                                                 <svg
                                                                     className="h-5 w-5 transition-transform group-hover:scale-110"
@@ -923,15 +999,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                                     <span className="font-semibold text-slate-800">
                                                                         {studio.createdAt
                                                                             ? new Date(
-                                                                                  studio.createdAt
-                                                                              ).toLocaleDateString(
-                                                                                  locale === "vi" ? "vi-VN" : "en-US",
-                                                                                  {
-                                                                                      month: "numeric",
-                                                                                      day: "numeric",
-                                                                                      year: "numeric"
-                                                                                  }
-                                                                              )
+                                                                                studio.createdAt
+                                                                            ).toLocaleDateString(
+                                                                                locale === "vi" ? "vi-VN" : "en-US",
+                                                                                {
+                                                                                    month: "numeric",
+                                                                                    day: "numeric",
+                                                                                    year: "numeric"
+                                                                                }
+                                                                            )
                                                                             : t("detail.notAvailable")}
                                                                     </span>
                                                                 </div>
@@ -1046,8 +1122,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     {editLoading
                                                         ? t("detail.settings.saving")
                                                         : isEditing
-                                                          ? t("detail.settings.saveChanges")
-                                                          : t("detail.settings.edit")}
+                                                            ? t("detail.settings.saveChanges")
+                                                            : t("detail.settings.edit")}
                                                 </Button>
                                             </div>
                                         </div>
@@ -1207,13 +1283,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                             value={
                                                                 studio.createdAt
                                                                     ? new Date(studio.createdAt).toLocaleDateString(
-                                                                          locale === "vi" ? "vi-VN" : "en-US",
-                                                                          {
-                                                                              day: "numeric",
-                                                                              month: "long",
-                                                                              year: "numeric"
-                                                                          }
-                                                                      )
+                                                                        locale === "vi" ? "vi-VN" : "en-US",
+                                                                        {
+                                                                            day: "numeric",
+                                                                            month: "long",
+                                                                            year: "numeric"
+                                                                        }
+                                                                    )
                                                                     : t("detail.notAvailable")
                                                             }
                                                             readOnly
