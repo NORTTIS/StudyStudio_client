@@ -114,8 +114,8 @@ export function isTokenExpired(): boolean {
     if (!expiryStr) return true;
 
     const expiryTime = Number.parseInt(expiryStr, 10);
-    // Add 60 second buffer to refresh before actual expiry
-    return Date.now() >= expiryTime - 60000;
+    // Add 30 second buffer to refresh before actual expiry (reduced from 60s)
+    return Date.now() >= expiryTime - 30000;
 }
 
 /**
