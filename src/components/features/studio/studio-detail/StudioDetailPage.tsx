@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
 import {
     deleteStudio,
+    getStudioGroups,
     getStudioMembers,
     leaveStudio,
     type StudioMemberResponse,
@@ -182,6 +183,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     const [editTagline, setEditTagline] = useState("");
     const [editAlias, setEditAlias] = useState("");
     const [isLeavingStudio, setIsLeavingStudio] = useState(false);
+    const [groupList, setGroupList] = useState<GroupCardDto[]>(initialGroups);
 
     const clampStudioName = useCallback((value: string) => value.slice(0, STUDIO_NAME_MAX_LENGTH), []);
     const clampStudioDescription = useCallback((value: string) => value.slice(0, STUDIO_DESCRIPTION_MAX_LENGTH), []);
@@ -216,7 +218,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     }, [initialStudio]);
 
     const groups: TransformedGroup[] = useMemo(() => {
-        return initialGroups.map((group) => ({
+        return groupList.map((group) => ({
             id: group.id || "",
             name: group.name || "",
             code: "",
@@ -229,7 +231,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             colorHex: group.colorHex ?? null,
             iconEmoji: group.iconEmoji ?? null
         }));
-    }, [initialGroups]);
+    }, [groupList]);
 
     const filteredGroups = useMemo(() => {
         const query = groupSearchQuery.trim().toLowerCase();
@@ -264,6 +266,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             setMembersLoading(false);
         }
     }, [locale, studioId, t, toast]);
+
+    const loadGroups = useCallback(async () => {
+        try {
+            const res = await getStudioGroups(studioId);
+            if (res.status === "success" && res.data?.studioGroups) {
+                setGroupList(res.data.studioGroups);
+            }
+        } catch { /* silent fail */ }
+    }, [studioId]);
 
     useEffect(() => {
         loadData();
@@ -1560,7 +1571,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 open={isQuickAssignOpen}
                 onClose={() => setIsQuickAssignOpen(false)}
                 studioId={studioId}
-                groups={initialGroups.map((g) => ({
+                groups={groupList.map((g) => ({
                     id: g.id || "",
                     name: g.name || "",
                     memberCount: g.memberCount ?? 0
@@ -1569,6 +1580,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 members={members}
                 onSuccess={() => {
                     loadData();
+                    loadGroups();
                 }}
             />
 

@@ -13,6 +13,7 @@ const STUDIO_DESCRIPTION_MAX_LENGTH = 200;
 export type StudioMemberResponse = components["schemas"]["StudioMemberResponse"];
 export type GroupInfoItem = components["schemas"]["GroupInfoItem"];
 export type LeaveStudioResponse = components["schemas"]["LeaveStudioResponse"];
+export type StudioGroupListResponse = components["schemas"]["StudioGroupListResponse"];
 
 // Subscription info from /studio API response
 export type StudioListSubscription = {
@@ -337,5 +338,24 @@ export async function randomAssignMembers(
         body: JSON.stringify(body)
     });
 
+    return response.json();
+}
+
+/**
+ * Get studio groups (with membersPreview)
+ */
+export async function getStudioGroups(
+    studioId: string,
+    locale = "vi"
+): Promise<StudioGroupListResponse> {
+    const fullUrl = buildStudioApiUrl(`/studio/${studioId}/groups`);
+    const token = getAccessToken();
+    const response = await fetch(fullUrl, {
+        method: "GET",
+        headers: {
+            "Accept-Language": locale,
+            Authorization: `Bearer ${token}`
+        }
+    });
     return response.json();
 }

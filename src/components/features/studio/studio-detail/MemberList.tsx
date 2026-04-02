@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import type { StudioMemberResponse } from "@/api/studios";
+import { GroupRoleBadge } from "@/components/features/group/GroupRoleBadge";
+import type { GroupRole } from "@/components/features/group/types";
 
 interface GroupBasic {
     id: string;
@@ -75,6 +77,17 @@ export function MemberList({
         }
     };
 
+    const toGroupRole = (role: number | null | undefined): GroupRole => {
+        switch (role) {
+            case 0: return "owner";
+            case 1: return "moderator";
+            case 2: return "member";
+            case 3: return "commenter";
+            case 4: return "viewer";
+            default: return "member";
+        }
+    };
+
     return (
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
@@ -130,9 +143,25 @@ export function MemberList({
                                 </div>
                             </div>
                             {member.userId === studioOwnerId && (
-                                <span className="whitespace-nowrap rounded-full border border-slate-300 px-2.5 py-0.5 font-medium text-slate-700 text-xs transition-all duration-300">
+                                <span className="whitespace-nowrap rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 font-medium text-orange-600 text-xs transition-all duration-300">
                                     {t("owner")}
                                 </span>
+                            )}
+                            {member.groupInfo && member.groupInfo.length > 0 && member.userId !== studioOwnerId && (
+                                <div className="flex flex-wrap items-center gap-1 justify-end">
+                                    {member.groupInfo.slice(0, 2).map((g) => (
+                                        <GroupRoleBadge
+                                            key={g.groupId}
+                                            groupName={g.groupName ?? ""}
+                                            role={toGroupRole(g.groupRole)}
+                                        />
+                                    ))}
+                                    {member.groupInfo.length > 2 && (
+                                        <span className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-slate-400 text-xs font-medium">
+                                            ...
+                                        </span>
+                                    )}
+                                </div>
                             )}
 
                         </div>

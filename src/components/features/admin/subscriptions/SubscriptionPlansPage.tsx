@@ -12,7 +12,6 @@ import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { AdminReportsTab } from "../reports/AdminReportsTab";
 import { BillingHistoryTab } from "./BillingHistoryTab";
-import { FeatureComparisonTable } from "./FeatureComparisonTable";
 import { PaymentMethodsTab } from "./PaymentMethodsTab";
 import { PlanCard } from "./PlanCard";
 import { PlanEditModal } from "./PlanEditModal";
@@ -342,8 +341,6 @@ export function SubscriptionPlansPage() {
                                         ))}
                                     </div>
 
-                                    {/* Feature Comparison */}
-                                    <FeatureComparisonTable />
                                 </>
                             ))}
 

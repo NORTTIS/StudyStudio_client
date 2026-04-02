@@ -15,6 +15,10 @@
     "messages",
     "src/i18n"
 ],
-"typescript.autoClosingTags": false,
+"i18n-ally.sourceLanguage": "vi",
+"i18n-ally.displayLanguage": "vi",
+"i18n-ally.enabledFrameworks": ["next-intl"],
+"i18n-ally.namespace": true,
+"js/ts.autoClosingTags.enabled": false,
 "i18n-ally.keystyle": "nested"
 }
