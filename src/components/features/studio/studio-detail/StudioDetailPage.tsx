@@ -433,24 +433,25 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.20),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.68),rgba(255,248,242,0.56))]" />
 
                             <div className="relative z-10">
-                                <motion.button
-                                    whileHover={{ x: -2 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    type="button"
-                                    onClick={() => router.push(`/${locale}/master`)}
-                                    className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600">
-                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M15 19l-7-7 7-7"
-                                        />
-                                    </svg>
-                                </motion.button>
+                                
 
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-4">
+                                        <motion.button
+                                        whileHover={{ x: -2 }}
+                                        whileTap={{ scale: 0.96 }}
+                                        type="button"
+                                        onClick={() => router.push(`/${locale}/master`)}
+                                        className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600">
+                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M15 19l-7-7 7-7"
+                                            />
+                                        </svg>
+                                        </motion.button>
                                         <motion.div
                                             whileHover={{ rotate: -2, scale: 1.04 }}
                                             className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/80 shadow-[0_16px_30px_rgba(255,95,61,0.18)]">
@@ -807,7 +808,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     </div>
 
                                     <div className="flex min-w-0 justify-end lg:col-span-4">
-                                        <aside className="h-fit w-full max-w-[380px] shrink-0 overflow-hidden rounded-[30px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
+                                        <aside className="h-fit w-full shrink-0 overflow-hidden rounded-[30px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
                                             <div className="items-center justify-between border-b border-[#F3F0F7] px-4 py-4">
                                                 <div className="min-w-0">
                                                     <h3 className="truncate text-base font-semibold text-slate-800">
