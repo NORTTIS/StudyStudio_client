@@ -316,7 +316,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const apiBase = getApiBase();
 
     const visibleTabs = React.useMemo(() => {
-        const canSeeSetting = userRole === "owner";
+        const canSeeSetting = userRole === "owner" || userRole === "moderator";
         const canSeeTrashed = userRole === "owner" || userRole === "moderator";
         const canSeeAnalytic = userRole !== "viewer";
 
@@ -434,7 +434,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     };
 
     return (
-        <Container>
+        <Container className="bg-transparent">
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}

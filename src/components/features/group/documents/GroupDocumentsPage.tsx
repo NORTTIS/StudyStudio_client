@@ -355,11 +355,11 @@ export default function GroupDocumentsPage() {
     };
 
     return (
-        <div className="min-h-screen w-full bg-white">
-            <Container className="bg-white px-6 py-4">
+        <div className="min-h-screen w-full bg-transparent">
+            <Container className="bg-white px-6 py-4 bg-transparent">
                 <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
-                        <p className="font-medium text-[#6F6B99] text-sm">{t("sharedProjectDocuments")}</p>
+                        <p className="font-medium text-[#6F6B99] text-sm px-4 py-4 bg-white rounded-xl border border-[#E5E5E5]">{t("sharedProjectDocuments")}</p>
                     </div>
 
                     <div className="flex items-center gap-3">

@@ -28,6 +28,7 @@ type CalEvent = {
     end?: string;
     allDay?: boolean;
     color?: string;
+    textColor?: string;
     extendedProps?: {
         severity?: TaskSeverity;
         priority?: TaskPriority;
@@ -49,6 +50,36 @@ type TooltipState = {
     assignees: string;
     status: string;
 };
+
+const UNASSIGNED_FILTER_VALUE = "__unassigned__";
+
+function getTooltipPosition(tooltip: TooltipState) {
+    const spacing = 12;
+    const viewportPadding = 20;
+    const tooltipWidth = 260;
+    const estimatedTooltipHeight = 140;
+
+    if (typeof window === "undefined") {
+        return {
+            left: tooltip.x + spacing,
+            top: tooltip.y + spacing
+        };
+    }
+
+    const preferRight = tooltip.x + spacing + tooltipWidth <= window.innerWidth - viewportPadding;
+    const rawLeft = preferRight ? tooltip.x + spacing : tooltip.x - tooltipWidth - spacing;
+    const minLeft = viewportPadding;
+    const maxLeft = window.innerWidth - tooltipWidth - viewportPadding;
+
+    const minTop = viewportPadding;
+    const maxTop = window.innerHeight - estimatedTooltipHeight - viewportPadding;
+    const rawTop = tooltip.y + spacing;
+
+    return {
+        left: Math.max(minLeft, Math.min(rawLeft, maxLeft)),
+        top: Math.max(minTop, Math.min(rawTop, maxTop))
+    };
+}
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -162,6 +193,39 @@ function severityColorOf(v?: TaskSeverity): string {
     return "#3b82f6";
 }
 
+function toIsoDateOnly(value: string): string | null {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    const y = date.getUTCFullYear();
+    const m = pad2(date.getUTCMonth() + 1);
+    const d = pad2(date.getUTCDate());
+    return `${y}-${m}-${d}`;
+}
+
+function buildDailyDates(start: string, end: string): string[] {
+    const startIso = toIsoDateOnly(start);
+    const endIso = toIsoDateOnly(end);
+    if (!startIso || !endIso) return [];
+
+    const startDate = new Date(`${startIso}T00:00:00Z`);
+    const endDate = new Date(`${endIso}T00:00:00Z`);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return [];
+
+    const safeEnd = endDate < startDate ? startDate : endDate;
+    const dates: string[] = [];
+    const cursor = new Date(startDate);
+
+    while (cursor <= safeEnd) {
+        const y = cursor.getUTCFullYear();
+        const m = pad2(cursor.getUTCMonth() + 1);
+        const d = pad2(cursor.getUTCDate());
+        dates.push(`${y}-${m}-${d}`);
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    return dates;
+}
+
 async function apiGetGroupTasks(args: { groupId: string; fallbackMessage: string; missingApiBaseMessage: string }) {
     const base = getApiBase();
     const token = getAccessTokenOrNull();
@@ -267,6 +331,7 @@ function CalendarToolbar({
                 onChange={(e) => onAssigneeChange(e.target.value || null)}
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
                 <option value="">{t("allTasks")}</option>
+                <option value={UNASSIGNED_FILTER_VALUE}>{t("unassignedTasks")}</option>
                 {assigneeOptions.map((option) => (
                     <option key={option.id} value={option.id}>
                         {option.name}
@@ -352,33 +417,37 @@ export default function GroupCalendar() {
                 setAssigneeOptions(Array.from(assigneeMap.values()).sort((a, b) => a.name.localeCompare(b.name)));
 
                 const filteredTasks = tasks.filter((task) => {
-                    if (!task.assignees || task.assignees.length === 0) {
-                        return false;
+                    if (selectedAssigneeId === UNASSIGNED_FILTER_VALUE) {
+                        return !task.assignees || task.assignees.length === 0;
                     }
 
                     if (selectedAssigneeId) {
-                        return task.assignees.some((assignee) => assignee.id === selectedAssigneeId);
+                        return task.assignees?.some((assignee) => assignee.id === selectedAssigneeId) ?? false;
                     }
 
+                    // Show all tasks in calendar when no assignee filter is selected.
                     return true;
                 });
 
                 const calEvents: CalEvent[] = filteredTasks
                     .filter((task) => task.startDate && task.dueDate)
-                    .map((task, index) => {
-                        const id = String(task.taskId ?? "").trim() || `task_${index}`;
+                    .flatMap((task, index) => {
+                        const baseId = String(task.taskId ?? "").trim() || `task_${index}`;
                         const title = String(task.taskTitle ?? "").trim() || t("untitledTask");
                         const start = String(task.startDate ?? "").trim();
                         const end = String(task.dueDate ?? "").trim();
-                        const color = severityColorOf(task.taskSeverity);
+                        const hasAssignees = Boolean(task.assignees && task.assignees.length > 0);
+                        const color = hasAssignees ? severityColorOf(task.taskSeverity) : "#e5e7eb";
+                        const textColor = hasAssignees ? "#ffffff" : "#374151";
+                        const days = buildDailyDates(start, end);
 
-                        return {
-                            id,
+                        return days.map((day, dayIndex) => ({
+                            id: `${baseId}_${dayIndex}`,
                             title,
-                            start,
-                            end,
+                            start: day,
                             allDay: true,
                             color,
+                            textColor,
                             extendedProps: {
                                 severity: task.taskSeverity,
                                 priority: task.taskPriority,
@@ -390,7 +459,7 @@ export default function GroupCalendar() {
                                         lastName: a.lastName ?? ""
                                     })) ?? []
                             }
-                        };
+                        }));
                     });
 
                 setEvents(calEvents);
@@ -453,12 +522,13 @@ export default function GroupCalendar() {
             locales: [viLocale, enLocale],
             initialView: calendarViewName,
             height: "auto",
-            showNonCurrentDates: false,
+            showNonCurrentDates: true,
             fixedWeekCount: false,
             headerToolbar: false as const,
             selectable: false,
             editable: false,
-            dayMaxEvents: 2,
+            dayMaxEvents: 3,
+            moreLinkContent: (arg: { num: number }) => `+${arg.num} ${t("more")}`,
             displayEventTime: false,
             events,
             eventMouseEnter: (info: {
@@ -504,12 +574,10 @@ export default function GroupCalendar() {
     );
 
     return (
-        <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,_rgba(251,146,60,0.10),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.10),_transparent_24%),linear-gradient(180deg,_#fff7ed_0%,_#ffffff_38%,_#f8fafc_100%)]">
-            <Container className="px-4 pb-8 pt-6 md:px-6 lg:px-8">
+        <div className="min-h-screen w-full">
+            <Container className="px-4 pb-8 pt-6 md:px-6 lg:px-8 bg-white rounded-3xl border border-[#dadce0] shadow-sm">
                 <section>
-                    <div className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white/75 p-4 shadow-[0_25px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6 lg:p-7">
-                        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),rgba(255,255,255,0.12))]" />
-
+                    <div className="relative rounded-3xl border border-[#dadce0]  p-4 shadow-[0_1px_2px_rgba(60,64,67,0.12),0_1px_3px_1px_rgba(60,64,67,0.08)] sm:p-6 lg:p-7">
                         <div className="relative">
                             {loading ? (
                                 <div className="flex min-h-[620px] flex-col items-center justify-center gap-3 rounded-[28px] border border-dashed border-slate-200 bg-white/70">
@@ -545,8 +613,10 @@ export default function GroupCalendar() {
                                         t={t}
                                     />
 
-                                    <div className="overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/80 p-2 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
-                                        <FullCalendar ref={calendarRef} {...options} />
+                                    <div className="rounded-2xl border border-[#dadce0] bg-white p-2">
+                                        <div className="w-full overflow-visible">
+                                            <FullCalendar ref={calendarRef} {...options} />
+                                        </div>
                                     </div>
                                 </>
                             )}
@@ -557,11 +627,8 @@ export default function GroupCalendar() {
 
             {tooltip.visible && (
                 <div
-                    className="pointer-events-none fixed z-[9999] w-[260px] rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-[0_16px_40px_rgba(15,23,42,0.30)]"
-                    style={{
-                        left: tooltip.x + 14,
-                        top: tooltip.y + 14
-                    }}>
+                    className="pointer-events-none fixed z-[9999] w-[min(260px,calc(100vw-40px))] rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-[0_16px_40px_rgba(15,23,42,0.30)]"
+                    style={getTooltipPosition(tooltip)}>
                     <div className="text-sm font-semibold leading-5 text-white">{tooltip.title}</div>
 
                     <div className="mt-2 h-px w-full bg-white/10" />
@@ -588,8 +655,8 @@ export default function GroupCalendar() {
                 }
 
                 .fc {
-                    font-family: inherit;
-                    color: #0f172a;
+                    font-family: Roboto, Arial, sans-serif;
+                    color: #3c4043;
                 }
 
                 .fc .fc-toolbar {
@@ -597,97 +664,131 @@ export default function GroupCalendar() {
                 }
 
                 .fc .fc-scrollgrid {
-                    border: 1px solid #e2e8f0 !important;
-                    border-radius: 20px !important;
-                    overflow: hidden !important;
-                    background: rgba(255, 255, 255, 0.95);
+                    border: 1px solid #dadce0 !important;
+                    border-radius: 16px !important;
+                    overflow: visible !important;
+                    background: #ffffff;
+                    width: 100% !important;
+                }
+
+                .fc .fc-view-harness,
+                .fc .fc-view-harness-active,
+                .fc .fc-daygrid-body,
+                .fc .fc-daygrid-body table,
+                .fc .fc-scrollgrid table {
+                    width: 100% !important;
+                }
+
+                .fc .fc-daygrid-body table,
+                .fc .fc-scrollgrid table {
+                    table-layout: fixed;
                 }
 
                 .fc .fc-scrollgrid-section > td,
                 .fc .fc-scrollgrid-section > th {
-                    border-color: #e2e8f0 !important;
+                    border-color: #e8eaed !important;
                 }
 
                 .fc-theme-standard td,
                 .fc-theme-standard th {
-                    border-color: #e2e8f0 !important;
+                    border-color: #e8eaed !important;
+                }
+
+                .fc .fc-col-header {
+                    background: #ffffff;
                 }
 
                 .fc .fc-col-header-cell {
-                    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-                    padding: 8px 0;
+                    background: #ffffff;
+                    padding: 0;
+                    height: 44px;
                 }
 
                 .fc .fc-col-header-cell-cushion {
-                    color: #475569;
-                    font-weight: 700;
-                    font-size: 13px;
-                    letter-spacing: 0.02em;
-                    text-decoration: none;
+                    color: #70757a;
+                    font-weight: 500;
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    text-decoration: none !important;
                     padding: 12px 6px !important;
                 }
 
                 .fc .fc-daygrid-day {
                     background: #ffffff;
-                    transition: background 0.22s ease;
+                    transition: background-color 0.18s ease;
+                }
+
+                .fc .fc-daygrid-day:hover {
+                    background: #f8f9fa;
                 }
 
                 .fc .fc-daygrid-day-number {
-                    color: #64748b;
-                    font-size: 13px;
-                    font-weight: 700;
-                    padding: 10px 12px !important;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 28px;
+                    height: 28px;
+                    margin: 6px 0 0 6px;
+                    border-radius: 9999px;
+                    color: #3c4043;
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 0 !important;
                     text-decoration: none !important;
                 }
 
                 .fc .fc-day-other .fc-daygrid-day-number {
-                    color: #cbd5e1;
+                    color: #bdc1c6;
                 }
 
                 .fc .fc-day-today {
-                    background: rgba(249, 115, 22, 0.08) !important;
+                    background: #fff8e1 !important;
                 }
 
                 .fc .fc-daygrid-day.fc-day-today {
-                    background: rgba(249, 115, 22, 0.08) !important;
+                    background: #fff8e1 !important;
                 }
 
                 .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    min-width: 32px;
-                    height: 32px;
-                    margin: 6px 0 0 6px;
-                    border-radius: 9999px;
-                    background: #f97316;
-                    color: white !important;
-                    box-shadow: 0 8px 20px rgba(249, 115, 22, 0.35);
+                    background: transparent;
+                    color: #b45309 !important;
+                    font-weight: 700;
+                }
+
+                .fc .fc-daygrid-day-frame {
+                    min-height: 112px;
+                }
+
+                .fc .fc-daygrid-day-top {
+                    justify-content: flex-start;
+                }
+
+                .fc .fc-daygrid-day-events {
+                    margin: 2px 4px 0 4px;
                 }
 
                 .fc .fc-event {
                     border: none !important;
-                    border-radius: 6px !important;
-                    padding: 1px 4px !important;
-                    min-height: 16px !important;
-                    font-size: 10px !important;
-                    line-height: 1.1 !important;
-                    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+                    border-radius: 4px !important;
+                    padding: 2px 6px !important;
+                    min-height: 18px !important;
+                    font-size: 11px !important;
+                    line-height: 1.25 !important;
+                    box-shadow: none;
                     transition:
-                        transform 0.18s ease,
-                        box-shadow 0.18s ease,
-                        opacity 0.18s ease;
+                        opacity 0.16s ease,
+                        filter 0.16s ease;
                     cursor: pointer;
                 }
 
                 .fc .fc-event:hover {
-                    transform: translateY(-0.5px);
-                    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.10);
-                    opacity: 0.95;
+                    opacity: 0.96;
+                    filter: brightness(0.98);
                 }
 
                 .fc .fc-event-title {
-                    font-weight: 600;
+                    font-weight: 500;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -702,53 +803,131 @@ export default function GroupCalendar() {
                 .fc .fc-timegrid-slot,
                 .fc .fc-timegrid-axis,
                 .fc .fc-timegrid-col {
-                    border-color: #e2e8f0 !important;
+                    border-color: #e8eaed !important;
                 }
 
                 .fc .fc-timegrid-now-indicator-line {
-                    border-color: #f97316 !important;
+                    border-color: #ea4335 !important;
                 }
 
                 .fc .fc-more-link {
-                    color: #ea580c !important;
-                    font-weight: 700;
-                    font-size: 12px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-top: 2px;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 2px 6px;
+                    background: transparent;
+                    color: #1a73e8 !important;
+                    font-weight: 500;
+                    font-size: 11px;
+                    line-height: 1.2;
+                    text-decoration: none !important;
+                    box-shadow: none;
+                    transition:
+                        background 0.16s ease,
+                        color 0.16s ease;
                 }
 
                 .fc .fc-daygrid-more-link:hover {
-                    text-decoration: underline;
+                    background: #f1f3f4;
+                    color: #174ea6 !important;
+                    text-decoration: none !important;
                 }
 
-                .fc .fc-daygrid-day-frame {
-                    min-height: 100px;
+                .fc .fc-daygrid-more-link:focus-visible {
+                    outline: 2px solid #1a73e8;
+                    outline-offset: 2px;
+                }
+
+                .fc .fc-popover {
+                    border: 1px solid #dadce0 !important;
+                    border-radius: 12px !important;
+                    overflow: hidden;
+                    background: #ffffff !important;
+                    box-shadow:
+                        0 1px 2px rgba(60, 64, 67, 0.2),
+                        0 2px 6px rgba(60, 64, 67, 0.15) !important;
+                }
+
+                .fc .fc-popover-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                    padding: 10px 12px !important;
+                    border-bottom: 1px solid #e8eaed;
+                    background: #ffffff;
+                }
+
+                .fc .fc-popover-title {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #3c4043;
+                }
+
+                .fc .fc-popover-close {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 9999px;
+                    color: #5f6368 !important;
+                    transition:
+                        background-color 0.16s ease,
+                        color 0.16s ease;
+                }
+
+                .fc .fc-popover-close:hover {
+                    color: #202124 !important;
+                    background: #f1f3f4;
+                }
+
+                .fc .fc-popover-body {
+                    padding: 8px;
+                    max-height: 240px;
+                    overflow: auto;
+                }
+
+                .fc .fc-popover-body .fc-daygrid-event-harness {
+                    margin-top: 4px;
                 }
 
                 @media (max-width: 1024px) {
                     .fc .fc-daygrid-day-frame {
-                        min-height: 85px;
+                        min-height: 92px;
                     }
                 }
 
                 @media (max-width: 768px) {
                     .fc .fc-col-header-cell-cushion {
-                        font-size: 12px;
+                        font-size: 10px;
                         padding: 10px 4px !important;
                     }
 
                     .fc .fc-daygrid-day-number {
-                        font-size: 12px;
-                        padding: 8px !important;
+                        width: 24px;
+                        height: 24px;
+                        font-size: 11px;
+                        margin: 4px 0 0 4px;
                     }
 
                     .fc .fc-event {
-                        font-size: 9px !important;
-                        padding: 1px 3px !important;
-                        min-height: 15px !important;
-                        line-height: 1 !important;
+                        font-size: 10px !important;
+                        padding: 1px 4px !important;
+                        min-height: 16px !important;
+                        line-height: 1.1 !important;
                     }
 
                     .fc .fc-daygrid-day-frame {
-                        min-height: 70px;
+                        min-height: 74px;
+                    }
+
+                    .fc .fc-more-link {
+                        padding: 1px 6px;
+                        font-size: 10px;
                     }
                 }
             `}</style>

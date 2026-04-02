@@ -16,7 +16,7 @@ interface BatchUploadModalProps {
     onSuccess?: () => void;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 
 export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUploadModalProps) {
@@ -206,11 +206,10 @@ export function BatchUploadModal({ open, onClose, studioId, onSuccess }: BatchUp
                                     onDragOver={handleDragOver}
                                     onDragLeave={handleDragLeave}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${
-                                        dragOver
+                                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 transition-colors ${dragOver
                                             ? "border-orange-400 bg-orange-50"
                                             : "border-[#E6E6E6] bg-[#FAFAFF] hover:border-[#CFCFCF]"
-                                    }`}>
+                                        }`}>
                                     <input
                                         ref={fileInputRef}
                                         type="file"

@@ -144,7 +144,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch {}
+            } catch { }
             return;
         }
 
@@ -153,7 +153,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch {}
+            } catch { }
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -176,36 +176,36 @@ function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; del
 function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0, onClick }: StatCardProps) {
     const styles = {
         neutral: {
-            card: "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,250,252,0.92))]",
-            glow: "from-slate-100/70 via-white to-transparent",
-            iconWrap: "bg-slate-100 text-slate-700",
+            card: "border-[#DCE6F4]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(246,249,252,0.98)_55%,rgba(232,239,250,0.92)_100%)] backdrop-blur-xl",
+            glow: "",
+            iconWrap: "bg-[#EAF1FB] text-[#4B607D]",
             label: "text-slate-500",
             value: "text-slate-900",
-            note: "text-slate-400"
+            note: "text-[#63738A]"
         },
         danger: {
-            card: "border-red-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.92))]",
-            glow: "from-red-100/70 via-white to-transparent",
-            iconWrap: "bg-red-50 text-red-500",
-            label: "text-red-500",
-            value: "text-red-600",
-            note: "text-red-400"
+            card: "border-[#F4D0C6]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(255,248,245,0.98)_55%,rgba(255,234,228,0.94)_100%)] backdrop-blur-xl",
+            glow: "",
+            iconWrap: "bg-[#FDE2D9] text-[#C14E35]",
+            label: "text-slate-500",
+            value: "text-slate-900",
+            note: "text-[#B56A57]"
         },
         success: {
-            card: "border-emerald-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(236,253,245,0.92))]",
-            glow: "from-emerald-100/70 via-white to-transparent",
-            iconWrap: "bg-emerald-50 text-emerald-600",
-            label: "text-emerald-600",
-            value: "text-emerald-600",
-            note: "text-emerald-500"
+            card: "border-[#CDE9D9]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(244,252,248,0.98)_55%,rgba(227,246,236,0.94)_100%)] backdrop-blur-xl",
+            glow: "",
+            iconWrap: "bg-[#DFF4E9] text-[#1F7A55]",
+            label: "text-slate-500",
+            value: "text-slate-900",
+            note: "text-[#4F876B]"
         },
         violet: {
-            card: "border-violet-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(245,243,255,0.94))]",
-            glow: "from-violet-100/70 via-white to-transparent",
-            iconWrap: "bg-violet-50 text-violet-600",
-            label: "text-violet-600",
-            value: "text-violet-700",
-            note: "text-violet-500"
+            card: "border-[#DDD3F8]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(250,247,255,0.98)_55%,rgba(239,232,255,0.94)_100%)] backdrop-blur-xl",
+            glow: "",
+            iconWrap: "bg-[#EEE7FF] text-[#6A4FD8]",
+            label: "text-slate-500",
+            value: "text-slate-900",
+            note: "text-[#7864AF]"
         }
     };
 
@@ -222,11 +222,10 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
             whileHover={{ y: -6 }}
             onClick={onClick}
             className={cx(
-                "group relative w-full overflow-hidden rounded-[28px] border p-5 text-left shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]",
+                "group relative w-full overflow-hidden rounded-[28px] border p-5 text-left shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.08)]",
                 onClick && "cursor-pointer",
                 s.card
             )}>
-            <div className={cx("absolute inset-x-0 top-0 h-24 bg-gradient-to-b opacity-90", s.glow)} />
             <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/60 blur-3xl opacity-70" />
 
             <div className="relative flex items-start justify-between gap-4">
@@ -275,31 +274,31 @@ function OverviewCard({
 
     const styles = {
         neutral: {
-            card: "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.95))]",
-            badge: "bg-violet-50 text-violet-600",
+            card: "border-[#DCE6F4]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(246,249,252,0.98)_55%,rgba(232,239,250,0.92)_100%)] backdrop-blur-xl",
+            badge: "bg-[#EDF3FF] text-[#4D5F88]",
             percent: "text-slate-900",
             desc: "text-slate-500",
-            track: "bg-slate-100",
-            bar: "bg-[linear-gradient(90deg,#8B5CF6_0%,#6366F1_100%)]",
-            glow: "from-violet-50/80 via-white to-transparent"
+            track: "bg-[#E9EEF7]",
+            bar: "bg-[linear-gradient(90deg,#748FB8_0%,#90A8CF_100%)]",
+            glow: ""
         },
         danger: {
-            card: "border-red-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.94))]",
-            badge: "bg-red-50 text-red-500",
-            percent: "text-red-600",
-            desc: "text-red-400",
-            track: "bg-red-50",
-            bar: "bg-[linear-gradient(90deg,#F97316_0%,#EF4444_100%)]",
-            glow: "from-red-50/80 via-white to-transparent"
+            card: "border-[#F4D0C6]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(255,248,245,0.98)_55%,rgba(255,234,228,0.94)_100%)] backdrop-blur-xl",
+            badge: "bg-[#FDE4DB] text-[#C14E35]",
+            percent: "text-slate-900",
+            desc: "text-slate-500",
+            track: "bg-[#F6E8E2]",
+            bar: "bg-[linear-gradient(90deg,#D97B60_0%,#C85A43_100%)]",
+            glow: ""
         },
         success: {
-            card: "border-emerald-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(236,253,245,0.94))]",
-            badge: "bg-emerald-50 text-emerald-600",
-            percent: "text-emerald-600",
-            desc: "text-emerald-500",
-            track: "bg-emerald-50",
-            bar: "bg-[linear-gradient(90deg,#10B981_0%,#22C55E_100%)]",
-            glow: "from-emerald-50/80 via-white to-transparent"
+            card: "border-[#CDE9D9]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(244,252,248,0.98)_55%,rgba(227,246,236,0.94)_100%)] backdrop-blur-xl",
+            badge: "bg-[#DFF4E9] text-[#1F7A55]",
+            percent: "text-slate-900",
+            desc: "text-slate-500",
+            track: "bg-[#E4F3EB]",
+            bar: "bg-[linear-gradient(90deg,#58C893_0%,#31B476_100%)]",
+            glow: ""
         }
     };
 
@@ -312,11 +311,9 @@ function OverviewCard({
             transition={{ duration: 0.35, delay: 0.08 * index }}
             whileHover={{ y: -6 }}
             className={cx(
-                "relative overflow-hidden rounded-[30px] border p-6 shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]",
+                "relative overflow-hidden rounded-[30px] border p-6 shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.08)]",
                 s.card
             )}>
-            <div className={cx("absolute inset-x-0 top-0 h-28 bg-gradient-to-b opacity-90", s.glow)} />
-
             <div className="relative">
                 <div className="flex items-center gap-3">
                     <div className={cx("rounded-2xl p-2.5 shadow-sm", s.badge)}>
@@ -382,9 +379,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-              status?: string;
-              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-          }
+            status?: string;
+            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+        }
         | null
         | undefined;
 
@@ -693,7 +690,7 @@ export default function HomeSummary() {
                     localStorage.removeItem(key);
                 }
             });
-        } catch {}
+        } catch { }
     }, [accountKey, hasSummary]);
 
     const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);
@@ -735,7 +732,7 @@ export default function HomeSummary() {
                                     <div className="flex items-center gap-3">
                                         <Button
                                             variant="outline"
-                                            className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur hover:bg-white">
+                                            className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur transition-[transform,box-shadow,border-color,background-color] hover:bg-white">
                                             <CalendarDays className="mr-2 h-4 w-4" />
                                             {t("calendar")}
                                         </Button>
@@ -807,7 +804,7 @@ export default function HomeSummary() {
                                         <div className="flex justify-end">
                                             <Button
                                                 onClick={() => setOpenDetail(true)}
-                                                className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4">
+                                                className="h-11 rounded-2xl bg-gradient-to-r from-[#FF8A63] to-[#E9644A] px-5 text-white shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition-[transform,box-shadow,background-image] hover:from-[#FF9A76] hover:to-[#D95342] focus:outline-none focus:ring-4">
                                                 {t("viewDetails")}
                                             </Button>
                                         </div>

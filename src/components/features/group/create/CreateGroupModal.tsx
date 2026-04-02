@@ -10,6 +10,8 @@ import { Button } from "@/components/common/Button";
 import { BannerUpload } from "@/components/ui/banner-upload";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 import { BatchUploadModal } from "./BatchUploadModal";
 
 type GroupType = "independent" | "managed";
@@ -82,6 +84,7 @@ export function CreateGroupModal({
     variant?: CreateGroupModalVariant;
 }) {
     const t = useTranslations("CreateGroupModal");
+    const { toast } = useToast();
     const [createMode, setCreateMode] = useState<CreateMode>("single");
     const [type, setType] = useState<GroupType>("independent");
     const [studioId, setStudioId] = useState<string>("");
@@ -122,7 +125,7 @@ export function CreateGroupModal({
 
     const handleGroupCountChange = (raw: string) => {
         if (raw === "") {
-            setGroupCount(1);
+            setGroupCount(0);
             return;
         }
 
@@ -130,11 +133,11 @@ export function CreateGroupModal({
         if (Number.isNaN(next)) return;
 
         if (remaining <= 0) {
-            setGroupCount(1);
+            setGroupCount(0);
             return;
         }
 
-        if (next < 1) setGroupCount(1);
+        if (next < 0) setGroupCount(0);
         else if (next > remaining) setGroupCount(remaining);
         else setGroupCount(next);
     };
@@ -312,7 +315,7 @@ export function CreateGroupModal({
 
     useEffect(() => {
         if (remaining <= 0) {
-            setGroupCount(1);
+            setGroupCount(0);
             return;
         }
         setGroupCount((prev) => (prev > remaining ? remaining : prev < 1 ? 1 : prev));
@@ -356,6 +359,10 @@ export function CreateGroupModal({
             }
 
             await Promise.resolve(onCreate());
+            toast({
+                variant: "success",
+                description: t("createSuccess")
+            });
             onClose();
         } catch (e: unknown) {
             setCreateError(e instanceof Error ? e.message : t("errors.createFailed"));
@@ -436,27 +443,30 @@ export function CreateGroupModal({
                                         <div className="font-semibold text-[#2A2438] text-base">
                                             {t("createModeLabel")}
                                         </div>
-                                        <div className="relative mt-3">
-                                            <select
-                                                value={createMode}
-                                                onChange={(e) => setCreateMode(e.target.value as CreateMode)}
-                                                className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                                                <option value="single">{t("createModeSingle")}</option>
-                                                <option value="batch">{t("createModeBatch")}</option>
-                                            </select>
-
-                                            <div className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-[#6F6B99]">
-                                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                                    <path
-                                                        d="M6 8l4 4 4-4"
-                                                        stroke="currentColor"
-                                                        strokeWidth="1.5"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    />
-                                                </svg>
-                                            </div>
-                                        </div>
+                                        <Select
+                                            value={createMode}
+                                            onValueChange={(value) => setCreateMode(value as CreateMode)}>
+                                            <SelectTrigger className="mt-3 h-12 w-full rounded-2xl border border-[#E6E6E6] bg-white px-5 text-left text-[#2A2438] text-sm shadow-[0_8px_24px_rgba(30,41,59,0.06)] transition hover:border-orange-300 hover:bg-[#FFFDFC] focus-visible:border-orange-400 focus-visible:ring-2 focus-visible:ring-orange-100 data-[state=open]:border-orange-400 data-[state=open]:ring-2 data-[state=open]:ring-orange-100 [&>span]:truncate [&>svg]:text-[#6F6B99]">
+                                                <SelectValue placeholder={t("createModeLabel")} />
+                                            </SelectTrigger>
+                                            <SelectContent
+                                                position="popper"
+                                                side="bottom"
+                                                align="start"
+                                                sideOffset={8}
+                                                className="z-[70] min-w-[var(--radix-select-trigger-width)] rounded-2xl border border-[#F3DCC8] bg-white p-1 shadow-[0_18px_40px_rgba(41,30,56,0.18)]">
+                                                <SelectItem
+                                                    value="single"
+                                                    className="cursor-pointer rounded-xl bg-white px-3 py-2.5 text-[#2A2438] text-sm data-[highlighted]:bg-[#FFF4EA] data-[state=checked]:bg-white">
+                                                    {t("createModeSingle")}
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value="batch"
+                                                    className="cursor-pointer rounded-xl bg-white px-3 py-2.5 text-[#2A2438] text-sm data-[highlighted]:bg-[#FFF4EA] data-[state=checked]:bg-white">
+                                                    {t("createModeBatch")}
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
 
                                     {variant !== "studio" ? (
@@ -464,27 +474,28 @@ export function CreateGroupModal({
                                             <div className="font-semibold text-[#2A2438] text-base">
                                                 {t("groupTypeLabel")}
                                             </div>
-                                            <div className="relative mt-3">
-                                                <select
-                                                    value={type}
-                                                    onChange={(e) => setType(e.target.value as GroupType)}
-                                                    className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                                                    <option value="independent">{t("groupTypeIndependent")}</option>
-                                                    <option value="managed">{t("groupTypeManaged")}</option>
-                                                </select>
-
-                                                <div className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-[#6F6B99]">
-                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                                        <path
-                                                            d="M6 8l4 4 4-4"
-                                                            stroke="currentColor"
-                                                            strokeWidth="1.5"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                            </div>
+                                            <Select value={type} onValueChange={(value) => setType(value as GroupType)}>
+                                                <SelectTrigger className="mt-3 h-12 w-full rounded-2xl border border-[#E6E6E6] bg-white px-5 text-left text-[#2A2438] text-sm shadow-[0_8px_24px_rgba(30,41,59,0.06)] transition hover:border-orange-300 hover:bg-[#FFFDFC] focus-visible:border-orange-400 focus-visible:ring-2 focus-visible:ring-orange-100 data-[state=open]:border-orange-400 data-[state=open]:ring-2 data-[state=open]:ring-orange-100 [&>span]:truncate [&>svg]:text-[#6F6B99]">
+                                                    <SelectValue placeholder={t("groupTypeLabel")} />
+                                                </SelectTrigger>
+                                                <SelectContent
+                                                    position="popper"
+                                                    side="bottom"
+                                                    align="start"
+                                                    sideOffset={8}
+                                                    className="z-[70] min-w-[var(--radix-select-trigger-width)] rounded-2xl border border-[#F3DCC8] bg-white p-1 shadow-[0_18px_40px_rgba(41,30,56,0.18)]">
+                                                    <SelectItem
+                                                        value="independent"
+                                                        className="cursor-pointer rounded-xl bg-white px-3 py-2.5 text-[#2A2438] text-sm data-[highlighted]:bg-[#FFF4EA] data-[state=checked]:bg-white">
+                                                        {t("groupTypeIndependent")}
+                                                    </SelectItem>
+                                                    <SelectItem
+                                                        value="managed"
+                                                        className="cursor-pointer rounded-xl bg-white px-3 py-2.5 text-[#2A2438] text-sm data-[highlighted]:bg-[#FFF4EA] data-[state=checked]:bg-white">
+                                                        {t("groupTypeManaged")}
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     ) : null}
 
@@ -495,32 +506,31 @@ export function CreateGroupModal({
                                             </div>
 
                                             <div className="relative mt-3">
-                                                <select
-                                                    value={studioId}
-                                                    onChange={(e) => setStudioId(e.target.value)}
-                                                    disabled={loadingOptions || creating || !hasOwnerStudio}
-                                                    className="h-12 w-full appearance-none rounded-2xl border border-[#E6E6E6] bg-white px-5 pr-14 text-[#2A2438] text-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-100">
-                                                    {hasOwnerStudio ? null : (
-                                                        <option value="">{t("noOwnerStudios")}</option>
-                                                    )}
-                                                    {ownerStudios.map((s) => (
-                                                        <option key={s.studioId} value={s.studioId}>
-                                                            {s.studioName || t("untitledStudio")}
-                                                        </option>
-                                                    ))}
-                                                </select>
-
-                                                <div className="pointer-events-none absolute inset-y-0 right-5 flex items-center text-[#6F6B99]">
-                                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                                        <path
-                                                            d="M6 8l4 4 4-4"
-                                                            stroke="currentColor"
-                                                            strokeWidth="1.5"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                        />
-                                                    </svg>
-                                                </div>
+                                                <Select
+                                                    value={studioId || undefined}
+                                                    onValueChange={setStudioId}
+                                                    disabled={loadingOptions || creating || !hasOwnerStudio}>
+                                                    <SelectTrigger className="h-12 w-full rounded-2xl border border-[#E6E6E6] bg-white px-5 text-left text-[#2A2438] text-sm shadow-[0_8px_24px_rgba(30,41,59,0.06)] transition hover:border-orange-300 hover:bg-[#FFFDFC] focus-visible:border-orange-400 focus-visible:ring-2 focus-visible:ring-orange-100 data-[state=open]:border-orange-400 data-[state=open]:ring-2 data-[state=open]:ring-orange-100 disabled:bg-gray-100 disabled:text-[#9CA3AF] [&>span]:truncate [&>svg]:text-[#6F6B99]">
+                                                        <SelectValue placeholder={t("noOwnerStudios")} />
+                                                    </SelectTrigger>
+                                                    <SelectContent
+                                                        position="popper"
+                                                        side="bottom"
+                                                        align="start"
+                                                        sideOffset={8}
+                                                        className="z-[70] min-w-[var(--radix-select-trigger-width)] rounded-2xl border border-[#F3DCC8] bg-white p-1 shadow-[0_18px_40px_rgba(41,30,56,0.18)]">
+                                                        {ownerStudios
+                                                            .filter((s) => Boolean(s.studioId))
+                                                            .map((s) => (
+                                                                <SelectItem
+                                                                    key={s.studioId}
+                                                                    value={s.studioId as string}
+                                                                    className="cursor-pointer rounded-xl bg-white px-3 py-2.5 text-[#2A2438] text-sm data-[highlighted]:bg-[#FFF4EA] data-[state=checked]:bg-white">
+                                                                    {s.studioName || t("untitledStudio")}
+                                                                </SelectItem>
+                                                            ))}
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
                                     ) : null}
@@ -685,9 +695,9 @@ export function CreateGroupModal({
                                             <div>
                                                 <input
                                                     type="number"
-                                                    min={1}
+                                                    min={0}
                                                     max={remaining}
-                                                    value={groupCount}
+                                                    value={groupCount === 0 ? "" : groupCount}
                                                     onChange={(e) => handleGroupCountChange(e.target.value)}
                                                     className="h-12 w-full rounded-2xl border border-[#E6E6E6] px-5 text-[#2A2438] text-sm outline-none transition placeholder:text-[#A3A0C2] focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                                                     placeholder={t("groupCountPlaceholder")}
@@ -838,11 +848,10 @@ export function CreateGroupModal({
                                                     setTemplateId((prev) => (prev === template.id ? "" : template.id))
                                                 }
                                                 disabled={creating}
-                                                className={`overflow-hidden rounded-2xl border text-left transition ${
-                                                    selected
-                                                        ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
-                                                        : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
-                                                }`}
+                                                className={`overflow-hidden rounded-2xl border text-left transition ${selected
+                                                    ? "border-orange-500 shadow-[0_10px_30px_rgba(255,122,0,0.18)]"
+                                                    : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
+                                                    }`}
                                                 title={`${template.name}\n\n${template.desc || ""}`}>
                                                 <div className="flex items-center justify-center bg-white py-8">
                                                     <div className="grid h-14 w-14 place-items-center rounded-xl border border-[#E6E6E6] bg-white text-[#6F6B99]">

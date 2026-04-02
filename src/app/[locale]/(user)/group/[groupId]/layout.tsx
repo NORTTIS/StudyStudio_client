@@ -84,7 +84,7 @@ export default function Layout({
                 <GroupBannerBackground bannerUrl={bannerUrl} colorHex={colorHex} />
             </div>
 
-            <div className="relative z-20">
+            <div className="relative z-20 back-ground-transparent">
                 <GroupStudioHeader />
                 <div className="relative z-20">{children}</div>
             </div>

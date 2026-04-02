@@ -10,7 +10,8 @@ import type { components } from "@/api/types";
 
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
-import { getRoleIcon, getRoleColor, roleDisplayText } from "@/components/features/group/RoleUtils";
+import { ApproveMemberSection } from "@/components/features/group/setting/ApproveMemberSection";
+import { getRoleIcon, getRoleColor } from "@/components/features/group/RoleUtils";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -34,7 +35,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
 
-/** ✅ OpenAPI types */
 type GroupDetailResponseApiResponse = components["schemas"]["GroupDetailResponseApiResponse"];
 type GroupMemberListResponseApiResponse = components["schemas"]["GroupMemberListResponseApiResponse"];
 type CreateInviteLinkResponseApiResponse = components["schemas"]["CreateInviteLinkResponseApiResponse"];
@@ -211,6 +211,7 @@ export function GroupSettingView() {
 
     const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
     const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
+    const [currentUserId, setCurrentUserId] = useState<string>("");
 
     const canManageMembers = myRoleInGroup === "Owner" || myRoleInGroup === "Moderator";
     const canDelete = useMemo(() => myRoleInGroup === "Owner", [myRoleInGroup]);
@@ -242,12 +243,17 @@ export function GroupSettingView() {
         return roleOptions;
     };
 
+    const getRoleLabel = (role: MemberRole) => {
+        const key = role.toLowerCase();
+        return t(`members.roleLabels.${key}`);
+    };
+
     const extractApiMessage = (text: string, json: unknown) => {
         const msg =
             json && typeof json === "object" ? String((json as { message?: unknown }).message ?? "").trim() : "";
         if (msg) return msg;
-        const t = (text ?? "").toString().trim();
-        return t || "Đã xảy ra lỗi";
+        const rawText = (text ?? "").toString().trim();
+        return rawText || "Đã xảy ra lỗi";
     };
 
     const getTokenOrFail = () => {
@@ -387,7 +393,6 @@ export function GroupSettingView() {
         setInitialTagline(data.tagline ?? "");
         setInitialAlias(data.alias ?? "");
 
-        // Template field - check for isTemplate, template, or isTemplateGroup fields
         const templateValue =
             (data as Record<string, unknown>).isTemplate ??
             (data as Record<string, unknown>).template ??
@@ -409,15 +414,14 @@ export function GroupSettingView() {
             const me = mapped.find((x) => String(x.id).trim() === String(meId).trim());
             if (me?.role) setMyRoleInGroup(me.role);
         } catch {
-            // fallback: dùng membersPreview (nếu backend không cho members)
-            const currentUserId = getCurrentUserId();
+            const currentUid = getCurrentUserId();
             const preview: ApiMemberPreview[] = (data as ApiGroupDetailWithPreview | undefined)?.membersPreview ?? [];
             const mapped: Member[] = (preview || []).map((m, idx) => {
                 const first = (m.firstName ?? "").trim();
                 const last = (m.lastName ?? "").trim();
                 const previewMember = m as ApiMemberPreview & { id?: string | number; userId?: string | number };
                 const uid = previewMember.id ?? previewMember.userId ?? `${id}-${idx}`;
-                const isMe = String(uid).trim() === String(currentUserId).trim();
+                const isMe = String(uid).trim() === String(currentUid).trim();
 
                 return {
                     id: String(uid),
@@ -429,7 +433,7 @@ export function GroupSettingView() {
             });
             setMembers(mapped);
 
-            const me = mapped.find((x) => String(x.id).trim() === String(currentUserId).trim());
+            const me = mapped.find((x) => String(x.id).trim() === String(currentUid).trim());
             if (me?.role) setMyRoleInGroup(me.role);
         }
 
@@ -466,6 +470,10 @@ export function GroupSettingView() {
             alive = false;
         };
     }, [groupId, t]);
+
+    useEffect(() => {
+        setCurrentUserId(getCurrentUserId());
+    }, []);
 
     const handleEditSave = async () => {
         if (!groupId) return;
@@ -620,7 +628,6 @@ export function GroupSettingView() {
 
         setMembersError("");
 
-        // 1) body
         {
             const res = await fetch(`${apiBase}/group/member/remove`, {
                 method: "DELETE",
@@ -639,7 +646,6 @@ export function GroupSettingView() {
             setMembersError(extractApiMessage(text, json));
         }
 
-        // 2) query fallback
         {
             const url = `${apiBase}/group/member/remove?groupId=${encodeURIComponent(groupId)}&userId=${encodeURIComponent(
                 userId
@@ -728,6 +734,11 @@ export function GroupSettingView() {
     const onChangeRole = async (userId: string, role: Exclude<MemberRole, "Owner">) => {
         if (!canManageMembers) return;
 
+        if (myRoleInGroup === "Moderator" && String(userId).trim() === String(currentUserId).trim()) {
+            setMembersError("Moderator không thể tự thay đổi vai trò của chính mình");
+            return;
+        }
+
         if (role === "Moderator" && currentModeratorId && String(userId) !== String(currentModeratorId)) {
             setMembersError(t("members.oneModeratorError"));
             return;
@@ -772,6 +783,10 @@ export function GroupSettingView() {
         const current = members.find((x) => x.id === userId);
         if (!current) return;
         if (isOwner(current.role)) return;
+        if (myRoleInGroup === "Moderator" && String(userId).trim() === String(currentUserId).trim()) {
+            setMembersError("Moderator không thể tự xóa chính mình khỏi nhóm");
+            return;
+        }
 
         setRemoveTarget({ id: userId, name: current.name });
         setRemoveConfirmOpen(true);
@@ -780,6 +795,11 @@ export function GroupSettingView() {
     const confirmRemoveMember = async () => {
         if (!removeTarget) return;
         const userId = removeTarget.id;
+
+        if (myRoleInGroup === "Moderator" && String(userId).trim() === String(currentUserId).trim()) {
+            setMembersError("Moderator không thể tự xóa chính mình khỏi nhóm");
+            return;
+        }
 
         setMembersError("");
         setRemoveLoadingByUserId((p) => ({ ...p, [userId]: true }));
@@ -833,11 +853,44 @@ export function GroupSettingView() {
     const hasModerator = members.some((m) => m.role === "Moderator");
 
     return (
-        <div className="min-h-screen w-full">
+        <div className="min-h-screen w-full px-8 py-6 bg-transparent">
             <Container className="rounded-2xl border border-gray-200 bg-white px-6 py-4 shadow-sm">
                 <div className="space-y-6 pb-10">
                     
-                    {/* Identity strip */}
+                    
+
+                    <section className="rounded-2xl border bg-white shadow-sm">
+                        <div className="flex items-start justify-between border-b px-6 py-5">
+                            <div className="flex items-start gap-3">
+                                <div className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
+                                    <Settings className="h-4 w-4 text-gray-700" />
+                                </div>
+                                <div>
+                                    <h2 className="font-bold text-gray-900 text-sm">{t("general.title")}</h2>
+                                    <p className="mt-0.5 text-gray-500 text-xs">{t("general.subtitle")}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {isEditing ? (
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleCancelEdit}
+                                        className="h-10 rounded-xl border-gray-300 px-4 font-semibold text-gray-700 text-sm hover:bg-gray-100">
+                                        {t("general.cancelButton")}
+                                    </Button>
+                                ) : null}
+                                <Button
+                                    onClick={handleEditSave}
+                                    className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700">
+                                    {isEditing ? t("general.saveButton") : t("general.editButton")}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="px-6 py-6">
+                            <div className="mb-6 flex items-end gap-6">
+                                {/* Identity strip */}
                     <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row sm:items-start">
                         {/* Banner thumbnail */}
                         
@@ -885,37 +938,8 @@ export function GroupSettingView() {
                             />
                         </div>
                     </div>
-
-                    <section className="rounded-2xl border bg-white shadow-sm">
-                        <div className="flex items-start justify-between border-b px-6 py-5">
-                            <div className="flex items-start gap-3">
-                                <div className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100">
-                                    <Settings className="h-4 w-4 text-gray-700" />
-                                </div>
-                                <div>
-                                    <h2 className="font-bold text-gray-900 text-sm">{t("general.title")}</h2>
-                                    <p className="mt-0.5 text-gray-500 text-xs">{t("general.subtitle")}</p>
-                                </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                {isEditing ? (
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleCancelEdit}
-                                        className="h-10 rounded-xl border-gray-300 px-4 font-semibold text-gray-700 text-sm hover:bg-gray-100">
-                                        {t("general.cancelButton")}
-                                    </Button>
-                                ) : null}
-                                <Button
-                                    onClick={handleEditSave}
-                                    className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700">
-                                    {isEditing ? t("general.saveButton") : t("general.editButton")}
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="px-6 py-6">
                             <div className="grid grid-cols-1 gap-5">
                                 <div>
                                     <label htmlFor="group-name-input" className="font-semibold text-gray-700 text-xs">
@@ -1120,7 +1144,11 @@ export function GroupSettingView() {
                                 {members.map((m) => {
                                     const roleBusy = !!roleLoadingByUserId[m.id];
                                     const removingThis = !!removeLoadingByUserId[m.id];
-                                    const disabledAll = roleBusy || removingThis || !canManageMembers;
+                                    const isSelf = String(m.id).trim() === String(currentUserId).trim();
+                                    const isModeratorSelf = myRoleInGroup === "Moderator" && isSelf;
+                                    const disabledAll = roleBusy || removingThis || !canManageMembers || isModeratorSelf;
+                                    const roleColor = getRoleColor(m.role);
+                                    const roleLabel = getRoleLabel(m.role);
 
                                     return (
                                         <div
@@ -1156,10 +1184,11 @@ export function GroupSettingView() {
                                             </div>
 
                                             <div className="flex items-center justify-center gap-3 md:col-span-3">
-                                                {isOwner(m.role) ? (
-                                                    <div className="inline-flex h-10 w-42.5 items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 font-semibold text-orange-700 text-sm">
+                                                {isOwner(m.role) || isModeratorSelf ? (
+                                                    <div
+                                                        className={`inline-flex h-10 w-42.5 items-center justify-center gap-2 rounded-xl border px-3 font-semibold text-sm ${roleColor.border} ${roleColor.bg} ${roleColor.text}`}>
                                                         {getRoleIcon(m.role)}
-                                                        <span>{t("members.ownerRole")}</span>
+                                                        <span>{roleLabel}</span>
                                                     </div>
                                                 ) : (
                                                     <Select
@@ -1168,7 +1197,7 @@ export function GroupSettingView() {
                                                         onValueChange={(v) =>
                                                             onChangeRole(m.id, v as Exclude<MemberRole, "Owner">)
                                                         }>
-                                                        <SelectTrigger className="h-10 w-42.5 justify-between rounded-xl border border-gray-200 bg-white px-3 font-semibold text-gray-900 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 data-[state=open]:ring-2 data-[state=open]:ring-orange-500">
+                                                        <SelectTrigger className="h-10 w-42.5 justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 font-semibold text-gray-900 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 data-[state=open]:ring-2 data-[state=open]:ring-orange-500">
                                                             <SelectValue
                                                                 placeholder={t("members.selectPlaceholder")}
                                                                 className="text-left"
@@ -1189,7 +1218,7 @@ export function GroupSettingView() {
                                                                     className="relative cursor-pointer rounded-xl px-3 py-2.5 text-gray-900 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 data-highlighted:bg-gray-100 data-[state=checked]:font-bold">
                                                                     <div className="flex items-center gap-2">
                                                                         {getRoleIcon(r)}
-                                                                        <span>{r}</span>
+                                                                        <span>{getRoleLabel(r)}</span>
                                                                     </div>
                                                                 </SelectItem>
                                                             ))}
@@ -1199,7 +1228,7 @@ export function GroupSettingView() {
                                             </div>
 
                                             <div className="flex items-center justify-center gap-2 md:col-span-3">
-                                                {!isOwner(m.role) ? (
+                                                {!isOwner(m.role) && !isModeratorSelf ? (
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -1231,78 +1260,76 @@ export function GroupSettingView() {
                         </div>
                     </section>
 
-                    <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
-                        <div className="border-red-200 border-b px-6 py-5">
-                            <h2 className="font-bold text-red-700 text-sm">{t("dangerZone.title")}</h2>
-                            <p className="mt-0.5 text-red-600 text-xs">{t("dangerZone.subtitle")}</p>
-                        </div>
+                    <ApproveMemberSection groupId={groupId} canManage={canManageMembers} />
 
-                        <div className="px-6 py-6">
-                            <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                    <div>
-                                        <div className="font-bold text-red-700 text-sm">
-                                            {t("dangerZone.deleteGroup.label")}
+                    {canDelete ? (
+                        <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
+                            <div className="border-red-200 border-b px-6 py-5">
+                                <h2 className="font-bold text-red-700 text-sm">{t("dangerZone.title")}</h2>
+                                <p className="mt-0.5 text-red-600 text-xs">{t("dangerZone.subtitle")}</p>
+                            </div>
+
+                            <div className="px-6 py-6">
+                                <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                        <div>
+                                            <div className="font-bold text-red-700 text-sm">
+                                                {t("dangerZone.deleteGroup.label")}
+                                            </div>
+                                            <div className="mt-1 text-red-600 text-xs">
+                                                {t("dangerZone.deleteGroup.description")}
+                                            </div>
                                         </div>
-                                        <div className="mt-1 text-red-600 text-xs">
-                                            {t("dangerZone.deleteGroup.description")}
-                                        </div>
+
+                                        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    disabled={!canDelete}
+                                                    className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    {t("dangerZone.deleteGroup.button")}
+                                                </Button>
+                                            </AlertDialogTrigger>
+
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>
+                                                        {t("dangerZone.deleteGroup.confirmTitle")}
+                                                    </AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        {t("dangerZone.deleteGroup.confirmDescription")}
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel disabled={deleteLoading}>
+                                                        {t("removeMember.cancelButton")}
+                                                    </AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        disabled={deleteLoading || !canDelete}
+                                                        className="bg-red-600 hover:bg-red-700"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            void handleDelete();
+                                                        }}>
+                                                        {deleteLoading
+                                                            ? t("dangerZone.deleteGroup.deleting")
+                                                            : t("dangerZone.deleteGroup.confirmButton")}
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
-
-                                    <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-                                        <AlertDialogTrigger asChild>
-                                            <Button
-                                                disabled={!canDelete}
-                                                className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                {t("dangerZone.deleteGroup.button")}
-                                            </Button>
-                                        </AlertDialogTrigger>
-
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>
-                                                    {t("dangerZone.deleteGroup.confirmTitle")}
-                                                </AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    {t("dangerZone.deleteGroup.confirmDescription")}
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel disabled={deleteLoading}>
-                                                    {t("removeMember.cancelButton")}
-                                                </AlertDialogCancel>
-                                                <AlertDialogAction
-                                                    disabled={deleteLoading || !canDelete}
-                                                    className="bg-red-600 hover:bg-red-700"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        void handleDelete();
-                                                    }}>
-                                                    {deleteLoading
-                                                        ? t("dangerZone.deleteGroup.deleting")
-                                                        : t("dangerZone.deleteGroup.confirmButton")}
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
                                 </div>
 
-                                {!canDelete ? (
-                                    <div className="mt-4 text-red-700 text-xs">
-                                        {t("dangerZone.deleteGroup.onlyOwner")}
+                                {dangerError ? (
+                                    <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
+                                        {dangerError}
                                     </div>
                                 ) : null}
                             </div>
-
-                            {dangerError ? (
-                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
-                                    {dangerError}
-                                </div>
-                            ) : null}
-                        </div>
-                    </section>
+                        </section>
+                    ) : null}
                 </div>
             </Container>
 

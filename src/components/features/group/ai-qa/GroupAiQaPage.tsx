@@ -424,7 +424,7 @@ export default function GroupAiQaPage() {
     );
 
     return (
-        <div className="min-h-screen w-full">
+        <div className="w-full px-8 py-6">
             <Container className="rounded-2xl border border-[#EDEDED] bg-white px-6 py-4 shadow-sm">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <h2 className="font-semibold text-[#261E33] text-xl">{t("title")}</h2>
