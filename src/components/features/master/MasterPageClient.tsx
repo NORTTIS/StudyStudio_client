@@ -143,7 +143,15 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
             }}>
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.24),rgba(255,255,255,0.04))]" />
 
-            <div className="relative h-36 overflow-visible px-5 pt-5" style={{ background: gradient }}>
+            <div
+                className="relative h-36 overflow-visible px-5 pt-5"
+                style={{
+                    background: studio.bannerUrl
+                        ? `url(${studio.bannerUrl}) center/cover no-repeat`
+                        : gradient
+                }}
+            >
+                {studio.bannerUrl && <div className="absolute inset-0 bg-black/10" />}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.36),transparent_36%)]" />
                 <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
                 <motion.div
@@ -153,9 +161,20 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                 />
 
                 <div className="relative flex items-start justify-between gap-3">
-                    <div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
+                     {studio.alias ? (
+                                <span
+                                    className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+                                    style={{
+                                        backgroundColor: `white`,
+                                        borderColor: `${studio.colorHex ?? "#FF5F3D"}40`,
+                                        color: studio.colorHex ?? "#FF5F3D"
+                                    }}>
+                                    {studio.alias}
+                                </span>
+                            ) : (<div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
                         Studio
-                    </div>
+                    </div>)}
+                    
 
                     {studio.studioRole !== undefined && (
                         <motion.div whileHover={{ scale: 1.04 }}>
@@ -180,9 +199,14 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
             <div className="mt-10 p-5 pt-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <h3 className="truncate text-[19px] font-semibold text-[#261E33] transition duration-300 group-hover:text-[#FF5F3D]">
-                            {studio.name}
-                        </h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-[19px] font-semibold text-[#261E33] transition duration-300 group-hover:text-[#FF5F3D]">
+                                {studio.name}
+                            </h3>
+                        </div>
+                        {studio.tagline ? (
+                            <p className="mt-1 italic text-[#9B8CA8] text-xs">{studio.tagline}</p>
+                        ) : null}
                         <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#6F6B99]">{studio.description}</p>
                     </div>
 
@@ -448,6 +472,10 @@ export default function MasterPageClient({
         startDate?: string | null;
         endDate?: string | null;
         colorHex?: string | null;
+        avatarUrl?: string | null;
+        bannerUrl?: string | null;
+        tagline?: string | null;
+        alias?: string | null;
     }) => {
         if (!selectedStudio) return;
 
@@ -460,7 +488,11 @@ export default function MasterPageClient({
                     type: data.type as "personal" | "group",
                     startDate: data.startDate ?? null,
                     endDate: data.endDate ?? null,
-                    colorHex: data.colorHex ?? null
+                    colorHex: data.colorHex ?? null,
+                    avatarUrl: data.avatarUrl ?? null,
+                    bannerUrl: data.bannerUrl ?? null,
+                    tagline: data.tagline ?? null,
+                    alias: data.alias ?? null
                 },
                 locale
             );

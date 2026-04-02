@@ -323,7 +323,7 @@ function GroupActivityHeatmap({
     };
 
     return (
-        <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
+        <div className="rounded-[26px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
                     <h2 className="font-semibold text-lg text-slate-900">{t("heatmap.title")}</h2>
@@ -1676,7 +1676,7 @@ export default function GroupMemberAnalyticsPage() {
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
             </div>
 
-            <Container className="relative pt-8 pb-6 rounded-3xl border border-[#F3E4D7]">
+            <Container className="relative bg-transparent px-0 py-0 sm:px-0 lg:px-0">
                 <div className="space-y-5">
                     <SectionReveal delay={0.04}>
                         <section className="space-y-4">
@@ -1686,7 +1686,7 @@ export default function GroupMemberAnalyticsPage() {
                                     canViewPersonalPieChart ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-1"
                                 )}>
                                 {canViewPersonalPieChart && (
-                                    <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
+                                    <div className="rounded-[26px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                         <div className="mb-5">
                                             <h2 className="font-semibold text-lg text-slate-900">
                                                 {t("chart.myTaskDistribution")}
@@ -1728,7 +1728,7 @@ export default function GroupMemberAnalyticsPage() {
                                     </div>
                                 )}
 
-                                <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
+                                <div className="rounded-[26px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                     <div className="mb-5">
                                         <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
@@ -1772,7 +1772,7 @@ export default function GroupMemberAnalyticsPage() {
                                 </div>
                             </div>
 
-                            <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
+                            <div className="rounded-[30px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                 <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div>
                                         <h2 className="font-semibold text-lg text-slate-900">
@@ -1842,7 +1842,7 @@ export default function GroupMemberAnalyticsPage() {
 
                     <SectionReveal delay={0.08}>
                         <section className="space-y-4">
-                            <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
+                            <div className="rounded-[30px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
                                 <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div>
                                         <h2 className="font-semibold text-lg text-slate-900">

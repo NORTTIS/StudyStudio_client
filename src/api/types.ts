@@ -8431,6 +8431,8 @@ export interface components {
             endDate?: string | null;
             /** Format: int32 */
             groupCount?: number;
+            /** Format: int32 */
+            memberCount?: number;
             /** Format: uuid */
             ownerId?: string;
             /** Format: date-time */

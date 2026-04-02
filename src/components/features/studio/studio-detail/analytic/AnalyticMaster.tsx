@@ -625,7 +625,7 @@ function MemberProgressCard({ member, onClick }: { member: MemberProgressItem; o
                         <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-orange-100">
                             <span className="font-bold text-[10px] text-orange-600">%</span>
                         </div>
-                        <span>Contribution: {member.contributionScoreRate.toFixed(2)}%</span>
+                        <span>{t("member.contributionRate")}: {member.contributionScoreRate.toFixed(2)}%</span>
                     </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -758,7 +758,7 @@ function MemberDetailModal({
                     {member.contributionScoreRate !== undefined && (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                             <div className="mb-2 flex items-center justify-between text-sm">
-                                <span className="font-semibold text-slate-700">Tỷ lệ đóng góp</span>
+                                <span className="font-semibold text-slate-700">{t("member.contributionRate")}</span>
                                 <span className="font-bold text-orange-600">{member.contributionScoreRate}%</span>
                             </div>
                             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
@@ -1151,7 +1151,7 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.42, delay: 0.04 }}
-                className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                className="rounded-[28px] border border-white bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                 <SectionTitle title={t("sections.overview.title")} />
                 <div className="space-y-4">
                     {overview?.startDate && overview?.dueDate && (
@@ -1172,7 +1172,7 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.42, delay: 0.08 }}
-                className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                className="rounded-[28px] border border-white bg-white p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                 <SectionTitle title={t("sections.taskStatus.title")} />
                 <div className="mb-5">
                     <GroupSelect groups={groups} value={selectedGroupId} onChange={setSelectedGroupId} />
@@ -1226,7 +1226,7 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, delay: 0.12 }}
-                className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                className="rounded-[30px] border border-white/70 bg-white p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                 <SectionTitle title={t("sections.comparison.title")} />
                 <TimeRangeToolbar
                     mode={lineMode}
@@ -1273,7 +1273,7 @@ export default function AnalyticMaster({ studioRole, maxStorageMb }: AnalyticMas
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, delay: 0.24 }}
-                className="rounded-[30px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+                className="rounded-[30px] border border-white/70 bg-white p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
                 <SectionTitle
                     title={t("sections.memberProgress.title")}
                     description={t("sections.memberProgress.description")}

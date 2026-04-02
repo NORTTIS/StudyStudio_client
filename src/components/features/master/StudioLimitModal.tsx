@@ -35,7 +35,7 @@ export function StudioLimitModal({ isOpen, onClose, studioLimit }: StudioLimitMo
                             />
                         </svg>
                     </div>
-                    <h2 className="mb-2 font-bold text-[#261E33] text-xl">Đã đạt giới hạn studio</h2>
+                    <h2 className="mb-2 font-bold text-[#261E33] text-xl">{t("studioLimit.title")}</h2>
                     <p className="text-gray-600 text-sm">{t("modal.limitReached")}</p>
                 </div>
 
@@ -44,7 +44,7 @@ export function StudioLimitModal({ isOpen, onClose, studioLimit }: StudioLimitMo
                         {t("modal.upgradeButton")}
                     </Button>
                     <Button variant="outline" onClick={onClose}>
-                        Đóng
+                        {t("studioLimit.close")}
                     </Button>
                 </div>
             </div>

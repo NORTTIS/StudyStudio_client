@@ -23,5 +23,12 @@ export default async function StudioDetail({ params }: PageProps) {
             ? groupsResponse.data.studioGroups
             : [];
     console.log("Fetched studio groups:", groupsData);
-    return <StudioDetailPage initialStudio={studioData} initialGroups={groupsData} />;
+    return (
+        <StudioDetailPage
+            initialStudio={studioData}
+            initialGroups={groupsData}
+            bannerUrl={studioData?.bannerUrl ?? null}
+            colorHex={studioData?.colorHex ?? null}
+        />
+    );
 }

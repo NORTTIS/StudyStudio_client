@@ -102,19 +102,19 @@ export function BannerUpload({
     };
 
     return (
-        <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden border border-border bg-muted/50 group/upload">
+        <div className="relative w-[500px] h-[250px] rounded-xl overflow-hidden border border-border bg-muted/50 group/upload">
             {displayUrl ? (
                 <img
                     src={displayUrl}
-                    alt="Banner"
+                    alt="Ảnh nền"
                     className="w-full h-full object-cover"
                 />
             ) : (
                 <div
-                    className="w-full h-full flex items-center justify-center"
+                    className="w-[500px] h-[250px] flex items-center justify-center"
                     style={{ background: gradient }}
                 >
-                    <span className="text-white/60 text-sm font-medium">Chưa có banner</span>
+                    <span className="text-white/60 text-sm font-medium">Chưa có ảnh nền</span>
                 </div>
             )}
 

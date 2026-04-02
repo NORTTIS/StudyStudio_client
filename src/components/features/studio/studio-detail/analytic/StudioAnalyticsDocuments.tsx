@@ -333,7 +333,7 @@ export default function StudioAnalyticsDocuments({ groups, studioRole, maxStorag
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.28 }}
-            className="rounded-[28px] border border-white/70 bg-white/85 p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+            className="rounded-[28px] border border-white/70 bg-white p-6 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl">
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 {/* Section title */}
                 <div>

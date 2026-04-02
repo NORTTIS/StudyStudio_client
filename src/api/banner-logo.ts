@@ -16,7 +16,7 @@ import { type ApiResponse, apiDelete, apiFetch } from "./api-client";
 export type BannerEntityType = "group" | "studio";
 export type LogoEntityType = "studio";
 
-export const BANNER_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+export const BANNER_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 export const LOGO_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
 export const BANNER_ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"] as const;
@@ -139,7 +139,7 @@ export async function uploadToPresignedUrl(uploadUrl: string, file: File): Promi
 
 export function validateBannerFile(file: File): string | null {
     if (file.size > BANNER_MAX_SIZE_BYTES) {
-        return "File quá lớn. Kích thước tối đa là 10MB.";
+        return "File quá lớn. Kích thước tối đa là 5MB.";
     }
     if (!BANNER_ALLOWED_TYPES.includes(file.type as AllowedBannerType)) {
         return "Định dạng không hỗ trợ. Chỉ chấp nhận: JPG, PNG, WEBP.";

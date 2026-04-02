@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Clock3, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ const MOCK_PENDING_MEMBERS: PendingMember[] = [
 ];
 
 export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemberSectionProps) {
+    const t = useTranslations("GroupSettingView.approveMember");
     const [items, setItems] = useState<PendingMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -77,7 +79,7 @@ export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemb
                 setItems(MOCK_PENDING_MEMBERS);
             } catch {
                 if (!alive) return;
-                setError("Không tải được danh sách chờ phê duyệt");
+                setError(t("error"));
                 setItems([]);
             } finally {
                 if (!alive) return;
@@ -150,24 +152,24 @@ export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemb
                         <Clock3 className="h-4 w-4 text-gray-700" />
                     </div>
                     <div>
-                        <h2 className="font-bold text-gray-900 text-sm">Phê duyệt thành viên</h2>
+                        <h2 className="font-bold text-gray-900 text-sm">{t("title")}</h2>
                         <p className="mt-0.5 text-gray-500 text-xs">
-                            Duyệt hoặc từ chối các yêu cầu tham gia nhóm
+                            {t("subtitle")}
                         </p>
                     </div>
                 </div>
 
                 <div className="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700 text-xs">
-                    {items.length} chờ duyệt
+                    {t("pendingCount", { count: items.length })}
                 </div>
             </div>
 
             <div className="px-6 py-6">
                 {loading ? (
-                    <div className="text-gray-500 text-sm">Đang tải danh sách chờ phê duyệt...</div>
+                    <div className="text-gray-500 text-sm">{t("loading")}</div>
                 ) : items.length === 0 ? (
                     <div className="rounded-2xl border border-dashed px-4 py-10 text-center text-gray-500 text-sm">
-                        Hiện không có thành viên nào chờ phê duyệt
+                        {t("empty")}
                     </div>
                 ) : (
                     <div className="divide-y rounded-2xl border">
@@ -188,13 +190,13 @@ export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemb
                                         <div className="mt-2 flex flex-wrap items-center gap-2">
                                             {item.requestedRole ? (
                                                 <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 text-xs">
-                                                    Vai trò: {item.requestedRole}
+                                                    {t("requestedRole", { role: item.requestedRole })}
                                                 </span>
                                             ) : null}
 
                                             {item.requestedAt ? (
                                                 <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 text-xs">
-                                                    Yêu cầu lúc: {item.requestedAt}
+                                                    {t("requestedAt", { time: item.requestedAt })}
                                                 </span>
                                             ) : null}
                                         </div>
@@ -207,7 +209,7 @@ export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemb
                                             className="h-10 gap-1.5 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700"
                                         >
                                             <Check className="h-4 w-4" />
-                                            {approving ? "Đang phê duyệt..." : "Phê duyệt"}
+                                            {approving ? t("approving") : t("approve")}
                                         </Button>
 
                                         <Button
@@ -217,7 +219,7 @@ export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemb
                                             className="h-10 gap-1.5 rounded-xl border-red-200 px-4 font-semibold text-red-600 text-sm hover:bg-red-50"
                                         >
                                             <X className="h-4 w-4" />
-                                            {rejecting ? "Đang từ chối..." : "Từ chối"}
+                                            {rejecting ? t("rejecting") : t("reject")}
                                         </Button>
                                     </div>
                                 </div>

@@ -38,11 +38,16 @@ const mapStudioToUI = (studio: StudioResponse): StudioUI => ({
     name: studio.studioName || "",
     description: studio.description || "",
     type: "group",
-    memberCount: 0,
+    memberCount: studio.memberCount ?? 0,
     groupCount: studio.groupCount || 0,
     completionProgress: 0,
     createdAt: studio.createdAt || "",
-    updatedAt: studio.updatedAt || ""
+    updatedAt: studio.updatedAt || "",
+    avatarUrl: studio.avatarUrl ?? null,
+    colorHex: studio.colorHex ?? null,
+    bannerUrl: studio.bannerUrl ?? null,
+    tagline: studio.tagline ?? null,
+    alias: studio.alias ?? null
 });
 
 export default async function MasterPage() {

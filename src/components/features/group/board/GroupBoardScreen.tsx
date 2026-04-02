@@ -1488,7 +1488,7 @@ function AddColumnInline({
     }
 
     return (
-        <div className="rounded-xl border border-zinc-200/60 bg-white/40 p-3 backdrop-blur-sm">
+        <div className="rounded-xl border border-zinc-200/60 bg-white p-3 backdrop-blur-sm">
             <input
                 ref={inputRef}
                 value={title}
@@ -1639,7 +1639,7 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div className="rounded-xl border border-zinc-200/60 bg-white/40">
+        <div className="rounded-xl border border-zinc-200/60 bg-white">
             <div
                 ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
                 {...(headerDragProps?.attributes ?? {})}
@@ -1986,7 +1986,7 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     const t = useTranslations("GroupBoardScreen");
     return (
         <div className="min-w-[300px] max-w-[300px]">
-            <div className="rounded-xl border border-zinc-200/60 bg-white/40 backdrop-blur-sm shadow-xl">
+            <div className="rounded-xl border border-zinc-200/60 bg-white backdrop-blur-sm shadow-xl">
                 <div className="rounded-t-xl bg-white/60 px-3 pt-3 pb-2">
                     <p className="truncate font-bold text-sm text-zinc-900">{col.title}</p>
                     <p className="text-[11px] text-zinc-500">{t("movingStatus")}</p>

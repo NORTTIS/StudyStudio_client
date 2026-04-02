@@ -16,6 +16,7 @@ import {
 } from "@/api/studios";
 import type { components } from "@/api/types";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
+import { GroupBannerBackground } from "@/components/features/group/GroupBannerBackground";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { mapRole } from "@/components/features/group/group.api";
 import { RolePill } from "@/components/features/group/RolePill";
@@ -73,6 +74,8 @@ interface TransformedGroup {
 interface StudioDetailPageProps {
     initialStudio: StudioResponse | null;
     initialGroups: GroupCardDto[];
+    bannerUrl?: string | null;
+    colorHex?: string | null;
 }
 
 function FloatingOrb({ className }: { className: string }) {
@@ -122,7 +125,7 @@ function EmptyBlock({ title, subtitle }: { title: string; subtitle: string }) {
     );
 }
 
-export default function StudioDetailPage({ initialStudio, initialGroups }: StudioDetailPageProps) {
+export default function StudioDetailPage({ initialStudio, initialGroups, bannerUrl, colorHex }: StudioDetailPageProps) {
     const params = useParams();
     const router = useRouter();
     const t = useTranslations("MasterPage");
@@ -448,15 +451,21 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
             <div className="flex h-full">
                 <DashboardSidebar />
 
-                <main className="relative h-screen flex-1 overflow-y-auto overflow-x-hidden">
-                    <FloatingOrb className="left-[-120px] top-[-40px] h-72 w-72 bg-orange-200/25" />
-                    <FloatingOrb className="right-[-100px] top-[12%] h-80 w-80 bg-violet-200/20" />
-                    <FloatingOrb className="bottom-[-120px] left-[15%] h-80 w-80 bg-sky-200/15" />
+                {/* Relative container — banner only covers content area, not sidebar */}
+                <div className="relative flex-1 overflow-hidden">
+                    {/* Banner — scoped to content area only */}
+                    {bannerUrl && (
+                        <div className="pointer-events-none absolute inset-0 z-0">
+                            <GroupBannerBackground bannerUrl={bannerUrl} colorHex={colorHex ?? null} />
+                        </div>
+                    )}
 
-                    <Header userProfile={userProfile} />
+                    <main className="relative z-10 flex h-full flex-col overflow-y-auto overflow-x-hidden">
 
-                    <div className="px-6 py-6">
-                        <motion.div
+                        <Header userProfile={userProfile} />
+
+                        <div className="px-6 py-6">
+                            <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="relative mb-6 overflow-hidden rounded-[36px] border border-white/70 bg-white/72 px-6 py-7 shadow-[0_28px_90px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
@@ -515,15 +524,34 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                         </motion.div>
 
                                         <div className="min-w-0">
-                                            <div className="flex flex-wrap items-center gap-3">
+                                            <div className="flex flex-wrap items-center gap-2.5">
                                                 <h1 className="truncate text-2xl font-bold text-[#261E33] sm:text-[30px]">
                                                     {studio.name}
                                                 </h1>
+
+                                                {studio.alias?.trim() ? (
+                                                    <span
+                                                        className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                                                        style={{
+                                                            backgroundColor: `${studio.colorHex ?? "#FF5F3D"}18`,
+                                                            borderColor: `${studio.colorHex ?? "#FF5F3D"}40`,
+                                                            color: studio.colorHex ?? "#FF5F3D"
+                                                        }}>
+                                                        {studio.alias}
+                                                    </span>
+                                                ) : null}
+
                                                 <RolePill role={isStudioOwner ? "owner" : "member"} />
                                             </div>
 
+                                            {studio.tagline?.trim() ? (
+                                                <p className="mt-1 italic text-[#9B8CA8] text-sm">
+                                                    {studio.tagline}
+                                                </p>
+                                            ) : null}
+
                                             {studio.description?.trim() ? (
-                                                <p className="mt-2 max-w-3xl text-sm leading-7 text-[#6F6B99]">
+                                                <p className="mt-1 max-w-3xl text-sm leading-7 text-[#6F6B99]">
                                                     {studio.description}
                                                 </p>
                                             ) : null}
@@ -1130,26 +1158,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
                                     className="space-y-6">
-                                    {/* Banner thumbnail strip */}
-                                    <div className="overflow-hidden rounded-[28px] border border-white/80 bg-white/88 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
-                                        <p className="mb-2 text-xs font-semibold text-gray-700">
-                                            {t("detail.settings.bannerLabel") ?? "Ảnh bìa"}
-                                        </p>
-                                        <BannerUpload
-                                            entityType="studio"
-                                            entityId={studio.id}
-                                            bannerUrl={isEditing ? editBannerUrl : studio.bannerUrl}
-                                            colorHex={editColorHex}
-                                            onUploadSuccess={(url) => setEditBannerUrl(url)}
-                                            onDeleteSuccess={() => setEditBannerUrl(null)}
-                                            onError={(msg) =>
-                                                toast({ description: msg, variant: "destructive" })
-                                            }
-                                            disabled={!isEditing}
-                                        />
-                                    </div>
+                                    
 
-                                    <section className="overflow-hidden rounded-[28px] border border-white/80 bg-white/88 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
+                                    <section className="overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
                                         <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
                                             <div className="flex items-start gap-3">
                                                 <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100">
@@ -1209,28 +1220,78 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
 
                                         <div className="px-6 py-6">
                                             {/* Avatar + Color row */}
-                                            <div className="mb-6 flex items-end gap-4">
-                                                <AvatarUpload
-                                                    entityType="studio"
-                                                    entityId={studio.id}
-                                                    avatarUrl={isEditing ? editAvatarUrl : studio.avatarUrl}
-                                                    colorHex={editColorHex}
-                                                    onUploadSuccess={(url) => setEditAvatarUrl(url)}
-                                                    onError={(msg) =>
-                                                        toast({ description: msg, variant: "destructive" })
-                                                    }
-                                                    disabled={!isEditing}
-                                                />
-                                                <div className="rounded-[24px] border border-[#F1EDF7] bg-[#FCFBFE] p-4 shadow-sm">
-                                                    <ColorPicker
-                                                        label={t("detail.settings.primaryColor")}
-                                                        value={
-                                                            isEditing ? editColorHex : (studio.colorHex ?? "#FF5F3D")
+                                            <div className="mb-6 flex items-center gap-4">
+                                                <div className="flex flex-col gap-1">
+                                                    <AvatarUpload
+                                                        entityType="studio"
+                                                        entityId={studio.id}
+                                                        avatarUrl={isEditing ? editAvatarUrl : studio.avatarUrl}
+                                                        colorHex={editColorHex}
+                                                        onUploadSuccess={(url) => setEditAvatarUrl(url)}
+                                                        onError={(msg) =>
+                                                            toast({ description: msg, variant: "destructive" })
                                                         }
-                                                        onChange={isEditing ? setEditColorHex : undefined}
+                                                        disabled={!isEditing}
+                                                    />
+                                                    <div className="rounded-[24px] border border-[#F1EDF7] bg-[#FCFBFE] p-4 shadow-sm">
+                                                        <ColorPicker
+                                                            label={t("detail.settings.primaryColor")}
+                                                            value={
+                                                                isEditing ? editColorHex : (studio.colorHex ?? "#FF5F3D")
+                                                            }
+                                                            onChange={isEditing ? setEditColorHex : undefined}
+                                                            disabled={!isEditing}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-1 flex-col gap-4">
+                                                    <AliasInput
+                                                        value={editAlias}
+                                                        onChange={isEditing ? setEditAlias : undefined}
+                                                        disabled={!isEditing}
+                                                        label={t("detail.settings.aliasLabel") ?? "Biệt danh"}
+                                                        placeholder={t("detail.settings.aliasPlaceholder") ?? "VD: THPT Hoang Dieu"}
+                                                        colorHex={editColorHex}
+                                                    />
+
+                                                    <div>
+                                                        <label
+                                                            htmlFor="studio-tagline-input"
+                                                            className="text-xs font-semibold text-gray-700">
+                                                            {t("detail.settings.taglineLabel") ?? "Slogan"}
+                                                        </label>
+                                                        <Input
+                                                            id="studio-tagline-input"
+                                                            disabled={!isEditing}
+                                                            value={editTagline}
+                                                            onChange={(e) => setEditTagline(e.target.value.slice(0, 50))}
+                                                            maxLength={50}
+                                                            placeholder={t("detail.settings.taglinePlaceholder") ?? "VD: Học là thích - Yêu là nhớ"}
+                                                            className="mt-2 h-11 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
+                                                        />
+                                                        <p className="mt-1 text-right text-gray-400 text-xs">{editTagline.length}/50</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Banner thumbnail strip */}
+                                                <div className="overflow-hidden rounded-[28px] border border-white/80 bg-white/88 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur">
+                                                    <p className="mb-2 text-xs font-semibold text-gray-700">
+                                                        {t("detail.settings.bannerLabel") ?? "Ảnh bìa"}
+                                                    </p>
+                                                    <BannerUpload
+                                                        entityType="studio"
+                                                        entityId={studio.id}
+                                                        bannerUrl={isEditing ? editBannerUrl : studio.bannerUrl}
+                                                        colorHex={editColorHex}
+                                                        onUploadSuccess={(url) => setEditBannerUrl(url)}
+                                                        onDeleteSuccess={() => setEditBannerUrl(null)}
+                                                        onError={(msg) =>
+                                                            toast({ description: msg, variant: "destructive" })
+                                                        }
                                                         disabled={!isEditing}
                                                     />
                                                 </div>
+                                                
                                             </div>
 
                                             <div className="grid grid-cols-1 gap-5">
@@ -1273,32 +1334,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                    <AliasInput
-                                                        value={editAlias}
-                                                        onChange={isEditing ? setEditAlias : undefined}
-                                                        disabled={!isEditing}
-                                                        label={t("detail.settings.aliasLabel") ?? "Biệt danh"}
-                                                        placeholder={t("detail.settings.aliasPlaceholder") ?? "VD: THPT Hoang Dieu"}
-                                                    />
-
-                                                    <div>
-                                                        <label
-                                                            htmlFor="studio-tagline-input"
-                                                            className="text-xs font-semibold text-gray-700">
-                                                            {t("detail.settings.taglineLabel") ?? "Tagline"}
-                                                        </label>
-                                                        <Input
-                                                            id="studio-tagline-input"
-                                                            disabled={!isEditing}
-                                                            value={editTagline}
-                                                            onChange={(e) => setEditTagline(e.target.value)}
-                                                            maxLength={200}
-                                                            placeholder={t("detail.settings.taglinePlaceholder") ?? "VD: Học là thích - Yêu là nhớ"}
-                                                            className="mt-2 h-11 rounded-2xl border-gray-200 bg-white shadow-sm focus-visible:border-orange-500 focus-visible:ring-orange-500 disabled:opacity-70"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                
 
                                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                     <div>
@@ -1485,8 +1521,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                     </div>
                 </main>
             </div>
+        </div>
 
-            <InviteMemberModal
+        <InviteMemberModal
                 open={isInviteModalOpen}
                 onClose={() => setIsInviteModalOpen(false)}
                 groupName={studio?.name || t("group")}

@@ -150,6 +150,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const [error, setError] = React.useState<string>("");
     const [groupTagline, setGroupTagline] = React.useState<string>("");
     const [groupAlias, setGroupAlias] = React.useState<string>("");
+    const [groupColorHex, setGroupColorHex] = React.useState<string>("#FF5F3D");
 
     const [inviteOpen, setInviteOpen] = React.useState(false);
     const [hasModerator, setHasModerator] = React.useState(false);
@@ -241,6 +242,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 setStudioName(data?.studioName || "");
                 setGroupTagline(data?.tagline || "");
                 setGroupAlias(data?.alias || "");
+                setGroupColorHex(data?.colorHex || "#FF5F3D");
 
                 const c = Number(data?.memberCount ?? 0);
                 setMemberCount(Number.isFinite(c) ? c : 0);
@@ -496,7 +498,12 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                                className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">
+                                                className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                                                style={{
+                                                    backgroundColor: `${groupColorHex}18`,
+                                                    borderColor: `${groupColorHex}40`,
+                                                    color: groupColorHex
+                                                }}>
                                                 {groupAlias}
                                             </motion.span>
                                         ) : null}
