@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import type { StudioMemberResponse } from "@/api/studios";
+import { RolePill } from "@/components/features/group/RolePill";
+import type { GroupRole } from "@/components/features/group/types";
 
 interface MemberDetailModalProps {
     member: StudioMemberResponse | null;
@@ -25,45 +27,20 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
             .slice(0, 2);
     };
 
-    const getRoleLabel = (role: number | null | undefined) => {
-        // StudioRole: 0 = owner, 1 = member
+    const toGroupRole = (role: number | null | undefined): GroupRole => {
         switch (role) {
             case 0:
-                return t("studioRole.owner");
+                return "owner";
             case 1:
-                return t("studioRole.member");
-            default:
-                return t("studioRole.member");
-        }
-    };
-
-    const getRoleBadgeStyle = (role: number | null | undefined) => {
-        // StudioRole: 0 = owner, 1 = member
-        switch (role) {
-            case 0:
-                return "bg-gradient-to-r from-orange-500 to-red-600 text-white";
-            case 1:
-                return "bg-slate-100 text-slate-600";
-            default:
-                return "bg-slate-100 text-slate-600";
-        }
-    };
-
-    const getGroupRoleLabel = (role: number | null | undefined) => {
-        // GroupRole: 0=Owner, 1=Moderator, 2=Member, 3=Commenter, 4=Viewer
-        switch (role) {
-            case 0:
-                return t("groupRole.owner");
-            case 1:
-                return t("groupRole.moderator");
+                return "moderator";
             case 2:
-                return t("groupRole.member");
+                return "member";
             case 3:
-                return t("groupRole.commenter");
+                return "commenter";
             case 4:
-                return t("groupRole.viewer");
+                return "viewer";
             default:
-                return t("groupRole.member");
+                return "member";
         }
     };
 
@@ -96,16 +73,9 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
                     <div className="min-w-0 flex-1">
                         <h3 className="truncate font-semibold text-lg text-slate-800">{member.userName}</h3>
                         <p className="truncate text-slate-500 text-sm">{member.email}</p>
-                        {member.userId === studioOwnerId ? (
-                            <span className="mt-2 inline-block rounded-full bg-gradient-to-r from-orange-500 to-red-600 px-3 py-1 font-medium text-white text-xs">
-                                {t("studioRole.owner")}
-                            </span>
-                        ) : (
-                            <span
-                                className={`mt-2 inline-block rounded-full px-3 py-1 font-medium text-xs ${getRoleBadgeStyle(member.studioRole)}`}>
-                                {getRoleLabel(member.studioRole)}
-                            </span>
-                        )}
+                        <div className="mt-2">
+                            <RolePill role={member.userId === studioOwnerId ? "owner" : "member"} />
+                        </div>
                     </div>
                 </div>
 
@@ -135,9 +105,7 @@ export function MemberDetailModal({ member, studioOwnerId, isOpen, onClose }: Me
                                         </div>
                                         <span className="font-medium text-slate-700 text-sm">{group.groupName}</span>
                                     </div>
-                                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-600 text-xs">
-                                        {getGroupRoleLabel(group.groupRole)}
-                                    </span>
+                                    <RolePill role={toGroupRole(group.groupRole)} />
                                 </div>
                             ))}
                         </div>

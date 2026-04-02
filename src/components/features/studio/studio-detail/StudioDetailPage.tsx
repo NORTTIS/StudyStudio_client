@@ -6,7 +6,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createStudioInviteLink, sendStudioInviteEmail } from "@/api/studio-invites";
-import { deleteStudio, getStudioMembers, type StudioMemberResponse, type StudioUI, updateStudio } from "@/api/studios";
+import {
+    deleteStudio,
+    getStudioMembers,
+    leaveStudio,
+    type StudioMemberResponse,
+    type StudioUI,
+    updateStudio
+} from "@/api/studios";
 import type { components } from "@/api/types";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
@@ -158,6 +165,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     ]);
     const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
     const isStudioOwner = initialStudio?.studioRole === 0;
+    const canLeaveStudio = initialStudio?.studioRole === 1;
 
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState("");
@@ -170,6 +178,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
     const [editBannerUrl, setEditBannerUrl] = useState<string | null>(null);
     const [editTagline, setEditTagline] = useState("");
     const [editAlias, setEditAlias] = useState("");
+    const [isLeavingStudio, setIsLeavingStudio] = useState(false);
 
     const clampStudioName = useCallback((value: string) => value.slice(0, STUDIO_NAME_MAX_LENGTH), []);
     const clampStudioDescription = useCallback((value: string) => value.slice(0, STUDIO_DESCRIPTION_MAX_LENGTH), []);
@@ -292,6 +301,28 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
         } catch (error) {
             console.error("Delete studio failed:", error);
             toast({ description: t("deleteModal.error"), variant: "destructive" });
+        }
+    };
+
+    const handleLeaveStudio = async () => {
+        if (!studio || isLeavingStudio || !canLeaveStudio) return;
+
+        setIsLeavingStudio(true);
+        try {
+            const result = await leaveStudio(studio.id, locale);
+
+            if (result.status === "success") {
+                toast({ description: t("detail.leave.success"), variant: "success" });
+                router.push(`/${locale}/master`);
+                return;
+            }
+
+            toast({ description: t("detail.leave.error"), variant: "destructive" });
+        } catch (error) {
+            console.error("Leave studio failed:", error);
+            toast({ description: t("detail.leave.error"), variant: "destructive" });
+        } finally {
+            setIsLeavingStudio(false);
         }
     };
 
@@ -488,9 +519,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                                 <h1 className="truncate text-2xl font-bold text-[#261E33] sm:text-[30px]">
                                                     {studio.name}
                                                 </h1>
-                                                <span className="rounded-full border border-orange-100/80 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700 shadow-sm">
-                                                    {t("detail.workspaceBadge")}
-                                                </span>
+                                                <RolePill role={isStudioOwner ? "owner" : "member"} />
                                             </div>
 
                                             {studio.description?.trim() ? (
@@ -500,6 +529,57 @@ export default function StudioDetailPage({ initialStudio, initialGroups }: Studi
                                             ) : null}
                                         </div>
                                     </div>
+
+                                    {canLeaveStudio && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="h-10 shrink-0 rounded-2xl border-red-200 bg-white/90 px-4 text-red-600 shadow-sm hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                                                    disabled={isLeavingStudio}>
+                                                    <svg
+                                                        className="mr-2 h-4 w-4"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M17 16l4-4m0 0l-4-4m4 4H9m4 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"
+                                                        />
+                                                    </svg>
+                                                    {isLeavingStudio
+                                                        ? t("detail.leave.leaving")
+                                                        : t("detail.leave.button")}
+                                                </Button>
+                                            </AlertDialogTrigger>
+
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>
+                                                        {t("detail.leave.confirmTitle")}
+                                                    </AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        {t("detail.leave.confirmDescription")}
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>{t("deleteModal.cancel")}</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        className="bg-red-600 hover:bg-red-700"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleLeaveStudio();
+                                                        }}>
+                                                        {t("detail.leave.confirmButton")}
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

@@ -2,6 +2,15 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import {
     ArrowLeft,
     BarChart3,
     Calendar,
@@ -9,6 +18,7 @@ import {
     LayoutGrid,
     List,
     MessageSquare,
+    LogOut,
     Settings,
     Sparkles,
     Trash2,
@@ -23,6 +33,7 @@ import { twMerge } from "tailwind-merge";
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { useToast } from "@/components/ui/use-toast";
+import { leaveGroup } from "../group.api";
 import { RolePill } from "../RolePill";
 import type { GroupRole } from "../types";
 import { components } from "@/api/types";
@@ -126,6 +137,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const { toast } = useToast();
     const tCommon = useTranslations("Common");
     const t = useTranslations("GroupStudioHeader");
+    const tGroupCard = useTranslations("GroupCard");
 
     const groupId = groupIdProp || searchParams.get("id") || extractGroupIdFromPath(pathname || "") || "";
 
@@ -141,6 +153,8 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
     const [inviteOpen, setInviteOpen] = React.useState(false);
     const [hasModerator, setHasModerator] = React.useState(false);
+    const [showLeaveDialog, setShowLeaveDialog] = React.useState(false);
+    const [isLeaving, setIsLeaving] = React.useState(false);
 
     const tabs: Tab[] = React.useMemo(
         () => [
@@ -298,6 +312,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
 
     const curPath = stripLocale(pathname || "");
     const canInvite = userRole === "owner" || userRole === "moderator";
+    const canLeaveGroup = userRole !== "owner";
     const apiBase = getApiBase();
 
     const visibleTabs = React.useMemo(() => {
@@ -400,6 +415,24 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         return false;
     };
 
+    const handleConfirmLeave = async () => {
+        if (!groupId) return;
+
+        try {
+            setIsLeaving(true);
+            await leaveGroup(groupId);
+            setShowLeaveDialog(false);
+            router.push(`/${locale}/group`);
+        } catch (e: unknown) {
+            toast({
+                description: e instanceof Error ? e.message : tGroupCard("leaveGroup"),
+                variant: "destructive"
+            });
+        } finally {
+            setIsLeaving(false);
+        }
+    };
+
     return (
         <Container className="bg-transparent">
             <motion.div
@@ -408,10 +441,10 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 className="relative w-full overflow-hidden rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6">
                 <div className="mb-6 flex flex-col justify-between gap-4">
-                    
+
 
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                        
+
                         <div className="min-w-0">
                             <AnimatePresence mode="wait">
                                 {studioName ? (
@@ -435,7 +468,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-linear-to-r hover:from-orange-500 hover:to-red-600 hover:text-white hover:shadow-md hover:shadow-orange-200">
                                         <ArrowLeft className="h-4 w-4" />
                                     </Link>
-                                    </div>
+                                </div>
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-linear-to-br from-orange-500 via-orange-500 to-red-600 shadow-md shadow-orange-200">
                                     {groupAvatarUrl ? (
                                         <img
@@ -537,6 +570,21 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                 </span>
                             </motion.div>
 
+                            {canLeaveGroup ? (
+                                <motion.button
+                                    type="button"
+                                    onClick={() => setShowLeaveDialog(true)}
+                                    whileHover={{ y: -1 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    transition={{ duration: 0.18 }}
+                                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 shadow-sm transition-colors duration-200 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-200"
+                                    aria-label={tGroupCard("leaveGroup")}
+                                    title={tGroupCard("leaveGroup")}
+                                    disabled={isLeaving}>
+                                    <LogOut className="h-4 w-4" />
+                                </motion.button>
+                            ) : null}
+
                             {canInvite ? (
                                 <motion.button
                                     type="button"
@@ -623,6 +671,26 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                         if (!ok) return;
                     }}
                 />
+
+                <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>{tGroupCard("leaveConfirmTitle")}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {tGroupCard("leaveConfirmDescription", { groupName: groupName || "" })}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="flex justify-end gap-3">
+                            <AlertDialogCancel>{tGroupCard("cancel")}</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleConfirmLeave}
+                                disabled={isLeaving}
+                                className="bg-red-600 hover:bg-red-700">
+                                {isLeaving ? tGroupCard("leaving") : tGroupCard("confirmLeave")}
+                            </AlertDialogAction>
+                        </div>
+                    </AlertDialogContent>
+                </AlertDialog>
             </motion.div>
         </Container>
     );

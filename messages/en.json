@@ -883,6 +883,15 @@
             "invite": {
                 "createLinkError": "Failed to create invite link. Please try again."
             },
+            "leave": {
+                "button": "Leave studio",
+                "leaving": "Leaving...",
+                "confirmTitle": "Confirm leaving studio",
+                "confirmDescription": "You will leave this studio and all groups under it. You can only rejoin if you are invited again.",
+                "confirmButton": "Confirm leave",
+                "success": "You have left the studio successfully.",
+                "error": "Failed to leave studio. Please try again."
+            },
             "settings": {
                 "title": "Studio settings",
                 "subtitle": "Adjust studio information and configuration",
@@ -1845,6 +1854,12 @@
         "addFavorite": "Add to favorites",
         "menuLabel": "Options menu",
         "leaveGroup": "Leave group",
+        "leaveConfirmTitle": "Confirm leave group",
+        "leaveConfirmDescription": "Are you sure you want to leave \"{groupName}\"?",
+        "confirmLeave": "Leave group",
+        "thisGroup": "this group",
+        "cancel": "Cancel",
+        "leaving": "Leaving...",
         "createdBy": "Created by",
         "members": "members",
         "tasks": "tasks"

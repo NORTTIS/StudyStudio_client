@@ -4141,6 +4141,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/group/member/{groupId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LeaveGroupResponseApiResponse"];
+                        "text/json": components["schemas"]["LeaveGroupResponseApiResponse"];
+                        "text/plain": components["schemas"]["LeaveGroupResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/group/member/assign-role": {
         parameters: {
             query?: never;
@@ -5498,6 +5537,45 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LeaveStudioResponseApiResponse"];
+                        "text/json": components["schemas"]["LeaveStudioResponseApiResponse"];
+                        "text/plain": components["schemas"]["LeaveStudioResponseApiResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -7459,6 +7537,32 @@ export interface components {
         HourlyActivityResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["HourlyActivityResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        LeaveGroupResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            /** Format: date-time */
+            leftAt?: string;
+        };
+        LeaveGroupResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["LeaveGroupResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        LeaveStudioResponse: {
+            /** Format: date-time */
+            leftAt?: string;
+            /** Format: uuid */
+            studioId?: string;
+            studioName?: string | null;
+        };
+        LeaveStudioResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["LeaveStudioResponse"];
             message?: string | null;
             status?: string | null;
         };
