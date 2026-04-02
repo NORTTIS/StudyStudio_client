@@ -1357,7 +1357,7 @@ export default function Trashed() {
 
     if (loading) {
         return (
-            <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
+            <div className="min-h-[calc(100vh-0px)] bg-transparent px-8 py-6">
                 <Container>
                     <div className="pt-8">
                         <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
@@ -1396,7 +1396,7 @@ export default function Trashed() {
     }
 
     return (
-        <div className="min-h-[calc(100vh-0px)] bg-zinc-50">
+        <div className="min-h-[calc(100vh-0px)] bg-transparent px-8 py-6">
             <ConfirmModal
                 open={confirmRestore.open}
                 title={t("confirm.restore.title")}
@@ -1419,8 +1419,8 @@ export default function Trashed() {
                 onCancel={() => setConfirmDelete({ open: false, taskId: null, taskName: "" })}
             />
 
-            <Container>
-                <div className="pt-8 pb-8">
+            <Container className="rounded-3xl border border-[#F3E4D7]">
+                <div className="pt-8 pb-8 ">
                     <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
                         <h1 className="font-bold text-[40px] text-zinc-900 tracking-tight">{t("title")}</h1>
 

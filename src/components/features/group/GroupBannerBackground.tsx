@@ -26,19 +26,11 @@ export function GroupBannerBackground({ bannerUrl, colorHex }: GroupBannerBackgr
         );
     }
 
-    if (colorHex) {
-        return (
-            <div
-                className="pointer-events-none absolute inset-0 z-0"
-                style={{ background: hexToGradient(colorHex) }}
-            />
-        );
-    }
 
     return (
         <div
             className="pointer-events-none absolute inset-0 z-0"
-            style={{ background: hexToGradient("#FF5F3D") }}
+            style={{ background: "#EEEEEE" }}
         />
     );
 }

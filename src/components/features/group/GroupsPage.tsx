@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronDown, FolderKanban, Layers, LayoutGrid, List, Plus, Sparkles, Star, Users, Users2 } from "lucide-react";
+import { ChevronDown, Filter, FolderKanban, Layers, LayoutGrid, List, Plus, Search, Sparkles, Star, Users, Users2, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { GroupCard } from "./GroupCard";
 import { addFavourite, fetchGroupsPageData, mapRole, removeFavourite } from "./group.api";
@@ -58,6 +59,19 @@ function uniqueByIdKeepFirst(list: GroupCardDto[]) {
         out.push(g);
     }
     return out;
+}
+
+function getGroupSearchText(group: GroupCardDto) {
+    const candidate = group as Record<string, unknown>;
+    return [candidate.name, candidate.groupName, candidate.title, candidate.description]
+        .map((value) => String(value ?? "").trim().toLowerCase())
+        .join(" ");
+}
+
+function filterGroupsBySearch(groups: GroupCardDto[], query: string) {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return groups;
+    return groups.filter((group) => getGroupSearchText(group).includes(normalized));
 }
 
 function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -203,6 +217,8 @@ export function GroupsPage() {
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
     const [openCreate, setOpenCreate] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [groupTypeFilter, setGroupTypeFilter] = useState<"all" | "independent" | "managed" | "joined">("all");
 
     const [expandFav, setExpandFav] = useState(false);
     const [expandAll, setExpandAll] = useState(false);
@@ -262,9 +278,25 @@ export function GroupsPage() {
 
     const ownedIndependent = useMemo(() => independent.filter((g) => mapRole(g.role) === "owner"), [independent]);
 
+    const filteredFavorites = useMemo(() => filterGroupsBySearch(favorites, searchQuery), [favorites, searchQuery]);
+    const filteredOwnedGroups = useMemo(() => filterGroupsBySearch(ownedGroups, searchQuery), [ownedGroups, searchQuery]);
+    const filteredOwnedManaged = useMemo(() => {
+        if (groupTypeFilter !== "all" && groupTypeFilter !== "managed") return [];
+        return filterGroupsBySearch(ownedManaged, searchQuery);
+    }, [groupTypeFilter, ownedManaged, searchQuery]);
+    const filteredOwnedIndependent = useMemo(() => {
+        if (groupTypeFilter !== "all" && groupTypeFilter !== "independent") return [];
+        return filterGroupsBySearch(ownedIndependent, searchQuery);
+    }, [groupTypeFilter, ownedIndependent, searchQuery]);
+    const filteredJoined = useMemo(() => {
+        if (groupTypeFilter !== "all" && groupTypeFilter !== "joined") return [];
+        return filterGroupsBySearch(joined, searchQuery);
+    }, [groupTypeFilter, joined, searchQuery]);
+
     const maxGroups = usage.max > 0 ? usage.max : 5;
     const currentGroupsCount = usage.current > 0 ? usage.current : ownedGroups.length;
     const limitReached = currentGroupsCount >= maxGroups;
+    const isAllFilter = groupTypeFilter === "all";
 
     const onToggleStar = async (groupIdRaw: string) => {
         const groupId = normId(groupIdRaw);
@@ -310,9 +342,9 @@ export function GroupsPage() {
         <>
             <div className="relative -mt-px min-h-screen overflow-hidden bg-white px-3 pt-0 pb-4 md:px-4 xl:px-5">
                 <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,#FFF8F2_0%,#FFF6F0_28%,#FAF5FF_64%,#F8FAFC_100%)]" />
-                <AmbientOrb className="left-[-90px] top-[-60px] h-72 w-72 bg-orange-200/35" />
-                <AmbientOrb className="right-[-80px] top-[10%] h-80 w-80 bg-amber-200/30" />
-                <AmbientOrb className="left-[28%] bottom-[-100px] h-80 w-80 bg-purple-200/25" />
+                <AmbientOrb className="top-[-60px] left-[-90px] h-72 w-72 bg-orange-200/35" />
+                <AmbientOrb className="top-[10%] right-[-80px] h-80 w-80 bg-amber-200/30" />
+                <AmbientOrb className="bottom-[-100px] left-[28%] h-80 w-80 bg-purple-200/25" />
 
                 <div className="space-y-5 py-4">
                     <SectionReveal>
@@ -327,13 +359,13 @@ export function GroupsPage() {
                                         </IconBadge>
 
                                         <div>
-                                            <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm backdrop-blur">
+                                            <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/70 px-3 py-1 font-semibold text-[11px] text-orange-700 uppercase tracking-[0.18em] shadow-sm backdrop-blur">
                                                 <Sparkles className="h-3.5 w-3.5" />
                                                 {t("workspaceGroups")}
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-2.5">
-                                                <h1 className="bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#EA580C_100%)] bg-clip-text font-bold text-[1.8rem] tracking-tight text-transparent">
+                                                <h1 className="bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#EA580C_100%)] bg-clip-text font-bold text-[1.8rem] text-transparent tracking-tight">
                                                     {t("title")}
                                                 </h1>
                                                 <span className="rounded-full border border-orange-200/60 bg-orange-50/90 px-3 py-1 font-semibold text-[11px] text-orange-700 shadow-sm">
@@ -372,10 +404,53 @@ export function GroupsPage() {
                                 </div>
                             </CardHeader>
 
-                            <CardContent className="relative pb-6 pt-1">
+                            <CardContent className="relative pt-1 pb-6">
                                 <div className="space-y-3">
                                     <div className="rounded-[24px] border border-white/70 bg-white/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur">
                                         <UsageBar current={usage.current} max={usage.max} />
+                                    </div>
+
+                                    <div className="flex flex-col gap-3 rounded-[24px] border border-slate-200/80 bg-slate-50/80 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur lg:flex-row lg:items-center">
+                                        <div className="relative flex-1">
+                                            <Search className="pointer-events-none absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                                            <Input
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                placeholder={t("searchGroups")}
+                                                className="h-11 border border-slate-200 bg-slate-100 pl-12 text-[#261E33] placeholder:text-slate-500"
+                                            />
+                                            {searchQuery ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSearchQuery("")}
+                                                    className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-500 hover:text-slate-700">
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            ) : null}
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <Filter className="hidden h-4 w-4 text-slate-400 lg:block" />
+                                            {[
+                                                { value: "all" as const, label: t("allGroups") },
+                                                { value: "independent" as const, label: t("independent") },
+                                                { value: "managed" as const, label: t("managed") },
+                                                { value: "joined" as const, label: t("joined") }
+                                            ].map((item) => (
+                                                <button
+                                                    key={item.value}
+                                                    type="button"
+                                                    onClick={() => setGroupTypeFilter(item.value)}
+                                                    className={cn(
+                                                        "rounded-xl border px-4 py-2 font-medium text-sm transition-all duration-300",
+                                                        groupTypeFilter === item.value
+                                                            ? "border-0 bg-[linear-gradient(135deg,#F97316_0%,#EA580C_45%,#DC2626_100%)] text-white shadow-[0_14px_28px_rgba(249,115,22,0.28)] hover:brightness-105"
+                                                            : "border-white/70 bg-white text-[#374151] hover:border-[#FDBA74] hover:bg-orange-50 hover:text-[#EA580C]"
+                                                    )}>
+                                                    {item.label}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     <AnimatePresence mode="wait">
@@ -408,15 +483,15 @@ export function GroupsPage() {
                     </SectionReveal>
 
                     <div className="space-y-4">
-                        {(loading || favorites.length > 0) && (
+                        {isAllFilter && (loading || filteredFavorites.length > 0) && (
                             <SectionReveal delay={0.03}>
                                 <GroupsSection
                                     icon={Star}
                                     iconVariant="yellow"
                                     title={t("favorites")}
-                                    count={favorites.length}
+                                    count={filteredFavorites.length}
                                     view={view}
-                                    items={favorites}
+                                    items={filteredFavorites}
                                     expanded={expandFav}
                                     onToggle={() => setExpandFav((v) => !v)}
                                     onToggleStar={onToggleStar}
@@ -427,15 +502,15 @@ export function GroupsPage() {
                             </SectionReveal>
                         )}
 
-                        {(loading || ownedGroups.length > 0) && (
+                        {isAllFilter && (loading || filteredOwnedGroups.length > 0) && (
                             <SectionReveal delay={0.06}>
                                 <GroupsSection
                                     icon={FolderKanban}
                                     iconVariant="blue"
                                     title={t("created")}
-                                    count={ownedGroups.length}
+                                    count={filteredOwnedGroups.length}
                                     view={view}
-                                    items={ownedGroups}
+                                    items={filteredOwnedGroups}
                                     expanded={expandAll}
                                     onToggle={() => setExpandAll((v) => !v)}
                                     onToggleStar={onToggleStar}
@@ -446,15 +521,15 @@ export function GroupsPage() {
                             </SectionReveal>
                         )}
 
-                        {(loading || ownedManaged.length > 0) && (
+                        {(isAllFilter || groupTypeFilter === "managed") && (loading || filteredOwnedManaged.length > 0) && (
                             <SectionReveal delay={0.09}>
                                 <GroupsSection
                                     icon={Layers}
                                     iconVariant="purple"
                                     title={t("managed")}
-                                    count={ownedManaged.length}
+                                    count={filteredOwnedManaged.length}
                                     view={view}
-                                    items={ownedManaged}
+                                    items={filteredOwnedManaged}
                                     expanded={expandManaged}
                                     onToggle={() => setExpandManaged((v) => !v)}
                                     onToggleStar={onToggleStar}
@@ -465,15 +540,15 @@ export function GroupsPage() {
                             </SectionReveal>
                         )}
 
-                        {(loading || ownedIndependent.length > 0) && (
+                        {(isAllFilter || groupTypeFilter === "independent") && (loading || filteredOwnedIndependent.length > 0) && (
                             <SectionReveal delay={0.12}>
                                 <GroupsSection
                                     icon={Users}
                                     iconVariant="slate"
                                     title={t("independent")}
-                                    count={ownedIndependent.length}
+                                    count={filteredOwnedIndependent.length}
                                     view={view}
-                                    items={ownedIndependent}
+                                    items={filteredOwnedIndependent}
                                     expanded={expandIndependent}
                                     onToggle={() => setExpandIndependent((v) => !v)}
                                     onToggleStar={onToggleStar}
@@ -484,15 +559,15 @@ export function GroupsPage() {
                             </SectionReveal>
                         )}
 
-                        {(loading || joined.length > 0) && (
+                        {(isAllFilter || groupTypeFilter === "joined") && (loading || filteredJoined.length > 0) && (
                             <SectionReveal delay={0.15}>
                                 <GroupsSection
                                     icon={Users2}
                                     iconVariant="orange"
                                     title={t("joined")}
-                                    count={joined.length}
+                                    count={filteredJoined.length}
                                     view={view}
-                                    items={joined}
+                                    items={filteredJoined}
                                     expanded={expandJoined}
                                     onToggle={() => setExpandJoined((v) => !v)}
                                     onToggleStar={onToggleStar}
@@ -638,13 +713,13 @@ function GroupsSection({
             <div className="pointer-events-none absolute inset-0 rounded-[34px] bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(255,255,255,0.18))]" />
             <div
                 className={cn(
-                    "pointer-events-none absolute -left-8 top-10 h-28 w-28 rounded-full blur-3xl",
+                    "pointer-events-none absolute top-10 -left-8 h-28 w-28 rounded-full blur-3xl",
                     theme.glowA
                 )}
             />
             <div
                 className={cn(
-                    "pointer-events-none absolute right-[-20px] top-[-10px] h-40 w-40 rounded-full blur-3xl",
+                    "pointer-events-none absolute top-[-10px] right-[-20px] h-40 w-40 rounded-full blur-3xl",
                     theme.glowB
                 )}
             />

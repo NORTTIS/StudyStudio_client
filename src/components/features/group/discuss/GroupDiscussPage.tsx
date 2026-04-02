@@ -1713,7 +1713,7 @@ export default function GroupDiscussPage() {
     };
 
     return (
-        <div className="min-h-screen w-full">
+        <div className="min-h-screen w-full bg-transparent py-6 px-8">
             <Container className="rounded-2xl border border-[#EDEDED] bg-white px-6 py-4 shadow-sm">
                 <div className="mb-5">
                     <p className="font-semibold text-[#261E33] text-sm">{t("title")}</p>
