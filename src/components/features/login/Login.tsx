@@ -14,7 +14,6 @@ import { apiPost } from "@/api/api-client";
 import type { AuthTokens } from "@/api/auth";
 import { setAuthTokens } from "@/api/auth";
 import type { components } from "@/api/types";
-import { getUserProfile } from "@/api/user-profile";
 import { Button, Input, Logo } from "@/components/common";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -77,22 +76,18 @@ export default function Login() {
                 // Store tokens in localStorage
                 setAuthTokens(result.data);
 
-                // Fetch user profile to get isAdmin status
-                const profileResult = await getUserProfile(locale);
-
                 // Show success toast
                 toast({
                     description: "Đăng nhập thành công",
                     variant: "success"
                 });
 
-                // Redirect based on user role
+                // Redirect based on user role (isAdmin is in the login response)
                 const redirectUrl = searchParams.get("redirect");
                 if (redirectUrl) {
                     router.push(decodeURIComponent(redirectUrl));
                 } else {
-                    // Check isAdmin from profile and redirect accordingly
-                    if (profileResult.status === "success" && profileResult.data?.isAdmin === true) {
+                    if (result.data.isAdmin === true) {
                         router.push(`/${locale}/admin/dashboard`);
                     } else {
                         router.push(`/${locale}/home`);
@@ -145,9 +140,6 @@ export default function Login() {
 
             setAuthTokens(result.data);
 
-            // Fetch user profile to get isAdmin status
-            const profileResult = await getUserProfile(locale);
-
             toast({
                 description: "Đăng nhập thành công",
                 variant: "success"
@@ -157,8 +149,7 @@ export default function Login() {
             if (redirectUrl) {
                 router.push(decodeURIComponent(redirectUrl));
             } else {
-                // Check isAdmin from profile and redirect accordingly
-                if (profileResult.status === "success" && profileResult.data?.isAdmin === true) {
+                if (result.data.isAdmin === true) {
                     router.push(`/${locale}/admin/dashboard`);
                 } else {
                     router.push(`/${locale}/home`);
