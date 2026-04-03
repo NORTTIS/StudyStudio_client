@@ -14,6 +14,7 @@ export type StudioMemberResponse = components["schemas"]["StudioMemberResponse"]
 export type GroupInfoItem = components["schemas"]["GroupInfoItem"];
 export type LeaveStudioResponse = components["schemas"]["LeaveStudioResponse"];
 export type StudioGroupListResponse = components["schemas"]["StudioGroupListResponse"];
+export type StudioGroupListResponseApiResponse = components["schemas"]["StudioGroupListResponseApiResponse"];
 
 // Subscription info from /studio API response
 export type StudioListSubscription = {
@@ -347,7 +348,7 @@ export async function randomAssignMembers(
 export async function getStudioGroups(
     studioId: string,
     locale = "vi"
-): Promise<StudioGroupListResponse> {
+): Promise<StudioGroupListResponseApiResponse> {
     const fullUrl = buildStudioApiUrl(`/studio/${studioId}/groups`);
     const token = getAccessToken();
     const response = await fetch(fullUrl, {
