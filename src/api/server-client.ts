@@ -56,18 +56,49 @@ class ServerApiClient {
     }
 
     /**
-     * GET request
+     * Refresh access token via internal Next.js API route
+     */
+    private async _refreshToken(): Promise<string | null> {
+        try {
+            const refreshResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/auth/refresh`,
+                { method: "POST" }
+            );
+            if (!refreshResponse.ok) return null;
+            const data = await refreshResponse.json();
+            return data.data?.accessToken ?? null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * GET request with automatic 401 token refresh
      */
     async GET<T = unknown>(endpoint: string, options?: FetchOptions): Promise<ApiResponse<T>> {
         try {
             const headers = await this.buildHeaders(options?.headers);
             const url = `${this.baseURL}${endpoint}`;
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: "GET",
                 headers,
                 cache: options?.cache || "no-store",
                 next: options?.revalidate ? { revalidate: options.revalidate } : undefined
             });
+
+            // 401: refresh token and retry once
+            if (response.status === 401) {
+                const newToken = await this._refreshToken();
+                if (newToken) {
+                    headers.Authorization = `Bearer ${newToken}`;
+                    response = await fetch(url, {
+                        method: "GET",
+                        headers,
+                        cache: options?.cache || "no-store",
+                        next: options?.revalidate ? { revalidate: options.revalidate } : undefined
+                    });
+                }
+            }
 
             // Check if response is ok and has content
             if (!response.ok) {
@@ -115,19 +146,33 @@ class ServerApiClient {
     }
 
     /**
-     * POST request
+     * POST request with automatic 401 token refresh
      */
     async POST<T = unknown>(endpoint: string, body?: unknown, options?: FetchOptions): Promise<ApiResponse<T>> {
         try {
             const headers = await this.buildHeaders(options?.headers);
             const url = `${this.baseURL}${endpoint}`;
 
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: "POST",
                 headers,
                 body: body ? JSON.stringify(body) : undefined,
                 cache: options?.cache || "no-store"
             });
+
+            // 401: refresh token and retry once
+            if (response.status === 401) {
+                const newToken = await this._refreshToken();
+                if (newToken) {
+                    headers.Authorization = `Bearer ${newToken}`;
+                    response = await fetch(url, {
+                        method: "POST",
+                        headers,
+                        body: body ? JSON.stringify(body) : undefined,
+                        cache: options?.cache || "no-store"
+                    });
+                }
+            }
 
             // Check if response is ok and has content
             if (!response.ok) {
@@ -174,19 +219,33 @@ class ServerApiClient {
     }
 
     /**
-     * PUT request
+     * PUT request with automatic 401 token refresh
      */
     async PUT<T = unknown>(endpoint: string, body?: unknown, options?: FetchOptions): Promise<ApiResponse<T>> {
         try {
             const headers = await this.buildHeaders(options?.headers);
             const url = `${this.baseURL}${endpoint}`;
 
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: "PUT",
                 headers,
                 body: body ? JSON.stringify(body) : undefined,
                 cache: options?.cache || "no-store"
             });
+
+            // 401: refresh token and retry once
+            if (response.status === 401) {
+                const newToken = await this._refreshToken();
+                if (newToken) {
+                    headers.Authorization = `Bearer ${newToken}`;
+                    response = await fetch(url, {
+                        method: "PUT",
+                        headers,
+                        body: body ? JSON.stringify(body) : undefined,
+                        cache: options?.cache || "no-store"
+                    });
+                }
+            }
 
             // Check if response is ok and has content
             if (!response.ok) {
@@ -233,18 +292,31 @@ class ServerApiClient {
     }
 
     /**
-     * DELETE request
+     * DELETE request with automatic 401 token refresh
      */
     async DELETE<T = unknown>(endpoint: string, options?: FetchOptions): Promise<ApiResponse<T>> {
         try {
             const headers = await this.buildHeaders(options?.headers);
             const url = `${this.baseURL}${endpoint}`;
 
-            const response = await fetch(url, {
+            let response = await fetch(url, {
                 method: "DELETE",
                 headers,
                 cache: options?.cache || "no-store"
             });
+
+            // 401: refresh token and retry once
+            if (response.status === 401) {
+                const newToken = await this._refreshToken();
+                if (newToken) {
+                    headers.Authorization = `Bearer ${newToken}`;
+                    response = await fetch(url, {
+                        method: "DELETE",
+                        headers,
+                        cache: options?.cache || "no-store"
+                    });
+                }
+            }
 
             // Check if response is ok and has content
             if (!response.ok) {

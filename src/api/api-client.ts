@@ -15,6 +15,7 @@ export type ApiResponse<T = unknown> = {
 type FetchOptions = RequestInit & {
     locale?: string;
     skipAuth?: boolean; // Skip Authorization header (for login/register)
+    skipDefaultHeaders?: boolean; // Skip Content-Type/Accept-Language headers (for FormData uploads)
 };
 
 /**
@@ -40,7 +41,7 @@ function buildUrl(endpoint: string): string {
  * @param options - Fetch options with optional locale and skipAuth
  */
 export async function apiFetch<T = unknown>(url: string, options: FetchOptions = {}): Promise<ApiResponse<T>> {
-    const { locale = "vi", skipAuth = false, ...fetchOptions } = options;
+    const { locale = "vi", skipAuth = false, skipDefaultHeaders = false, ...fetchOptions } = options;
 
     // Build full URL with base URL (handles /api deduplication)
     const fullUrl = url.startsWith("http") ? url : buildUrl(url);
@@ -64,8 +65,10 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
     }
 
     const headers = new Headers(fetchOptions.headers);
-    headers.set("Content-Type", "application/json");
-    headers.set("Accept-Language", locale);
+    if (!skipDefaultHeaders) {
+        headers.set("Content-Type", "application/json");
+        headers.set("Accept-Language", locale);
+    }
 
     // Add Authorization header if not skipped
     if (!skipAuth) {

@@ -4,7 +4,7 @@
  */
 
 import { apiDownload, apiFetch } from "./api-client";
-import { getAccessToken } from "./auth";
+import { getAccessToken, refreshAccessToken } from "./auth";
 import type { components } from "./types";
 
 const STUDIO_NAME_MAX_LENGTH = 30;
@@ -294,22 +294,31 @@ export async function downloadBatchAssignTemplate(studioId: string): Promise<Blo
  */
 export async function uploadBatchAssignCsv(
     studioId: string,
-    file: File
+    file: File,
+    locale = "vi"
 ): Promise<components["schemas"]["BatchAssignResponseApiResponse"]> {
     const fullUrl = buildStudioApiUrl(`/studio/${studioId}/members/batch-assign`);
-
     const formData = new FormData();
     formData.append("file", file);
 
     const token = getAccessToken();
-    const response = await fetch(fullUrl, {
+    let response = await fetch(fullUrl, {
         method: "POST",
-        headers: {
-            Authorization: `Bearer ${token}`
-            // NOTE: no Content-Type header — browser auto-sets multipart boundary for FormData
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData
     });
+
+    // 401: refresh token and retry once
+    if (response.status === 401) {
+        const refreshed = await refreshAccessToken(locale);
+        if (refreshed) {
+            response = await fetch(fullUrl, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${refreshed.accessToken}` },
+                body: formData
+            });
+        }
+    }
 
     return response.json();
 }
@@ -329,7 +338,7 @@ export async function randomAssignMembers(
     const fullUrl = buildStudioApiUrl(`/studio/${studioId}/groups/random-assign`);
 
     const token = getAccessToken();
-    const response = await fetch(fullUrl, {
+    let response = await fetch(fullUrl, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -338,6 +347,22 @@ export async function randomAssignMembers(
         },
         body: JSON.stringify(body)
     });
+
+    // 401: refresh token and retry once
+    if (response.status === 401) {
+        const refreshed = await refreshAccessToken(locale);
+        if (refreshed) {
+            response = await fetch(fullUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept-Language": locale,
+                    Authorization: `Bearer ${refreshed.accessToken}`
+                },
+                body: JSON.stringify(body)
+            });
+        }
+    }
 
     return response.json();
 }
@@ -350,13 +375,29 @@ export async function getStudioGroups(
     locale = "vi"
 ): Promise<StudioGroupListResponseApiResponse> {
     const fullUrl = buildStudioApiUrl(`/studio/${studioId}/groups`);
+
     const token = getAccessToken();
-    const response = await fetch(fullUrl, {
+    let response = await fetch(fullUrl, {
         method: "GET",
         headers: {
             "Accept-Language": locale,
             Authorization: `Bearer ${token}`
         }
     });
+
+    // 401: refresh token and retry once
+    if (response.status === 401) {
+        const refreshed = await refreshAccessToken(locale);
+        if (refreshed) {
+            response = await fetch(fullUrl, {
+                method: "GET",
+                headers: {
+                    "Accept-Language": locale,
+                    Authorization: `Bearer ${refreshed.accessToken}`
+                }
+            });
+        }
+    }
+
     return response.json();
 }
