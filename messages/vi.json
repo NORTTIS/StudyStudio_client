@@ -799,6 +799,22 @@
         "noGroups": "Chưa có nhóm nào trong studio này",
         "yourStudios": "Studio của bạn",
         "joinedStudios": "Studio bạn tham gia",
+        "inactiveStudioTitle": "Studio này đang tạm dừng",
+        "inactiveStudioDescription": "Studio \"{studioName}\" đang dừng hoạt động. Chỉ chủ sở hữu mới có thể mở lại trong phần cài đặt.",
+        "inactiveStudioOk": "Đã hiểu",
+        "pendingJoinBadge": "Chờ duyệt",
+        "pendingJoinNotice": "Bạn đang chờ duyệt vào studio này.",
+        "pendingStudioTitle": "Yêu cầu tham gia đang chờ duyệt",
+        "pendingStudioDescription": "Bạn chưa thể vào studio \"{studioName}\" khi yêu cầu vẫn đang chờ duyệt. Bạn chỉ có thể hủy yêu cầu.",
+        "pendingStudioCancel": "Hủy yêu cầu",
+        "pendingStudioCanceling": "Đang hủy...",
+        "pendingStudioCancelSuccess": "Đã hủy yêu cầu tham gia studio",
+        "pendingStudioCancelError": "Không thể hủy yêu cầu tham gia studio",
+        "leaveStudio": "Rời studio",
+        "leaveStudioTitle": "Rời studio này?",
+        "leaveStudioDescription": "Bạn có chắc chắn muốn rời studio \"{studioName}\" không?",
+        "leaveStudioCancel": "Hủy",
+        "leaveStudioConfirm": "Rời studio",
         "roles": {
             "owner": "Chủ sở hữu",
             "member": "Thành viên"
@@ -927,6 +943,13 @@
                 "confirmButton": "Xác nhận rời",
                 "success": "Đã rời studio thành công.",
                 "error": "Không thể rời studio. Vui lòng thử lại."
+            },
+            "removeMember": {
+                "confirmTitle": "Xác nhận xóa thành viên",
+                "confirmDescription": "Bạn có chắc muốn xóa {name} khỏi studio? Thành viên sẽ không bị xóa khỏi các nhóm.",
+                "confirmButton": "Xóa khỏi studio",
+                "success": "Đã xóa thành viên khỏi studio",
+                "error": "Không thể xóa thành viên khỏi studio"
             }
         }
     },
@@ -942,6 +965,8 @@
         "quickAssign": "Giao nhanh",
         "invite": "Mời",
         "avatarFallback": "Ảnh đại diện",
+        "remove": "Xóa",
+        "removing": "Đang xóa...",
         "owner": "Chủ sở hữu",
         "empty": "Chưa có thành viên"
     },
@@ -996,13 +1021,18 @@
         "acceptPrompt": "Nhấn \"Chấp nhận gia nhập\" để tham gia studio.",
         "success": "Bạn đã tham gia studio thành công",
         "redirecting": "Đang chuyển hướng...",
+        "pendingTitle": "Yêu cầu tham gia đang chờ duyệt",
+        "pendingMessage": "Yêu cầu tham gia của bạn đã được gửi. Vui lòng chờ chủ studio phê duyệt.",
+        "cancelRequest": "Hủy yêu cầu",
+        "cancelingRequest": "Đang hủy yêu cầu...",
         "alreadyMemberTitle": "Thông báo",
         "alreadyMember": "Bạn đã là thành viên của studio này rồi.",
         "goToStudio": "Đi tới Studio",
-        "backHome": "Về trang chủ",
+        "backHome": "Về Quản lý",
         "errorMissingToken": "Thiếu mã tham gia.",
         "errorInvalidToken": "Mã tham gia không hợp lệ hoặc đã hết hạn.",
-        "errorAcceptFailed": "Chấp nhận lời mời thất bại."
+        "errorAcceptFailed": "Chấp nhận lời mời thất bại.",
+        "cancelRequestFailed": "Không thể hủy yêu cầu tham gia."
     },
     "LandingGroupPage": {
         "badge": "Không gian nhóm",
@@ -1881,6 +1911,8 @@
         "independentEmpty": "Chưa có nhóm độc lập nào",
         "joined": "Tham gia",
         "joinedEmpty": "Chưa tham gia nhóm nào",
+        "pendingApproval": "Chờ phê duyệt",
+        "pendingApprovalEmpty": "Chưa có yêu cầu tham gia nào đang chờ duyệt",
         "active": "nhóm hoạt động",
         "noGroups": "Chưa có nhóm nào",
         "cardsShowing": "thẻ nhóm đang hiển thị",
@@ -1897,9 +1929,18 @@
         "addFavorite": "Thêm vào yêu thích",
         "menuLabel": "Menu tùy chọn",
         "leaveGroup": "Rời khỏi nhóm",
+        "cancelRequest": "Hủy yêu cầu",
+        "awaitingApproval": "Đang chờ xét duyệt",
+        "inactiveGroupTitle": "Nhóm này đang tạm dừng",
+        "inactiveGroupDescription": "Nhóm đang dừng hoạt động. Chỉ chủ sở hữu mới có thể mở lại trong phần cài đặt.",
+        "inactiveGroupOk": "Đã hiểu",
         "leaveConfirmTitle": "Xác nhận rời nhóm",
         "leaveConfirmDescription": "Bạn có chắc muốn rời khỏi nhóm \"{groupName}\" không?",
         "confirmLeave": "Rời khỏi",
+        "cancelRequestTitle": "Xác nhận hủy yêu cầu",
+        "cancelRequestDescription": "Bạn có chắc muốn hủy yêu cầu tham gia nhóm \"{groupName}\" không?",
+        "confirmCancel": "Hủy yêu cầu",
+        "canceling": "Đang hủy...",
         "thisGroup": "nhóm này",
         "cancel": "Hủy",
         "leaving": "Đang rời...",
@@ -2117,6 +2158,13 @@
             "setting": "Cài đặt",
             "trashed": "Đã xóa"
         },
+        "status": {
+            "active": "Đang hoạt động",
+            "inactive": "Đang tắt"
+        },
+        "inactiveTitle": "Nhóm này đang tạm dừng",
+        "goToSetting": "Đi tới cài đặt",
+        "backToGroups": "Quay lại danh sách nhóm",
         "errors": {
             "fetchDetailFailed": "Không thể tải thông tin nhóm"
         },
@@ -2125,10 +2173,13 @@
             "loading": "Đang tải...",
             "successTitle": "Bạn đã tham gia nhóm thành công",
             "redirecting": "Đang chuyển hướng...",
+            "pendingTitle": "Yêu cầu tham gia đang chờ xét duyệt",
+            "pendingMessage": "Yêu cầu tham gia của bạn đã được gửi. Vui lòng chờ chủ nhóm phê duyệt.",
+            "cancelRequest": "Hủy yêu cầu",
             "notice": "Thông báo",
             "alreadyMember": "Bạn đã là thành viên của nhóm này rồi.",
-            "goToGroups": "Đi tới Groups",
-            "backHome": "Về trang chủ",
+            "goToGroups": "Đi tới Nhóm",
+            "backHome": "Về nhóm",
             "submittingTitle": "Lời mời",
             "checking": "Đang kiểm tra lời mời...",
             "notLoggedIn": "Bạn chưa đăng nhập",
@@ -2383,6 +2434,14 @@
             "saveButton": "Lưu thay đổi",
             "editButton": "Chỉnh sửa"
         },
+        "access": {
+            "title": "Trạng thái hoạt động",
+            "activeDescription": "Nhóm đang hoạt động bình thường. Bạn có thể chỉnh sửa nội dung, quản lý thành viên và dùng các tab khác.",
+            "inactiveDescription": "Nhóm đang tắt hoạt động. Chỉ có thể bật lại từ đây, các thao tác khác sẽ bị khóa.",
+            "activeLabel": "Hoạt động",
+            "inactiveLabel": "Tạm dừng",
+            "inactiveNotice": "Khi nhóm đang tắt hoạt động, các thay đổi khác sẽ bị khóa cho đến khi bạn bật lại nhóm."
+        },
         "groupInfo": {
             "nameLabel": "Tên nhóm",
             "descriptionLabel": "Mô tả",
@@ -2396,6 +2455,10 @@
         "template": {
             "label": "Mẫu nhóm",
             "description": "Mẫu hiện đang áp dụng cho nhóm này"
+        },
+        "memberApproval": {
+            "label": "Bật duyệt thành viên",
+            "description": "Yêu cầu phê duyệt khi thành viên tham gia bằng link mời"
         },
         "members": {
             "title": "Thành viên",
@@ -2451,7 +2514,9 @@
             "approving": "Đang phê duyệt...",
             "reject": "Từ chối",
             "rejecting": "Đang từ chối...",
-            "error": "Không tải được danh sách chờ phê duyệt"
+            "error": "Không tải được danh sách chờ phê duyệt",
+            "approveFailed": "Phê duyệt thành viên thất bại",
+            "rejectFailed": "Từ chối thành viên thất bại"
         }
     },
     "TrashedPage": {
@@ -2859,6 +2924,12 @@
             "high": "Cao"
         },
         "updatedAt": "Cập nhật: {time}"
+    },
+    "MemberDetailModal": {
+        "title": "Chi tiết thành viên",
+        "joinedGroups": "Nhóm đã tham gia",
+        "noJoinedGroups": "Chưa tham gia nhóm nào",
+        "close": "Đóng"
     },
     "GroupPerformanceRadar": {
         "title": "Hiệu suất nhóm",

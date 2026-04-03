@@ -926,6 +926,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/studios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    PageNumber?: number;
+                    PageSize?: number;
+                    SearchTerm?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminStudioListResponseApiResponse"];
+                        "text/json": components["schemas"]["AdminStudioListResponseApiResponse"];
+                        "text/plain": components["schemas"]["AdminStudioListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/studios/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["UpdateStudioStatusRequest"];
+                    "application/json": components["schemas"]["UpdateStudioStatusRequest"];
+                    "text/json": components["schemas"]["UpdateStudioStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StringApiResponse"];
+                        "text/json": components["schemas"]["StringApiResponse"];
+                        "text/plain": components["schemas"]["StringApiResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/admin/subscription-plans": {
         parameters: {
             query?: never;
@@ -4010,6 +4096,96 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/group/{groupId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ApproveMemberRequest"];
+                    "application/json": components["schemas"]["ApproveMemberRequest"];
+                    "text/json": components["schemas"]["ApproveMemberRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApproveMemberResponseApiResponse"];
+                        "text/json": components["schemas"]["ApproveMemberResponseApiResponse"];
+                        "text/plain": components["schemas"]["ApproveMemberResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/group/{groupId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ToggleArchiveRequest"];
+                    "application/json": components["schemas"]["ToggleArchiveRequest"];
+                    "text/json": components["schemas"]["ToggleArchiveRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ArchiveGroupResponseApiResponse"];
+                        "text/json": components["schemas"]["ArchiveGroupResponseApiResponse"];
+                        "text/plain": components["schemas"]["ArchiveGroupResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/group/{groupId}/detail": {
         parameters: {
             query?: never;
@@ -4088,6 +4264,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/group/{groupId}/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PendingMemberListResponseApiResponse"];
+                        "text/json": components["schemas"]["PendingMemberListResponseApiResponse"];
+                        "text/plain": components["schemas"]["PendingMemberListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/group/{groupId}/tasks": {
         parameters: {
             query?: never;
@@ -4134,6 +4349,51 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/group/{groupId}/toggle-open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ToggleIsOpenRequest"];
+                    "application/json": components["schemas"]["ToggleIsOpenRequest"];
+                    "text/json": components["schemas"]["ToggleIsOpenRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ToggleIsOpenResponseApiResponse"];
+                        "text/json": components["schemas"]["ToggleIsOpenResponseApiResponse"];
+                        "text/plain": components["schemas"]["ToggleIsOpenResponseApiResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -5458,6 +5718,96 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/studio/{studioId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ApproveMemberRequest"];
+                    "application/json": components["schemas"]["ApproveMemberRequest"];
+                    "text/json": components["schemas"]["ApproveMemberRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApproveMemberResponseApiResponse"];
+                        "text/json": components["schemas"]["ApproveMemberResponseApiResponse"];
+                        "text/plain": components["schemas"]["ApproveMemberResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ToggleArchiveRequest"];
+                    "application/json": components["schemas"]["ToggleArchiveRequest"];
+                    "text/json": components["schemas"]["ToggleArchiveRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ArchiveStudioResponseApiResponse"];
+                        "text/json": components["schemas"]["ArchiveStudioResponseApiResponse"];
+                        "text/plain": components["schemas"]["ArchiveStudioResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/studio/{studioId}/groups": {
         parameters: {
             query?: never;
@@ -5696,6 +6046,133 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StudioPendingMemberListResponseApiResponse"];
+                        "text/json": components["schemas"]["StudioPendingMemberListResponseApiResponse"];
+                        "text/plain": components["schemas"]["StudioPendingMemberListResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/{studioId}/toggle-open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    studioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["ToggleIsOpenRequest"];
+                    "application/json": components["schemas"]["ToggleIsOpenRequest"];
+                    "text/json": components["schemas"]["ToggleIsOpenRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ToggleIsOpenResponseApiResponse"];
+                        "text/json": components["schemas"]["ToggleIsOpenResponseApiResponse"];
+                        "text/plain": components["schemas"]["ToggleIsOpenResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/*+json": components["schemas"]["RemoveStudioMemberRequest"];
+                    "application/json": components["schemas"]["RemoveStudioMemberRequest"];
+                    "text/json": components["schemas"]["RemoveStudioMemberRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RemoveStudioMemberResponseApiResponse"];
+                        "text/json": components["schemas"]["RemoveStudioMemberResponseApiResponse"];
+                        "text/plain": components["schemas"]["RemoveStudioMemberResponseApiResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -6696,6 +7173,7 @@ export interface components {
             /** Format: uuid */
             groupId?: string;
             groupName?: string | null;
+            isApproved?: boolean;
             /** Format: date-time */
             joinedAt?: string;
             role?: string | null;
@@ -6710,6 +7188,7 @@ export interface components {
             token: string;
         };
         AcceptStudioInviteResponse: {
+            isApproved?: boolean;
             /** Format: date-time */
             joinedAt?: string;
             role?: string | null;
@@ -6742,6 +7221,24 @@ export interface components {
         AdminGroupListResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["AdminGroupListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        AdminStudioListResponse: {
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            studioList?: components["schemas"]["StudioListItem"][] | null;
+            summary?: components["schemas"]["StudioListSummary"];
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            readonly totalPages?: number;
+        };
+        AdminStudioListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["AdminStudioListResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -6780,6 +7277,53 @@ export interface components {
          * @enum {integer}
          */
         AnnouncementType: 0 | 1 | 2 | 3 | 4 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17;
+        ApproveMemberRequest: {
+            /** Format: uuid */
+            userId: string;
+        };
+        ApproveMemberResponse: {
+            /** Format: uuid */
+            id?: string;
+            isApproved?: boolean;
+            name?: string | null;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
+        ApproveMemberResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["ApproveMemberResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        ArchiveGroupResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            isArchived?: boolean;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ArchiveGroupResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["ArchiveGroupResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        ArchiveStudioResponse: {
+            isArchived?: boolean;
+            /** Format: uuid */
+            studioId?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ArchiveStudioResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["ArchiveStudioResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         AssignRoleRequest: {
             /** Format: uuid */
             groupId: string;
@@ -6916,6 +7460,7 @@ export interface components {
             description?: string | null;
             groupName: string;
             iconEmoji?: string | null;
+            isOpen?: boolean;
             /** Format: uuid */
             studioId?: string | null;
             tagline?: string | null;
@@ -6937,6 +7482,8 @@ export interface components {
             groupName?: string | null;
             groupType?: string | null;
             iconEmoji?: string | null;
+            isArchived?: boolean;
+            isOpen?: boolean;
             /** Format: uuid */
             studioId?: string | null;
             tagline?: string | null;
@@ -7038,6 +7585,7 @@ export interface components {
             description?: string | null;
             /** Format: date-time */
             endDate?: string | null;
+            isOpen?: boolean;
             /** Format: uuid */
             ownerId?: string;
             /** Format: date-time */
@@ -7158,7 +7706,10 @@ export interface components {
             iconEmoji?: string | null;
             /** Format: uuid */
             id?: string;
+            isArchived?: boolean;
             isFavorite?: boolean;
+            isMember?: boolean;
+            isOpen?: boolean;
             /** Format: date-time */
             lastActivityAt?: string;
             /** Format: int32 */
@@ -7214,7 +7765,9 @@ export interface components {
             groupName?: string | null;
             groupType?: string | null;
             iconEmoji?: string | null;
+            isArchived?: boolean;
             isFavorite?: boolean;
+            isOpen?: boolean;
             isTemplate?: boolean;
             /** Format: int32 */
             memberCount?: number;
@@ -7297,6 +7850,7 @@ export interface components {
             avatarUrl?: string | null;
             email?: string | null;
             firstName?: string | null;
+            isApproved?: boolean;
             /** Format: date-time */
             joinedAt?: string;
             lastName?: string | null;
@@ -7370,11 +7924,14 @@ export interface components {
          */
         GroupRole: 0 | 1 | 2 | 3 | 4;
         GroupSections: {
+            archivedGroups?: components["schemas"]["GroupCardDto"][] | null;
             favorites?: components["schemas"]["GroupCardDto"][] | null;
             independentGroups?: components["schemas"]["GroupCardDto"][] | null;
             studioGroups?: components["schemas"]["GroupCardDto"][] | null;
         };
         GroupSummary: {
+            /** Format: int32 */
+            archivedCount?: number;
             /** Format: int32 */
             favoriteCount?: number;
             /** Format: int32 */
@@ -7793,6 +8350,31 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        PendingMemberDto: {
+            avatarUrl?: string | null;
+            email?: string | null;
+            firstName?: string | null;
+            lastName?: string | null;
+            /** Format: date-time */
+            requestedAt?: string;
+            role?: string | null;
+            /** Format: uuid */
+            userId?: string;
+        };
+        PendingMemberListResponse: {
+            /** Format: uuid */
+            groupId?: string;
+            groupName?: string | null;
+            pendingMembers?: components["schemas"]["PendingMemberDto"][] | null;
+            /** Format: int32 */
+            totalPending?: number;
+        };
+        PendingMemberListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["PendingMemberListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         PersonalAIRequest: {
             question?: string | null;
         };
@@ -7942,6 +8524,28 @@ export interface components {
         RemoveMemberResponseApiResponse: {
             code?: string | null;
             data?: components["schemas"]["RemoveMemberResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
+        RemoveStudioMemberRequest: {
+            /** Format: uuid */
+            studioId: string;
+            /** Format: uuid */
+            userId: string;
+        };
+        RemoveStudioMemberResponse: {
+            /** Format: date-time */
+            removedAt?: string;
+            /** Format: uuid */
+            removedUserId?: string;
+            removedUserName?: string | null;
+            /** Format: uuid */
+            studioId?: string;
+            studioName?: string | null;
+        };
+        RemoveStudioMemberResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["RemoveStudioMemberResponse"];
             message?: string | null;
             status?: string | null;
         };
@@ -8370,6 +8974,25 @@ export interface components {
             date?: string;
             groups?: components["schemas"]["StudioGroupActivityItem"][] | null;
         };
+        StudioListItem: {
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string | null;
+            /** Format: int32 */
+            groupCount?: number;
+            isActive?: boolean;
+            /** Format: date-time */
+            lastActivityAt?: string | null;
+            /** Format: int32 */
+            memberCount?: number;
+            ownerEmail?: string | null;
+            ownerName?: string | null;
+            /** Format: uuid */
+            studioId?: string;
+            studioName?: string | null;
+            /** Format: int32 */
+            taskCount?: number;
+        };
         StudioListResponse: {
             studios?: components["schemas"]["StudioResponse"][] | null;
             subscription?: components["schemas"]["StudioListSubscriptionResponse"];
@@ -8386,10 +9009,23 @@ export interface components {
             /** Format: int32 */
             studioLimit?: number;
         };
+        StudioListSummary: {
+            /** Format: int32 */
+            activeStudios?: number;
+            /** Format: int32 */
+            inactiveStudios?: number;
+            /** Format: int32 */
+            totalGroups?: number;
+            /** Format: int32 */
+            totalMembers?: number;
+            /** Format: int32 */
+            totalStudios?: number;
+        };
         StudioMemberResponse: {
             avatarUrl?: string | null;
             email?: string | null;
             groupInfo?: components["schemas"]["GroupInfoItem"][] | null;
+            isApproved?: boolean;
             studioRole?: components["schemas"]["StudioRole"];
             /** Format: uuid */
             userId?: string;
@@ -8419,6 +9055,30 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        StudioPendingMemberDto: {
+            avatarUrl?: string | null;
+            email?: string | null;
+            firstName?: string | null;
+            lastName?: string | null;
+            /** Format: date-time */
+            requestedAt?: string;
+            /** Format: uuid */
+            userId?: string;
+        };
+        StudioPendingMemberListResponse: {
+            pendingMembers?: components["schemas"]["StudioPendingMemberDto"][] | null;
+            /** Format: uuid */
+            studioId?: string;
+            studioName?: string | null;
+            /** Format: int32 */
+            totalPending?: number;
+        };
+        StudioPendingMemberListResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["StudioPendingMemberListResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         StudioResponse: {
             alias?: string | null;
             avatarUrl?: string | null;
@@ -8431,6 +9091,8 @@ export interface components {
             endDate?: string | null;
             /** Format: int32 */
             groupCount?: number;
+            isArchived?: boolean;
+            isOpen?: boolean;
             /** Format: int32 */
             memberCount?: number;
             /** Format: uuid */
@@ -8788,6 +9450,26 @@ export interface components {
             position: number;
             statusName: string;
         };
+        ToggleArchiveRequest: {
+            isArchived: boolean;
+        };
+        ToggleIsOpenRequest: {
+            isOpen: boolean;
+        };
+        ToggleIsOpenResponse: {
+            /** Format: uuid */
+            id?: string;
+            isOpen?: boolean;
+            name?: string | null;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ToggleIsOpenResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["ToggleIsOpenResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         TopActiveGroupItem: {
             /** Format: int32 */
             completedTasks?: number;
@@ -8900,6 +9582,7 @@ export interface components {
             groupId: string;
             groupName: string;
             iconEmoji?: string | null;
+            isOpen?: boolean | null;
             isTemplate?: boolean;
             tagline?: string | null;
         };
@@ -8914,6 +9597,8 @@ export interface components {
             groupName?: string | null;
             groupType?: string | null;
             iconEmoji?: string | null;
+            isArchived?: boolean;
+            isOpen?: boolean;
             isTemplate?: boolean;
             /** Format: uuid */
             studioId?: string | null;
@@ -8967,6 +9652,7 @@ export interface components {
             endDate?: string | null;
             /** Format: uuid */
             id?: string;
+            isOpen?: boolean | null;
             /** Format: date-time */
             startDate?: string | null;
             studioName?: string | null;
@@ -8980,6 +9666,8 @@ export interface components {
             description?: string | null;
             /** Format: date-time */
             endDate?: string | null;
+            isArchived?: boolean;
+            isOpen?: boolean | null;
             /** Format: date-time */
             startDate?: string | null;
             studioName?: string | null;
@@ -8992,6 +9680,9 @@ export interface components {
             data?: components["schemas"]["UpdateStudioResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        UpdateStudioStatusRequest: {
+            isActive?: boolean;
         };
         UpdateSubscriptionPlanRequest: {
             billingCycle: components["schemas"]["BillingCycle"];

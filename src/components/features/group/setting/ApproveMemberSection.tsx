@@ -2,143 +2,186 @@
 
 import { Check, Clock3, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { approvePendingMember, getPendingMembers, rejectPendingMember } from "@/api/invites";
+import {
+    isPendingJoinRequestCanceledByMember,
+    pendingJoinEvents,
+    PENDING_JOIN_CHANGED_EVENT
+} from "@/components/features/group/group.api";
+import type { PendingMemberDto } from "@/api/invites";
 
-export type PendingMember = {
+export type PendingMember = PendingMemberDto & {
     id: string;
     name: string;
-    email: string;
-    requestedRole?: string;
-    requestedAt?: string;
 };
 
 type ApproveMemberSectionProps = {
     groupId?: string;
     canManage?: boolean;
+    showMemberApprovalToggle?: boolean;
+    requiresMemberApproval?: boolean;
+    canEditMemberApproval?: boolean;
+    onRequiresMemberApprovalChange?: (checked: boolean) => void;
 };
 
-const MOCK_PENDING_MEMBERS: PendingMember[] = [
-    {
-        id: "pending-1",
-        name: "Nguyen Van A",
-        email: "nguyenvana@example.com",
-        requestedRole: "Member",
-        requestedAt: "2026-04-01 09:30"
-    },
-    {
-        id: "pending-2",
-        name: "Tran Thi B",
-        email: "tranthib@example.com",
-        requestedRole: "Commenter",
-        requestedAt: "2026-04-01 10:15"
-    },
-    {
-        id: "pending-3",
-        name: "Le Van C",
-        email: "levanc@example.com",
-        requestedRole: "Viewer",
-        requestedAt: "2026-04-01 11:00"
-    }
-];
-
-export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemberSectionProps) {
+export function ApproveMemberSection({
+    groupId,
+    canManage = false,
+    showMemberApprovalToggle = false,
+    requiresMemberApproval = false,
+    canEditMemberApproval = false,
+    onRequiresMemberApprovalChange
+}: ApproveMemberSectionProps) {
     const t = useTranslations("GroupSettingView.approveMember");
+    const groupT = useTranslations("GroupSettingView");
     const [items, setItems] = useState<PendingMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [approveLoadingByUserId, setApproveLoadingByUserId] = useState<Record<string, boolean>>({});
     const [rejectLoadingByUserId, setRejectLoadingByUserId] = useState<Record<string, boolean>>({});
 
-    useEffect(() => {
-        let alive = true;
+    const loadPendingMembers = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-        const loadPendingMembers = async () => {
-            try {
-                setLoading(true);
-                setError("");
-
-                // TODO: CALL API HERE
-                // Ví dụ:
-                // const res = await fetch(`/api/group/${groupId}/pending-members`);
-                // const json = await res.json();
-                // if (!alive) return;
-                // setItems(json.data ?? []);
-
-                await new Promise((resolve) => setTimeout(resolve, 300));
-
-                if (!alive) return;
-
-                if (!groupId) {
-                    setItems([]);
-                    setLoading(false);
-                    return;
-                }
-
-                setItems(MOCK_PENDING_MEMBERS);
-            } catch {
-                if (!alive) return;
-                setError(t("error"));
+            if (!groupId) {
                 setItems([]);
-            } finally {
-                if (!alive) return;
                 setLoading(false);
+                return;
             }
+
+            const response = await getPendingMembers(groupId);
+
+            if (response?.status === "success" && response?.data) {
+                const pendingMembers = (response.data.pendingMembers || []).map((member) => {
+                    const firstName = member.firstName || "";
+                    const lastName = member.lastName || "";
+                    const name = `${firstName} ${lastName}`.trim() || member.email || "Unknown";
+                    return {
+                        ...member,
+                        id: member.userId || "",
+                        name
+                    };
+                }).filter((member) => !isPendingJoinRequestCanceledByMember(groupId, member));
+
+                setItems(pendingMembers);
+            } else {
+                setItems([]);
+                if (response?.message) {
+                    setError(response.message);
+                }
+            }
+        } catch (err) {
+            console.error("[ApproveMemberSection] Failed to load pending members:", err);
+            setError(t("error"));
+            setItems([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [groupId, t, requiresMemberApproval]);
+
+    useEffect(() => {
+        void loadPendingMembers();
+    }, [loadPendingMembers]);
+
+    // Listen for pending join changes from other components
+    useEffect(() => {
+        const handlePendingJoinChanged = (event: Event) => {
+            const customEvent = event as CustomEvent<{ groupId?: string; marker?: { userId?: string } }>;
+            const changedGroupId = String(customEvent.detail?.groupId ?? "").trim();
+            const canceledUserId = String(customEvent.detail?.marker?.userId ?? "").trim();
+
+            if (changedGroupId && groupId && changedGroupId !== groupId) {
+                return;
+            }
+
+            if (canceledUserId) {
+                setItems((prev) => prev.filter((item) => item.id !== canceledUserId));
+            }
+
+            window.setTimeout(() => {
+                void loadPendingMembers();
+            }, 800);
         };
 
-        void loadPendingMembers();
+        pendingJoinEvents.addEventListener(PENDING_JOIN_CHANGED_EVENT, handlePendingJoinChanged);
 
         return () => {
-            alive = false;
+            pendingJoinEvents.removeEventListener(PENDING_JOIN_CHANGED_EVENT, handlePendingJoinChanged);
         };
-    }, [groupId]);
+    }, [loadPendingMembers]);
+
+    const approvalEnabled = !!requiresMemberApproval;
+    const approvalTone = approvalEnabled
+        ? {
+            wrapper: "border-orange-200 bg-orange-50/80",
+            title: "text-orange-800",
+            description: "text-orange-700/80",
+            badge: "bg-orange-600 text-white",
+            badgeText: "Đang bật",
+            switchTrack: "data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-gray-300"
+        }
+        : {
+            wrapper: "border-slate-200 bg-slate-50/80",
+            title: "text-slate-800",
+            description: "text-slate-500",
+            badge: "bg-slate-200 text-slate-700",
+            badgeText: "Đang tắt",
+            switchTrack: "data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-slate-300"
+        };
 
     const handleApprove = async (userId: string) => {
-        if (!canManage) return;
+        if (!canManage || !groupId) return;
 
         setApproveLoadingByUserId((prev) => ({ ...prev, [userId]: true }));
         setError("");
 
         try {
-            // TODO: CALL API APPROVE HERE
-            // Ví dụ:
-            // await fetch(`/api/group/member/approve`, {
-            //     method: "PUT",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify({ groupId, userId })
-            // });
+            const response = await approvePendingMember(groupId, userId);
 
-            await new Promise((resolve) => setTimeout(resolve, 400));
-
-            setItems((prev) => prev.filter((item) => item.id !== userId));
-        } catch {
-            setError("Phê duyệt thành viên thất bại");
+            if (response?.status === "success") {
+                setItems((prev) => prev.filter((item) => item.id !== userId));
+                // Dispatch event to notify other components that pending members have changed
+                pendingJoinEvents.dispatchEvent(
+                    new CustomEvent(PENDING_JOIN_CHANGED_EVENT, {
+                        detail: { groupId, userId }
+                    })
+                );
+            } else {
+                setError(response?.message || t("approveFailed"));
+            }
+        } catch (err) {
+            console.error("[ApproveMemberSection] Approval failed:", err);
+            setError(t("approveFailed"));
         } finally {
             setApproveLoadingByUserId((prev) => ({ ...prev, [userId]: false }));
         }
     };
 
     const handleReject = async (userId: string) => {
-        if (!canManage) return;
+        if (!canManage || !groupId) return;
 
         setRejectLoadingByUserId((prev) => ({ ...prev, [userId]: true }));
         setError("");
 
         try {
-            // TODO: CALL API REJECT HERE
-            // Ví dụ:
-            // await fetch(`/api/group/member/reject`, {
-            //     method: "DELETE",
-            //     headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify({ groupId, userId })
-            // });
-
-            await new Promise((resolve) => setTimeout(resolve, 400));
+            await rejectPendingMember(groupId, userId);
 
             setItems((prev) => prev.filter((item) => item.id !== userId));
-        } catch {
-            setError("Từ chối thành viên thất bại");
+            // Dispatch event to notify other components that pending members have changed
+            pendingJoinEvents.dispatchEvent(
+                new CustomEvent(PENDING_JOIN_CHANGED_EVENT, {
+                    detail: { groupId, userId }
+                })
+            );
+        } catch (err) {
+            console.error("[ApproveMemberSection] Rejection failed:", err);
+            setError(t("rejectFailed"));
         } finally {
             setRejectLoadingByUserId((prev) => ({ ...prev, [userId]: false }));
         }
@@ -165,6 +208,37 @@ export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemb
             </div>
 
             <div className="px-6 py-6">
+                {showMemberApprovalToggle ? (
+                    <div
+                        className={`mb-5 flex items-center justify-between rounded-2xl border px-4 py-4 shadow-sm transition-all duration-300 ease-out ${approvalTone.wrapper}`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className={`rounded-full px-3 py-1 font-semibold text-[11px] uppercase tracking-[0.14em] transition-colors duration-300 ${approvalTone.badge}`}>
+                                {approvalTone.badgeText}
+                            </div>
+                            <div>
+                                <div className={`font-semibold text-xs transition-colors duration-300 ${approvalTone.title}`}>
+                                    {approvalEnabled ? "Phê duyệt thành viên đang bật" : "Phê duyệt thành viên đang tắt"}
+                                </div>
+                                <div className={`mt-0.5 text-xs transition-colors duration-300 ${approvalTone.description}`}>
+                                    {approvalEnabled
+                                        ? "Thành viên sẽ phải chờ duyệt trước khi tham gia nhóm"
+                                        : "Thành viên sẽ vào nhóm ngay khi dùng link mời"}
+                                </div>
+                            </div>
+                        </div>
+                        <Switch
+                            checked={requiresMemberApproval}
+                            onCheckedChange={(checked) => {
+                                if (!canEditMemberApproval) return;
+                                onRequiresMemberApprovalChange?.(checked);
+                            }}
+                            disabled={!canEditMemberApproval}
+                            className={`scale-110 transition-all duration-300 ease-out data-[state=checked]:shadow-[0_0_0_6px_rgba(249,115,22,0.12)] ${approvalTone.switchTrack}`}
+                        />
+                    </div>
+                ) : null}
+
                 {loading ? (
                     <div className="text-gray-500 text-sm">{t("loading")}</div>
                 ) : items.length === 0 ? (
@@ -188,15 +262,15 @@ export function ApproveMemberSection({ groupId, canManage = false }: ApproveMemb
                                         <div className="truncate text-gray-500 text-xs">{item.email}</div>
 
                                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                                            {item.requestedRole ? (
+                                            {item.role ? (
                                                 <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 text-xs">
-                                                    {t("requestedRole", { role: item.requestedRole })}
+                                                    {t("requestedRole", { role: item.role })}
                                                 </span>
                                             ) : null}
 
                                             {item.requestedAt ? (
                                                 <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 text-xs">
-                                                    {t("requestedAt", { time: item.requestedAt })}
+                                                    {t("requestedAt", { time: new Date(item.requestedAt).toLocaleString() })}
                                                 </span>
                                             ) : null}
                                         </div>

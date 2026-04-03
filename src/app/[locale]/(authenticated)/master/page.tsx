@@ -43,11 +43,15 @@ const mapStudioToUI = (studio: StudioResponse): StudioUI => ({
     completionProgress: 0,
     createdAt: studio.createdAt || "",
     updatedAt: studio.updatedAt || "",
+    studioRole: studio.studioRole,
     avatarUrl: studio.avatarUrl ?? null,
     colorHex: studio.colorHex ?? null,
     bannerUrl: studio.bannerUrl ?? null,
     tagline: studio.tagline ?? null,
-    alias: studio.alias ?? null
+    alias: studio.alias ?? null,
+    isOpen: studio.isOpen ?? true,
+    isApproved: (studio as StudioResponse & { isApproved?: boolean | null }).isApproved ?? null,
+    isPendingApproval: false
 });
 
 export default async function MasterPage() {

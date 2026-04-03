@@ -799,6 +799,22 @@
         "noGroups": "No groups in this studio yet",
         "yourStudios": "Your Studios",
         "joinedStudios": "Studios You Join",
+        "inactiveStudioTitle": "This studio is paused",
+        "inactiveStudioDescription": "The studio \"{studioName}\" is currently stopped. Only the owner can reopen it from Settings.",
+        "inactiveStudioOk": "Got it",
+        "pendingJoinBadge": "Pending",
+        "pendingJoinNotice": "Your membership request is waiting for approval.",
+        "pendingStudioTitle": "Membership request is pending approval",
+        "pendingStudioDescription": "You cannot open \"{studioName}\" while your request is pending. You can only cancel your request.",
+        "pendingStudioCancel": "Cancel request",
+        "pendingStudioCanceling": "Canceling...",
+        "pendingStudioCancelSuccess": "Studio join request canceled",
+        "pendingStudioCancelError": "Failed to cancel studio join request",
+        "leaveStudio": "Leave studio",
+        "leaveStudioTitle": "Leave this studio?",
+        "leaveStudioDescription": "Are you sure you want to leave \"{studioName}\"?",
+        "leaveStudioCancel": "Stay",
+        "leaveStudioConfirm": "Leave studio",
         "roles": {
             "owner": "Owner",
             "member": "Member"
@@ -904,6 +920,13 @@
                 "success": "You have left the studio successfully.",
                 "error": "Failed to leave studio. Please try again."
             },
+            "removeMember": {
+                "confirmTitle": "Confirm remove member",
+                "confirmDescription": "Are you sure you want to remove {name} from this studio? This will not remove them from groups.",
+                "confirmButton": "Remove from studio",
+                "success": "Member removed from studio",
+                "error": "Failed to remove member from studio"
+            },
             "settings": {
                 "title": "Studio settings",
                 "subtitle": "Adjust studio information and configuration",
@@ -942,6 +965,8 @@
         "quickAssign": "Quick Assign",
         "invite": "Invite",
         "avatarFallback": "Avatar",
+        "remove": "Remove",
+        "removing": "Removing...",
         "owner": "Owner",
         "empty": "No members"
     },
@@ -996,13 +1021,18 @@
         "acceptPrompt": "Click \"Accept Invitation\" to join the studio.",
         "success": "You have successfully joined the studio",
         "redirecting": "Redirecting...",
+        "pendingTitle": "Your membership request is pending approval",
+        "pendingMessage": "Your request has been sent. Please wait for the studio owner to approve it.",
+        "cancelRequest": "Cancel request",
+        "cancelingRequest": "Canceling request...",
         "alreadyMemberTitle": "Notice",
         "alreadyMember": "You are already a member of this studio.",
         "goToStudio": "Go to Studio",
-        "backHome": "Back to Home",
+        "backHome": "Back to Master",
         "errorMissingToken": "Missing invitation token.",
         "errorInvalidToken": "Invalid or expired invitation token.",
-        "errorAcceptFailed": "Failed to accept invitation."
+        "errorAcceptFailed": "Failed to accept invitation.",
+        "cancelRequestFailed": "Failed to cancel membership request."
     },
     "LandingGroupPage": {
         "badge": "Group Workspace",
@@ -1850,6 +1880,8 @@
         "independentEmpty": "No independent groups",
         "joined": "Joined",
         "joinedEmpty": "No joined groups",
+        "pendingApproval": "Pending approval",
+        "pendingApprovalEmpty": "No membership requests are waiting for approval",
         "active": "groups active",
         "noGroups": "No groups",
         "cardsShowing": "group cards showing",
@@ -1866,9 +1898,18 @@
         "addFavorite": "Add to favorites",
         "menuLabel": "Options menu",
         "leaveGroup": "Leave group",
+        "cancelRequest": "Cancel request",
+        "awaitingApproval": "Awaiting approval",
+        "inactiveGroupTitle": "This group is paused",
+        "inactiveGroupDescription": "The group is currently stopped. Only the owner can reopen it from Settings.",
+        "inactiveGroupOk": "Got it",
         "leaveConfirmTitle": "Confirm leave group",
         "leaveConfirmDescription": "Are you sure you want to leave \"{groupName}\"?",
         "confirmLeave": "Leave group",
+        "cancelRequestTitle": "Confirm cancel request",
+        "cancelRequestDescription": "Are you sure you want to cancel your membership request for \"{groupName}\"?",
+        "confirmCancel": "Cancel request",
+        "canceling": "Canceling...",
         "thisGroup": "this group",
         "cancel": "Cancel",
         "leaving": "Leaving...",
@@ -2086,6 +2127,13 @@
             "setting": "Settings",
             "trashed": "Trash"
         },
+        "status": {
+            "active": "Active",
+            "inactive": "Paused"
+        },
+        "inactiveTitle": "This group is paused",
+        "goToSetting": "Go to settings",
+        "backToGroups": "Back to group list",
         "errors": {
             "fetchDetailFailed": "Unable to load group information"
         },
@@ -2094,10 +2142,13 @@
             "loading": "Loading...",
             "successTitle": "You have joined the group successfully",
             "redirecting": "Redirecting...",
+            "pendingTitle": "Your membership request is pending approval",
+            "pendingMessage": "Your membership request has been sent. Please wait for the group owner to approve it.",
+            "cancelRequest": "Cancel request",
             "notice": "Notice",
             "alreadyMember": "You are already a member of this group.",
             "goToGroups": "Go to Groups",
-            "backHome": "Back to home",
+            "backHome": "Back to groups",
             "submittingTitle": "Invitation",
             "checking": "Checking invitation...",
             "notLoggedIn": "You are not logged in",
@@ -2352,6 +2403,14 @@
             "saveButton": "Save changes",
             "editButton": "Edit"
         },
+        "access": {
+            "title": "Activity status",
+            "activeDescription": "The group is active. You can edit content, manage members, and use the other tabs.",
+            "inactiveDescription": "The group is paused. Only reopening it is allowed here; other actions are locked.",
+            "activeLabel": "Active",
+            "inactiveLabel": "Paused",
+            "inactiveNotice": "When the group is paused, all other changes stay locked until you turn it back on."
+        },
         "groupInfo": {
             "nameLabel": "Group name",
             "descriptionLabel": "Description",
@@ -2365,6 +2424,10 @@
         "template": {
             "label": "Group template",
             "description": "Template currently applied to this group"
+        },
+        "memberApproval": {
+            "label": "Enable member approval",
+            "description": "Require approval when members join via invite link"
         },
         "members": {
             "title": "Members",
@@ -2420,7 +2483,9 @@
             "approving": "Approving...",
             "reject": "Reject",
             "rejecting": "Rejecting...",
-            "error": "Failed to load pending approvals"
+            "error": "Failed to load pending approvals",
+            "approveFailed": "Failed to approve member",
+            "rejectFailed": "Failed to reject member"
         }
     },
     "TrashedPage": {
@@ -2907,6 +2972,12 @@
             "high": "High"
         },
         "updatedAt": "Updated: {time}"
+    },
+    "MemberDetailModal": {
+        "title": "Member details",
+        "joinedGroups": "Joined groups",
+        "noJoinedGroups": "Not joined any groups",
+        "close": "Close"
     },
     "GroupPerformanceRadar": {
         "title": "Group Performance",

@@ -358,7 +358,7 @@ export default function SettingsClient({ initialData }: SettingsClientProps) {
             {contextHolder}
 
             {/* ── 2-column grid ── */}
-            <div style={{ display: "flex", gap: 24, alignItems: "flex-start", paddingBottom: 80 }}>
+            <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
                 {/* ════════════════════════════════
                     LEFT — Profile form
                 ════════════════════════════════ */}

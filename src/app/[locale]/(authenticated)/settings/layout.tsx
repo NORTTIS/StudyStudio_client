@@ -9,7 +9,7 @@ import {
     SettingOutlined,
     UserOutlined
 } from "@ant-design/icons";
-import { ConfigProvider, Menu, Typography } from "antd";
+import { ConfigProvider, Typography } from "antd";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -21,6 +21,7 @@ const PRIMARY = "#FF5F3D";
 const DARK = "#261E33";
 const MUTED = "#6F6B99";
 const BORDER = "#E5E5E5";
+const APP_FONT_FAMILY = "var(--font-inter), sans-serif";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations("SettingsPage");
@@ -31,25 +32,25 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         {
             key: `/${locale}/settings`,
             icon: <UserOutlined />,
-            label: <Link href={`/${locale}/settings`}>{t("menu.profile")}</Link>,
+            label: t("menu.profile"),
             description: t("menu.profile")
         },
         {
             key: `/${locale}/settings/security`,
             icon: <LockOutlined />,
-            label: <Link href={`/${locale}/settings/security`}>{t("menu.security")}</Link>,
+            label: t("menu.security"),
             description: t("menu.security")
         },
         {
             key: `/${locale}/settings/billing`,
             icon: <CreditCardOutlined />,
-            label: <Link href={`/${locale}/settings/billing`}>{t("menu.billing")}</Link>,
+            label: t("menu.billing"),
             description: t("menu.billing")
         },
         {
             key: `/${locale}/settings/help`,
             icon: <QuestionCircleOutlined />,
-            label: <Link href={`/${locale}/settings/help`}>{t("menu.help")}</Link>,
+            label: t("menu.help"),
             description: t("menu.help")
         }
     ];
@@ -67,27 +68,15 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     return (
         <ConfigProvider
             theme={{
-                token: { colorPrimary: PRIMARY, fontFamily: "inherit", borderRadius: 10 },
-                components: {
-                    Menu: {
-                        itemSelectedBg: "#FFF0ED",
-                        itemSelectedColor: PRIMARY,
-                        itemHoverBg: "#F5F5F5",
-                        itemHoverColor: DARK,
-                        itemColor: MUTED,
-                        itemBorderRadius: 10,
-                        itemPaddingInline: 14,
-                        iconSize: 16,
-                        iconMarginInlineEnd: 10
-                    }
-                }
+                token: { colorPrimary: PRIMARY, fontFamily: APP_FONT_FAMILY, borderRadius: 10 },
+                components: {}
             }}>
-            <div style={{ display: "flex", minHeight: "100vh", background: "#F5F5F5" }}>
+            <div style={{ display: "flex", minHeight: "100vh", background: "#F5F5F5", fontFamily: APP_FONT_FAMILY }}>
                 {/* ─────────── SIDEBAR ─────────── */}
                 <aside
                     style={{
-                        width: 240,
-                        background: "#fff",
+                        width: 272,
+                        background: "#F8F8F8",
                         borderRight: `1px solid ${BORDER}`,
                         display: "flex",
                         flexDirection: "column",
@@ -96,44 +85,94 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                         top: 0,
                         height: "100vh"
                     }}>
-                    {/* Logo */}
                     <div
                         style={{
-                            height: 64,
                             display: "flex",
-                            alignItems: "center",
-                            paddingInline: 20,
-                            borderBottom: `1px solid ${BORDER}`,
-                            flexShrink: 0
+                            height: "100%",
+                            flexDirection: "column",
+                            borderRight: "1px solid rgba(255,165,96,0.35)",
+                            background: "#FFFFFF",
+                            boxShadow: "0 10px 40px rgba(15,23,42,0.04)"
                         }}>
-                        <Link href={`/${locale}/home`} style={{ display: "flex", alignItems: "center" }}>
-                            <Logo className="m-0" />
-                        </Link>
-                    </div>
-
-                    {/* Section label */}
-                    <div style={{ padding: "20px 20px 6px" }}>
-                        <Text
+                        {/* Logo */}
+                        <div
                             style={{
-                                fontSize: 10,
-                                fontWeight: 700,
-                                letterSpacing: "0.09em",
-                                textTransform: "uppercase",
-                                color: "#B0AAC5"
+                                height: 80,
+                                display: "flex",
+                                alignItems: "center",
+                                paddingInline: 20,
+                                borderBottom: `1px solid ${BORDER}`,
+                                flexShrink: 0
                             }}>
-                            {t("sectionLabel")}
-                        </Text>
-                    </div>
+                            <Link href={`/${locale}/home`} style={{ display: "flex", alignItems: "center" }}>
+                                <Logo className="m-0" />
+                            </Link>
+                        </div>
 
-                    {/* Nav */}
-                    <div style={{ flex: 1, padding: "4px 12px", overflowY: "auto" }}>
-                        <Menu
-                            mode="inline"
-                            selectedKeys={[selectedKey]}
-                            items={menuItems.map(({ key, icon, label }) => ({ key, icon, label }))}
-                            inlineIndent={0}
-                            style={{ border: "none", background: "transparent", fontSize: 14 }}
-                        />
+                        {/* Section label */}
+                        <div style={{ padding: "20px 20px 8px" }}>
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    letterSpacing: "0.09em",
+                                    textTransform: "uppercase",
+                                    color: "#B0AAC5"
+                                }}>
+                                {t("sectionLabel")}
+                            </Text>
+                        </div>
+
+                        {/* Nav */}
+                        <div style={{ flex: 1, padding: "0 12px 12px", overflowY: "auto" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                {menuItems.map((item) => {
+                                    const isActive = item.key === selectedKey;
+
+                                    return (
+                                        <Link
+                                            key={item.key}
+                                            href={item.key}
+                                            className={!isActive ? "hover:bg-orange-50 hover:text-orange-600 hover:shadow-sm" : undefined}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 14,
+                                                borderRadius: 16,
+                                                padding: "14px 16px",
+                                                fontSize: 14,
+                                                fontWeight: 600,
+                                                textDecoration: "none",
+                                                color: isActive ? "#FFFFFF" : undefined,
+                                                background: isActive
+                                                    ? "linear-gradient(to right, #f97316, #dc2626)"
+                                                    : undefined,
+                                                boxShadow: isActive
+                                                    ? "0 10px 24px rgba(249,115,22,0.28)"
+                                                    : undefined,
+                                                transition: "all 0.2s ease"
+                                            }}>
+                                            <span
+                                                style={{
+                                                    width: 28,
+                                                    height: 28,
+                                                    borderRadius: 10,
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    color: isActive ? "#FFFFFF" : "#F97316",
+                                                    background: isActive ? "rgba(255,255,255,0.16)" : "#FFF7ED",
+                                                    fontSize: 16,
+                                                    flexShrink: 0
+                                                }}>
+                                                {item.icon}
+                                            </span>
+                                            <span>{item.label}</span>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </aside>
 
@@ -154,33 +193,14 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             top: 0,
                             zIndex: 10
                         }}>
-                        {/* Back to Dashboard — prominent button */}
-                        <div style={{ borderTop: `1px solid ${BORDER}` }}>
-                            <Link
-                                href={`/${locale}/home`}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 8,
-                                    padding: "11px 14px",
-                                    borderRadius: 10,
-                                    color: "#fff",
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    textDecoration: "none",
-                                    background: "#eaeaea",
-                                    transition: "opacity 0.15s"
-                                }}
-                                className="hover:opacity-90"
-                                onMouseEnter={(e) => {
-                                    (e.currentTarget as HTMLAnchorElement).style.opacity = "0.85";
-                                }}
-                                onMouseLeave={(e) => {
-                                    (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
-                                }}>
-                                <ArrowLeftOutlined style={{ fontSize: 12, color: "#000000" }} />
-                            </Link>
-                        </div>
+                        <Link
+                            href={`/${locale}/home`}
+                            className="mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-[#6F6B99] shadow-sm transition-all hover:bg-orange-50 hover:text-orange-600"
+                            style={{ textDecoration: "none" }}
+                            aria-label="Back to dashboard"
+                            title="Back to dashboard">
+                            <ArrowLeftOutlined style={{ fontSize: 16 }} />
+                        </Link>
                         {/* Icon badge */}
                         <div
                             style={{

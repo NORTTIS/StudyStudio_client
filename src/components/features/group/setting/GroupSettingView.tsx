@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Trash2, UserPlus, Users } from "lucide-react";
+import { Power, Settings, Trash2, UserPlus, Users } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -12,6 +12,12 @@ import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { ApproveMemberSection } from "@/components/features/group/setting/ApproveMemberSection";
 import { getRoleIcon, getRoleColor } from "@/components/features/group/RoleUtils";
+import { toggleGroupArchive, toggleGroupMemberApproval, updateGroupSettings } from "@/api/groups";
+import { getStudioById } from "@/api/studios";
+import {
+    pendingJoinEvents,
+    PENDING_JOIN_CHANGED_EVENT
+} from "@/components/features/group/group.api";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -38,6 +44,7 @@ type MemberRole = "Owner" | "Moderator" | "Member" | "Commenter" | "Viewer";
 type GroupDetailResponseApiResponse = components["schemas"]["GroupDetailResponseApiResponse"];
 type GroupMemberListResponseApiResponse = components["schemas"]["GroupMemberListResponseApiResponse"];
 type CreateInviteLinkResponseApiResponse = components["schemas"]["CreateInviteLinkResponseApiResponse"];
+type StudioResponseApiResponse = components["schemas"]["StudioResponseApiResponse"];
 
 type ApiMemberPreview = components["schemas"]["MemberPreviewDto"];
 type ApiGroupMemberDto = components["schemas"]["GroupMemberDto"];
@@ -150,10 +157,84 @@ const ROLE_FORMATS = (role: string) => {
     return [raw, upper, roleUpper];
 };
 
+const normalizeInviteRoleForApi = (role: InviteRole) => {
+    const normalized = String(role).trim().toLowerCase();
+
+    if (normalized === "moderator") return "admin";
+    if (normalized === "commenter") return "viewer";
+    if (normalized === "viewer") return "viewer";
+    return "member";
+};
+
+const normalizeErrorMessage = (value: string, fallback = "Đã xảy ra lỗi") => {
+    const raw = String(value || "").trim();
+    if (!raw) return fallback;
+
+    const lowered = raw.toLowerCase();
+    const isInviteLimitError =
+        (lowered.includes("invite") || lowered.includes("lời mời"))
+        && (lowered.includes("limit") || lowered.includes("quota") || lowered.includes("too many") || lowered.includes("maximum"));
+
+    if (isInviteLimitError) {
+        return "Bạn đã vượt quá giới hạn tạo lời mời. Vui lòng thử lại sau.";
+    }
+
+    const cleaned = raw
+        .replace(/\[[^\]]+\]/g, " ")
+        .replace(/\b(http\s*)?\d{3}\b/gi, " ")
+        .replace(/\b(code|error\s*code|status)\s*[:=]\s*[^\s,;]+/gi, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
+    return cleaned || fallback;
+};
+
 const getApiBase = () => {
     const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
     const base = String(raw).replace(/\/+$/, "");
     return base.endsWith("/api") ? base : `${base}/api`;
+};
+
+const extractTokenFromInviteUrl = (inviteUrl: string) => {
+    const raw = String(inviteUrl || "").trim();
+    if (!raw) return "";
+
+    try {
+        const parsed = new URL(raw, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+        const tokenFromQuery = String(parsed.searchParams.get("token") ?? "").trim();
+        if (tokenFromQuery) return tokenFromQuery;
+
+        const pathMatch = parsed.pathname.match(/\/(?:invite|studio-invite)\/([^/?#]+)/i);
+        if (pathMatch?.[1]) return decodeURIComponent(pathMatch[1]);
+    } catch {
+        const queryMatch = raw.match(/[?&]token=([^&#]+)/i);
+        if (queryMatch?.[1]) return decodeURIComponent(queryMatch[1]);
+
+        const pathMatch = raw.match(/\/(?:invite|studio-invite)\/([^/?#]+)/i);
+        if (pathMatch?.[1]) return decodeURIComponent(pathMatch[1]);
+    }
+
+    return "";
+};
+
+const memberApprovalStorageKey = (groupId: string) => `group:${groupId}:requires-member-approval`;
+
+const readMemberApprovalFallback = (groupId: string): boolean | null => {
+    try {
+        const raw = localStorage.getItem(memberApprovalStorageKey(groupId));
+        if (raw === null) return null;
+        return raw === "1";
+    } catch {
+        return null;
+    }
+};
+
+const writeMemberApprovalFallback = (groupId: string, value: boolean) => {
+    try {
+        localStorage.setItem(memberApprovalStorageKey(groupId), value ? "1" : "0");
+    } catch {
+        // Ignore storage failures (private mode/quota) and keep UI flow working.
+    }
 };
 
 export function GroupSettingView() {
@@ -192,6 +273,12 @@ export function GroupSettingView() {
     const [isTemplate, setIsTemplate] = useState(false);
     const [initialIsTemplate, setInitialIsTemplate] = useState(false);
 
+    const [requiresMemberApproval, setRequiresMemberApproval] = useState(false);
+    const [initialRequiresMemberApproval, setInitialRequiresMemberApproval] = useState(false);
+    const [isArchived, setIsArchived] = useState(false);
+    const [isParentStudioArchived, setIsParentStudioArchived] = useState(false);
+    const [isUpdatingArchive, setIsUpdatingArchive] = useState(false);
+
     const [members, setMembers] = useState<Member[]>([]);
     const [myRoleInGroup, setMyRoleInGroup] = useState<MemberRole>("Member");
 
@@ -200,6 +287,7 @@ export function GroupSettingView() {
     const [generalError, setGeneralError] = useState("");
     const [membersError, setMembersError] = useState("");
     const [dangerError, setDangerError] = useState("");
+    const [statusError, setStatusError] = useState("");
 
     const [roleLoadingByUserId, setRoleLoadingByUserId] = useState<Record<string, boolean>>({});
     const [removeLoadingByUserId, setRemoveLoadingByUserId] = useState<Record<string, boolean>>({});
@@ -213,8 +301,11 @@ export function GroupSettingView() {
     const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string>("");
 
-    const canManageMembers = myRoleInGroup === "Owner" || myRoleInGroup === "Moderator";
-    const canDelete = useMemo(() => myRoleInGroup === "Owner", [myRoleInGroup]);
+    const isGroupPaused = isArchived || isParentStudioArchived;
+    const canToggleArchive = myRoleInGroup === "Owner" && !isParentStudioArchived;
+    const canEditDetails = myRoleInGroup === "Owner" && !isGroupPaused;
+    const canManageMembers = (myRoleInGroup === "Owner" || myRoleInGroup === "Moderator") && !isGroupPaused;
+    const canDelete = useMemo(() => myRoleInGroup === "Owner" && !isGroupPaused, [myRoleInGroup, isGroupPaused]);
 
     const apiBase = getApiBase();
 
@@ -251,9 +342,9 @@ export function GroupSettingView() {
     const extractApiMessage = (text: string, json: unknown) => {
         const msg =
             json && typeof json === "object" ? String((json as { message?: unknown }).message ?? "").trim() : "";
-        if (msg) return msg;
+        if (msg) return normalizeErrorMessage(msg);
         const rawText = (text ?? "").toString().trim();
-        return rawText || "Đã xảy ra lỗi";
+        return normalizeErrorMessage(rawText);
     };
 
     const getTokenOrFail = () => {
@@ -272,7 +363,7 @@ export function GroupSettingView() {
         });
 
         const text = await readText(res);
-        if (!res.ok) throw new Error(text || `${t("errors.loadMembersFailed")} (${res.status})`);
+        if (!res.ok) throw new Error(normalizeErrorMessage(text, t("errors.loadMembersFailed")));
 
         const json = parseJsonSafe(text);
         return (json ?? {}) as GroupMemberListResponseApiResponse;
@@ -305,6 +396,7 @@ export function GroupSettingView() {
         setGeneralError("");
         setMembersError("");
         setDangerError("");
+        setStatusError("");
 
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
@@ -329,6 +421,9 @@ export function GroupSettingView() {
             setInitialAlias("");
             setIsTemplate(false);
             setInitialIsTemplate(false);
+            setRequiresMemberApproval(false);
+            setInitialRequiresMemberApproval(false);
+            setIsArchived(false);
             return false;
         }
 
@@ -363,6 +458,7 @@ export function GroupSettingView() {
             setInitialAlias("");
             setIsTemplate(false);
             setInitialIsTemplate(false);
+            setIsArchived(false);
             return false;
         }
 
@@ -401,6 +497,34 @@ export function GroupSettingView() {
         const templateBool = Boolean(templateValue);
         setIsTemplate(templateBool);
         setInitialIsTemplate(templateBool);
+
+        const archivedBool = Boolean((data as Record<string, unknown>).isArchived ?? false);
+        setIsArchived(archivedBool);
+
+        const parentStudioId = String(data.studioId ?? "").trim();
+        if (parentStudioId) {
+            try {
+                const studioResult = await getStudioById(parentStudioId, locale);
+                if (studioResult.status === "success" && studioResult.data) {
+                    setIsParentStudioArchived(Boolean(studioResult.data.isArchived ?? false));
+                } else {
+                    setIsParentStudioArchived(false);
+                }
+            } catch {
+                setIsParentStudioArchived(false);
+            }
+        } else {
+            setIsParentStudioArchived(false);
+        }
+
+        const requiresApprovalValue =
+            (data as Record<string, unknown>).requiresMemberApproval ??
+            (data as Record<string, unknown>).memberApprovalRequired ??
+            readMemberApprovalFallback(id) ??
+            false;
+        const requiresApprovalBool = Boolean(requiresApprovalValue);
+        setRequiresMemberApproval(requiresApprovalBool);
+        setInitialRequiresMemberApproval(requiresApprovalBool);
 
         const roleFromDetail = toMemberRole(data.userRole);
         setMyRoleInGroup(roleFromDetail);
@@ -475,8 +599,37 @@ export function GroupSettingView() {
         setCurrentUserId(getCurrentUserId());
     }, []);
 
+    // Listen for pending member approval changes and reload members
+    useEffect(() => {
+        const handleMembersChanged = (event: Event) => {
+            const customEvent = event as CustomEvent<{ groupId?: string; userId?: string }>;
+            const changedGroupId = String(customEvent.detail?.groupId ?? "").trim();
+
+            if (changedGroupId && groupId && changedGroupId === groupId) {
+                const token = localStorage.getItem("accessToken");
+                if (token) {
+                    fetchGroupMembers(groupId, token)
+                        .then((membersJson) => {
+                            const mapped = mapMembersFromMembersApi(membersJson);
+                            setMembers(mapped);
+                        })
+                        .catch((err) => {
+                            console.error("[GroupSettingView] Failed to reload members after approval:", err);
+                        });
+                }
+            }
+        };
+
+        pendingJoinEvents.addEventListener(PENDING_JOIN_CHANGED_EVENT, handleMembersChanged);
+
+        return () => {
+            pendingJoinEvents.removeEventListener(PENDING_JOIN_CHANGED_EVENT, handleMembersChanged);
+        };
+    }, [groupId]);
+
     const handleEditSave = async () => {
         if (!groupId) return;
+        if (!canEditDetails) return;
 
         if (isEditing) {
             setGeneralError("");
@@ -486,17 +639,8 @@ export function GroupSettingView() {
                 return;
             }
 
-            const token = getTokenOrFail();
-            if (!token) return;
-
-            const res = await fetch(`${apiBase}/group`, {
-                method: "PUT",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
+            const res = await updateGroupSettings(
+                {
                     groupId,
                     groupName: validation.data.groupName,
                     description: validation.data.description,
@@ -504,19 +648,22 @@ export function GroupSettingView() {
                     colorHex: colorHex,
                     iconEmoji: iconEmoji || null,
                     isTemplate: isTemplate,
+                    isOpen: !requiresMemberApproval,
+                    requiresMemberApproval,
+                    memberApprovalRequired: requiresMemberApproval,
                     bannerUrl: bannerUrl,
                     tagline: tagline || null,
                     alias: alias || null
-                })
-            });
+                },
+                locale
+            );
 
-            const text = await readText(res);
-            const json = parseJsonSafe(text);
-
-            if (!res.ok || (json && !okByJsonStatus(json))) {
-                setGeneralError(extractApiMessage(text, json));
+            if (res.status !== "success" || !res.data) {
+                setGeneralError(res.message || t("errors.loadGroupFailed"));
                 return;
             }
+
+            writeMemberApprovalFallback(groupId, requiresMemberApproval);
 
             window.dispatchEvent(
                 new CustomEvent(GROUP_UPDATED_EVENT, {
@@ -524,7 +671,8 @@ export function GroupSettingView() {
                         id: groupId,
                         name: validation.data.groupName,
                         description: validation.data.description,
-                        studioName: masterStudio
+                        studioName: masterStudio,
+                        requiresMemberApproval
                     }
                 })
             );
@@ -537,6 +685,9 @@ export function GroupSettingView() {
             setInitialTagline(tagline);
             setInitialAlias(alias);
             setInitialIsTemplate(isTemplate);
+            setInitialRequiresMemberApproval(requiresMemberApproval);
+
+            await loadGroup(groupId);
 
             setIsEditing(false);
             return;
@@ -555,8 +706,82 @@ export function GroupSettingView() {
         setTagline(initialTagline);
         setAlias(initialAlias);
         setIsTemplate(initialIsTemplate);
+        setRequiresMemberApproval(initialRequiresMemberApproval);
         setGeneralError("");
         setIsEditing(false);
+    };
+
+    const handleArchiveToggle = async (checked: boolean) => {
+        if (!groupId || !canToggleArchive || isUpdatingArchive) return;
+
+        const previous = isArchived;
+        setStatusError("");
+        setIsArchived(checked);
+        setIsUpdatingArchive(true);
+
+        try {
+            const res = await toggleGroupArchive(groupId, checked, locale);
+
+            if (res.status !== "success") {
+                setIsArchived(previous);
+                setStatusError(res.message || t("errors.loadGroupFailed"));
+                return;
+            }
+
+            if (checked && isEditing) {
+                setIsEditing(false);
+            }
+
+            window.dispatchEvent(
+                new CustomEvent(GROUP_UPDATED_EVENT, {
+                    detail: {
+                        id: groupId,
+                        isArchived: checked
+                    }
+                })
+            );
+
+            await loadGroup(groupId);
+        } catch {
+            setIsArchived(previous);
+            setStatusError(t("errors.loadGroupFailed"));
+        } finally {
+            setIsUpdatingArchive(false);
+        }
+    };
+
+    const handleRequiresMemberApprovalChange = async (checked: boolean) => {
+        if (!groupId || myRoleInGroup !== "Owner" || isGroupPaused) return;
+
+        const previous = requiresMemberApproval;
+        setGeneralError("");
+        setRequiresMemberApproval(checked);
+
+        try {
+            const res = await toggleGroupMemberApproval(groupId, checked, locale);
+
+            if (res.status !== "success") {
+                setRequiresMemberApproval(previous);
+                setGeneralError(res.message || t("errors.loadGroupFailed"));
+                return;
+            }
+
+            setInitialRequiresMemberApproval(checked);
+            writeMemberApprovalFallback(groupId, checked);
+            window.dispatchEvent(
+                new CustomEvent(GROUP_UPDATED_EVENT, {
+                    detail: {
+                        id: groupId,
+                        requiresMemberApproval: checked
+                    }
+                })
+            );
+
+            await loadGroup(groupId);
+        } catch {
+            setRequiresMemberApproval(previous);
+            setGeneralError(t("errors.loadGroupFailed"));
+        }
     };
 
     const handleDelete = async () => {
@@ -673,25 +898,36 @@ export function GroupSettingView() {
 
         setMembersError("");
 
-        for (const apiRole of ROLE_FORMATS(role)) {
-            const res = await fetch(`${apiBase}/invite/email`, {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ groupId, email, role: apiRole })
-            });
+        const apiRole = normalizeInviteRoleForApi(role);
+        const requestBody: Record<string, unknown> = {
+            groupId,
+            email,
+            role: apiRole
+        };
 
-            const text = await readText(res);
-            const json = parseJsonSafe(text);
-
-            if (res.ok && (!json || okByJsonStatus(json))) return true;
-
-            setMembersError(extractApiMessage(text, json));
+        if (requiresMemberApproval) {
+            requestBody.requiresMemberApproval = true;
+            requestBody.memberApprovalRequired = true;
+            requestBody.isApproved = false;
+            requestBody.pendingApproval = true;
         }
 
+        const res = await fetch(`${apiBase}/invite/email`, {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const text = await readText(res);
+        const json = parseJsonSafe(text);
+
+        if (res.ok && (!json || okByJsonStatus(json))) return true;
+
+        setMembersError(extractApiMessage(text, json));
         return false;
     };
 
@@ -703,31 +939,56 @@ export function GroupSettingView() {
 
         setMembersError("");
 
-        for (const apiRole of ROLE_FORMATS(role)) {
-            const res = await fetch(`${apiBase}/invite/create`, {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ groupId, role: apiRole })
-            });
+        const apiRole = normalizeInviteRoleForApi(role);
+        const requestBody: Record<string, unknown> = {
+            groupId,
+            role: apiRole
+        };
 
-            const text = await readText(res);
-            const json = parseJsonSafe(text);
-
-            if (res.ok && json && okByJsonStatus(json)) {
-                const inviteResponse = json as CreateInviteLinkResponseApiResponse;
-                const url = String(inviteResponse?.data?.inviteUrl ?? "").trim();
-                if (url) return url;
-                setMembersError("Thiếu inviteUrl");
-                return null;
-            }
-
-            setMembersError(extractApiMessage(text, json));
+        if (requiresMemberApproval) {
+            requestBody.requiresMemberApproval = true;
+            requestBody.memberApprovalRequired = true;
+            requestBody.isApproved = false;
+            requestBody.pendingApproval = true;
         }
 
+        const res = await fetch(`${apiBase}/invite/create`, {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const text = await readText(res);
+        const json = parseJsonSafe(text);
+
+        if (res.ok) {
+            const inviteResponse = (json && typeof json === "object" ? (json as CreateInviteLinkResponseApiResponse) : null) ?? null;
+            const inviteData = inviteResponse?.data ?? null;
+            const tokenFromApi = String(inviteData?.token ?? (json as Record<string, unknown> | null)?.token ?? "").trim();
+            const inviteUrlFromApi = String(inviteData?.inviteUrl ?? (json as Record<string, unknown> | null)?.inviteUrl ?? text.trim()).trim();
+
+            const token = tokenFromApi || extractTokenFromInviteUrl(inviteUrlFromApi);
+
+            if (token) {
+                const origin = typeof window !== "undefined" ? window.location.origin : "";
+                const pendingQuery = requiresMemberApproval ? "?pa=1" : "";
+                return `${origin}/${locale}/invite/${encodeURIComponent(token)}${pendingQuery}`;
+            }
+
+            if (inviteUrlFromApi) {
+                if (!requiresMemberApproval) return inviteUrlFromApi;
+                const separator = inviteUrlFromApi.includes("?") ? "&" : "?";
+                return `${inviteUrlFromApi}${separator}pa=1`;
+            }
+            setMembersError("Thiếu inviteUrl");
+            return null;
+        }
+
+        setMembersError(extractApiMessage(text, json));
         return null;
     };
 
@@ -856,8 +1117,8 @@ export function GroupSettingView() {
         <div className="min-h-screen w-full px-8 py-6 bg-transparent">
             <Container className="rounded-2xl border border-gray-200 bg-white px-6 py-4 shadow-sm">
                 <div className="space-y-6 pb-10">
-                    
-                    
+
+
 
                     <section className="rounded-2xl border bg-white shadow-sm">
                         <div className="flex items-start justify-between border-b px-6 py-5">
@@ -882,6 +1143,7 @@ export function GroupSettingView() {
                                 ) : null}
                                 <Button
                                     onClick={handleEditSave}
+                                    disabled={!canEditDetails}
                                     className="h-10 rounded-xl bg-orange-600 px-4 font-semibold text-sm text-white hover:bg-orange-700">
                                     {isEditing ? t("general.saveButton") : t("general.editButton")}
                                 </Button>
@@ -889,55 +1151,56 @@ export function GroupSettingView() {
                         </div>
 
                         <div className="px-6 py-6">
+
                             <div className="mb-6 flex items-end gap-6">
                                 {/* Identity strip */}
-                    <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row sm:items-start">
-                        {/* Banner thumbnail */}
-                        
+                                <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row sm:items-start">
+                                    {/* Banner thumbnail */}
 
-                        {/* Avatar + Color/Emoji */}
-                        <div className="flex items-end gap-3 sm:flex-col sm:items-start">
-                            <AvatarUpload
-                                entityType="group"
-                                entityId={groupId ?? ""}
-                                avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
-                                colorHex={isEditing ? colorHex : initialColorHex}
-                                iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
-                                onUploadSuccess={(url) => setAvatarUrl(url)}
-                                onError={(msg) => setGeneralError(msg)}
-                                disabled={!isEditing}
-                            />
-                            <div className="flex items-center gap-2">
-                                <ColorPicker
-                                    label="Màu"
-                                    value={isEditing ? colorHex : initialColorHex}
-                                    onChange={isEditing ? setColorHex : undefined}
-                                    disabled={!isEditing}
-                                />
-                                <EmojiPicker
-                                    label="icon"
-                                    value={isEditing ? iconEmoji : initialIconEmoji}
-                                    onChange={isEditing ? setIconEmoji : undefined}
-                                    disabled={!isEditing}
-                                />
-                            </div>
-                        </div>
-                        <div className="w-full sm:flex-1">
-                            <p className="mb-2 text-xs font-semibold text-gray-700">
-                                {t("groupInfo.bannerLabel") || "Ảnh bìa"}
-                            </p>
-                            <BannerUpload
-                                entityType="group"
-                                entityId={groupId ?? ""}
-                                bannerUrl={isEditing ? bannerUrl : initialBannerUrl}
-                                colorHex={isEditing ? colorHex : initialColorHex}
-                                onUploadSuccess={(url) => setBannerUrl(url)}
-                                onDeleteSuccess={() => setBannerUrl(null)}
-                                onError={(msg) => setGeneralError(msg)}
-                                disabled={!isEditing}
-                            />
-                        </div>
-                    </div>
+
+                                    {/* Avatar + Color/Emoji */}
+                                    <div className="flex items-end gap-3 sm:flex-col sm:items-start">
+                                        <AvatarUpload
+                                            entityType="group"
+                                            entityId={groupId ?? ""}
+                                            avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
+                                            colorHex={isEditing ? colorHex : initialColorHex}
+                                            iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
+                                            onUploadSuccess={(url) => setAvatarUrl(url)}
+                                            onError={(msg) => setGeneralError(msg)}
+                                            disabled={!isEditing}
+                                        />
+                                        <div className="flex items-center gap-2">
+                                            <ColorPicker
+                                                label="Màu"
+                                                value={isEditing ? colorHex : initialColorHex}
+                                                onChange={isEditing ? setColorHex : undefined}
+                                                disabled={!isEditing}
+                                            />
+                                            <EmojiPicker
+                                                label="icon"
+                                                value={isEditing ? iconEmoji : initialIconEmoji}
+                                                onChange={isEditing ? setIconEmoji : undefined}
+                                                disabled={!isEditing}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="w-full sm:flex-1">
+                                        <p className="mb-2 text-xs font-semibold text-gray-700">
+                                            {t("groupInfo.bannerLabel") || "Ảnh bìa"}
+                                        </p>
+                                        <BannerUpload
+                                            entityType="group"
+                                            entityId={groupId ?? ""}
+                                            bannerUrl={isEditing ? bannerUrl : initialBannerUrl}
+                                            colorHex={isEditing ? colorHex : initialColorHex}
+                                            onUploadSuccess={(url) => setBannerUrl(url)}
+                                            onDeleteSuccess={() => setBannerUrl(null)}
+                                            onError={(msg) => setGeneralError(msg)}
+                                            disabled={!isEditing}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-5">
@@ -1102,6 +1365,7 @@ export function GroupSettingView() {
                                         className="data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-gray-300"
                                     />
                                 </div>
+
                             </div>
 
                             {generalError ? (
@@ -1260,9 +1524,16 @@ export function GroupSettingView() {
                         </div>
                     </section>
 
-                    <ApproveMemberSection groupId={groupId} canManage={canManageMembers} />
+                    <ApproveMemberSection
+                        groupId={groupId}
+                        canManage={canManageMembers}
+                        showMemberApprovalToggle={myRoleInGroup === "Owner"}
+                        requiresMemberApproval={requiresMemberApproval}
+                        canEditMemberApproval={myRoleInGroup === "Owner"}
+                        onRequiresMemberApprovalChange={handleRequiresMemberApprovalChange}
+                    />
 
-                    {canDelete ? (
+                    {myRoleInGroup === "Owner" ? (
                         <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
                             <div className="border-red-200 border-b px-6 py-5">
                                 <h2 className="font-bold text-red-700 text-sm">{t("dangerZone.title")}</h2>
@@ -1270,6 +1541,72 @@ export function GroupSettingView() {
                             </div>
 
                             <div className="px-6 py-6">
+                                <div
+                                    className={`mb-5 rounded-2xl border p-5 transition-all duration-300 ${isGroupPaused
+                                        ? "border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50"
+                                        : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50"}`}>
+                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                        <div className="flex items-start gap-3">
+                                            <div
+                                                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${isGroupPaused
+                                                    ? "bg-amber-100 text-amber-700"
+                                                    : "bg-emerald-100 text-emerald-700"} ${isUpdatingArchive ? "animate-pulse" : ""}`}>
+                                                <Power className="h-4 w-4" />
+                                            </div>
+                                            <div>
+                                                <div
+                                                    className={`font-bold text-sm transition-colors duration-300 ${isGroupPaused
+                                                        ? "text-amber-700"
+                                                        : "text-emerald-700"}`}>
+                                                    {t("access.title")}
+                                                </div>
+                                                <div className="mt-1 text-xs text-gray-600">
+                                                    {isGroupPaused
+                                                        ? t("access.inactiveDescription")
+                                                        : t("access.activeDescription")}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${isGroupPaused
+                                                    ? "bg-amber-100 text-amber-700"
+                                                    : "bg-gray-100 text-gray-500"}`}>
+                                                {t("access.inactiveLabel")}
+                                            </span>
+                                            <Switch
+                                                checked={!isGroupPaused}
+                                                onCheckedChange={(checked) => {
+                                                    void handleArchiveToggle(!checked);
+                                                }}
+                                                disabled={!canToggleArchive || isUpdatingArchive || isParentStudioArchived}
+                                                className="transition-all duration-300 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500"
+                                            />
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${!isGroupPaused
+                                                    ? "bg-emerald-100 text-emerald-700"
+                                                    : "bg-gray-100 text-gray-500"}`}>
+                                                {t("access.activeLabel")}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {statusError ? (
+                                        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
+                                            {statusError}
+                                        </div>
+                                    ) : null}
+
+                                    {isParentStudioArchived ? (
+                                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700 text-xs">
+                                            {locale === "vi"
+                                                ? "Studio đang dừng hoạt động nên nhóm này không thể tự mở lại."
+                                                : "This group cannot be reactivated while its parent studio is paused."}
+                                        </div>
+                                    ) : null}
+                                </div>
+
                                 <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
                                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                         <div>

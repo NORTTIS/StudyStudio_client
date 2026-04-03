@@ -3,14 +3,24 @@
 import { ChevronDown, Filter, FolderKanban, Layers, LayoutGrid, List, Plus, Search, Sparkles, Star, Users, Users2, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { getStudioById } from "@/api/studios";
+import { cancelPendingJoinRequest } from "@/api/invites";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { GroupCard } from "./GroupCard";
-import { addFavourite, fetchGroupsPageData, leaveGroup, mapRole, removeFavourite } from "./group.api";
+import {
+    addFavourite,
+    fetchGroupsPageData,
+    leaveGroup,
+    mapRole,
+    markPendingJoinRequestCanceled,
+    removeFavourite,
+    removePendingJoinGroup
+} from "./group.api";
 import type { GroupsPageData, GroupCardDto } from "./types";
 import { UsageBar } from "./UsageBar";
 
@@ -19,6 +29,7 @@ const emptyData: GroupsPageData = {
     favorites: [],
     managed: [],
     independent: [],
+    pending: [],
     joined: []
 };
 
@@ -72,6 +83,35 @@ function filterGroupsBySearch(groups: GroupCardDto[], query: string) {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return groups;
     return groups.filter((group) => getGroupSearchText(group).includes(normalized));
+}
+
+function getStudioId(group: GroupCardDto) {
+    const studio = (group as { studio?: { id?: string | null } }).studio;
+    return normId(studio?.id);
+}
+
+async function loadStudioOpenById(groups: GroupCardDto[]) {
+    const studioIds = Array.from(new Set(groups.map(getStudioId).filter((id) => !!id)));
+    if (studioIds.length === 0) return {} as Record<string, boolean>;
+
+    const results = await Promise.allSettled(
+        studioIds.map(async (studioId) => {
+            const result = await getStudioById(studioId);
+            return {
+                studioId,
+                isOpen: result.status === "success" ? result.data?.isOpen !== false : true
+            };
+        })
+    );
+
+    const studioOpenById: Record<string, boolean> = {};
+    for (const result of results) {
+        if (result.status === "fulfilled") {
+            studioOpenById[result.value.studioId] = result.value.isOpen;
+        }
+    }
+
+    return studioOpenById;
 }
 
 function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -212,10 +252,12 @@ function SegmentedView({
 
 export function GroupsPage() {
     const t = useTranslations("GroupsPage");
+    const locale = useLocale();
     const [view, setView] = useState<"grid" | "list">("grid");
     const [data, setData] = useState<GroupsPageData>(emptyData);
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
+    const [studioOpenById, setStudioOpenById] = useState<Record<string, boolean>>({});
     const [openCreate, setOpenCreate] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [groupTypeFilter, setGroupTypeFilter] = useState<"all" | "independent" | "managed" | "joined">("all");
@@ -231,9 +273,18 @@ export function GroupsPage() {
             setLoading(true);
             setError("");
             const res = await fetchGroupsPageData();
-            setData(sanitizeGroupsPageData(res));
+            const sanitized = sanitizeGroupsPageData(res);
+            setData(sanitized);
+            const allGroups = uniqueByIdKeepFirst([
+                ...sanitized.favorites,
+                ...sanitized.managed,
+                ...sanitized.independent,
+                ...sanitized.joined
+            ]);
+            setStudioOpenById(await loadStudioOpenById(allGroups));
         } catch (e: unknown) {
             setData(emptyData);
+            setStudioOpenById({});
             setError(e instanceof Error ? e.message : "Failed to load groups");
         } finally {
             setLoading(false);
@@ -249,10 +300,21 @@ export function GroupsPage() {
                 setError("");
                 const res = await fetchGroupsPageData();
                 if (!alive) return;
-                setData(sanitizeGroupsPageData(res));
+                const sanitized = sanitizeGroupsPageData(res);
+                setData(sanitized);
+                const allGroups = uniqueByIdKeepFirst([
+                    ...sanitized.favorites,
+                    ...sanitized.managed,
+                    ...sanitized.independent,
+                    ...sanitized.joined
+                ]);
+                const studioOpenMap = await loadStudioOpenById(allGroups);
+                if (!alive) return;
+                setStudioOpenById(studioOpenMap);
             } catch (e: unknown) {
                 if (!alive) return;
                 setData(emptyData);
+                setStudioOpenById({});
                 setError(e instanceof Error ? e.message : "Failed to load groups");
             } finally {
                 if (!alive) return;
@@ -265,7 +327,7 @@ export function GroupsPage() {
         };
     }, []);
 
-    const { usage, favorites, managed, independent, joined } = useMemo(() => data, [data]);
+    const { usage, favorites, managed, independent, pending, joined } = useMemo(() => data, [data]);
 
     const allGroups = useMemo(
         () => uniqueByIdKeepFirst([...favorites, ...managed, ...independent]),
@@ -292,6 +354,7 @@ export function GroupsPage() {
         if (groupTypeFilter !== "all" && groupTypeFilter !== "joined") return [];
         return filterGroupsBySearch(joined, searchQuery);
     }, [groupTypeFilter, joined, searchQuery]);
+    const filteredPending = useMemo(() => filterGroupsBySearch(pending, searchQuery), [pending, searchQuery]);
 
     const maxGroups = usage.max > 0 ? usage.max : 5;
     const currentGroupsCount = usage.current > 0 ? usage.current : ownedGroups.length;
@@ -357,6 +420,31 @@ export function GroupsPage() {
         } catch (e: unknown) {
             setData(snapshot);
             setError(e instanceof Error ? e.message : "Leave group failed");
+        }
+    };
+
+    const onCancelPending = async (groupIdRaw: string) => {
+        const groupId = normId(groupIdRaw);
+        if (!groupId) return;
+
+        const snapshot = data;
+
+        setData((prev) => ({
+            ...prev,
+            favorites: prev.favorites.filter((g) => getGroupId(g) !== groupId),
+            managed: prev.managed.filter((g) => getGroupId(g) !== groupId),
+            independent: prev.independent.filter((g) => getGroupId(g) !== groupId),
+            joined: prev.joined.filter((g) => getGroupId(g) !== groupId),
+            pending: prev.pending.filter((g) => getGroupId(g) !== groupId)
+        }));
+
+        try {
+            await cancelPendingJoinRequest(groupId);
+            markPendingJoinRequestCanceled(groupId);
+            removePendingJoinGroup(groupId);
+        } catch (e: unknown) {
+            setData(snapshot);
+            setError(e instanceof Error ? e.message : "Cancel pending request failed");
         }
     };
 
@@ -518,8 +606,10 @@ export function GroupsPage() {
                                     onToggle={() => setExpandFav((v) => !v)}
                                     onToggleStar={onToggleStar}
                                     onLeaveGroup={onLeaveGroup}
+                                    onCancelPending={onCancelPending}
                                     emptyText={t("favoritesEmpty")}
                                     loading={loading}
+                                    studioOpenById={studioOpenById}
                                     t={t}
                                 />
                             </SectionReveal>
@@ -538,8 +628,10 @@ export function GroupsPage() {
                                     onToggle={() => setExpandAll((v) => !v)}
                                     onToggleStar={onToggleStar}
                                     onLeaveGroup={onLeaveGroup}
+                                    onCancelPending={onCancelPending}
                                     emptyText={t("createdEmpty")}
                                     loading={loading}
+                                    studioOpenById={studioOpenById}
                                     t={t}
                                 />
                             </SectionReveal>
@@ -558,8 +650,10 @@ export function GroupsPage() {
                                     onToggle={() => setExpandManaged((v) => !v)}
                                     onToggleStar={onToggleStar}
                                     onLeaveGroup={onLeaveGroup}
+                                    onCancelPending={onCancelPending}
                                     emptyText={t("managedEmpty")}
                                     loading={loading}
+                                    studioOpenById={studioOpenById}
                                     t={t}
                                 />
                             </SectionReveal>
@@ -578,8 +672,10 @@ export function GroupsPage() {
                                     onToggle={() => setExpandIndependent((v) => !v)}
                                     onToggleStar={onToggleStar}
                                     onLeaveGroup={onLeaveGroup}
+                                    onCancelPending={onCancelPending}
                                     emptyText={t("independentEmpty")}
                                     loading={loading}
+                                    studioOpenById={studioOpenById}
                                     t={t}
                                 />
                             </SectionReveal>
@@ -598,8 +694,32 @@ export function GroupsPage() {
                                     onToggle={() => setExpandJoined((v) => !v)}
                                     onToggleStar={onToggleStar}
                                     onLeaveGroup={onLeaveGroup}
+                                    onCancelPending={onCancelPending}
                                     emptyText={t("joinedEmpty")}
                                     loading={loading}
+                                    studioOpenById={studioOpenById}
+                                    t={t}
+                                />
+                            </SectionReveal>
+                        )}
+
+                        {isAllFilter && (loading || filteredPending.length > 0) && (
+                            <SectionReveal delay={0.18}>
+                                <GroupsSection
+                                    icon={Users2}
+                                    iconVariant="yellow"
+                                    title={t("pendingApproval")}
+                                    count={filteredPending.length}
+                                    view={view}
+                                    items={filteredPending}
+                                    expanded={true}
+                                    onToggle={() => undefined}
+                                    onToggleStar={onToggleStar}
+                                    onLeaveGroup={onLeaveGroup}
+                                    onCancelPending={onCancelPending}
+                                    emptyText={t("pendingApprovalEmpty")}
+                                    loading={loading}
+                                    studioOpenById={studioOpenById}
                                     t={t}
                                 />
                             </SectionReveal>
@@ -632,8 +752,10 @@ function GroupsSection({
     onToggle,
     onToggleStar,
     onLeaveGroup,
+    onCancelPending,
     emptyText,
     loading = false,
+    studioOpenById,
     t
 }: {
     title: string;
@@ -647,8 +769,10 @@ function GroupsSection({
     onToggle: () => void;
     onToggleStar: (groupId: string) => Promise<void>;
     onLeaveGroup: (groupId: string) => Promise<void>;
+    onCancelPending: (groupId: string) => Promise<void>;
     emptyText: string;
     loading?: boolean;
+    studioOpenById: Record<string, boolean>;
     t: (key: string) => string;
 }) {
     const canToggle = items.length > PREVIEW_COUNT;
@@ -878,6 +1002,11 @@ function GroupsSection({
                                                 group={g}
                                                 onToggleStar={() => onToggleStar(getGroupId(g))}
                                                 onLeaveGroup={() => onLeaveGroup(getGroupId(g))}
+                                                onCancelPending={() => onCancelPending(getGroupId(g))}
+                                                isStudioOpen={(() => {
+                                                    const studioId = getStudioId(g);
+                                                    return studioId ? studioOpenById[studioId] !== false : true;
+                                                })()}
                                                 view={view}
                                             />
                                         </div>

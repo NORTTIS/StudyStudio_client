@@ -4,26 +4,27 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { getUserProfile, type UserProfile } from "@/api/user-profile";
+import {
+    approveStudioPendingMember,
+    getStudioPendingMembers,
+    rejectStudioPendingMember,
+    type StudioPendingMemberDto
+} from "@/api/studios";
 import { hexToGradient } from "@/lib/utils";
-
-type ApprovalStatus = "pending" | "approved" | "rejected";
 
 export interface StudioMemberApprovalItem {
     id: string;
     fullName: string;
     email: string;
     avatarUrl?: string | null;
-    requestedRole: string;
     requestedAt: string;
-    note?: string | null;
     colorHex?: string | null;
-    status: ApprovalStatus;
 }
 
 interface StudioMemberApprovalPageProps {
@@ -96,46 +97,20 @@ export default function StudioMemberApprovalPage({
 
     const [approvals, setApprovals] = useState<StudioMemberApprovalItem[]>([]);
 
-    const mockApprovalData: StudioMemberApprovalItem[] = useMemo(
-        () => [
-            {
-                id: "approval-1",
-                fullName: "Nguyễn Văn A",
-                email: "vana@example.com",
-                requestedRole: "Member",
-                requestedAt: "2026-04-01T09:30:00Z",
-                note: "Muốn tham gia để theo dõi task thiết kế.",
-                colorHex: "#FF7A59",
-                status: "pending"
-            },
-            {
-                id: "approval-2",
-                fullName: "Trần Thị B",
-                email: "thib@example.com",
-                requestedRole: "Member",
-                requestedAt: "2026-04-01T10:00:00Z",
-                note: "Cần quyền quản lý để điều phối team.",
-                colorHex: "#7C3AED",
-                status: "pending"
-            },
-            {
-                id: "approval-3",
-                fullName: "Lê Minh C",
-                email: "minhc@example.com",
-                requestedRole: "Member",
-                requestedAt: "2026-04-01T11:15:00Z",
-                note: "Hỗ trợ kiểm thử và tổng hợp tiến độ.",
-                colorHex: "#0EA5E9",
-                status: "pending"
-            }
-        ],
-        []
-    );
+    const mapPendingMember = useCallback((member: StudioPendingMemberDto): StudioMemberApprovalItem => {
+        const firstName = String(member.firstName ?? "").trim();
+        const lastName = String(member.lastName ?? "").trim();
+        const fullName = `${firstName} ${lastName}`.trim() || String(member.email || "Unknown");
 
-    const pendingApprovals = useMemo(
-        () => approvals.filter((item) => item.status === "pending"),
-        [approvals]
-    );
+        return {
+            id: String(member.userId || ""),
+            fullName,
+            email: String(member.email || ""),
+            avatarUrl: member.avatarUrl ?? null,
+            requestedAt: String(member.requestedAt || ""),
+            colorHex: null
+        };
+    }, []);
 
     const loadUserProfile = useCallback(async () => {
         setLoadingProfile(true);
@@ -155,35 +130,33 @@ export default function StudioMemberApprovalPage({
         setLoadingApprovals(true);
 
         try {
-            /**
-             * TODO: Replace mock data with real API call
-             *
-             * Example:
-             * const result = await getStudioMemberApprovalRequests(studioId, locale);
-             * if (result.status === "success" && result.data) {
-             *     setApprovals(result.data);
-             *     return;
-             * }
-             */
+            const result = await getStudioPendingMembers(studioId, locale);
 
-            setApprovals(mockApprovalData);
+            if (result.status === "success" && result.data) {
+                const items = (result.data.pendingMembers || [])
+                    .map(mapPendingMember)
+                    .filter((item) => item.id);
+                setApprovals(items);
+                return;
+            }
+
+            setApprovals([]);
+            toast({
+                description: result.message || "Không tải được danh sách phê duyệt.",
+                variant: "destructive"
+            });
         } catch (error) {
             console.error("Load approval requests failed:", error);
-
-            /**
-             * TODO: Handle API error state if needed
-             * For now fallback to mock data
-             */
-            setApprovals(mockApprovalData);
+            setApprovals([]);
 
             toast({
-                description: "Không tải được danh sách phê duyệt, đang hiển thị mock data.",
+                description: "Không tải được danh sách phê duyệt.",
                 variant: "destructive"
             });
         } finally {
             setLoadingApprovals(false);
         }
-    }, [locale, mockApprovalData, studioId, toast]);
+    }, [locale, mapPendingMember, studioId, toast]);
 
     useEffect(() => {
         loadUserProfile();
@@ -194,30 +167,13 @@ export default function StudioMemberApprovalPage({
         setSubmittingId(approvalId);
 
         try {
-            /**
-             * TODO: Replace with real API call
-             *
-             * Example:
-             * const result = await approveStudioMemberRequest({
-             *     studioId,
-             *     approvalId
-             * }, locale);
-             *
-             * if (result.status !== "success") {
-             *     throw new Error("Approve failed");
-             * }
-             */
+            const result = await approveStudioPendingMember(studioId, approvalId, locale);
+            if (result.status !== "success") {
+                throw new Error("Approve failed");
+            }
 
-            setApprovals((prev) =>
-                prev.map((item) =>
-                    item.id === approvalId ? { ...item, status: "approved" } : item
-                )
-            );
-
-            toast({
-                description: "Đã phê duyệt thành viên thành công",
-                variant: "success"
-            });
+            setApprovals((prev) => prev.filter((item) => item.id !== approvalId));
+            await loadApprovalRequests();
         } catch (error) {
             console.error("Approve member failed:", error);
             toast({
@@ -233,30 +189,9 @@ export default function StudioMemberApprovalPage({
         setSubmittingId(approvalId);
 
         try {
-            /**
-             * TODO: Replace with real API call
-             *
-             * Example:
-             * const result = await rejectStudioMemberRequest({
-             *     studioId,
-             *     approvalId
-             * }, locale);
-             *
-             * if (result.status !== "success") {
-             *     throw new Error("Reject failed");
-             * }
-             */
-
-            setApprovals((prev) =>
-                prev.map((item) =>
-                    item.id === approvalId ? { ...item, status: "rejected" } : item
-                )
-            );
-
-            toast({
-                description: "Đã từ chối yêu cầu tham gia",
-                variant: "destructive"
-            });
+            await rejectStudioPendingMember(studioId, approvalId, locale);
+            setApprovals((prev) => prev.filter((item) => item.id !== approvalId));
+            await loadApprovalRequests();
         } catch (error) {
             console.error("Reject member failed:", error);
             toast({
@@ -335,7 +270,7 @@ export default function StudioMemberApprovalPage({
                                 </Link>
 
                                 <div className="rounded-xl bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(230,73,45,0.28)]">
-                                    Phê duyệt thành viên ({pendingApprovals.length})
+                                    Phê duyệt thành viên ({approvals.length})
                                 </div>
                             </div>
                         </motion.div>
@@ -346,14 +281,14 @@ export default function StudioMemberApprovalPage({
                                 <ApprovalCardSkeleton />
                                 <ApprovalCardSkeleton />
                             </div>
-                        ) : pendingApprovals.length === 0 ? (
+                        ) : approvals.length === 0 ? (
                             <EmptyBlock
                                 title="Không có yêu cầu chờ phê duyệt"
                                 subtitle="Mọi yêu cầu tham gia mới sẽ hiển thị tại đây."
                             />
                         ) : (
                             <div className="grid grid-cols-1 gap-5">
-                                {pendingApprovals.map((item) => {
+                                {approvals.map((item) => {
                                     const isSubmitting = submittingId === item.id;
 
                                     return (
@@ -390,16 +325,12 @@ export default function StudioMemberApprovalPage({
                                                                 {item.fullName}
                                                             </h3>
                                                             <span className="inline-flex shrink-0 items-center rounded-lg border border-orange-200 bg-white px-3 py-1 text-[12px] font-medium text-orange-600 shadow-sm">
-                                                                {item.requestedRole}
+                                                                Member
                                                             </span>
                                                         </div>
 
                                                         <p className="mt-1 text-sm text-slate-500">
                                                             {item.email}
-                                                        </p>
-
-                                                        <p className="mt-2 text-sm leading-6 text-[#6F6B99]">
-                                                            {item.note || "Không có ghi chú"}
                                                         </p>
 
                                                         <p className="mt-2 text-xs text-slate-400">
