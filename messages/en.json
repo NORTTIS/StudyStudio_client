@@ -638,485 +638,484 @@
       "comingSoon": "Billing features coming soon"
     },
     "MasterPage": {
-        "title": "Master",
-        "subtitle": "Manage your studios and workspaces",
-        "searchPlaceholder": "Search studio, work...",
-        "searchGroups": "Search groups...",
-        "createButton": "New Space",
-        "infoBanner": "Create and manage studios to organize your work more effectively.",
-        "studiosUsed": "studios used",
-        "personal": "Personal",
-        "group": "Group",
-        "groups": "groups",
-        "members": "members",
-        "videos": "videos",
-        "noStudios": "No studios yet. Create your first studio!",
-        "noSearchResults": "No studios found matching your search",
-        "error": "Error",
-        "loadError": "Failed to load studios list",
-        "backToList": "Back to list",
-        "groupsTitle": "Groups List",
-        "noGroups": "No groups in this studio yet",
-        "yourStudios": "Your Studios",
-        "joinedStudios": "Studios You Join",
-        "inactiveStudioTitle": "This studio is paused",
-        "inactiveStudioDescription": "The studio \"{studioName}\" is currently stopped. Only the owner can reopen it from Settings.",
-        "inactiveStudioOk": "Got it",
-        "pendingJoinBadge": "Pending",
-        "pendingJoinNotice": "Your membership request is waiting for approval.",
-        "pendingStudioTitle": "Membership request is pending approval",
-        "pendingStudioDescription": "You cannot open \"{studioName}\" while your request is pending. You can only cancel your request.",
-        "pendingStudioCancel": "Cancel request",
-        "pendingStudioCanceling": "Canceling...",
-        "pendingStudioCancelSuccess": "Studio join request canceled",
-        "pendingStudioCancelError": "Failed to cancel studio join request",
-        "leaveStudio": "Leave studio",
-        "leaveStudioTitle": "Leave this studio?",
-        "leaveStudioDescription": "Are you sure you want to leave \"{studioName}\"?",
-        "leaveStudioCancel": "Stay",
-        "leaveStudioConfirm": "Leave studio",
-        "roles": {
-            "owner": "Owner",
-            "member": "Member"
+      "title": "Master",
+      "subtitle": "Manage your studios and workspaces",
+      "searchPlaceholder": "Search studio, work...",
+      "searchGroups": "Search groups...",
+      "createButton": "New Space",
+      "infoBanner": "Create and manage studios to organize your work more effectively.",
+      "studiosUsed": "studios used",
+      "personal": "Personal",
+      "group": "Group",
+      "groups": "groups",
+      "members": "members",
+      "videos": "videos",
+      "noStudios": "No studios yet. Create your first studio!",
+      "noSearchResults": "No studios found matching your search",
+      "error": "Error",
+      "loadError": "Failed to load studios list",
+      "backToList": "Back to list",
+      "groupsTitle": "Groups List",
+      "noGroups": "No groups in this studio yet",
+      "yourStudios": "Your Studios",
+      "joinedStudios": "Studios You Join",
+      "inactiveStudioTitle": "This studio is paused",
+      "inactiveStudioDescription": "The studio \"{studioName}\" is currently stopped. Only the owner can reopen it from Settings.",
+      "inactiveStudioOk": "Got it",
+      "pendingJoinBadge": "Pending",
+      "pendingJoinNotice": "Your membership request is waiting for approval.",
+      "pendingStudioTitle": "Membership request is pending approval",
+      "pendingStudioDescription": "You cannot open \"{studioName}\" while your request is pending. You can only cancel your request.",
+      "pendingStudioCancel": "Cancel request",
+      "pendingStudioCanceling": "Canceling...",
+      "pendingStudioCancelSuccess": "Studio join request canceled",
+      "pendingStudioCancelError": "Failed to cancel studio join request",
+      "leaveStudio": "Leave studio",
+      "leaveStudioTitle": "Leave this studio?",
+      "leaveStudioDescription": "Are you sure you want to leave \"{studioName}\"?",
+      "leaveStudioCancel": "Stay",
+      "leaveStudioConfirm": "Leave studio",
+      "roles": {
+        "owner": "Owner",
+        "member": "Member"
+      },
+      "modal": {
+        "createTitle": "Create New Studio",
+        "editTitle": "Edit Studio",
+        "name": "Studio Name",
+        "namePlaceholder": "Enter studio name...",
+        "nameRequired": "Studio name is required",
+        "nameTooLong": "Studio name cannot exceed 100 characters",
+        "description": "Description",
+        "descriptionPlaceholder": "Brief description of the studio...",
+        "descriptionRequired": "Description is required",
+        "descriptionTooLong": "Description cannot exceed 500 characters",
+        "type": "Type",
+        "cancel": "Cancel",
+        "create": "Create",
+        "save": "Save",
+        "createSuccess": "Studio created successfully!",
+        "editSuccess": "Studio updated successfully!",
+        "createError": "Failed to create studio",
+        "editError": "Failed to update studio",
+        "limitReached": "You have reached the limit of 3 studios. Please upgrade your subscription plan or delete an old studio to create a new one.",
+        "upgradeButton": "Upgrade Plan",
+        "duplicateName": "Studio name already exists. Please choose a different name.",
+        "colorLabel": "Primary Color",
+        "bannerLabel": "Banner",
+        "avatarLabel": "Avatar",
+        "aliasPlaceholder": "Ex: THPT Hoang Dieu",
+        "taglineLabel": "Slogan",
+        "taglinePlaceholder": "Enter a short slogan",
+        "startDate": "Start Date",
+        "endDate": "End Date"
+      },
+      "studioLimit": {
+        "title": "Studio limit reached",
+        "close": "Close"
+      },
+      "detailModal": {
+        "description": "Description",
+        "members": "Members",
+        "videos": "Videos",
+        "created": "Created",
+        "updated": "Last Updated",
+        "close": "Close",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "deleteModal": {
+        "title": "Delete Studio",
+        "message": "Are you sure you want to delete",
+        "warning": "Warning: All groups inside this studio will also be deleted. This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete",
+        "success": "Studio deleted successfully!",
+        "error": "Failed to delete studio"
+      },
+      "detail": {
+        "activeBadge": "Active",
+        "addGroupButton": "Add Group",
+        "inviteMember": "Invite Member",
+        "studioNotFound": "Studio not found",
+        "studioNotFoundSubtitle": "Please check the URL or go back to the studios list",
+        "noGroupsSubtitle": "Create your first group to start collaborating",
+        "validation": {
+          "dateRangeError": "Start date must be less than or equal to end date"
         },
-        "modal": {
-            "createTitle": "Create New Studio",
-            "editTitle": "Edit Studio",
-            "name": "Studio Name",
-            "namePlaceholder": "Enter studio name...",
-            "nameRequired": "Studio name is required",
-            "nameTooLong": "Studio name cannot exceed 100 characters",
-            "description": "Description",
-            "descriptionPlaceholder": "Brief description of the studio...",
-            "descriptionRequired": "Description is required",
-            "descriptionTooLong": "Description cannot exceed 500 characters",
-            "type": "Type",
-            "cancel": "Cancel",
-            "create": "Create",
-            "save": "Save",
-            "createSuccess": "Studio created successfully!",
-            "editSuccess": "Studio updated successfully!",
-            "createError": "Failed to create studio",
-            "editError": "Failed to update studio",
-            "limitReached": "You have reached the limit of 3 studios. Please upgrade your subscription plan or delete an old studio to create a new one.",
-            "upgradeButton": "Upgrade Plan",
-            "duplicateName": "Studio name already exists. Please choose a different name.",
-            "colorLabel": "Primary Color",
-            "bannerLabel": "Banner",
-            "avatarLabel": "Avatar",
-            "aliasPlaceholder": "Ex: THPT Hoang Dieu",
-            "taglineLabel": "Slogan",
-            "taglinePlaceholder": "Enter a short slogan",
-            "startDate": "Start Date",
-            "endDate": "End Date"
+        "groupsUsed": "group spaces being used",
+        "completionProgress": "Average work completion progress",
+        "tasks": "tasks",
+        "progress": "Work Progress",
+        "workspaceBadge": "Workspace",
+        "notAvailable": "No data available",
+        "tabs": {
+          "groups": "Groups",
+          "ai": "AI",
+          "analytics": "Analytics",
+          "settings": "Settings"
         },
-        "studioLimit": {
-            "title": "Studio limit reached",
-            "close": "Close"
+        "panel": {
+          "title": "Studio Details",
+          "subtitle": "Overview Information",
+          "collapse": "Collapse",
+          "expand": "Expand",
+          "memberListTitle": "Members List",
+          "quickStatsTitle": "Quick Stats",
+          "quickStatsSubtitle": "Performance Overview",
+          "created": "Created Date"
         },
-        "detailModal": {
-            "description": "Description",
-            "members": "Members",
-            "videos": "Videos",
-            "created": "Created",
-            "updated": "Last Updated",
-            "close": "Close",
-            "edit": "Edit",
-            "delete": "Delete"
+        "memberAltFallback": "Member",
+        "groupCreatedSuccess": "Group created successfully!",
+        "invite": {
+          "createLinkError": "Failed to create invite link. Please try again."
         },
-        "deleteModal": {
-            "title": "Delete Studio",
-            "message": "Are you sure you want to delete",
-            "warning": "Warning: All groups inside this studio will also be deleted. This action cannot be undone.",
-            "cancel": "Cancel",
-            "confirm": "Delete",
-            "success": "Studio deleted successfully!",
-            "error": "Failed to delete studio"
+        "leave": {
+          "button": "Leave studio",
+          "leaving": "Leaving...",
+          "confirmTitle": "Confirm leaving studio",
+          "confirmDescription": "You will leave this studio and all groups under it. You can only rejoin if you are invited again.",
+          "confirmButton": "Confirm leave",
+          "success": "You have left the studio successfully.",
+          "error": "Failed to leave studio. Please try again."
         },
-        "detail": {
-            "activeBadge": "Active",
-            "addGroupButton": "Add Group",
-            "inviteMember": "Invite Member",
-            "studioNotFound": "Studio not found",
-            "studioNotFoundSubtitle": "Please check the URL or go back to the studios list",
-            "noGroupsSubtitle": "Create your first group to start collaborating in this studio",
-            "validation": {
-                "dateRangeError": "Start date must be less than or equal to end date"
-            },
-            "groupsUsed": "group spaces being used",
-            "completionProgress": "Average work completion progress",
-            "tasks": "tasks",
-            "progress": "Work Progress",
-            "workspaceBadge": "Workspace",
-            "notAvailable": "No data available",
-            "tabs": {
-                "groups": "Groups",
-                "ai": "AI",
-                "analytics": "Analytics",
-                "settings": "Settings"
-            },
-            "panel": {
-                "title": "Studio Details",
-                "subtitle": "Overview Information",
-                "collapse": "Collapse",
-                "expand": "Expand",
-                "memberListTitle": "Members List",
-                "quickStatsTitle": "Quick Stats",
-                "quickStatsSubtitle": "Performance Overview",
-                "created": "Created Date"
-            },
-            "noGroupsSubtitle": "Create your first group to start collaborating",
-            "memberAltFallback": "Member",
-            "groupCreatedSuccess": "Group created successfully!",
-            "invite": {
-                "createLinkError": "Failed to create invite link. Please try again."
-            },
-            "leave": {
-                "button": "Leave studio",
-                "leaving": "Leaving...",
-                "confirmTitle": "Confirm leaving studio",
-                "confirmDescription": "You will leave this studio and all groups under it. You can only rejoin if you are invited again.",
-                "confirmButton": "Confirm leave",
-                "success": "You have left the studio successfully.",
-                "error": "Failed to leave studio. Please try again."
-            },
-            "removeMember": {
-                "confirmTitle": "Confirm remove member",
-                "confirmDescription": "Are you sure you want to remove {name} from this studio? This will not remove them from groups.",
-                "confirmButton": "Remove from studio",
-                "success": "Member removed from studio",
-                "error": "Failed to remove member from studio"
-            },
-            "settings": {
-                "title": "Studio settings",
-                "subtitle": "Adjust studio information and configuration",
-                "edit": "Edit",
-                "saving": "Saving...",
-                "saveChanges": "Save changes",
-                "primaryColor": "Primary color",
-                "bannerLabel": "Background image",
-                "aliasLabel": "Nickname",
-                "aliasPlaceholder": "e.g. Hoang Dieu High School",
-                "taglineLabel": "Slogan",
-                "taglinePlaceholder": "Enter a short slogan",
-                "startDate": "Start date",
-                "endDate": "End date",
-                "createdDate": "Created date",
-                "groupCount": "Number of groups"
-            },
-            "danger": {
-                "title": "Danger zone",
-                "deleteDescription": "Deleting the studio will also delete all groups and related data.",
-                "confirmTitle": "Confirm studio deletion",
-                "confirmDescription": "Are you sure you want to delete this studio? This action cannot be undone.",
-                "confirmDelete": "Confirm deletion"
-            }
+        "removeMember": {
+          "confirmTitle": "Confirm remove member",
+          "confirmDescription": "Are you sure you want to remove {name} from this studio? This will not remove them from groups.",
+          "confirmButton": "Remove from studio",
+          "success": "Member removed from studio",
+          "error": "Failed to remove member from studio"
+        },
+        "settings": {
+          "title": "Studio settings",
+          "subtitle": "Adjust studio information and configuration",
+          "edit": "Edit",
+          "saving": "Saving...",
+          "saveChanges": "Save changes",
+          "primaryColor": "Primary color",
+          "bannerLabel": "Background image",
+          "aliasLabel": "Nickname",
+          "aliasPlaceholder": "e.g. Hoang Dieu High School",
+          "taglineLabel": "Slogan",
+          "taglinePlaceholder": "Enter a short slogan",
+          "startDate": "Start date",
+          "endDate": "End date",
+          "createdDate": "Created date",
+          "groupCount": "Number of groups"
+        },
+        "danger": {
+          "title": "Danger zone",
+          "deleteDescription": "Deleting the studio will also delete all groups and related data.",
+          "confirmTitle": "Confirm studio deletion",
+          "confirmDescription": "Are you sure you want to delete this studio? This action cannot be undone.",
+          "confirmDelete": "Confirm deletion"
         }
+      }
     },
     "MemberList": {
-        "groupRole": {
-            "owner": "Owner",
-            "moderator": "Moderator",
-            "member": "Member",
-            "commenter": "Commenter",
-            "viewer": "Viewer"
-        },
-        "title": "Members List",
-        "quickAssign": "Quick Assign",
-        "invite": "Invite",
-        "avatarFallback": "Avatar",
-        "remove": "Remove",
-        "removing": "Removing...",
+      "groupRole": {
         "owner": "Owner",
-        "empty": "No members"
+        "moderator": "Moderator",
+        "member": "Member",
+        "commenter": "Commenter",
+        "viewer": "Viewer"
+      },
+      "title": "Members List",
+      "quickAssign": "Quick Assign",
+      "invite": "Invite",
+      "avatarFallback": "Avatar",
+      "remove": "Remove",
+      "removing": "Removing...",
+      "owner": "Owner",
+      "empty": "No members"
     },
     "QuickAssignModal": {
-        "title": "Quick Task Assignment",
-        "subtitle": "Assign tasks to group members",
-        "roles": {
-            "moderator": "Moderator",
-            "member": "Member",
-            "commenter": "Commenter",
-            "viewer": "Viewer"
-        },
-        "scope": {
-            "title": "Assignment Scope",
-            "unassignedOnly": "Unassigned members only",
-            "unassignedDescription": "Assign tasks only to members who don't have tasks yet",
-            "allMembers": "All members",
-            "allMembersDescription": "Assign tasks to all members"
-        },
-        "defaultRole": {
-            "title": "Default Role"
-        },
-        "targetGroups": {
-            "title": "Target Groups",
-            "hint": "Select groups to assign tasks to",
-            "memberCount": "({count} members)",
-            "noGroups": "No groups"
-        },
-        "excludeMembers": {
-            "title": "Exclude Members",
-            "hint": "Select members to exclude from assignment",
-            "none": "No members excluded"
-        },
-        "success": "Task assigned successfully",
-        "errors": {
-            "assignFailed": "Failed to assign task",
-            "assignException": "Error assigning task"
-        },
-        "actions": {
-            "cancel": "Cancel",
-            "assigning": "Assigning...",
-            "assignRandom": "Assign Randomly"
-        }
+      "title": "Quick Task Assignment",
+      "subtitle": "Assign tasks to group members",
+      "roles": {
+        "moderator": "Moderator",
+        "member": "Member",
+        "commenter": "Commenter",
+        "viewer": "Viewer"
+      },
+      "scope": {
+        "title": "Assignment Scope",
+        "unassignedOnly": "Unassigned members only",
+        "unassignedDescription": "Assign tasks only to members who don't have tasks yet",
+        "allMembers": "All members",
+        "allMembersDescription": "Assign tasks to all members"
+      },
+      "defaultRole": {
+        "title": "Default Role"
+      },
+      "targetGroups": {
+        "title": "Target Groups",
+        "hint": "Select groups to assign tasks to",
+        "memberCount": "({count} members)",
+        "noGroups": "No groups"
+      },
+      "excludeMembers": {
+        "title": "Exclude Members",
+        "hint": "Select members to exclude from assignment",
+        "none": "No members excluded"
+      },
+      "success": "Task assigned successfully",
+      "errors": {
+        "assignFailed": "Failed to assign task",
+        "assignException": "Error assigning task"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "assigning": "Assigning...",
+        "assignRandom": "Assign Randomly"
+      }
     },
     "StudioInviteAccept": {
-        "title": "Studio Invitation",
-        "checking": "Checking invitation...",
-        "notLoggedIn": "You are not logged in",
-        "loginRequired": "Please log in to accept the studio invitation.",
-        "loginButton": "Log in to continue",
-        "acceptButton": "Accept Invitation",
-        "acceptPrompt": "Click \"Accept Invitation\" to join the studio.",
-        "success": "You have successfully joined the studio",
-        "redirecting": "Redirecting...",
-        "pendingTitle": "Your membership request is pending approval",
-        "pendingMessage": "Your request has been sent. Please wait for the studio owner to approve it.",
-        "cancelRequest": "Cancel request",
-        "cancelingRequest": "Canceling request...",
-        "alreadyMemberTitle": "Notice",
-        "alreadyMember": "You are already a member of this studio.",
-        "goToStudio": "Go to Studio",
-        "backHome": "Back to Master",
-        "errorMissingToken": "Missing invitation token.",
-        "errorInvalidToken": "Invalid or expired invitation token.",
-        "errorAcceptFailed": "Failed to accept invitation.",
-        "cancelRequestFailed": "Failed to cancel membership request."
+      "title": "Studio Invitation",
+      "checking": "Checking invitation...",
+      "notLoggedIn": "You are not logged in",
+      "loginRequired": "Please log in to accept the studio invitation.",
+      "loginButton": "Log in to continue",
+      "acceptButton": "Accept Invitation",
+      "acceptPrompt": "Click \"Accept Invitation\" to join the studio.",
+      "success": "You have successfully joined the studio",
+      "redirecting": "Redirecting...",
+      "pendingTitle": "Your membership request is pending approval",
+      "pendingMessage": "Your request has been sent. Please wait for the studio owner to approve it.",
+      "cancelRequest": "Cancel request",
+      "cancelingRequest": "Canceling request...",
+      "alreadyMemberTitle": "Notice",
+      "alreadyMember": "You are already a member of this studio.",
+      "goToStudio": "Go to Studio",
+      "backHome": "Back to Master",
+      "errorMissingToken": "Missing invitation token.",
+      "errorInvalidToken": "Invalid or expired invitation token.",
+      "errorAcceptFailed": "Failed to accept invitation.",
+      "cancelRequestFailed": "Failed to cancel membership request."
     },
     "LandingGroupPage": {
-        "badge": "Group Workspace",
-        "hero": {
-            "title": "Shared workspace for",
-            "titleHighlight": "learning & projects",
-            "description": "Collaborate with your team, track progress, and achieve goals faster together.",
-            "createButton": "Create a group →",
-            "imageAlt": "Group collaboration"
+      "badge": "Group Workspace",
+      "hero": {
+        "title": "Shared workspace for",
+        "titleHighlight": "learning & projects",
+        "description": "Collaborate with your team, track progress, and achieve goals faster together.",
+        "createButton": "Create a group →",
+        "imageAlt": "Group collaboration"
+      },
+      "howToUse": {
+        "title": "How to use",
+        "description": "Get started quickly with a clear process for effective and transparent teamwork.",
+        "step1": "Create a new group with available templates",
+        "step2": "Then share the board with other users",
+        "step3": "Create tasks, assign members",
+        "step4": "Collaborate to complete work together."
+      },
+      "features": {
+        "title": "What can groups do?",
+        "manageGroup": {
+          "title": "Manage groups",
+          "description": "Create and organize study groups\nor projects in seconds"
         },
-        "howToUse": {
-            "title": "How to use",
-            "description": "Get started quickly with a clear process for effective and transparent teamwork.",
-            "step1": "Create a new group with available templates",
-            "step2": "Then share the board with other users",
-            "step3": "Create tasks, assign members",
-            "step4": "Collaborate to complete work together."
+        "trackWork": {
+          "title": "Track work",
+          "description": "Know who does what, and\ntrack progress"
         },
-        "features": {
-            "title": "What can groups do?",
-            "manageGroup": {
-                "title": "Manage groups",
-                "description": "Create and organize study groups\nor projects in seconds"
-            },
-            "trackWork": {
-                "title": "Track work",
-                "description": "Know who does what, and\ntrack progress"
-            },
-            "permissions": {
-                "title": "Smart permissions",
-                "description": "Create and organize study groups\nor projects in seconds"
-            },
-            "aiSupport": {
-                "title": "AI learning support",
-                "description": "Q&A, requirements analysis,\ngenerate reports"
-            }
+        "permissions": {
+          "title": "Smart permissions",
+          "description": "Create and organize study groups\nor projects in seconds"
         },
-        "users": {
-            "title": "Who's using Study Studio",
-            "subtitle": "Over xxx people use boards each month.",
-            "personal": {
-                "title": "Individuals & Groups",
-                "description": "For teachers, students, and self-learners\nfriend groups, project teams,\nand small communities\nlearning and working effectively together."
-            },
-            "education": {
-                "title": "Education",
-                "description": "Classrooms, universities, and adult\neducation programs."
-            }
-        },
-        "ai": {
-            "title": "Manage work more efficiently",
-            "subtitle": "with AI support",
-            "feature1": "Provide reports on group work status",
-            "feature2": "Answer questions about information provided in groups"
+        "aiSupport": {
+          "title": "AI learning support",
+          "description": "Q&A, requirements analysis,\ngenerate reports"
         }
+      },
+      "users": {
+        "title": "Who's using Study Studio",
+        "subtitle": "Over xxx people use boards each month.",
+        "personal": {
+          "title": "Individuals & Groups",
+          "description": "For teachers, students, and self-learners\nfriend groups, project teams,\nand small communities\nlearning and working effectively together."
+        },
+        "education": {
+          "title": "Education",
+          "description": "Classrooms, universities, and adult\neducation programs."
+        }
+      },
+      "ai": {
+        "title": "Manage work more efficiently",
+        "subtitle": "with AI support",
+        "feature1": "Provide reports on group work status",
+        "feature2": "Answer questions about information provided in groups"
+      }
     },
     "LandingPersonalPage": {
-        "badge": "Personal Workspace",
-        "hero": {
-            "title": "Workspace",
-            "titleHighlight": "just for you",
-            "subtitle": "Organize notes, documents, and study plans.",
-            "subtitleExtra": "All in one intuitive, easy-to-use personal space.",
-            "createButton": "Create your space →",
-            "imageAlt": "Landing illustration"
+      "badge": "Personal Workspace",
+      "hero": {
+        "title": "Workspace",
+        "titleHighlight": "just for you",
+        "subtitle": "Organize notes, documents, and study plans.",
+        "subtitleExtra": "All in one intuitive, easy-to-use personal space.",
+        "createButton": "Create your space →",
+        "imageAlt": "Landing illustration"
+      },
+      "howToUse": {
+        "title": "How to use",
+        "step1": {
+          "title": "Create personal space",
+          "description": "Start with a blank space\nArrange it your way"
         },
-        "howToUse": {
-            "title": "How to use",
-            "step1": {
-                "title": "Create personal space",
-                "description": "Start with a blank space\nArrange it your way"
-            },
-            "step2": {
-                "title": "Add notes, documents",
-                "description": "Add text, images, links, and files\nAll organized on one board"
-            },
-            "step3": {
-                "title": "Plan your studies",
-                "description": "Create to-do lists, set goals\nand track daily progress"
-            },
-            "step4": {
-                "title": "Study more effectively",
-                "description": "AI helps you summarize, review, and suggests\noptimal learning methods"
-            }
+        "step2": {
+          "title": "Add notes, documents",
+          "description": "Add text, images, links, and files\nAll organized on one board"
         },
-        "features": {
-            "title": "What can you do?",
-            "smartNotes": {
-                "title": "Smart notes",
-                "description": "Create notes with text,\nimages, and links"
-            },
-            "tasks": {
-                "title": "Tasks & goals",
-                "description": "Make to-do lists,\nset deadlines and track progress\ndaily"
-            },
-            "documents": {
-                "title": "Organize documents",
-                "description": "Store and organize learning materials\nby topic, subject, or\nproject"
-            },
-            "aiSupport": {
-                "title": "AI learning support",
-                "description": "AI summarizes documents, suggests reviews\nand answers your questions"
-            },
-            "schedule": {
-                "title": "Study schedule",
-                "description": "Schedule study time and manage\ntime effectively"
-            },
-            "progress": {
-                "title": "Track progress",
-                "description": "View study progress overview\nand statistics"
-            }
+        "step3": {
+          "title": "Plan your studies",
+          "description": "Create to-do lists, set goals\nand track daily progress"
         },
-        "users": {
-            "title": "Who's using Study Studio",
-            "subtitle": "Over xxx people use boards each month.",
-            "students": {
-                "title": "Students",
-                "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working\ntogether effectively."
-            },
-            "selfLearners": {
-                "title": "Self-learners",
-                "description": "Organize learning paths,\nstore reference materials\nand set personal\ndevelopment goals"
-            }
+        "step4": {
+          "title": "Study more effectively",
+          "description": "AI helps you summarize, review, and suggests\noptimal learning methods"
         }
+      },
+      "features": {
+        "title": "What can you do?",
+        "smartNotes": {
+          "title": "Smart notes",
+          "description": "Create notes with text,\nimages, and links"
+        },
+        "tasks": {
+          "title": "Tasks & goals",
+          "description": "Make to-do lists,\nset deadlines and track progress\ndaily"
+        },
+        "documents": {
+          "title": "Organize documents",
+          "description": "Store and organize learning materials\nby topic, subject, or\nproject"
+        },
+        "aiSupport": {
+          "title": "AI learning support",
+          "description": "AI summarizes documents, suggests reviews\nand answers your questions"
+        },
+        "schedule": {
+          "title": "Study schedule",
+          "description": "Schedule study time and manage\ntime effectively"
+        },
+        "progress": {
+          "title": "Track progress",
+          "description": "View study progress overview\nand statistics"
+        }
+      },
+      "users": {
+        "title": "Who's using Study Studio",
+        "subtitle": "Over xxx people use boards each month.",
+        "students": {
+          "title": "Students",
+          "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working\ntogether effectively."
+        },
+        "selfLearners": {
+          "title": "Self-learners",
+          "description": "Organize learning paths,\nstore reference materials\nand set personal\ndevelopment goals"
+        }
+      }
     },
     "LandingManagementPage": {
-        "badge": "Management Workspace",
-        "hero": {
-            "title": "Manage all groups",
-            "titleHighlight": "from one place",
-            "description": "Coordinate multiple groups, track progress, and make faster decisions from a unified dashboard.",
-            "executiveLabel": "Executive Dashboard",
-            "executiveCaption": "Monitor overall performance in real-time",
-            "createButton": "Start managing →",
-            "imageAlt": "Management Illustration"
+      "badge": "Management Workspace",
+      "hero": {
+        "title": "Manage all groups",
+        "titleHighlight": "from one place",
+        "description": "Coordinate multiple groups, track progress, and make faster decisions from a unified dashboard.",
+        "executiveLabel": "Executive Dashboard",
+        "executiveCaption": "Monitor overall performance in real-time",
+        "createButton": "Start managing →",
+        "imageAlt": "Management Illustration"
+      },
+      "howToUse": {
+        "title": "How to use",
+        "description": "Quickly set up a management process to track groups, assign roles, and evaluate progress clearly.",
+        "step1": {
+          "title": "Create management space",
+          "description": "Set up space and configure according to your organization's needs"
         },
-        "howToUse": {
-            "title": "How to use",
-            "description": "Quickly set up a management process to track groups, assign roles, and evaluate progress clearly.",
-            "step1": {
-                "title": "Create management space",
-                "description": "Set up space and configure according to your organization's needs"
-            },
-            "step2": {
-                "title": "Add groups & members",
-                "description": "Invite members, create study groups in just a few clicks"
-            },
-            "step3": {
-                "title": "Assign permissions, setup",
-                "description": "Assign management and member permissions for each separate group"
-            },
-            "step4": {
-                "title": "Track & report",
-                "description": "View progress, activity reports, and evaluate effectiveness"
-            }
+        "step2": {
+          "title": "Add groups & members",
+          "description": "Invite members, create study groups in just a few clicks"
         },
-        "features": {
-            "title": "What can managers do?",
-            "manageMembers": {
-                "title": "Manage members",
-                "description": "Add, remove, and manage members in your organization"
-            },
-            "trackProgress": {
-                "title": "Track progress",
-                "description": "View progress of each group and member"
-            },
-            "permissions": {
-                "title": "Smart permissions",
-                "description": "Set permissions for each role: owner and member"
-            },
-            "overview": {
-                "title": "Overview",
-                "description": "Overview dashboard, metrics"
-            }
+        "step3": {
+          "title": "Assign permissions, setup",
+          "description": "Assign management and member permissions for each separate group"
         },
-        "users": {
-            "title": "Who's using Study Studio",
-            "subtitle": "Over xx million people use boards each month.",
-            "personal": {
-                "title": "Individuals & Groups",
-                "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
-            },
-            "education": {
-                "title": "Educational organizations",
-                "description": "Classrooms, universities, and adult\neducation programs."
-            }
+        "step4": {
+          "title": "Track & report",
+          "description": "View progress, activity reports, and evaluate effectiveness"
         }
+      },
+      "features": {
+        "title": "What can managers do?",
+        "manageMembers": {
+          "title": "Manage members",
+          "description": "Add, remove, and manage members in your organization"
+        },
+        "trackProgress": {
+          "title": "Track progress",
+          "description": "View progress of each group and member"
+        },
+        "permissions": {
+          "title": "Smart permissions",
+          "description": "Set permissions for each role: owner and member"
+        },
+        "overview": {
+          "title": "Overview",
+          "description": "Overview dashboard, metrics"
+        }
+      },
+      "users": {
+        "title": "Who's using Study Studio",
+        "subtitle": "Over xx million people use boards each month.",
+        "personal": {
+          "title": "Individuals & Groups",
+          "description": "Students, self-learners, friend groups,\nproject teams, and small communities\nlearning and working together effectively."
+        },
+        "education": {
+          "title": "Educational organizations",
+          "description": "Classrooms, universities, and adult\neducation programs."
+        }
+      }
     },
     "LandingPlanPage": {
-        "hero": {
-            "title": "Our subscription",
-            "titleHighlight": "plans"
-        },
-        "freePlan": {
-            "title": "Free plan",
-            "tierBadge": "Basic Plan",
-            "price": "0 VND",
-            "description": "Suitable for individuals and\nsmall groups to try out",
-            "registerButton": "Sign up",
-            "feature1": "Up to 3 separate management spaces",
-            "feature2": "Up to 5 group spaces",
-            "feature3": "Up to 10 members per group space",
-            "feature4": "500 MB document storage per group space",
-            "feature5": "20 AI requests per day"
-        },
-        "premiumPlan": {
-            "title": "Premium plan",
-            "tierBadge": "Premium Plan",
-            "price": "299,000 VND / Month",
-            "description": "Suitable for large groups needing\nmore flexibility",
-            "registerButton": "Sign up",
-            "badge": "Most Popular",
-            "recommendation": "For users who want to work more seriously, need more powerful tools, and want to optimize their entire learning or management process.",
-            "feature1": "Up to 10 separate management spaces",
-            "feature2": "Up to 10 group spaces",
-            "feature3": "Up to 10 members per group space",
-            "feature4": "1 GB document storage per group space",
-            "feature5": "100 AI requests per day"
-        },
-        "freePlanRecommendation": "Perfect to get started, experience the system, and get familiar with basic work management.",
-        "landingCta": "Start with Free anytime, or choose Premium to unlock the full experience and boost efficiency starting today.",
-        "heroSubtitle": "Choose the right plan to get started today. Easy to begin with Free, powerful acceleration with Premium.",
-        "valuePill1": "Quick deployment",
-        "valuePill2": "Smart AI support"
+      "hero": {
+        "title": "Our subscription",
+        "titleHighlight": "plans"
+      },
+      "freePlan": {
+        "title": "Free plan",
+        "tierBadge": "Basic Plan",
+        "price": "0 VND",
+        "description": "Suitable for individuals and\nsmall groups to try out",
+        "registerButton": "Sign up",
+        "feature1": "Up to 3 separate management spaces",
+        "feature2": "Up to 5 group spaces",
+        "feature3": "Up to 10 members per group space",
+        "feature4": "500 MB document storage per group space",
+        "feature5": "20 AI requests per day"
+      },
+      "premiumPlan": {
+        "title": "Premium plan",
+        "tierBadge": "Premium Plan",
+        "price": "299,000 VND / Month",
+        "description": "Suitable for large groups needing\nmore flexibility",
+        "registerButton": "Sign up",
+        "badge": "Most Popular",
+        "recommendation": "For users who want to work more seriously, need more powerful tools, and want to optimize their entire learning or management process.",
+        "feature1": "Up to 10 separate management spaces",
+        "feature2": "Up to 10 group spaces",
+        "feature3": "Up to 10 members per group space",
+        "feature4": "1 GB document storage per group space",
+        "feature5": "100 AI requests per day"
+      },
+      "freePlanRecommendation": "Perfect to get started, experience the system, and get familiar with basic work management.",
+      "landingCta": "Start with Free anytime, or choose Premium to unlock the full experience and boost efficiency starting today.",
+      "heroSubtitle": "Choose the right plan to get started today. Easy to begin with Free, powerful acceleration with Premium.",
+      "valuePill1": "Quick deployment",
+      "valuePill2": "Smart AI support"
     },
     "notifications": {
       "comingSoon": "Notification features coming soon"
@@ -1327,6 +1326,13 @@
     "noGroups": "No groups in this studio yet",
     "yourStudios": "Your Studios",
     "joinedStudios": "Studios You Join",
+    "leaveStudioTitle": "Leave studio",
+    "leaveStudioDescription": "Are you sure you want to leave \"{studioName}\"? You can only rejoin if you are invited again.",
+    "leaveStudioCancel": "Cancel",
+    "leaveStudioConfirm": "Leave studio",
+    "inactiveStudioTitle": "Studio is currently paused",
+    "inactiveStudioDescription": "\"{studioName}\" is paused by the owner. You cannot access this studio until it is reactivated.",
+    "inactiveStudioOk": "Understood",
     "roles": {
       "owner": "Owner",
       "member": "Member"
@@ -1418,6 +1424,11 @@
         "created": "Created Date"
       },
       "memberAltFallback": "Member",
+      "removeMember": {
+        "confirmTitle": "Remove member",
+        "confirmDescription": "Are you sure you want to remove {name} from this studio?",
+        "confirmButton": "Remove"
+      },
       "groupCreatedSuccess": "Group created successfully!",
       "invite": {
         "createLinkError": "Failed to create invite link. Please try again."
@@ -1469,14 +1480,55 @@
         "createSuccess": "Group created successfully.",
         "limitReached": "You have reached your plan limit ({limit} groups).",
         "errors": {
-            "loadUser": "Unable to load user information.",
-            "loadStudios": "Unable to load studios.",
-            "loadTemplates": "Unable to load templates.",
-            "loadData": "Unable to load required data.",
-            "createFailed": "Unable to create group. Please try again."
-        }
-    },
-    "AdminSubscriptions": {
+          "loadUser": "Unable to load user information.",
+          "loadStudios": "Unable to load studios.",
+          "loadTemplates": "Unable to load templates.",
+          "loadData": "Unable to load required data.",
+          "createFailed": "Unable to create group. Please try again.",
+          "sendCommentFailed": "Gửi bình luận thất bại",
+          "deleteCommentFailed": "Xóa bình luận thất bại",
+          "loadTaskDetailFailed": "Không thể tải chi tiết công việc",
+          "missingGroupIdFromRoute": "Thiếu groupId trong đường dẫn",
+          "loadCommentsFailed": "Không thể tải bình luận",
+          "loadMembersFailed": "Không thể tải thành viên",
+          "taskNameRequired": "Tên công việc là bắt buộc",
+          "startDateAfterDueDate": "Ngày bắt đầu không được sau hạn hoàn thành",
+          "restrictedAssignee": "Không thể giao việc cho vai trò này",
+          "missingGroupOrTask": "Thiếu thông tin nhóm hoặc công việc",
+          "updateTaskFailed": "Cập nhật công việc thất bại"
+        },
+        "saveChange": "Lưu thay đổi",
+        "assignee": "Người phụ trách",
+        "status": "Trạng thái",
+        "noStatus": "Không có trạng thái",
+        "priority": "Độ ưu tiên",
+        "severity": "Độ nghiêm trọng",
+        "startDate": "Ngày bắt đầu",
+        "dueDate": "Hạn hoàn thành",
+        "estimatedHours": "Giờ ước tính",
+        "actualHours": "Giờ thực tế",
+        "progress": "Tiến độ",
+        "description": "Mô tả",
+        "comments": "Bình luận",
+        "replyingTo": "Đang trả lời",
+        "loadingComments": "Đang tải bình luận",
+        "noComments": "Chưa có bình luận",
+        "moreActions": "Thao tác khác",
+        "reply": "Trả lời",
+        "deleting": "Đang xóa...",
+        "delete": "Xóa",
+        "me": "Tôi",
+        "send": "Gửi",
+        "confirmDeleteTitle": "Xác nhận xóa bình luận",
+        "confirmDeleteDescription": "Bạn có chắc muốn xóa bình luận này không?",
+        "writeReply": "Viết phản hồi...",
+        "writeComment": "Viết bình luận...",
+        "noMembersToMention": "Không có thành viên để mention.",
+        "endDate": "End Date",
+        "createdDate": "Created Date",
+        "groupCount": "Number of groups"
+      },
+      "AdminSubscriptions": {
         "title": "Subscription Plans Management",
         "subtitle": "Manage subscription tiers and their limits",
         "totalSubscribers": "Total Subscribers",
@@ -1484,13 +1536,13 @@
         "premiumUsers": "Premium Users",
         "conversionRate": "Conversion Rate",
         "tabs": {
-            "plans": "Subscription Plans",
-            "billing": "Billing History",
-            "revenue": "Revenue Stats",
-            "payments": "Payment Methods"
+          "plans": "Subscription Plans",
+          "billing": "Billing History",
+          "revenue": "Revenue Stats",
+          "payments": "Payment Methods"
         }
-    },
-    "AdminNews": {
+      },
+      "AdminNews": {
         "title": "News & Announcements Management",
         "subtitle": "Create and manage news and system announcements",
         "createButton": "Create News",
@@ -1500,218 +1552,218 @@
         "draft": "Draft",
         "archived": "Archived",
         "filters": {
-            "allTypes": "All Types",
-            "system": "System",
-            "update": "Update",
-            "maintenance": "Maintenance",
-            "announcement": "Announcement",
-            "allStatus": "All Status",
-            "published": "Published",
-            "draft": "Draft",
-            "archived": "Archived"
+          "allTypes": "All Types",
+          "system": "System",
+          "update": "Update",
+          "maintenance": "Maintenance",
+          "announcement": "Announcement",
+          "allStatus": "All Status",
+          "published": "Published",
+          "draft": "Draft",
+          "archived": "Archived"
         },
         "table": {
-            "title": "Title",
-            "type": "Type",
-            "priority": "Priority",
-            "status": "Status",
-            "author": "Author",
-            "date": "Created",
-            "actions": "Actions",
-            "edit": "Edit",
-            "delete": "Delete"
+          "title": "Title",
+          "type": "Type",
+          "priority": "Priority",
+          "status": "Status",
+          "author": "Author",
+          "date": "Created",
+          "actions": "Actions",
+          "edit": "Edit",
+          "delete": "Delete"
         },
         "noNews": "No news found",
         "createModal": {
-            "title": "Create New News",
-            "subtitle": "Add new news or announcement to the system",
-            "titleLabel": "Title",
-            "titlePlaceholder": "Enter news title...",
-            "contentLabel": "Content",
-            "contentPlaceholder": "Enter detailed content...",
-            "typeLabel": "News Type",
-            "priorityLabel": "Priority Level",
-            "statusLabel": "Status",
-            "cancel": "Cancel",
-            "create": "Create News",
-            "creating": "Creating..."
+          "title": "Create New News",
+          "subtitle": "Add new news or announcement to the system",
+          "titleLabel": "Title",
+          "titlePlaceholder": "Enter news title...",
+          "contentLabel": "Content",
+          "contentPlaceholder": "Enter detailed content...",
+          "typeLabel": "News Type",
+          "priorityLabel": "Priority Level",
+          "statusLabel": "Status",
+          "cancel": "Cancel",
+          "create": "Create News",
+          "creating": "Creating..."
         },
         "editModal": {
-            "title": "Edit News",
-            "subtitle": "Update news information",
-            "titleLabel": "Title",
-            "titlePlaceholder": "Enter news title...",
-            "contentLabel": "Content",
-            "contentPlaceholder": "Enter detailed content...",
-            "typeLabel": "News Type",
-            "priorityLabel": "Priority Level",
-            "statusLabel": "Status",
-            "cancel": "Cancel",
-            "update": "Update",
-            "updating": "Updating..."
+          "title": "Edit News",
+          "subtitle": "Update news information",
+          "titleLabel": "Title",
+          "titlePlaceholder": "Enter news title...",
+          "contentLabel": "Content",
+          "contentPlaceholder": "Enter detailed content...",
+          "typeLabel": "News Type",
+          "priorityLabel": "Priority Level",
+          "statusLabel": "Status",
+          "cancel": "Cancel",
+          "update": "Update",
+          "updating": "Updating..."
         },
         "deleteModal": {
-            "title": "Delete News",
-            "message": "Are you sure you want to delete the news",
-            "warning": "Warning: This action cannot be undone. The news will be permanently deleted from the system.",
-            "cancel": "Cancel",
-            "delete": "Delete News",
-            "deleting": "Deleting..."
+          "title": "Delete News",
+          "message": "Are you sure you want to delete the news",
+          "warning": "Warning: This action cannot be undone. The news will be permanently deleted from the system.",
+          "cancel": "Cancel",
+          "delete": "Delete News",
+          "deleting": "Deleting..."
         }
-    },
-    "AdminDashboard": {
+      },
+      "AdminDashboard": {
         "title": "Dashboard",
         "subtitle": "Study Studio System Overview",
         "stats": {
-            "totalUsers": "Total Users",
-            "thisMonth": "this month",
-            "activeUsers": "Active Users",
-            "revenue": "Revenue",
-            "reports": "Reports",
-            "pending": "pending"
+          "totalUsers": "Total Users",
+          "thisMonth": "this month",
+          "activeUsers": "Active Users",
+          "revenue": "Revenue",
+          "reports": "Reports",
+          "pending": "pending"
         },
         "charts": {
-            "userGrowth": "User Growth",
-            "revenueByMonth": "Revenue by Month",
-            "userDistribution": "User Distribution",
-            "subscriptionDistribution": "Subscription Distribution",
-            "activityByTime": "Activity by Time",
-            "reportStatus": "Report Status",
-            "newUsers": "New Users",
-            "revenue": "Revenue",
-            "userDistributionName": "User Distribution",
-            "subscriptionName": "Subscription",
-            "activity": "Activity",
-            "activities": "activities"
+          "userGrowth": "User Growth",
+          "revenueByMonth": "Revenue by Month",
+          "userDistribution": "User Distribution",
+          "subscriptionDistribution": "Subscription Distribution",
+          "activityByTime": "Activity by Time",
+          "reportStatus": "Report Status",
+          "newUsers": "New Users",
+          "revenue": "Revenue",
+          "userDistributionName": "User Distribution",
+          "subscriptionName": "Subscription",
+          "activity": "Activity",
+          "activities": "activities"
         },
         "userStatus": {
-            "active": "Active",
-            "inactive": "Inactive",
-            "new": "New"
+          "active": "Active",
+          "inactive": "Inactive",
+          "new": "New"
         },
         "reportStatuses": {
-            "pending": "Pending",
-            "inProgress": "In Progress",
-            "resolved": "Resolved",
-            "rejected": "Rejected"
+          "pending": "Pending",
+          "inProgress": "In Progress",
+          "resolved": "Resolved",
+          "rejected": "Rejected"
         },
         "recentActivities": {
-            "title": "Recent Activities",
-            "newUser": "New user registered",
-            "newReport": "New report",
-            "upgrade": "Premium upgrade",
-            "newNews": "New news published",
-            "minutesAgo": "minutes ago",
-            "hoursAgo": "hours ago"
+          "title": "Recent Activities",
+          "newUser": "New user registered",
+          "newReport": "New report",
+          "upgrade": "Premium upgrade",
+          "newNews": "New news published",
+          "minutesAgo": "minutes ago",
+          "hoursAgo": "hours ago"
         },
         "topGroups": {
-            "title": "Top Active Groups",
-            "members": "members",
-            "activity": "activity"
+          "title": "Top Active Groups",
+          "members": "members",
+          "activity": "activity"
         },
         "months": {
-            "jan": "Jan",
-            "feb": "Feb",
-            "mar": "Mar",
-            "apr": "Apr",
-            "may": "May",
-            "jun": "Jun",
-            "jul": "Jul",
-            "aug": "Aug",
-            "sep": "Sep",
-            "oct": "Oct",
-            "nov": "Nov",
-            "dec": "Dec"
+          "jan": "Jan",
+          "feb": "Feb",
+          "mar": "Mar",
+          "apr": "Apr",
+          "may": "May",
+          "jun": "Jun",
+          "jul": "Jul",
+          "aug": "Aug",
+          "sep": "Sep",
+          "oct": "Oct",
+          "nov": "Nov",
+          "dec": "Dec"
         },
         "days": {
-            "mon": "Mon",
-            "tue": "Tue",
-            "wed": "Wed",
-            "thu": "Thu",
-            "fri": "Fri",
-            "sat": "Sat",
-            "sun": "Sun"
+          "mon": "Mon",
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun"
         }
-    },
-    "AdminReports": {
+      },
+      "AdminReports": {
         "loading": "Loading data...",
         "summary": {
-            "totalReports": "Total Reports",
-            "open": "Open",
-            "inProgress": "In Progress",
-            "resolved": "Resolved"
+          "totalReports": "Total Reports",
+          "open": "Open",
+          "inProgress": "In Progress",
+          "resolved": "Resolved"
         },
         "filters": {
-            "title": "Filters",
-            "search": "Search",
-            "searchPlaceholder": "Search by email, title...",
-            "type": "Report Type",
-            "status": "Status",
-            "pageSize": "Items per page",
-            "all": "All",
-            "types": {
-                "bugReport": "Bug Report",
-                "featureRequest": "Feature Request",
-                "accountIssue": "Account Issue",
-                "other": "Other"
-            },
-            "statuses": {
-                "open": "Open",
-                "inProgress": "In Progress",
-                "resolved": "Resolved",
-                "closed": "Closed"
-            }
+          "title": "Filters",
+          "search": "Search",
+          "searchPlaceholder": "Search by email, title...",
+          "type": "Report Type",
+          "status": "Status",
+          "pageSize": "Items per page",
+          "all": "All",
+          "types": {
+            "bugReport": "Bug Report",
+            "featureRequest": "Feature Request",
+            "accountIssue": "Account Issue",
+            "other": "Other"
+          },
+          "statuses": {
+            "open": "Open",
+            "inProgress": "In Progress",
+            "resolved": "Resolved",
+            "closed": "Closed"
+          }
         },
         "table": {
-            "title": "Report List",
-            "headers": {
-                "email": "Email",
-                "title": "Title",
-                "type": "Type",
-                "status": "Status",
-                "priority": "Priority",
-                "createdAt": "Created Date",
-                "actions": "Actions"
-            }
-        },
-        "actions": {
-            "edit": "Edit",
-            "retry": "Try Again"
-        },
-        "pagination": {
-            "showing": "Showing {{start}} - {{end}} of {{total}} reports",
-            "previous": "Previous",
-            "next": "Next"
-        },
-        "empty": {
-            "title": "No reports yet",
-            "description": "There are currently no reports from users."
-        },
-        "errors": {
-            "loadFailed": "Unable to load report data",
-            "loadFailedTitle": "Unable to load data",
-            "loadError": "An error occurred while loading report data",
-            "updateFailed": "Failed to update report",
-            "updateError": "An error occurred while updating report"
-        },
-        "success": {
-            "updateReport": "Report updated successfully!",
-            "updateReportWithNotification": "Report updated successfully! Notification sent to user via system and email.",
-            "updateReportNotificationFailed": "Report updated successfully! However, unable to send notification to user."
-        },
-        "modal": {
-            "title": "Edit Report",
-            "reportTitle": "Title",
-            "content": "Content",
+          "title": "Report List",
+          "headers": {
+            "email": "Email",
+            "title": "Title",
+            "type": "Type",
             "status": "Status",
             "priority": "Priority",
-            "adminNote": "Admin Note",
-            "adminNotePlaceholder": "Enter admin note...",
-            "cancel": "Cancel",
-            "update": "Update"
+            "createdAt": "Created Date",
+            "actions": "Actions"
+          }
+        },
+        "actions": {
+          "edit": "Edit",
+          "retry": "Try Again"
+        },
+        "pagination": {
+          "showing": "Showing {{start}} - {{end}} of {{total}} reports",
+          "previous": "Previous",
+          "next": "Next"
+        },
+        "empty": {
+          "title": "No reports yet",
+          "description": "There are currently no reports from users."
+        },
+        "errors": {
+          "loadFailed": "Unable to load report data",
+          "loadFailedTitle": "Unable to load data",
+          "loadError": "An error occurred while loading report data",
+          "updateFailed": "Failed to update report",
+          "updateError": "An error occurred while updating report"
+        },
+        "success": {
+          "updateReport": "Report updated successfully!",
+          "updateReportWithNotification": "Report updated successfully! Notification sent to user via system and email.",
+          "updateReportNotificationFailed": "Report updated successfully! However, unable to send notification to user."
+        },
+        "modal": {
+          "title": "Edit Report",
+          "reportTitle": "Title",
+          "content": "Content",
+          "status": "Status",
+          "priority": "Priority",
+          "adminNote": "Admin Note",
+          "adminNotePlaceholder": "Enter admin note...",
+          "cancel": "Cancel",
+          "update": "Update"
         }
-    },
-    "Notifications": {
+      },
+      "Notifications": {
         "title": "Notifications",
         "markAllRead": "Mark all as read",
         "noNotifications": "No notifications yet",
@@ -1745,128 +1797,128 @@
         "commentContent": "Comment content",
         "from": "From",
         "noContent": "No content"
-    },
-    "BillingHistoryTab": {
+      },
+      "BillingHistoryTab": {
         "search": {
-            "placeholder": "Search by user, email, or invoice..."
+          "placeholder": "Search by user, email, or invoice..."
         },
         "filters": {
-            "allStatus": "All Status",
-            "pending": "Pending",
-            "success": "Success",
-            "cancelled": "Cancelled",
-            "failed": "Failed"
+          "allStatus": "All Status",
+          "pending": "Pending",
+          "success": "Success",
+          "cancelled": "Cancelled",
+          "failed": "Failed"
         },
         "actions": {
-            "export": "Export"
+          "export": "Export"
         },
         "table": {
-            "orderCode": "Order Code",
-            "user": "User",
-            "plan": "Plan",
-            "amount": "Amount",
-            "method": "Method",
-            "status": "Status",
-            "date": "Date",
-            "actions": "Actions"
+          "orderCode": "Order Code",
+          "user": "User",
+          "plan": "Plan",
+          "amount": "Amount",
+          "method": "Method",
+          "status": "Status",
+          "date": "Date",
+          "actions": "Actions"
         }
-    },
-    "PaymentPage": {
+      },
+      "PaymentPage": {
         "title": "Subscription Plans",
         "subtitle": "Choose the plan that fits your needs",
         "historyButton": "Payment History",
         "plans": {
-            "popular": "Popular",
-            "current": "Current Plan",
-            "free": {
-                "feature1": "Up to 3 Management Spaces",
-                "feature2": "Up to 5 Group Spaces",
-                "feature3": "Up to 10 members/group",
-                "feature4": "500 MB storage/group",
-                "feature5": "20 AI requests/day"
-            },
-            "premium": {
-                "feature1": "Up to 10 Management Spaces",
-                "feature2": "Up to 10 Group Spaces",
-                "feature3": "Up to 50 members/group",
-                "feature4": "1 GB storage/group",
-                "feature5": "100 AI requests/day"
-            },
-            "enterprise": {
-                "feature1": "Unlimited Management Spaces",
-                "feature2": "Unlimited Group Spaces",
-                "feature3": "Unlimited members",
-                "feature4": "10 GB storage/group",
-                "feature5": "Unlimited AI requests"
-            }
+          "popular": "Popular",
+          "current": "Current Plan",
+          "free": {
+            "feature1": "Up to 3 Management Spaces",
+            "feature2": "Up to 5 Group Spaces",
+            "feature3": "Up to 10 members/group",
+            "feature4": "500 MB storage/group",
+            "feature5": "20 AI requests/day"
+          },
+          "premium": {
+            "feature1": "Up to 10 Management Spaces",
+            "feature2": "Up to 10 Group Spaces",
+            "feature3": "Up to 50 members/group",
+            "feature4": "1 GB storage/group",
+            "feature5": "100 AI requests/day"
+          },
+          "enterprise": {
+            "feature1": "Unlimited Management Spaces",
+            "feature2": "Unlimited Group Spaces",
+            "feature3": "Unlimited members",
+            "feature4": "10 GB storage/group",
+            "feature5": "Unlimited AI requests"
+          }
         },
         "buttons": {
-            "processing": "Processing...",
-            "currentPlan": "Current Plan",
-            "upgrade": "Upgrade Now"
+          "processing": "Processing...",
+          "currentPlan": "Current Plan",
+          "upgrade": "Upgrade Now"
         },
         "info": {
-            "title": "Payment Information",
-            "secure": "Secure payment via PayOS payment gateway",
-            "methods": "Support payment via QR Code, bank transfer",
-            "activation": "Subscription will be activated immediately after successful payment",
-            "cancellation": "You can cancel subscription at any time"
+          "title": "Payment Information",
+          "secure": "Secure payment via PayOS payment gateway",
+          "methods": "Support payment via QR Code, bank transfer",
+          "activation": "Subscription will be activated immediately after successful payment",
+          "cancellation": "You can cancel subscription at any time"
         },
         "messages": {
-            "alreadyFree": "You are using the Free plan",
-            "paymentFailed": "Unable to create payment",
-            "paymentError": "An error occurred. Please try again!"
+          "alreadyFree": "You are using the Free plan",
+          "paymentFailed": "Unable to create payment",
+          "paymentError": "An error occurred. Please try again!"
         }
-    },
-    "PaymentHistoryPage": {
+      },
+      "PaymentHistoryPage": {
         "title": "Payment History",
         "subtitle": "View all your payment transactions",
         "backButton": "Back",
         "loading": "Loading...",
         "empty": {
-            "title": "No transactions yet",
-            "description": "You haven't made any payment transactions yet",
-            "upgradeButton": "Upgrade plan now"
+          "title": "No transactions yet",
+          "description": "You haven't made any payment transactions yet",
+          "upgradeButton": "Upgrade plan now"
         },
         "table": {
-            "paymentId": "Payment ID",
-            "plan": "Subscription Plan",
-            "status": "Status",
-            "date": "Payment Date",
-            "actions": "Actions",
-            "viewDetails": "View Details"
+          "paymentId": "Payment ID",
+          "plan": "Subscription Plan",
+          "status": "Status",
+          "date": "Payment Date",
+          "actions": "Actions",
+          "viewDetails": "View Details"
         }
-    },
-    "PaymentStatusPage": {
+      },
+      "PaymentStatusPage": {
         "title": "Payment Details",
         "subtitle": "Detailed information about the transaction",
         "backButton": "Back",
         "loading": "Loading...",
         "notFound": {
-            "title": "Payment not found",
-            "description": "Payment ID is invalid or has been deleted"
+          "title": "Payment not found",
+          "description": "Payment ID is invalid or has been deleted"
         },
         "details": {
-            "title": "Payment Information",
-            "plan": "Subscription Plan",
-            "amount": "Amount",
-            "createdAt": "Created Date",
-            "paidAt": "Payment Date"
+          "title": "Payment Information",
+          "plan": "Subscription Plan",
+          "amount": "Amount",
+          "createdAt": "Created Date",
+          "paidAt": "Payment Date"
         },
         "actions": {
-            "cancel": "Cancel Payment",
-            "cancelling": "Cancelling...",
-            "backToBilling": "Back to Subscription Plans"
+          "cancel": "Cancel Payment",
+          "cancelling": "Cancelling...",
+          "backToBilling": "Back to Subscription Plans"
         },
         "messages": {
-            "cancelSuccess": "Payment cancelled successfully",
-            "cancelFailed": "Unable to cancel payment",
-            "cancelError": "An error occurred. Please try again!",
-            "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to billing page...",
-            "emailSent": "📧 Payment confirmation email has been sent to your email address"
+          "cancelSuccess": "Payment cancelled successfully",
+          "cancelFailed": "Unable to cancel payment",
+          "cancelError": "An error occurred. Please try again!",
+          "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to billing page...",
+          "emailSent": "📧 Payment confirmation email has been sent to your email address"
         }
-    },
-    "GroupsPage": {
+      },
+      "GroupsPage": {
         "workspaceGroups": "Group Workspaces",
         "title": "Your Groups",
         "subtitle": "Manage and quickly access your groups",
@@ -1896,8 +1948,8 @@
         "moreGroups": "more groups",
         "board": "Board",
         "list": "List"
-    },
-    "GroupCard": {
+      },
+      "GroupCard": {
         "removeFavorite": "Remove from favorites",
         "addFavorite": "Add to favorites",
         "menuLabel": "Options menu",
@@ -1920,8 +1972,8 @@
         "createdBy": "Created by",
         "members": "members",
         "tasks": "tasks"
-    },
-    "UsageBar": {
+      },
+      "UsageBar": {
         "limitReached": "Limit reached",
         "limitReachedHint": "You've used {usage} / {max} group spaces",
         "nearLimit": "Approaching limit",
@@ -1946,8 +1998,8 @@
         "remainingGroupsMessage": "You can create {remaining} more group spaces",
         "upgradeButton": "Upgrade plan",
         "usageNote": "Upgrade your plan to increase the limit"
-    },
-    "GroupTaskListPage": {
+      },
+      "GroupTaskListPage": {
         "pageTitle": "Tasks List",
         "searchPlaceholder": "Search tasks",
         "allStatus": "All",
@@ -1971,7 +2023,8 @@
         "startDate": "Start date",
         "endDate": "End date",
         "createdDate": "Created date",
-        "groupCount": "Number of groups"
+        "groupCount": "Number of groups",
+        "taglinePlaceholder": "VD: Học đi đôi với cọc"
       },
       "danger": {
         "title": "Danger zone",
@@ -1979,6 +2032,1282 @@
         "confirmTitle": "Confirm studio deletion",
         "confirmDescription": "Are you sure you want to delete this studio? This action cannot be undone.",
         "confirmDelete": "Confirm deletion"
+      },
+      "AIHome": {
+        "badge": "AI cá nhân",
+        "quickActions": {
+          "today": {
+            "title": "Việc hôm nay",
+            "description": "Tóm tắt những việc cá nhân cần ưu tiên trong ngày",
+            "prompt": "Hãy tóm tắt những việc cá nhân tôi nên ưu tiên hôm nay."
+          },
+          "plan": {
+            "title": "Lên kế hoạch",
+            "description": "Sắp xếp thứ tự làm việc hợp lý cho hôm nay",
+            "prompt": "Hãy giúp tôi lập kế hoạch làm việc cá nhân cho hôm nay."
+          },
+          "overdue": {
+            "title": "Xử lý quá hạn",
+            "description": "Gợi ý cách xử lý các việc đang bị trễ",
+            "prompt": "Hãy gợi ý cách xử lý các công việc cá nhân đang quá hạn."
+          },
+          "focus": {
+            "title": "Chọn việc để tập trung",
+            "description": "Xác định 3 việc quan trọng nhất lúc này",
+            "prompt": "Hãy giúp tôi chọn 3 việc quan trọng nhất để tập trung ngay bây giờ."
+          }
+        }
+      },
+      "AnalysisHome": {
+        "hero": {
+          "badge": "Phân tích cá nhân",
+          "title": "Phân tích hiệu suất cá nhân"
+        },
+        "cards": {
+          "totalTasks": {
+            "title": "Tổng công việc",
+            "note": "Tổng số công việc hiện tại"
+          },
+          "completed": {
+            "title": "Hoàn thành",
+            "note": "Công việc đã hoàn thành"
+          },
+          "inProgress": {
+            "title": "Đang thực hiện",
+            "note": "Công việc đang thực hiện"
+          }
+        },
+        "sections": {
+          "statusDistribution": "1. Phân bố trạng thái công việc",
+          "progressOverTime": "2. Tiến độ công việc theo thời gian",
+          "workloadByGroup": "3. Khối lượng công việc theo nhóm",
+          "contributionActivity": "4. Hoạt động đóng góp {year}"
+        },
+        "trend": {
+          "week": "Tuần",
+          "month": "Tháng",
+          "year": "Năm"
+        },
+        "status": {
+          "todo": "Cần làm",
+          "inProgress": "Đang thực hiện",
+          "done": "Hoàn thành",
+          "overdue": "Quá hạn"
+        },
+        "chart": {
+          "totalTasks": "Tổng công việc",
+          "taskStatus": "Trạng thái công việc",
+          "taskCompleted": "Công việc hoàn thành",
+          "workload": "Khối lượng",
+          "tasksUnit": "công việc"
+        },
+        "trendLabels": {
+          "weekdays": {
+            "mon": "T2",
+            "tue": "T3",
+            "wed": "T4",
+            "thu": "T5",
+            "fri": "T6",
+            "sat": "T7",
+            "sun": "CN"
+          },
+          "weeks": {
+            "week1": "Tuần 1",
+            "week2": "Tuần 2",
+            "week3": "Tuần 3",
+            "week4": "Tuần 4",
+            "week5": "Tuần 5"
+          },
+          "months": {
+            "m1": "T1",
+            "m2": "T2",
+            "m3": "T3",
+            "m4": "T4",
+            "m5": "T5",
+            "m6": "T6",
+            "m7": "T7",
+            "m8": "T8",
+            "m9": "T9",
+            "m10": "T10",
+            "m11": "T11",
+            "m12": "T12"
+          }
+        },
+        "heatmap": {
+          "day": {
+            "mon": "T2",
+            "wed": "T4",
+            "fri": "T6"
+          },
+          "less": "Ít",
+          "more": "Nhiều",
+          "taskSingular": "công việc",
+          "taskPlural": "công việc"
+        }
+      },
+      "HomePage": {
+        "title": "Trang chủ",
+        "description": "Trang chủ của ứng dụng",
+        "meta": {
+          "title": "Trang chủ - StudyStudio",
+          "description": "Chào mừng đến StudyStudio"
+        },
+        "features": {
+          "title": "Tính năng",
+          "item1": "Tính năng 1",
+          "item2": "Tính năng 2",
+          "item3": "Tính năng 3"
+        },
+        "footer": "© 2024 StudyStudio. Bảo lưu mọi quyền."
+      },
+      "LoginPage": {
+        "title": "Chào mừng trở lại",
+        "subtitle": "Đăng nhập vào tài khoản Study Studio của bạn",
+        "email": "Email",
+        "emailPlaceholder": "Nhập email của bạn",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Email không hợp lệ",
+        "password": "Mật khẩu",
+        "passwordPlaceholder": "Nhập mật khẩu của bạn",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "forgotPassword": "Quên mật khẩu?",
+        "signInButton": "Đăng nhập",
+        "continueWithGoogle": "Tiếp tục với Google",
+        "orContinueWith": "HOẶC TIẾP TỤC VỚI",
+        "noAccount": "Chưa có tài khoản?",
+        "signUpLink": "Đăng ký",
+        "loginFailed": "Đăng nhập thất bại",
+        "loginSuccess": "Đăng nhập thành công",
+        "emailNotVerified": "Email chưa xác thực",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "error": "Lỗi",
+        "credentialError": "Không thể lấy thông tin xác thực từ Google",
+        "meta": {
+          "title": "Đăng Nhập - StudyStudio",
+          "description": "Đăng nhập vào tài khoản StudyStudio của bạn"
+        }
+      },
+      "RegisterPage": {
+        "title": "Tạo tài khoản",
+        "subtitle": "Bắt đầu sử dụng Study Studio miễn phí",
+        "firstName": "Tên",
+        "lastName": "Họ",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "confirmPassword": "Nhập lại mật khẩu",
+        "firstNameRequired": "Tên là bắt buộc",
+        "firstNameInvalid": "Tên không được vượt quá 20 ký tự",
+        "lastNameRequired": "Họ là bắt buộc",
+        "lastNameInvalid": "Họ không được vượt quá 20 ký tự",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Email không đúng định dạng (ví dụ: abc@gmail.com)",
+        "emailNoSpaces": "Email không được chứa khoảng trắng",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, chứa ít nhất một chữ hoa, một chữ thường và một chữ số",
+        "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+        "confirmPasswordMismatch": "Mật khẩu nhập lại không khớp",
+        "continueWithGoogle": "Tiếp tục với Google",
+        "orContinueWith": "Hoặc tiếp tục với",
+        "createAccountButton": "Tạo tài khoản",
+        "hasAccount": "Đã có tài khoản?",
+        "signInLink": "Đăng nhập",
+        "successMessage": "Đăng ký thành công!",
+        "verificationEmailSent": "Email xác thực đã được gửi. Đang chuyển sang trang đăng nhập...",
+        "registrationFailed": "Đăng ký thất bại. Vui lòng thử lại.",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "verifyEmailTitle": "Xác thực Email",
+        "verifyEmailSubtitle": "Hãy kiểm tra email của bạn để biết các bước tiếp theo",
+        "checkYourEmail": "Kiểm tra email của bạn",
+        "verificationLinkSentTo": "Chúng tôi đã gửi liên kết xác thực đến:",
+        "linkExpiresIn15Minutes": "Liên kết sẽ hết hạn sau 15 phút.",
+        "checkSpamFolder": "Nếu bạn không thấy email, vui lòng kiểm tra thư mục spam.",
+        "backToLogin": "Quay lại đăng nhập",
+        "meta": {
+          "title": "Đăng Ký - StudyStudio",
+          "description": "Tạo tài khoản StudyStudio của bạn"
+        }
+      },
+      "ForgotPasswordPage": {
+        "title": "Quên mật khẩu?",
+        "subtitle": "Nhập email của bạn để nhận liên kết đặt lại mật khẩu",
+        "email": "Email",
+        "emailPlaceholder": "Nhập email của bạn",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Email không đúng định dạng",
+        "emailNoSpaces": "Email không được chứa khoảng trắng",
+        "emailNotRegistered": "Email chưa được đăng ký",
+        "sendResetLink": "Gửi liên kết đặt lại",
+        "backToLogin": "Quay lại đăng nhập",
+        "successTitle": "Đã gửi email!",
+        "successSubtitle": "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến",
+        "successInstructions": "Vui lòng kiểm tra hộp thư đến và nhấp vào liên kết để đặt lại mật khẩu.",
+        "notReceived": "Chưa nhận được email?",
+        "resendLink": "Gửi lại",
+        "meta": {
+          "title": "Quên Mật Khẩu - StudyStudio",
+          "description": "Đặt lại mật khẩu StudyStudio của bạn"
+        }
+      },
+      "ResetPasswordPage": {
+        "title": "Tạo mật khẩu mới",
+        "subtitle": "Nhập mật khẩu mới cho tài khoản của bạn",
+        "password": "Mật khẩu mới",
+        "confirmPassword": "Xác nhận mật khẩu mới",
+        "passwordRequired": "Mật khẩu là bắt buộc",
+        "passwordInvalid": "Mật khẩu phải từ 10 đến 20 ký tự, chứa ít nhất một chữ hoa, một chữ thường và một chữ số",
+        "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
+        "confirmPasswordMismatch": "Mật khẩu xác nhận không khớp",
+        "resetPasswordButton": "Đặt lại mật khẩu",
+        "invalidTokenTitle": "Liên kết đặt lại mật khẩu không hợp lệ",
+        "invalidTokenMessage": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+        "backToLogin": "Quay lại trang đăng nhập",
+        "successTitle": "Đặt lại mật khẩu thành công!",
+        "successMessage": "Mật khẩu của bạn đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
+        "goToLogin": "Đi đến trang đăng nhập",
+        "meta": {
+          "title": "Đặt Lại Mật Khẩu - StudyStudio",
+          "description": "Đặt lại mật khẩu StudyStudio của bạn"
+        }
+      },
+      "VerifyEmailPage": {
+        "title": "Xác thực Email",
+        "subtitle": "Kích hoạt tài khoản Study Studio của bạn",
+        "loading": "Đang xác thực email, vui lòng chờ...",
+        "successTitle": "Xác thực thành công",
+        "successMessage": "Tài khoản của bạn đã được xác thực thành công.",
+        "successDescription": "Bạn có thể đăng nhập để bắt đầu sử dụng hệ thống.",
+        "redirectingToLogin": "Hệ thống sẽ tự động chuyển hướng về trang đăng nhập sau 5 giây...",
+        "alreadyVerifiedMessage": "Tài khoản của bạn đã được xác thực trước đó.",
+        "invalidTokenTitle": "Liên kết không hợp lệ",
+        "invalidTokenMessage": "Liên kết xác thực không hợp lệ hoặc đã hết hạn.",
+        "invalidTokenDescription": "Vui lòng đăng nhập để tiếp tục xác thực tài khoản.",
+        "errorTitle": "Có lỗi xảy ra",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "backToLogin": "Quay lại đăng nhập",
+        "meta": {
+          "title": "Xác Thực Email - StudyStudio",
+          "description": "Xác thực tài khoản StudyStudio của bạn"
+        }
+      },
+      "ResendEmailVerifyPage": {
+        "title": "Xác thực Email của bạn",
+        "subtitle": "Gửi lại liên kết xác thực",
+        "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn một liên kết xác thực mới.",
+        "email": "Địa chỉ Email",
+        "emailPlaceholder": "email@cua.ban",
+        "emailRequired": "Email là bắt buộc",
+        "emailInvalid": "Vui lòng nhập một địa chỉ email hợp lệ",
+        "sendButton": "Gửi Liên kết Xác thực",
+        "sendFailed": "Không thể gửi liên kết xác thực",
+        "connectionError": "Không thể kết nối tới server. Vui lòng thử lại.",
+        "successTitle": "Kiểm tra email của bạn",
+        "successMessage": "Chúng tôi đã gửi một liên kết xác thực đến địa chỉ email của bạn.",
+        "successDescription": "Vui lòng kiểm tra hộp thư đến của bạn và nhấp vào liên kết xác thực. Nếu bạn không thấy nó, hãy kiểm tra thư mục spam.",
+        "backToLogin": "Quay lại Đăng nhập",
+        "sendAnother": "Gửi Lại",
+        "alreadyHaveEmail": "Đã xác thực email của bạn?",
+        "backToLoginLink": "Đến Đăng nhập",
+        "meta": {
+          "title": "Gửi lại xác thực Email - StudyStudio",
+          "description": "Gửi lại liên kết xác thực email"
+        }
+      },
+      "SettingsPage": {
+        "title": "Cài đặt",
+        "backToDashboard": "Quay lại Dashboard",
+        "menu": {
+          "profile": "Hồ sơ",
+          "security": "Bảo mật",
+          "billing": "Gói dùng kỳ & Thanh toán",
+          "notifications": "Tự động báo cáo",
+          "help": "Trợ giúp & Báo cáo"
+        },
+        "profile": {
+          "avatarTitle": "Hình ảnh hiển thị",
+          "changeAvatar": "Thay đổi ảnh",
+          "avatarSupport": "Tệp hỗ trợ: JPG, PNG (tối đa 5MB)",
+          "userInfoTitle": "Thông tin người dùng",
+          "userInfoSubtitle": "Cập nhật thông tin cá nhân của bạn",
+          "firstName": "Họ",
+          "lastName": "Tên",
+          "firstNameRequired": "Tên là bắt buộc",
+          "firstNameInvalid": "Tên không được vượt quá 20 ký tự",
+          "lastNameRequired": "Họ là bắt buộc",
+          "lastNameInvalid": "Họ không được vượt quá 20 ký tự",
+          "email": "Email",
+          "phoneNumber": "Số điện thoại",
+          "phoneNumberInvalid": "Số điện thoại phải có 10 đến 11 chữ số",
+          "bio": "Tiểu sử",
+          "bioPlaceholder": "Viết gì đó về bạn...",
+          "bioMaxLength": "Tiểu sử không được vượt quá 500 ký tự",
+          "preferencesTitle": "Tùy chọn",
+          "preferencesSubtitle": "Tùy chỉnh trải nghiệm của bạn",
+          "language": "Ngôn ngữ",
+          "notificationsTitle": "Thông báo qua email",
+          "notificationsSubtitle": "Quản lý các thông báo qua email của bạn",
+          "studioNotifications": "Thông báo từ Studio",
+          "studioNotificationsDesc": "Nhận thông báo qua email khi công việc hoàn tất",
+          "deleteAccount": {
+            "title": "Xóa tài khoản",
+            "subtitle": "Tài khoản sẽ bị đánh dấu là xóa và có thể khôi phục",
+            "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập cho đến khi khôi phục tài khoản",
+            "consequence1": "Tài khoản sẽ bị đánh dấu là xóa",
+            "consequence2": "Bạn sẽ không thể truy cập các không gian làm việc",
+            "consequence3": "Dữ liệu vẫn được giữ lại và tài khoản có thể khôi phục",
+            "button": "Xóa tài khoản",
+            "modalTitle": "Xác nhận xóa tài khoản",
+            "modalSubtitle": "Để tiếp tục, vui lòng xác nhận thao tác xóa tài khoản.",
+            "confirmLabel": "Nhập DELETE để xác nhận",
+            "confirmHint": "Bạn phải nhập chính xác DELETE (in hoa)",
+            "confirmTextError": "Vui lòng nhập chính xác DELETE để xác nhận",
+            "cancelButton": "Hủy",
+            "confirmButton": "Xóa tài khoản",
+            "deleting": "Đang xử lý...",
+            "success": "Tài khoản đã bị đánh dấu là xóa",
+            "error": "Vô hiệu hóa tài khoản thất bại. Vui lòng thử lại!"
+          },
+          "editButton": "Chỉnh sửa",
+          "cancelButton": "Hủy bỏ",
+          "saveButton": "Lưu thay đổi",
+          "savingButton": "Đang lưu...",
+          "saveSuccess": "Cài đặt đã được lưu thành công!",
+          "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại!",
+          "sectionBasicInfo": "Thông tin cơ bản",
+          "sectionContact": "Liên hệ",
+          "sectionBio": "Giới thiệu bản thân",
+          "hintFirstName": "Họ hiển thị của bạn",
+          "hintLastName": "Tên trong họ và tên",
+          "hintEmail": "Email không thể thay đổi",
+          "hintPhone": "10–11 chữ số, chỉ nhập số",
+          "placeholderFirstName": "Nhập họ của bạn",
+          "placeholderLastName": "Nhập tên của bạn",
+          "languageHint": "Tải lại trang khi đổi",
+          "switchOn": "Bật",
+          "switchOff": "Tắt",
+          "statusOn": "Đang bật",
+          "statusOff": "Đang tắt",
+          "deleteConfirmPlaceholder": "Nhập \"DELETE\" để xác nhận",
+          "deleteIrreversible": "⚠️  Hành động này không thể hoàn tác!"
+        },
+        "security": {
+          "comingSoon": "Tính năng bảo mật sẽ sớm có"
+        },
+        "billing": {
+          "comingSoon": "Tính năng thanh toán sẽ sớm có"
+        },
+        "notifications": {
+          "comingSoon": "Tính năng thông báo sẽ sớm có"
+        },
+        "sectionLabel": "Cài đặt tài khoản"
+      },
+      "Sidebar": {
+        "home": "Trang chủ",
+        "groups": "Nhóm",
+        "master": "Quản lý",
+        "announcements": "Thông báo",
+        "dashboard": "Bảng điều khiển",
+        "users": "Người dùng",
+        "adminGroups": "Nhóm",
+        "subscriptions": "Gói đăng ký",
+        "reports": "Báo cáo",
+        "news": "Tin tức"
+      },
+      "Header": {
+        "searchPlaceholder": "Tìm kiếm dự án, công việc...",
+        "settings": "Cài đặt",
+        "profile": "Hồ sơ",
+        "logout": "Đăng xuất",
+        "loggingOut": "Đang đăng xuất..."
+      },
+      "SecurityPage": {
+        "title": "Bảo mật",
+        "backToSettings": "Quay lại Cài đặt",
+        "changePasswordTitle": "Đổi mật khẩu",
+        "changePasswordSubtitle": "Cập nhật mật khẩu thường xuyên để giữ cho tài khoản của bạn an toàn.",
+        "currentPassword": "Mật khẩu hiện tại",
+        "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
+        "currentPasswordRequired": "Mật khẩu hiện tại không được để trống",
+        "newPassword": "Mật khẩu mới",
+        "newPasswordPlaceholder": "Nhập mật khẩu mới",
+        "newPasswordRequired": "Mật khẩu mới không được để trống",
+        "passwordInvalid": "Mật khẩu mới phải từ 10–20 ký tự, chứa ít nhất một chữ hoa, một chữ thường và một chữ số",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+        "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+        "passwordMismatch": "Mật khẩu không khớp",
+        "cancelButton": "Hủy",
+        "updateButton": "Cập nhật mật khẩu",
+        "updatingButton": "Đang cập nhật...",
+        "changePasswordSuccess": "Cập nhật mật khẩu thành công!",
+        "changePasswordError": "Cập nhật mật khẩu thất bại. Vui lòng thử lại!",
+        "strength": {
+          "title": "Độ mạnh mật khẩu",
+          "levelLabel": "Mức độ",
+          "empty": "Nhập mật khẩu mới để xem độ mạnh",
+          "weak": "Yếu",
+          "fair": "Trung bình",
+          "good": "Khá",
+          "strong": "Mạnh",
+          "reqLength": "10–20 ký tự",
+          "reqUpper": "Chữ hoa (A–Z)",
+          "reqLower": "Chữ thường (a–z)",
+          "reqNumber": "Chữ số (0–9)"
+        },
+        "matchOk": "Mật khẩu khớp nhau ✓",
+        "matchFail": "Mật khẩu chưa khớp",
+        "successTitle": "Đổi mật khẩu thành công!",
+        "successMessage": "Mật khẩu của bạn đã được cập nhật an toàn.",
+        "changeAnother": "Đổi mật khẩu khác",
+        "deleteAccount": {
+          "title": "Vùng nguy hiểm",
+          "subtitle": "Xóa tài khoản (bị đánh dấu) và có thể khôi phục sau",
+          "warning": "Cảnh báo: Bạn sẽ không thể đăng nhập sau khi xóa!",
+          "consequence1": "Tài khoản sẽ bị đánh dấu là xóa",
+          "consequence2": "Bạn sẽ không thể truy cập vào tất cả các không gian làm việc",
+          "consequence3": "Dữ liệu dự án và tài liệu vẫn được giữ lại",
+          "consequence4": "Bạn có thể liên hệ hỗ trợ để khôi phục tài khoản",
+          "button": "Xóa tài khoản",
+          "modalTitle": "Xác nhận xóa tài khoản",
+          "modalSubtitle": "Bạn có chắc chắn muốn xóa tài khoản của mình không?",
+          "modalWarning": "Hành động này sẽ:",
+          "confirmLabel": "Để xác nhận, vui lòng nhập DELETE",
+          "confirmHint": "Nhập chữ DELETE (viết hoa) để xác nhận",
+          "confirmTextError": "Vui lòng nhập chính xác chữ DELETE để xác nhận",
+          "cancelButton": "Hủy",
+          "confirmButton": "Xóa tài khoản",
+          "deleting": "Đang xử lý...",
+          "success": "Tài khoản đã bị đánh dấu là xóa",
+          "error": "Vô hiệu hóa tài khoản thất bại. Vui lòng thử lại!"
+        }
+      },
+      "BillingPage": {
+        "plansTitle": "Gói đăng ký",
+        "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
+        "currentPlan": {
+          "title": "Gói đăng ký hiện tại",
+          "subtitle": "Bạn hiện đang sử dụng gói",
+          "changeButton": "Nâng cấp Premium",
+          "cancelButton": "Hủy gói đăng ký",
+          "activeBadge": "Đang hoạt động"
+        },
+        "plans": {
+          "period": "/tháng",
+          "current": "Gói hiện tại",
+          "free": {
+            "name": "Miễn phí",
+            "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
+            "feature2": "Tối đa 5 Không gian nhóm",
+            "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+            "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+            "feature5": "20 lượt yêu cầu AI mỗi ngày",
+            "button": "Chuyển về gói Free"
+          },
+          "premium": {
+            "name": "Premium",
+            "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
+            "feature2": "Tối đa 10 Không gian nhóm",
+            "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+            "feature4": "1024 MB  tài liệu cho mỗi Không gian nhóm",
+            "feature5": "100 lượt yêu cầu AI mỗi ngày",
+            "button": "Nâng cấp lên Premium"
+          }
+        },
+        "historyTitle": "Lịch sử thanh toán",
+        "history": {
+          "today": "Hôm nay",
+          "lastMonth": "Tháng trước",
+          "twoMonthsAgo": "2 tháng trước",
+          "threeMonthsAgo": "3 tháng trước",
+          "annual": "Gói năm",
+          "subscription": "Đăng ký hàng tháng"
+        },
+        "table": {
+          "invoice": "Số hóa đơn",
+          "date": "Ngày",
+          "description": "Mô tả",
+          "amount": "Số tiền"
+        },
+        "invoiceInfo": {
+          "title": "Thông tin hóa đơn",
+          "subtitle": "Cập nhật thông tin thanh toán và hóa đơn của bạn",
+          "email": "Email nhận hóa đơn",
+          "paymentMethod": "Phương thức thanh toán",
+          "emailNotification": "Nhận thông báo qua email khi có hóa đơn mới",
+          "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!",
+          "editButton": "Chỉnh sửa thông tin hóa đơn",
+          "updateButton": "Cập nhật thông tin hóa đơn"
+        }
+      },
+      "HelpPage": {
+        "form": {
+          "formTitle": "Gửi lời than phiền hoặc Liên hệ hỗ trợ",
+          "subtitle": "Hãy cho chúng tôi biết nếu bạn gặp sự cố hoặc có bất kỳ câu hỏi nào",
+          "feedbackType": "Loại phản hồi",
+          "feedbackOptions": {
+            "bug": "Báo cáo lỗi",
+            "feedback": "Góp ý cải thiện",
+            "support": "Yêu cầu hỗ trợ",
+            "other": "Khác"
+          },
+          "email": "Email",
+          "emailPlaceholder": "dat@studist.edu.vn",
+          "title": "Tiêu đề",
+          "titlePlaceholder": "Một vài từ mô tả vấn đề",
+          "content": "Nội dung",
+          "contentPlaceholder": "Mô tả chi tiết vấn đề của bạn...",
+          "cancelButton": "Hủy",
+          "submitButton": "Gửi báo cáo",
+          "validationError": "Vui lòng điền tất cả các trường",
+          "submitSuccess": "Báo cáo của bạn đã được gửi thành công!",
+          "submitError": "Gửi báo cáo thất bại"
+        },
+        "faq": {
+          "title": "Câu hỏi thường gặp",
+          "subtitle": "Tìm câu trả lời nhanh cho các câu hỏi phổ biến",
+          "item1": {
+            "question": "Làm thế nào để đặt lại mật khẩu?",
+            "answer": "Bạn có thể đặt lại mật khẩu bằng cách vào trang Đăng nhập và nhấp vào 'Quên mật khẩu'. Làm theo hướng dẫn được gửi đến email của bạn."
+          },
+          "item2": {
+            "question": "Làm thế nào để thay đổi ngôn ngữ?",
+            "answer": "Vào Cài đặt > Hồ sơ và chọn ngôn ngữ ưa thích của bạn từ menu thả xuống."
+          },
+          "item3": {
+            "question": "Tôi có thể hủy đăng ký bất cứ lúc nào không?",
+            "answer": "Có, bạn có thể hủy đăng ký bất cứ lúc nào từ trang Thanh toán trong Cài đặt."
+          },
+          "item4": {
+            "question": "Làm thế nào để liên hệ hỗ trợ?",
+            "answer": "Bạn có thể liên hệ với chúng tôi bằng cách sử dụng biểu mẫu trên trang này hoặc gửi email trực tiếp đến support@studystudio.com."
+          }
+        }
+      },
+      "MasterPage": {
+        "title": "Quản lý",
+        "subtitle": "Quản lý các studio và không gian làm việc của bạn",
+        "searchPlaceholder": "Tìm kiếm studio, công việc...",
+        "searchGroups": "Tìm kiếm nhóm...",
+        "createButton": "Không gian mới",
+        "infoBanner": "Tạo và quản lý các studio để tổ chức công việc của bạn hiệu quả hơn.",
+        "studiosUsed": "không gian đã sử dụng",
+        "personal": "Cá nhân",
+        "group": "Nhóm",
+        "groups": "Nhóm",
+        "members": "thành viên",
+        "videos": "video",
+        "noStudios": "Chưa có studio nào. Tạo studio đầu tiên của bạn!",
+        "noSearchResults": "Không tìm thấy studio nào phù hợp",
+        "error": "Lỗi",
+        "loadError": "Không thể tải danh sách studio",
+        "backToList": "Quay lại danh sách",
+        "groupsTitle": "Danh sách nhóm",
+        "noGroups": "Chưa có nhóm nào trong studio này",
+        "yourStudios": "Studio của bạn",
+        "joinedStudios": "Studio bạn tham gia",
+        "inactiveStudioTitle": "Studio này đang tạm dừng",
+        "inactiveStudioDescription": "Studio \"{studioName}\" đang dừng hoạt động. Chỉ chủ sở hữu mới có thể mở lại trong phần cài đặt.",
+        "inactiveStudioOk": "Đã hiểu",
+        "pendingJoinBadge": "Chờ duyệt",
+        "pendingJoinNotice": "Bạn đang chờ duyệt vào studio này.",
+        "pendingStudioTitle": "Yêu cầu tham gia đang chờ duyệt",
+        "pendingStudioDescription": "Bạn chưa thể vào studio \"{studioName}\" khi yêu cầu vẫn đang chờ duyệt. Bạn chỉ có thể hủy yêu cầu.",
+        "pendingStudioCancel": "Hủy yêu cầu",
+        "pendingStudioCanceling": "Đang hủy...",
+        "pendingStudioCancelSuccess": "Đã hủy yêu cầu tham gia studio",
+        "pendingStudioCancelError": "Không thể hủy yêu cầu tham gia studio",
+        "leaveStudio": "Rời studio",
+        "leaveStudioTitle": "Rời studio này?",
+        "leaveStudioDescription": "Bạn có chắc chắn muốn rời studio \"{studioName}\" không?",
+        "leaveStudioCancel": "Hủy",
+        "leaveStudioConfirm": "Rời studio",
+        "roles": {
+          "owner": "Chủ sở hữu",
+          "member": "Thành viên"
+        },
+        "modal": {
+          "createTitle": "Tạo Studio Mới",
+          "editTitle": "Chỉnh sửa Studio",
+          "name": "Tên Studio",
+          "namePlaceholder": "Nhập tên studio...",
+          "nameRequired": "Tên studio là bắt buộc",
+          "nameTooLong": "Tên studio không được vượt quá 100 ký tự",
+          "description": "Mô tả",
+          "descriptionPlaceholder": "Mô tả ngắn gọn về studio...",
+          "descriptionRequired": "Mô tả là bắt buộc",
+          "descriptionTooLong": "Mô tả không được vượt quá 500 ký tự",
+          "type": "Loại",
+          "cancel": "Hủy",
+          "create": "Tạo",
+          "save": "Lưu",
+          "createSuccess": "Tạo studio thành công!",
+          "editSuccess": "Cập nhật studio thành công!",
+          "createError": "Không thể tạo studio",
+          "editError": "Không thể cập nhật studio",
+          "limitReached": "Bạn đã đạt giới hạn 3 studio. Vui lòng nâng cấp gói đăng ký hoặc xóa studio cũ để tạo mới.",
+          "upgradeButton": "Nâng cấp gói",
+          "duplicateName": "Tên studio đã tồn tại. Vui lòng chọn tên khác.",
+          "colorLabel": "Màu chủ đạo",
+          "bannerLabel": "Ảnh nền",
+          "avatarLabel": "Ảnh đại diện",
+          "aliasPlaceholder": "VD: THPT Hoang Dieu",
+          "taglineLabel": "Slogan",
+          "taglinePlaceholder": "Nhập slogan ngắn gọn",
+          "startDate": "Ngày bắt đầu",
+          "endDate": "Ngày kết thúc"
+        },
+        "studioLimit": {
+          "title": "Đã đạt giới hạn studio",
+          "close": "Đóng"
+        },
+        "detailModal": {
+          "description": "Mô tả",
+          "members": "Thành viên",
+          "videos": "Video",
+          "created": "Ngày tạo",
+          "updated": "Cập nhật lần cuối",
+          "close": "Đóng",
+          "edit": "Chỉnh sửa",
+          "delete": "Xóa"
+        },
+        "deleteModal": {
+          "title": "Xóa Studio",
+          "message": "Bạn có chắc chắn muốn xóa",
+          "warning": "Cảnh báo: Tất cả các nhóm bên trong không gian này cũng sẽ bị xóa. Hành động này không thể hoàn tác.",
+          "cancel": "Hủy",
+          "confirm": "Xóa",
+          "success": "Xóa studio thành công!",
+          "error": "Không thể xóa studio"
+        },
+        "detail": {
+          "activeBadge": "Đang hoạt động",
+          "addGroupButton": "Thêm nhóm",
+          "inviteMember": "Mời thành viên",
+          "studioNotFound": "Studio không tồn tại",
+          "studioNotFoundSubtitle": "Vui lòng kiểm tra lại đường dẫn hoặc quay về danh sách studio",
+          "noGroupsSubtitle": "Tạo nhóm đầu tiên để bắt đầu cộng tác",
+          "validation": {
+            "dateRangeError": "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc"
+          },
+          "groupsUsed": "không gian nhóm đang được sử dụng",
+          "completionProgress": "Tiến độ hoàn thiện công việc trung bình",
+          "tasks": "công việc",
+          "progress": "Tiến độ công việc",
+          "workspaceBadge": "Không gian làm việc",
+          "notAvailable": "Không có dữ liệu",
+          "settings": {
+            "title": "Cài đặt studio",
+            "subtitle": "Điều chỉnh thông tin và cấu hình của studio",
+            "edit": "Chỉnh sửa",
+            "saving": "Đang lưu...",
+            "saveChanges": "Lưu thay đổi",
+            "primaryColor": "Màu chủ đạo",
+            "bannerLabel": "Ảnh nền",
+            "aliasLabel": "Biệt danh",
+            "aliasPlaceholder": "VD: THPT Hoang Dieu",
+            "taglineLabel": "Slogan",
+            "taglinePlaceholder": "VD: Học đi đôi với cọc",
+            "startDate": "Ngày bắt đầu",
+            "endDate": "Ngày kết thúc",
+            "createdDate": "Ngày tạo",
+            "groupCount": "Số lượng nhóm"
+          },
+          "danger": {
+            "title": "Vùng nguy hiểm",
+            "deleteDescription": "Xóa studio sẽ đồng thời xóa toàn bộ nhóm và dữ liệu liên quan.",
+            "confirmTitle": "Xác nhận xóa studio",
+            "confirmDescription": "Bạn có chắc chắn muốn xóa studio này không? Hành động này không thể hoàn tác.",
+            "confirmDelete": "Xác nhận xóa"
+          },
+          "tabs": {
+            "groups": "Nhóm",
+            "ai": "AI",
+            "analytics": "Phân tích",
+            "settings": "Cài đặt"
+          },
+          "panel": {
+            "title": "Chi tiết Studio",
+            "subtitle": "Thông tin tổng quan",
+            "collapse": "Thu gọn",
+            "expand": "Mở rộng",
+            "memberListTitle": "Danh sách thành viên",
+            "quickStatsTitle": "Thống kê nhanh",
+            "quickStatsSubtitle": "Tổng quan hiệu suất",
+            "created": "Ngày tạo"
+          },
+          "memberAltFallback": "Thành viên",
+          "groupCreatedSuccess": "Nhóm đã được tạo thành công!",
+          "invite": {
+            "createLinkError": "Không thể tạo liên kết mời. Vui lòng thử lại."
+          },
+          "leave": {
+            "button": "Rời studio",
+            "leaving": "Đang rời...",
+            "confirmTitle": "Xác nhận rời studio",
+            "confirmDescription": "Bạn sẽ rời studio này và rời toàn bộ nhóm thuộc studio. Hành động này có thể tham gia lại nếu được mời.",
+            "confirmButton": "Xác nhận rời",
+            "success": "Đã rời studio thành công.",
+            "error": "Không thể rời studio. Vui lòng thử lại."
+          },
+          "removeMember": {
+            "confirmTitle": "Xác nhận xóa thành viên",
+            "confirmDescription": "Bạn có chắc muốn xóa {name} khỏi studio? Thành viên sẽ không bị xóa khỏi các nhóm.",
+            "confirmButton": "Xóa khỏi studio",
+            "success": "Đã xóa thành viên khỏi studio",
+            "error": "Không thể xóa thành viên khỏi studio"
+          }
+        }
+      },
+      "MemberList": {
+        "groupRole": {
+          "owner": "Chủ sở hữu",
+          "moderator": "Điều phối viên",
+          "member": "Thành viên",
+          "commenter": "Người bình luận",
+          "viewer": "Người xem"
+        },
+        "title": "Danh sách thành viên",
+        "quickAssign": "Giao nhanh",
+        "invite": "Mời",
+        "avatarFallback": "Ảnh đại diện",
+        "remove": "Xóa",
+        "removing": "Đang xóa...",
+        "owner": "Chủ sở hữu",
+        "empty": "Chưa có thành viên"
+      },
+      "QuickAssignModal": {
+        "title": "Giao việc nhanh",
+        "subtitle": "Phân công nhiệm vụ cho thành viên nhóm",
+        "roles": {
+          "moderator": "Điều phối viên",
+          "member": "Thành viên",
+          "commenter": "Người bình luận",
+          "viewer": "Người xem"
+        },
+        "scope": {
+          "title": "Phạm vi phân công",
+          "unassignedOnly": "Chỉ thành viên chưa có việc",
+          "unassignedDescription": "Chỉ giao việc cho những thành viên chưa có nhiệm vụ",
+          "allMembers": "Tất cả thành viên",
+          "allMembersDescription": "Giao việc cho toàn bộ thành viên"
+        },
+        "defaultRole": {
+          "title": "Vai trò mặc định"
+        },
+        "targetGroups": {
+          "title": "Nhóm mục tiêu",
+          "hint": "Chọn các nhóm để phân công nhiệm vụ",
+          "memberCount": "({count} thành viên)",
+          "noGroups": "Không có nhóm"
+        },
+        "excludeMembers": {
+          "title": "Loại trừ thành viên",
+          "hint": "Chọn thành viên cần loại khỏi danh sách phân công",
+          "none": "Không có thành viên nào bị loại"
+        },
+        "success": "Phân công nhiệm vụ thành công",
+        "errors": {
+          "assignFailed": "Phân công nhiệm vụ thất bại",
+          "assignException": "Có lỗi khi phân công nhiệm vụ"
+        },
+        "actions": {
+          "cancel": "Hủy",
+          "assigning": "Đang phân công...",
+          "assignRandom": "Phân công ngẫu nhiên"
+        }
+      },
+      "StudioInviteAccept": {
+        "title": "Lời mời tham gia Studio",
+        "checking": "Đang kiểm tra lời mời...",
+        "notLoggedIn": "Bạn chưa đăng nhập",
+        "loginRequired": "Vui lòng đăng nhập để chấp nhận lời mời vào studio.",
+        "loginButton": "Đăng nhập để tiếp tục",
+        "acceptButton": "Chấp nhận gia nhập",
+        "acceptPrompt": "Nhấn \"Chấp nhận gia nhập\" để tham gia studio.",
+        "success": "Bạn đã tham gia studio thành công",
+        "redirecting": "Đang chuyển hướng...",
+        "pendingTitle": "Yêu cầu tham gia đang chờ duyệt",
+        "pendingMessage": "Yêu cầu tham gia của bạn đã được gửi. Vui lòng chờ chủ studio phê duyệt.",
+        "cancelRequest": "Hủy yêu cầu",
+        "cancelingRequest": "Đang hủy yêu cầu...",
+        "alreadyMemberTitle": "Thông báo",
+        "alreadyMember": "Bạn đã là thành viên của studio này rồi.",
+        "goToStudio": "Đi tới Studio",
+        "backHome": "Về Quản lý",
+        "errorMissingToken": "Thiếu mã tham gia.",
+        "errorInvalidToken": "Mã tham gia không hợp lệ hoặc đã hết hạn.",
+        "errorAcceptFailed": "Chấp nhận lời mời thất bại.",
+        "cancelRequestFailed": "Không thể hủy yêu cầu tham gia."
+      },
+      "LandingGroupPage": {
+        "badge": "Không gian nhóm",
+        "hero": {
+          "title": "Không gian làm việc chung cho",
+          "titleHighlight": "học tập & dự án",
+          "description": "Phối hợp cùng nhóm, theo dõi tiến độ và hoàn thành mục tiêu nhanh hơn.",
+          "createButton": "Tạo nhóm →",
+          "imageAlt": "Hợp tác nhóm"
+        },
+        "howToUse": {
+          "title": "Cách sử dụng",
+          "description": "Bắt đầu nhanh với quy trình rõ ràng để nhóm làm việc hiệu quả và minh bạch.",
+          "step1": "Tạo mới một nhóm với template có sẵn",
+          "step2": "Sau đó chia sẻ bảng với những người dùng khác",
+          "step3": "Tạo công việc, giao nhiệm vụ cho thành viên",
+          "step4": "Cộng tác để cùng nhau hoàn thành công việc."
+        },
+        "features": {
+          "title": "Nhóm có thể làm gì?",
+          "manageGroup": {
+            "title": "Quản lý nhóm",
+            "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
+          },
+          "trackWork": {
+            "title": "Theo dõi công việc",
+            "description": "Nắm rõ ai làm gì, tiến độ\nđến đâu"
+          },
+          "permissions": {
+            "title": "Phân quyền thông minh",
+            "description": "Tạo và tổ chức nhóm học tập\nhoặc dự án chỉ trong vài giây"
+          },
+          "aiSupport": {
+            "title": "AI hỗ trợ học tập",
+            "description": "Hỏi đáp, phân tích yêu cầu,\ntạo báo cáo"
+          }
+        },
+        "users": {
+          "title": "Ai đang sử dụng Study Studio",
+          "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
+          "personal": {
+            "title": "Cá nhân & Nhóm",
+            "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ cùng\nnhau học tập và làm việc hiệu quả."
+          },
+          "education": {
+            "title": "Giáo dục",
+            "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho\nngười trưởng thành."
+          }
+        },
+        "ai": {
+          "title": "Quản lý công việc hiệu quả hơn",
+          "subtitle": "với sự giúp sức của AI",
+          "feature1": "Cung cấp báo cáo về tình trạng công việc của các nhóm",
+          "feature2": "Giải đáp thắc mắc về những thông tin được cung cấp trong nhóm"
+        }
+      },
+      "LandingPersonalPage": {
+        "badge": "Không gian cá nhân",
+        "hero": {
+          "title": "Không gian làm việc",
+          "titleHighlight": "dành riêng cho bạn",
+          "subtitle": "Tổ chức ghi chú, tài liệu và kế hoạch học tập.",
+          "subtitleExtra": "Tất cả trong một Không gian cá nhân trực quan, dễ sử dụng.",
+          "createButton": "Tạo không gian của bạn →",
+          "imageAlt": "Minh họa không gian cá nhân"
+        },
+        "howToUse": {
+          "title": "Cách sử dụng",
+          "step1": {
+            "title": "Tạo Không gian cá nhân",
+            "description": "Bắt đầu với một không gian trống\nTự do sắp xếp theo cách của bạn"
+          },
+          "step2": {
+            "title": "Thêm ghi chú, tài liệu",
+            "description": "Thêm văn bản, hình ảnh, đường dẫn và tệp\nTất cả gọn gàng trên một bảng"
+          },
+          "step3": {
+            "title": "Lập kế hoạch học tập",
+            "description": "Tạo danh sách công việc đặt mục tiêu\nvà theo dõi tiến độ mỗi ngày"
+          },
+          "step4": {
+            "title": "Học tập hiệu quả hơn",
+            "description": "AI giúp bạn tóm tắt, ôn tập và gợi ý\nphương pháp học tối ưu hơn"
+          }
+        },
+        "features": {
+          "title": "Bạn có thể làm gì?",
+          "smartNotes": {
+            "title": "Ghi chú thông minh",
+            "description": "Tạo và ghi chú với văn bản,\nhình ảnh, đường dẫn"
+          },
+          "tasks": {
+            "title": "Công việc, mục tiêu",
+            "description": "Lập danh sách việc cần làm\nđặt hạn chót và theo dõi tiến độ\nmỗi ngày"
+          },
+          "documents": {
+            "title": "Tổ chức tài liệu",
+            "description": "Lưu trữ và sắp xếp tài liệu học\ntập theo chủ đề, môn học hoặc\ndự án"
+          },
+          "aiSupport": {
+            "title": "AI hỗ trợ học tập",
+            "description": "AI tóm tắt tài liệu, gợi ý ôn tập\nvà trả lời câu hỏi của bạn"
+          },
+          "schedule": {
+            "title": "Lịch học tập",
+            "description": "Lên lịch học và quản lý\nthời gian hiệu quả"
+          },
+          "progress": {
+            "title": "Theo dõi tiến độ",
+            "description": "Xem tổng quan tiến độ học tập\nvà thống kê"
+          }
+        },
+        "users": {
+          "title": "Ai đang sử dụng Study Studio",
+          "subtitle": "Hơn xxx người sử dụng bảng mỗi tháng.",
+          "students": {
+            "title": "Giáo viên, học sinh, sinh viên",
+            "description": "Giáo viên, học sinh, sinh viên\nngười tự học, nhóm bạn\nđội dự án và cộng đồng nhỏ\ncùng học tập và làm việc hiệu quả."
+          },
+          "selfLearners": {
+            "title": "Người tự học",
+            "description": "Tự tổ chức lộ trình học,\nlưu trữ tài liệu tham khảo\nvà đặt mục tiêu phát triển\ncủa bản thân"
+          }
+        }
+      },
+      "LandingManagementPage": {
+        "badge": "Không gian quản lý",
+        "hero": {
+          "title": "Quản lý toàn bộ nhóm",
+          "titleHighlight": "từ một nơi",
+          "description": "Điều phối nhiều nhóm, theo dõi tiến độ và ra quyết định nhanh hơn từ một bảng quản trị thống nhất.",
+          "executiveLabel": "Bảng điều hành",
+          "executiveCaption": "Theo dõi hiệu suất tổng thể theo thời gian thực",
+          "createButton": "Bắt đầu quản lý →",
+          "imageAlt": "Minh họa không gian quản lý"
+        },
+        "howToUse": {
+          "title": "Cách sử dụng",
+          "description": "Thiết lập nhanh quy trình quản lý để theo dõi nhóm, phân quyền và đánh giá tiến độ rõ ràng.",
+          "step1": {
+            "title": "Tạo Không gian quản lý",
+            "description": "Thiết lập không gian và cấu hình theo nhu cầu tổ chức của bạn"
+          },
+          "step2": {
+            "title": "Thêm nhóm & thành viên",
+            "description": "Mời thành viên, tạo nhóm học tập chỉ trong vài click"
+          },
+          "step3": {
+            "title": "Phân quyền, thiết lập",
+            "description": "Phân quyền quản lý, thành viên cho từng nhóm riêng biệt"
+          },
+          "step4": {
+            "title": "Theo dõi & báo cáo",
+            "description": "Xem tiến độ, báo cáo hoạt động và đánh giá hiệu quả"
+          }
+        },
+        "features": {
+          "title": "Quản lý có thể làm gì?",
+          "manageMembers": {
+            "title": "Quản lý thành viên",
+            "description": "Thêm, xóa quản lý thành viên trong tổ chức của bạn"
+          },
+          "trackProgress": {
+            "title": "Theo dõi tiến độ",
+            "description": "Xem tiến độ của từng nhóm, thành viên"
+          },
+          "permissions": {
+            "title": "Phân quyền thông minh",
+            "description": "Thiết lập quyền hạn cho từng vai trò: chủ sở hữu và thành viên"
+          },
+          "overview": {
+            "title": "Tổng quan",
+            "description": "Dashboard tổng quan, số liệu"
+          }
+        },
+        "users": {
+          "title": "Ai đang sử dụng Study Studio",
+          "subtitle": "Hơn xx triệu người sử dụng bảng mỗi tháng.",
+          "personal": {
+            "title": "Cá nhân & Nhóm",
+            "description": "Sinh viên, người tự học, nhóm bạn,\nđội dự án và cộng đồng nhỏ\ncùng nhau học tập và làm việc hiệu quả."
+          },
+          "education": {
+            "title": "Tổ chức giáo dục",
+            "description": "Lớp học, các trường đại học và các\nchương trình giáo dục dành cho người trưởng thành."
+          }
+        }
+      },
+      "LandingPlanPage": {
+        "hero": {
+          "title": "Các gói đăng ký trả phí",
+          "titleHighlight": "của chúng tôi"
+        },
+        "freePlan": {
+          "title": "Gói miễn phí",
+          "tierBadge": "Gói cơ bản",
+          "price": "0 VND",
+          "description": "Phù hợp cho người dùng cá nhân và các\nnhóm nhỏ trải nghiệm",
+          "registerButton": "Đăng ký",
+          "feature1": "Tối đa 3 Không gian quản lý riêng biệt",
+          "feature2": "Tối đa 5 Không gian nhóm",
+          "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+          "feature4": "500 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+          "feature5": "20 lượt yêu cầu AI mỗi ngày"
+        },
+        "premiumPlan": {
+          "title": "Gói nâng cấp",
+          "tierBadge": "Gói nâng cao",
+          "price": "299.000 VND / Tháng",
+          "description": "Phù hợp cho các nhóm lớn cần sự linh\nhoạt hơn",
+          "registerButton": "Đăng ký",
+          "badge": "Phổ biến nhất",
+          "recommendation": "Dành cho người dùng muốn làm việc nghiêm túc hơn, cần nhiều công cụ mạnh hơn và muốn tối ưu toàn bộ quy trình học tập hoặc quản lý.",
+          "feature1": "Tối đa 10 Không gian quản lý riêng biệt",
+          "feature2": "Tối đa 10 Không gian nhóm",
+          "feature3": "Tối đa 10 thành viên ở mỗi Không gian nhóm",
+          "feature4": "1024 MB lưu trữ tài liệu cho mỗi Không gian nhóm",
+          "feature5": "100 lượt yêu cầu AI mỗi ngày"
+        },
+        "freePlanRecommendation": "Phù hợp để bắt đầu, trải nghiệm hệ thống và làm quen với cách quản lý công việc cơ bản.",
+        "landingCta": "Bắt đầu với Free bất cứ lúc nào, hoặc chọn Premium để mở khóa trải nghiệm đầy đủ và tăng tốc hiệu quả ngay từ hôm nay.",
+        "heroSubtitle": "Chọn gói phù hợp để bắt đầu ngay hôm nay. Dễ bắt đầu với Free, mạnh mẽ bứt tốc với Premium.",
+        "valuePill1": "Triển khai nhanh",
+        "valuePill2": "Hỗ trợ AI thông minh"
+      },
+      "GroupDocumentsPage": {
+        "download": "Tải xuống",
+        "delete": "Xóa",
+        "statusLabel": "Trạng thái",
+        "more": "Thêm",
+        "untitled": "Không có tên",
+        "unknownStatus": "không rõ",
+        "unknownUploader": "Người tải lên không xác định",
+        "uploadedBy": "Tải lên bởi {name}",
+        "cannotLoadDocuments": "Không thể tải danh sách tài liệu",
+        "cannotDetectGroupId": "Không xác định được groupId từ URL",
+        "invalidFiles": "Tệp không hợp lệ: {names}",
+        "uploadedFiles": "Đã tải lên {count} tệp",
+        "failedFiles": "Tệp tải lên thất bại: {names}",
+        "documentNotFound": "Không tìm thấy tài liệu",
+        "documentDeleted": "Đã xóa tài liệu",
+        "deleteFailed": "Xóa thất bại",
+        "downloadFailed": "Tải xuống thất bại",
+        "sharedProjectDocuments": "Tài liệu dự án được chia sẻ",
+        "uploading": "Đang tải lên...",
+        "upload": "Tải lên",
+        "uploadModalTitle": "Tải tài liệu",
+        "dragDropTitle": "Kéo & thả tệp vào đây",
+        "dragDropSubtitle": "hoặc bấm để chọn tệp",
+        "uploadHint": "Hỗ trợ: PDF, DOCX, TXT, MD • Tối đa 5MB • 1 tệp",
+        "browseFile": "Chọn tệp",
+        "loadingDocuments": "Đang tải tài liệu...",
+        "noDocuments": "Chưa có tài liệu nào được tải lên.",
+        "tooManyFiles": "Chỉ được tải lên 1 tệp.",
+        "invalidFileType": "Định dạng tệp không hợp lệ: {name}",
+        "fileTooLarge": "Tệp vượt quá 5MB: {name}",
+        "uploadFailed": "Tải lên thất bại",
+        "confirmDeleteTitle": "Xác nhận xóa tài liệu",
+        "confirmDeleteDescriptionPrefix": "Bạn có chắc chắn muốn xóa",
+        "confirmDeleteDescriptionSuffix": "không? Hành động này không thể hoàn tác.",
+        "thisDocument": "tài liệu này",
+        "cancel": "Hủy",
+        "deleting": "Đang xóa...",
+        "deleteDocument": "Xóa tài liệu"
+      },
+      "StudioAiPage": {
+        "usedToday": "Lượt hỏi đã dùng hôm nay",
+        "remainingRequests": "Lượt hỏi còn lại",
+        "dailyLimit": "Giới hạn mỗi ngày",
+        "unknown": "Không rõ",
+        "startConversation": "Bắt đầu cuộc trò chuyện",
+        "description": "Hỏi tôi về tình hình Studio, so sánh các nhóm, phân tích rủi ro và đề xuất cải thiện.",
+        "inputPlaceholder": "Nhập câu hỏi cho AI...",
+        "cannotDetectStudioId": "Không xác định được studioId",
+        "aiThinking": "AI đang trả lời...",
+        "emptyAiAnswer": "AI chưa trả về nội dung trả lời.",
+        "aiResponseError": "Không thể nhận phản hồi từ AI",
+        "quickActions": {
+          "summary": {
+            "label": "Tổng hợp Studio",
+            "prompt": "Hãy tổng hợp và phân tích tình hình tổng thể của Studio dựa trên các nhóm và task hiện tại.\n\nCung cấp:\n1. Tổng quan số lượng nhóm, thành viên, task\n2. Tỷ lệ hoàn thành chung\n3. Các nhóm hoạt động tốt nhất và kém nhất\n4. Số lượng task quá hạn\n5. Nhận định và gợi ý cải thiện cho toàn Studio"
+          },
+          "risk": {
+            "label": "Phân tích rủi ro",
+            "prompt": "Hãy xác định và phân tích các nhóm có nguy cơ trong Studio.\n\nVới mỗi nhóm có nguy cơ, cung cấp:\n1. Tên nhóm và mức độ rủi ro (HIGH/MEDIUM/LOW)\n2. Các yếu tố rủi ro cụ thể (tỷ lệ hoàn thành thấp, nhiều task quá hạn, không hoạt động gần đây)\n3. Đề xuất hành động khắc phục cụ thể"
+          },
+          "report": {
+            "label": "Báo cáo tiến độ",
+            "prompt": "Hãy tạo báo cáo chi tiết về tiến độ các nhóm trong Studio.\n\nBao gồm:\n1. Bảng so sánh các nhóm theo tỷ lệ hoàn thành\n2. Số lượng task đã hoàn thành / đang thực hiện / chưa bắt đầu / quá hạn\n3. Nhóm hoàn thành tốt nhất và lý do\n4. Nhóm cần cải thiện và các vấn đề cụ thể\n5. Đề xuất điều phối công việc"
+          },
+          "deadline": {
+            "label": "Deadline sắp tới",
+            "prompt": "Hãy tổng hợp tình hình deadline trong Studio.\n\nCung cấp:\n1. Tổng số task quá hạn và task sắp đến hạn\n2. Nhóm nào có nhiều task quá hạn nhất\n3. Các nhóm hoàn thành tốt và giữ đúng tiến độ\n4. Đề xuất phân bổ công việc hợp lý"
+          }
+        }
+      },
+      "GroupAiQaPage": {
+        "title": "AI Hỏi đáp nhóm",
+        "usedToday": "Lượt hỏi đã dùng hôm nay",
+        "remainingRequests": "Lượt hỏi còn lại",
+        "dailyLimit": "Giới hạn mỗi ngày",
+        "unknown": "Không rõ",
+        "startConversation": "Bắt đầu cuộc trò chuyện",
+        "description": "Hỏi tôi bất cứ điều gì về công việc, tài liệu và tiến độ của nhóm đã chọn.",
+        "inputPlaceholder": "Nhập câu hỏi cho AI...",
+        "cannotDetectGroupId": "Không xác định được groupId từ URL",
+        "aiThinking": "AI đang trả lời...",
+        "scrollToBottom": "Cuộn xuống cuối",
+        "emptyAiAnswer": "AI chưa trả về nội dung trả lời. Bạn thử lại với câu hỏi chi tiết hơn nhé.",
+        "aiResponseError": "Không thể nhận phản hồi từ AI",
+        "quickActions": {
+          "summary": {
+            "label": "Tóm tắt tiến độ dự án",
+            "prompt": "Hãy tóm tắt tiến độ hiện tại của dự án dựa trên các task, hoạt động và tài liệu trong nhóm.\n\nPhân tích:\n- tổng số task\n- số task đã hoàn thành\n- task đang thực hiện\n- task chưa bắt đầu\n\nSau đó cung cấp:\n1. Tổng quan tiến độ dự án\n2. Các milestone đã đạt được\n3. Công việc đang thực hiện\n4. Công việc còn lại\n5. Insight của AI về tình trạng dự án"
+          },
+          "risk": {
+            "label": "Phân tích rủi ro",
+            "prompt": "Hãy phân tích các rủi ro tiềm ẩn của dự án dựa trên task, deadline và tiến độ hiện tại.\n\nXác định:\n- task có nguy cơ trễ deadline\n- task chưa có tiến triển\n- thành viên bị quá tải\n- các vấn đề có thể ảnh hưởng tiến độ\n\nTrả về kết quả gồm:\n1. Tổng quan mức độ rủi ro dự án\n2. Các rủi ro nghiêm trọng\n3. Các rủi ro cần theo dõi\n4. Các task có nguy cơ trễ deadline\n5. Đề xuất giải pháp giảm rủi ro"
+          },
+          "report": {
+            "label": "Báo cáo tiến độ",
+            "prompt": "Tạo báo cáo tiến độ dự án dựa trên dữ liệu task và hoạt động của nhóm.\n\nBáo cáo cần gồm:\n\n1. Executive summary\n2. Trạng thái hiện tại của dự án\n3. Các milestone đã hoàn thành\n4. Công việc đang thực hiện\n5. Đóng góp của các thành viên\n6. Các công việc tiếp theo\n7. Nhận xét tổng quan của AI"
+          },
+          "deadline": {
+            "label": "Review deadline sắp tới",
+            "prompt": "Hãy review các deadline sắp tới của dự án.\n\nPhân tích:\n- task có deadline trong thời gian gần\n- task chưa hoàn thành nhưng gần deadline\n- task có nguy cơ trễ\n\nTrả về:\n1. Danh sách deadline sắp tới\n2. Các task cần ưu tiên\n3. Các task có nguy cơ trễ deadline\n4. Đề xuất hành động cho nhóm"
+          }
+        }
+      },
+      "InviteMemberModal": {
+        "title": "Mời thành viên vào",
+        "inviteByEmail": "Mời qua email",
+        "emailPlaceholder": "Nhập email",
+        "inviteAs": "Mời với vai trò",
+        "member": "Thành viên",
+        "memberDescription": "Có thể truy cập tất cả các mục công khai trong Nhóm của bạn.",
+        "sendInvite": "Gửi lời mời",
+        "sending": "Đang gửi...",
+        "orInviteViaLink": "Hoặc mời qua liên kết",
+        "linkPlaceholder": "http://localhost:3000/invite/9IKK3fXcoEY",
+        "getLink": "Lấy liên kết",
+        "copied": "Đã sao chép",
+        "emailRequired": "Vui lòng nhập email",
+        "emailInvalid": "Email không hợp lệ",
+        "emailSent": "Đã gửi lời mời qua email thành công!",
+        "emailError": "Không thể gửi email. Vui lòng thử lại.",
+        "linkGenerated": "Đã tạo liên kết mời thành công!",
+        "linkError": "Không thể tạo liên kết. Vui lòng thử lại.",
+        "linkCopied": "Đã sao chép liên kết!",
+        "copyError": "Không thể sao chép. Vui lòng thử lại."
+      },
+      "GroupInviteModal": {
+        "title": "Mời người dùng vào {groupName}",
+        "closeAriaLabel": "Đóng",
+        "inviteByEmail": "Mời qua email",
+        "emailPlaceholder": "Nhập email",
+        "clearEmailAriaLabel": "Xóa email",
+        "inviteAs": "Mời với vai trò",
+        "inviteViaLink": "Hoặc mời bằng liên kết",
+        "linkPlaceholder": "Liên kết mời sẽ hiển thị ở đây...",
+        "permissionDenied": "Bạn không có quyền mời thành viên trong nhóm này.",
+        "validation": {
+          "emailRequired": "Vui lòng nhập email.",
+          "emailNoSpaces": "Email không được chứa khoảng trắng.",
+          "emailInvalid": "Vui lòng nhập đúng định dạng email."
+        },
+        "buttons": {
+          "sending": "Đang gửi...",
+          "sendInvite": "Gửi lời mời",
+          "copied": "Đã sao chép!",
+          "copyLink": "Sao chép liên kết",
+          "creating": "Đang tạo...",
+          "createLink": "Tạo liên kết"
+        },
+        "roles": {
+          "Moderator": {
+            "label": "Điều phối viên",
+            "note": "Có thể quản lý thành viên và nội dung trong nhóm."
+          },
+          "Member": {
+            "label": "Thành viên",
+            "note": "Có thể truy cập tất cả mục công khai trong nhóm.",
+            "studioNote": "Có thể truy cập không gian quản lý của bạn."
+          },
+          "Commenter": {
+            "label": "Người bình luận",
+            "note": "Có thể xem và bình luận các mục trong nhóm."
+          },
+          "Viewer": {
+            "label": "Người xem",
+            "note": "Có thể xem các mục trong nhóm."
+          }
+        },
+        "toast": {
+          "inviteFailedWithReason": "Mời thất bại: {reason}",
+          "inviteSent": "Đã gửi lời mời tới {email}.",
+          "inviteFailed": "Mời thất bại: không thể gửi lời mời. Vui lòng thử lại.",
+          "linkCopied": "Đã sao chép liên kết mời vào bộ nhớ tạm.",
+          "copyFailed": "Sao chép thất bại: không thể sao chép liên kết mời. Vui lòng sao chép thủ công.",
+          "createLinkFailedEmpty": "Tạo liên kết thất bại: không nhận được liên kết mời. Vui lòng thử lại.",
+          "createLinkFailed": "Tạo liên kết thất bại: không thể tạo liên kết mời. Vui lòng thử lại."
+        }
+      },
+      "CreateGroupModal": {
+        "title": "Tạo nhóm mới",
+        "subtitle": "Thiết lập thông tin nhóm và chọn mẫu nếu cần.",
+        "close": "Đóng",
+        "createModeLabel": "Chế độ tạo",
+        "createModeSingle": "Một nhóm",
+        "createModeBatch": "Hàng loạt",
+        "groupTypeLabel": "Loại nhóm",
+        "groupTypeIndependent": "Độc lập",
+        "groupTypeManaged": "Thuộc studio",
+        "ownerStudiosLabel": "Studio của bạn",
+        "noOwnerStudios": "Không tìm thấy studio bạn sở hữu",
+        "untitledStudio": "Studio chưa đặt tên",
+        "groupNameLabel": "Tên nhóm",
+        "groupNamePlaceholder": "Nhập tên nhóm...",
+        "colorAndIconLabel": "Màu sắc và biểu tượng",
+        "saveChanges": "Lưu thay đổi",
+        "primaryColor": "Màu chủ đạo",
+        "bannerLabel": "Ảnh nền",
+        "aliasLabel": "Biệt danh",
+        "aliasPlaceholder": "VD: THPT Hoang Dieu",
+        "taglineLabel": "Slogan",
+        "taglinePlaceholder": "Nhập slogan ngắn gọn",
+        "groupPrefixLabel": "Tiền tố nhóm",
+        "groupPrefixPlaceholder": "Nhập tiền tố nhóm...",
+        "groupPrefixHint": "Tên nhóm sẽ theo dạng \"{prefix} 1\", \"{prefix} 2\", ...",
+        "prefixFallback": "Nhóm",
+        "groupCountLabel": "Số lượng nhóm",
+        "groupCountPlaceholder": "Nhập số lượng nhóm",
+        "groupCountMaxHint": "Hiện bạn có thể tạo tối đa {remaining} nhóm.",
+        "descriptionLabel": "Mô tả",
+        "descriptionPlaceholder": "Nhập mô tả nhóm...",
+        "batchFromFileTitle": "Tạo hàng loạt từ file",
+        "batchFromFileSubtitle": "Tải file CSV mẫu, điền dữ liệu rồi tải lên để tạo thành viên nhanh.",
+        "downloadTemplate": "Tải mẫu",
+        "uploadFile": "Tải file lên",
+        "templatesTitle": "Mẫu nhóm",
+        "templatesSubtitle": "Chọn mẫu để điền sẵn thiết lập cho nhóm.",
+        "loadingTemplates": "Đang tải mẫu...",
+        "emptyTemplatesTitle": "Chưa có mẫu nào",
+        "emptyTemplatesSubtitle": "Hãy tạo mẫu trước để tái sử dụng cấu hình nhanh hơn.",
+        "templateFallbackName": "Mẫu chưa đặt tên",
+        "noDescription": "Không có mô tả",
+        "cancel": "Hủy",
+        "create": "Tạo",
+        "creating": "Đang tạo...",
+        "createSuccess": "Tạo nhóm thành công.",
+        "limitReached": "Bạn đã đạt giới hạn gói hiện tại ({limit} nhóm).",
+        "errors": {
+          "loadUser": "Không thể tải thông tin người dùng.",
+          "loadStudios": "Không thể tải danh sách studio.",
+          "loadTemplates": "Không thể tải danh sách mẫu.",
+          "loadData": "Không thể tải dữ liệu cần thiết.",
+          "createFailed": "Không thể tạo nhóm. Vui lòng thử lại."
+        }
+      },
+      "currentPlan": {
+        "title": "Gói hiện tại",
+        "subtitle": "Bạn đang sử dụng",
+        "active": "Đang hoạt động",
+        "changePlan": "Đổi gói",
+        "cancelPlan": "Hủy đăng ký",
+        "currentButton": "Gói hiện tại"
+      },
+      "invoiceInfo": {
+        "editButton": "Sửa thông tin hóa đơn",
+        "updateButton": "Cập nhật thông tin hóa đơn",
+        "visaText": "Visa ****1234"
       }
     }
   },
@@ -3554,6 +4883,13 @@
       "label": "Group template",
       "description": "Template currently applied to this group"
     },
+    "access": {
+      "title": "Group activity status",
+      "inactiveDescription": "Group is currently paused and only settings are available.",
+      "activeDescription": "Group is active and available for normal collaboration.",
+      "inactiveLabel": "Paused",
+      "activeLabel": "Active"
+    },
     "members": {
       "title": "Members",
       "subtitle": "Manage member roles and permissions",
@@ -3708,55 +5044,55 @@
       "deletedDate": "Deleted date: {dateRange}"
     },
     "GroupStudioHeader": {
-        "roles": {
-            "owner": "Owner",
-            "moderator": "Moderator",
-            "member": "Member",
-            "commenter": "Commenter",
-            "viewer": "Viewer"
-        },
-        "tabs": {
-            "board": "Board",
-            "list": "List",
-            "calendar": "Calendar",
-            "documents": "Documents",
-            "discuss": "Discussion",
-            "analytic": "Analytics",
-            "setting": "Settings",
-            "trashed": "Trash"
-        },
-        "status": {
-            "active": "Active",
-            "inactive": "Paused"
-        },
-        "inactiveTitle": "This group is paused",
-        "goToSetting": "Go to settings",
-        "backToGroups": "Back to group list",
-        "errors": {
-            "fetchDetailFailed": "Unable to load group information"
-        },
-        "inviteAcceptPage": {
-            "invitation": "Invitation",
-            "loading": "Loading...",
-            "successTitle": "You have joined the group successfully",
-            "redirecting": "Redirecting...",
-            "pendingTitle": "Your membership request is pending approval",
-            "pendingMessage": "Your membership request has been sent. Please wait for the group owner to approve it.",
-            "cancelRequest": "Cancel request",
-            "notice": "Notice",
-            "alreadyMember": "You are already a member of this group.",
-            "goToGroups": "Go to Groups",
-            "backHome": "Back to groups",
-            "submittingTitle": "Invitation",
-            "checking": "Checking invitation...",
-            "notLoggedIn": "You are not logged in",
-            "loginPrompt": "Please log in to accept the group invitation.",
-            "loginToContinue": "Log in to continue",
-            "acceptPrompt": "Press \"Accept\" to join the group.",
-            "accept": "Accept",
-            "missingToken": "Missing invitation token.",
-            "serverError": "Accept invitation failed."
-        }
+      "roles": {
+        "owner": "Owner",
+        "moderator": "Moderator",
+        "member": "Member",
+        "commenter": "Commenter",
+        "viewer": "Viewer"
+      },
+      "tabs": {
+        "board": "Board",
+        "list": "List",
+        "calendar": "Calendar",
+        "documents": "Documents",
+        "discuss": "Discussion",
+        "analytic": "Analytics",
+        "setting": "Settings",
+        "trashed": "Trash"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Paused"
+      },
+      "inactiveTitle": "This group is paused",
+      "goToSetting": "Go to settings",
+      "backToGroups": "Back to group list",
+      "errors": {
+        "fetchDetailFailed": "Unable to load group information"
+      },
+      "inviteAcceptPage": {
+        "invitation": "Invitation",
+        "loading": "Loading...",
+        "successTitle": "You have joined the group successfully",
+        "redirecting": "Redirecting...",
+        "pendingTitle": "Your membership request is pending approval",
+        "pendingMessage": "Your membership request has been sent. Please wait for the group owner to approve it.",
+        "cancelRequest": "Cancel request",
+        "notice": "Notice",
+        "alreadyMember": "You are already a member of this group.",
+        "goToGroups": "Go to Groups",
+        "backHome": "Back to groups",
+        "submittingTitle": "Invitation",
+        "checking": "Checking invitation...",
+        "notLoggedIn": "You are not logged in",
+        "loginPrompt": "Please log in to accept the group invitation.",
+        "loginToContinue": "Log in to continue",
+        "acceptPrompt": "Press \"Accept\" to join the group.",
+        "accept": "Accept",
+        "missingToken": "Missing invitation token.",
+        "serverError": "Accept invitation failed."
+      }
     },
     "table": {
       "headers": {
@@ -3784,727 +5120,754 @@
       "cannotDeleteTaskPermanently": "Unable to permanently delete task"
     },
     "GroupCalendar": {
-        "viewMonth": "Month",
-        "viewWeek": "Week",
-        "viewDay": "Day",
-        "more": "more",
-        "allTasks": "All tasks",
-        "unassignedTasks": "Unassigned tasks",
-        "missingGroupId": "Missing groupId in URL",
-        "invalidGroupId": "Invalid groupId",
-        "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
-        "cannotLoad": "Unable to load calendar data",
-        "unknown": "Unknown",
-        "untitledTask": "Untitled task",
-        "monthPrefix": "Month",
-        "unassigned": "Unassigned",
-        "noStatus": "No status",
-        "loading": "Loading...",
-        "reload": "Reload",
-        "assigneeLabel": "Assignee",
-        "statusLabel": "Status"
+      "viewMonth": "Month",
+      "viewWeek": "Week",
+      "viewDay": "Day",
+      "more": "more",
+      "allTasks": "All tasks",
+      "unassignedTasks": "Unassigned tasks",
+      "missingGroupId": "Missing groupId in URL",
+      "invalidGroupId": "Invalid groupId",
+      "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
+      "cannotLoad": "Unable to load calendar data",
+      "unknown": "Unknown",
+      "untitledTask": "Untitled task",
+      "monthPrefix": "Month",
+      "unassigned": "Unassigned",
+      "noStatus": "No status",
+      "loading": "Loading...",
+      "reload": "Reload",
+      "assigneeLabel": "Assignee",
+      "statusLabel": "Status"
     },
     "GroupAnalyticPage": {
-        "common": {
-            "tasks": "tasks"
-        },
-        "formatLastActivity": {
-            "noActivity": "No activity yet",
-            "minutesAgo": "{count} minutes ago",
-            "hoursAgo": "{count} hours ago",
-            "daysAgo": "{count} days ago"
-        },
-        "heatmap": {
-            "title": "Member activity heatmap",
-            "subtitle": "Track {count} members' activity in {period}",
-            "week": "Last 7 days",
-            "month": "Last 30 days",
-            "legend": {
-                "low": "Low",
-                "high": "High"
-            },
-            "updated": "Updated"
-        },
-        "memberStatus": {
-            "onTrack": "On track",
-            "needsAttention": "Needs attention",
-            "delayed": "Delayed"
-        },
-        "memberProgressCard": {
-            "contribution": "Contribution",
-            "lastActivity": "Last activity"
-        },
-        "memberProgress": {
-            "title": "Progress by member",
-            "subtitle": "Details of each member's completion and contribution",
-            "seeDetails": "See details"
-        },
-        "memberModal": {
-            "taskProgress": "Task progress",
-            "completePts": "Completion points",
-            "createPts": "Creation points",
-            "updatePts": "Update points",
-            "messages": "Messages",
-            "activityBreakdown": "Activity breakdown",
-            "activityItems": {
-                "completed": "Completed",
-                "created": "Created",
-                "updated": "Updated",
-                "deleted": "Deleted",
-                "assigned": "Assigned",
-                "comments": "Comments",
-                "messages": "Messages"
-            },
-            "totalScore": "Total score",
-            "contributionRate": "Contribution rate",
-            "lastActivity": "Last activity"
-        },
-        "taskStatus": {
-            "todo": "To do",
-            "inProgress": "In progress",
-            "done": "Done",
-            "overdue": "Overdue"
-        },
-        "chart": {
-            "myTasks": "My tasks",
-            "taskStatus": "Task status",
-            "groupTasks": "Group tasks",
-            "groupTaskStatus": "Group task status",
-            "me": "Me",
-            "group": "Group",
-            "myTaskDistribution": "My Task Status Distribution",
-            "myTaskDistributionDesc": "Personal task status in the current group.",
-            "groupTaskDistribution": "Group Task Status Overview",
-            "groupTaskDistributionDesc": "Overview of task status across all groups.",
-            "progressOverTime": "Task Progress Over Time",
-            "progressOverTimeDesc": "Compare total completed tasks over time.",
-            "compareByMember": "Compare Task Status by Member",
-            "compareByMemberDesc": "View task distribution by each member."
-        },
-        "timeLabels": {
-            "week": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            "month": ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
-            "year": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        },
-        "chartFilterLabels": {
-            "week": "Week",
-            "month": "Month",
-            "year": "Year"
-        }
-    },
-    "GroupSettingView": {
-        "validation": {
-            "groupNameRequired": "Group name is required",
-            "groupNameMax": "Group name exceeds maximum length",
-            "descriptionMax": "Description exceeds maximum length"
-        },
-        "errors": {
-            "missingToken": "Missing access token",
-            "loadMembersFailed": "Unable to load member list",
-            "loadGroupFailed": "Unable to load group information"
-        },
-        "loading": {
-            "error": "An error occurred while loading data",
-            "loading": "Loading...",
-            "noGroupId": "GroupId not found",
-            "notFound": "Group not found"
-        },
-        "general": {
-            "title": "General settings",
-            "subtitle": "Update basic group information",
-            "cancelButton": "Cancel",
-            "saveButton": "Save changes",
-            "editButton": "Edit"
-        },
-        "access": {
-            "title": "Activity status",
-            "activeDescription": "The group is active. You can edit content, manage members, and use the other tabs.",
-            "inactiveDescription": "The group is paused. Only reopening it is allowed here; other actions are locked.",
-            "activeLabel": "Active",
-            "inactiveLabel": "Paused",
-            "inactiveNotice": "When the group is paused, all other changes stay locked until you turn it back on."
-        },
-        "groupInfo": {
-            "nameLabel": "Group name",
-            "descriptionLabel": "Description",
-            "masterStudioLabel": "Managing Studio",
-            "bannerLabel": "Background image",
-            "aliasLabel": "Nickname",
-            "aliasPlaceholder": "e.g. Hoang Dieu High School",
-            "taglineLabel": "Slogan",
-            "taglinePlaceholder": "Enter a short slogan"
-        },
-        "template": {
-            "label": "Group template",
-            "description": "Template currently applied to this group"
-        },
-        "memberApproval": {
-            "label": "Enable member approval",
-            "description": "Require approval when members join via invite link"
-        },
-        "members": {
-            "title": "Members",
-            "subtitle": "Manage member roles and permissions",
-            "addButton": "Add member",
-            "tableHeaders": {
-                "member": "Member",
-                "role": "Role",
-                "action": "Action"
-            },
-            "ownerRole": "Owner",
-            "roleLabels": {
-                "owner": "Owner",
-                "moderator": "Moderator",
-                "member": "Member",
-                "commenter": "Commenter",
-                "viewer": "Viewer"
-            },
-            "selectPlaceholder": "Select role",
-            "emptyState": "No members yet",
-            "oneModeratorError": "Group must have at least one moderator"
-        },
-        "dangerZone": {
-            "title": "Danger zone",
-            "subtitle": "Actions below may cause data loss",
-            "deleteGroup": {
-                "label": "Delete group",
-                "description": "Permanently delete group and related data",
-                "button": "Delete group",
-                "confirmTitle": "Confirm group deletion",
-                "confirmDescription": "Are you sure you want to delete this group? This action cannot be undone.",
-                "deleting": "Deleting...",
-                "confirmButton": "Confirm deletion",
-                "onlyOwner": "Only the owner can delete the group"
-            }
-        },
-        "removeMember": {
-            "confirmTitle": "Confirm member removal",
-            "confirmDescription": "Are you sure you want to remove {name} from the group?",
-            "cancelButton": "Cancel",
-            "deleting": "Removing...",
-            "confirmButton": "Remove member"
-        },
-        "approveMember": {
-            "title": "Approve members",
-            "subtitle": "Approve or reject group membership requests",
-            "pendingCount": "{count} pending",
-            "loading": "Loading pending approvals...",
-            "empty": "No pending member requests",
-            "requestedRole": "Role: {role}",
-            "requestedAt": "Requested at: {time}",
-            "approve": "Approve",
-            "approving": "Approving...",
-            "reject": "Reject",
-            "rejecting": "Rejecting...",
-            "error": "Failed to load pending approvals",
-            "approveFailed": "Failed to approve member",
-            "rejectFailed": "Failed to reject member"
-        }
-    },
-    "TrashedPage": {
-        "title": "Trash",
-        "search": {
-            "placeholder": "Search deleted tasks..."
-        },
-        "actions": {
-            "reload": "Reload",
-            "restore": "Restore",
-            "deletePermanently": "Delete permanently",
-            "moreOptions": "More options"
-        },
-        "common": {
-            "cancel": "Cancel",
-            "back": "Back"
-        },
-        "confirm": {
-            "restore": {
-                "title": "Restore task",
-                "description": "Are you sure you want to restore \"{taskName}\"?"
-            },
-            "delete": {
-                "title": "Permanently delete task",
-                "description": "Are you sure you want to permanently delete \"{taskName}\"? This action cannot be undone."
-            }
-        },
-        "datePicker": {
-            "selectDate": "Select date",
-            "today": "Today",
-            "tomorrow": "Tomorrow",
-            "nextWeek": "Next week",
-            "noDate": "No date"
-        },
-        "filters": {
-            "title": "Filters",
-            "ariaLabel": "Open filters",
-            "clearAll": "Clear all",
-            "deletedBy": {
-                "label": "Deleted by",
-                "searchPlaceholder": "Search by name or email...",
-                "me": "Me",
-                "all": "All",
-                "selectTitle": "Select deleted by"
-            },
-            "deletedDate": {
-                "label": "Deleted date",
-                "selectTitle": "Select deleted date range",
-                "fromDate": "From date",
-                "toDate": "To date",
-                "clearSelection": "Clear selection",
-                "apply": "Apply"
-            },
-            "dateRange": {
-                "fromDate": "From date",
-                "toDate": "To date"
-            }
-        },
-        "chips": {
-            "deletedBy": "Deleted by: {name}",
-            "deletedDate": "Deleted date: {dateRange}"
-        },
-        "table": {
-            "headers": {
-                "name": "Name",
-                "type": "Type",
-                "deletedTime": "Deleted at",
-                "deletedBy": "Deleted by"
-            },
-            "noData": "No data"
-        },
-        "pagination": {
-            "summary": "{count} items • Page {page}/{totalPages}",
-            "previous": "Previous",
-            "next": "Next"
-        },
-        "errors": {
-            "unknown": "An unknown error occurred",
-            "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
-            "invalidGroupId": "Invalid groupId",
-            "invalidTaskId": "Invalid taskId",
-            "missingGroupId": "Missing groupId",
-            "cannotLoadTrash": "Unable to load trash list",
-            "cannotRestoreTask": "Unable to restore task",
-            "cannotRefreshList": "Unable to refresh list",
-            "cannotDeleteTaskPermanently": "Unable to permanently delete task"
-        },
-        "fallbacks": {
-            "unknown": "Unknown",
-            "untitledTask": "Untitled task"
-        }
-    },
-    "GroupDiscussPage": {
-        "title": "Group discussion",
-        "subtitle": "Discuss with group members",
-        "composerPlaceholder": "Write discussion content...",
-        "writeReplyPlaceholder": "Write a reply...",
-        "post": "Post",
-        "reply": "Reply",
-        "cancel": "Cancel",
-        "delete": "Delete",
-        "deleting": "Deleting...",
-        "deleteMessage": "Delete message",
-        "confirmDeleteTitle": "Confirm deletion",
-        "confirmDeleteDescription": "Are you sure you want to delete this content?",
-        "showReplies": "Show replies",
-        "hideReplies": "Hide replies",
-        "replyAria": "Open replies",
-        "more": "See more",
-        "noActions": "No actions",
-        "noDiscussions": "No discussions yet",
-        "noMembersToMention": "No members to mention.",
-        "mentionAllShort": "everyone",
-        "mentionAllSubtitle": "Mention all members in the conversation",
-        "viewerOnly": "View only",
-        "viewerCannotComment": "Your current role cannot comment",
-        "cannotConnectDiscuss": "Unable to connect to discussion room",
-        "cannotSendReplyWhenDisconnected": "Cannot send reply when disconnected",
-        "cannotDeleteWhenDisconnected": "Cannot delete when disconnected",
-        "cannotRejoinRoom": "Unable to rejoin discussion room",
-        "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
-        "reloginForDiscuss": "Please log in again to continue discussing",
-        "reloadPageOrRelogin": "Please reload the page or log in again",
-        "tryAgainLater": "Please try again later",
-        "userFallback": "User",
-        "me": "Me",
-        "justNow": "Just now",
+      "common": {
+        "tasks": "tasks"
+      },
+      "formatLastActivity": {
+        "noActivity": "No activity yet",
         "minutesAgo": "{count} minutes ago",
         "hoursAgo": "{count} hours ago",
-        "daysAgo": "{count} days ago",
-        "wordsUnit": "words",
-        "charsUnit": "characters",
-        "anonymous": "Anonymous",
-        "@": "@"
-    },
-    "AnalyticMaster": {
-        "common": {
-            "close": "Close",
-            "done": "Done",
-            "notAvailable": "No data"
-        },
-        "time": {
-            "week": "Week",
-            "month": "Month",
-            "year": "Year",
-            "monthPrefix": "Month",
-            "yearPrefix": "Year"
-        },
-        "timeLabels": {
-            "mon": "Mon",
-            "tue": "Tue",
-            "wed": "Wed",
-            "thu": "Thu",
-            "fri": "Fri",
-            "sat": "Sat",
-            "sun": "Sun",
-            "week1": "Week 1",
-            "week2": "Week 2",
-            "week3": "Week 3",
-            "week4": "Week 4",
-            "month1": "Jan",
-            "month2": "Feb",
-            "month3": "Mar",
-            "month4": "Apr",
-            "month5": "May",
-            "month6": "Jun",
-            "month7": "Jul",
-            "month8": "Aug",
-            "month9": "Sep",
-            "month10": "Oct",
-            "month11": "Nov",
-            "month12": "Dec"
-        },
-        "sections": {
-            "overview": {
-                "title": "Overview"
-            },
-            "comparison": {
-                "title": "Group comparison"
-            },
-            "memberProgress": {
-                "title": "Member progress",
-                "description": "Track each member's contribution and performance"
-            },
-            "taskStatus": {
-                "title": "Task status",
-                "noData": "No status data yet"
-            }
-        },
-        "compare": {
-            "title": "Compare groups",
-            "description": "Select groups to compare performance",
-            "triggerLabel": "Select groups",
-            "selectedCount": "{count} selected",
-            "topFourDefault": "Showing 4 groups by default",
-            "keepOneGroup": "Keep at least one group",
-            "moreGroups": "and {count} more groups",
-            "noGroupSelected": "No groups selected"
-        },
-        "groupSelect": {
-            "selectGroup": "Select group",
-            "selected": "Selected"
-        },
-        "member": {
-            "listTitle": "Member list",
-            "detail": "Detail",
-            "tasks": "Tasks",
-            "completedTasks": "Completed tasks",
-            "taskProgress": "Task progress",
-            "contribution": "Contribution",
-            "contributionRate": "Contribution rate",
-            "contributionScore": "Contribution score",
-            "lastActivity": "Last activity",
-            "totalScore": "Total score",
-            "score": {
-                "completed": "Completion score",
-                "created": "Creation score",
-                "updated": "Update score",
-                "messages": "Interaction score"
-            }
-        },
-        "statusFallback": "Unknown status"
-    },
-    "GroupProgressChart": {
-        "title": "Group progress",
-        "status": {
-            "onTrack": "On track",
-            "atRisk": "At risk",
-            "behind": "Behind schedule",
-            "notStarted": "Not started"
-        },
-        "taskInfo": {
-            "tasks": "tasks",
-            "overdue": "overdue",
-            "lastActivity": "Last activity"
-        }
-    },
-    "StudioGroupHeatmap": {
-        "common": {
-            "notAvailable": "No data"
-        },
-        "header": {
-            "title": "Group activity heatmap",
-            "description": "Activity density by day across groups"
-        },
-        "range": {
-            "week": "Week",
-            "month": "Month"
-        },
+        "daysAgo": "{count} days ago"
+      },
+      "heatmap": {
+        "title": "Member activity heatmap",
+        "subtitle": "Track {count} members' activity in {period}",
+        "week": "Last 7 days",
+        "month": "Last 30 days",
         "legend": {
-            "groups": "Groups",
-            "activityLevel": "Activity level",
-            "low": "Low",
-            "high": "High"
+          "low": "Low",
+          "high": "High"
         },
-        "levels": {
-            "inactive": "Inactive",
-            "veryLow": "Very low",
-            "low": "Low",
-            "medium": "Medium",
-            "high": "High"
+        "updated": "Updated"
+      },
+      "memberStatus": {
+        "onTrack": "On track",
+        "needsAttention": "Needs attention",
+        "delayed": "Delayed"
+      },
+      "memberProgressCard": {
+        "contribution": "Contribution",
+        "lastActivity": "Last activity"
+      },
+      "memberProgress": {
+        "title": "Progress by member",
+        "subtitle": "Details of each member's completion and contribution",
+        "seeDetails": "See details"
+      },
+      "memberModal": {
+        "taskProgress": "Task progress",
+        "completePts": "Completion points",
+        "createPts": "Creation points",
+        "updatePts": "Update points",
+        "messages": "Messages",
+        "activityBreakdown": "Activity breakdown",
+        "activityItems": {
+          "completed": "Completed",
+          "created": "Created",
+          "updated": "Updated",
+          "deleted": "Deleted",
+          "assigned": "Assigned",
+          "comments": "Comments",
+          "messages": "Messages"
         },
-        "tooltip": {
-            "cell": "{name} • {date}: {tasks} tasks, score {score} ({level})"
-        }
+        "totalScore": "Total score",
+        "contributionRate": "Contribution rate",
+        "lastActivity": "Last activity"
+      },
+      "taskStatus": {
+        "todo": "To do",
+        "inProgress": "In progress",
+        "done": "Done",
+        "overdue": "Overdue"
+      },
+      "chart": {
+        "myTasks": "My tasks",
+        "taskStatus": "Task status",
+        "groupTasks": "Group tasks",
+        "groupTaskStatus": "Group task status",
+        "me": "Me",
+        "group": "Group",
+        "myTaskDistribution": "My Task Status Distribution",
+        "myTaskDistributionDesc": "Personal task status in the current group.",
+        "groupTaskDistribution": "Group Task Status Overview",
+        "groupTaskDistributionDesc": "Overview of task status across all groups.",
+        "progressOverTime": "Task Progress Over Time",
+        "progressOverTimeDesc": "Compare total completed tasks over time.",
+        "compareByMember": "Compare Task Status by Member",
+        "compareByMemberDesc": "View task distribution by each member."
+      },
+      "timeLabels": {
+        "week": [
+          "Mon",
+          "Tue",
+          "Wed",
+          "Thu",
+          "Fri",
+          "Sat",
+          "Sun"
+        ],
+        "month": [
+          "Week 1",
+          "Week 2",
+          "Week 3",
+          "Week 4",
+          "Week 5"
+        ],
+        "year": [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec"
+        ]
+      },
+      "chartFilterLabels": {
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      }
     },
-    "StudioAnalyticsDocuments": {
-        "section": {
-            "title": "Documents in studio",
-            "description": "Manage shared documents for groups"
+    "GroupSettingView": {
+      "validation": {
+        "groupNameRequired": "Group name is required",
+        "groupNameMax": "Group name exceeds maximum length",
+        "descriptionMax": "Description exceeds maximum length"
+      },
+      "errors": {
+        "missingToken": "Missing access token",
+        "loadMembersFailed": "Unable to load member list",
+        "loadGroupFailed": "Unable to load group information"
+      },
+      "loading": {
+        "error": "An error occurred while loading data",
+        "loading": "Loading...",
+        "noGroupId": "GroupId not found",
+        "notFound": "Group not found"
+      },
+      "general": {
+        "title": "General settings",
+        "subtitle": "Update basic group information",
+        "cancelButton": "Cancel",
+        "saveButton": "Save changes",
+        "editButton": "Edit"
+      },
+      "access": {
+        "title": "Activity status",
+        "activeDescription": "The group is active. You can edit content, manage members, and use the other tabs.",
+        "inactiveDescription": "The group is paused. Only reopening it is allowed here; other actions are locked.",
+        "activeLabel": "Active",
+        "inactiveLabel": "Paused",
+        "inactiveNotice": "When the group is paused, all other changes stay locked until you turn it back on."
+      },
+      "groupInfo": {
+        "nameLabel": "Group name",
+        "descriptionLabel": "Description",
+        "masterStudioLabel": "Managing Studio",
+        "bannerLabel": "Background image",
+        "aliasLabel": "Nickname",
+        "aliasPlaceholder": "e.g. Hoang Dieu High School",
+        "taglineLabel": "Slogan",
+        "taglinePlaceholder": "Enter a short slogan"
+      },
+      "template": {
+        "label": "Group template",
+        "description": "Template currently applied to this group"
+      },
+      "memberApproval": {
+        "label": "Enable member approval",
+        "description": "Require approval when members join via invite link"
+      },
+      "members": {
+        "title": "Members",
+        "subtitle": "Manage member roles and permissions",
+        "addButton": "Add member",
+        "tableHeaders": {
+          "member": "Member",
+          "role": "Role",
+          "action": "Action"
         },
-        "tabs": {
-            "unnamedGroup": "Unnamed group"
+        "ownerRole": "Owner",
+        "roleLabels": {
+          "owner": "Owner",
+          "moderator": "Moderator",
+          "member": "Member",
+          "commenter": "Commenter",
+          "viewer": "Viewer"
         },
-        "documents": {
-            "untitled": "Untitled document"
-        },
-        "storage": {
-            "title": "Storage",
-            "remaining": "Remaining storage"
-        },
-        "upload": {
-            "button": "Upload",
-            "modalTitle": "Upload document",
-            "dropTitle": "Drag and drop file here",
-            "dropDescription": "or click to select file",
-            "chooseFile": "Choose file",
-            "accepted": "Supported: PDF, DOCX, TXT, MD",
-            "targetGroup": "Target group",
-            "selectGroupFirst": "Please select group first",
-            "onlyOneFile": "Only one file can be uploaded",
-            "fileTooLarge": "File exceeds allowed size",
-            "invalidExtension": "Invalid file format",
-            "loading": "Uploading...",
-            "success": "File uploaded successfully",
-            "failed": "Upload failed"
-        },
-        "download": {
-            "action": "Download",
-            "failed": "Download failed"
+        "selectPlaceholder": "Select role",
+        "emptyState": "No members yet",
+        "oneModeratorError": "Group must have at least one moderator"
+      },
+      "dangerZone": {
+        "title": "Danger zone",
+        "subtitle": "Actions below may cause data loss",
+        "deleteGroup": {
+          "label": "Delete group",
+          "description": "Permanently delete group and related data",
+          "button": "Delete group",
+          "confirmTitle": "Confirm group deletion",
+          "confirmDescription": "Are you sure you want to delete this group? This action cannot be undone.",
+          "deleting": "Deleting...",
+          "confirmButton": "Confirm deletion",
+          "onlyOwner": "Only the owner can delete the group"
+        }
+      },
+      "removeMember": {
+        "confirmTitle": "Confirm member removal",
+        "confirmDescription": "Are you sure you want to remove {name} from the group?",
+        "cancelButton": "Cancel",
+        "deleting": "Removing...",
+        "confirmButton": "Remove member"
+      },
+      "approveMember": {
+        "title": "Approve members",
+        "subtitle": "Approve or reject group membership requests",
+        "pendingCount": "{count} pending",
+        "loading": "Loading pending approvals...",
+        "empty": "No pending member requests",
+        "requestedRole": "Role: {role}",
+        "requestedAt": "Requested at: {time}",
+        "approve": "Approve",
+        "approving": "Approving...",
+        "reject": "Reject",
+        "rejecting": "Rejecting...",
+        "error": "Failed to load pending approvals",
+        "approveFailed": "Failed to approve member",
+        "rejectFailed": "Failed to reject member"
+      }
+    },
+    "TrashedPage": {
+      "title": "Trash",
+      "search": {
+        "placeholder": "Search deleted tasks..."
+      },
+      "actions": {
+        "reload": "Reload",
+        "restore": "Restore",
+        "deletePermanently": "Delete permanently",
+        "moreOptions": "More options"
+      },
+      "common": {
+        "cancel": "Cancel",
+        "back": "Back"
+      },
+      "confirm": {
+        "restore": {
+          "title": "Restore task",
+          "description": "Are you sure you want to restore \"{taskName}\"?"
         },
         "delete": {
-            "action": "Delete",
-            "title": "Delete document",
-            "description": "Are you sure you want to delete this document?",
-            "cancel": "Cancel",
-            "confirm": "Delete",
-            "processing": "Deleting...",
-            "success": "Document deleted successfully",
-            "failed": "Delete failed"
+          "title": "Permanently delete task",
+          "description": "Are you sure you want to permanently delete \"{taskName}\"? This action cannot be undone."
+        }
+      },
+      "datePicker": {
+        "selectDate": "Select date",
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "nextWeek": "Next week",
+        "noDate": "No date"
+      },
+      "filters": {
+        "title": "Filters",
+        "ariaLabel": "Open filters",
+        "clearAll": "Clear all",
+        "deletedBy": {
+          "label": "Deleted by",
+          "searchPlaceholder": "Search by name or email...",
+          "me": "Me",
+          "all": "All",
+          "selectTitle": "Select deleted by"
         },
-        "empty": {
-            "title": "No documents yet",
-            "description": "Upload your first document to get started"
+        "deletedDate": {
+          "label": "Deleted date",
+          "selectTitle": "Select deleted date range",
+          "fromDate": "From date",
+          "toDate": "To date",
+          "clearSelection": "Clear selection",
+          "apply": "Apply"
         },
-        "a": "file"
+        "dateRange": {
+          "fromDate": "From date",
+          "toDate": "To date"
+        }
+      },
+      "chips": {
+        "deletedBy": "Deleted by: {name}",
+        "deletedDate": "Deleted date: {dateRange}"
+      },
+      "table": {
+        "headers": {
+          "name": "Name",
+          "type": "Type",
+          "deletedTime": "Deleted at",
+          "deletedBy": "Deleted by"
+        },
+        "noData": "No data"
+      },
+      "pagination": {
+        "summary": "{count} items • Page {page}/{totalPages}",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "errors": {
+        "unknown": "An unknown error occurred",
+        "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
+        "invalidGroupId": "Invalid groupId",
+        "invalidTaskId": "Invalid taskId",
+        "missingGroupId": "Missing groupId",
+        "cannotLoadTrash": "Unable to load trash list",
+        "cannotRestoreTask": "Unable to restore task",
+        "cannotRefreshList": "Unable to refresh list",
+        "cannotDeleteTaskPermanently": "Unable to permanently delete task"
+      },
+      "fallbacks": {
+        "unknown": "Unknown",
+        "untitledTask": "Untitled task"
+      }
+    },
+    "GroupDiscussPage": {
+      "title": "Group discussion",
+      "subtitle": "Discuss with group members",
+      "composerPlaceholder": "Write discussion content...",
+      "writeReplyPlaceholder": "Write a reply...",
+      "post": "Post",
+      "reply": "Reply",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "deleteMessage": "Delete message",
+      "confirmDeleteTitle": "Confirm deletion",
+      "confirmDeleteDescription": "Are you sure you want to delete this content?",
+      "showReplies": "Show replies",
+      "hideReplies": "Hide replies",
+      "replyAria": "Open replies",
+      "more": "See more",
+      "noActions": "No actions",
+      "noDiscussions": "No discussions yet",
+      "noMembersToMention": "No members to mention.",
+      "mentionAllShort": "everyone",
+      "mentionAllSubtitle": "Mention all members in the conversation",
+      "viewerOnly": "View only",
+      "viewerCannotComment": "Your current role cannot comment",
+      "cannotConnectDiscuss": "Unable to connect to discussion room",
+      "cannotSendReplyWhenDisconnected": "Cannot send reply when disconnected",
+      "cannotDeleteWhenDisconnected": "Cannot delete when disconnected",
+      "cannotRejoinRoom": "Unable to rejoin discussion room",
+      "missingApiBase": "NEXT_PUBLIC_API_BASE_URL configuration is missing",
+      "reloginForDiscuss": "Please log in again to continue discussing",
+      "reloadPageOrRelogin": "Please reload the page or log in again",
+      "tryAgainLater": "Please try again later",
+      "userFallback": "User",
+      "me": "Me",
+      "justNow": "Just now",
+      "minutesAgo": "{count} minutes ago",
+      "hoursAgo": "{count} hours ago",
+      "daysAgo": "{count} days ago",
+      "wordsUnit": "words",
+      "charsUnit": "characters",
+      "anonymous": "Anonymous",
+      "@": "@"
+    },
+    "AnalyticMaster": {
+      "common": {
+        "close": "Close",
+        "done": "Done",
+        "notAvailable": "No data"
+      },
+      "time": {
+        "week": "Week",
+        "month": "Month",
+        "year": "Year",
+        "monthPrefix": "Month",
+        "yearPrefix": "Year"
+      },
+      "timeLabels": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun",
+        "week1": "Week 1",
+        "week2": "Week 2",
+        "week3": "Week 3",
+        "week4": "Week 4",
+        "month1": "Jan",
+        "month2": "Feb",
+        "month3": "Mar",
+        "month4": "Apr",
+        "month5": "May",
+        "month6": "Jun",
+        "month7": "Jul",
+        "month8": "Aug",
+        "month9": "Sep",
+        "month10": "Oct",
+        "month11": "Nov",
+        "month12": "Dec"
+      },
+      "sections": {
+        "overview": {
+          "title": "Overview"
+        },
+        "comparison": {
+          "title": "Group comparison"
+        },
+        "memberProgress": {
+          "title": "Member progress",
+          "description": "Track each member's contribution and performance"
+        },
+        "taskStatus": {
+          "title": "Task status",
+          "noData": "No status data yet"
+        }
+      },
+      "compare": {
+        "title": "Compare groups",
+        "description": "Select groups to compare performance",
+        "triggerLabel": "Select groups",
+        "selectedCount": "{count} selected",
+        "topFourDefault": "Showing 4 groups by default",
+        "keepOneGroup": "Keep at least one group",
+        "moreGroups": "and {count} more groups",
+        "noGroupSelected": "No groups selected"
+      },
+      "groupSelect": {
+        "selectGroup": "Select group",
+        "selected": "Selected"
+      },
+      "member": {
+        "listTitle": "Member list",
+        "detail": "Detail",
+        "tasks": "Tasks",
+        "completedTasks": "Completed tasks",
+        "taskProgress": "Task progress",
+        "contribution": "Contribution",
+        "contributionRate": "Contribution rate",
+        "contributionScore": "Contribution score",
+        "lastActivity": "Last activity",
+        "totalScore": "Total score",
+        "score": {
+          "completed": "Completion score",
+          "created": "Creation score",
+          "updated": "Update score",
+          "messages": "Interaction score"
+        }
+      },
+      "statusFallback": "Unknown status"
+    },
+    "GroupProgressChart": {
+      "title": "Group progress",
+      "status": {
+        "onTrack": "On track",
+        "atRisk": "At risk",
+        "behind": "Behind schedule",
+        "notStarted": "Not started"
+      },
+      "taskInfo": {
+        "tasks": "tasks",
+        "overdue": "overdue",
+        "lastActivity": "Last activity"
+      }
+    },
+    "StudioGroupHeatmap": {
+      "common": {
+        "notAvailable": "No data"
+      },
+      "header": {
+        "title": "Group activity heatmap",
+        "description": "Activity density by day across groups"
+      },
+      "range": {
+        "week": "Week",
+        "month": "Month"
+      },
+      "legend": {
+        "groups": "Groups",
+        "activityLevel": "Activity level",
+        "low": "Low",
+        "high": "High"
+      },
+      "levels": {
+        "inactive": "Inactive",
+        "veryLow": "Very low",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "tooltip": {
+        "cell": "{name} • {date}: {tasks} tasks, score {score} ({level})"
+      }
+    },
+    "StudioAnalyticsDocuments": {
+      "section": {
+        "title": "Documents in studio",
+        "description": "Manage shared documents for groups"
+      },
+      "tabs": {
+        "unnamedGroup": "Unnamed group"
+      },
+      "documents": {
+        "untitled": "Untitled document"
+      },
+      "storage": {
+        "title": "Storage",
+        "remaining": "Remaining storage"
+      },
+      "upload": {
+        "button": "Upload",
+        "modalTitle": "Upload document",
+        "dropTitle": "Drag and drop file here",
+        "dropDescription": "or click to select file",
+        "chooseFile": "Choose file",
+        "accepted": "Supported: PDF, DOCX, TXT, MD",
+        "targetGroup": "Target group",
+        "selectGroupFirst": "Please select group first",
+        "onlyOneFile": "Only one file can be uploaded",
+        "fileTooLarge": "File exceeds allowed size",
+        "invalidExtension": "Invalid file format",
+        "loading": "Uploading...",
+        "success": "File uploaded successfully",
+        "failed": "Upload failed"
+      },
+      "download": {
+        "action": "Download",
+        "failed": "Download failed"
+      },
+      "delete": {
+        "action": "Delete",
+        "title": "Delete document",
+        "description": "Are you sure you want to delete this document?",
+        "cancel": "Cancel",
+        "confirm": "Delete",
+        "processing": "Deleting...",
+        "success": "Document deleted successfully",
+        "failed": "Delete failed"
+      },
+      "empty": {
+        "title": "No documents yet",
+        "description": "Upload your first document to get started"
+      },
+      "a": "file"
     },
     "StudioAiPage": {
-        "usedToday": "AI requests used today",
-        "remainingRequests": "Remaining requests",
-        "dailyLimit": "Daily limit",
-        "unknown": "Unknown",
-        "startConversation": "Start a conversation",
-        "description": "Ask me about Studio status, compare groups, analyze risks, and suggest improvements.",
-        "inputPlaceholder": "Enter your question for AI...",
-        "cannotDetectStudioId": "Cannot detect studioId from URL",
-        "aiThinking": "AI is thinking...",
-        "emptyAiAnswer": "AI has not returned an answer yet.",
-        "aiResponseError": "Unable to receive response from AI",
-        "quickActions": {
-            "summary": {
-                "label": "Studio Overview",
-                "prompt": "Please summarize and analyze the overall status of the Studio based on current groups and tasks.\n\nProvide:\n1. Overview of number of groups, members, tasks\n2. Overall completion rate\n3. Best and worst performing groups\n4. Number of overdue tasks\n5. Assessment and suggestions for Studio improvement"
-            },
-            "risk": {
-                "label": "Risk Analysis",
-                "prompt": "Please identify and analyze at-risk groups in the Studio.\n\nFor each at-risk group, provide:\n1. Group name and risk level (HIGH/MEDIUM/LOW)\n2. Specific risk factors (low completion rate, many overdue tasks, no recent activity)\n3. Specific corrective action recommendations"
-            },
-            "report": {
-                "label": "Progress Report",
-                "prompt": "Please generate a detailed report on group progress in the Studio.\n\nInclude:\n1. Comparison table of groups by completion rate\n2. Number of tasks: completed / in progress / not started / overdue\n3. Best performing groups and reasons\n4. Groups needing improvement and specific issues\n5. Work coordination recommendations"
-            },
-            "deadline": {
-                "label": "Upcoming Deadlines",
-                "prompt": "Please summarize deadline status in the Studio.\n\nProvide:\n1. Total number of overdue and upcoming tasks\n2. Which groups have the most overdue tasks\n3. Groups that are on track and on schedule\n4. Recommendations for reasonable work allocation"
-            }
+      "usedToday": "AI requests used today",
+      "remainingRequests": "Remaining requests",
+      "dailyLimit": "Daily limit",
+      "unknown": "Unknown",
+      "startConversation": "Start a conversation",
+      "description": "Ask me about Studio status, compare groups, analyze risks, and suggest improvements.",
+      "inputPlaceholder": "Enter your question for AI...",
+      "cannotDetectStudioId": "Cannot detect studioId from URL",
+      "aiThinking": "AI is thinking...",
+      "emptyAiAnswer": "AI has not returned an answer yet.",
+      "aiResponseError": "Unable to receive response from AI",
+      "quickActions": {
+        "summary": {
+          "label": "Studio Overview",
+          "prompt": "Please summarize and analyze the overall status of the Studio based on current groups and tasks.\n\nProvide:\n1. Overview of number of groups, members, tasks\n2. Overall completion rate\n3. Best and worst performing groups\n4. Number of overdue tasks\n5. Assessment and suggestions for Studio improvement"
+        },
+        "risk": {
+          "label": "Risk Analysis",
+          "prompt": "Please identify and analyze at-risk groups in the Studio.\n\nFor each at-risk group, provide:\n1. Group name and risk level (HIGH/MEDIUM/LOW)\n2. Specific risk factors (low completion rate, many overdue tasks, no recent activity)\n3. Specific corrective action recommendations"
+        },
+        "report": {
+          "label": "Progress Report",
+          "prompt": "Please generate a detailed report on group progress in the Studio.\n\nInclude:\n1. Comparison table of groups by completion rate\n2. Number of tasks: completed / in progress / not started / overdue\n3. Best performing groups and reasons\n4. Groups needing improvement and specific issues\n5. Work coordination recommendations"
+        },
+        "deadline": {
+          "label": "Upcoming Deadlines",
+          "prompt": "Please summarize deadline status in the Studio.\n\nProvide:\n1. Total number of overdue and upcoming tasks\n2. Which groups have the most overdue tasks\n3. Groups that are on track and on schedule\n4. Recommendations for reasonable work allocation"
         }
+      }
     },
     "PaymentHistoryPage": {
-        "title": "Payment history",
-        "subtitle": "View all your payment transactions",
-        "backButton": "Go back",
-        "loading": "Loading...",
-        "empty": {
-            "title": "No transactions yet",
-            "description": "You have not made any payment transactions",
-            "upgradeButton": "Upgrade plan now"
-        },
-        "table": {
-            "paymentId": "Payment ID",
-            "plan": "Subscription plan",
-            "status": "Status",
-            "date": "Payment date",
-            "actions": "Actions",
-            "viewDetails": "View details"
-        }
+      "title": "Payment history",
+      "subtitle": "View all your payment transactions",
+      "backButton": "Go back",
+      "loading": "Loading...",
+      "empty": {
+        "title": "No transactions yet",
+        "description": "You have not made any payment transactions",
+        "upgradeButton": "Upgrade plan now"
+      },
+      "table": {
+        "paymentId": "Payment ID",
+        "plan": "Subscription plan",
+        "status": "Status",
+        "date": "Payment date",
+        "actions": "Actions",
+        "viewDetails": "View details"
+      }
     },
     "PaymentStatusPage": {
-        "title": "Payment details",
-        "subtitle": "Transaction details",
-        "backButton": "Go back",
-        "loading": "Loading...",
-        "notFound": {
-            "title": "Payment not found",
-            "description": "Invalid or deleted payment ID"
-        },
-        "details": {
-            "title": "Payment information",
-            "plan": "Subscription plan",
-            "amount": "Amount",
-            "createdAt": "Created at",
-            "paidAt": "Payment date"
-        },
-        "actions": {
-            "cancel": "Cancel payment",
-            "cancelling": "Cancelling...",
-            "backToBilling": "Back to subscription page"
-        },
-        "messages": {
-            "cancelSuccess": "Payment cancelled successfully",
-            "cancelFailed": "Unable to cancel payment",
-            "cancelError": "An error occurred. Please try again!",
-            "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to plan management...",
-            "emailSent": "Payment confirmation email has been sent to your email address"
-        }
+      "title": "Payment details",
+      "subtitle": "Transaction details",
+      "backButton": "Go back",
+      "loading": "Loading...",
+      "notFound": {
+        "title": "Payment not found",
+        "description": "Invalid or deleted payment ID"
+      },
+      "details": {
+        "title": "Payment information",
+        "plan": "Subscription plan",
+        "amount": "Amount",
+        "createdAt": "Created at",
+        "paidAt": "Payment date"
+      },
+      "actions": {
+        "cancel": "Cancel payment",
+        "cancelling": "Cancelling...",
+        "backToBilling": "Back to subscription page"
+      },
+      "messages": {
+        "cancelSuccess": "Payment cancelled successfully",
+        "cancelFailed": "Unable to cancel payment",
+        "cancelError": "An error occurred. Please try again!",
+        "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to plan management...",
+        "emailSent": "Payment confirmation email has been sent to your email address"
+      }
     },
     "StudioDateRange": {
-        "title": "Time Range",
-        "notAvailable": "No time information available",
-        "labels": {
-            "start": "Start",
-            "end": "End",
-            "remaining": "Remaining",
-            "overdue": "Overdue"
-        },
-        "days": "{count} days",
-        "status": {
-            "overdue": "Overdue",
-            "upcoming": "Upcoming"
-        },
-        "progress": {
-            "title": "Progress",
-            "elapsed": "Elapsed {elapsed} / {total} days"
-        }
+      "title": "Time Range",
+      "notAvailable": "No time information available",
+      "labels": {
+        "start": "Start",
+        "end": "End",
+        "remaining": "Remaining",
+        "overdue": "Overdue"
+      },
+      "days": "{count} days",
+      "status": {
+        "overdue": "Overdue",
+        "upcoming": "Upcoming"
+      },
+      "progress": {
+        "title": "Progress",
+        "elapsed": "Elapsed {elapsed} / {total} days"
+      }
     },
     "BatchUploadModal": {
-        "title": "Upload Member List",
-        "subtitle": "Upload a CSV/XLSX file to add multiple members to groups",
-        "closeButton": "Close",
-        "selectError": {
-            "invalidFormat": "Unsupported format. Please upload a CSV or XLSX file.",
-            "fileTooLarge": "File too large. Maximum size is 5MB."
-        },
-        "errors": {
-            "uploadFailed": "Upload failed. Please try again."
-        },
-        "downloadErrorsFilename": "import-errors.tsv",
-        "fileSize": {
-            "bytes": "bytes",
-            "kb": "KB",
-            "mb": "MB"
-        },
-        "dropzone": {
-            "text": "Drag and drop file or click to select",
-            "maxSize": "Max 5MB • CSV, XLSX"
-        },
-        "buttons": {
-            "cancel": "Cancel",
-            "upload": "Upload",
-            "downloadErrors": "Download Errors",
-            "close": "Close",
-            "tryAgain": "Try Again"
-        },
-        "uploading": {
-            "title": "Uploading...",
-            "hint": "Please wait a moment"
-        },
-        "success": {
-            "title": "Upload Successful!",
-            "subtitle": "{totalRows} members added"
-        },
-        "stats": {
-            "success": "Success",
-            "skipped": "Skipped",
-            "error": "Error"
-        },
-        "errorList": {
-            "title": "Error List ({count})"
-        },
-        "table": {
-            "row": "#",
-            "email": "Email",
-            "group": "Group",
-            "reason": "Reason"
-        },
-        "error": {
-            "title": "Upload Failed"
-        }
+      "title": "Upload Member List",
+      "subtitle": "Upload a CSV/XLSX file to add multiple members to groups",
+      "closeButton": "Close",
+      "selectError": {
+        "invalidFormat": "Unsupported format. Please upload a CSV or XLSX file.",
+        "fileTooLarge": "File too large. Maximum size is 5MB."
+      },
+      "errors": {
+        "uploadFailed": "Upload failed. Please try again."
+      },
+      "downloadErrorsFilename": "import-errors.tsv",
+      "fileSize": {
+        "bytes": "bytes",
+        "kb": "KB",
+        "mb": "MB"
+      },
+      "dropzone": {
+        "text": "Drag and drop file or click to select",
+        "maxSize": "Max 5MB • CSV, XLSX"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "upload": "Upload",
+        "downloadErrors": "Download Errors",
+        "close": "Close",
+        "tryAgain": "Try Again"
+      },
+      "uploading": {
+        "title": "Uploading...",
+        "hint": "Please wait a moment"
+      },
+      "success": {
+        "title": "Upload Successful!",
+        "subtitle": "{totalRows} members added"
+      },
+      "stats": {
+        "success": "Success",
+        "skipped": "Skipped",
+        "error": "Error"
+      },
+      "errorList": {
+        "title": "Error List ({count})"
+      },
+      "table": {
+        "row": "#",
+        "email": "Email",
+        "group": "Group",
+        "reason": "Reason"
+      },
+      "error": {
+        "title": "Upload Failed"
+      }
     },
     "ActivityHeatmap": {
-        "title": "Activity",
-        "actions": {
-            "previousPeriod": "Previous Period",
-            "nextPeriod": "Next Period"
-        },
-        "empty": "No activity data yet",
-        "tooltip": {
-            "activity": "Activity",
-            "completed": "Completed",
-            "tasks": "tasks"
-        },
-        "legend": {
-            "low": "Low",
-            "high": "High"
-        },
-        "updatedAt": "Updated: {time}"
+      "title": "Activity",
+      "actions": {
+        "previousPeriod": "Previous Period",
+        "nextPeriod": "Next Period"
+      },
+      "empty": "No activity data yet",
+      "tooltip": {
+        "activity": "Activity",
+        "completed": "Completed",
+        "tasks": "tasks"
+      },
+      "legend": {
+        "low": "Low",
+        "high": "High"
+      },
+      "updatedAt": "Updated: {time}"
     },
     "MemberDetailModal": {
-        "title": "Member details",
-        "joinedGroups": "Joined groups",
-        "noJoinedGroups": "Not joined any groups",
-        "close": "Close"
+      "title": "Member details",
+      "joinedGroups": "Joined groups",
+      "noJoinedGroups": "Not joined any groups",
+      "close": "Close"
     },
     "GroupPerformanceRadar": {
-        "title": "Group Performance",
-        "metrics": {
-            "completedTasks": "Completed Tasks",
-            "discussions": "Discussions",
-            "collaboration": "Collaboration"
-        },
-        "labels": {
-            "task": "Tasks",
-            "discussions": "Discussions",
-            "collaboration": "Collaboration",
-            "average": "Average"
-        }
+      "title": "Group Performance",
+      "metrics": {
+        "completedTasks": "Completed Tasks",
+        "discussions": "Discussions",
+        "collaboration": "Collaboration"
+      },
+      "labels": {
+        "task": "Tasks",
+        "discussions": "Discussions",
+        "collaboration": "Collaboration",
+        "average": "Average"
+      }
     },
     "fallbacks": {
       "unknown": "Unknown",
@@ -4824,7 +6187,8 @@
     },
     "stats": {
       "success": "Success",
-      "skipped": "Skipped"
+      "skipped": "Skipped",
+      "error": "Lỗi"
     },
     "error": {
       "title": "Upload Failed"
