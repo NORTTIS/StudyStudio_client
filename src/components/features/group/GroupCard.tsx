@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckSquare2, MoreVertical, Star, Users, Users2 } from "lucide-react";
+import { CheckSquare2, MoreVertical, Star, Users, Users2, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -20,33 +20,99 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { cancelPendingJoinRequest } from "@/api/invites";
 import { hexToGradient } from "@/lib/utils";
 import { mapRole } from "./group.api";
 import { RolePill } from "./RolePill";
 import type { GroupCardDto } from "./types";
 
+function toBooleanLike(value: unknown): boolean | null {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") {
+        if (value === 1) return true;
+        if (value === 0) return false;
+    }
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true" || normalized === "1") return true;
+        if (normalized === "false" || normalized === "0") return false;
+    }
+    return null;
+}
+
 export function GroupCard({
     group,
     onToggleStar,
     onLeaveGroup,
+    onCancelPending,
+    isStudioOpen,
     view = "grid"
 }: {
     group: GroupCardDto;
     onToggleStar: () => Promise<void>;
     onLeaveGroup: () => Promise<void>;
+    onCancelPending?: () => Promise<void>;
+    isStudioOpen?: boolean;
     view?: "grid" | "list";
 }) {
     const t = useTranslations("GroupCard");
     const router = useRouter();
     const locale = useLocale();
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [showInactiveDialog, setShowInactiveDialog] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
+    const [isCanceling, setIsCanceling] = useState(false);
     const groupRole = mapRole(group.role);
     const isOwner = groupRole === "owner";
+    const isArchived = toBooleanLike((group as Record<string, unknown>).isArchived) === true;
+    const isGroupOpen = group.isOpen !== false;
+    const isGroupActive = !isArchived && isGroupOpen;
+    const isEffectiveOpen = isGroupActive && isStudioOpen !== false;
+    const isInactiveForViewer = !isOwner && !isEffectiveOpen;
+    const rawStatus = String(
+        (group as Record<string, unknown>).membershipStatus ??
+        (group as Record<string, unknown>).status ??
+        (group as Record<string, unknown>).joinStatus ??
+        ""
+    )
+        .trim()
+        .toLowerCase();
+    const isApprovedRaw = toBooleanLike(
+        (group as Record<string, unknown>).isApproved ?? (group as Record<string, unknown>).approved
+    );
+    const isMemberRaw = toBooleanLike(
+        (group as Record<string, unknown>).isMember ?? (group as Record<string, unknown>).member
+    );
+    const isPendingApproval =
+        isMemberRaw !== true
+        && (
+            isApprovedRaw === false ||
+            rawStatus === "pending" ||
+            rawStatus === "waiting_approval" ||
+            rawStatus === "awaiting_approval" ||
+            rawStatus === "requested"
+        );
+    const inactiveMutedClass = isInactiveForViewer ? "opacity-60" : "";
 
     const goBoard = () => {
         if (!group.id) return;
         router.push(`/${locale}/group/${String(group.id)}`);
+    };
+
+    const handleOpenGroup = () => {
+        if (!group.id) return;
+
+        if (isInactiveForViewer) {
+            setShowInactiveDialog(true);
+            return;
+        }
+
+        if (isPendingApproval && !isOwner) {
+            return;
+        }
+
+        goBoard();
     };
 
     const handleConfirmLeave = async () => {
@@ -56,6 +122,16 @@ export function GroupCard({
             setShowLeaveDialog(false);
         } finally {
             setIsLeaving(false);
+        }
+    };
+
+    const handleCancelPending = async () => {
+        try {
+            setIsCanceling(true);
+            await (onCancelPending?.() ?? cancelPendingJoinRequest(group.id || ""));
+            setShowCancelDialog(false);
+        } finally {
+            setIsCanceling(false);
         }
     };
 
@@ -93,16 +169,21 @@ export function GroupCard({
         <div
             role="button"
             tabIndex={0}
-            onClick={goBoard}
+            aria-disabled={(isPendingApproval && !isOwner) || isInactiveForViewer}
+            onClick={handleOpenGroup}
             onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    goBoard();
+                    handleOpenGroup();
                 }
             }}
-            className="cursor-pointer overflow-hidden rounded-xl border border-[#E5E5E5] bg-white shadow-sm transition hover:bg-[#FAFAFA]">
+            className={`group/card overflow-hidden rounded-xl border border-[#E5E5E5] bg-white shadow-sm transition ${isInactiveForViewer
+                ? "cursor-not-allowed bg-[#FCFCFC]"
+                : isPendingApproval && !isOwner
+                    ? "cursor-default"
+                    : "cursor-pointer hover:bg-[#FAFAFA]"}`}>
             {group.bannerUrl ? (
-                <div className="relative h-16 w-full overflow-hidden bg-[#F4F5FA]">
+                <div className={`relative h-16 w-full overflow-hidden bg-[#F4F5FA] ${inactiveMutedClass}`}>
                     <img
                         src={group.bannerUrl}
                         alt=""
@@ -111,7 +192,7 @@ export function GroupCard({
                 </div>
             ) : (
                 <div
-                    className="h-16 w-full"
+                    className={`h-16 w-full ${inactiveMutedClass}`}
                     style={{
                         background: hexToGradient(
                             typeof group.colorHex === "string" ? group.colorHex : "#FF5F3D"
@@ -140,11 +221,30 @@ export function GroupCard({
                                 )}
                             </div>
 
-                            <h3 className="truncate font-semibold text-[#261E33]">{displayTitle}</h3>
+                            <span
+                                aria-label={isEffectiveOpen ? "active" : "inactive"}
+                                title={isEffectiveOpen ? "Đang hoạt động" : "Đang dừng"}
+                                className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center">
+                                <span
+                                    aria-hidden="true"
+                                    className={`absolute inset-0 rounded-full ${isEffectiveOpen ? "bg-emerald-500/65" : "bg-red-500/75"} animate-ping motion-reduce:animate-none`}
+                                />
+                                <span
+                                    aria-hidden="true"
+                                    className={`relative h-2.5 w-2.5 rounded-full transition-transform duration-300 group-hover/card:scale-110 ${isEffectiveOpen ? "bg-emerald-500" : "bg-red-600"}`}
+                                    style={{
+                                        boxShadow: isEffectiveOpen
+                                            ? "0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 10px rgba(16, 185, 129, 0.35)"
+                                            : "0 0 0 3px rgba(220, 38, 38, 0.28), 0 0 12px rgba(220, 38, 38, 0.42)"
+                                    }}
+                                />
+                            </span>
+
+                            <h3 className={`truncate font-semibold text-[#261E33] ${inactiveMutedClass}`}>{displayTitle}</h3>
 
                             {group.alias ? (
                                 <span
-                                    className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+                                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${inactiveMutedClass}`}
                                     style={{
                                         backgroundColor: `${group.colorHex ?? "#FF5F3D"}18`,
                                         borderColor: `${group.colorHex ?? "#FF5F3D"}40`,
@@ -154,10 +254,18 @@ export function GroupCard({
                                 </span>
                             ) : null}
 
-                            <RolePill role={groupRole} />
+                            {isPendingApproval ? (
+                                <span className={`inline-flex items-center rounded-full border border-orange-300 bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 ${inactiveMutedClass}`}>
+                                    {t("awaitingApproval")}
+                                </span>
+                            ) : null}
+
+                            <span className={inactiveMutedClass}>
+                                <RolePill role={groupRole} />
+                            </span>
 
                             {group.studio?.name ? (
-                                <span className="inline-flex shrink-0 items-center rounded-md border border-purple-500/60 bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-600">
+                                <span className={`inline-flex shrink-0 items-center rounded-md border border-purple-500/60 bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-600 ${inactiveMutedClass}`}>
                                     {group.studio.name}
                                 </span>
                             ) : null}
@@ -172,7 +280,8 @@ export function GroupCard({
                                 e.stopPropagation();
                                 await onToggleStar();
                             }}
-                            className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
+                            disabled={isInactiveForViewer}
+                            className={`rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95 ${inactiveMutedClass}`}
                             aria-label={starred ? t("removeFavorite") : t("addFavorite")}>
                             <Star
                                 className={`h-4 w-4 transition ${starred ? "text-yellow-500" : "text-[#6F6B99] hover:text-yellow-500"}`}
@@ -189,7 +298,7 @@ export function GroupCard({
                                             e.preventDefault();
                                             e.stopPropagation();
                                         }}
-                                        className="rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95"
+                                        className={`rounded-md p-1 transition hover:bg-[#F4F5FA] active:scale-95 ${inactiveMutedClass}`}
                                         aria-label={t("menuLabel")}>
                                         <MoreVertical className="h-4 w-4 text-[#6F6B99] hover:text-[#261E33]" />
                                     </button>
@@ -199,15 +308,27 @@ export function GroupCard({
                                     align="end"
                                     className="z-50 w-48 rounded-md border border-gray-200 bg-white shadow-lg"
                                     onClick={(e) => e.stopPropagation()}>
-                                    <DropdownMenuItem
-                                        className="text-red-600 focus:text-red-600"
-                                        onSelect={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setShowLeaveDialog(true);
-                                        }}>
-                                        {t("leaveGroup")}
-                                    </DropdownMenuItem>
+                                    {isPendingApproval ? (
+                                        <DropdownMenuItem
+                                            className="text-red-600 focus:text-red-600"
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setShowCancelDialog(true);
+                                            }}>
+                                            {t("cancelRequest")}
+                                        </DropdownMenuItem>
+                                    ) : (
+                                        <DropdownMenuItem
+                                            className="text-red-600 focus:text-red-600"
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setShowLeaveDialog(true);
+                                            }}>
+                                            {t("leaveGroup")}
+                                        </DropdownMenuItem>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         ) : null}
@@ -215,18 +336,18 @@ export function GroupCard({
                 </div>
 
                 {group.tagline ? (
-                    <p className="mt-1 line-clamp-1 text-xs italic text-[#9B8CA8]">
+                    <p className={`mt-1 line-clamp-1 text-xs italic text-[#9B8CA8] ${inactiveMutedClass}`}>
                         {group.tagline}
                     </p>
                 ) : null}
             </div>
 
             <div className="px-3 pb-3">
-                <p className="mt-2 line-clamp-3 whitespace-pre-line break-words text-sm text-[#6F6B99]">
+                <p className={`mt-2 line-clamp-3 whitespace-pre-line break-words text-sm text-[#6F6B99] ${inactiveMutedClass}`}>
                     {description}
                 </p>
 
-                <div className="mt-3 border-t border-[#E5E5E5] pt-2">
+                <div className={`mt-3 border-t border-[#E5E5E5] pt-2 ${inactiveMutedClass}`}>
                     <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-[#6F6B99]">
                             <span className="text-xs">{t("createdBy")}</span>
@@ -291,7 +412,7 @@ export function GroupCard({
             </div>
 
             <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
-                <AlertDialogContent>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                     <AlertDialogHeader>
                         <AlertDialogTitle>{t("leaveConfirmTitle")}</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -299,12 +420,64 @@ export function GroupCard({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <div className="flex justify-end gap-3">
-                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogCancel
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowLeaveDialog(false);
+                            }}>
+                            {t("cancel")}
+                        </AlertDialogCancel>
                         <AlertDialogAction
-                            onClick={handleConfirmLeave}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                void handleConfirmLeave();
+                            }}
                             disabled={isLeaving}
                             className="bg-red-600 hover:bg-red-700">
                             {isLeaving ? t("leaving") : t("confirmLeave")}
+                        </AlertDialogAction>
+                    </div>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={showInactiveDialog} onOpenChange={setShowInactiveDialog}>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t("inactiveGroupTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("inactiveGroupDescription")}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex justify-end gap-3">
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowInactiveDialog(false);
+                            }}>
+                            {t("inactiveGroupOk")}
+                        </AlertDialogAction>
+                    </div>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t("cancelRequestTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t("cancelRequestDescription", { groupName: group.name ?? "" })}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex justify-end gap-3">
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                void handleCancelPending();
+                            }}
+                            disabled={isCanceling}
+                            className="bg-red-600 hover:bg-red-700">
+                            {isCanceling ? t("canceling") : t("confirmCancel")}
                         </AlertDialogAction>
                     </div>
                 </AlertDialogContent>

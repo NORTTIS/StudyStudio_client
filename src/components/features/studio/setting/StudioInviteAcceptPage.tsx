@@ -2,12 +2,13 @@
 
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { acceptStudioInvite } from "@/api/studio-invites";
+import { leaveStudio } from "@/api/studios";
 import { Button } from "@/components/ui/button";
+import { removePendingStudioJoinRequest, upsertPendingStudioJoinRequest } from "@/utils/studio-pending";
 
-type AnyObj = Record<string, any>;
-type Status = "idle" | "submitting" | "accepted" | "already" | "need_login" | "error";
+type Status = "idle" | "submitting" | "accepted" | "already" | "pending" | "need_login" | "error";
 
 function normalizeToken(t: string | string[] | undefined) {
     if (!t) return "";
@@ -19,9 +20,38 @@ function normalizeToken(t: string | string[] | undefined) {
     }
 }
 
-function normalizeBaseUrl(url?: string) {
-    if (!url) return "";
-    return url.replace(/\/+$/, "");
+function decodeBase64Url(value: string) {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+
+    if (typeof window !== "undefined" && typeof window.atob === "function") {
+        return window.atob(padded);
+    }
+
+    return "";
+}
+
+function getStudioIdFromToken(token: string) {
+    if (!token) return "";
+
+    const parts = token.split(".");
+    if (parts.length < 2) return "";
+
+    try {
+        const payload = JSON.parse(decodeBase64Url(parts[1])) as Record<string, unknown>;
+        const candidateKeys = ["studioId", "studio_id", "masterId", "master_id"];
+
+        for (const key of candidateKeys) {
+            const value = payload[key];
+            if (typeof value === "string" && value.trim()) {
+                return value.trim();
+            }
+        }
+    } catch {
+        return "";
+    }
+
+    return "";
 }
 
 function getAccessToken(): string {
@@ -34,9 +64,28 @@ function getAccessToken(): string {
     return "";
 }
 
+function isAlreadyInStudioMessage(msg: string) {
+    const m = (msg || "").toLowerCase();
+    return (
+        m.includes("studio002") ||
+        m.includes("in studio") ||
+        m.includes("in this studio") ||
+        m.includes("already_in_studio") ||
+        m.includes("already_studio_member") ||
+        m.includes("already_joined_studio") ||
+        m.includes("already in studio") ||
+        m.includes("studio member already exists") ||
+        m.includes("trong studio") ||
+        m.includes("da o trong studio") ||
+        m.includes("da tham gia studio") ||
+        m.includes("da o studio")
+    );
+}
+
 export function StudioInviteAcceptPage() {
     const params = useParams<{ token?: string | string[] }>();
     const token = normalizeToken(params?.token);
+    const studioIdFromToken = getStudioIdFromToken(token);
 
     const router = useRouter();
     const locale = useLocale();
@@ -49,12 +98,10 @@ export function StudioInviteAcceptPage() {
     const [error, setError] = useState("");
     const [studioId, setStudioId] = useState("");
     const [loginUrl, setLoginUrl] = useState("");
+    const [cancelingRequest, setCancelingRequest] = useState(false);
 
     const [hydrated, setHydrated] = useState(false);
     const [hasAuth, setHasAuth] = useState(false);
-
-    const autoRanRef = useRef(false);
-    const base = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 
     const buildLoginUrl = () => {
         const returnUrl = encodeURIComponent(pathname || `/${locale}/studio-invite/${encodeURIComponent(token)}`);
@@ -62,7 +109,9 @@ export function StudioInviteAcceptPage() {
     };
 
     const goLogin = () => router.push(loginUrl || buildLoginUrl());
-    const onBackHome = () => router.push(`/${locale}/home`);
+    const onBackHome = () => router.push(`/${locale}/master`);
+    const goToStudio = () =>
+        router.push(studioId ? `/${locale}/master/${studioId}` : studioIdFromToken ? `/${locale}/master/${studioIdFromToken}` : `/${locale}/master`);
 
     useEffect(() => {
         setHydrated(true);
@@ -70,7 +119,6 @@ export function StudioInviteAcceptPage() {
     }, []);
 
     useEffect(() => {
-        autoRanRef.current = false;
         setStatus("idle");
         setError("");
         setStudioId("");
@@ -91,7 +139,7 @@ export function StudioInviteAcceptPage() {
         }
     }, [hydrated, searchParams]);
 
-    const handleAcceptInvite = async () => {
+    const handleAcceptInvite = useCallback(async () => {
         try {
             setError("");
 
@@ -104,59 +152,66 @@ export function StudioInviteAcceptPage() {
             setStatus("submitting");
 
             const response = await acceptStudioInvite({ token }, locale);
+            const sid = String(response.data?.studioId || studioIdFromToken || "").trim();
+            const normalizedErrorCode = String(response.code || "").toLowerCase();
+            const normalizedMessage = String(response.message || "");
+            const alreadyStudioSignal = `${normalizedErrorCode} ${normalizedMessage}`;
 
-            // Check if API returned error status
             if (response.status === "error") {
-                const errorCode = response.code?.toLowerCase() || "";
-                const errorMessage = response.message || "";
-
-                // Already member
-                if (
-                    errorCode === "already_member" ||
-                    errorCode === "already_exists" ||
-                    errorCode === "already_joined" ||
-                    errorMessage.toLowerCase().includes("already") ||
-                    errorMessage.toLowerCase().includes("exists") ||
-                    errorMessage.toLowerCase().includes("đã là") ||
-                    errorMessage.toLowerCase().includes("đã tham gia") ||
-                    errorMessage.toLowerCase().includes("da la") ||
-                    errorMessage.toLowerCase().includes("da tham gia")
-                ) {
+                if (isAlreadyInStudioMessage(alreadyStudioSignal)) {
+                    setStudioId(sid);
                     setStatus("already");
                     return;
                 }
 
-                // Invalid/expired token
                 if (
-                    errorCode === "not_found" ||
-                    errorCode === "invalid_token" ||
-                    errorCode === "token_expired" ||
-                    errorCode === "expired" ||
-                    errorCode === "invalid" ||
-                    errorMessage.toLowerCase().includes("invalid") ||
-                    errorMessage.toLowerCase().includes("expired") ||
-                    errorMessage.toLowerCase().includes("hết hạn") ||
-                    errorMessage.toLowerCase().includes("không hợp lệ")
+                    normalizedErrorCode === "not_found" ||
+                    normalizedErrorCode === "invalid_token" ||
+                    normalizedErrorCode === "token_expired" ||
+                    normalizedErrorCode === "expired" ||
+                    normalizedErrorCode === "invalid" ||
+                    normalizedMessage.toLowerCase().includes("invalid") ||
+                    normalizedMessage.toLowerCase().includes("expired") ||
+                    normalizedMessage.toLowerCase().includes("het han") ||
+                    normalizedMessage.toLowerCase().includes("khong hop le")
                 ) {
                     setStatus("error");
                     setError(t("errorInvalidToken"));
                     return;
                 }
 
-                // Unauthorized
-                if (errorCode === "unauthorized" || errorCode === "auth_required") {
+                if (normalizedErrorCode === "unauthorized" || normalizedErrorCode === "auth_required") {
                     setLoginUrl(buildLoginUrl());
                     setStatus("need_login");
                     return;
                 }
 
-                // Generic error
                 setStatus("error");
-                setError(errorMessage || t("errorAcceptFailed"));
+                setError(normalizedMessage || t("errorAcceptFailed"));
                 return;
             }
 
-            const sid = response.data?.studioId || "";
+            if (isAlreadyInStudioMessage(alreadyStudioSignal)) {
+                setStudioId(sid);
+                if (sid) {
+                    removePendingStudioJoinRequest(sid);
+                }
+                setStatus("already");
+                return;
+            }
+
+            if (response.data?.isApproved === false) {
+                setStudioId(sid);
+                if (sid) {
+                    upsertPendingStudioJoinRequest(sid, response.data?.studioName || undefined);
+                }
+                setStatus("pending");
+                return;
+            }
+
+            if (sid) {
+                removePendingStudioJoinRequest(sid);
+            }
 
             setStudioId(sid);
             setStatus("accepted");
@@ -167,16 +222,13 @@ export function StudioInviteAcceptPage() {
                 router.replace(`/${locale}/master`);
             }
         } catch (e: any) {
-            const errorMessage = e?.message || t("errorAcceptFailed");
+            const errorMessage = String(e?.message || t("errorAcceptFailed"));
 
-            if (
-                errorMessage.toLowerCase().includes("already") ||
-                errorMessage.toLowerCase().includes("exists") ||
-                errorMessage.toLowerCase().includes("đã là") ||
-                errorMessage.toLowerCase().includes("đã tham gia") ||
-                errorMessage.toLowerCase().includes("da la") ||
-                errorMessage.toLowerCase().includes("da tham gia")
-            ) {
+            if (isAlreadyInStudioMessage(errorMessage)) {
+                setStudioId(studioIdFromToken);
+                if (studioIdFromToken) {
+                    removePendingStudioJoinRequest(studioIdFromToken);
+                }
                 setStatus("already");
                 return;
             }
@@ -184,13 +236,37 @@ export function StudioInviteAcceptPage() {
             setStatus("error");
             setError(errorMessage);
         }
-    };
+    }, [locale, router, studioIdFromToken, t, token]);
 
-    useEffect(() => {
-        if (!hydrated) return;
-        if (!token) return;
-        autoRanRef.current = false;
-    }, [hydrated, token, hasAuth, searchParams]);
+    const handleCancelRequest = useCallback(async () => {
+        const targetStudioId = String(studioId || studioIdFromToken || "").trim();
+        if (!targetStudioId) {
+            setError(t("errorAcceptFailed"));
+            setStatus("error");
+            return;
+        }
+
+        setCancelingRequest(true);
+        setError("");
+
+        try {
+            const result = await leaveStudio(targetStudioId, locale);
+
+            if (result.status !== "success") {
+                setError(result.message || t("cancelRequestFailed"));
+                setStatus("pending");
+                return;
+            }
+
+            removePendingStudioJoinRequest(targetStudioId);
+            router.replace(`/${locale}/master`);
+        } catch {
+            setError(t("cancelRequestFailed"));
+            setStatus("pending");
+        } finally {
+            setCancelingRequest(false);
+        }
+    }, [locale, router, studioId, studioIdFromToken, t]);
 
     if (!hydrated) {
         return (
@@ -217,15 +293,34 @@ export function StudioInviteAcceptPage() {
                         <h1 className="mb-2 font-bold text-2xl">{t("success")}</h1>
                         <p className="mb-6 text-muted-foreground text-sm">{t("redirecting")}</p>
                     </>
+                ) : status === "pending" ? (
+                    <>
+                        <h1 className="mb-2 font-bold text-2xl">{t("pendingTitle")}</h1>
+                        <p className="mb-6 text-muted-foreground text-sm">{t("pendingMessage")}</p>
+
+                        {error ? <p className="mb-4 text-red-600 text-sm">{error}</p> : null}
+
+                        <div className="space-y-3">
+                            <Button className="w-full" onClick={onBackHome}>
+                                {t("backHome")}
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                onClick={handleCancelRequest}
+                                disabled={cancelingRequest}>
+                                {cancelingRequest ? t("cancelingRequest") : t("cancelRequest")}
+                            </Button>
+                        </div>
+                    </>
                 ) : status === "already" ? (
                     <>
                         <h1 className="mb-2 font-bold text-2xl">{t("alreadyMemberTitle")}</h1>
                         <p className="mb-6 text-muted-foreground text-sm">{t("alreadyMember")}</p>
 
                         <div className="space-y-3">
-                            <Button
-                                className="w-full"
-                                onClick={() => router.push(`/${locale}/master/${studioId || ""}`)}>
+                            <Button className="w-full" onClick={goToStudio}>
                                 {t("goToStudio")}
                             </Button>
                             <Button variant="outline" className="w-full" onClick={onBackHome}>

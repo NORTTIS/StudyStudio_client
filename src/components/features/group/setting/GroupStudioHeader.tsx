@@ -60,6 +60,8 @@ type GroupUpdatedDetail = {
     description?: string | null;
     studioName?: string | null;
     memberCount?: number | null;
+    requiresMemberApproval?: boolean | null;
+    isArchived?: boolean | null;
 };
 
 type ApiGroupMembersResponse = {
@@ -105,10 +107,64 @@ const ROLE_FORMATS = (role: string) => {
     return [raw, upper, roleUpper];
 };
 
+const normalizeInviteRoleForApi = (role: InviteRole) => {
+    const normalized = String(role).trim().toLowerCase();
+
+    if (normalized === "moderator") return "admin";
+    if (normalized === "commenter") return "viewer";
+    if (normalized === "viewer") return "viewer";
+    return "member";
+};
+
+const normalizeErrorMessage = (value: string, fallback: string) => {
+    const raw = String(value || "").trim();
+    if (!raw) return fallback;
+
+    const lowered = raw.toLowerCase();
+    const isInviteLimitError =
+        (lowered.includes("invite") || lowered.includes("lời mời"))
+        && (lowered.includes("limit") || lowered.includes("quota") || lowered.includes("too many") || lowered.includes("maximum"));
+
+    if (isInviteLimitError) {
+        return "Bạn đã vượt quá giới hạn tạo lời mời. Vui lòng thử lại sau.";
+    }
+
+    const cleaned = raw
+        .replace(/\[[^\]]+\]/g, " ")
+        .replace(/\b(http\s*)?\d{3}\b/gi, " ")
+        .replace(/\b(code|error\s*code|status)\s*[:=]\s*[^\s,;]+/gi, " ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+
+    return cleaned || fallback;
+};
+
 const getApiBase = () => {
     const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
     const base = String(raw).replace(/\/+$/, "");
     return base.endsWith("/api") ? base : `${base}/api`;
+};
+
+const extractTokenFromInviteUrl = (inviteUrl: string) => {
+    const raw = String(inviteUrl || "").trim();
+    if (!raw) return "";
+
+    try {
+        const parsed = new URL(raw, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+        const tokenFromQuery = String(parsed.searchParams.get("token") ?? "").trim();
+        if (tokenFromQuery) return tokenFromQuery;
+
+        const pathMatch = parsed.pathname.match(/\/(?:invite|studio-invite)\/([^/?#]+)/i);
+        if (pathMatch?.[1]) return decodeURIComponent(pathMatch[1]);
+    } catch {
+        const queryMatch = raw.match(/[?&]token=([^&#]+)/i);
+        if (queryMatch?.[1]) return decodeURIComponent(queryMatch[1]);
+
+        const pathMatch = raw.match(/\/(?:invite|studio-invite)\/([^/?#]+)/i);
+        if (pathMatch?.[1]) return decodeURIComponent(pathMatch[1]);
+    }
+
+    return "";
 };
 
 const toMemberRole = (r?: string | null) => {
@@ -129,7 +185,11 @@ const toMemberRole = (r?: string | null) => {
     return "member";
 };
 
-export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }) {
+export function GroupStudioHeader({
+    groupId: groupIdProp
+}: {
+    groupId?: string;
+}) {
     const locale = useLocale();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -151,6 +211,9 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
     const [groupTagline, setGroupTagline] = React.useState<string>("");
     const [groupAlias, setGroupAlias] = React.useState<string>("");
     const [groupColorHex, setGroupColorHex] = React.useState<string>("#FF5F3D");
+    const [requiresMemberApproval, setRequiresMemberApproval] = React.useState<boolean>(false);
+    const [isArchived, setIsArchived] = React.useState<boolean>(false);
+    const [statusPulseKey, setStatusPulseKey] = React.useState(0);
 
     const [inviteOpen, setInviteOpen] = React.useState(false);
     const [hasModerator, setHasModerator] = React.useState(false);
@@ -220,7 +283,10 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 } catch { }
 
                 if (!res.ok) {
-                    const msg = json?.message || text || `${t("errors.fetchDetailFailed")} (${res.status})`;
+                    const msg = normalizeErrorMessage(
+                        String(json?.message || text || ""),
+                        t("errors.fetchDetailFailed")
+                    );
                     toast({
                         description: msg,
                         variant: "destructive"
@@ -243,6 +309,18 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 setGroupTagline(data?.tagline || "");
                 setGroupAlias(data?.alias || "");
                 setGroupColorHex(data?.colorHex || "#FF5F3D");
+                setIsArchived(Boolean(data?.isArchived ?? false));
+                const memberApprovalValue =
+                    (data as GroupDetail & {
+                        requiresMemberApproval?: boolean | null;
+                        memberApprovalRequired?: boolean | null;
+                    })?.requiresMemberApproval ??
+                    (data as GroupDetail & {
+                        requiresMemberApproval?: boolean | null;
+                        memberApprovalRequired?: boolean | null;
+                    })?.memberApprovalRequired ??
+                    false;
+                setRequiresMemberApproval(Boolean(memberApprovalValue));
 
                 const c = Number(data?.memberCount ?? 0);
                 setMemberCount(Number.isFinite(c) ? c : 0);
@@ -306,6 +384,12 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 const c = Number(d.memberCount);
                 setMemberCount(Number.isFinite(c) ? c : 0);
             }
+            if (typeof d.requiresMemberApproval !== "undefined" && d.requiresMemberApproval != null) {
+                setRequiresMemberApproval(Boolean(d.requiresMemberApproval));
+            }
+            if (typeof d.isArchived !== "undefined" && d.isArchived != null) {
+                setIsArchived(Boolean(d.isArchived));
+            }
         };
 
         window.addEventListener(GROUP_UPDATED_EVENT, onUpdated);
@@ -345,39 +429,64 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         const token = getTokenOrFail();
         if (!token) return null;
 
-        for (const apiRole of ROLE_FORMATS(role)) {
-            const res = await fetch(`${apiBase}/invite/create`, {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ groupId, role: apiRole })
-            });
+        const apiRole = normalizeInviteRoleForApi(role);
+        const requestBody: Record<string, unknown> = {
+            groupId,
+            role: apiRole
+        };
 
-            const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
+        if (requiresMemberApproval) {
+            requestBody.requiresMemberApproval = true;
+            requestBody.memberApprovalRequired = true;
+            requestBody.isApproved = false;
+            requestBody.pendingApproval = true;
+        }
 
-            if (res.ok && json && okByJsonStatus(json)) {
-                const url = String(json?.data?.inviteUrl ?? "").trim();
-                if (url) return url;
-                toast({
-                    description: `[invite/create] ${tCommon("missingInviteUrl")} (sent role="${apiRole}")`,
-                    variant: "destructive"
-                });
-                return null;
+        const res = await fetch(`${apiBase}/invite/create`, {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const text = await readText(res);
+        let json: any = null;
+        try {
+            json = text ? JSON.parse(text) : null;
+        } catch { }
+
+        if (res.ok) {
+            const inviteData = json?.data ?? json ?? {};
+            const tokenFromApi = String(inviteData?.token ?? "").trim();
+            const inviteUrlFromApi = String(inviteData?.inviteUrl ?? text.trim()).trim();
+
+            const token = tokenFromApi || extractTokenFromInviteUrl(inviteUrlFromApi);
+
+            if (token) {
+                const origin = typeof window !== "undefined" ? window.location.origin : "";
+                const pendingQuery = requiresMemberApproval ? "?pa=1" : "";
+                return `${origin}/${locale}/invite/${encodeURIComponent(token)}${pendingQuery}`;
             }
 
-            const msg = json?.message || text || `${tCommon("inviteCreateFailed")} (${res.status})`;
+            if (inviteUrlFromApi) return inviteUrlFromApi;
             toast({
-                description: `[invite/create ${res.status}] ${msg} (sent role="${apiRole}")`,
+                description: normalizeErrorMessage(tCommon("missingInviteUrl"), tCommon("inviteCreateFailed")),
                 variant: "destructive"
             });
+            return null;
         }
+
+        const msg = normalizeErrorMessage(
+            String(json?.message || text || tCommon("inviteCreateFailed")),
+            tCommon("inviteCreateFailed")
+        );
+        toast({
+            description: msg,
+            variant: "destructive"
+        });
 
         return null;
     };
@@ -388,31 +497,46 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
         const token = getTokenOrFail();
         if (!token) return false;
 
-        for (const apiRole of ROLE_FORMATS(role)) {
-            const res = await fetch(`${apiBase}/invite/email`, {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ groupId, email, role: apiRole })
-            });
+        const apiRole = normalizeInviteRoleForApi(role);
+        const requestBody: Record<string, unknown> = {
+            groupId,
+            email,
+            role: apiRole
+        };
 
-            const text = await readText(res);
-            let json: any = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch { }
-
-            if (res.ok && (!json || okByJsonStatus(json))) return true;
-
-            const msg = json?.message || text || `${tCommon("inviteByEmailFailed")} (${res.status})`;
-            toast({
-                description: `[invite/email ${res.status}] ${msg} (sent role="${apiRole}")`,
-                variant: "destructive"
-            });
+        if (requiresMemberApproval) {
+            requestBody.requiresMemberApproval = true;
+            requestBody.memberApprovalRequired = true;
+            requestBody.isApproved = false;
+            requestBody.pendingApproval = true;
         }
+
+        const res = await fetch(`${apiBase}/invite/email`, {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const text = await readText(res);
+        let json: any = null;
+        try {
+            json = text ? JSON.parse(text) : null;
+        } catch { }
+
+        if (res.ok && (!json || okByJsonStatus(json))) return true;
+
+        const msg = normalizeErrorMessage(
+            String(json?.message || text || tCommon("inviteByEmailFailed")),
+            tCommon("inviteByEmailFailed")
+        );
+        toast({
+            description: msg,
+            variant: "destructive"
+        });
 
         return false;
     };
@@ -441,7 +565,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="relative w-full overflow-hidden rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6">
+                className={`relative w-full overflow-hidden rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6`}>
                 <div className="mb-6 flex flex-col justify-between gap-4">
 
 
@@ -457,7 +581,34 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.22 }}
                                         className="flex items-center gap-2 font-medium text-[#8B6B4A] text-sm">
-                                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" />
+                                        <span
+                                            aria-label={isArchived ? "inactive" : "active"}
+                                            title={isArchived ? "Đang dừng" : "Đang hoạt động"}
+                                            className="relative inline-flex h-2.5 w-2.5 items-center justify-center"
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className={twMerge(
+                                                    "absolute inset-0 rounded-full animate-ping motion-reduce:animate-none",
+                                                    isArchived ? "bg-red-500/75" : "bg-emerald-400/60"
+                                                )}
+                                            />
+                                            <motion.span
+                                                key={`${isArchived ? "inactive" : "active"}-${statusPulseKey}`}
+                                                initial={{ scale: 0.85, opacity: 0.75 }}
+                                                animate={{ scale: [1, 1.18, 1], opacity: [0.85, 1, 1] }}
+                                                transition={{ duration: 0.34, ease: "easeOut" }}
+                                                className={twMerge(
+                                                    "relative h-2.5 w-2.5 rounded-full",
+                                                    isArchived ? "bg-red-600" : "bg-emerald-500"
+                                                )}
+                                                style={{
+                                                    boxShadow: isArchived
+                                                        ? "0 0 0 4px rgba(220, 38, 38, 0.26), 0 0 12px rgba(220, 38, 38, 0.42)"
+                                                        : "0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 10px rgba(16, 185, 129, 0.28)"
+                                                }}
+                                            />
+                                        </span>
                                         {studioName}
                                     </motion.p>
                                 ) : null}
@@ -511,6 +662,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         <motion.div layout transition={{ type: "spring", stiffness: 280, damping: 26 }}>
                                             <RolePill role={userRole} />
                                         </motion.div>
+
                                     </div>
 
                                     <AnimatePresence mode="wait">
@@ -540,6 +692,7 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                             </motion.p>
                                         ) : null}
                                     </AnimatePresence>
+
                                 </div>
                             </div>
 
@@ -616,27 +769,44 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                     <div className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-[#F3E4D7] bg-[#FFFCF8] p-1.5 shadow-sm">
                         {visibleTabs.map((tab) => {
                             const Icon = tab.icon;
-                            const href = groupId ? tab.href(locale, groupId) : "#";
-                            const target = stripLocale(href.split("?")[0] || href);
+                            const target = stripLocale((tab.href(locale, groupId) || "").split("?")[0] || tab.href(locale, groupId));
+                            const tabDisabled = isArchived && tab.key !== "setting";
 
                             const active =
                                 tab.key === "board"
                                     ? curPath === target
                                     : curPath === target || curPath.startsWith(`${target}/`);
 
+                            const href = groupId ? tab.href(locale, groupId) : "#";
                             return (
-                                <Link key={tab.key} href={href} className="relative shrink-0">
+                                <Link
+                                    key={tab.key}
+                                    href={href}
+                                    onClick={(e) => {
+                                        if (tabDisabled) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            return;
+                                        }
+
+                                        setStatusPulseKey((prev) => prev + 1);
+                                    }}
+                                    aria-disabled={tabDisabled}
+                                    className={twMerge("relative shrink-0", tabDisabled ? "cursor-not-allowed" : "")}
+                                >
                                     <motion.div
-                                        whileHover={{ y: -1 }}
-                                        whileTap={{ scale: 0.98 }}
+                                        whileHover={tabDisabled ? undefined : { y: -1 }}
+                                        whileTap={tabDisabled ? undefined : { scale: 0.98 }}
                                         transition={{ duration: 0.15 }}
                                         className={twMerge(
                                             "group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200",
-                                            active
-                                                ? "text-white shadow-md shadow-orange-200"
-                                                : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                            tabDisabled
+                                                ? "bg-[#F3F4F6] text-[#9CA3AF]"
+                                                : active
+                                                    ? "text-white shadow-md shadow-orange-200"
+                                                    : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
                                         )}>
-                                        {active ? (
+                                        {active && !tabDisabled ? (
                                             <motion.div
                                                 layoutId="activeGroupTab"
                                                 className="absolute inset-0 rounded-xl bg-linear-to-r from-orange-500 to-red-600"
@@ -651,7 +821,11 @@ export function GroupStudioHeader({ groupId: groupIdProp }: { groupId?: string }
                                         <Icon
                                             className={twMerge(
                                                 "relative z-10 h-4 w-4 transition-colors duration-200",
-                                                active ? "text-white" : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                tabDisabled
+                                                    ? "text-[#9CA3AF]"
+                                                    : active
+                                                        ? "text-white"
+                                                        : "text-[#8C8C8C] group-hover:text-[#EA580C]"
                                             )}
                                         />
                                         <span className="relative z-10 whitespace-nowrap">{tab.label}</span>

@@ -749,8 +749,8 @@ function applyTaskDrop(args: {
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-          ? overRaw.replace(END_PREFIX, "")
-          : overRaw;
+            ? overRaw.replace(END_PREFIX, "")
+            : overRaw;
 
     const fromCol = findColumnOfTask(board, columns, activeTaskId);
     if (!fromCol) return null;
@@ -844,8 +844,8 @@ function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?:
                 done
                     ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                     : overdue
-                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                      : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
             )}>
             <Clock3 className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
@@ -1278,19 +1278,19 @@ function TaskCard({
                     )}
 
                     {task.due ||
-                    severityLabel ||
-                    done ||
-                    showProgress ||
-                    task.estimatedHours != null ||
-                    task.actualHours != null ? (
+                        severityLabel ||
+                        done ||
+                        showProgress ||
+                        task.estimatedHours != null ||
+                        task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
                             {severityLabel ||
-                            done ||
-                            showProgress ||
-                            task.estimatedHours != null ||
-                            task.actualHours != null ? (
+                                done ||
+                                showProgress ||
+                                task.estimatedHours != null ||
+                                task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {severityLabel ? (
                                         <span
@@ -1352,19 +1352,19 @@ function GhostTaskCard({ task }: { task: Task }) {
                     </p>
 
                     {task.due ||
-                    severityLabel ||
-                    done ||
-                    showProgress ||
-                    task.estimatedHours != null ||
-                    task.actualHours != null ? (
+                        severityLabel ||
+                        done ||
+                        showProgress ||
+                        task.estimatedHours != null ||
+                        task.actualHours != null ? (
                         <div className="mt-3 space-y-2">
                             {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
 
                             {severityLabel ||
-                            done ||
-                            showProgress ||
-                            task.estimatedHours != null ||
-                            task.actualHours != null ? (
+                                done ||
+                                showProgress ||
+                                task.estimatedHours != null ||
+                                task.actualHours != null ? (
                                 <div className="flex flex-wrap items-center gap-2">
                                     {severityLabel ? (
                                         <span
@@ -2523,8 +2523,8 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-              ? overId.replace(END_PREFIX, "")
-              : overId;
+                ? overId.replace(END_PREFIX, "")
+                : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -2948,6 +2948,35 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         [columns]
     );
 
+    const totalTaskCount = React.useMemo(
+        () => Object.values(board).reduce((count, tasks) => count + tasks.length, 0),
+        [board]
+    );
+    const isBoardEmpty = columns.length === 0;
+    const shouldLockVerticalScroll = !loading && !loadError && isBoardEmpty && totalTaskCount === 0;
+    const boardRootClassName = cn("relative z-10", !isBoardEmpty && "min-h-screen");
+    const boardScrollClassName = cn(
+        "scrollbar-hide flex cursor-grab select-none items-start gap-4 overflow-x-auto active:cursor-grabbing",
+        isBoardEmpty ? "pb-0" : "pb-6"
+    );
+
+    React.useEffect(() => {
+        const html = document.documentElement;
+        const body = document.body;
+        const prevHtmlOverflowY = html.style.overflowY;
+        const prevBodyOverflowY = body.style.overflowY;
+
+        if (shouldLockVerticalScroll) {
+            html.style.overflowY = "hidden";
+            body.style.overflowY = "hidden";
+        }
+
+        return () => {
+            html.style.overflowY = prevHtmlOverflowY;
+            body.style.overflowY = prevBodyOverflowY;
+        };
+    }, [shouldLockVerticalScroll]);
+
     if (loading) {
         return (
             <div className="relative z-10 min-h-screen">
@@ -2994,7 +3023,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     };
 
     return (
-        <div className="relative z-10 min-h-screen">
+        <div className={boardRootClassName}>
             <TaskFormModal
                 open={taskFormOpen}
                 onClose={closeCreateTask}
@@ -3063,7 +3092,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                         onPointerMove={handleBoardPointerMove}
                         onPointerUp={handleBoardPointerUp}
                         onPointerCancel={handleBoardPointerCancel}
-                        className="scrollbar-hide flex cursor-grab select-none items-start gap-4 overflow-x-auto pb-6 active:cursor-grabbing">
+                        className={boardScrollClassName}>
                         {columns.map((col) => (
                             <ColumnView
                                 key={col.id}
@@ -3113,7 +3142,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                                 onPointerMove={handleBoardPointerMove}
                                 onPointerUp={handleBoardPointerUp}
                                 onPointerCancel={handleBoardPointerCancel}
-                                className="scrollbar-hide flex cursor-grab select-none items-start gap-4 overflow-x-auto pb-6 active:cursor-grabbing">
+                                className={boardScrollClassName}>
                                 {columns.map((col) => (
                                     <SortableColumn
                                         key={col.id}

@@ -8,6 +8,7 @@ import {
     createStudio,
     deleteStudio,
     getStudios,
+    leaveStudio,
     type StudioListSubscription,
     type StudioUI,
     updateStudio
@@ -20,10 +21,21 @@ import { StudioLimitModal } from "@/components/features/master/StudioLimitModal"
 import { StudioModal } from "@/components/features/master/StudioModal";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { mockStudios } from "@/mocks/studios-data";
+import { getPendingStudioJoinRequests, removePendingStudioJoinRequest } from "@/utils/studio-pending";
 
 interface MasterPageClientProps {
     initialUserProfile: UserProfile | null;
@@ -97,15 +109,31 @@ interface StudioCardProps {
     onClick: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onLeave?: () => void;
+    onCancelPendingRequest?: () => void;
+    pendingCancelLoading?: boolean;
+    isLeavingLoading?: boolean;
     canEdit: boolean;
 }
 
-function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardProps) {
+function StudioCard({
+    studio,
+    onClick,
+    onEdit,
+    onDelete,
+    onLeave,
+    onCancelPendingRequest,
+    pendingCancelLoading = false,
+    isLeavingLoading = false,
+    canEdit
+}: StudioCardProps) {
     const t = useTranslations("MasterPage");
     const gradient = getColorGradient(studio.colorHex);
     const hoverShadow = getHoverShadow(studio.colorHex);
     const focusRing = getFocusRing(studio.colorHex);
     const isOwner = studio.studioRole === 0;
+    const isMember = studio.studioRole === 1;
+    const isPendingApproval = !isOwner && !!studio.isPendingApproval;
     const [isHovered, setIsHovered] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
 
@@ -122,7 +150,7 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
             whileHover={{ y: -7 }}
             role="button"
             tabIndex={0}
-            className="group relative cursor-pointer overflow-hidden rounded-[30px] border bg-white/82 text-left backdrop-blur-2xl transition-all duration-300"
+            className={`group relative overflow-hidden rounded-[30px] border bg-white/82 text-left backdrop-blur-2xl transition-all duration-300 ${isPendingApproval ? "cursor-not-allowed" : "cursor-pointer"}`}
             style={
                 {
                     boxShadow: cardShadow,
@@ -161,26 +189,32 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                 />
 
                 <div className="relative flex items-start justify-between gap-3">
-                     {studio.alias ? (
-                                <span
-                                    className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
-                                    style={{
-                                        backgroundColor: `white`,
-                                        borderColor: `${studio.colorHex ?? "#FF5F3D"}40`,
-                                        color: studio.colorHex ?? "#FF5F3D"
-                                    }}>
-                                    {studio.alias}
-                                </span>
-                            ) : (<div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
+                    {studio.alias ? (
+                        <span
+                            className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+                            style={{
+                                backgroundColor: `white`,
+                                borderColor: `${studio.colorHex ?? "#FF5F3D"}40`,
+                                color: studio.colorHex ?? "#FF5F3D"
+                            }}>
+                            {studio.alias}
+                        </span>
+                    ) : (<div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
                         Studio
                     </div>)}
-                    
+
 
                     {studio.studioRole !== undefined && (
                         <motion.div whileHover={{ scale: 1.04 }}>
                             <RolePill role={isOwner ? "owner" : "member"} />
                         </motion.div>
                     )}
+
+                    {isPendingApproval ? (
+                        <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 shadow-sm">
+                            {t("pendingJoinBadge")}
+                        </span>
+                    ) : null}
                 </div>
 
                 <motion.div
@@ -210,58 +244,89 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                         <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#6F6B99]">{studio.description}</p>
                     </div>
 
-                    {canEdit && (
+                    {(canEdit || isMember) && (
                         <motion.div
                             initial={false}
                             animate={{ opacity: isHovered ? 1 : 0.55, y: isHovered ? 0 : 2 }}
                             className="flex shrink-0 gap-2 transition-all duration-200">
-                            <motion.button
-                                whileHover={{ y: -2, scale: 1.04 }}
-                                whileTap={{ scale: 0.96 }}
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEdit();
-                                }}
-                                className="rounded-xl border border-gray-200 bg-white/95 p-2 shadow-sm transition hover:bg-gray-50"
-                                title="Edit">
-                                <svg
-                                    className="h-4 w-4 text-gray-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                </svg>
-                            </motion.button>
+                            {canEdit && (
+                                <>
+                                    <motion.button
+                                        whileHover={{ y: -2, scale: 1.04 }}
+                                        whileTap={{ scale: 0.96 }}
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEdit();
+                                        }}
+                                        className="rounded-xl border border-gray-200 bg-white/95 p-2 shadow-sm transition hover:bg-gray-50"
+                                        title="Edit">
+                                        <svg
+                                            className="h-4 w-4 text-gray-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                            />
+                                        </svg>
+                                    </motion.button>
 
-                            <motion.button
-                                whileHover={{ y: -2, scale: 1.04 }}
-                                whileTap={{ scale: 0.96 }}
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete();
-                                }}
-                                className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50"
-                                title="Delete">
-                                <svg
-                                    className="h-4 w-4 text-red-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                </svg>
-                            </motion.button>
+                                    <motion.button
+                                        whileHover={{ y: -2, scale: 1.04 }}
+                                        whileTap={{ scale: 0.96 }}
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete();
+                                        }}
+                                        className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50"
+                                        title="Delete">
+                                        <svg
+                                            className="h-4 w-4 text-red-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            />
+                                        </svg>
+                                    </motion.button>
+                                </>
+                            )}
+
+                            {isMember && (
+                                <motion.button
+                                    whileHover={{ y: -2, scale: 1.04 }}
+                                    whileTap={{ scale: 0.96 }}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onLeave?.();
+                                    }}
+                                    disabled={isLeavingLoading}
+                                    className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50 disabled:opacity-50"
+                                    title={t("leaveStudio")}>
+                                    <svg
+                                        className="h-4 w-4 text-red-500"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                                        />
+                                    </svg>
+                                </motion.button>
+                            )}
                         </motion.div>
                     )}
                 </div>
@@ -301,6 +366,22 @@ function StudioCard({ studio, onClick, onEdit, onDelete, canEdit }: StudioCardPr
                         <p className="mt-2 text-xl font-semibold text-[#261E33]">{studio.memberCount}</p>
                     </motion.div>
                 </div>
+
+                {isPendingApproval ? (
+                    <div className="mt-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2.5">
+                        <p className="text-[12px] text-amber-700">{t("pendingJoinNotice")}</p>
+                        <Button
+                            type="button"
+                            className="h-8 rounded-lg bg-amber-600 px-3 text-xs text-white hover:bg-amber-700"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onCancelPendingRequest?.();
+                            }}
+                            disabled={pendingCancelLoading}>
+                            {pendingCancelLoading ? t("pendingStudioCanceling") : t("pendingStudioCancel")}
+                        </Button>
+                    </div>
+                ) : null}
             </div>
         </motion.div>
     );
@@ -341,6 +422,32 @@ function LoadingState() {
     );
 }
 
+function buildPendingStudioCard(
+    request: { studioId: string; studioName?: string; requestedAt: string },
+    locale: string
+): StudioUI {
+    return {
+        id: request.studioId,
+        name: request.studioName || (locale === "vi" ? "Studio chờ duyệt" : "Pending studio"),
+        description: locale === "vi" ? "Yêu cầu tham gia đang chờ phê duyệt" : "Membership request pending approval",
+        type: "group",
+        memberCount: 0,
+        groupCount: 0,
+        completionProgress: 0,
+        createdAt: request.requestedAt,
+        updatedAt: request.requestedAt,
+        studioRole: 1,
+        avatarUrl: null,
+        colorHex: null,
+        bannerUrl: null,
+        tagline: null,
+        alias: null,
+        isOpen: true,
+        isApproved: false,
+        isPendingApproval: true
+    };
+}
+
 export default function MasterPageClient({
     initialUserProfile,
     initialStudios,
@@ -360,7 +467,12 @@ export default function MasterPageClient({
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
+    const [isCancelingPendingStudio, setIsCancelingPendingStudio] = useState(false);
+    const [leavingStudioId, setLeavingStudioId] = useState<string | null>(null);
+    const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+    const [inactiveStudioTarget, setInactiveStudioTarget] = useState<StudioUI | null>(null);
     const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
+    const [leaveTargetStudio, setLeaveTargetStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
     const { ownedStudios, joinedStudios } = useMemo(() => {
@@ -406,15 +518,52 @@ export default function MasterPageClient({
             }
 
             const studiosResult = await getStudios(locale);
+            const pendingRequests = getPendingStudioJoinRequests();
+
             if (studiosResult.status === "success" && studiosResult.data) {
-                setStudios(studiosResult.data.studios);
+                const pendingStudioIds = new Set(getPendingStudioJoinRequests().map((item) => item.studioId));
+
+                const approvedStudios = studiosResult.data.studios.map((studio: StudioUI) => {
+                    const isPendingApproval = studio.studioRole === 1 && (
+                        studio.isApproved === false || pendingStudioIds.has(studio.id)
+                    );
+
+                    if (studio.isApproved !== false) {
+                        removePendingStudioJoinRequest(studio.id);
+                    }
+
+                    return {
+                        ...studio,
+                        isPendingApproval
+                    };
+                });
+
+                const existingStudioIds = new Set(approvedStudios.map((studio: StudioUI) => studio.id));
+                const syntheticPendingStudios = pendingRequests
+                    .filter((request) => !existingStudioIds.has(request.studioId))
+                    .map((request) => buildPendingStudioCard(request, locale));
+
+                const mergedStudios = [...approvedStudios, ...syntheticPendingStudios];
+
+                setStudios(mergedStudios);
                 setSubscriptionInfo(studiosResult.data.subscription);
             } else {
-                setStudios(mockStudios);
+                const existingStudioIds = new Set(mockStudios.map((studio) => studio.id));
+                const syntheticPendingStudios = pendingRequests
+                    .filter((request) => !existingStudioIds.has(request.studioId))
+                    .map((request) => buildPendingStudioCard(request, locale));
+
+                setStudios([...mockStudios, ...syntheticPendingStudios]);
             }
         } catch (error) {
             console.error("Load data failed, using mock data:", error);
-            setStudios(mockStudios);
+            const pendingRequests = getPendingStudioJoinRequests();
+            const existingStudioIds = new Set(mockStudios.map((studio) => studio.id));
+            const syntheticPendingStudios = pendingRequests
+                .filter((request) => !existingStudioIds.has(request.studioId))
+                .map((request) => buildPendingStudioCard(request, locale));
+
+            setStudios([...mockStudios, ...syntheticPendingStudios]);
         } finally {
             setIsLoading(false);
         }
@@ -537,6 +686,17 @@ export default function MasterPageClient({
     };
 
     const handleStudioClick = async (studio: StudioUI) => {
+        const isOwner = studio.studioRole === 0;
+
+        if (studio.isPendingApproval && !isOwner) {
+            return;
+        }
+
+        if (!isOwner && studio.isArchived) {
+            setInactiveStudioTarget(studio);
+            return;
+        }
+
         router.push(`/${locale}/master/${studio.id}`);
     };
 
@@ -557,6 +717,56 @@ export default function MasterPageClient({
         setIsDeleteModalOpen(true);
     };
 
+    const handleCancelPendingStudio = async (studio: StudioUI) => {
+        if (!studio.id || isCancelingPendingStudio) return;
+
+        setIsCancelingPendingStudio(true);
+        try {
+            const result = await leaveStudio(studio.id, locale);
+
+            if (result.status !== "success") {
+                toast({
+                    description: result.message || t("pendingStudioCancelError"),
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            removePendingStudioJoinRequest(studio.id);
+            await loadData();
+        } catch {
+            toast({ description: t("pendingStudioCancelError"), variant: "destructive" });
+        } finally {
+            setIsCancelingPendingStudio(false);
+        }
+    };
+
+    const handleOpenLeaveDialog = (studio: StudioUI) => {
+        setLeaveTargetStudio(studio);
+        setIsLeaveDialogOpen(true);
+    };
+
+    const handleLeaveStudio = async () => {
+        if (!leaveTargetStudio?.id || leavingStudioId) return;
+
+        setLeavingStudioId(leaveTargetStudio.id);
+        try {
+            const result = await leaveStudio(leaveTargetStudio.id, locale);
+
+            if (result.status !== "success") {
+                return;
+            }
+
+            setIsLeaveDialogOpen(false);
+            setLeaveTargetStudio(null);
+            await loadData();
+        } catch {
+            // Silent fail: leave action intentionally has no toast per UX request.
+        } finally {
+            setLeavingStudioId(null);
+        }
+    };
+
     const renderStudioSection = (title: string, studioList: StudioUI[]) => {
         if (studioList.length === 0) return null;
 
@@ -573,6 +783,14 @@ export default function MasterPageClient({
                                 onClick={() => handleStudioClick(studio)}
                                 onEdit={() => handleOpenEditModal(studio)}
                                 onDelete={() => handleOpenDeleteModal(studio)}
+                                onLeave={() => {
+                                    handleOpenLeaveDialog(studio);
+                                }}
+                                onCancelPendingRequest={() => {
+                                    void handleCancelPendingStudio(studio);
+                                }}
+                                pendingCancelLoading={isCancelingPendingStudio && studio.isPendingApproval}
+                                isLeavingLoading={leavingStudioId === studio.id}
                                 canEdit={studio.studioRole === 0}
                             />
                         ))}
@@ -758,6 +976,67 @@ export default function MasterPageClient({
                 onClose={() => setIsLimitModalOpen(false)}
                 studioLimit={studioLimit}
             />
+
+            <AlertDialog
+                open={isLeaveDialogOpen}
+                onOpenChange={(open) => {
+                    setIsLeaveDialogOpen(open);
+                    if (!open && !leavingStudioId) {
+                        setLeaveTargetStudio(null);
+                    }
+                }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t("leaveStudioTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t("leaveStudioDescription", {
+                                studioName: leaveTargetStudio?.name || ""
+                            })}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={!!leavingStudioId}>
+                            {t("leaveStudioCancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-[#D93F21] text-white hover:bg-[#BC341B] focus-visible:ring-[#D93F21]/30"
+                            disabled={!!leavingStudioId}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                void handleLeaveStudio();
+                            }}>
+                            {t("leaveStudioConfirm")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={!!inactiveStudioTarget}
+                onOpenChange={(open) => {
+                    if (!open) setInactiveStudioTarget(null);
+                }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t("inactiveStudioTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t("inactiveStudioDescription", {
+                                studioName: inactiveStudioTarget?.name || ""
+                            })}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setInactiveStudioTarget(null);
+                            }}>
+                            {t("inactiveStudioOk")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
         </div>
     );
 }

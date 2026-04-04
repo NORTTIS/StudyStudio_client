@@ -2,11 +2,13 @@
 
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { markPendingJoinRequestCanceled, removePendingJoinGroup, savePendingJoinGroup } from "@/components/features/group/group.api";
+import { cancelPendingJoinRequest } from "@/api/invites";
 
 type AnyObj = Record<string, any>;
-type Status = "idle" | "submitting" | "accepted" | "already" | "need_login" | "error";
+type Status = "idle" | "submitting" | "accepted" | "pending" | "already" | "need_login" | "error";
 
 function normalizeToken(t: string | string[] | undefined) {
     if (!t) return "";
@@ -16,6 +18,40 @@ function normalizeToken(t: string | string[] | undefined) {
     } catch {
         return raw;
     }
+}
+
+function decodeBase64Url(value: string) {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+
+    if (typeof window !== "undefined" && typeof window.atob === "function") {
+        return window.atob(padded);
+    }
+
+    return "";
+}
+
+function getGroupIdFromToken(token: string) {
+    if (!token) return "";
+
+    const parts = token.split(".");
+    if (parts.length < 2) return "";
+
+    try {
+        const payload = JSON.parse(decodeBase64Url(parts[1])) as Record<string, unknown>;
+        const candidateKeys = ["groupId", "group_id"];
+
+        for (const key of candidateKeys) {
+            const value = payload[key];
+            if (typeof value === "string" && value.trim()) {
+                return value.trim();
+            }
+        }
+    } catch {
+        return "";
+    }
+
+    return "";
 }
 
 function normalizeBaseUrl(url?: string) {
@@ -67,6 +103,46 @@ function isAlreadyMemberMessage(msg: string) {
     );
 }
 
+function isPendingApprovalMessage(msg: string) {
+    const m = (msg || "").toLowerCase();
+    return (
+        m.includes("pending") ||
+        m.includes("await") ||
+        m.includes("approval") ||
+        m.includes("chờ") ||
+        m.includes("duyệt")
+    );
+}
+
+function toBooleanLike(value: unknown): boolean | null {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") {
+        if (value === 1) return true;
+        if (value === 0) return false;
+    }
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true" || normalized === "1") return true;
+        if (normalized === "false" || normalized === "0") return false;
+    }
+    return null;
+}
+
+function isPendingStatusValue(value: unknown) {
+    const normalized = String(value ?? "").trim().toLowerCase();
+    if (!normalized) return false;
+
+    return [
+        "pending",
+        "awaiting",
+        "awaiting_approval",
+        "awaiting-approval",
+        "waiting",
+        "waiting_approval",
+        "requested"
+    ].includes(normalized);
+}
+
 async function requestWithAutoMethod(url: string, payload?: AnyObj) {
     const accessToken = getAccessToken();
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -91,15 +167,50 @@ async function requestWithAutoMethod(url: string, payload?: AnyObj) {
     return res;
 }
 
+async function getGroupRequiresApproval(base: string, groupId: string): Promise<boolean | null> {
+    const normalizedGroupId = String(groupId || "").trim();
+    if (!normalizedGroupId) return null;
+
+    const accessToken = getAccessToken();
+    if (!accessToken) return null;
+
+    const detailUrl = base
+        ? `${base}/group/${encodeURIComponent(normalizedGroupId)}/detail`
+        : `/group/${encodeURIComponent(normalizedGroupId)}/detail`;
+
+    try {
+        const res = await fetch(detailUrl, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                Accept: "application/json",
+                Authorization: `Bearer ${accessToken}`
+            },
+            cache: "no-store"
+        });
+
+        if (!res.ok) return null;
+
+        const body = await readBody(res);
+        const data = (body.json?.data ?? body.json ?? {}) as AnyObj;
+        const flag = data.requiresMemberApproval ?? data.memberApprovalRequired;
+        return typeof flag === "boolean" ? flag : null;
+    } catch {
+        return null;
+    }
+}
+
 export function InviteAcceptPage() {
     const t = useTranslations("GroupStudioHeader.inviteAcceptPage");
     const params = useParams<{ token?: string | string[] }>();
     const token = normalizeToken(params?.token);
+    const groupIdFromToken = getGroupIdFromToken(token);
 
     const router = useRouter();
     const locale = useLocale();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const pendingApprovalHintFromLink = searchParams?.get("pa") === "1" || searchParams?.get("pendingApproval") === "1";
 
     const [status, setStatus] = useState<Status>("idle");
     const [error, setError] = useState("");
@@ -109,7 +220,6 @@ export function InviteAcceptPage() {
     const [hydrated, setHydrated] = useState(false);
     const [hasAuth, setHasAuth] = useState(false);
 
-    const autoRanRef = useRef(false);
     const base = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 
     const buildLoginUrl = () => {
@@ -118,7 +228,27 @@ export function InviteAcceptPage() {
     };
 
     const goLogin = () => router.push(loginUrl || buildLoginUrl());
-    const onBackHome = () => router.push(`/${locale}/home`);
+    const onBackHome = () => router.push(`/${locale}/group`);
+    const goToGroup = () =>
+        router.push(groupId ? `/${locale}/group/${groupId}` : groupIdFromToken ? `/${locale}/group/${groupIdFromToken}` : `/${locale}/group`);
+
+    const handleCancelRequest = useCallback(async () => {
+        const targetGroupId = groupId || groupIdFromToken;
+        if (!targetGroupId) {
+            router.replace(`/${locale}/group`);
+            return;
+        }
+
+        try {
+            await cancelPendingJoinRequest(targetGroupId, locale);
+            markPendingJoinRequestCanceled(targetGroupId);
+            removePendingJoinGroup(targetGroupId);
+        } catch (error) {
+            console.error("[InviteAcceptPage] Failed to cancel pending request:", error);
+        } finally {
+            router.replace(`/${locale}/group`);
+        }
+    }, [groupId, groupIdFromToken, locale, router]);
 
     useEffect(() => {
         setHydrated(true);
@@ -126,7 +256,6 @@ export function InviteAcceptPage() {
     }, []);
 
     useEffect(() => {
-        autoRanRef.current = false;
         setStatus("idle");
         setError("");
         setGroupId("");
@@ -147,7 +276,7 @@ export function InviteAcceptPage() {
         }
     }, [hydrated, searchParams]);
 
-    const acceptInvite = async () => {
+    const acceptInvite = useCallback(async () => {
         try {
             setError("");
 
@@ -199,11 +328,20 @@ export function InviteAcceptPage() {
                         `Accept invitation failed (HTTP ${res.status}).`;
 
                     if (isAlreadyMemberMessage(msg)) {
+                        const existingGroupId = String(body.json?.data?.groupId || body.json?.groupId || groupIdFromToken || "").trim();
+                        if (existingGroupId) setGroupId(existingGroupId);
                         setStatus("already");
                         return;
                     }
 
                     if (res.status === 400) {
+                        if (isPendingApprovalMessage(msg)) {
+                            const pendingGroupId = String(body.json?.data?.groupId || body.json?.groupId || groupIdFromToken || "").trim();
+                            if (pendingGroupId) setGroupId(pendingGroupId);
+                            setStatus("pending");
+                            return;
+                        }
+
                         setStatus("error");
                         setError(msg);
                         return;
@@ -214,13 +352,57 @@ export function InviteAcceptPage() {
                     return;
                 }
 
-                const gid = body.json?.data?.groupId || body.json?.groupId || body.json?.data?.id || "";
+                const responseData = (body.json?.data ?? body.json ?? {}) as AnyObj;
+                const gid = String(responseData.groupId || responseData.id || "").trim();
+
+                const serverRequiresApproval = gid ? await getGroupRequiresApproval(base, gid) : null;
+                const responseRequiresApproval = toBooleanLike(
+                    responseData.requiresMemberApproval ?? responseData.memberApprovalRequired
+                );
+                const isApprovedRaw = toBooleanLike(
+                    responseData.isApproved ?? responseData.approved ?? responseData.is_approved ?? responseData.is_approve
+                );
+                const isPendingRaw = toBooleanLike(responseData.isPending ?? responseData.pendingApproval ?? responseData.pending);
+                const pendingStatusRaw = isPendingStatusValue(
+                    responseData.membershipStatus ?? responseData.status ?? responseData.joinStatus
+                );
+
+                const effectiveRequiresApproval =
+                    serverRequiresApproval !== null
+                        ? serverRequiresApproval
+                        : responseRequiresApproval;
+
+                const isPendingByApprovalFlag = isApprovedRaw === false;
+                const isPendingByResponse = isPendingRaw === true || pendingStatusRaw;
+                const isPendingByInviteHint = pendingApprovalHintFromLink && effectiveRequiresApproval === true && isApprovedRaw !== true;
+
+                const isApproved = effectiveRequiresApproval === false
+                    ? true
+                    : !(isPendingByApprovalFlag || isPendingByResponse || isPendingByInviteHint);
 
                 setGroupId(gid);
-                setStatus("accepted");
+                setStatus(isApproved ? "accepted" : "pending");
+
+                if (!isApproved) {
+                    savePendingJoinGroup({
+                        ...responseData,
+                        id: gid,
+                        groupId: gid,
+                        isApproved: false,
+                        membershipStatus: "pending",
+                        status: "pending"
+                    });
+
+                    // Keep the user on this page so the pending state is explicit.
+                    return;
+                }
 
                 if (gid) {
-                    router.replace(`/${locale}/group?id=${gid}`);
+                    removePendingJoinGroup(gid);
+                }
+
+                if (gid) {
+                    router.replace(`/${locale}/group/${gid}`);
                 } else {
                     router.replace(`/${locale}/group`);
                 }
@@ -232,16 +414,15 @@ export function InviteAcceptPage() {
                 `Accept invitation failed. Endpoint not found (last 404: ${last404 || "(none)"}), or request body fields mismatch.`
             );
         } catch (e: any) {
+            if (isAlreadyMemberMessage(String(e?.message || ""))) {
+                if (groupIdFromToken) setGroupId(groupIdFromToken);
+                setStatus("already");
+                return;
+            }
             setStatus("error");
             setError(e?.message || t("serverError"));
         }
-    };
-
-    useEffect(() => {
-        if (!hydrated) return;
-        if (!token) return;
-        autoRanRef.current = false;
-    }, [hydrated, token, hasAuth, searchParams]);
+    }, [base, groupIdFromToken, locale, pathname, pendingApprovalHintFromLink, router, t, token]);
 
     if (!hydrated) {
         return (
@@ -268,16 +449,34 @@ export function InviteAcceptPage() {
                         <h1 className="mb-2 text-2xl font-bold">{t("successTitle")}</h1>
                         <p className="mb-6 text-sm text-muted-foreground">{t("redirecting")}</p>
                     </>
+                ) : status === "pending" ? (
+                    <>
+                        <h1 className="mb-2 text-2xl font-bold">{t("pendingTitle")}</h1>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("pendingMessage")}</p>
+
+                        <div className="space-y-3">
+                            <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
+                                {t("backHome")}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                onClick={handleCancelRequest}
+                            >
+                                {t("cancelRequest")}
+                            </Button>
+                        </div>
+                    </>
                 ) : status === "already" ? (
                     <>
                         <h1 className="mb-2 text-2xl font-bold">{t("notice")}</h1>
                         <p className="mb-6 text-sm text-muted-foreground">{t("alreadyMember")}</p>
 
                         <div className="space-y-3">
-                            <Button className="w-full" onClick={() => router.push(`/${locale}/group`)}>
+                            <Button className="w-full" onClick={goToGroup}>
                                 {t("goToGroups")}
                             </Button>
-                            <Button variant="outline" className="w-full" onClick={onBackHome}>
+                            <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
                                 {t("backHome")}
                             </Button>
                         </div>
@@ -296,7 +495,7 @@ export function InviteAcceptPage() {
                             <Button className="w-full" onClick={goLogin}>
                                 {t("loginToContinue")}
                             </Button>
-                            <Button variant="outline" className="w-full" onClick={onBackHome}>
+                            <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
                                 {t("backHome")}
                             </Button>
                         </div>
@@ -313,7 +512,7 @@ export function InviteAcceptPage() {
                                 {t("accept")}
                             </Button>
 
-                            <Button variant="outline" className="w-full" onClick={onBackHome}>
+                            <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
                                 {t("backHome")}
                             </Button>
                         </div>
@@ -337,3 +536,5 @@ function Logo() {
         </div>
     );
 }
+
+const GROUP_PRIMARY_BUTTON_CLASS = "w-full bg-orange-600 text-white hover:bg-orange-700";

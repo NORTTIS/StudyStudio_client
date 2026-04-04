@@ -1,4 +1,5 @@
 import type { components, paths } from "@/api/types";
+import { getUserData } from "@/api/auth";
 import type { GroupCardDto, GroupsPageData } from "./types";
 
 type GetGroupsResponse =
@@ -43,6 +44,322 @@ type LeaveGroupResponseApi =
 type AIAskStreamRequest = NonNullable<
     paths["/api/ai/group/ask/stream"]["post"]["requestBody"]
 >["content"]["application/json"];
+
+type PendingGroupCard = GroupCardDto & {
+    isApproved?: boolean;
+    membershipStatus?: string;
+    status?: string;
+    joinStatus?: string;
+};
+
+const pendingJoinStorageKey = "my-studio:pending-group-joins";
+const canceledPendingJoinStorageKey = "my-studio:canceled-pending-joins";
+
+// Event emitter for pending join changes
+export const pendingJoinEvents = new EventTarget();
+export const PENDING_JOIN_CHANGED_EVENT = "pending-join-changed";
+
+function readPendingJoinGroups(): PendingGroupCard[] {
+    if (typeof window === "undefined") return [];
+
+    try {
+        const raw = window.localStorage.getItem(pendingJoinStorageKey);
+        if (!raw) return [];
+
+        const parsed = JSON.parse(raw) as unknown;
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed.filter((item): item is PendingGroupCard => {
+            if (!item || typeof item !== "object") return false;
+            const candidate = item as PendingGroupCard & { id?: unknown };
+            return typeof candidate.id === "string" && candidate.id.trim().length > 0;
+        });
+    } catch {
+        return [];
+    }
+}
+
+function writePendingJoinGroups(groups: PendingGroupCard[]) {
+    if (typeof window === "undefined") return;
+
+    try {
+        window.localStorage.setItem(pendingJoinStorageKey, JSON.stringify(groups));
+    } catch {
+        // Ignore storage failures and keep the UI working.
+    }
+}
+
+type CanceledPendingJoinMarker = {
+    userId?: string;
+};
+
+type CanceledPendingJoinMap = Record<string, CanceledPendingJoinMarker>;
+
+function readCanceledPendingJoinMap(): CanceledPendingJoinMap {
+    if (typeof window === "undefined") return {};
+
+    try {
+        const raw = window.localStorage.getItem(canceledPendingJoinStorageKey);
+        if (!raw) return {};
+
+        const parsed = JSON.parse(raw) as unknown;
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+
+        const entries: Array<readonly [string, CanceledPendingJoinMarker]> = [];
+
+        for (const [groupId, value] of Object.entries(parsed)) {
+            if (!groupId.trim()) continue;
+
+            if (typeof value === "string") {
+                const userId = value.trim();
+                if (userId) {
+                    entries.push([groupId, { userId }] as const);
+                }
+                continue;
+            }
+
+            if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+
+            const marker = value as CanceledPendingJoinMarker;
+            const userId = String(marker.userId ?? "").trim();
+            if (!userId) continue;
+
+            entries.push([groupId, { userId }] as const);
+        }
+
+        return Object.fromEntries(entries);
+    } catch {
+        return {};
+    }
+}
+
+function writeCanceledPendingJoinMap(map: CanceledPendingJoinMap) {
+    if (typeof window === "undefined") return;
+
+    try {
+        window.localStorage.setItem(canceledPendingJoinStorageKey, JSON.stringify(map));
+    } catch {
+        // Ignore storage failures and keep the UI working.
+    }
+}
+
+function getPendingGroupId(group: PendingGroupCard | Record<string, unknown>) {
+    const candidate = group as { id?: unknown; groupId?: unknown; group_id?: unknown };
+    return String(candidate.id ?? candidate.groupId ?? candidate.group_id ?? "").trim();
+}
+
+function normalizePendingJoinGroup(group: Record<string, unknown>): PendingGroupCard | null {
+    const id = getPendingGroupId(group);
+    if (!id) return null;
+
+    const name = String(group.name ?? group.groupName ?? group.title ?? group.alias ?? id).trim();
+
+    return {
+        ...(group as PendingGroupCard),
+        id,
+        name,
+        isApproved: false,
+        membershipStatus: "pending",
+        status: "pending"
+    };
+}
+
+function getStorageValue(key: string) {
+    if (typeof window === "undefined") return "";
+    return String(window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key) ?? "").trim();
+}
+
+function getUserIdFromToken(token: string) {
+    try {
+        const payloadPart = token.split(".")[1];
+        if (!payloadPart) return "";
+
+        const base64 = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+
+        const json = decodeURIComponent(
+            atob(padded)
+                .split("")
+                .map((char) => "%" + ("00" + char.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+        );
+
+        const payload = JSON.parse(json) as Record<string, unknown>;
+        const idFromToken = payload.userId || payload.accountId || payload.id || payload.uid || payload.sub;
+        return idFromToken ? String(idFromToken).trim() : "";
+    } catch {
+        return "";
+    }
+}
+
+export function getCurrentUserId() {
+    if (typeof window === "undefined") return "";
+
+    const userData = getUserData();
+    const userDataId = String(userData?.id ?? "").trim();
+    if (userDataId) return userDataId;
+
+    // Fallback for cases where token exists but `setAuthTokens` has not populated userData yet.
+    const userDataRaw = getStorageValue("userData");
+    if (userDataRaw) {
+        try {
+            const parsed = JSON.parse(userDataRaw) as Record<string, unknown>;
+            const parsedId = String(parsed.id ?? parsed.userId ?? parsed.accountId ?? parsed.uid ?? "").trim();
+            if (parsedId) return parsedId;
+        } catch {
+            // Ignore malformed data and continue with token/id-key fallbacks.
+        }
+    }
+
+    const keys = ["userId", "accountId", "id", "uid", "user_id", "account_id"];
+    for (const key of keys) {
+        const value = getStorageValue(key);
+        if (value) return value;
+    }
+
+    const tokenKeys = ["accessToken", "access_token", "token", "jwt", "ss_access_token"];
+    for (const key of tokenKeys) {
+        const token = getStorageValue(key);
+        if (!token) continue;
+        const tokenUserId = getUserIdFromToken(token);
+        if (tokenUserId) return tokenUserId;
+    }
+
+    return "";
+}
+
+export function markPendingJoinRequestCanceled(groupId: string, marker?: CanceledPendingJoinMarker) {
+    const normalizedGroupId = String(groupId ?? "").trim();
+    const userId = String(marker?.userId ?? getCurrentUserId()).trim();
+    if (!normalizedGroupId || !userId) return;
+
+    const next = {
+        ...readCanceledPendingJoinMap(),
+        [normalizedGroupId]: { userId }
+    };
+
+    writeCanceledPendingJoinMap(next);
+    pendingJoinEvents.dispatchEvent(
+        new CustomEvent(PENDING_JOIN_CHANGED_EVENT, {
+            detail: { groupId: normalizedGroupId, marker: next[normalizedGroupId] }
+        })
+    );
+}
+
+export function clearPendingJoinRequestCanceled(groupId: string) {
+    const normalizedGroupId = String(groupId ?? "").trim();
+    if (!normalizedGroupId) return;
+
+    const current = readCanceledPendingJoinMap();
+    if (!(normalizedGroupId in current)) return;
+
+    delete current[normalizedGroupId];
+    writeCanceledPendingJoinMap(current);
+}
+
+export function isPendingJoinRequestCanceled(groupId: string, userId: string) {
+    const normalizedGroupId = String(groupId ?? "").trim();
+    const normalizedUserId = String(userId ?? "").trim();
+    if (!normalizedGroupId || !normalizedUserId) return false;
+
+    return readCanceledPendingJoinMap()[normalizedGroupId]?.userId === normalizedUserId;
+}
+
+export function isPendingJoinRequestCanceledByMember(
+    groupId: string,
+    member: { userId?: string | null }
+) {
+    const normalizedGroupId = String(groupId ?? "").trim();
+    if (!normalizedGroupId) return false;
+
+    const marker = readCanceledPendingJoinMap()[normalizedGroupId];
+    if (!marker) return false;
+
+    const memberUserId = String(member.userId ?? "").trim();
+    return !!(marker.userId && memberUserId && marker.userId === memberUserId);
+}
+
+function toBooleanLike(value: unknown): boolean | null {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") {
+        if (value === 1) return true;
+        if (value === 0) return false;
+    }
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true" || normalized === "1") return true;
+        if (normalized === "false" || normalized === "0") return false;
+    }
+    return null;
+}
+
+function getApprovedFlag(group: Record<string, unknown>) {
+    return toBooleanLike(
+        group.isApproved ?? group.approved ?? group.is_approved ?? group.is_approve
+    );
+}
+
+function getIsMemberFlag(group: Record<string, unknown>) {
+    return toBooleanLike(group.isMember ?? group.member ?? group.is_member);
+}
+
+function getMembershipStatus(group: Record<string, unknown>) {
+    return String(group.membershipStatus ?? group.status ?? group.joinStatus ?? "")
+        .trim()
+        .toLowerCase();
+}
+
+function isPendingMembership(group: Record<string, unknown>) {
+    const isMember = getIsMemberFlag(group);
+    if (isMember === true) return false;
+
+    const approved = getApprovedFlag(group);
+    if (approved === false) return true;
+    if (approved === true) return false;
+
+    const status = getMembershipStatus(group);
+    if (!status) return false;
+
+    return ["pending", "waiting", "requested", "request", "awaiting", "invited"].some((value) => status.includes(value));
+}
+
+function isApprovedMembership(group: Record<string, unknown>) {
+    const isMember = getIsMemberFlag(group);
+    if (isMember === true) return true;
+    if (isMember === false) return false;
+
+    const approved = getApprovedFlag(group);
+    if (approved === true) return true;
+    if (approved === false) return false;
+
+    const status = getMembershipStatus(group);
+    if (!status) return false;
+
+    return ["approved", "joined", "active", "member"].some((value) => status.includes(value));
+}
+
+export function savePendingJoinGroup(group: Record<string, unknown>) {
+    const normalized = normalizePendingJoinGroup(group);
+    if (!normalized) return null;
+
+    const current = readPendingJoinGroups();
+    const groupId = normalized.id ?? "";
+    clearPendingJoinRequestCanceled(groupId);
+    const next = [normalized, ...current.filter((item) => getPendingGroupId(item) !== groupId)];
+    writePendingJoinGroups(next);
+    return normalized;
+}
+
+export function removePendingJoinGroup(groupId: string) {
+    const normalizedId = String(groupId ?? "").trim();
+    if (!normalizedId || typeof window === "undefined") return;
+
+    const next = readPendingJoinGroups().filter((item) => getPendingGroupId(item) !== normalizedId);
+    writePendingJoinGroups(next);
+    
+    // Notify about the change
+    pendingJoinEvents.dispatchEvent(new CustomEvent(PENDING_JOIN_CHANGED_EVENT, { detail: { groupId: normalizedId } }));
+}
 
 function getToken() {
     if (typeof window === "undefined") return "";
@@ -98,15 +415,102 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     const subscription = data?.subscription as SubscriptionInfo | undefined;
     const sections = data?.sections as GroupSections | undefined;
 
-    const favorites = ((sections?.favorites || []) as GroupCardDto[]).filter(Boolean);
-    const managed = ((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean);
-    const independent = ((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean);
+    const dedupeById = (groups: GroupCardDto[]) => {
+        const seen = new Set<string>();
+        return groups.filter((group) => {
+            const groupId = getPendingGroupId(group as Record<string, unknown>);
+            if (!groupId || seen.has(groupId)) return false;
+            seen.add(groupId);
+            return true;
+        });
+    };
 
-    // Filter for joined groups (where user is not the owner)
+    const hasStudio = (group: GroupCardDto) => {
+        const candidate = group as unknown as {
+            studio?: { id?: string | null } | null;
+            studioId?: string | null;
+        };
+
+        const studioId = String(candidate.studio?.id ?? candidate.studioId ?? "").trim();
+        return !!studioId;
+    };
+
+    const favorites = dedupeById(((sections?.favorites || []) as GroupCardDto[]).filter(Boolean));
+    const managedBase = dedupeById(((sections?.studioGroups || []) as GroupCardDto[]).filter(Boolean));
+    const independentBase = dedupeById(((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean));
+    const archived = dedupeById(((sections?.archivedGroups || []) as GroupCardDto[]).filter(Boolean));
+
+    // Keep archived groups visible in list. Backend may move them to archivedGroups only.
+    // We merge them back by whether group belongs to a studio.
+    const managed = dedupeById([...managedBase, ...archived.filter(hasStudio)]);
+    const independent = dedupeById([...independentBase, ...archived.filter((group) => !hasStudio(group))]);
+    const pendingJoined = readPendingJoinGroups();
     const allGroups = [...favorites, ...managed, ...independent];
+    const groupsById = new Map(
+        allGroups
+            .map((group) => [getPendingGroupId(group as Record<string, unknown>), group] as const)
+            .filter(([groupId]) => !!groupId)
+    );
+
+    // Backend is source of truth: clear stale local pending when API already knows the group
+    // and no longer marks it as waiting approval.
+    for (const localPending of pendingJoined) {
+        const groupId = getPendingGroupId(localPending);
+        if (!groupId) continue;
+        const apiGroup = groupsById.get(groupId);
+        if (!apiGroup) continue;
+        if (isApprovedMembership(apiGroup as Record<string, unknown>)) {
+            removePendingJoinGroup(groupId);
+        }
+    }
+
+    const pendingFromGroups = allGroups
+        .filter((group) => isPendingMembership(group as Record<string, unknown>))
+        .map((group) => {
+            const normalized = normalizePendingJoinGroup(group as Record<string, unknown>);
+            return normalized ?? null;
+        })
+        .filter((group): group is PendingGroupCard => !!group);
+
+    const pendingFallbackFromLocal = pendingJoined.filter((localPending) => {
+        const groupId = getPendingGroupId(localPending);
+        if (!groupId) return false;
+
+        const apiGroup = groupsById.get(groupId);
+        if (!apiGroup) {
+            // Backend no longer returns this group for current user (e.g. rejected request),
+            // so drop stale local pending entry.
+            removePendingJoinGroup(groupId);
+            return false;
+        }
+
+        const apiRecord = apiGroup as Record<string, unknown>;
+        if (isApprovedMembership(apiRecord)) return false;
+        if (isPendingMembership(apiRecord)) return false;
+
+        // BE did not provide explicit approval state yet, keep local pending fallback.
+        return true;
+    });
+
+    const blockedPendingIds = new Set([
+        ...pendingFromGroups.map((group) => getPendingGroupId(group)),
+        ...pendingFallbackFromLocal.map((group) => getPendingGroupId(group))
+    ]);
+
+    const pending = [
+        ...pendingFromGroups,
+        ...pendingFallbackFromLocal
+    ].filter((group, index, array) => {
+        const groupId = getPendingGroupId(group);
+        if (!groupId) return false;
+        return array.findIndex((item) => getPendingGroupId(item) === groupId) === index;
+    });
+
     const joined = allGroups.filter((g) => {
         const role = mapRole(g.role);
-        return role !== "owner";
+        const groupId = getPendingGroupId(g as Record<string, unknown>);
+        const membershipApproved = isApprovedMembership(g as Record<string, unknown>);
+        return role !== "owner" && membershipApproved && !blockedPendingIds.has(groupId);
     });
 
     return {
@@ -117,6 +521,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
         favorites,
         managed,
         independent,
+        pending,
         joined
     };
 }
@@ -161,6 +566,14 @@ export async function removeFavourite(groupId: string) {
 export async function leaveGroup(groupId: string) {
     const baseUrl = getBaseUrl();
     const token = getToken();
+
+    // Best-effort cleanup: leaving a group should not keep stale favourite state
+    // if the user joins the same group again later.
+    try {
+        await removeFavourite(groupId);
+    } catch {
+        // Ignore remove-favourite failure so the leave action can still proceed.
+    }
 
     const res = await fetch(`${baseUrl}/group/member/${encodeURIComponent(groupId)}/leave`, {
         method: "DELETE",
