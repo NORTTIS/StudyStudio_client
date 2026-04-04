@@ -272,8 +272,10 @@
             "startDateAfterDueDate": "Start date cannot be after due date",
             "restrictedAssignee": "Cannot assign to this role",
             "missingGroupOrTask": "Missing group or task information",
-            "updateTaskFailed": "Failed to update task"
-        }
+            "updateTaskFailed": "Failed to update task",
+            "commentMax": "Comment is too long (max 1000 characters)"
+        },
+        "unknownMentionUser": "Unknown user"
     },
     "AIHome": {
         "badge": "Personal AI",
@@ -1367,7 +1369,8 @@
             "taglineLabel": "Slogan",
             "taglinePlaceholder": "Enter a short slogan",
             "startDate": "Start Date",
-            "endDate": "End Date"
+            "endDate": "End Date",
+            "aliasLabel": "Alias"
         },
         "studioLimit": {
             "title": "Studio limit reached",
@@ -1428,7 +1431,8 @@
             "removeMember": {
                 "confirmTitle": "Remove member",
                 "confirmDescription": "Are you sure you want to remove {name} from this studio?",
-                "confirmButton": "Remove"
+                "confirmButton": "Remove",
+                "error": "Failed to remove member"
             },
             "groupCreatedSuccess": "Group created successfully!",
             "invite": {
@@ -1528,8 +1532,21 @@
                 "endDate": "End Date",
                 "createdDate": "Created Date",
                 "groupCount": "Number of groups"
+            },
+            "danger": {
+                "title": "Danger Zone",
+                "deleteDescription": "Delete this studio and all its data permanently.",
+                "confirmTitle": "Delete studio",
+                "confirmDescription": "Are you sure you want to delete this studio? This action cannot be undone.",
+                "confirmDelete": "Delete"
             }
-        }
+        },
+        "pendingJoinBadge": "Pending",
+        "leaveStudio": "Leave studio",
+        "pendingJoinNotice": "Pending approval",
+        "pendingStudioCanceling": "Canceling...",
+        "pendingStudioCancel": "Cancel Request",
+        "pendingStudioCancelError": "Failed to cancel request"
     },
     "MemberList": {
         "groupRole": {
@@ -1544,7 +1561,9 @@
         "invite": "Invite",
         "avatarFallback": "Avatar",
         "owner": "Owner",
-        "empty": "No members"
+        "empty": "No members",
+        "removing": "Removing...",
+        "remove": "Remove"
     },
     "QuickAssignModal": {
         "title": "Quick Task Assignment",
@@ -1603,7 +1622,12 @@
         "backHome": "Back to Home",
         "errorMissingToken": "Missing invitation token.",
         "errorInvalidToken": "Invalid or expired invitation token.",
-        "errorAcceptFailed": "Failed to accept invitation."
+        "errorAcceptFailed": "Failed to accept invitation.",
+        "cancelRequestFailed": "Failed to cancel request",
+        "pendingTitle": "Invitation pending",
+        "pendingMessage": "Your invitation is pending approval from the studio owner.",
+        "cancelingRequest": "Canceling...",
+        "cancelRequest": "Cancel Request"
     },
     "LandingGroupPage": {
         "badge": "Group Workspace",
@@ -1880,7 +1904,8 @@
         "thisDocument": "this document",
         "cancel": "Cancel",
         "deleting": "Deleting...",
-        "deleteDocument": "Delete document"
+        "deleteDocument": "Delete document",
+        "uploadHttpFailed": "Upload failed"
     },
     "GroupAiQaPage": {
         "title": "AI Group Q&A",
@@ -2563,7 +2588,11 @@
         },
         "validation": {
             "dateRangeError": "Start date must be before end date."
-        }
+        },
+        "inactive": "Archived",
+        "inactiveEmpty": "No archived groups",
+        "pendingApproval": "Pending Approval",
+        "pendingApprovalEmpty": "No pending groups"
     },
     "GroupCard": {
         "removeFavorite": "Remove from favorites",
@@ -2591,7 +2620,16 @@
             "list": "List",
             "setting": "Settings",
             "trashed": "Trash"
-        }
+        },
+        "awaitingApproval": "Awaiting Approval",
+        "cancelRequest": "Cancel Request",
+        "inactiveGroupTitle": "Group is archived",
+        "inactiveGroupDescription": "This group is archived and cannot be accessed.",
+        "inactiveGroupOk": "Understood",
+        "cancelRequestTitle": "Cancel join request?",
+        "cancelRequestDescription": "Are you sure you want to cancel your request to join \"{groupName}\"?",
+        "canceling": "Canceling...",
+        "confirmCancel": "Confirm Cancel"
     },
     "UsageBar": {
         "limitReached": "Limit reached",
@@ -2795,7 +2833,10 @@
             "acceptPrompt": "Press \"Accept\" to join the group.",
             "accept": "Accept",
             "missingToken": "Missing invitation token.",
-            "serverError": "Accept invitation failed."
+            "serverError": "Accept invitation failed.",
+            "pendingTitle": "Invitation pending",
+            "pendingMessage": "Your invitation is pending approval from the group owner.",
+            "cancelRequest": "Cancel Request"
         }
     },
     "GroupBoardScreen": {
@@ -2853,7 +2894,8 @@
         "confirmDeleteTask": "Confirm delete task",
         "confirmDeleteTaskDesc": "Are you sure you want to delete task \"{title}\"?",
         "deleteTaskButton": "Delete task",
-        "close": "Close"
+        "close": "Close",
+        "deleteStatusFailed": "Failed to delete status"
     },
     "TaskFormModal": {
         "priorityLow": "Low",
@@ -2984,7 +3026,8 @@
             },
             "totalScore": "Total score",
             "contributionRate": "Contribution rate",
-            "lastActivity": "Last activity"
+            "lastActivity": "Last activity",
+            "taskCount": "Task count"
         },
         "taskStatus": {
             "todo": "To do",
@@ -3164,7 +3207,9 @@
             "approving": "Approving...",
             "reject": "Reject",
             "rejecting": "Rejecting...",
-            "error": "Failed to load pending approvals"
+            "error": "Failed to load pending approvals",
+            "approveFailed": "Failed to approve member",
+            "rejectFailed": "Failed to reject member"
         }
     },
     "dangerZone": {

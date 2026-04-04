@@ -4,6 +4,7 @@
  */
 
 import { cookies } from "next/headers";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 
 interface ApiResponse<T = unknown> {
     status: "success" | "error";
@@ -133,6 +134,13 @@ class ServerApiClient {
             }
 
             const data: ApiResponse<T> = JSON.parse(text);
+            if (data.status === "error") {
+                return {
+                    ...data,
+                    message: sanitizeErrorMessage(data.message, "Đã xảy ra lỗi")
+                };
+            }
+
             return data;
         } catch (error) {
             console.error(`GET ${endpoint} error:`, error);
@@ -206,6 +214,13 @@ class ServerApiClient {
             }
 
             const data: ApiResponse<T> = JSON.parse(text);
+            if (data.status === "error") {
+                return {
+                    ...data,
+                    message: sanitizeErrorMessage(data.message, "Đã xảy ra lỗi")
+                };
+            }
+
             return data;
         } catch (error) {
             console.error(`POST ${endpoint} error:`, error);
@@ -279,6 +294,13 @@ class ServerApiClient {
             }
 
             const data: ApiResponse<T> = JSON.parse(text);
+            if (data.status === "error") {
+                return {
+                    ...data,
+                    message: sanitizeErrorMessage(data.message, "Đã xảy ra lỗi")
+                };
+            }
+
             return data;
         } catch (error) {
             console.error(`PUT ${endpoint} error:`, error);
@@ -350,6 +372,13 @@ class ServerApiClient {
             }
 
             const data: ApiResponse<T> = JSON.parse(text);
+            if (data.status === "error") {
+                return {
+                    ...data,
+                    message: sanitizeErrorMessage(data.message, "Đã xảy ra lỗi")
+                };
+            }
+
             return data;
         } catch (error) {
             console.error(`DELETE ${endpoint} error:`, error);

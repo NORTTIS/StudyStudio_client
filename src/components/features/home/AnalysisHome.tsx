@@ -86,6 +86,13 @@ const C = {
     bg: "#f8fafc"
 } as const;
 
+const STATUS_COLORS = {
+    completed: C.green,
+    inProgress: C.blue,
+    overdue: C.red,
+    todo: C.slate
+} as const;
+
 // Donut colors matching GroupAnalyticPage: Todo/InProgress/Done/Overdue
 const DONUT_STATUS_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
 
@@ -409,12 +416,12 @@ function BarChartTooltip({ active, payload, label }: any) {
                         {entry.name === "you"
                             ? "Bạn"
                             : entry.name === "avg"
-                              ? "TB nhóm"
-                              : entry.name === "groupAvg"
                                 ? "TB nhóm"
-                                : entry.name === "user"
-                                  ? "Bạn"
-                                  : entry.name}
+                                : entry.name === "groupAvg"
+                                    ? "TB nhóm"
+                                    : entry.name === "user"
+                                        ? "Bạn"
+                                        : entry.name}
                         :
                     </span>
                     <span className="ml-auto font-semibold text-slate-900">{entry.value}</span>
@@ -860,7 +867,7 @@ export default function AnalysisHome() {
     }, [rankings, selectedGroupId]);
 
     return (
-        <div className="relative min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#FFF7ED_34%,#FFFBF5_66%,#F8FAFC_100%)]">
+        <div className="relative overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#FFF7ED_34%,#FFFBF5_66%,#F8FAFC_100%)]">
             {/* Decorative blobs */}
             <div className="absolute top-[-40px] left-[-80px] h-72 w-72 rounded-full bg-orange-200/20 blur-3xl" />
             <div className="absolute top-[18%] right-[-80px] h-80 w-80 rounded-full bg-amber-200/15 blur-3xl" />
@@ -889,12 +896,12 @@ export default function AnalysisHome() {
                     {/* ── KPI Cards ── */}
                     {kpiLoading ? (
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                            {[...Array(5)].map((_, i) => (
+                            {[...Array(4)].map((_, i) => (
                                 <SkeletonCard key={i} />
                             ))}
                         </div>
                     ) : kpiData ? (
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                             <KpiCard
                                 title="Tổng công việc"
                                 value={kpiData.totalTasks ?? 0}
@@ -936,8 +943,8 @@ export default function AnalysisHome() {
                             />
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                            {[...Array(5)].map((_, i) => (
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            {[...Array(4)].map((_, i) => (
                                 <SkeletonCard key={i} />
                             ))}
                         </div>
@@ -1054,16 +1061,16 @@ export default function AnalysisHome() {
                                 subtitle={`Xu hướng ${trendPeriod} ngày`}
                                 action={
                                     <div className="flex items-center gap-2">
-                                        <div className="flex rounded-xl border border-slate-200 bg-white p-0.5 shadow-xs">
+                                        <div className="inline-flex rounded-2xl bg-slate-100 p-1">
                                             {([7, 14, 30] as TrendPeriod[]).map((p) => (
                                                 <button
                                                     key={p}
                                                     onClick={() => setTrendPeriod(p)}
                                                     className={cn(
-                                                        "rounded-lg px-3 py-1 text-xs font-semibold transition-all",
+                                                        "rounded-xl px-4 py-2 font-medium text-sm transition",
                                                         trendPeriod === p
-                                                            ? "bg-orange-500 text-white shadow-sm"
-                                                            : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                                                            ? "bg-white text-orange-500 shadow-sm"
+                                                            : "text-slate-500 hover:text-orange-500"
                                                     )}>
                                                     {p}d
                                                 </button>
@@ -1190,28 +1197,28 @@ export default function AnalysisHome() {
                                             <span className="flex items-center gap-1">
                                                 <span
                                                     className="h-2 w-2 rounded-full"
-                                                    style={{ backgroundColor: C.orange }}
+                                                    style={{ backgroundColor: STATUS_COLORS.completed }}
                                                 />
                                                 Hoàn thành
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <span
                                                     className="h-2 w-2 rounded-full"
-                                                    style={{ backgroundColor: C.orange }}
+                                                    style={{ backgroundColor: STATUS_COLORS.inProgress }}
                                                 />
                                                 Đang làm
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <span
                                                     className="h-2 w-2 rounded-full"
-                                                    style={{ backgroundColor: C.red }}
+                                                    style={{ backgroundColor: STATUS_COLORS.overdue }}
                                                 />
                                                 Quá hạn
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <span
                                                     className="h-2 w-2 rounded-full"
-                                                    style={{ backgroundColor: C.slate }}
+                                                    style={{ backgroundColor: STATUS_COLORS.todo }}
                                                 />
                                                 Chưa bắt đầu
                                             </span>
@@ -1228,8 +1235,8 @@ export default function AnalysisHome() {
                                                                 item.priority === "Cao"
                                                                     ? "bg-red-50 text-red-600"
                                                                     : item.priority === "Trung bình"
-                                                                      ? "bg-orange-50 text-orange-600"
-                                                                      : "bg-slate-100 text-slate-500"
+                                                                        ? "bg-orange-50 text-orange-600"
+                                                                        : "bg-slate-100 text-slate-500"
                                                             )}>
                                                             {item.priority ?? "—"}
                                                         </span>
@@ -1241,7 +1248,7 @@ export default function AnalysisHome() {
                                                                 className="flex items-center justify-center text-white"
                                                                 style={{
                                                                     width: `${pct(item.completed ?? 0)}%`,
-                                                                    backgroundColor: C.orange
+                                                                    backgroundColor: STATUS_COLORS.completed
                                                                 }}>
                                                                 {item.completed}
                                                             </div>
@@ -1251,7 +1258,7 @@ export default function AnalysisHome() {
                                                                 className="flex items-center justify-center text-white"
                                                                 style={{
                                                                     width: `${pct(item.inProgress ?? 0)}%`,
-                                                                    backgroundColor: C.orange
+                                                                    backgroundColor: STATUS_COLORS.inProgress
                                                                 }}>
                                                                 {item.inProgress}
                                                             </div>
@@ -1261,7 +1268,7 @@ export default function AnalysisHome() {
                                                                 className="flex items-center justify-center text-white"
                                                                 style={{
                                                                     width: `${pct(item.overdue ?? 0)}%`,
-                                                                    backgroundColor: C.red
+                                                                    backgroundColor: STATUS_COLORS.overdue
                                                                 }}>
                                                                 {item.overdue}
                                                             </div>
@@ -1271,7 +1278,7 @@ export default function AnalysisHome() {
                                                                 className="flex items-center justify-center text-white"
                                                                 style={{
                                                                     width: `${pct(item.todo ?? 0)}%`,
-                                                                    backgroundColor: C.slate
+                                                                    backgroundColor: STATUS_COLORS.todo
                                                                 }}>
                                                                 {item.todo}
                                                             </div>
@@ -1303,28 +1310,28 @@ export default function AnalysisHome() {
                                         <span className="flex items-center gap-1">
                                             <span
                                                 className="h-2 w-2 rounded-full"
-                                                style={{ backgroundColor: C.orange }}
+                                                style={{ backgroundColor: STATUS_COLORS.completed }}
                                             />
                                             Hoàn thành
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <span
                                                 className="h-2 w-2 rounded-full"
-                                                style={{ backgroundColor: "#dc2626" }}
+                                                style={{ backgroundColor: STATUS_COLORS.inProgress }}
                                             />
                                             Đang làm
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <span
                                                 className="h-2 w-2 rounded-full"
-                                                style={{ backgroundColor: "#b91c1c" }}
+                                                style={{ backgroundColor: STATUS_COLORS.overdue }}
                                             />
                                             Quá hạn
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <span
                                                 className="h-2 w-2 rounded-full"
-                                                style={{ backgroundColor: C.slate }}
+                                                style={{ backgroundColor: STATUS_COLORS.todo }}
                                             />
                                             Chưa bắt đầu
                                         </span>
@@ -1341,10 +1348,10 @@ export default function AnalysisHome() {
                                                             item.urgency === "Khẩn cấp"
                                                                 ? "bg-red-100 text-red-700"
                                                                 : item.urgency === "Cao"
-                                                                  ? "bg-orange-100 text-orange-700"
-                                                                  : item.urgency === "Trung bình"
-                                                                    ? "bg-amber-50 text-amber-600"
-                                                                    : "bg-orange-50 text-orange-600"
+                                                                    ? "bg-orange-100 text-orange-700"
+                                                                    : item.urgency === "Trung bình"
+                                                                        ? "bg-amber-50 text-amber-600"
+                                                                        : "bg-orange-50 text-orange-600"
                                                         )}>
                                                         {item.urgency ?? "—"}
                                                     </span>
@@ -1356,7 +1363,7 @@ export default function AnalysisHome() {
                                                             className="flex items-center justify-center text-white"
                                                             style={{
                                                                 width: `${pct(item.completed ?? 0)}%`,
-                                                                backgroundColor: C.orange
+                                                                backgroundColor: STATUS_COLORS.completed
                                                             }}>
                                                             {item.completed}
                                                         </div>
@@ -1366,8 +1373,7 @@ export default function AnalysisHome() {
                                                             className="flex items-center justify-center text-white"
                                                             style={{
                                                                 width: `${pct(item.inProgress ?? 0)}%`,
-                                                                backgroundColor:
-                                                                    item.urgency === "Khẩn cấp" ? "#dc2626" : C.orange
+                                                                backgroundColor: STATUS_COLORS.inProgress
                                                             }}>
                                                             {item.inProgress}
                                                         </div>
@@ -1377,7 +1383,7 @@ export default function AnalysisHome() {
                                                             className="flex items-center justify-center text-white"
                                                             style={{
                                                                 width: `${pct(item.overdue ?? 0)}%`,
-                                                                backgroundColor: "#b91c1c"
+                                                                backgroundColor: STATUS_COLORS.overdue
                                                             }}>
                                                             {item.overdue}
                                                         </div>
@@ -1387,7 +1393,7 @@ export default function AnalysisHome() {
                                                             className="flex items-center justify-center text-white"
                                                             style={{
                                                                 width: `${pct(item.todo ?? 0)}%`,
-                                                                backgroundColor: C.slate
+                                                                backgroundColor: STATUS_COLORS.todo
                                                             }}>
                                                             {item.todo}
                                                         </div>
@@ -1460,16 +1466,16 @@ export default function AnalysisHome() {
                                 <p className="mt-0.5 text-slate-400 text-xs">So sánh vs tuần trước và TB nhóm</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="flex rounded-xl border border-slate-200 bg-white p-0.5 shadow-xs">
+                                <div className="inline-flex rounded-2xl bg-slate-100 p-1">
                                     {([4, 7, 12] as BenchmarkPeriod[]).map((w) => (
                                         <button
                                             key={w}
                                             onClick={() => setBenchmarkPeriod(w)}
                                             className={cn(
-                                                "rounded-lg px-3 py-1 text-xs font-semibold transition-all",
+                                                "rounded-xl px-4 py-2 font-medium text-sm transition",
                                                 benchmarkPeriod === w
-                                                    ? "bg-orange-500 text-white shadow-sm"
-                                                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                                                    ? "bg-white text-orange-500 shadow-sm"
+                                                    : "text-slate-500 hover:text-orange-500"
                                             )}>
                                             {w}w
                                         </button>

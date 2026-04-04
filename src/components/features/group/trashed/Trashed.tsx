@@ -9,6 +9,7 @@ import {
     RotateCcw,
     Search,
     Trash2,
+    Users,
     X
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -18,6 +19,7 @@ import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import { Container } from "@/components/common";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -470,12 +472,12 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
         return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     }, [minDate]);
 
-    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setMonth(new Date(month.getFullYear(), Number(e.target.value), 1));
+    const handleMonthChange = (value: string) => {
+        setMonth(new Date(month.getFullYear(), Number(value), 1));
     };
 
-    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setMonth(new Date(Number(e.target.value), month.getMonth(), 1));
+    const handleYearChange = (value: string) => {
+        setMonth(new Date(Number(value), month.getMonth(), 1));
     };
 
     const goPrevMonth = () => {
@@ -517,32 +519,34 @@ function TrelloDatePicker({ label, value, onChange, min, max }: TrelloDatePicker
                         width: popupPosition.width
                     }}>
                     <div className="mb-4 flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <select
-                                value={month.getMonth()}
-                                onChange={handleMonthChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {monthOptions.map((item, index) => (
-                                    <option key={item} value={item}>
-                                        {t(`datePicker.month${index + 1}`)}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        <div className="flex-1">
+                            <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
+                                <SelectTrigger className="h-12 w-full font-semibold text-base">
+                                    <SelectValue placeholder={t(`datePicker.month${month.getMonth() + 1}`)} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {monthOptions.map((item, index) => (
+                                        <SelectItem key={item} value={item}>
+                                            {t(`datePicker.month${index + 1}`)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
-                        <div className="relative w-[140px]">
-                            <select
-                                value={month.getFullYear()}
-                                onChange={handleYearChange}
-                                className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                {yearOptions.map((year) => (
-                                    <option key={year} value={year}>
-                                        {year}
-                                    </option>
-                                ))}
-                            </select>
-                            <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                        <div className="w-[140px]">
+                            <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
+                                <SelectTrigger className="h-12 w-full font-semibold text-base">
+                                    <SelectValue placeholder={String(month.getFullYear())} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {yearOptions.map((year) => (
+                                        <SelectItem key={year} value={String(year)}>
+                                            {year}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 
@@ -878,30 +882,30 @@ function DeletedByPicker({
 
     return (
         <div className="overflow-hidden">
-            <div className="border-zinc-200 border-b px-6 py-5">
+            <div className="border-zinc-200 border-b px-4 py-3">
                 <div className="relative">
-                    <Search className="pointer-events-none absolute top-1/2 left-0 h-7 w-7 -translate-y-1/2 text-zinc-400" />
+                    <Search className="pointer-events-none absolute top-1/2 left-0 h-5 w-5 -translate-y-1/2 text-zinc-400" />
                     <input
                         value={localSearch}
                         onChange={(e) => setLocalSearch(e.target.value)}
                         placeholder={t("filters.deletedBy.searchPlaceholder")}
-                        className="h-11 w-full border-none bg-transparent pl-12 text-[18px] text-zinc-900 outline-none placeholder:text-zinc-400"
+                        className="h-10 w-full border-none bg-transparent pl-8 text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
                     />
                 </div>
             </div>
 
-            <div className="max-h-[360px] overflow-y-auto py-3">
+            <div className="max-h-[280px] overflow-y-auto py-2">
                 <button
                     type="button"
                     onClick={() => onSelect(null)}
                     className={cn(
-                        "flex w-full items-center gap-4 px-6 py-5 text-left hover:bg-zinc-50",
+                        "flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50",
                         selectedId === null && "bg-zinc-100"
                     )}>
-                    <div className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full bg-emerald-500 font-bold text-[18px] text-white">
-                        {t("filters.deletedBy.me")}
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-zinc-700 text-white">
+                        <Users className="h-4 w-4" />
                     </div>
-                    <div className="font-semibold text-[20px] text-zinc-900">{t("filters.deletedBy.all")}</div>
+                    <div className="font-semibold text-sm text-zinc-900">{t("filters.deletedBy.all")}</div>
                 </button>
 
                 {filtered.map((option) => {
@@ -915,25 +919,25 @@ function DeletedByPicker({
                             type="button"
                             onClick={() => onSelect(option.id)}
                             className={cn(
-                                "flex w-full items-center gap-4 px-6 py-5 text-left hover:bg-zinc-50",
+                                "flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50",
                                 selectedId === option.id && "bg-zinc-100"
                             )}>
                             {hasAvatar ? (
                                 <img
                                     src={option.avatarUrl!}
                                     alt={option.name}
-                                    className="h-[72px] w-[72px] shrink-0 rounded-full object-cover"
+                                    className="h-10 w-10 shrink-0 rounded-full object-cover"
                                 />
                             ) : (
                                 <div
                                     className={cn(
-                                        "grid h-[72px] w-[72px] shrink-0 place-items-center rounded-full font-bold text-[18px] text-white",
+                                        "grid h-10 w-10 shrink-0 place-items-center rounded-full font-bold text-xs text-white",
                                         tone
                                     )}>
                                     {initials}
                                 </div>
                             )}
-                            <div className="font-semibold text-[20px] text-zinc-900">{option.name}</div>
+                            <div className="font-semibold text-sm text-zinc-900">{option.name}</div>
                         </button>
                     );
                 })}
@@ -985,28 +989,28 @@ function FilterPopover({
 
     return (
         <div
-            className="absolute top-[calc(100%+12px)] right-0 z-30 w-[380px] overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-2xl"
+            className="absolute top-[calc(100%+10px)] right-0 z-30 flex max-h-[calc(100vh-240px)] w-[320px] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl"
             onPointerDown={(e) => e.stopPropagation()}>
             {view === "root" && (
                 <>
-                    <div className="border-zinc-200 border-b px-6 py-4 font-medium text-[20px] text-zinc-400">
+                    <div className="border-zinc-200 border-b px-4 py-3 font-medium text-sm text-zinc-500 flex-shrink-0">
                         {t("filters.title")}
                     </div>
-                    <div className="p-3">
+                    <div className="p-2">
                         <button
                             type="button"
                             onClick={() => onChangeView("deletedBy")}
-                            className="flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left font-semibold text-[18px] text-zinc-900 hover:bg-zinc-100">
+                            className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                             <span>{t("filters.deletedBy.label")}</span>
-                            <ChevronRight className="h-5 w-5 text-zinc-400" />
+                            <ChevronRight className="h-4 w-4 text-zinc-400" />
                         </button>
 
                         <button
                             type="button"
                             onClick={() => onChangeView("deletedDate")}
-                            className="mt-2 flex w-full items-center justify-between rounded-2xl px-5 py-4 text-left font-semibold text-[18px] text-zinc-900 hover:bg-zinc-100">
+                            className="mt-1.5 flex w-full items-center justify-between rounded-xl px-4 py-3 text-left font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
                             <span>{t("filters.deletedDate.label")}</span>
-                            <ChevronRight className="h-5 w-5 text-zinc-400" />
+                            <ChevronRight className="h-4 w-4 text-zinc-400" />
                         </button>
                     </div>
                 </>
@@ -1014,45 +1018,49 @@ function FilterPopover({
 
             {view === "deletedBy" && (
                 <>
-                    <div className="flex items-center gap-3 border-zinc-200 border-b px-5 py-4">
+                    <div className="flex items-center gap-2 border-zinc-200 border-b px-4 py-3 flex-shrink-0">
                         <button
                             type="button"
                             onClick={() => onChangeView("root")}
                             className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
                             {t("common.back")}
                         </button>
-                        <div className="font-semibold text-[18px] text-zinc-900">
+                        <div className="font-semibold text-sm text-zinc-900">
                             {t("filters.deletedBy.selectTitle")}
                         </div>
                     </div>
-                    <DeletedByPicker
-                        options={deletedByOptions}
-                        selectedId={deletedByFilter}
-                        onSelect={(value) => {
-                            onChangeDeletedBy(value);
-                            onClose();
-                        }}
-                    />
+                    <div className="flex-1 overflow-y-auto">
+                        <DeletedByPicker
+                            options={deletedByOptions}
+                            selectedId={deletedByFilter}
+                            onSelect={(value) => {
+                                onChangeDeletedBy(value);
+                                onClose();
+                            }}
+                        />
+                    </div>
                 </>
             )}
 
             {view === "deletedDate" && (
                 <>
-                    <div className="flex items-center gap-3 border-zinc-200 border-b px-5 py-4">
+                    <div className="flex items-center gap-2 border-zinc-200 border-b px-4 py-3 flex-shrink-0">
                         <button
                             type="button"
                             onClick={() => onChangeView("root")}
                             className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
                             {t("common.back")}
                         </button>
-                        <div className="font-semibold text-[18px] text-zinc-900">
+                        <div className="font-semibold text-sm text-zinc-900">
                             {t("filters.deletedDate.selectTitle")}
                         </div>
                     </div>
 
-                    <DeletedDateRangePicker value={deletedDateFilter} onChange={onChangeDeletedDate} />
+                    <div className="flex-1 overflow-y-auto px-4 py-3">
+                        <DeletedDateRangePicker value={deletedDateFilter} onChange={onChangeDeletedDate} />
+                    </div>
 
-                    <div className="flex items-center justify-end gap-3 border-zinc-200 border-t p-4">
+                    <div className="flex flex-shrink-0 items-center justify-end gap-3 border-zinc-200 border-t bg-white px-4 py-4">
                         <button
                             type="button"
                             onClick={() => onChangeDeletedDate({ startDate: "", endDate: "" })}
@@ -1102,6 +1110,7 @@ export default function Trashed() {
 
     const [memberNameMap, setMemberNameMap] = React.useState<Record<string, string>>({});
     const [memberAvatarMap, setMemberAvatarMap] = React.useState<Record<string, string | null>>({});
+    const [groupMembers, setGroupMembers] = React.useState<DeletedByOption[]>([]);
     const [deletedByFilter, setDeletedByFilter] = React.useState<string | null>(null);
     const [deletedDateFilter, setDeletedDateFilter] = React.useState<DeletedDateFilter>({
         startDate: "",
@@ -1152,6 +1161,11 @@ export default function Trashed() {
             for (const member of members) {
                 const userId = String(member?.userId ?? "").trim();
                 if (!userId) continue;
+                
+                // Filter by role: only Owner and Moderator
+                const role = String(member?.role ?? "").trim().toLowerCase();
+                if (!role || !["owner", "moderator"].includes(role)) continue;
+                
                 const fullName = buildFullName(member?.firstName, member?.lastName, member?.email);
                 nextMemberNameMap[userId] = fullName || member?.email || t("fallbacks.unknown");
                 nextMemberAvatarMap[userId] = member?.avatarUrl ?? null;
@@ -1159,9 +1173,15 @@ export default function Trashed() {
 
             setMemberNameMap(nextMemberNameMap);
             setMemberAvatarMap(nextMemberAvatarMap);
-
-            console.log("[Trashed] memberNameMap:", nextMemberNameMap);
-            console.log("[Trashed] memberAvatarMap:", nextMemberAvatarMap);
+            setGroupMembers(
+                Object.entries(nextMemberNameMap)
+                    .map(([id, name]) => ({
+                        id,
+                        name,
+                        avatarUrl: nextMemberAvatarMap[id] ?? null
+                    }))
+                    .sort((a, b) => a.name.localeCompare(b.name, "vi"))
+            );
 
             const list = trashRes?.data ?? [];
 
@@ -1170,7 +1190,9 @@ export default function Trashed() {
                 const deletedOnRaw = x.deletedOn ?? "";
                 const deletedBy = x.deletedBy ?? null;
                 const name = String(x.taskName ?? "").trim() || t("fallbacks.untitledTask");
-                const deletedByName = deletedBy ? (nextMemberNameMap[String(deletedBy)] ?? null) : null;
+                const deletedByName = deletedBy
+                    ? (nextMemberNameMap[String(deletedBy)] ?? `${t("fallbacks.unknown")} (${String(deletedBy).slice(0, 8)})`)
+                    : null;
 
                 return {
                     id,
@@ -1202,18 +1224,8 @@ export default function Trashed() {
     }, [search, deletedByFilter, deletedDateFilter.startDate, deletedDateFilter.endDate]);
 
     const deletedByOptions = React.useMemo<DeletedByOption[]>(() => {
-        const map = new Map<string, { name: string; avatarUrl: string | null }>();
-        items.forEach((item) => {
-            const id = String(item.deletedBy ?? "").trim();
-            if (!id) return;
-            const name = item.deletedByName || memberNameMap[id] || t("fallbacks.unknown");
-            const avatarUrl = memberAvatarMap[id] ?? null;
-            map.set(id, { name, avatarUrl });
-        });
-        return Array.from(map.entries())
-            .map(([id, { name, avatarUrl }]) => ({ id, name, avatarUrl }))
-            .sort((a, b) => a.name.localeCompare(b.name, "vi"));
-    }, [items, memberNameMap, memberAvatarMap]);
+        return groupMembers;
+    }, [groupMembers]);
 
     const filteredItems = React.useMemo(() => {
         const q = normalizeText(search);
@@ -1396,7 +1408,7 @@ export default function Trashed() {
     }
 
     return (
-        <div className="bg-transparent px-8 py-6">
+        <div className="bg-transparent px-8 py-6 pb-24">
             <ConfirmModal
                 open={confirmRestore.open}
                 title={t("confirm.restore.title")}

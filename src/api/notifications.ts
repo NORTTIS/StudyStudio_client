@@ -1,4 +1,5 @@
 import { type ApiResponse, apiDelete, apiGet, apiPut } from "./api-client";
+import { localizeNotificationText } from "@/utils/notification-localization";
 
 export type NotificationSourceType = "announcement" | "mention_chat" | "mention_comment" | "chat_message";
 
@@ -101,8 +102,8 @@ export async function fetchNotifications(locale = "vi"): Promise<Notification[]>
         if (response.status === "success" && response.data && Array.isArray(response.data)) {
             const notifications = response.data.map((userAnnouncement: UserAnnouncementResponse) => ({
                 id: userAnnouncement.userAnnouncementId,
-                title: userAnnouncement.title,
-                description: userAnnouncement.content,
+                title: localizeNotificationText(userAnnouncement.title, locale),
+                description: localizeNotificationText(userAnnouncement.content, locale),
                 type: getNotificationType(userAnnouncement.type),
                 date: userAnnouncement.publishedAt,
                 read: userAnnouncement.isRead,
@@ -191,8 +192,8 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
         if (systemResponse.status === "success" && systemResponse.data) {
             const systemNotifications = systemResponse.data.map((announcement) => ({
                 id: announcement.announcementId,
-                title: announcement.title,
-                description: announcement.content,
+                title: localizeNotificationText(announcement.title, locale),
+                description: localizeNotificationText(announcement.content, locale),
                 type: getNotificationType(announcement.type),
                 date: announcement.publishedAt,
                 read: false,
@@ -207,8 +208,8 @@ export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]
         if (userResponse.status === "success" && userResponse.data) {
             const userNotifications = userResponse.data.map((userAnnouncement) => ({
                 id: userAnnouncement.userAnnouncementId,
-                title: userAnnouncement.title,
-                description: userAnnouncement.content,
+                title: localizeNotificationText(userAnnouncement.title, locale),
+                description: localizeNotificationText(userAnnouncement.content, locale),
                 type: getNotificationType(userAnnouncement.type),
                 date: userAnnouncement.publishedAt,
                 read: userAnnouncement.isRead,
@@ -261,8 +262,8 @@ export async function getAnnouncementDetail(announcementId: string, locale = "vi
             const announcement = response.data;
             return {
                 id: announcement.announcementId,
-                title: announcement.title,
-                description: announcement.content,
+                title: localizeNotificationText(announcement.title, locale),
+                description: localizeNotificationText(announcement.content, locale),
                 type: getNotificationType(announcement.type),
                 date: announcement.publishedAt,
                 read: false,
@@ -348,7 +349,7 @@ export async function getNotificationDetail(notification: Notification, locale =
 
             return {
                 ...notification,
-                originalMessage: matchedMessage?.content ?? "",
+                originalMessage: localizeNotificationText(matchedMessage?.content ?? "", locale),
                 senderName:
                     matchedMessage?.sender?.fullName ??
                     matchedMessage?.sender?.name ??
@@ -364,7 +365,7 @@ export async function getNotificationDetail(notification: Notification, locale =
 
             return {
                 ...notification,
-                originalMessage: matchedComment?.content ?? "",
+                originalMessage: localizeNotificationText(matchedComment?.content ?? "", locale),
                 senderName:
                     matchedComment?.createdBy?.fullName ??
                     matchedComment?.createdBy?.name ??

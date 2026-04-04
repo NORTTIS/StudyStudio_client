@@ -1,6 +1,7 @@
 import { apiGet } from "./api-client";
 import { parseSseBlock } from "@/components/features/group/group.api";
 import type { components } from "./types";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 
 function getToken() {
     if (typeof window === "undefined") return "";
@@ -37,18 +38,18 @@ function extractRemainingRequestsFromHeaders(headers: Headers): number | null {
 
 async function extractApiErrorMessage(res: Response): Promise<string> {
     const text = await res.text().catch(() => "");
-    if (!text) return `Request failed: ${res.status}`;
+    if (!text) return "Đã xảy ra lỗi";
 
     try {
         const parsed = JSON.parse(text) as { message?: unknown };
         if (typeof parsed.message === "string" && parsed.message.trim()) {
-            return parsed.message;
+            return sanitizeErrorMessage(parsed.message, "Đã xảy ra lỗi");
         }
     } catch {
         // ignore
     }
 
-    return text;
+    return sanitizeErrorMessage(text, "Đã xảy ra lỗi");
 }
 
 export type AskStudioAiResult = {

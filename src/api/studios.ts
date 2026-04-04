@@ -476,6 +476,7 @@ export async function getStudioGroups(
     const token = getAccessToken();
     let response = await fetch(fullUrl, {
         method: "GET",
+        cache: "no-store",
         headers: {
             "Accept-Language": locale,
             Authorization: `Bearer ${token}`
@@ -488,6 +489,7 @@ export async function getStudioGroups(
         if (refreshed) {
             response = await fetch(fullUrl, {
                 method: "GET",
+                cache: "no-store",
                 headers: {
                     "Accept-Language": locale,
                     Authorization: `Bearer ${refreshed.accessToken}`

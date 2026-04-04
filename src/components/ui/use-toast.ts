@@ -1,4 +1,5 @@
 import * as React from "react";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
@@ -136,6 +137,10 @@ function dispatch(action: Action) {
 
 function toast(props: Toast) {
     const id = genId();
+    const normalizedDescription =
+        typeof props.description === "string"
+            ? sanitizeErrorMessage(props.description, "Đã xảy ra lỗi")
+            : props.description;
 
     const update = (props: ToastActionType) =>
         dispatch({
@@ -148,6 +153,7 @@ function toast(props: Toast) {
         type: "ADD_TOAST",
         toast: {
             ...props,
+            description: normalizedDescription,
             id,
             open: true,
             onOpenChange: (open) => {

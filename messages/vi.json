@@ -272,8 +272,10 @@
             "startDateAfterDueDate": "Ngày bắt đầu không được sau hạn hoàn thành",
             "restrictedAssignee": "Không thể giao việc cho vai trò này",
             "missingGroupOrTask": "Thiếu thông tin nhóm hoặc công việc",
-            "updateTaskFailed": "Cập nhật công việc thất bại"
-        }
+            "updateTaskFailed": "Cập nhật công việc thất bại",
+            "commentMax": "Bình luận quá dài (tối đa 1000 ký tự)"
+        },
+        "unknownMentionUser": "Người dùng không xác định"
     },
     "AIHome": {
         "badge": "AI cá nhân",
@@ -880,7 +882,8 @@
             "taglineLabel": "Slogan",
             "taglinePlaceholder": "Nhập slogan ngắn gọn",
             "startDate": "Ngày bắt đầu",
-            "endDate": "Ngày kết thúc"
+            "endDate": "Ngày kết thúc",
+            "aliasLabel": "Tên gọi khác"
         },
         "studioLimit": {
             "title": "Đã đạt giới hạn studio",
@@ -1040,7 +1043,15 @@
             "removeMember": {
                 "confirmTitle": "Xóa thành viên",
                 "confirmDescription": "Bạn có chắc chắn muốn xóa {name} khỏi studio này không?",
-                "confirmButton": "Xóa"
+                "confirmButton": "Xóa",
+                "error": "Xóa thành viên thất bại"
+            },
+            "danger": {
+                "title": "Vùng nguy hiểm",
+                "deleteDescription": "Xóa vĩnh viễn studio này và tất cả dữ liệu của nó.",
+                "confirmTitle": "Xóa studio",
+                "confirmDescription": "Bạn có chắc chắn muốn xóa studio này không? Hành động này không thể hoàn tác.",
+                "confirmDelete": "Xóa"
             }
         },
         "leaveStudioTitle": "Rời khỏi studio",
@@ -1049,7 +1060,13 @@
         "leaveStudioConfirm": "Rời studio",
         "inactiveStudioTitle": "Studio hiện đang tạm dừng",
         "inactiveStudioDescription": "\"{studioName}\" đang bị tạm dừng bởi chủ sở hữu. Bạn không thể truy cập studio cho đến khi được mở lại.",
-        "inactiveStudioOk": "Đã hiểu"
+        "inactiveStudioOk": "Đã hiểu",
+        "pendingJoinBadge": "Đang chờ",
+        "leaveStudio": "Rời studio",
+        "pendingJoinNotice": "Đang chờ xét duyệt",
+        "pendingStudioCanceling": "Đang hủy...",
+        "pendingStudioCancel": "Hủy yêu cầu",
+        "pendingStudioCancelError": "Hủy yêu cầu thất bại"
     },
     "MemberList": {
         "groupRole": {
@@ -1064,7 +1081,9 @@
         "invite": "Mời",
         "avatarFallback": "Ảnh đại diện",
         "owner": "Chủ sở hữu",
-        "empty": "Chưa có thành viên"
+        "empty": "Chưa có thành viên",
+        "removing": "Đang xóa...",
+        "remove": "Xóa"
     },
     "QuickAssignModal": {
         "title": "Xếp nhóm nhanh",
@@ -1123,7 +1142,12 @@
         "backHome": "Về trang chủ",
         "errorMissingToken": "Thiếu mã tham gia.",
         "errorInvalidToken": "Mã tham gia không hợp lệ hoặc đã hết hạn.",
-        "errorAcceptFailed": "Chấp nhận lời mời thất bại."
+        "errorAcceptFailed": "Chấp nhận lời mời thất bại.",
+        "cancelRequestFailed": "Hủy yêu cầu thất bại",
+        "pendingTitle": "Lời mời đang chờ xét duyệt",
+        "pendingMessage": "Lời mời của bạn đang chờ xét duyệt từ chủ sở hữu studio.",
+        "cancelingRequest": "Đang hủy...",
+        "cancelRequest": "Hủy yêu cầu"
     },
     "LandingGroupPage": {
         "badge": "Không gian nhóm",
@@ -1387,7 +1411,8 @@
         "thisDocument": "tài liệu này",
         "cancel": "Hủy",
         "deleting": "Đang xóa...",
-        "deleteDocument": "Xóa tài liệu"
+        "deleteDocument": "Xóa tài liệu",
+        "uploadHttpFailed": "Tải lên thất bại"
     },
     "StudioAiPage": {
         "usedToday": "Lượt hỏi đã dùng hôm nay",
@@ -2114,7 +2139,11 @@
         },
         "validation": {
             "dateRangeError": "Ngày bắt đầu phải trước ngày kết thúc."
-        }
+        },
+        "inactive": "Đã lưu trữ",
+        "inactiveEmpty": "Không có nhóm nào bị lưu trữ",
+        "pendingApproval": "Đang chờ xét duyệt",
+        "pendingApprovalEmpty": "Không có nhóm nào đang chờ xét duyệt"
     },
     "GroupCard": {
         "removeFavorite": "Bỏ yêu thích",
@@ -2142,7 +2171,16 @@
             "list": "Danh sách",
             "setting": "Cài đặt",
             "trashed": "Đã xóa"
-        }
+        },
+        "awaitingApproval": "Đang chờ xét duyệt",
+        "cancelRequest": "Hủy yêu cầu",
+        "inactiveGroupTitle": "Nhóm đã bị lưu trữ",
+        "inactiveGroupDescription": "Nhóm này đã bị lưu trữ và không thể truy cập.",
+        "inactiveGroupOk": "Đã hiểu",
+        "cancelRequestTitle": "Hủy yêu cầu tham gia?",
+        "cancelRequestDescription": "Bạn có chắc chắn muốn hủy yêu cầu tham gia \"{groupName}\" không?",
+        "canceling": "Đang hủy...",
+        "confirmCancel": "Xác nhận hủy"
     },
     "UsageBar": {
         "limitReached": "Đã đầy nhóm",
@@ -2346,7 +2384,10 @@
             "acceptPrompt": "Nhấn \"Chấp nhận gia nhập\" để tham gia nhóm.",
             "accept": "Chấp nhận gia nhập",
             "missingToken": "Missing invitation token.",
-            "serverError": "Chấp nhận lời mời thất bại."
+            "serverError": "Chấp nhận lời mời thất bại.",
+            "pendingTitle": "Lời mời đang chờ xét duyệt",
+            "pendingMessage": "Lời mời của bạn đang chờ xét duyệt từ chủ sở hữu nhóm.",
+            "cancelRequest": "Hủy yêu cầu"
         }
     },
     "GroupBoardScreen": {
@@ -2404,7 +2445,8 @@
         "confirmDeleteTask": "Xác nhận xóa công việc",
         "confirmDeleteTaskDesc": "Bạn có chắc chắn muốn xóa công việc \"{title}\" không?",
         "deleteTaskButton": "Xóa công việc",
-        "close": "Đóng"
+        "close": "Đóng",
+        "deleteStatusFailed": "Xóa trạng thái thất bại"
     },
     "TaskFormModal": {
         "priorityLow": "Thấp",
@@ -2535,7 +2577,8 @@
             },
             "totalScore": "Tổng điểm",
             "contributionRate": "Tỷ lệ đóng góp",
-            "lastActivity": "Hoạt động gần nhất"
+            "lastActivity": "Hoạt động gần nhất",
+            "taskCount": "Số lượng công việc"
         },
         "taskStatus": {
             "todo": "Cần làm",
@@ -2708,7 +2751,9 @@
             "approving": "Đang phê duyệt...",
             "reject": "Từ chối",
             "rejecting": "Đang từ chối...",
-            "error": "Không tải được danh sách chờ phê duyệt"
+            "error": "Không tải được danh sách chờ phê duyệt",
+            "approveFailed": "Xét duyệt thành viên thất bại",
+            "rejectFailed": "Từ chối thành viên thất bại"
         },
         "access": {
             "title": "Trạng thái hoạt động của nhóm",
