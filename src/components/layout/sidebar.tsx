@@ -16,8 +16,8 @@ import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { getUserProfile } from "@/api/user-profile";
 import { getUserData } from "@/api/auth";
+import { getUserProfile } from "@/api/user-profile";
 import { Logo } from "@/components/common";
 
 export function DashboardSidebar() {
@@ -52,6 +52,7 @@ export function DashboardSidebar() {
         { name: t("dashboard"), href: "/admin/dashboard", icon: LayoutDashboard },
         { name: t("users"), href: "/admin/users", icon: Users },
         { name: t("adminGroups"), href: "/admin/groups", icon: Users },
+        { name: t("studios"), href: "/admin/studios", icon: BarChart3 },
         { name: t("subscriptions"), href: "/admin/subscriptions", icon: CreditCard },
         { name: t("reports"), href: "/admin/reports", icon: FileText },
         { name: t("news"), href: "/admin/news", icon: Newspaper }
@@ -91,6 +92,7 @@ export function DashboardSidebar() {
         "/admin/dashboard": ["/admin/dashboard"],
         "/admin/users": ["/admin/users"],
         "/admin/groups": ["/admin/groups"],
+        "/admin/studios": ["/admin/studios"],
         "/admin/subscriptions": ["/admin/subscriptions"],
         "/admin/reports": ["/admin/reports"],
         "/admin/news": ["/admin/news"]
@@ -109,7 +111,7 @@ export function DashboardSidebar() {
     const renderHeader = () => {
         if (collapsed) {
             return (
-                <div className="flex h-20 items-center justify-center border-b border-[#E5E5E5] px-4">
+                <div className="flex h-20 items-center justify-center border-[#E5E5E5] border-b px-4">
                     <button
                         type="button"
                         onClick={() => setCollapsed(false)}
@@ -128,7 +130,7 @@ export function DashboardSidebar() {
         }
 
         return (
-            <div className="flex h-20 items-center justify-between border-b border-[#E5E5E5] px-5">
+            <div className="flex h-20 items-center justify-between border-[#E5E5E5] border-b px-5">
                 <Link
                     href={homeHref}
                     className="flex min-w-0 items-center overflow-hidden transition-transform duration-300 ease-out hover:scale-[1.01]">
@@ -149,10 +151,10 @@ export function DashboardSidebar() {
     return (
         <aside
             className={twMerge(
-                "hidden h-screen shrink-0 overflow-hidden border-r border-[#E5E5E5] bg-[#F8F8F8] transition-[width] duration-300 ease-in-out lg:block",
+                "hidden h-screen shrink-0 overflow-hidden border-[#E5E5E5] border-r bg-[#F8F8F8] transition-[width] duration-300 ease-in-out lg:block",
                 collapsed ? "w-24" : "w-72"
             )}>
-            <div className="flex h-full flex-col border-r border-orange-100/60 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
+            <div className="flex h-full flex-col border-orange-100/60 border-r bg-white shadow-[0_10px_40px_rgba(15,23,42,0.04)]">
                 {renderHeader()}
 
                 <nav className="flex-1 px-4 py-5">
@@ -203,7 +205,7 @@ export function DashboardSidebar() {
 
                                     <span
                                         className={twMerge(
-                                            "relative z-10 overflow-hidden whitespace-nowrap text-[15px] font-medium transition-all duration-300 ease-out",
+                                            "relative z-10 overflow-hidden whitespace-nowrap font-medium text-[15px] transition-all duration-300 ease-out",
                                             active ? "text-white" : "",
                                             collapsed
                                                 ? "w-0 translate-x-2 opacity-0"
