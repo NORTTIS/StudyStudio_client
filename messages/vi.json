@@ -50,7 +50,7 @@
     "deleteSuccess": "Đã xóa thông báo thành công",
     "confirmed": "Đã xác nhận",
     "systemNews": "Thông báo hệ thống",
-    "newsroom": "Study Studio Newsroom",
+    "newsroom": "Bản tin Study Studio",
     "loading": "Đang tải...",
     "learningHub": "Trung tâm học tập",
     "heroDescription": "Khám phá các thông báo mới nhất và cập nhật từ Study Studio. Luôn cập nhật với những tin tức mới și thông tin quan trọng.",
@@ -261,6 +261,7 @@
     "writeReply": "Viết phản hồi...",
     "writeComment": "Viết bình luận...",
     "noMembersToMention": "Không có thành viên để mention.",
+    "unknownMentionUser": "người lạ",
     "errors": {
       "sendCommentFailed": "Gửi bình luận thất bại",
       "deleteCommentFailed": "Xóa bình luận thất bại",
@@ -708,6 +709,7 @@
         "colorLabel": "Primary Color",
         "bannerLabel": "Banner",
         "avatarLabel": "Avatar",
+        "aliasLabel": "Biệt danh",
         "aliasPlaceholder": "Ex: THPT Hoang Dieu",
         "taglineLabel": "Slogan",
         "taglinePlaceholder": "Enter a short slogan",
@@ -795,10 +797,10 @@
           "subtitle": "Adjust studio information and configuration",
           "edit": "Edit",
           "saving": "Saving...",
-          "saveChanges": "Save changes",
+          "saveChanges": "Lưu thay đổi",
           "primaryColor": "Primary color",
           "bannerLabel": "Background image",
-          "aliasLabel": "Nickname",
+          "aliasLabel": "Biệt danh",
           "aliasPlaceholder": "e.g. Hoang Dieu High School",
           "taglineLabel": "Slogan",
           "taglinePlaceholder": "Enter a short slogan",
@@ -1326,6 +1328,7 @@
     "noGroups": "Chưa có nhóm nào trong studio này",
     "yourStudios": "Studio của bạn",
     "joinedStudios": "Studio bạn tham gia",
+    "leaveStudio": "Rời studio",
     "roles": {
       "owner": "Chủ sở hữu",
       "member": "Thành viên"
@@ -1452,10 +1455,10 @@
           "loadData": "Unable to load required data.",
           "createFailed": "Unable to create group. Please try again."
         },
-        "saveChanges": "Save changes",
+        "saveChanges": "Lưu thay đổi",
         "primaryColor": "Primary color",
         "bannerLabel": "Background image",
-        "aliasLabel": "Nickname",
+        "aliasLabel": "Biệt danh",
         "aliasPlaceholder": "e.g. Hoang Dieu High School",
         "taglineLabel": "Slogan",
         "taglinePlaceholder": "Enter a short slogan",
@@ -2102,6 +2105,7 @@
           "colorLabel": "Màu chủ đạo",
           "bannerLabel": "Ảnh nền",
           "avatarLabel": "Ảnh đại diện",
+          "aliasLabel": "Biệt danh",
           "aliasPlaceholder": "VD: THPT Hoang Dieu",
           "taglineLabel": "Slogan",
           "taglinePlaceholder": "Nhập slogan ngắn gọn",
@@ -3168,6 +3172,8 @@
         "managedEmpty": "Chưa quản lý nhóm nào",
         "independent": "Độc lập",
         "independentEmpty": "Chưa có nhóm độc lập nào",
+        "inactive": "Lưu trữ",
+        "inactiveEmpty": "Chưa có nhóm nào đang dừng hoạt động",
         "joined": "Tham gia",
         "joinedEmpty": "Chưa tham gia nhóm nào",
         "pendingApproval": "Chờ phê duyệt",
@@ -3190,8 +3196,8 @@
         "leaveGroup": "Rời khỏi nhóm",
         "cancelRequest": "Hủy yêu cầu",
         "awaitingApproval": "Đang chờ xét duyệt",
-        "inactiveGroupTitle": "Nhóm này đang tạm dừng",
-        "inactiveGroupDescription": "Nhóm đang dừng hoạt động. Chỉ chủ sở hữu mới có thể mở lại trong phần cài đặt.",
+        "inactiveGroupTitle": "Nhóm này đã được lưu trữ",
+        "inactiveGroupDescription": "Nhóm đã được lưu trữ. Chỉ chủ sở hữu mới có thể mở lại trong phần cài đặt.",
         "inactiveGroupOk": "Đã hiểu",
         "leaveConfirmTitle": "Xác nhận rời nhóm",
         "leaveConfirmDescription": "Bạn có chắc muốn rời khỏi nhóm \"{groupName}\" không?",
@@ -3304,6 +3310,7 @@
       }
     },
     "leaveStudioTitle": "Rời khỏi studio",
+    "leaveStudio": "Rời studio",
     "leaveStudioDescription": "Bạn có chắc chắn muốn rời khỏi \"{studioName}\" không? Bạn chỉ có thể tham gia lại khi được mời.",
     "leaveStudioCancel": "Hủy",
     "leaveStudioConfirm": "Rời studio",
@@ -3323,6 +3330,8 @@
     "quickAssign": "Giao nhanh",
     "invite": "Mời",
     "avatarFallback": "Ảnh đại diện",
+    "remove": "Xóa",
+    "removing": "Đang xóa...",
     "owner": "Chủ sở hữu",
     "empty": "Chưa có thành viên"
   },
@@ -4271,8 +4280,12 @@
     "managedEmpty": "Chưa quản lý nhóm nào",
     "independent": "Độc lập",
     "independentEmpty": "Chưa có nhóm độc lập nào",
+    "inactive": "Lưu trữ",
+    "inactiveEmpty": "Chưa có nhóm nào đang dừng hoạt động",
     "joined": "Tham gia",
     "joinedEmpty": "Chưa tham gia nhóm nào",
+    "pendingApproval": "Chờ phê duyệt",
+    "pendingApprovalEmpty": "Chưa có yêu cầu tham gia nào đang chờ duyệt",
     "active": "nhóm hoạt động",
     "noGroups": "Chưa có nhóm nào",
     "cardsShowing": "thẻ nhóm đang hiển thị",
@@ -4381,6 +4394,15 @@
     "addFavorite": "Thêm vào yêu thích",
     "menuLabel": "Menu tùy chọn",
     "leaveGroup": "Rời khỏi nhóm",
+    "cancelRequest": "Hủy yêu cầu",
+    "awaitingApproval": "Đang chờ xét duyệt",
+    "inactiveGroupTitle": "Nhóm này đã được lưu trữ",
+    "inactiveGroupDescription": "Nhóm đã được lưu trữ. Chỉ chủ sở hữu mới có thể mở lại trong phần cài đặt.",
+    "inactiveGroupOk": "Đã hiểu",
+    "cancelRequestTitle": "Xác nhận hủy yêu cầu",
+    "cancelRequestDescription": "Bạn có chắc muốn hủy yêu cầu tham gia nhóm \"{groupName}\" không?",
+    "confirmCancel": "Hủy yêu cầu",
+    "canceling": "Đang hủy...",
     "leaveConfirmTitle": "Xác nhận rời nhóm",
     "leaveConfirmDescription": "Bạn có chắc muốn rời khỏi nhóm \"{groupName}\" không?",
     "confirmLeave": "Rời khỏi",
@@ -4971,11 +4993,11 @@
       "error": "Không tải được danh sách chờ phê duyệt"
     },
     "access": {
-      "title": "Trạng thái hoạt động của nhóm",
-      "inactiveDescription": "Nhóm đang tạm dừng và chỉ có thể thao tác trong phần cài đặt.",
-      "activeDescription": "Nhóm đang hoạt động và có thể cộng tác bình thường.",
-      "inactiveLabel": "Đang dừng",
-      "activeLabel": "Đang hoạt động"
+      "title": "Trạng thái lưu trữ của nhóm",
+      "inactiveDescription": "Nhóm đang được lưu trữ. Chỉ nên dùng phần cài đặt để mở lại.",
+      "activeDescription": "Nhóm đang hoạt động bình thường.",
+      "inactiveLabel": "Lưu trữ",
+      "activeLabel": "Hoạt động"
     }
   },
   "dangerZone": {
@@ -5096,7 +5118,7 @@
         "active": "Đang hoạt động",
         "inactive": "Đang tắt"
       },
-      "inactiveTitle": "Nhóm này đang tạm dừng",
+      "inactiveTitle": "Nhóm này đã được lưu trữ",
       "goToSetting": "Đi tới cài đặt",
       "backToGroups": "Quay lại danh sách nhóm",
       "errors": {
@@ -5311,12 +5333,12 @@
         "editButton": "Chỉnh sửa"
       },
       "access": {
-        "title": "Trạng thái hoạt động",
-        "activeDescription": "Nhóm đang hoạt động bình thường. Bạn có thể chỉnh sửa nội dung, quản lý thành viên và dùng các tab khác.",
-        "inactiveDescription": "Nhóm đang tắt hoạt động. Chỉ có thể bật lại từ đây, các thao tác khác sẽ bị khóa.",
+        "title": "Trạng thái lưu trữ của nhóm",
+        "activeDescription": "Nhóm đang hoạt động bình thường.",
+        "inactiveDescription": "Nhóm đang được lưu trữ. Chỉ nên dùng phần cài đặt để mở lại.",
         "activeLabel": "Hoạt động",
-        "inactiveLabel": "Tạm dừng",
-        "inactiveNotice": "Khi nhóm đang tắt hoạt động, các thay đổi khác sẽ bị khóa cho đến khi bạn bật lại nhóm."
+        "inactiveLabel": "Lưu trữ",
+        "inactiveNotice": "Khi nhóm đang được lưu trữ, các thay đổi khác sẽ bị khóa cho đến khi bạn mở lại nhóm."
       },
       "groupInfo": {
         "nameLabel": "Tên nhóm",

@@ -22,6 +22,7 @@ import {
 } from "@/api/admin-reports";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
@@ -288,44 +289,56 @@ export function AdminReportsTab() {
                     </div>
                     <div>
                         <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.type")}</label>
-                        <select
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            value={filters.type || ""}
-                            onChange={(e) =>
-                                handleFilterChange("type", e.target.value ? Number(e.target.value) : undefined)
+                        <Select
+                            value={filters.type === undefined ? "all" : String(filters.type)}
+                            onValueChange={(value) =>
+                                handleFilterChange("type", value === "all" ? undefined : Number(value))
                             }>
-                            <option value="">{t("filters.all")}</option>
-                            <option value="0">{t("filters.types.bugReport")}</option>
-                            <option value="1">{t("filters.types.featureRequest")}</option>
-                            <option value="2">{t("filters.types.accountIssue")}</option>
-                            <option value="3">{t("filters.types.other")}</option>
-                        </select>
+                            <SelectTrigger className="w-full rounded-md px-3">
+                                <SelectValue placeholder={t("filters.all")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t("filters.all")}</SelectItem>
+                                <SelectItem value="0">{t("filters.types.bugReport")}</SelectItem>
+                                <SelectItem value="1">{t("filters.types.featureRequest")}</SelectItem>
+                                <SelectItem value="2">{t("filters.types.accountIssue")}</SelectItem>
+                                <SelectItem value="3">{t("filters.types.other")}</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.status")}</label>
-                        <select
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            value={filters.status || ""}
-                            onChange={(e) =>
-                                handleFilterChange("status", e.target.value ? Number(e.target.value) : undefined)
+                        <Select
+                            value={filters.status === undefined ? "all" : String(filters.status)}
+                            onValueChange={(value) =>
+                                handleFilterChange("status", value === "all" ? undefined : Number(value))
                             }>
-                            <option value="">{t("filters.all")}</option>
-                            <option value="0">{t("filters.statuses.open")}</option>
-                            <option value="1">{t("filters.statuses.inProgress")}</option>
-                            <option value="2">{t("filters.statuses.resolved")}</option>
-                            <option value="3">{t("filters.statuses.closed")}</option>
-                        </select>
+                            <SelectTrigger className="w-full rounded-md px-3">
+                                <SelectValue placeholder={t("filters.all")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t("filters.all")}</SelectItem>
+                                <SelectItem value="0">{t("filters.statuses.open")}</SelectItem>
+                                <SelectItem value="1">{t("filters.statuses.inProgress")}</SelectItem>
+                                <SelectItem value="2">{t("filters.statuses.resolved")}</SelectItem>
+                                <SelectItem value="3">{t("filters.statuses.closed")}</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.pageSize")}</label>
-                        <select
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                            value={filters.pageSize || 10}
-                            onChange={(e) => handleFilterChange("pageSize", Number(e.target.value))}>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                        </select>
+                        <Select
+                            value={String(filters.pageSize || 10)}
+                            onValueChange={(value) => handleFilterChange("pageSize", Number(value))}>
+                            <SelectTrigger className="w-full rounded-md px-3">
+                                <SelectValue placeholder="10" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="20">20</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </div>
@@ -516,36 +529,44 @@ export function AdminReportsTab() {
                                 <label className="mb-2 block font-medium text-[#261E33] text-sm">
                                     {t("modal.status")}
                                 </label>
-                                <select
-                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                    value={editForm.status}
-                                    onChange={(e) =>
-                                        setEditForm((prev) => ({ ...prev, status: Number(e.target.value) }))
+                                <Select
+                                    value={String(editForm.status)}
+                                    onValueChange={(value) =>
+                                        setEditForm((prev) => ({ ...prev, status: Number(value) }))
                                     }>
-                                    {Object.entries(REPORT_STATUSES).map(([value, label]) => (
-                                        <option key={value} value={value}>
-                                            {label}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <SelectTrigger className="w-full rounded-md px-3">
+                                        <SelectValue placeholder={t("modal.status")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(REPORT_STATUSES).map(([value, label]) => (
+                                            <SelectItem key={value} value={value}>
+                                                {label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div>
                                 <label className="mb-2 block font-medium text-[#261E33] text-sm">
                                     {t("modal.priority")}
                                 </label>
-                                <select
-                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                    value={editForm.priority}
-                                    onChange={(e) =>
-                                        setEditForm((prev) => ({ ...prev, priority: Number(e.target.value) }))
+                                <Select
+                                    value={String(editForm.priority)}
+                                    onValueChange={(value) =>
+                                        setEditForm((prev) => ({ ...prev, priority: Number(value) }))
                                     }>
-                                    {Object.entries(REPORT_PRIORITIES).map(([value, label]) => (
-                                        <option key={value} value={value}>
-                                            {label}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <SelectTrigger className="w-full rounded-md px-3">
+                                        <SelectValue placeholder={t("modal.priority")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(REPORT_PRIORITIES).map(([value, label]) => (
+                                            <SelectItem key={value} value={value}>
+                                                {label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div>

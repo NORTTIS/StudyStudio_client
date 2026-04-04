@@ -1,4 +1,5 @@
 import { type ApiResponse, apiDelete, apiGet, apiPut } from "./api-client";
+import { localizeNotificationText } from "@/utils/notification-localization";
 
 // Types for user announcements
 export interface UserAnnouncement {
@@ -26,17 +27,56 @@ export interface Announcement {
 
 // Get all public announcements
 export async function getAllAnnouncements(locale = "vi"): Promise<ApiResponse<Announcement[]>> {
-    return apiGet<Announcement[]>("/announcements", locale);
+    const response = await apiGet<Announcement[]>('/announcements', locale);
+
+    if (response.status === "success" && response.data) {
+        return {
+            ...response,
+            data: response.data.map((announcement) => ({
+                ...announcement,
+                title: localizeNotificationText(announcement.title, locale),
+                content: localizeNotificationText(announcement.content, locale)
+            }))
+        };
+    }
+
+    return response;
 }
 
 // Get announcement by ID
 export async function getAnnouncementById(id: string, locale = "vi"): Promise<ApiResponse<Announcement>> {
-    return apiGet<Announcement>(`/announcements/${id}`, locale);
+    const response = await apiGet<Announcement>(`/announcements/${id}`, locale);
+
+    if (response.status === "success" && response.data) {
+        return {
+            ...response,
+            data: {
+                ...response.data,
+                title: localizeNotificationText(response.data.title, locale),
+                content: localizeNotificationText(response.data.content, locale)
+            }
+        };
+    }
+
+    return response;
 }
 
 // Get user's announcements (personalized)
 export async function getUserAnnouncements(locale = "vi"): Promise<ApiResponse<UserAnnouncement[]>> {
-    return apiGet<UserAnnouncement[]>("/announcements/user", locale);
+    const response = await apiGet<UserAnnouncement[]>('/announcements/user', locale);
+
+    if (response.status === "success" && response.data) {
+        return {
+            ...response,
+            data: response.data.map((announcement) => ({
+                ...announcement,
+                title: localizeNotificationText(announcement.title, locale),
+                content: localizeNotificationText(announcement.content, locale)
+            }))
+        };
+    }
+
+    return response;
 }
 
 // Mark announcement as read

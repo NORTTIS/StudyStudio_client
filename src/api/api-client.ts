@@ -4,6 +4,7 @@
  */
 
 import { getAccessToken, isTokenExpired, refreshAccessToken } from "@/api/auth";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 
 export type ApiResponse<T = unknown> = {
     status: "success" | "error";
@@ -120,6 +121,17 @@ export async function apiFetch<T = unknown>(url: string, options: FetchOptions =
             };
         }
         console.log("API Response:", { url: fullUrl, options: fetchOptions, response, data });
+
+        if (data.status === "error") {
+            return {
+                ...data,
+                message: sanitizeErrorMessage(
+                    data.message,
+                    locale === "vi" ? "Đã xảy ra lỗi" : "An error occurred"
+                )
+            };
+        }
+
         return data;
     } catch {
         // Network or parsing error

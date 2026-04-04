@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Noto_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
-const interSans = Inter({
-    variable: "--font-inter",
-    subsets: ["latin", "latin-ext"]
+const appSans = Noto_Sans({
+    variable: "--font-app-sans",
+    subsets: ["latin", "vietnamese"],
+    display: "swap"
 });
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default async function RootLayout({
 
     return (
         <html lang={locale || "en"} suppressHydrationWarning>
-            <body className={`${interSans.variable} antialiased`} suppressHydrationWarning>
+            <body className={`${appSans.variable} font-sans antialiased`} suppressHydrationWarning>
                 {children}
                 <Toaster />
             </body>

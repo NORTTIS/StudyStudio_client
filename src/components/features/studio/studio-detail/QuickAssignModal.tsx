@@ -10,6 +10,7 @@ import { z } from "zod";
 import { type RandomAssignResponseApiResponse, randomAssignMembers, type StudioMemberResponse } from "@/api/studios";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 export interface QuickAssignGroup {
@@ -69,6 +70,7 @@ export function QuickAssignModal({
     const scope = form.watch("scope");
     const excludeUserIds = form.watch("excludeUserIds");
     const targetGroupIds = form.watch("targetGroupIds");
+    const defaultRole = form.watch("defaultRole");
 
     // Excluded user IDs (includes owner + user-selected)
     const allExcludedIds = useMemo(() => {
@@ -295,15 +297,24 @@ export function QuickAssignModal({
                         <div>
                             <h3 className="font-semibold text-[#111827] text-base">{t("defaultRole.title")}</h3>
                             <div className="mt-3">
-                                <select
-                                    {...form.register("defaultRole")}
-                                    className="h-11 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-4 text-[#111827] text-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20">
-                                    {roleOptions.map(({ value, label }) => (
-                                        <option key={value} value={value}>
-                                            {label}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select
+                                    value={defaultRole}
+                                    onValueChange={(value) =>
+                                        form.setValue("defaultRole", value as FormValues["defaultRole"], {
+                                            shouldValidate: true
+                                        })
+                                    }>
+                                    <SelectTrigger className="h-11 w-full rounded-xl px-4">
+                                        <SelectValue placeholder={t("defaultRole.title")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {roleOptions.map(({ value, label }) => (
+                                            <SelectItem key={value} value={value}>
+                                                {label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 

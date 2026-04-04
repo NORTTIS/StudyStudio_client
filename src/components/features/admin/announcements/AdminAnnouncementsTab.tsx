@@ -17,6 +17,7 @@ import {
 } from "@/api/admin-announcements";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
@@ -654,18 +655,22 @@ export function AdminAnnouncementsTab() {
                                     <label className="mb-2 block font-medium text-[#261E33] text-sm">
                                         Loại thông báo
                                     </label>
-                                    <select
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                        value={formData.type}
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({ ...prev, type: Number(e.target.value) }))
+                                    <Select
+                                        value={String(formData.type)}
+                                        onValueChange={(value) =>
+                                            setFormData((prev) => ({ ...prev, type: Number(value) }))
                                         }>
-                                        {Object.entries(ANNOUNCEMENT_TYPES).map(([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger className="w-full rounded-md px-3">
+                                            <SelectValue placeholder="Chọn loại thông báo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(ANNOUNCEMENT_TYPES).map(([value, label]) => (
+                                                <SelectItem key={value} value={value}>
+                                                    {label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <div>
@@ -834,18 +839,22 @@ export function AdminAnnouncementsTab() {
                                     <label className="mb-2 block font-medium text-[#261E33] text-sm">
                                         Loại thông báo
                                     </label>
-                                    <select
-                                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                        value={formData.type}
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({ ...prev, type: Number(e.target.value) }))
+                                    <Select
+                                        value={String(formData.type)}
+                                        onValueChange={(value) =>
+                                            setFormData((prev) => ({ ...prev, type: Number(value) }))
                                         }>
-                                        {Object.entries(ANNOUNCEMENT_TYPES).map(([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger className="w-full rounded-md px-3">
+                                            <SelectValue placeholder="Chọn loại thông báo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(ANNOUNCEMENT_TYPES).map(([value, label]) => (
+                                                <SelectItem key={value} value={value}>
+                                                    {label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <div>

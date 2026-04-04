@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
@@ -326,18 +327,27 @@ function CalendarToolbar({
                 </button>
             </div>
 
-            <select
-                value={selectedAssigneeId || ""}
-                onChange={(e) => onAssigneeChange(e.target.value || null)}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                <option value="">{t("allTasks")}</option>
-                <option value={UNASSIGNED_FILTER_VALUE}>{t("unassignedTasks")}</option>
-                {assigneeOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                        {option.name}
-                    </option>
-                ))}
-            </select>
+            <Select
+                value={selectedAssigneeId || "all"}
+                onValueChange={(value) => onAssigneeChange(value === "all" ? null : value)}>
+                <SelectTrigger className="min-w-[220px] rounded-xl px-4 py-2">
+                    <SelectValue placeholder={t("allTasks")} />
+                </SelectTrigger>
+                <SelectContent
+                    position="popper"
+                    side="bottom"
+                    align="start"
+                    sideOffset={8}
+                    className="min-w-[var(--radix-select-trigger-width)]">
+                    <SelectItem value="all">{t("allTasks")}</SelectItem>
+                    <SelectItem value={UNASSIGNED_FILTER_VALUE}>{t("unassignedTasks")}</SelectItem>
+                    {assigneeOptions.map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                            {option.name}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
         </div>
     );
 }

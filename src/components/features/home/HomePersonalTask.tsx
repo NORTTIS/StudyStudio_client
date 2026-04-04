@@ -47,7 +47,7 @@ import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { TaskProgressEditor } from "@/components/features/home/Editor";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
 type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
@@ -1623,13 +1623,13 @@ function InlineDatePicker({
         return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     }, [minDate]);
 
-    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const nextMonth = Number(e.target.value);
+    const handleMonthChange = (value: string) => {
+        const nextMonth = Number(value);
         setMonth(new Date(month.getFullYear(), nextMonth, 1));
     };
 
-    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const nextYear = Number(e.target.value);
+    const handleYearChange = (value: string) => {
+        const nextYear = Number(value);
         setMonth(new Date(nextYear, month.getMonth(), 1));
     };
 
@@ -1713,32 +1713,34 @@ function InlineDatePicker({
                             overflowY: "auto"
                         }}>
                         <div className="mb-4 flex items-center gap-3">
-                            <div className="relative flex-1">
-                                <select
-                                    value={month.getMonth()}
-                                    onChange={handleMonthChange}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                    {monthOptions.map((item) => (
-                                        <option key={item.value} value={item.value}>
-                                            {item.label}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <div className="flex-1">
+                                <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
+                                    <SelectTrigger className="h-12 w-full font-semibold text-base">
+                                        <SelectValue placeholder={monthOptions[month.getMonth()]?.label} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {monthOptions.map((item) => (
+                                            <SelectItem key={item.value} value={item.value}>
+                                                {item.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
-                            <div className="relative w-[140px]">
-                                <select
-                                    value={month.getFullYear()}
-                                    onChange={handleYearChange}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                    {yearOptions.map((year) => (
-                                        <option key={year} value={year}>
-                                            {year}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
+                            <div className="w-[140px]">
+                                <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
+                                    <SelectTrigger className="h-12 w-full font-semibold text-base">
+                                        <SelectValue placeholder={String(month.getFullYear())} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {yearOptions.map((year) => (
+                                            <SelectItem key={year} value={String(year)}>
+                                                {year}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 

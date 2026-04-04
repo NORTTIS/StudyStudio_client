@@ -21,7 +21,7 @@ const PRIMARY = "#FF5F3D";
 const DARK = "#261E33";
 const MUTED = "#6F6B99";
 const BORDER = "#E5E5E5";
-const APP_FONT_FAMILY = "var(--font-inter), sans-serif";
+const APP_FONT_FAMILY = "var(--font-app-sans), sans-serif";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations("SettingsPage");

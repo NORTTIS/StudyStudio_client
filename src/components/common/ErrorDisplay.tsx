@@ -1,5 +1,7 @@
 "use client";
 
+import { sanitizeErrorMessage } from "@/utils/error-message";
+
 interface ErrorDisplayProps {
     message?: string;
     title?: string;
@@ -13,6 +15,8 @@ export default function ErrorDisplay({
     message = "Đã có lỗi xảy ra khi tải dữ liệu",
     title = "Có lỗi xảy ra"
 }: ErrorDisplayProps) {
+    const normalizedMessage = sanitizeErrorMessage(message, "Đã có lỗi xảy ra khi tải dữ liệu");
+
     return (
         <div className="flex min-h-100 items-center justify-center px-4">
             <div className="w-full max-w-md rounded-lg border border-[#E26060]/20 bg-white p-8 text-center shadow-sm">
@@ -29,7 +33,7 @@ export default function ErrorDisplay({
 
                 <h2 className="mb-2 font-semibold text-[#261E33] text-xl">{title}</h2>
 
-                <p className="mb-6 text-[#6F6B99] text-sm">{message}</p>
+                <p className="mb-6 text-[#6F6B99] text-sm">{normalizedMessage}</p>
 
                 <button
                     type="button"

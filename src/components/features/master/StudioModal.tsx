@@ -123,6 +123,7 @@ interface StudioModalProps {
 
 export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingStudios = [] }: StudioModalProps) {
     const t = useTranslations("MasterPage");
+    const aliasLabel = t.has("modal.aliasLabel") ? t("modal.aliasLabel") : t("detail.settings.aliasLabel");
     const [formData, setFormData] = useState<StudioFormData>({
         name: "",
         description: "",
@@ -242,8 +243,8 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
             field === "name"
                 ? STUDIO_NAME_MAX_LENGTH
                 : field === "description"
-                  ? STUDIO_DESCRIPTION_MAX_LENGTH
-                  : undefined;
+                    ? STUDIO_DESCRIPTION_MAX_LENGTH
+                    : undefined;
         const boundedValue = maxLength ? value.slice(0, maxLength) : value;
         const nextData = applyFieldData(formData, field, boundedValue);
         setFormData(nextData);
@@ -316,9 +317,9 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
             onKeyDown={(e) => {
                 if (e.key === "Escape") onClose();
             }}>
-            <div className="w-[600px] max-h-[800px] rounded-xl bg-white p-6 shadow-xl overflow-y-scroll">
-                <div className="mb-4 flex items-center justify-between">
-                    <h2 id="studio-modal-title" className="font-bold text-2xl text-[#261E33]">
+            <div className="w-[920px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-3rem)] overflow-hidden rounded-2xl bg-white shadow-xl">
+                <div className="mb-4 flex items-center justify-between p-5 pb-0">
+                    <h2 id="studio-modal-title" className="font-bold text-xl text-[#261E33]">
                         {mode === "create" ? t("modal.createTitle") : t("modal.editTitle")}
                     </h2>
                     <button
@@ -329,190 +330,194 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.colorLabel")}</label>
-                        <ColorPicker
-                            value={formData.colorHex}
-                            onChange={(hex) => setFormData((f) => ({ ...f, colorHex: hex }))}
-                        />
-                    </div>
+                <form onSubmit={handleSubmit} className="max-h-[calc(100vh-8rem)] overflow-y-auto px-5 pb-5 scrollbar-hide">
+                    <div className="grid gap-6 md:grid-cols-[0.92fr_1.08fr] md:items-start">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.colorLabel")}</label>
+                                <ColorPicker
+                                    value={formData.colorHex}
+                                    onChange={(hex) => setFormData((f) => ({ ...f, colorHex: hex }))}
+                                />
+                            </div>
 
-                    {/* Banner */}
-                    {studio?.id && (
-                        <div>
-                            <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.bannerLabel")}</label>
-                            <BannerUpload
-                                entityType="studio"
-                                entityId={studio.id}
-                                bannerUrl={bannerUrl}
-                                colorHex={formData.colorHex}
-                                onUploadSuccess={(url) => setBannerUrl(url)}
-                                onDeleteSuccess={() => setBannerUrl(null)}
-                            />
-                        </div>
-                    )}
+                            {studio?.id && (
+                                <div>
+                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.bannerLabel")}</label>
+                                    <BannerUpload
+                                        entityType="studio"
+                                        entityId={studio.id}
+                                        bannerUrl={bannerUrl}
+                                        colorHex={formData.colorHex}
+                                        onUploadSuccess={(url) => setBannerUrl(url)}
+                                        onDeleteSuccess={() => setBannerUrl(null)}
+                                    />
+                                </div>
+                            )}
 
-                    {/* Avatar */}
-                    {studio?.id && (
-                        <div>
-                            <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.avatarLabel")}</label>
-                            <AvatarUpload
-                                entityType="studio"
-                                entityId={studio.id}
-                                avatarUrl={logoUrl}
-                                colorHex={formData.colorHex}
-                                onUploadSuccess={(url) => setLogoUrl(url)}
-                                onDeleteSuccess={() => setLogoUrl(null)}
-                            />
-                        </div>
-                    )}
-
-                    {/* Alias */}
-                    <div>
-                        <label htmlFor="studio-alias" className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.name")}</label>
-                        <Input
-                            id="studio-alias"
-                            type="text"
-                            value={alias}
-                            onChange={(e) => setAlias(e.target.value.slice(0, 10))}
-                            maxLength={10}
-                            placeholder={t("modal.aliasPlaceholder")}
-                            className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
-                        />
-                        <div className="flex items-center justify-between mt-1">
-                            {alias.length > 0 ? (
-                                <span
-                                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium"
-                                    style={{
-                                        backgroundColor: `${formData.colorHex}18`,
-                                        borderColor: `${formData.colorHex}40`,
-                                        color: formData.colorHex
-                                    }}>
-                                    {alias}
-                                </span>
-                            ) : <span />}
-                            <span className="text-gray-400 text-xs ml-auto">{alias.length}/10</span>
-                        </div>
-                    </div>
-
-                    {/* Tagline */}
-                    <div>
-                        <label htmlFor="studio-tagline" className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.taglineLabel")}</label>
-                        <Input
-                            id="studio-tagline"
-                            type="text"
-                            value={tagline}
-                            onChange={(e) => setTagline(e.target.value.slice(0, 50))}
-                            maxLength={50}
-                            placeholder={t("modal.taglinePlaceholder")}
-                            className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
-                        />
-                        <p className="mt-1 text-right text-gray-400 text-xs">{tagline.length}/50</p>
-                    </div>
-
-                    <div>
-                        <label htmlFor="studio-name" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            {t("modal.name")}
-                        </label>
-                        <Input
-                            id="studio-name"
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => handleChange("name", e.target.value)}
-                            onBlur={() => handleBlur("name")}
-                            placeholder={t("modal.namePlaceholder")}
-                            className={errors.name && touched.name ? "border-red-500" : ""}
-                            maxLength={STUDIO_NAME_MAX_LENGTH}
-                        />
-                        <div className="mt-1 flex items-center justify-between text-xs">
-                            <p
-                                className={`max-w-[70%] overflow-hidden text-ellipsis text-xs ${
-                                    errors.name && touched.name ? "text-red-500" : "text-transparent"
-                                }`}
-                                aria-live="assertive">
-                                {errors.name && touched.name ? errors.name : "\u00A0"}
-                            </p>
-                            <p className="text-right text-gray-500 text-xs">
-                                {formData.name.length}/{STUDIO_NAME_MAX_LENGTH}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label htmlFor="studio-description" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            {t("modal.description")}
-                        </label>
-                        <textarea
-                            id="studio-description"
-                            value={formData.description}
-                            onChange={(e) => handleChange("description", e.target.value)}
-                            onBlur={() => handleBlur("description")}
-                            placeholder={t("modal.descriptionPlaceholder")}
-                            rows={3}
-                            className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${
-                                errors.description && touched.description
-                                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                                    : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
-                            }`}
-                            maxLength={STUDIO_DESCRIPTION_MAX_LENGTH}
-                        />
-                        <p className="mt-1 text-right text-gray-500 text-xs">
-                            {formData.description.length}/{STUDIO_DESCRIPTION_MAX_LENGTH}
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="studio-startDate" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                {t("modal.startDate")}
-                            </label>
-                            <Input
-                                type="date"
-                                id="studio-startDate"
-                                value={formData.startDate}
-                                min={mode === "create" ? new Date().toISOString().split("T")[0] : undefined}
-                                onChange={(e) => handleChange("startDate", e.target.value)}
-                                onBlur={() => handleBlur("startDate")}
-                                className={errors.startDate && touched.startDate ? "border-red-500" : ""}
-                            />
-                            <p
-                                className={`mt-1 text-xs ${
-                                    errors.startDate && touched.startDate ? "text-red-500" : "text-transparent"
-                                }`}
-                                aria-live="assertive">
-                                {errors.startDate && touched.startDate ? errors.startDate : "\u00A0"}
-                            </p>
+                            {studio?.id && (
+                                <div>
+                                    <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.avatarLabel")}</label>
+                                    <AvatarUpload
+                                        entityType="studio"
+                                        entityId={studio.id}
+                                        avatarUrl={logoUrl}
+                                        colorHex={formData.colorHex}
+                                        onUploadSuccess={(url) => setLogoUrl(url)}
+                                        onDeleteSuccess={() => setLogoUrl(null)}
+                                    />
+                                </div>
+                            )}
                         </div>
 
-                        <div>
-                            <label htmlFor="studio-endDate" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                {t("modal.endDate")}
-                            </label>
-                            <Input
-                                type="date"
-                                id="studio-endDate"
-                                value={formData.endDate}
-                                min={
-                                    mode === "create"
-                                        ? formData.startDate || new Date().toISOString().split("T")[0]
-                                        : formData.startDate || undefined
-                                }
-                                onChange={(e) => handleChange("endDate", e.target.value)}
-                                onBlur={() => handleBlur("endDate")}
-                                className={errors.endDate && touched.endDate ? "border-red-500" : ""}
-                            />
-                            <p
-                                className={`mt-1 text-xs ${
-                                    errors.endDate && touched.endDate ? "text-red-500" : "text-transparent"
-                                }`}
-                                aria-live="assertive">
-                                {errors.endDate && touched.endDate ? errors.endDate : "\u00A0"}
-                            </p>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="studio-alias" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                    {aliasLabel}
+                                </label>
+                                <Input
+                                    id="studio-alias"
+                                    type="text"
+                                    value={alias}
+                                    onChange={(e) => setAlias(e.target.value.slice(0, 10))}
+                                    maxLength={10}
+                                    placeholder={t("modal.aliasPlaceholder")}
+                                    className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
+                                />
+                                <div className="mt-1 flex items-center justify-between">
+                                    {alias.length > 0 ? (
+                                        <span
+                                            className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                                            style={{
+                                                backgroundColor: `${formData.colorHex}18`,
+                                                borderColor: `${formData.colorHex}40`,
+                                                color: formData.colorHex
+                                            }}>
+                                            {alias}
+                                        </span>
+                                    ) : (
+                                        <span />
+                                    )}
+                                    <span className="ml-auto text-gray-400 text-xs">{alias.length}/10</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor="studio-tagline" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                    {t("modal.taglineLabel")}
+                                </label>
+                                <Input
+                                    id="studio-tagline"
+                                    type="text"
+                                    value={tagline}
+                                    onChange={(e) => setTagline(e.target.value.slice(0, 50))}
+                                    maxLength={50}
+                                    placeholder={t("modal.taglinePlaceholder")}
+                                    className="border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
+                                />
+                                <p className="mt-1 text-right text-gray-400 text-xs">{tagline.length}/50</p>
+                            </div>
+
+                            <div>
+                                <label htmlFor="studio-name" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                    {t("modal.name")}
+                                </label>
+                                <Input
+                                    id="studio-name"
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => handleChange("name", e.target.value)}
+                                    onBlur={() => handleBlur("name")}
+                                    placeholder={t("modal.namePlaceholder")}
+                                    className={errors.name && touched.name ? "border-red-500" : ""}
+                                    maxLength={STUDIO_NAME_MAX_LENGTH}
+                                />
+                                <div className="mt-1 flex items-center justify-between text-xs">
+                                    <p
+                                        className={`max-w-[70%] overflow-hidden text-ellipsis text-xs ${errors.name && touched.name ? "text-red-500" : "text-transparent"
+                                            }`}
+                                        aria-live="assertive">
+                                        {errors.name && touched.name ? errors.name : "\u00A0"}
+                                    </p>
+                                    <p className="text-right text-gray-500 text-xs">
+                                        {formData.name.length}/{STUDIO_NAME_MAX_LENGTH}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor="studio-description" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                    {t("modal.description")}
+                                </label>
+                                <textarea
+                                    id="studio-description"
+                                    value={formData.description}
+                                    onChange={(e) => handleChange("description", e.target.value)}
+                                    onBlur={() => handleBlur("description")}
+                                    placeholder={t("modal.descriptionPlaceholder")}
+                                    rows={4}
+                                    className={`w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 ${errors.description && touched.description
+                                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                                        : "border-gray-300 focus:border-[#FF5F3D] focus:ring-[#FF5F3D]"
+                                        }`}
+                                    maxLength={STUDIO_DESCRIPTION_MAX_LENGTH}
+                                />
+                                <p className="mt-1 text-right text-gray-500 text-xs">
+                                    {formData.description.length}/{STUDIO_DESCRIPTION_MAX_LENGTH}
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="studio-startDate" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                        {t("modal.startDate")}
+                                    </label>
+                                    <Input
+                                        type="date"
+                                        id="studio-startDate"
+                                        value={formData.startDate}
+                                        min={mode === "create" ? new Date().toISOString().split("T")[0] : undefined}
+                                        onChange={(e) => handleChange("startDate", e.target.value)}
+                                        onBlur={() => handleBlur("startDate")}
+                                        className={errors.startDate && touched.startDate ? "border-red-500" : ""}
+                                    />
+                                    <p
+                                        className={`mt-1 text-xs ${errors.startDate && touched.startDate ? "text-red-500" : "text-transparent"
+                                            }`}
+                                        aria-live="assertive">
+                                        {errors.startDate && touched.startDate ? errors.startDate : "\u00A0"}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="studio-endDate" className="mb-2 block font-medium text-[#261E33] text-sm">
+                                        {t("modal.endDate")}
+                                    </label>
+                                    <Input
+                                        type="date"
+                                        id="studio-endDate"
+                                        value={formData.endDate}
+                                        min={
+                                            mode === "create"
+                                                ? formData.startDate || new Date().toISOString().split("T")[0]
+                                                : formData.startDate || undefined
+                                        }
+                                        onChange={(e) => handleChange("endDate", e.target.value)}
+                                        onBlur={() => handleBlur("endDate")}
+                                        className={errors.endDate && touched.endDate ? "border-red-500" : ""}
+                                    />
+                                    <p
+                                        className={`mt-1 text-xs ${errors.endDate && touched.endDate ? "text-red-500" : "text-transparent"
+                                            }`}
+                                        aria-live="assertive">
+                                        {errors.endDate && touched.endDate ? errors.endDate : "\u00A0"}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4">
+                    <div className="flex justify-end gap-3 pt-6">
                         <Button type="button" variant="outline" onClick={handleClose}>
                             {t("modal.cancel")}
                         </Button>

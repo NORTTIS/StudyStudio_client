@@ -737,17 +737,19 @@ export function AdminDashboardPage() {
                                     <label className="mb-1 block font-medium text-[#6F6B99] text-sm">
                                         Loại báo cáo
                                     </label>
-                                    <select
-                                        value={exportReportType}
-                                        onChange={(e) => setExportReportType(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 p-2 text-sm outline-none focus:border-[#FF5F3D]">
-                                        <option value="overview">Tổng quan (Overview)</option>
-                                        <option value="period">Theo thời gian (Period)</option>
-                                        <option value="plan">Theo gói (Plan)</option>
-                                        <option value="top_plans">Top gói (Top Plans)</option>
-                                        <option value="transactions">Giao dịch (Transactions)</option>
-                                        <option value="mrr">MRR (Doanh thu định kỳ)</option>
-                                    </select>
+                                    <Select value={exportReportType} onValueChange={setExportReportType}>
+                                        <SelectTrigger className="w-full rounded-lg px-3">
+                                            <SelectValue placeholder="Loại báo cáo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="overview">Tổng quan (Overview)</SelectItem>
+                                            <SelectItem value="period">Theo thời gian (Period)</SelectItem>
+                                            <SelectItem value="plan">Theo gói (Plan)</SelectItem>
+                                            <SelectItem value="top_plans">Top gói (Top Plans)</SelectItem>
+                                            <SelectItem value="transactions">Giao dịch (Transactions)</SelectItem>
+                                            <SelectItem value="mrr">MRR (Doanh thu định kỳ)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -779,15 +781,17 @@ export function AdminDashboardPage() {
                                     <label className="mb-1 block font-medium text-[#6F6B99] text-sm">
                                         Chu kỳ hiển thị
                                     </label>
-                                    <select
-                                        value={exportPeriod}
-                                        onChange={(e) => setExportPeriod(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 p-2 text-sm outline-none focus:border-[#FF5F3D]">
-                                        <option value="day">Theo Ngày (Day)</option>
-                                        <option value="week">Theo Tuần (Week)</option>
-                                        <option value="month">Theo Tháng (Month)</option>
-                                        <option value="year">Theo Năm (Year)</option>
-                                    </select>
+                                    <Select value={exportPeriod} onValueChange={setExportPeriod}>
+                                        <SelectTrigger className="w-full rounded-lg px-3">
+                                            <SelectValue placeholder="Chu kỳ hiển thị" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="day">Theo Ngày (Day)</SelectItem>
+                                            <SelectItem value="week">Theo Tuần (Week)</SelectItem>
+                                            <SelectItem value="month">Theo Tháng (Month)</SelectItem>
+                                            <SelectItem value="year">Theo Năm (Year)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <div className="flex items-center gap-2">

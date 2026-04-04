@@ -149,6 +149,7 @@ function compressAllMentionsForDisplay(text: string, membersById: Record<string,
 
     const normalizedAuthorId = normalizeUserId(authorId);
     const expectedAllIds = allMemberIds.filter((id) => normalizeUserId(id) !== normalizedAuthorId);
+    if (expectedAllIds.length < 2) return text;
 
     // Detect all mentions in the text
     const mentionRegex = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
@@ -161,7 +162,7 @@ function compressAllMentionsForDisplay(text: string, membersById: Record<string,
     const expectedNormalizedIds = new Set(expectedAllIds.map((id) => normalizeUserId(id)));
 
     const isAllMentioned =
-        expectedNormalizedIds.size > 0 &&
+        expectedNormalizedIds.size > 1 &&
         expectedNormalizedIds.size === mentionedIds.size &&
         Array.from(expectedNormalizedIds).every((id) => mentionedIds.has(id));
 
@@ -347,23 +348,15 @@ function Avatar({ initials, avatarUrl }: { initials: string; avatarUrl?: string 
     );
 }
 
-function countWords(text: string) {
-    const t = String(text || "").trim();
-    if (!t) return 0;
-    return t.split(/\s+/).filter(Boolean).length;
-}
-
 function TextCounter({ text, maxChars = MAX_CHARS }: { text: string; maxChars?: number }) {
     const t = useTranslations("GroupDiscussPage");
     const chars = (text || "").length;
-    const words = countWords(text || "");
     const over = chars > maxChars;
 
     return (
-        <div className="mt-2 flex items-center justify-end gap-2 text-xs">
-            <span className="text-[#6F6B99]">{t("wordsUnit", { count: words })}</span>
+        <div className="mt-2 flex items-center justify-end text-xs">
             <span className={twMerge("font-medium", over ? "text-red-600" : "text-[#6F6B99]")}>
-                {t("charsUnit", { count: chars, max: maxChars })}
+                {chars}/{maxChars} {t("charsUnit")}
             </span>
         </div>
     );
@@ -379,22 +372,38 @@ function RichTextWithMentions({
     authorId?: string;
 }) {
     const t = useTranslations("GroupDiscussPage");
+    const locale = useLocale();
+    const unknownMentionLabel = locale.startsWith("vi") ? "người lạ" : "unknown user";
+    const mentionAllShort = t("mentionAllShort");
     const displayText = React.useMemo(
         () => compressAllMentionsForDisplay(text, membersById, authorId),
         [text, membersById, authorId]
     );
+
+    const normalizedDisplayText = React.useMemo(() => {
+        const aliases = ["all", "mọi người", mentionAllShort]
+            .map((alias) => alias.trim())
+            .filter(Boolean);
+
+        let output = displayText;
+        for (const alias of aliases) {
+            output = output.replace(new RegExp(`@${escapeRegExp(alias)}\\b`, "gi"), "@__all__");
+        }
+
+        return output;
+    }, [displayText, mentionAllShort]);
 
     const re = /@(__all__|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
 
     const parts: React.ReactNode[] = [];
     let last = 0;
 
-    for (const m of displayText.matchAll(re)) {
+    for (const m of normalizedDisplayText.matchAll(re)) {
         const idx = m.index ?? 0;
         const whole = m[0];
         const id = (m[1] || "").trim();
 
-        if (idx > last) parts.push(displayText.slice(last, idx));
+        if (idx > last) parts.push(normalizedDisplayText.slice(last, idx));
 
         if (id === "__all__") {
             parts.push(
@@ -411,14 +420,18 @@ function RichTextWithMentions({
                     </span>
                 );
             } else {
-                parts.push(whole);
+                parts.push(
+                    <span key={`${id}-${idx}`} className="font-semibold text-blue-600 hover:text-blue-700">
+                        @{unknownMentionLabel}
+                    </span>
+                );
             }
         }
 
         last = idx + whole.length;
     }
 
-    if (last < displayText.length) parts.push(displayText.slice(last));
+    if (last < normalizedDisplayText.length) parts.push(normalizedDisplayText.slice(last));
     return <>{parts}</>;
 }
 
@@ -593,7 +606,8 @@ const MentionTextarea = React.forwardRef<
         };
 
         const baseUsers = members.filter((u) => normalizeUserId(u.id) !== normalizeUserId(meId));
-        const full = [...baseUsers, allOption];
+        const mentionAllEnabled = baseUsers.length > 0;
+        const full = mentionAllEnabled ? [...baseUsers, allOption] : baseUsers;
 
         if (!q) return full.slice(0, 8);
 
@@ -604,6 +618,11 @@ const MentionTextarea = React.forwardRef<
             })
             .slice(0, 8);
     }, [members, meId, query, t]);
+
+    const mentionAllEnabled = React.useMemo(
+        () => members.some((u) => normalizeUserId(u.id) !== normalizeUserId(meId)),
+        [members, meId]
+    );
 
     const detectFromText = React.useCallback(
         (text: string, caret: number) => {
@@ -761,13 +780,15 @@ const MentionTextarea = React.forwardRef<
             text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
         }
 
-        text = text.replace(
-            new RegExp(`@(?:all|mọi người|${escapeRegExp(t("mentionAllShort"))})\\b`, "gi"),
-            "@__all__"
-        );
+        if (mentionAllEnabled) {
+            text = text.replace(
+                new RegExp(`@(?:all|mọi người|${escapeRegExp(t("mentionAllShort"))})\\b`, "gi"),
+                "@__all__"
+            );
+        }
 
         return text;
-    }, [t, value]);
+    }, [mentionAllEnabled, t, value]);
 
     React.useImperativeHandle(
         ref,
@@ -794,7 +815,7 @@ const MentionTextarea = React.forwardRef<
         for (const m of ms) {
             if (m.start > last) {
                 const seg = text.slice(last, m.start);
-                const segNodes = renderAllMentions(seg, t("mentionAllShort"));
+                const segNodes = mentionAllEnabled ? renderAllMentions(seg, t("mentionAllShort")) : [seg];
                 if (Array.isArray(segNodes)) nodes.push(...segNodes);
                 else nodes.push(segNodes);
             }
@@ -809,92 +830,92 @@ const MentionTextarea = React.forwardRef<
         }
 
         if (last < text.length) {
-            const tail = renderAllMentions(text.slice(last), t("mentionAllShort"));
+            const tail = mentionAllEnabled ? renderAllMentions(text.slice(last), t("mentionAllShort")) : [text.slice(last)];
             if (Array.isArray(tail)) nodes.push(...tail);
             else nodes.push(tail);
         }
 
         return nodes.length ? nodes : text;
-    }, [t, value]);
+    }, [mentionAllEnabled, t, value]);
 
     const popup =
         mounted && open && !disabled && popupPosition
             ? createPortal(
-                  <div
-                      ref={popupRef}
-                      className="fixed z-22000 overflow-hidden rounded-2xl border border-[#EDEDED] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
-                      style={{
-                          left: popupPosition.left,
-                          top: popupPosition.top,
-                          width: popupPosition.width,
-                          maxHeight: 320,
-                          transform:
-                              popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
-                                  ? "translateY(-100%)"
-                                  : undefined
-                      }}>
-                      {filtered.length > 0 ? (
-                          <div className="max-h-80 overflow-y-auto py-2">
-                              {filtered.map((u, idx) => {
-                                  const isActive = idx === activeIndex;
-                                  const displayName = u.isAll ? t("mentionAllShort") : u.name;
-                                  const subtitle = u.subtitle || (u.isAll ? t("mentionAllSubtitle") : "");
+                <div
+                    ref={popupRef}
+                    className="fixed z-22000 overflow-hidden rounded-2xl border border-[#EDEDED] bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                    style={{
+                        left: popupPosition.left,
+                        top: popupPosition.top,
+                        width: popupPosition.width,
+                        maxHeight: 320,
+                        transform:
+                            popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
+                                ? "translateY(-100%)"
+                                : undefined
+                    }}>
+                    {filtered.length > 0 ? (
+                        <div className="max-h-80 overflow-y-auto py-2">
+                            {filtered.map((u, idx) => {
+                                const isActive = idx === activeIndex;
+                                const displayName = u.isAll ? t("mentionAllShort") : u.name;
+                                const subtitle = u.subtitle || (u.isAll ? t("mentionAllSubtitle") : "");
 
-                                  return (
-                                      <button
-                                          key={u.id}
-                                          type="button"
-                                          onMouseDown={(ev) => {
-                                              ev.preventDefault();
-                                              insertMention(u);
-                                          }}
-                                          className={twMerge(
-                                              "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
-                                              isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
-                                          )}>
-                                          <div className="shrink-0">
-                                              {u.isAll ? (
-                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
-                                                      <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
-                                                          <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                                                      </svg>
-                                                  </div>
-                                              ) : u.avatarUrl ? (
-                                                  <Image
-                                                      src={u.avatarUrl}
-                                                      alt={displayName}
-                                                      width={40}
-                                                      height={40}
-                                                      unoptimized
-                                                      className="h-10 w-10 rounded-full object-cover"
-                                                  />
-                                              ) : (
-                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
-                                                      {safeInitialsFromName(displayName)}
-                                                  </div>
-                                              )}
-                                          </div>
+                                return (
+                                    <button
+                                        key={u.id}
+                                        type="button"
+                                        onMouseDown={(ev) => {
+                                            ev.preventDefault();
+                                            insertMention(u);
+                                        }}
+                                        className={twMerge(
+                                            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
+                                            isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
+                                        )}>
+                                        <div className="shrink-0">
+                                            {u.isAll ? (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
+                                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                                                        <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                                    </svg>
+                                                </div>
+                                            ) : u.avatarUrl ? (
+                                                <Image
+                                                    src={u.avatarUrl}
+                                                    alt={displayName}
+                                                    width={40}
+                                                    height={40}
+                                                    unoptimized
+                                                    className="h-10 w-10 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
+                                                    {safeInitialsFromName(displayName)}
+                                                </div>
+                                            )}
+                                        </div>
 
-                                          <div className="min-w-0 flex-1">
-                                              <div className="truncate text-[15px] font-medium leading-5 text-[#261E33]">
-                                                  {displayName}
-                                              </div>
-                                              {subtitle ? (
-                                                  <div className="truncate pt-0.5 text-[13px] leading-5 text-[#6F6B99]">
-                                                      {subtitle}
-                                                  </div>
-                                              ) : null}
-                                          </div>
-                                      </button>
-                                  );
-                              })}
-                          </div>
-                      ) : (
-                          <div className="px-4 py-3 text-sm text-[#6F6B99]">{t("noMembersToMention")}</div>
-                      )}
-                  </div>,
-                  document.body
-              )
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-[15px] font-medium leading-5 text-[#261E33]">
+                                                {displayName}
+                                            </div>
+                                            {subtitle ? (
+                                                <div className="truncate pt-0.5 text-[13px] leading-5 text-[#6F6B99]">
+                                                    {subtitle}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="px-4 py-3 text-sm text-[#6F6B99]">{t("noMembersToMention")}</div>
+                    )}
+                </div>,
+                document.body
+            )
             : null;
 
     return (
@@ -1277,7 +1298,7 @@ export default function GroupDiscussPage() {
                         avatarUrl: safeAvatarUrl(result.data?.avatarUrl)
                     }));
                 }
-            } catch {}
+            } catch { }
         };
 
         void fetchProfile();
@@ -1632,7 +1653,7 @@ export default function GroupDiscussPage() {
             const cleanup = async () => {
                 try {
                     if (startPromiseRef.current) {
-                        await startPromiseRef.current.catch(() => {});
+                        await startPromiseRef.current.catch(() => { });
                     }
 
                     const state = connection.state;
@@ -1644,7 +1665,7 @@ export default function GroupDiscussPage() {
                             if (state === signalR.HubConnectionState.Connected) {
                                 await connection.invoke("LeaveGroup", groupId);
                             }
-                        } catch {}
+                        } catch { }
                         await connection.stop();
                     }
                 } catch {

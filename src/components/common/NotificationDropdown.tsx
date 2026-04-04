@@ -150,13 +150,15 @@ function NotificationItem({
     onClick,
     onDelete,
     formatDate,
-    getNotificationIcon
+    getNotificationIcon,
+    deleteLabel
 }: {
     notification: ExtendedNotification;
     onClick: () => void;
     onDelete: () => void;
     formatDate: (date: string) => string;
     getNotificationIcon: (type: Notification["type"]) => React.ReactNode;
+    deleteLabel: string;
 }) {
     return (
         <div
@@ -209,7 +211,7 @@ function NotificationItem({
                     onDelete();
                 }}
                 className="absolute top-3 right-3 h-8 w-8 rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
-                aria-label="Delete notification">
+                aria-label={deleteLabel}>
                 <Trash2 className="h-4 w-4" />
             </Button>
         </div>
@@ -513,6 +515,7 @@ export function NotificationDropdown() {
                                         onDelete={() => handleDeleteNotification(notification)}
                                         formatDate={formatDate}
                                         getNotificationIcon={getNotificationIcon}
+                                        deleteLabel={t("delete")}
                                     />
                                 ))
                             )}

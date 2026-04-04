@@ -8,6 +8,7 @@ import { getUserProfile } from "@/api/user-profile";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 
 type ChatMessage = {
     id: string;
@@ -35,12 +36,12 @@ function parseAIError(error: unknown) {
         try {
             const parsed = JSON.parse(error.message) as { message?: unknown };
             if (typeof parsed.message === "string" && parsed.message.trim()) {
-                return parsed.message;
+                return sanitizeErrorMessage(parsed.message, "Đã xảy ra lỗi");
             }
         } catch {
-            return error.message;
+            return sanitizeErrorMessage(error.message, "Đã xảy ra lỗi");
         }
-        return error.message;
+        return sanitizeErrorMessage(error.message, "Đã xảy ra lỗi");
     }
     return "";
 }

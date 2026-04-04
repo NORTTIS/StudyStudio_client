@@ -134,6 +134,11 @@ function StudioCard({
     const isOwner = studio.studioRole === 0;
     const isMember = studio.studioRole === 1;
     const isPendingApproval = !isOwner && !!studio.isPendingApproval;
+    const isStudioOpen = studio.isOpen !== false;
+    const isStudioActive = !studio.isArchived && isStudioOpen;
+    const canShowOwnerActions = canEdit && !studio.isArchived;
+    const isInactiveForViewer = !isOwner && !isStudioActive;
+    const inactiveMutedClass = isInactiveForViewer ? "opacity-60" : "";
     const [isHovered, setIsHovered] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
 
@@ -150,7 +155,7 @@ function StudioCard({
             whileHover={{ y: -7 }}
             role="button"
             tabIndex={0}
-            className={`group relative overflow-hidden rounded-[30px] border bg-white/82 text-left backdrop-blur-2xl transition-all duration-300 ${isPendingApproval ? "cursor-not-allowed" : "cursor-pointer"}`}
+            className={`group relative overflow-hidden rounded-[30px] border bg-white/82 text-left backdrop-blur-2xl transition-all duration-300 ${isPendingApproval || isInactiveForViewer ? "cursor-not-allowed" : "cursor-pointer"}`}
             style={
                 {
                     boxShadow: cardShadow,
@@ -172,7 +177,7 @@ function StudioCard({
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.24),rgba(255,255,255,0.04))]" />
 
             <div
-                className="relative h-36 overflow-visible px-5 pt-5"
+                className={`relative h-36 overflow-visible px-5 pt-5 ${inactiveMutedClass}`}
                 style={{
                     background: studio.bannerUrl
                         ? `url(${studio.bannerUrl}) center/cover no-repeat`
@@ -230,10 +235,29 @@ function StudioCard({
                 </motion.div>
             </div>
 
-            <div className="mt-10 p-5 pt-4">
+            <div className={`mt-10 p-5 pt-4 ${inactiveMutedClass}`}>
                 <div className="mb-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
+                            <span
+                                aria-label={isStudioActive ? "active" : "inactive"}
+                                title={isStudioActive ? t("detail.activeBadge") : t("inactiveStudioTitle")}
+                                className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center">
+                                <span
+                                    aria-hidden="true"
+                                    className={`absolute inset-0 rounded-full ${isStudioActive ? "bg-emerald-500/65" : "bg-red-500/75"} animate-ping motion-reduce:animate-none`}
+                                />
+                                <span
+                                    aria-hidden="true"
+                                    className={`relative h-2.5 w-2.5 rounded-full transition-transform duration-300 group-hover:scale-110 ${isStudioActive ? "bg-emerald-500" : "bg-red-600"}`}
+                                    style={{
+                                        boxShadow: isStudioActive
+                                            ? "0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 10px rgba(16, 185, 129, 0.35)"
+                                            : "0 0 0 3px rgba(220, 38, 38, 0.28), 0 0 12px rgba(220, 38, 38, 0.42)"
+                                    }}
+                                />
+                            </span>
+
                             <h3 className="truncate text-[19px] font-semibold text-[#261E33] transition duration-300 group-hover:text-[#FF5F3D]">
                                 {studio.name}
                             </h3>
@@ -244,12 +268,12 @@ function StudioCard({
                         <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#6F6B99]">{studio.description}</p>
                     </div>
 
-                    {(canEdit || isMember) && (
+                    {(canShowOwnerActions || isMember) && (
                         <motion.div
                             initial={false}
                             animate={{ opacity: isHovered ? 1 : 0.55, y: isHovered ? 0 : 2 }}
                             className="flex shrink-0 gap-2 transition-all duration-200">
-                            {canEdit && (
+                            {canShowOwnerActions && (
                                 <>
                                     <motion.button
                                         whileHover={{ y: -2, scale: 1.04 }}
@@ -504,6 +528,21 @@ export default function MasterPageClient({
             filteredJoinedStudios: joinedStudios.filter(filterFn)
         };
     }, [searchQuery, ownedStudios, joinedStudios]);
+
+    const filteredOwnedActiveStudios = useMemo(
+        () => filteredOwnedStudios.filter((studio) => !studio.isArchived),
+        [filteredOwnedStudios]
+    );
+
+    const filteredJoinedActiveStudios = useMemo(
+        () => filteredJoinedStudios.filter((studio) => !studio.isArchived),
+        [filteredJoinedStudios]
+    );
+
+    const filteredArchivedStudios = useMemo(
+        () => [...filteredOwnedStudios, ...filteredJoinedStudios].filter((studio) => studio.isArchived),
+        [filteredOwnedStudios, filteredJoinedStudios]
+    );
 
     const studioLimit = subscriptionInfo?.studioLimit ?? 3;
     const studioCreated = subscriptionInfo?.studioCreated ?? studios.length;
@@ -800,9 +839,10 @@ export default function MasterPageClient({
         );
     };
 
-    const hasOwnedStudios = filteredOwnedStudios.length > 0;
-    const hasJoinedStudios = filteredJoinedStudios.length > 0;
-    const hasNoResults = !(hasOwnedStudios || hasJoinedStudios);
+    const hasOwnedStudios = filteredOwnedActiveStudios.length > 0;
+    const hasJoinedStudios = filteredJoinedActiveStudios.length > 0;
+    const hasArchivedStudios = filteredArchivedStudios.length > 0;
+    const hasNoResults = !(hasOwnedStudios || hasJoinedStudios || hasArchivedStudios);
 
     return (
         <div className="h-screen overflow-hidden bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
@@ -945,8 +985,12 @@ export default function MasterPageClient({
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}>
-                                        {renderStudioSection(t("yourStudios"), filteredOwnedStudios)}
-                                        {renderStudioSection(t("joinedStudios"), filteredJoinedStudios)}
+                                        {renderStudioSection(t("yourStudios"), filteredOwnedActiveStudios)}
+                                        {renderStudioSection(t("joinedStudios"), filteredJoinedActiveStudios)}
+                                        {renderStudioSection(
+                                            locale === "vi" ? "Studio đang lưu trữ" : "Archived studios",
+                                            filteredArchivedStudios
+                                        )}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
