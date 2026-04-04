@@ -7687,6 +7687,7 @@ export interface components {
             /** Format: uuid */
             groupId?: string;
             question?: string | null;
+            sessionId?: string | null;
         };
         GroupAssignmentSummary: {
             /** Format: uuid */

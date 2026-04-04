@@ -524,9 +524,80 @@ export default function TaskFormModal({
     const [dueDate, setDueDate] = React.useState("");
     const [estimatedHours, setEstimatedHours] = React.useState<number | undefined>(undefined);
     const [actualHours, setActualHours] = React.useState<number | undefined>(undefined);
+    const [estimatedHoursError, setEstimatedHoursError] = React.useState<string | null>(null);
+    const [actualHoursError, setActualHoursError] = React.useState<string | null>(null);
 
     const [submitting, setSubmitting] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+
+    // Calculate max hours allowed based on startDate and dueDate
+    const maxHours = React.useMemo((): number | null => {
+        if (!startDate || !dueDate) return null;
+
+        const startDay = Date.UTC(
+            new Date(startDate).getFullYear(),
+            new Date(startDate).getMonth(),
+            new Date(startDate).getDate()
+        );
+        const endDay = Date.UTC(
+            new Date(dueDate).getFullYear(),
+            new Date(dueDate).getMonth(),
+            new Date(dueDate).getDate()
+        );
+
+        const diffDays = (endDay - startDay) / (1000 * 60 * 60 * 24);
+        if (diffDays < 0) return null;
+
+        return (diffDays + 1) * 24;
+    }, [startDate, dueDate]);
+
+    // Validate and clamp estimated hours
+    const handleEstimatedHoursChange = (rawVal: string) => {
+        const val = rawVal;
+        const num = parseFloat(val);
+        const parsed = val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num;
+
+        if (parsed != null && maxHours != null && parsed > maxHours) {
+            setEstimatedHoursError(t("estimatedHoursExceed", { max: maxHours }));
+            setEstimatedHours(maxHours);
+        } else {
+            setEstimatedHoursError(null);
+            setEstimatedHours(parsed);
+        }
+    };
+
+    // Validate and clamp actual hours
+    const handleActualHoursChange = (rawVal: string) => {
+        const val = rawVal;
+        const num = parseFloat(val);
+        const parsed = val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num;
+
+        if (parsed != null && maxHours != null && parsed > maxHours) {
+            setActualHoursError(t("actualHoursExceed", { max: maxHours }));
+            setActualHours(maxHours);
+        } else {
+            setActualHoursError(null);
+            setActualHours(parsed);
+        }
+    };
+
+    // Re-validate hours when dates change
+    React.useEffect(() => {
+        if (estimatedHours != null && maxHours != null && estimatedHours > maxHours) {
+            setEstimatedHoursError(t("estimatedHoursExceed", { max: maxHours }));
+            setEstimatedHours(maxHours);
+        } else {
+            setEstimatedHoursError(null);
+        }
+
+        if (actualHours != null && maxHours != null && actualHours > maxHours) {
+            setActualHoursError(t("actualHoursExceed", { max: maxHours }));
+            setActualHours(maxHours);
+        } else {
+            setActualHoursError(null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [maxHours]);
 
     React.useEffect(() => setMounted(true), []);
 
@@ -545,6 +616,8 @@ export default function TaskFormModal({
         setDueDate("");
         setEstimatedHours(undefined);
         setActualHours(undefined);
+        setEstimatedHoursError(null);
+        setActualHoursError(null);
     }, [open, defaultAssigneeId, defaultStatusId, defaultPriority, defaultSeverity, statuses]);
 
     React.useEffect(() => {
@@ -624,7 +697,11 @@ export default function TaskFormModal({
         [t]
     );
 
-    const canSubmit = title.trim().length > 0 && !submitting;
+    const canSubmit =
+        title.trim().length > 0 &&
+        !submitting &&
+        !estimatedHoursError &&
+        !actualHoursError;
 
     const handleSubmit = async () => {
         const trimmedTitle = title.trim().slice(0, TASK_TITLE_MAX_LENGTH);
@@ -647,6 +724,11 @@ export default function TaskFormModal({
                 setError(t("errors.restrictedAssignee"));
                 return;
             }
+        }
+
+        if (estimatedHoursError || actualHoursError) {
+            setError(estimatedHoursError ?? actualHoursError ?? "");
+            return;
         }
 
         try {
@@ -906,11 +988,7 @@ export default function TaskFormModal({
                                 min="0"
                                 step="0.5"
                                 value={estimatedHours ?? ""}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    const num = parseFloat(val);
-                                    setEstimatedHours(val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num);
-                                }}
+                                onChange={(e) => handleEstimatedHoursChange(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === "-" || e.key === "e" || e.key === "E") {
                                         e.preventDefault();
@@ -919,6 +997,9 @@ export default function TaskFormModal({
                                 placeholder={t("estimatedHoursPlaceholder")}
                                 className="mt-2 flex h-11 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
+                            {estimatedHoursError ? (
+                                <div className="mt-1 text-xs font-medium text-rose-600">{estimatedHoursError}</div>
+                            ) : null}
                         </div>
 
                         <div>
@@ -928,11 +1009,7 @@ export default function TaskFormModal({
                                 min="0"
                                 step="0.5"
                                 value={actualHours ?? ""}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    const num = parseFloat(val);
-                                    setActualHours(val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num);
-                                }}
+                                onChange={(e) => handleActualHoursChange(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === "-" || e.key === "e" || e.key === "E") {
                                         e.preventDefault();
@@ -941,6 +1018,9 @@ export default function TaskFormModal({
                                 placeholder={t("actualHoursPlaceholder")}
                                 className="mt-2 flex h-11 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
+                            {actualHoursError ? (
+                                <div className="mt-1 text-xs font-medium text-rose-600">{actualHoursError}</div>
+                            ) : null}
                         </div>
                     </div>
 

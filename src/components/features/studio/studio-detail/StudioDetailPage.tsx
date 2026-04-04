@@ -10,6 +10,7 @@ import { toggleGroupArchive } from "@/api/groups";
 import {
     approveStudioPendingMember,
     deleteStudio,
+    getStudioGroups,
     getStudioMembers,
     getStudioPendingMembers,
     leaveStudio,
@@ -270,6 +271,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     const [editTagline, setEditTagline] = useState("");
     const [editAlias, setEditAlias] = useState("");
     const [isLeavingStudio, setIsLeavingStudio] = useState(false);
+    const [groupList, setGroupList] = useState<GroupCardDto[]>(initialGroups);
 
     const clampStudioName = useCallback((value: string) => value.slice(0, STUDIO_NAME_MAX_LENGTH), []);
     const clampStudioDescription = useCallback((value: string) => value.slice(0, STUDIO_DESCRIPTION_MAX_LENGTH), []);
@@ -578,6 +580,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             setMembersLoading(false);
         }
     }, [loadPendingApprovals, locale, studioId, t, toast]);
+
+    const loadGroups = useCallback(async () => {
+        try {
+            const res = await getStudioGroups(studioId);
+            if (res.status === "success" && res.data?.studioGroups) {
+                setGroupList(res.data.studioGroups);
+            }
+        } catch { /* silent fail */ }
+    }, [studioId]);
 
     useEffect(() => {
         loadData();
@@ -2206,6 +2217,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 members={members}
                 onSuccess={() => {
                     loadData();
+                    loadGroups();
                 }}
             />
 

@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
+import { useEffect, useState } from "react";
+import { getUserProfile } from "@/api/user-profile";
 
 type Tab = {
     key: string;
@@ -21,6 +23,29 @@ export default function HomeTopTabs() {
     const locale = useLocale();
     const pathname = usePathname();
     const t = useTranslations("HomeTopTabs");
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const checkAdminStatus = async () => {
+            try {
+                const result = await getUserProfile(locale);
+                if (result.status === "success" && result.data) {
+                    setIsAdmin(result.data.isAdmin);
+                }
+            } catch {
+                // Keep isAdmin as false on error
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        checkAdminStatus();
+    }, [locale]);
+
+    // Don't render tabs for admins
+    if (!isLoading && isAdmin) {
+        return null;
+    }
 
     const tabs: Tab[] = [
         {

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
-import { isAuthenticated } from "@/api/auth";
+import { isAuthenticated, getUserData } from "@/api/auth";
 import { LoadingPage } from "@/components/common";
 import Landing from "@/components/features/landing/Landing";
 
@@ -15,7 +15,10 @@ export default function Page() {
     useEffect(() => {
         const checkAuthForRootPage = async () => {
             if (isAuthenticated()) {
-                router.replace(`/${locale}/home`);
+                const userData = getUserData();
+                const isAdmin = userData?.isAdmin === true;
+                // Redirect admins to admin dashboard, regular users to home
+                router.replace(`/${locale}${isAdmin ? "/admin/dashboard" : "/home"}`);
                 return;
             }
 
@@ -25,7 +28,9 @@ export default function Page() {
                 const newTokens = await refreshAccessToken(locale);
 
                 if (newTokens) {
-                    router.replace(`/${locale}/home`);
+                    const userData = getUserData();
+                    const isAdmin = userData?.isAdmin === true;
+                    router.replace(`/${locale}${isAdmin ? "/admin/dashboard" : "/home"}`);
                     return;
                 }
             }

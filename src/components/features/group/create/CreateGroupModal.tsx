@@ -8,7 +8,7 @@ import { downloadBatchAssignTemplate } from "@/api/studios";
 import type { components } from "@/api/types";
 import { Button } from "@/components/common/Button";
 import { BannerUpload } from "@/components/ui/banner-upload";
-import { ColorPicker } from "@/components/ui/color-picker";
+import { BRAND_COLORS, ColorPicker } from "@/components/ui/color-picker";
 import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
@@ -57,6 +57,10 @@ function buildApiUrl(path: string) {
     return `${API_BASE}${p}`;
 }
 
+function getRandomBrandColor(): string {
+    return BRAND_COLORS[Math.floor(Math.random() * BRAND_COLORS.length)];
+}
+
 type CreateGroupModalVariant = "default" | "studio";
 const countLineBreaks = (value: string) => (value.match(/\n/g) || []).length;
 
@@ -93,7 +97,7 @@ export function CreateGroupModal({
     const [groupCount, setGroupCount] = useState<number>(1);
     const [description, setDescription] = useState("");
     const [templateId, setTemplateId] = useState<string>("");
-    const [colorHex, setColorHex] = useState("#FF5F3D");
+    const [colorHex, setColorHex] = useState(getRandomBrandColor());
     const [iconEmoji, setIconEmoji] = useState("");
     const [bannerUrl, setBannerUrl] = useState<string | null>(null);
     const [tagline, setTagline] = useState("");
@@ -220,7 +224,7 @@ export function CreateGroupModal({
         setGroupCount(1);
         setDescription("");
         setTemplateId("");
-        setColorHex("#FF5F3D");
+        setColorHex(getRandomBrandColor());
         setIconEmoji("");
         setBannerUrl(null);
         setTagline("");

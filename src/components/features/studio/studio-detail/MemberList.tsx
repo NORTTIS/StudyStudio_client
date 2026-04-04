@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import type { StudioMemberResponse } from "@/api/studios";
+import { GroupRoleBadge } from "@/components/features/group/GroupRoleBadge";
+import type { GroupRole } from "@/components/features/group/types";
 
 interface GroupBasic {
     id: string;
@@ -80,6 +82,17 @@ export function MemberList({
                 return t("groupRole.viewer");
             default:
                 return t("groupRole.member");
+        }
+    };
+
+    const toGroupRole = (role: number | null | undefined): GroupRole => {
+        switch (role) {
+            case 0: return "owner";
+            case 1: return "moderator";
+            case 2: return "member";
+            case 3: return "commenter";
+            case 4: return "viewer";
+            default: return "member";
         }
     };
 

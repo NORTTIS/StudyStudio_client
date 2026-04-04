@@ -37,10 +37,25 @@ export interface UserProfile {
     };
 }
 
+// In-flight request cache to deduplicate concurrent calls
+let inFlightRequest: Promise<ApiResponse<UserProfile>> | null = null;
+
 /**
- * Get user profile data
+ * Get user profile data with request deduplication.
+ * All concurrent callers share the same in-flight request to avoid
+ * triggering multiple API calls on the same resource.
  * @param locale - Current locale for API response messages
  */
 export async function getUserProfile(locale: string): Promise<ApiResponse<UserProfile>> {
-    return apiGet<UserProfile>("/user-profile", locale, false, { cache: "no-store" });
+    if (inFlightRequest) {
+        return inFlightRequest;
+    }
+
+    inFlightRequest = apiGet<UserProfile>("/user-profile", locale, false, { cache: "no-store" });
+
+    try {
+        return await inFlightRequest;
+    } finally {
+        inFlightRequest = null;
+    }
 }

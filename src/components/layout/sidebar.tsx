@@ -17,6 +17,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { getUserProfile } from "@/api/user-profile";
+import { getUserData } from "@/api/auth";
 import { Logo } from "@/components/common";
 
 export function DashboardSidebar() {
@@ -24,7 +25,12 @@ export function DashboardSidebar() {
     const locale = useLocale();
     const t = useTranslations("Sidebar");
 
-    const [isAdmin, setIsAdmin] = useState(false);
+    // Read isAdmin from localStorage synchronously to avoid race condition
+    const [isAdmin, setIsAdmin] = useState(() => {
+        if (typeof window === "undefined") return false;
+        const userData = getUserData();
+        return userData?.isAdmin === true;
+    });
     const [collapsed, setCollapsed] = useState(() => {
         if (typeof window === "undefined") return false;
 
