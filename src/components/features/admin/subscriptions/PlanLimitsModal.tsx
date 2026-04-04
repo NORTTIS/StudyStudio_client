@@ -64,7 +64,7 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
             <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
-                    <h2 className="font-bold text-[#261E33] text-xl">Edit Limits - {plan.planName} Plan</h2>
+                    <h2 className="font-bold text-[#261E33] text-xl">Chỉnh Sửa Giới Hạn - {plan.planName}</h2>
                     <button
                         type="button"
                         onClick={onClose}
@@ -84,7 +84,7 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
                 <div className="space-y-4">
                     <div>
                         <label htmlFor="maxStudios" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            Max Studios
+                            Studios tối đa
                         </label>
                         <Input
                             id="maxStudios"
@@ -96,7 +96,7 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
 
                     <div>
                         <label htmlFor="maxGroups" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            Max Groups
+                            Nhóm tối đa
                         </label>
                         <Input
                             id="maxGroups"
@@ -108,7 +108,7 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
 
                     <div>
                         <label htmlFor="maxMembersPerGroup" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            Max Members per Group
+                            thành viên tối đa mỗi nhóm
                         </label>
                         <Input
                             id="maxMembersPerGroup"
@@ -120,7 +120,7 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
 
                     <div>
                         <label htmlFor="maxStorageMb" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            Max Storage (MB)
+                            Dung lượng lưu trữ (MB) tối đa 
                         </label>
                         <Input
                             id="maxStorageMb"
@@ -132,7 +132,7 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
 
                     <div>
                         <label htmlFor="maxAiRequestsPerDay" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            Max AI Requests per Day
+                            Lượt Yêu Cầu AI Mỗi Ngày
                         </label>
                         <Input
                             id="maxAiRequestsPerDay"
@@ -146,13 +146,13 @@ export function PlanLimitsModal({ isOpen, onClose, plan, onSuccess }: PlanLimits
                 {/* Actions */}
                 <div className="mt-6 flex gap-3">
                     <Button variant="outline" onClick={onClose} className="flex-1" disabled={isLoading}>
-                        Cancel
+                        Hủy
                     </Button>
                     <Button
                         onClick={handleSave}
                         className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]"
                         disabled={isLoading}>
-                        {isLoading ? "Saving..." : "Save Changes"}
+                        {isLoading ? "Đang Lưu..." : "Lưu Thay Đổi"}
                     </Button>
                 </div>
             </div>

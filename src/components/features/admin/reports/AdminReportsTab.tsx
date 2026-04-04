@@ -1,7 +1,6 @@
 "use client";
 
 import { Empty } from "antd";
-import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
     type AdminReport,
@@ -26,9 +25,77 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
+const ADMIN_REPORTS_TEXT: Record<string, string> = {
+    "loading": "Dang tai du lieu...",
+    "summary.totalReports": "Tong bao cao",
+    "summary.open": "Dang mo",
+    "summary.inProgress": "Dang xu ly",
+    "summary.resolved": "Da giai quyet",
+    "filters.title": "Bo loc",
+    "filters.search": "Tim kiem",
+    "filters.searchPlaceholder": "Tim theo email, tieu de...",
+    "filters.type": "Loai bao cao",
+    "filters.status": "Trang thai",
+    "filters.pageSize": "So luong/trang",
+    "filters.all": "Tat ca",
+    "filters.types.bugReport": "Bao cao loi",
+    "filters.types.featureRequest": "Yeu cau tinh nang",
+    "filters.types.accountIssue": "Van de tai khoan",
+    "filters.types.other": "Khac",
+    "filters.statuses.open": "Dang mo",
+    "filters.statuses.inProgress": "Dang xu ly",
+    "filters.statuses.resolved": "Da giai quyet",
+    "filters.statuses.closed": "Da dong",
+    "table.title": "Danh sach bao cao",
+    "table.headers.email": "Email",
+    "table.headers.title": "Tieu de",
+    "table.headers.type": "Loai",
+    "table.headers.status": "Trang thai",
+    "table.headers.priority": "Do uu tien",
+    "table.headers.createdAt": "Ngay tao",
+    "table.headers.actions": "Thao tac",
+    "actions.edit": "Chinh sua",
+    "actions.retry": "Thu lai",
+    "pagination.showing": "Hien thi {{start}} - {{end}} trong tong so {{total}} bao cao",
+    "pagination.previous": "Truoc",
+    "pagination.next": "Sau",
+    "empty.title": "Chua co bao cao nao",
+    "empty.description": "Hien tai chua co bao cao nao tu nguoi dung.",
+    "errors.loadFailed": "Khong the tai du lieu bao cao",
+    "errors.loadFailedTitle": "Khong the tai du lieu",
+    "errors.loadError": "Co loi xay ra khi tai du lieu bao cao",
+    "errors.updateFailed": "Cap nhat bao cao that bai",
+    "errors.updateError": "Co loi xay ra khi cap nhat bao cao",
+    "success.updateReport": "Cap nhat bao cao thanh cong!",
+    "success.updateReportWithNotification": "Cap nhat bao cao thanh cong! Da gui thong bao den nguoi dung qua he thong va email.",
+    "success.updateReportNotificationFailed": "Cap nhat bao cao thanh cong! Tuy nhien khong the gui thong bao den nguoi dung.",
+    "modal.title": "Chinh sua bao cao",
+    "modal.reportTitle": "Tieu de",
+    "modal.content": "Noi dung",
+    "modal.status": "Trang thai",
+    "modal.priority": "Do uu tien",
+    "modal.adminNote": "Ghi chu admin",
+    "modal.adminNotePlaceholder": "Nhap ghi chu cua admin...",
+    "modal.cancel": "Huy",
+    "modal.update": "Cap nhat"
+};
+
+function t(key: string, values?: Record<string, string | number>) {
+    let output = ADMIN_REPORTS_TEXT[key] ?? key;
+
+    if (!values) {
+        return output;
+    }
+
+    for (const [token, value] of Object.entries(values)) {
+        output = output.replace(`{{${token}}}`, String(value));
+    }
+
+    return output;
+}
+
 export function AdminReportsTab() {
-    const t = useTranslations("AdminReports");
-    const locale = useLocale();
+    const locale = "vi";
     const { toast } = useToast();
     const toastRef = useRef(toast);
     useEffect(() => {
@@ -117,11 +184,11 @@ export function AdminReportsTab() {
         } finally {
             setIsLoading(false);
         }
-    }, [filters, locale, t]); // toast được bỏ khỏi deps vì tạo reference mới mỗi render → gây infinite loop
+    }, [filters]); // toast được bỏ khỏi deps vì tạo reference mới mỗi render → gây infinite loop
 
     useEffect(() => {
         loadReports();
-    }, [loadReports]); // Chỉ reload khi filters, locale hoặc t thay đổi
+    }, [loadReports]); // Chỉ reload khi filters hoặc t thay đổi
 
     const handleEditReport = (report: AdminReport) => {
         setSelectedReport(report);
@@ -280,7 +347,7 @@ export function AdminReportsTab() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.search")}</label>
+                        <p className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.search")}</p>
                         <Input
                             placeholder={t("filters.searchPlaceholder")}
                             value={filters.searchTerm || ""}
@@ -288,7 +355,7 @@ export function AdminReportsTab() {
                         />
                     </div>
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.type")}</label>
+                        <p className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.type")}</p>
                         <Select
                             value={filters.type === undefined ? "all" : String(filters.type)}
                             onValueChange={(value) =>
@@ -307,7 +374,7 @@ export function AdminReportsTab() {
                         </Select>
                     </div>
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.status")}</label>
+                        <p className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.status")}</p>
                         <Select
                             value={filters.status === undefined ? "all" : String(filters.status)}
                             onValueChange={(value) =>
@@ -326,7 +393,7 @@ export function AdminReportsTab() {
                         </Select>
                     </div>
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.pageSize")}</label>
+                        <p className="mb-2 block font-medium text-[#261E33] text-sm">{t("filters.pageSize")}</p>
                         <Select
                             value={String(filters.pageSize || 10)}
                             onValueChange={(value) => handleFilterChange("pageSize", Number(value))}>
@@ -526,9 +593,9 @@ export function AdminReportsTab() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                <p className="mb-2 block font-medium text-[#261E33] text-sm">
                                     {t("modal.status")}
-                                </label>
+                                </p>
                                 <Select
                                     value={String(editForm.status)}
                                     onValueChange={(value) =>
@@ -548,9 +615,9 @@ export function AdminReportsTab() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                <p className="mb-2 block font-medium text-[#261E33] text-sm">
                                     {t("modal.priority")}
-                                </label>
+                                </p>
                                 <Select
                                     value={String(editForm.priority)}
                                     onValueChange={(value) =>
@@ -570,9 +637,9 @@ export function AdminReportsTab() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">
+                                <p className="mb-2 block font-medium text-[#261E33] text-sm">
                                     {t("modal.adminNote")}
-                                </label>
+                                </p>
                                 <Textarea
                                     value={editForm.adminNote}
                                     onChange={(e) => setEditForm((prev) => ({ ...prev, adminNote: e.target.value }))}

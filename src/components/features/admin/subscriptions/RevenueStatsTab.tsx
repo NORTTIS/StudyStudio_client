@@ -1,12 +1,11 @@
 "use client";
 
-import { useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { exportRevenueData, getMRR, getRevenueOverview, getRevenueTrends, getTopPlans } from "@/api/admin-revenue";
 import { Button } from "@/components/ui/button";
 
 export function RevenueStatsTab() {
-    const locale = useLocale();
+    const locale = "vi";
     const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month");
     const [_isLoading, setIsLoading] = useState(true);
     const [stats, setStats] = useState({
@@ -92,31 +91,28 @@ export function RevenueStatsTab() {
                     <button
                         type="button"
                         onClick={() => setTimeRange("week")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "week"
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "week"
                                 ? "bg-[#FF5F3D] text-white"
                                 : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                            }`}>
                         This Week
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("month")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "month"
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "month"
                                 ? "bg-[#FF5F3D] text-white"
                                 : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                            }`}>
                         This Month
                     </button>
                     <button
                         type="button"
                         onClick={() => setTimeRange("year")}
-                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${
-                            timeRange === "year"
+                        className={`rounded-lg px-4 py-2 font-medium text-sm transition-colors ${timeRange === "year"
                                 ? "bg-[#FF5F3D] text-white"
                                 : "bg-white text-[#6F6B99] hover:bg-gray-50"
-                        }`}>
+                            }`}>
                         This Year
                     </button>
                 </div>

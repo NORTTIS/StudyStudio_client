@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import {
     type AdminSubscriptionPlan,
@@ -20,7 +19,6 @@ import { RevenueStatsTab } from "./RevenueStatsTab";
 type TabType = "plans" | "billing" | "revenue" | "payments" | "reports";
 
 export function SubscriptionPlansPage() {
-    const t = useTranslations("AdminSubscriptions");
     const [activeTab, setActiveTab] = useState<TabType>("plans");
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedPlanForEdit, setSelectedPlanForEdit] = useState<AdminSubscriptionPlan | null>(null);
@@ -28,8 +26,8 @@ export function SubscriptionPlansPage() {
 
     // Cấu hình tabs - ẩn một số tabs theo yêu cầu
     const availableTabs = [
-        { id: "plans" as const, label: t("tabs.plans") },
-        { id: "billing" as const, label: t("tabs.billing") }
+        { id: "plans" as const, label: "Gói Đăng Ký" },
+        { id: "billing" as const, label: "Lịch Sử Thanh Toán" }
         // Ẩn các tabs: revenue, payments, reports theo yêu cầu
     ];
     const [stats, setStats] = useState<UserStats>({
@@ -96,10 +94,10 @@ export function SubscriptionPlansPage() {
                     setPlans([
                         {
                             planId: "00000000-0000-0000-0000-000000000001", // Valid GUID format
-                            planName: "Free",
+                            planName: "Miễn Phí",
                             price: 0,
                             billingCycle: 0,
-                            description: "For individuals and small teams getting started",
+                            description: "Phù hợp cho người dùng cá nhân và các nhóm nhỏ trải nghiệm",
                             maxStudios: 3,
                             maxStorageMb: 500,
                             maxAiRequestsPerDay: 20,
@@ -113,7 +111,7 @@ export function SubscriptionPlansPage() {
                             planName: "Premium",
                             price: 299000,
                             billingCycle: 1,
-                            description: "For teams that need more power and flexibility",
+                            description: "Dành cho các nhóm cần nhiều quyền lực và linh hoạt hơn",
                             maxStudios: 10,
                             maxStorageMb: 1024,
                             maxAiRequestsPerDay: 100,
@@ -137,10 +135,10 @@ export function SubscriptionPlansPage() {
             setPlans([
                 {
                     planId: "00000000-0000-0000-0000-000000000001",
-                    planName: "Free",
+                    planName: "Miễn Phí",
                     price: 0,
                     billingCycle: 0,
-                    description: "For individuals and small teams getting started",
+                    description: "Phù hợp cho người dùng cá nhân và các nhóm nhỏ trải nghiệm",
                     maxStudios: 3,
                     maxStorageMb: 500,
                     maxAiRequestsPerDay: 20,
@@ -154,7 +152,7 @@ export function SubscriptionPlansPage() {
                     planName: "Premium",
                     price: 299000,
                     billingCycle: 1,
-                    description: "For teams that need more power and flexibility",
+                    description: "Dành cho các nhóm cần nhiều quyền lực và linh hoạt hơn",
                     maxStudios: 10,
                     maxStorageMb: 1024,
                     maxAiRequestsPerDay: 100,
@@ -198,8 +196,8 @@ export function SubscriptionPlansPage() {
                     <div className="px-6 py-6">
                         {/* Page Header */}
                         <div className="mb-6">
-                            <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("title")}</h1>
-                            <p className="text-[#6F6B99] text-sm">{t("subtitle")}</p>
+                            <h1 className="mb-2 font-bold text-2xl text-[#261E33]">Quản lý Gói Đăng Ký</h1>
+                            <p className="text-[#6F6B99] text-sm">Quản lý các gói đăng ký và giới hạn của chúng</p>
                         </div>
 
                         {/* Tabs */}
@@ -209,11 +207,10 @@ export function SubscriptionPlansPage() {
                                     key={tab.id}
                                     type="button"
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${
-                                        activeTab === tab.id
+                                    className={`border-b-2 px-4 py-3 font-medium text-sm transition-colors ${activeTab === tab.id
                                             ? "border-[#FF5F3D] text-[#FF5F3D]"
                                             : "border-transparent text-[#6F6B99] hover:text-[#261E33]"
-                                    }`}>
+                                        }`}>
                                     {tab.label}
                                 </button>
                             ))}
@@ -234,7 +231,7 @@ export function SubscriptionPlansPage() {
                                     <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
                                         <div className="rounded-xl border border-gray-200 bg-white p-5">
                                             <div className="mb-2 flex items-center justify-between">
-                                                <p className="text-[#6F6B99] text-sm">Total Active Users</p>
+                                                <p className="text-[#6F6B99] text-sm">Tổng Người Dùng Hoạt Động</p>
                                                 <svg
                                                     className="h-5 w-5 text-[#6F6B99]"
                                                     fill="none"
@@ -255,7 +252,7 @@ export function SubscriptionPlansPage() {
 
                                         <div className="rounded-xl border border-gray-200 bg-white p-5">
                                             <div className="mb-2 flex items-center justify-between">
-                                                <p className="text-[#6F6B99] text-sm">Free Users</p>
+                                                <p className="text-[#6F6B99] text-sm">Người Dùng Miễn Phí</p>
                                                 <svg
                                                     className="h-5 w-5 text-[#6F6B99]"
                                                     fill="none"
@@ -276,7 +273,7 @@ export function SubscriptionPlansPage() {
 
                                         <div className="rounded-xl border border-gray-200 bg-white p-5">
                                             <div className="mb-2 flex items-center justify-between">
-                                                <p className="text-[#6F6B99] text-sm">Premium Users</p>
+                                                <p className="text-[#6F6B99] text-sm">Người Dùng Premium</p>
                                                 <svg
                                                     className="h-5 w-5 text-[#FF5F3D]"
                                                     fill="none"
@@ -297,7 +294,7 @@ export function SubscriptionPlansPage() {
 
                                         <div className="rounded-xl border border-gray-200 bg-white p-5">
                                             <div className="mb-2 flex items-center justify-between">
-                                                <p className="text-[#6F6B99] text-sm">Conversion Rate</p>
+                                                <p className="text-[#6F6B99] text-sm">Tỷ Lệ Chuyển Đổi</p>
                                                 <svg
                                                     className="h-5 w-5 text-[#6F6B99]"
                                                     fill="none"

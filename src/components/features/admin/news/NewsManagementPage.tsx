@@ -1,13 +1,10 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/Header";
 import { DashboardSidebar } from "@/components/layout/sidebar";
 import { AdminAnnouncementsTab } from "../announcements/AdminAnnouncementsTab";
 
 export function NewsManagementPage() {
-    const _t = useTranslations("AdminNews");
-
     return (
         <div className="min-h-screen bg-[#F8F8F8]">
             <div className="flex min-h-screen">

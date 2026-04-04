@@ -3,14 +3,7 @@ import { RevenueDashboardPage } from "@/components/features/admin/monitoring/Rev
 
 export const dynamic = "force-dynamic";
 
-interface RevenuePageProps {
-    params: Promise<{
-        locale: string;
-    }>;
-}
-
-export default async function AdminRevenuePage({ params: _params }: RevenuePageProps) {
-    const { locale } = await _params;
+export default async function AdminRevenuePage() {
 
     // Get current date for default range
     const now = new Date();

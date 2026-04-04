@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -23,7 +22,6 @@ type DeleteNewsModalProps = {
 };
 
 export function DeleteNewsModal({ news, onClose }: DeleteNewsModalProps) {
-    const t = useTranslations("AdminNews");
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
@@ -51,7 +49,7 @@ export function DeleteNewsModal({ news, onClose }: DeleteNewsModalProps) {
                             </svg>
                         </div>
                         <div>
-                            <h2 className="font-bold text-[#261E33] text-lg">{t("deleteModal.title")}</h2>
+                            <h2 className="font-bold text-[#261E33] text-lg">Xóa tin tức</h2>
                         </div>
                     </div>
                     <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -69,10 +67,10 @@ export function DeleteNewsModal({ news, onClose }: DeleteNewsModalProps) {
                 {/* Content */}
                 <div className="mb-6">
                     <p className="mb-3 text-[#6F6B99] text-sm">
-                        {t("deleteModal.message")} <span className="font-semibold text-[#261E33]">"{news.title}"</span>?
+                        Bạn có chắc chắn muốn xóa tin tức <span className="font-semibold text-[#261E33]">"{news.title}"</span>?
                     </p>
                     <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                        <p className="text-red-700 text-xs">{t("deleteModal.warning")}</p>
+                        <p className="text-red-700 text-xs">Cảnh báo: Hành động này không thể hoàn tác. Tin tức sẽ bị xóa vĩnh viễn khỏi hệ thống.</p>
                     </div>
                 </div>
 
@@ -83,14 +81,14 @@ export function DeleteNewsModal({ news, onClose }: DeleteNewsModalProps) {
                         onClick={onClose}
                         variant="outline"
                         className="border-gray-300 text-[#261E33] hover:bg-gray-50">
-                        {t("deleteModal.cancel")}
+                        Hủy
                     </Button>
                     <Button
                         type="button"
                         onClick={handleDelete}
                         disabled={isDeleting}
                         className="bg-red-600 text-white hover:bg-red-700">
-                        {isDeleting ? t("deleteModal.deleting") : t("deleteModal.delete")}
+                        {isDeleting ? "Đang xóa..." : "Xóa tin tức"}
                     </Button>
                 </div>
             </div>

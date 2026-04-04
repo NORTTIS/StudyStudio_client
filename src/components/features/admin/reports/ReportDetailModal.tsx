@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,7 +25,6 @@ type ReportDetailModalProps = {
 };
 
 export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
-    const t = useTranslations("AdminReports");
     const [status, setStatus] = useState(report.status);
     const [priority, setPriority] = useState(report.priority);
     const [note, setNote] = useState("");
@@ -105,22 +103,22 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
 
                 {/* User Info */}
                 <div className="mb-6 rounded-lg border border-gray-200 bg-[#F8F8F8] p-4">
-                    <h3 className="mb-3 font-semibold text-[#261E33] text-sm">{t("modal.userInfo")}</h3>
+                    <h3 className="mb-3 font-semibold text-[#261E33] text-sm">Thông tin người dùng</h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <p className="mb-1 text-[#6F6B99] text-xs">{t("modal.name")}</p>
+                            <p className="mb-1 text-[#6F6B99] text-xs">Tên</p>
                             <p className="font-medium text-[#261E33] text-sm">{report.user.name}</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-[#6F6B99] text-xs">{t("modal.email")}</p>
+                            <p className="mb-1 text-[#6F6B99] text-xs">Email</p>
                             <p className="font-medium text-[#261E33] text-sm">{report.user.email}</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-[#6F6B99] text-xs">{t("modal.created")}</p>
+                            <p className="mb-1 text-[#6F6B99] text-xs">Ngày tạo</p>
                             <p className="font-medium text-[#261E33] text-sm">{report.createdAt}</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-[#6F6B99] text-xs">{t("modal.lastUpdated")}</p>
+                            <p className="mb-1 text-[#6F6B99] text-xs">Cập nhật lần cuối</p>
                             <p className="font-medium text-[#261E33] text-sm">{report.updatedAt}</p>
                         </div>
                     </div>
@@ -128,7 +126,7 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
 
                 {/* Description */}
                 <div className="mb-6">
-                    <h3 className="mb-3 font-semibold text-[#261E33] text-sm">{t("modal.description")}</h3>
+                    <h3 className="mb-3 font-semibold text-[#261E33] text-sm">Mô tả</h3>
                     <div className="rounded-lg border border-gray-200 bg-white p-4">
                         <p className="text-[#261E33] text-sm leading-relaxed">{report.description}</p>
                     </div>
@@ -137,34 +135,34 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
                 {/* Update Status & Priority */}
                 <div className="mb-6 grid grid-cols-2 gap-4">
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">
-                            {t("modal.updateStatus")}
-                        </label>
+                        <p className="mb-2 block font-medium text-[#261E33] text-sm">
+                            Cập nhật trạng thái
+                        </p>
                         <Select value={status} onValueChange={(value) => setStatus(value as Report["status"])}>
                             <SelectTrigger className="w-full rounded-lg px-4">
-                                <SelectValue placeholder={t("modal.updateStatus")} />
+                                <SelectValue placeholder="Cập nhật trạng thái" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Open">Open</SelectItem>
-                                <SelectItem value="In Progress">In Progress</SelectItem>
-                                <SelectItem value="Resolved">Resolved</SelectItem>
-                                <SelectItem value="Closed">Closed</SelectItem>
+                                <SelectItem value="Open">Đang mở</SelectItem>
+                                <SelectItem value="In Progress">Đang xử lý</SelectItem>
+                                <SelectItem value="Resolved">Đã giải quyết</SelectItem>
+                                <SelectItem value="Closed">Đã đóng</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div>
-                        <label className="mb-2 block font-medium text-[#261E33] text-sm">
-                            {t("modal.updatePriority")}
-                        </label>
+                        <p className="mb-2 block font-medium text-[#261E33] text-sm">
+                            Cập nhật độ ưu tiên
+                        </p>
                         <Select value={priority} onValueChange={(value) => setPriority(value as Report["priority"])}>
                             <SelectTrigger className="w-full rounded-lg px-4">
-                                <SelectValue placeholder={t("modal.updatePriority")} />
+                                <SelectValue placeholder="Cập nhật độ ưu tiên" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Low">Low</SelectItem>
-                                <SelectItem value="Medium">Medium</SelectItem>
-                                <SelectItem value="High">High</SelectItem>
-                                <SelectItem value="Critical">Critical</SelectItem>
+                                <SelectItem value="Low">Thấp</SelectItem>
+                                <SelectItem value="Medium">Trung bình</SelectItem>
+                                <SelectItem value="High">Cao</SelectItem>
+                                <SelectItem value="Critical">Nghiêm trọng</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -172,11 +170,11 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
 
                 {/* Add Note */}
                 <div className="mb-6">
-                    <label className="mb-2 block font-medium text-[#261E33] text-sm">{t("modal.addNote")}</label>
+                    <p className="mb-2 block font-medium text-[#261E33] text-sm">Thêm ghi chú</p>
                     <textarea
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
-                        placeholder={t("modal.notePlaceholder")}
+                        placeholder="Nhập ghi chú..."
                         rows={4}
                         className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20"
                     />
@@ -189,14 +187,14 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
                         onClick={onClose}
                         variant="outline"
                         className="border-gray-300 text-[#261E33] hover:bg-gray-50">
-                        {t("modal.cancel")}
+                        Hủy
                     </Button>
                     <Button
                         type="button"
                         onClick={handleUpdateStatus}
                         disabled={isUpdating}
                         className="bg-[#FF5F3D] text-white hover:bg-[#ff4620]">
-                        {isUpdating ? t("modal.updating") : t("modal.update")}
+                        {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
                     </Button>
                 </div>
             </div>

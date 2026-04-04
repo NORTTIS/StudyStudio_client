@@ -4,7 +4,6 @@ import { CalendarOutlined, DownloadOutlined, EyeOutlined, SearchOutlined } from 
 import { Button, Card, Col, DatePicker, Empty, Input, Row, Select, Table, Tag, Tooltip, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { type AdminBillingHistoryItem, getAdminBillingHistory } from "@/api/admin-billing";
 import {
@@ -21,7 +20,6 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 export function BillingHistoryTab() {
-    const t = useTranslations("BillingHistoryTab");
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<number | "all">("all");
     const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
@@ -238,14 +236,14 @@ export function BillingHistoryTab() {
                     filterStatus === "all"
                         ? undefined
                         : filterStatus === 0
-                          ? "Đang chờ"
-                          : filterStatus === 1
-                            ? "Thành công"
-                            : filterStatus === 2
-                              ? "Đã hủy"
-                              : filterStatus === 3
-                                ? "Thất bại"
-                                : undefined,
+                            ? "Đang chờ"
+                            : filterStatus === 1
+                                ? "Thành công"
+                                : filterStatus === 2
+                                    ? "Đã hủy"
+                                    : filterStatus === 3
+                                        ? "Thất bại"
+                                        : undefined,
                 dateRange:
                     dateRange?.[0] && dateRange[1]
                         ? `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`
@@ -280,14 +278,14 @@ export function BillingHistoryTab() {
 
     const columns: ColumnsType<AdminBillingHistoryItem> = [
         {
-            title: t("table.orderCode"),
+            title: "Mã đơn hàng",
             dataIndex: "orderCode",
             key: "orderCode",
             width: 120,
             render: (orderCode: number) => <Typography.Text strong>#{orderCode}</Typography.Text>
         },
         {
-            title: t("table.user"),
+            title: "Người dùng",
             key: "user",
             width: 200,
             render: (_, record) => (
@@ -298,14 +296,14 @@ export function BillingHistoryTab() {
             )
         },
         {
-            title: t("table.plan"),
+            title: "Gói",
             dataIndex: "planName",
             key: "planName",
             width: 100,
             render: (planName: string) => <Tag color="blue">{planName}</Tag>
         },
         {
-            title: t("table.amount"),
+            title: "Số tiền",
             dataIndex: "amount",
             key: "amount",
             width: 120,
@@ -317,13 +315,13 @@ export function BillingHistoryTab() {
             )
         },
         {
-            title: t("table.method"),
+            title: "Phương thức",
             dataIndex: "paymentMethod",
             key: "paymentMethod",
             width: 120
         },
         {
-            title: t("table.status"),
+            title: "Trạng thái",
             dataIndex: "paymentStatus",
             key: "paymentStatus",
             width: 120,
@@ -348,7 +346,7 @@ export function BillingHistoryTab() {
             }
         },
         {
-            title: t("table.date"),
+            title: "Ngày",
             dataIndex: "createdAt",
             key: "createdAt",
             width: 120,
@@ -365,7 +363,7 @@ export function BillingHistoryTab() {
             )
         },
         {
-            title: t("table.actions"),
+            title: "Hành động",
             key: "actions",
             width: 100,
             fixed: "right",
@@ -386,7 +384,7 @@ export function BillingHistoryTab() {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <Title level={3} className="!mb-2">
+                <Title level={3} className="mb-2!">
                     Lịch sử thanh toán
                 </Title>
                 <Typography.Text type="secondary">Quản lý và theo dõi tất cả giao dịch thanh toán</Typography.Text>
@@ -397,7 +395,7 @@ export function BillingHistoryTab() {
                 <Row gutter={[16, 16]}>
                     <Col xs={24} sm={12} md={8} lg={6}>
                         <Input
-                            placeholder={t("search.placeholder")}
+                            placeholder="Tìm theo người dùng, email hoặc hóa đơn..."
                             prefix={<SearchOutlined />}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -410,11 +408,11 @@ export function BillingHistoryTab() {
                             onChange={setFilterStatus}
                             style={{ width: "100%" }}
                             placeholder="Trạng thái">
-                            <Option value="all">{t("filters.allStatus")}</Option>
-                            <Option value={0}>{t("filters.pending")}</Option>
-                            <Option value={1}>{t("filters.success")}</Option>
-                            <Option value={2}>{t("filters.cancelled")}</Option>
-                            <Option value={3}>{t("filters.failed")}</Option>
+                            <Option value="all">Tất cả trạng thái</Option>
+                            <Option value={0}>Đang chờ</Option>
+                            <Option value={1}>Thành công</Option>
+                            <Option value={2}>Đã hủy</Option>
+                            <Option value={3}>Thất bại</Option>
                         </Select>
                     </Col>
                     <Col xs={24} sm={12} md={8} lg={6}>
@@ -434,7 +432,7 @@ export function BillingHistoryTab() {
                             onClick={handleExport}
                             loading={isExporting}
                             className="w-full border-[#FF5F3D] bg-[#FF5F3D] hover:border-[#ff4620] hover:bg-[#ff4620]">
-                            {t("actions.export")}
+                            Xuất dữ liệu
                         </Button>
                     </Col>
                 </Row>

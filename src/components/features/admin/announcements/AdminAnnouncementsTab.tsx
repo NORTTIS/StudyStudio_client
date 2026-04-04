@@ -15,6 +15,9 @@ import {
     type UpdateAnnouncementRequest,
     updateAdminAnnouncement
 } from "@/api/admin-announcements";
+
+// Các loại thông báo admin được phép quản lý
+const ADMIN_ANNOUNCEMENT_TYPES = [0, 1, 2, 3]; // Info, Warning, Maintenance, Promotion
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -68,8 +71,15 @@ export function AdminAnnouncementsTab() {
             const result = await getAdminAnnouncements("vi");
 
             if (result.status === "success" && result.data) {
-                setAnnouncements(result.data);
-                console.log("Đã tải dữ liệu announcements thành công:", result.data);
+                // Lọc chỉ lấy các announcement thuộc 4 loại admin được quản lý
+                const filteredAnnouncements = result.data.filter((announcement) => {
+                    const typeNumber = typeof announcement.type === "string"
+                        ? TYPE_STRING_TO_NUMBER[announcement.type]
+                        : announcement.type;
+                    return ADMIN_ANNOUNCEMENT_TYPES.includes(typeNumber);
+                });
+                setAnnouncements(filteredAnnouncements);
+                console.log("Đã tải dữ liệu announcements thành công:", filteredAnnouncements);
             } else {
                 setError(result.message || "Không thể tải dữ liệu thông báo");
                 console.error("API announcements thất bại:", result.message);
@@ -80,15 +90,10 @@ export function AdminAnnouncementsTab() {
             setError(errorMessage);
             console.error("Lỗi khi tải announcements:", error);
             setAnnouncements([]);
-
-            toast({
-                description: errorMessage,
-                variant: "destructive"
-            });
         } finally {
             setIsLoading(false);
         }
-    }, [toast]); // Empty dependency - chỉ load một lần khi mount, bỏ toast để tránh infinite loop
+    }, []); // Empty dependency - chỉ load một lần khi mount
 
     useEffect(() => {
         loadAnnouncements();

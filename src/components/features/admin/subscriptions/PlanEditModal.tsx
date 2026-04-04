@@ -102,21 +102,21 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
 
             if (result.status === "success") {
                 toast({
-                    description: `${formData.planName} plan updated successfully!`,
+                    description: `Đã cập nhật gói ${formData.planName} thành công!`,
                     variant: "default"
                 });
                 onSuccess?.();
                 onClose();
             } else {
                 toast({
-                    description: result.message || "Failed to update plan",
+                    description: result.message || "Cập nhật gói thất bại",
                     variant: "destructive"
                 });
             }
         } catch (error) {
             console.error("Failed to update plan:", error);
             toast({
-                description: "An error occurred while updating plan",
+                description: "Có lỗi xảy ra khi cập nhật gói",
                 variant: "destructive"
             });
         } finally {
@@ -136,15 +136,15 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
     const getBillingCycleText = (cycle: number) => {
         switch (cycle) {
             case 0:
-                return "Free";
+                return "Miễn Phí";
             case 1:
-                return "Monthly";
+                return "Hàng Tháng";
             case 3:
-                return "Quarterly";
+                return "Hàng Quý";
             case 12:
-                return "Yearly";
+                return "Hàng Năm";
             default:
-                return `${cycle} months`;
+                return `${cycle} tháng`;
         }
     };
 
@@ -154,8 +154,8 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <h2 className="font-bold text-[#261E33] text-xl">Edit Plan - {plan.planName}</h2>
-                        <p className="text-[#6F6B99] text-sm">{getBillingCycleText(plan.billingCycle)} Plan</p>
+                        <h2 className="font-bold text-[#261E33] text-xl">Chỉnh Sửa Gói - {plan.planName}</h2>
+                        <p className="text-[#6F6B99] text-sm">Gói {getBillingCycleText(plan.billingCycle)}</p>
                     </div>
                     <button
                         type="button"
@@ -176,47 +176,47 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                 <div className="space-y-6">
                     {/* Basic Info Section */}
                     <div className="space-y-4">
-                        <h3 className="font-semibold text-[#261E33] text-lg">Basic Information</h3>
+                        <h3 className="font-semibold text-[#261E33] text-lg">Thông Tin Cơ Bản</h3>
 
                         <div>
                             <label htmlFor="planName" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                Plan Name *
+                                Tên Gói *
                             </label>
                             <Input
                                 id="planName"
                                 type="text"
                                 value={formData.planName}
                                 onChange={(e) => handleInputChange("planName", e.target.value)}
-                                placeholder="Enter plan name"
+                                placeholder="Nhập tên gói"
                             />
                         </div>
 
                         <div>
                             <label htmlFor="price" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                Price (VND) *
+                                Giá (VND) *
                             </label>
                             <Input
                                 id="price"
                                 type="text"
                                 value={formatPrice(formData.price)}
                                 onChange={handlePriceChange}
-                                placeholder="Enter price in VND"
+                                placeholder="Nhập giá bằng VND"
                                 className="text-right"
                             />
                             <p className="mt-1 text-[#6F6B99] text-xs">
-                                Enter price without currency symbol. Example: 299000
+                                Nhập giá không kèm ký hiệu tiền tệ. Ví dụ: 299000
                             </p>
                         </div>
 
                         <div>
                             <label htmlFor="description" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                Description *
+                                Mô Tả *
                             </label>
                             <Textarea
                                 id="description"
                                 value={formData.description}
                                 onChange={(e) => handleInputChange("description", e.target.value)}
-                                placeholder="Enter plan description"
+                                placeholder="Nhập mô tả gói"
                                 rows={3}
                             />
                         </div>
@@ -224,12 +224,12 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
 
                     {/* Limits Section */}
                     <div className="space-y-4">
-                        <h3 className="font-semibold text-[#261E33] text-lg">Plan Limits</h3>
+                        <h3 className="font-semibold text-[#261E33] text-lg">Giới Hạn Gói</h3>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="maxStudios" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                    Max Studios *
+                                    Tối Đa Studios *
                                 </label>
                                 <Input
                                     id="maxStudios"
@@ -242,7 +242,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
 
                             <div>
                                 <label htmlFor="maxGroups" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                    Max Groups *
+                                    Tối Đa Nhóm *
                                 </label>
                                 <Input
                                     id="maxGroups"
@@ -257,7 +257,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 <label
                                     htmlFor="maxMembersPerGroup"
                                     className="mb-2 block font-medium text-[#261E33] text-sm">
-                                    Max Members Per Group *
+                                    Tối Đa Thành Viên Mỗi Nhóm *
                                 </label>
                                 <Input
                                     id="maxMembersPerGroup"
@@ -270,7 +270,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
 
                             <div>
                                 <label htmlFor="maxStorageMb" className="mb-2 block font-medium text-[#261E33] text-sm">
-                                    Max Storage (MB) *
+                                    Tối Đa Lưu Trữ (MB) *
                                 </label>
                                 <Input
                                     id="maxStorageMb"
@@ -285,7 +285,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 <label
                                     htmlFor="maxAiRequestsPerDay"
                                     className="mb-2 block font-medium text-[#261E33] text-sm">
-                                    Max AI Requests Per Day
+                                    Tối Đa Yêu Cầu AI Mỗi Ngày
                                 </label>
                                 <Input
                                     id="maxAiRequestsPerDay"
@@ -300,7 +300,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
 
                     {/* Status Section */}
                     <div className="hidden space-y-4">
-                        <h3 className="font-semibold text-[#261E33] text-lg">Status</h3>
+                        <h3 className="font-semibold text-[#261E33] text-lg">Trạng Thái</h3>
 
                         <div className="flex items-center space-x-2">
                             <input
@@ -311,7 +311,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
                             />
                             <label htmlFor="isActive" className="font-medium text-[#261E33] text-sm">
-                                Plan is active and available for subscription
+                                Gói đang hoạt động và có sẵn để đăng ký
                             </label>
                         </div>
                     </div>
@@ -327,11 +327,11 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                         formData.maxAiRequestsPerDay !== plan.maxAiRequestsPerDay ||
                         formData.isActive !== plan.isActive) && (
                         <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-4">
-                            <p className="mb-2 font-medium text-[#FF5F3D] text-sm">Changes Preview:</p>
+                            <p className="mb-2 font-medium text-[#FF5F3D] text-sm">Xem Trước Thay Đổi:</p>
                             <div className="space-y-1 text-sm">
                                 {formData.planName !== plan.planName && (
                                     <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Name:</span>
+                                        <span className="text-[#6F6B99]">Tên:</span>
                                         <span className="text-[#FF5F3D]">
                                             {plan.planName} → {formData.planName}
                                         </span>
@@ -339,7 +339,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 )}
                                 {formData.price !== plan.price && (
                                     <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Price:</span>
+                                        <span className="text-[#6F6B99]">Giá:</span>
                                         <span className="text-[#FF5F3D]">
                                             {formatPrice(plan.price)} → {formatPrice(formData.price)} VND
                                         </span>
@@ -347,7 +347,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 )}
                                 {formData.maxStudios !== plan.maxStudios && (
                                     <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Max Studios:</span>
+                                        <span className="text-[#6F6B99]">Tối Đa Studios:</span>
                                         <span className="text-[#FF5F3D]">
                                             {plan.maxStudios} → {formData.maxStudios}
                                         </span>
@@ -355,7 +355,7 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 )}
                                 {formData.maxGroups !== plan.maxGroups && (
                                     <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Max Groups:</span>
+                                        <span className="text-[#6F6B99]">Tối Đa Nhóm:</span>
                                         <span className="text-[#FF5F3D]">
                                             {plan.maxGroups} → {formData.maxGroups}
                                         </span>
@@ -363,10 +363,10 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                                 )}
                                 {formData.isActive !== plan.isActive && (
                                     <div className="flex justify-between">
-                                        <span className="text-[#6F6B99]">Status:</span>
+                                        <span className="text-[#6F6B99]">Trạng Thái:</span>
                                         <span className="text-[#FF5F3D]">
-                                            {plan.isActive ? "Active" : "Inactive"} →{" "}
-                                            {formData.isActive ? "Active" : "Inactive"}
+                                            {plan.isActive ? "Hoạt Động" : "Không Hoạt Động"} →{" "}
+                                            {formData.isActive ? "Hoạt Động" : "Không Hoạt Động"}
                                         </span>
                                     </div>
                                 )}
@@ -378,13 +378,13 @@ export function PlanEditModal({ isOpen, onClose, plan, onSuccess }: PlanEditModa
                 {/* Actions */}
                 <div className="mt-6 flex gap-3">
                     <Button variant="outline" onClick={onClose} className="flex-1" disabled={isLoading}>
-                        Cancel
+                        Hủy
                     </Button>
                     <Button
                         onClick={handleSave}
                         className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]"
                         disabled={isLoading}>
-                        {isLoading ? "Saving..." : "Update Plan"}
+                        {isLoading ? "Đang Lưu..." : "Cập Nhật Gói"}
                     </Button>
                 </div>
             </div>

@@ -53,36 +53,36 @@ export function PlanCard({ plan, onEditLimits, onEditPrice }: PlanCardProps) {
 
             {/* Active Subscribers */}
             <div className="mb-4 rounded-lg bg-[#F8F8F8] p-4">
-                <p className="mb-1 text-[#6F6B99] text-xs">Active Subscribers</p>
+                <p className="mb-1 text-[#6F6B99] text-xs">Người Đăng Ký Hoạt Động</p>
                 <p className="font-bold text-2xl text-[#261E33]">{(plan.activeSubscribers ?? 0).toLocaleString()}</p>
             </div>
 
             {/* Plan Limits */}
             <div className="mb-4 space-y-2 border-t pt-4">
-                <p className="mb-3 font-semibold text-[#261E33] text-sm">Plan Limits</p>
+                <p className="mb-3 font-semibold text-[#261E33] text-sm">Giới Hạn Gói</p>
 
                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#6F6B99]">Max Studios</span>
+                    <span className="text-[#6F6B99]">Tối Đa Studios</span>
                     <span className="font-medium text-[#261E33]">{plan.limits.maxStudios}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#6F6B99]">Groups per Studio</span>
+                    <span className="text-[#6F6B99]">Nhóm Mỗi Studio</span>
                     <span className="font-medium text-[#261E33]">{plan.limits.groupsPerStudio}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#6F6B99]">Members per Group</span>
+                    <span className="text-[#6F6B99]">Thành Viên Mỗi Nhóm</span>
                     <span className="font-medium text-[#261E33]">{plan.limits.membersPerGroup}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#6F6B99]">Storage per Group</span>
+                    <span className="text-[#6F6B99]">Lưu Trữ Mỗi Nhóm</span>
                     <span className="font-medium text-[#261E33]">{plan.limits.storagePerGroup}</span>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#6F6B99]">AI Requests/Day</span>
+                    <span className="text-[#6F6B99]">Yêu Cầu AI/Ngày</span>
                     <span className="font-medium text-[#261E33]">{plan.limits.aiRequestsPerDay}</span>
                 </div>
             </div>
@@ -102,7 +102,7 @@ export function PlanCard({ plan, onEditLimits, onEditPrice }: PlanCardProps) {
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                         />
                     </svg>
-                    Edit Limits
+                    Chỉnh Sửa Giới Hạn
                 </Button>
             </div>
         </div>

@@ -8133,10 +8133,12 @@ export interface components {
             /** Format: int64 */
             accessExpireIn?: number;
             accessToken?: string | null;
+            avatarUrl?: string | null;
             email?: string | null;
             firstName?: string | null;
             /** Format: uuid */
             id?: string;
+            isAdmin?: boolean;
             lastName?: string | null;
             /** Format: int64 */
             refreshExpireIn?: number;

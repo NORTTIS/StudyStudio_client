@@ -3,7 +3,6 @@
 import type { EChartsOption } from "echarts";
 import { Activity, DollarSign, FileText, Star, TrendingUp, UserPlus, Users } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useLocale } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import {
     exportRevenueData,
@@ -27,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
 export function AdminDashboardPage() {
-    const locale = useLocale();
+    const locale = "vi";
     const [stats, setStats] = useState({
         totalUsers: 0,
         activeUsers: 0,
@@ -196,7 +195,7 @@ export function AdminDashboardPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [locale, revenuePeriod, reportPeriod, activityPeriod, userPeriod, subPeriod, revPeriodFilter]);
+    }, [revenuePeriod, reportPeriod, activityPeriod, userPeriod, subPeriod, revPeriodFilter]);
 
     useEffect(() => {
         loadDashboardData();

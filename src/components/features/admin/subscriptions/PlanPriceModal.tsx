@@ -76,7 +76,7 @@ export function PlanPriceModal({ isOpen, onClose, plan, onSuccess }: PlanPriceMo
             <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
-                    <h2 className="font-bold text-[#261E33] text-xl">Edit Price - {plan.planName} Plan</h2>
+                    <h2 className="font-bold text-[#261E33] text-xl">Chỉnh Sửa - {plan.planName}</h2>
                     <button
                         type="button"
                         onClick={onClose}
@@ -94,7 +94,7 @@ export function PlanPriceModal({ isOpen, onClose, plan, onSuccess }: PlanPriceMo
 
                 {/* Current Price Display */}
                 <div className="mb-4 rounded-lg bg-gray-50 p-4">
-                    <p className="text-[#6F6B99] text-sm">Current Price</p>
+                    <p className="text-[#6F6B99] text-sm">Giá Hiện Tại</p>
                     <p className="font-bold text-2xl text-[#261E33]">{formatPrice(plan.price)} VND</p>
                 </div>
 
@@ -102,34 +102,34 @@ export function PlanPriceModal({ isOpen, onClose, plan, onSuccess }: PlanPriceMo
                 <div className="space-y-4">
                     <div>
                         <label htmlFor="price" className="mb-2 block font-medium text-[#261E33] text-sm">
-                            New Price (VND)
+                            Giá Mới (VND)
                         </label>
                         <Input
                             id="price"
                             type="text"
                             value={formatPrice(price)}
                             onChange={handlePriceChange}
-                            placeholder="Enter price in VND"
+                            placeholder="Nhập giá bằng VND"
                             className="text-right"
                         />
                         <p className="mt-1 text-[#6F6B99] text-xs">
-                            Enter price without currency symbol. Example: 299000
+                            Nhập giá không kèm ký hiệu tiền tệ. Ví dụ: 299000
                         </p>
                     </div>
 
                     {/* Price Preview */}
                     {price !== plan.price && (
                         <div className="rounded-lg border border-[#FF5F3D] bg-[#FFF7F4] p-3">
-                            <p className="text-[#FF5F3D] text-sm">Price Change Preview:</p>
+                            <p className="text-[#FF5F3D] text-sm">Xem Trước Thay Đổi Giá:</p>
                             <div className="mt-1 flex items-center justify-between">
-                                <span className="text-[#6F6B99] text-sm">From: {formatPrice(plan.price)} VND</span>
-                                <span className="text-[#FF5F3D] text-sm">To: {formatPrice(price)} VND</span>
+                                <span className="text-[#6F6B99] text-sm">Từ: {formatPrice(plan.price)} VND</span>
+                                <span className="text-[#FF5F3D] text-sm">Đến: {formatPrice(price)} VND</span>
                             </div>
                             <div className="mt-1">
                                 <span className={`text-sm ${price > plan.price ? "text-red-600" : "text-green-600"}`}>
                                     {price > plan.price ? "+" : ""}
                                     {formatPrice(price - plan.price)} VND (
-                                    {price > plan.price ? "increase" : "decrease"})
+                                    {price > plan.price ? "tăng" : "giảm"})
                                 </span>
                             </div>
                         </div>
@@ -149,13 +149,6 @@ export function PlanPriceModal({ isOpen, onClose, plan, onSuccess }: PlanPriceMo
                                         clipRule="evenodd"
                                     />
                                 </svg>
-                                <div>
-                                    <p className="font-medium text-sm text-yellow-800">Warning</p>
-                                    <p className="text-sm text-yellow-700">
-                                        Setting a price for the Free plan will convert it to a paid plan. This may
-                                        affect existing free users.
-                                    </p>
-                                </div>
                             </div>
                         </div>
                     )}
@@ -164,13 +157,13 @@ export function PlanPriceModal({ isOpen, onClose, plan, onSuccess }: PlanPriceMo
                 {/* Actions */}
                 <div className="mt-6 flex gap-3">
                     <Button variant="outline" onClick={onClose} className="flex-1" disabled={isLoading}>
-                        Cancel
+                        Hủy
                     </Button>
                     <Button
                         onClick={handleSave}
                         className="flex-1 bg-[#FF5F3D] hover:bg-[#ff4620]"
                         disabled={isLoading || price === plan.price}>
-                        {isLoading ? "Saving..." : "Update Price"}
+                        {isLoading ? "Đang Lưu..." : "Cập Nhật Giá"}
                     </Button>
                 </div>
             </div>
