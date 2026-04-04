@@ -105,16 +105,11 @@ export function StudiosManagementPage() {
                 }));
 
                 setStudios(mappedStudios);
-
-                // Tính toán lại số lượng active/inactive từ danh sách thực tế
-                const activeCount = mappedStudios.filter((s) => s.status === "active").length;
-                const inactiveCount = mappedStudios.filter((s) => s.status === "inactive").length;
-
                 if (response.data.summary) {
                     setSummary({
-                        totalStudios: response.data.totalCount || response.data.summary.totalStudios || 0,
-                        activeStudios: activeCount, // Tính từ danh sách thực tế
-                        inactiveStudios: inactiveCount, // Tính từ danh sách thực tế
+                        totalStudios: response.data.summary.totalStudios || 0,
+                        activeStudios: response.data.summary.activeStudios || 0,
+                        inactiveStudios: response.data.summary.inactiveStudios || 0,
                         totalMembers: response.data.summary.totalMembers || 0,
                         totalGroups: response.data.summary.totalGroups || 0
                     });
@@ -158,19 +153,24 @@ export function StudiosManagementPage() {
         if (!confirmModal.studio) return;
 
         const newStatus = confirmModal.action === "activate";
+        const newStatusDisplay = confirmModal.action === "activate" ? "active" : "inactive";
 
         try {
             const response = await updateStudioStatus(confirmModal.studio.id, newStatus);
 
             if (response.status === "success") {
+                setStudios((prev) =>
+                    prev.map((s) => (s.id === confirmModal.studio!.id ? { ...s, status: newStatusDisplay } : s))
+                );
+                if (selectedStudio?.id === confirmModal.studio.id) {
+                    setSelectedStudio((prev) => (prev ? { ...prev, status: newStatusDisplay } : null));
+                }
                 messageApi.success({
                     content:
                         confirmModal.action === "activate"
                             ? `Đã kích hoạt studio "${confirmModal.studio.name}"`
                             : `Đã vô hiệu hoá studio "${confirmModal.studio.name}"`
                 });
-                // Refresh toàn bộ danh sách và summary từ server
-                await fetchStudios();
             } else {
                 messageApi.error({
                     content: response.message || "Không thể cập nhật trạng thái studio"
