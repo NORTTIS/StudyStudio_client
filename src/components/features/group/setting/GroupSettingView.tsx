@@ -65,6 +65,28 @@ const roleOptions: Exclude<MemberRole, "Owner">[] = ["Moderator", "Member", "Com
 const GROUP_UPDATED_EVENT = "group:updated";
 const GROUP_NAME_MAX_LENGTH = 30;
 const GROUP_DESCRIPTION_MAX_LENGTH = 200;
+const groupArchiveStorageKey = (groupId: string) => `group:${groupId}:is-archived`;
+
+const writeGroupArchiveOverride = (groupId: string, value: boolean) => {
+    if (!groupId) return;
+    try {
+        localStorage.setItem(groupArchiveStorageKey(groupId), value ? "1" : "0");
+    } catch {
+        // Ignore storage failure and keep API as source of truth.
+    }
+};
+
+const readGroupArchiveOverride = (groupId: string): boolean | null => {
+    if (!groupId) return null;
+    try {
+        const raw = localStorage.getItem(groupArchiveStorageKey(groupId));
+        if (raw === "1") return true;
+        if (raw === "0") return false;
+    } catch {
+        // Ignore storage failures.
+    }
+    return null;
+};
 
 const isOwner = (role: MemberRole) => role === "Owner";
 
@@ -498,7 +520,8 @@ export function GroupSettingView() {
         setIsTemplate(templateBool);
         setInitialIsTemplate(templateBool);
 
-        const archivedBool = Boolean((data as Record<string, unknown>).isArchived ?? false);
+        const archivedOverride = readGroupArchiveOverride(id);
+        const archivedBool = archivedOverride ?? Boolean((data as Record<string, unknown>).isArchived ?? false);
         setIsArchived(archivedBool);
 
         const parentStudioId = String(data.studioId ?? "").trim();
@@ -731,6 +754,8 @@ export function GroupSettingView() {
             if (checked && isEditing) {
                 setIsEditing(false);
             }
+
+            writeGroupArchiveOverride(groupId, checked);
 
             window.dispatchEvent(
                 new CustomEvent(GROUP_UPDATED_EVENT, {
@@ -1534,138 +1559,150 @@ export function GroupSettingView() {
                     />
 
                     {myRoleInGroup === "Owner" ? (
-                        <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
-                            <div className="border-red-200 border-b px-6 py-5">
-                                <h2 className="font-bold text-red-700 text-sm">{t("dangerZone.title")}</h2>
-                                <p className="mt-0.5 text-red-600 text-xs">{t("dangerZone.subtitle")}</p>
-                            </div>
+                        <>
+                            <section className="rounded-2xl border border-amber-200 bg-white shadow-sm">
+                                <div className="border-amber-200 border-b px-6 py-5">
+                                    <h2 className="font-bold text-amber-700 text-sm">
+                                        {locale === "vi" ? "Lưu trữ" : "Archive"}
+                                    </h2>
+                                </div>
 
-                            <div className="px-6 py-6">
-                                <div
-                                    className={`mb-5 rounded-2xl border p-5 transition-all duration-300 ${isGroupPaused
-                                        ? "border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50"
-                                        : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50"}`}>
-                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                        <div className="flex items-start gap-3">
-                                            <div
-                                                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${isGroupPaused
-                                                    ? "bg-amber-100 text-amber-700"
-                                                    : "bg-emerald-100 text-emerald-700"} ${isUpdatingArchive ? "animate-pulse" : ""}`}>
-                                                <Power className="h-4 w-4" />
-                                            </div>
-                                            <div>
+                                <div className="px-6 py-6">
+                                    <div
+                                        className={`rounded-2xl border p-5 transition-all duration-300 ${isGroupPaused
+                                            ? "border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50"
+                                            : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50"}`}>
+                                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                            <div className="flex items-start gap-3">
                                                 <div
-                                                    className={`font-bold text-sm transition-colors duration-300 ${isGroupPaused
-                                                        ? "text-amber-700"
-                                                        : "text-emerald-700"}`}>
-                                                    {t("access.title")}
+                                                    className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${isGroupPaused
+                                                        ? "bg-amber-100 text-amber-700"
+                                                        : "bg-emerald-100 text-emerald-700"} ${isUpdatingArchive ? "animate-pulse" : ""}`}>
+                                                    <Power className="h-4 w-4" />
                                                 </div>
-                                                <div className="mt-1 text-xs text-gray-600">
-                                                    {isGroupPaused
-                                                        ? t("access.inactiveDescription")
-                                                        : t("access.activeDescription")}
+                                                <div>
+                                                    <div
+                                                        className={`font-bold text-sm transition-colors duration-300 ${isGroupPaused
+                                                            ? "text-amber-700"
+                                                            : "text-emerald-700"}`}>
+                                                        {t("access.title")}
+                                                    </div>
+                                                    <div className="mt-1 text-xs text-gray-600">
+                                                        {isGroupPaused
+                                                            ? t("access.inactiveDescription")
+                                                            : t("access.activeDescription")}
+                                                    </div>
                                                 </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-3">
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${isGroupPaused
+                                                        ? "bg-amber-100 text-amber-700"
+                                                        : "bg-gray-100 text-gray-500"}`}>
+                                                    {t("access.inactiveLabel")}
+                                                </span>
+                                                <Switch
+                                                    checked={!isGroupPaused}
+                                                    onCheckedChange={(checked) => {
+                                                        void handleArchiveToggle(!checked);
+                                                    }}
+                                                    disabled={!canToggleArchive || isUpdatingArchive || isParentStudioArchived}
+                                                    className="transition-all duration-300 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500"
+                                                />
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${!isGroupPaused
+                                                        ? "bg-emerald-100 text-emerald-700"
+                                                        : "bg-gray-100 text-gray-500"}`}>
+                                                    {t("access.activeLabel")}
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-3">
-                                            <span
-                                                className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${isGroupPaused
-                                                    ? "bg-amber-100 text-amber-700"
-                                                    : "bg-gray-100 text-gray-500"}`}>
-                                                {t("access.inactiveLabel")}
-                                            </span>
-                                            <Switch
-                                                checked={!isGroupPaused}
-                                                onCheckedChange={(checked) => {
-                                                    void handleArchiveToggle(!checked);
-                                                }}
-                                                disabled={!canToggleArchive || isUpdatingArchive || isParentStudioArchived}
-                                                className="transition-all duration-300 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500"
-                                            />
-                                            <span
-                                                className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${!isGroupPaused
-                                                    ? "bg-emerald-100 text-emerald-700"
-                                                    : "bg-gray-100 text-gray-500"}`}>
-                                                {t("access.activeLabel")}
-                                            </span>
+                                        {statusError ? (
+                                            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
+                                                {statusError}
+                                            </div>
+                                        ) : null}
+
+                                        {isParentStudioArchived ? (
+                                            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700 text-xs">
+                                                {locale === "vi"
+                                                    ? "Studio đang dừng hoạt động nên nhóm này không thể tự mở lại."
+                                                    : "This group cannot be reactivated while its parent studio is paused."}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="rounded-2xl border border-red-200 bg-white shadow-sm">
+                                <div className="border-red-200 border-b px-6 py-5">
+                                    <h2 className="font-bold text-red-700 text-sm">{t("dangerZone.title")}</h2>
+                                    <p className="mt-0.5 text-red-600 text-xs">{t("dangerZone.subtitle")}</p>
+                                </div>
+
+                                <div className="px-6 py-6">
+                                    <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+                                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                            <div>
+                                                <div className="font-bold text-red-700 text-sm">
+                                                    {t("dangerZone.deleteGroup.label")}
+                                                </div>
+                                                <div className="mt-1 text-red-600 text-xs">
+                                                    {t("dangerZone.deleteGroup.description")}
+                                                </div>
+                                            </div>
+
+                                            <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button
+                                                        disabled={!canDelete}
+                                                        className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        {t("dangerZone.deleteGroup.button")}
+                                                    </Button>
+                                                </AlertDialogTrigger>
+
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>
+                                                            {t("dangerZone.deleteGroup.confirmTitle")}
+                                                        </AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            {t("dangerZone.deleteGroup.confirmDescription")}
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel disabled={deleteLoading}>
+                                                            {t("removeMember.cancelButton")}
+                                                        </AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            disabled={deleteLoading || !canDelete}
+                                                            className="bg-red-600 hover:bg-red-700"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                void handleDelete();
+                                                            }}>
+                                                            {deleteLoading
+                                                                ? t("dangerZone.deleteGroup.deleting")
+                                                                : t("dangerZone.deleteGroup.confirmButton")}
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
                                     </div>
 
-                                    {statusError ? (
-                                        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
-                                            {statusError}
-                                        </div>
-                                    ) : null}
-
-                                    {isParentStudioArchived ? (
-                                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700 text-xs">
-                                            {locale === "vi"
-                                                ? "Studio đang dừng hoạt động nên nhóm này không thể tự mở lại."
-                                                : "This group cannot be reactivated while its parent studio is paused."}
+                                    {dangerError ? (
+                                        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
+                                            {dangerError}
                                         </div>
                                     ) : null}
                                 </div>
-
-                                <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                        <div>
-                                            <div className="font-bold text-red-700 text-sm">
-                                                {t("dangerZone.deleteGroup.label")}
-                                            </div>
-                                            <div className="mt-1 text-red-600 text-xs">
-                                                {t("dangerZone.deleteGroup.description")}
-                                            </div>
-                                        </div>
-
-                                        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-                                            <AlertDialogTrigger asChild>
-                                                <Button
-                                                    disabled={!canDelete}
-                                                    className="h-10 rounded-xl bg-red-600 px-5 font-semibold text-sm text-white hover:bg-red-700 disabled:opacity-50">
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    {t("dangerZone.deleteGroup.button")}
-                                                </Button>
-                                            </AlertDialogTrigger>
-
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>
-                                                        {t("dangerZone.deleteGroup.confirmTitle")}
-                                                    </AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        {t("dangerZone.deleteGroup.confirmDescription")}
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel disabled={deleteLoading}>
-                                                        {t("removeMember.cancelButton")}
-                                                    </AlertDialogCancel>
-                                                    <AlertDialogAction
-                                                        disabled={deleteLoading || !canDelete}
-                                                        className="bg-red-600 hover:bg-red-700"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            void handleDelete();
-                                                        }}>
-                                                        {deleteLoading
-                                                            ? t("dangerZone.deleteGroup.deleting")
-                                                            : t("dangerZone.deleteGroup.confirmButton")}
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </div>
-                                </div>
-
-                                {dangerError ? (
-                                    <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-xs">
-                                        {dangerError}
-                                    </div>
-                                ) : null}
-                            </div>
-                        </section>
+                            </section>
+                        </>
                     ) : null}
                 </div>
             </Container>

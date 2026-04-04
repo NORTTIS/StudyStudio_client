@@ -223,7 +223,7 @@ export function GroupCard({
 
                             <span
                                 aria-label={isEffectiveOpen ? "active" : "inactive"}
-                                title={isEffectiveOpen ? "Đang hoạt động" : "Đang dừng"}
+                                title={isEffectiveOpen ? "Đang hoạt động" : "Đã lưu trữ"}
                                 className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center">
                                 <span
                                     aria-hidden="true"

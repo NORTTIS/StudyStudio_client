@@ -33,7 +33,7 @@
 }
 
 @theme inline {
-    --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, "Segoe UI", "Roboto",
+    --font-sans: var(--font-app-sans), "Noto Sans", system-ui, -apple-system, "Segoe UI", "Roboto",
         "Helvetica Neue", "Arial", "Noto Sans", "Liberation Sans", sans-serif;
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -55,6 +55,26 @@
     }
     body {
         @apply bg-background text-foreground font-sans;
+    }
+
+    select {
+        border-color: #e4e4e7;
+        border-radius: 1rem;
+        background-color: #fff;
+        color: #27272a;
+        transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    }
+
+    select:hover {
+        border-color: #fdba74;
+        background-color: #fffdfc;
+    }
+
+    select:focus,
+    select:focus-visible {
+        border-color: #fb923c;
+        box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.18);
+        outline: none;
     }
 }
 

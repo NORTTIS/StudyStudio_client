@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Filter, FolderKanban, Layers, LayoutGrid, List, Plus, Search, Sparkles, Star, Users, Users2, X } from "lucide-react";
+import { Archive, ChevronDown, Filter, FolderKanban, Layers, LayoutGrid, List, Plus, Search, Sparkles, Star, Users, Users2, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -29,6 +29,7 @@ const emptyData: GroupsPageData = {
     favorites: [],
     managed: [],
     independent: [],
+    inactive: [],
     pending: [],
     joined: []
 };
@@ -56,6 +57,7 @@ function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
         favorites: uniqKeepOrder(raw.favorites ?? []),
         managed: uniqKeepOrder(raw.managed ?? []),
         independent: uniqKeepOrder(raw.independent ?? []),
+        inactive: uniqKeepOrder(raw.inactive ?? []),
         joined: uniqKeepOrder(raw.joined ?? [])
     };
 }
@@ -135,7 +137,7 @@ function IconBadge({
     className = "",
     size = "md"
 }: {
-    variant: "orange" | "yellow" | "blue" | "purple" | "slate";
+    variant: "orange" | "yellow" | "blue" | "purple" | "slate" | "red";
     children: React.ReactNode;
     className?: string;
     size?: "sm" | "md" | "lg";
@@ -145,7 +147,8 @@ function IconBadge({
         yellow: "from-[#FBBF24] via-[#F59E0B] to-[#EA580C]",
         blue: "from-[#7DD3FC] via-[#60A5FA] to-[#3B82F6]",
         purple: "from-[#C4B5FD] via-[#A78BFA] to-[#8B5CF6]",
-        slate: "from-[#CBD5E1] via-[#94A3B8] to-[#64748B]"
+        slate: "from-[#CBD5E1] via-[#94A3B8] to-[#64748B]",
+        red: "from-[#FCA5A5] via-[#F87171] to-[#DC2626]"
     };
 
     const sizes = { sm: "h-9 w-9", md: "h-11 w-11", lg: "h-14 w-14" };
@@ -266,7 +269,9 @@ export function GroupsPage() {
     const [expandAll, setExpandAll] = useState(false);
     const [expandManaged, setExpandManaged] = useState(false);
     const [expandIndependent, setExpandIndependent] = useState(false);
+    const [expandInactive, setExpandInactive] = useState(false);
     const [expandJoined, setExpandJoined] = useState(false);
+    const [expandPending, setExpandPending] = useState(false);
 
     const reload = async () => {
         try {
@@ -327,11 +332,11 @@ export function GroupsPage() {
         };
     }, []);
 
-    const { usage, favorites, managed, independent, pending, joined } = useMemo(() => data, [data]);
+    const { usage, favorites, managed, independent, inactive, pending, joined } = useMemo(() => data, [data]);
 
     const allGroups = useMemo(
-        () => uniqueByIdKeepFirst([...favorites, ...managed, ...independent]),
-        [favorites, managed, independent]
+        () => uniqueByIdKeepFirst([...favorites, ...managed, ...independent, ...inactive]),
+        [favorites, managed, independent, inactive]
     );
 
     const ownedGroups = useMemo(() => allGroups.filter((g) => mapRole(g.role) === "owner"), [allGroups]);
@@ -350,6 +355,7 @@ export function GroupsPage() {
         if (groupTypeFilter !== "all" && groupTypeFilter !== "independent") return [];
         return filterGroupsBySearch(ownedIndependent, searchQuery);
     }, [groupTypeFilter, ownedIndependent, searchQuery]);
+    const filteredInactive = useMemo(() => filterGroupsBySearch(inactive, searchQuery), [inactive, searchQuery]);
     const filteredJoined = useMemo(() => {
         if (groupTypeFilter !== "all" && groupTypeFilter !== "joined") return [];
         return filterGroupsBySearch(joined, searchQuery);
@@ -611,28 +617,7 @@ export function GroupsPage() {
                                     loading={loading}
                                     studioOpenById={studioOpenById}
                                     t={t}
-                                />
-                            </SectionReveal>
-                        )}
-
-                        {isAllFilter && (loading || filteredOwnedGroups.length > 0) && (
-                            <SectionReveal delay={0.06}>
-                                <GroupsSection
-                                    icon={FolderKanban}
-                                    iconVariant="blue"
-                                    title={t("created")}
-                                    count={filteredOwnedGroups.length}
-                                    view={view}
-                                    items={filteredOwnedGroups}
-                                    expanded={expandAll}
-                                    onToggle={() => setExpandAll((v) => !v)}
-                                    onToggleStar={onToggleStar}
-                                    onLeaveGroup={onLeaveGroup}
-                                    onCancelPending={onCancelPending}
-                                    emptyText={t("createdEmpty")}
-                                    loading={loading}
-                                    studioOpenById={studioOpenById}
-                                    t={t}
+                                    titleOnly
                                 />
                             </SectionReveal>
                         )}
@@ -655,6 +640,7 @@ export function GroupsPage() {
                                     loading={loading}
                                     studioOpenById={studioOpenById}
                                     t={t}
+                                    titleOnly
                                 />
                             </SectionReveal>
                         )}
@@ -677,6 +663,30 @@ export function GroupsPage() {
                                     loading={loading}
                                     studioOpenById={studioOpenById}
                                     t={t}
+                                    titleOnly
+                                />
+                            </SectionReveal>
+                        )}
+
+                        {isAllFilter && (loading || filteredInactive.length > 0) && (
+                            <SectionReveal delay={0.135}>
+                                <GroupsSection
+                                    icon={Archive}
+                                    iconVariant="red"
+                                    title={t("inactive")}
+                                    count={filteredInactive.length}
+                                    view={view}
+                                    items={filteredInactive}
+                                    expanded={expandInactive}
+                                    onToggle={() => setExpandInactive((v) => !v)}
+                                    onToggleStar={onToggleStar}
+                                    onLeaveGroup={onLeaveGroup}
+                                    onCancelPending={onCancelPending}
+                                    emptyText={t("inactiveEmpty")}
+                                    loading={loading}
+                                    studioOpenById={studioOpenById}
+                                    t={t}
+                                    titleOnly
                                 />
                             </SectionReveal>
                         )}
@@ -699,6 +709,7 @@ export function GroupsPage() {
                                     loading={loading}
                                     studioOpenById={studioOpenById}
                                     t={t}
+                                    titleOnly
                                 />
                             </SectionReveal>
                         )}
@@ -712,8 +723,8 @@ export function GroupsPage() {
                                     count={filteredPending.length}
                                     view={view}
                                     items={filteredPending}
-                                    expanded={true}
-                                    onToggle={() => undefined}
+                                    expanded={expandPending}
+                                    onToggle={() => setExpandPending((v) => !v)}
                                     onToggleStar={onToggleStar}
                                     onLeaveGroup={onLeaveGroup}
                                     onCancelPending={onCancelPending}
@@ -721,6 +732,7 @@ export function GroupsPage() {
                                     loading={loading}
                                     studioOpenById={studioOpenById}
                                     t={t}
+                                    titleOnly
                                 />
                             </SectionReveal>
                         )}
@@ -756,12 +768,13 @@ function GroupsSection({
     emptyText,
     loading = false,
     studioOpenById,
-    t
+    t,
+    titleOnly = false
 }: {
     title: string;
     count: number;
     icon: React.ElementType;
-    iconVariant: "orange" | "yellow" | "blue" | "purple" | "slate";
+    iconVariant: "orange" | "yellow" | "blue" | "purple" | "slate" | "red";
     items: GroupCardDto[];
     view: "grid" | "list";
     className?: string;
@@ -774,6 +787,7 @@ function GroupsSection({
     loading?: boolean;
     studioOpenById: Record<string, boolean>;
     t: (key: string) => string;
+    titleOnly?: boolean;
 }) {
     const canToggle = items.length > PREVIEW_COUNT;
     const visibleItems = expanded || !canToggle ? items : items.slice(0, PREVIEW_COUNT);
@@ -846,10 +860,22 @@ function GroupsSection({
             softBg: "bg-slate-50/90",
             softText: "text-slate-700",
             buttonHover: "hover:text-[#475569]"
+        },
+        red: {
+            shell: "from-[#FFF5F5] via-[#FFFBFB] to-[#FEECEC]",
+            header: "from-[#FFE7E7]/95 via-[#FFF4F4]/92 to-[#FCE8E8]/88",
+            content: "from-[#FFFCFC]/96 via-[#FFF5F5]/94 to-[#FDECEC]/92",
+            glowA: "bg-rose-200/35",
+            glowB: "bg-red-200/25",
+            ring: "ring-rose-100/80",
+            softBg: "bg-rose-50/90",
+            softText: "text-rose-700",
+            buttonHover: "hover:text-[#DC2626]"
         }
     };
 
     const theme = sectionThemes[iconVariant];
+    const showToggleButton = titleOnly ? items.length > 0 : canToggle;
 
     return (
         <motion.section
@@ -903,28 +929,27 @@ function GroupsSection({
                                 <h2 className="truncate font-semibold text-[#261F32] text-[15px] md:text-[16px]">
                                     {title}
                                 </h2>
-                                <span className="inline-flex items-center justify-center rounded-full border border-white/80 bg-white/80 px-2.5 py-1 font-semibold text-[#6F6257] text-[11px] shadow-sm backdrop-blur">
-                                    {count}
-                                </span>
                             </div>
 
-                            <div className="mt-1 flex items-center gap-2">
-                                <span
-                                    className={cn(
-                                        "inline-flex items-center rounded-full px-2.5 py-1 font-medium text-[11px] shadow-sm ring-1 ring-inset",
-                                        theme.softBg,
-                                        theme.softText
-                                    )}>
-                                    {count > 0 ? t("active") : t("noGroups")}
-                                </span>
-                                <p className="truncate text-[#94867B] text-xs">
-                                    {count > 0 ? `${count} ${t("cardsShowing")}` : t("addGroupsHint")}
-                                </p>
-                            </div>
+                            {!titleOnly && expanded && (
+                                <div className="mt-1 flex items-center gap-2">
+                                    <span
+                                        className={cn(
+                                            "inline-flex items-center rounded-full px-2.5 py-1 font-medium text-[11px] shadow-sm ring-1 ring-inset",
+                                            theme.softBg,
+                                            theme.softText
+                                        )}>
+                                        {count > 0 ? t("active") : t("noGroups")}
+                                    </span>
+                                    <p className="truncate text-[#94867B] text-xs">
+                                        {count > 0 ? `${count} ${t("cardsShowing")}` : t("addGroupsHint")}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {canToggle && (
+                    {showToggleButton && (
                         <motion.button
                             type="button"
                             onClick={onToggle}
@@ -941,92 +966,94 @@ function GroupsSection({
                 </div>
             </div>
 
-            <motion.div className={cn("relative px-5 py-5 md:px-6", theme.content)}>
-                {loading ? (
-                    <SectionSkeleton />
-                ) : visibleItems.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.985, y: 8 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="relative overflow-hidden rounded-[28px] border border-white/80 border-dashed bg-white/72 px-6 py-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_14px_34px_rgba(15,23,42,0.04)] backdrop-blur-xl">
-                        <div
-                            className={cn(
-                                "pointer-events-none absolute -top-10 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full blur-3xl",
-                                theme.glowA
-                            )}
-                        />
-                        <div
-                            className={cn(
-                                "mx-auto flex h-16 w-16 items-center justify-center rounded-full shadow-sm ring-1 ring-white/80",
-                                theme.softBg
-                            )}>
-                            <Icon className="h-6 w-6 text-[#8A796D]" />
-                        </div>
-                        <div className="mt-4 space-y-1.5">
-                            <p className="font-semibold text-[#544A42] text-sm">{emptyText}</p>
-                            <p className="text-[#9B8F84] text-xs">{t("emptyAreaHint")}</p>
-                        </div>
-                    </motion.div>
-                ) : (
-                    <>
+            {titleOnly && !expanded ? null : (
+                <motion.div className={cn("relative px-5 py-5 md:px-6", theme.content)}>
+                    {loading ? (
+                        <SectionSkeleton />
+                    ) : visibleItems.length === 0 ? (
                         <motion.div
-                            layout
-                            className={cn(
-                                view === "grid"
-                                    ? "grid grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-3"
-                                    : "flex flex-col gap-3.5"
-                            )}>
-                            <AnimatePresence initial={false} mode="popLayout">
-                                {visibleItems.map((g, index) => (
-                                    <motion.div
-                                        layout
-                                        key={getGroupId(g)}
-                                        initial={{ opacity: 0, y: 20, scale: 0.97, filter: "blur(6px)" }}
-                                        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                                        exit={{ opacity: 0, y: -10, scale: 0.98, filter: "blur(4px)" }}
-                                        transition={{
-                                            duration: 0.35,
-                                            delay: index * 0.045,
-                                            ease: [0.22, 1, 0.36, 1]
-                                        }}
-                                        whileHover={{ y: -6, scale: 1.01 }}
-                                        className={cn(
-                                            "group/card relative",
-                                            view === "list" ? "w-full" : "self-start"
-                                        )}>
-                                        <div className="pointer-events-none absolute inset-0 rounded-[26px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_42%)] opacity-0 blur-xl transition duration-300 group-hover/card:opacity-100" />
-                                        <div className="pointer-events-none absolute inset-0 rounded-[26px] shadow-[0_24px_44px_rgba(15,23,42,0.00)] transition duration-300 group-hover/card:shadow-[0_24px_44px_rgba(15,23,42,0.12)]" />
-                                        <div className="relative rounded-[26px]">
-                                            <GroupCard
-                                                group={g}
-                                                onToggleStar={() => onToggleStar(getGroupId(g))}
-                                                onLeaveGroup={() => onLeaveGroup(getGroupId(g))}
-                                                onCancelPending={() => onCancelPending(getGroupId(g))}
-                                                isStudioOpen={(() => {
-                                                    const studioId = getStudioId(g);
-                                                    return studioId ? studioOpenById[studioId] !== false : true;
-                                                })()}
-                                                view={view}
-                                            />
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
+                            initial={{ opacity: 0, scale: 0.985, y: 8 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="relative overflow-hidden rounded-[28px] border border-white/80 border-dashed bg-white/72 px-6 py-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_14px_34px_rgba(15,23,42,0.04)] backdrop-blur-xl">
+                            <div
+                                className={cn(
+                                    "pointer-events-none absolute -top-10 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full blur-3xl",
+                                    theme.glowA
+                                )}
+                            />
+                            <div
+                                className={cn(
+                                    "mx-auto flex h-16 w-16 items-center justify-center rounded-full shadow-sm ring-1 ring-white/80",
+                                    theme.softBg
+                                )}>
+                                <Icon className="h-6 w-6 text-[#8A796D]" />
+                            </div>
+                            <div className="mt-4 space-y-1.5">
+                                <p className="font-semibold text-[#544A42] text-sm">{emptyText}</p>
+                                <p className="text-[#9B8F84] text-xs">{t("emptyAreaHint")}</p>
+                            </div>
                         </motion.div>
+                    ) : (
+                        <>
+                            <motion.div
+                                layout
+                                className={cn(
+                                    view === "grid"
+                                        ? "grid grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                                        : "flex flex-col gap-3.5"
+                                )}>
+                                <AnimatePresence initial={false} mode="popLayout">
+                                    {visibleItems.map((g, index) => (
+                                        <motion.div
+                                            layout
+                                            key={getGroupId(g)}
+                                            initial={{ opacity: 0, y: 20, scale: 0.97, filter: "blur(6px)" }}
+                                            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                                            exit={{ opacity: 0, y: -10, scale: 0.98, filter: "blur(4px)" }}
+                                            transition={{
+                                                duration: 0.35,
+                                                delay: index * 0.045,
+                                                ease: [0.22, 1, 0.36, 1]
+                                            }}
+                                            whileHover={{ y: -6, scale: 1.01 }}
+                                            className={cn(
+                                                "group/card relative",
+                                                view === "list" ? "w-full" : "self-start"
+                                            )}>
+                                            <div className="pointer-events-none absolute inset-0 rounded-[26px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.9),transparent_42%)] opacity-0 blur-xl transition duration-300 group-hover/card:opacity-100" />
+                                            <div className="pointer-events-none absolute inset-0 rounded-[26px] shadow-[0_24px_44px_rgba(15,23,42,0.00)] transition duration-300 group-hover/card:shadow-[0_24px_44px_rgba(15,23,42,0.12)]" />
+                                            <div className="relative rounded-[26px]">
+                                                <GroupCard
+                                                    group={g}
+                                                    onToggleStar={() => onToggleStar(getGroupId(g))}
+                                                    onLeaveGroup={() => onLeaveGroup(getGroupId(g))}
+                                                    onCancelPending={() => onCancelPending(getGroupId(g))}
+                                                    isStudioOpen={(() => {
+                                                        const studioId = getStudioId(g);
+                                                        return studioId ? studioOpenById[studioId] !== false : true;
+                                                    })()}
+                                                    view={view}
+                                                />
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </motion.div>
 
-                        {canToggle && !expanded && items.length > PREVIEW_COUNT && (
-                            <motion.button
-                                whileHover={{ y: -2, scale: 1.005 }}
-                                whileTap={{ scale: 0.99 }}
-                                onClick={onToggle}
-                                className="mt-5 w-full rounded-[22px] border border-white/85 border-dashed bg-white/78 py-3.5 font-medium text-[#8B7B6D] text-[13px] shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-300 hover:bg-white hover:text-[#EA580C]">
-                                + {items.length - PREVIEW_COUNT} {t("moreGroups")}
-                            </motion.button>
-                        )}
-                    </>
-                )}
-            </motion.div>
+                            {canToggle && !expanded && items.length > PREVIEW_COUNT && (
+                                <motion.button
+                                    whileHover={{ y: -2, scale: 1.005 }}
+                                    whileTap={{ scale: 0.99 }}
+                                    onClick={onToggle}
+                                    className="mt-5 w-full rounded-[22px] border border-white/85 border-dashed bg-white/78 py-3.5 font-medium text-[#8B7B6D] text-[13px] shadow-[0_10px_24px_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-300 hover:bg-white hover:text-[#EA580C]">
+                                    + {items.length - PREVIEW_COUNT} {t("moreGroups")}
+                                </motion.button>
+                            )}
+                        </>
+                    )}
+                </motion.div>
+            )}
         </motion.section>
     );
 }

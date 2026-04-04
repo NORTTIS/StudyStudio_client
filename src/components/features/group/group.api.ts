@@ -1,5 +1,6 @@
 import type { components, paths } from "@/api/types";
 import { getUserData } from "@/api/auth";
+import { sanitizeErrorMessage } from "@/utils/error-message";
 import type { GroupCardDto, GroupsPageData } from "./types";
 
 type GetGroupsResponse =
@@ -440,12 +441,23 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
     const independentBase = dedupeById(((sections?.independentGroups || []) as GroupCardDto[]).filter(Boolean));
     const archived = dedupeById(((sections?.archivedGroups || []) as GroupCardDto[]).filter(Boolean));
 
-    // Keep archived groups visible in list. Backend may move them to archivedGroups only.
-    // We merge them back by whether group belongs to a studio.
-    const managed = dedupeById([...managedBase, ...archived.filter(hasStudio)]);
-    const independent = dedupeById([...independentBase, ...archived.filter((group) => !hasStudio(group))]);
+    const isArchivedGroup = (group: GroupCardDto) => {
+        const candidate = group as Record<string, unknown>;
+        return toBooleanLike(candidate.isArchived) === true;
+    };
+
+    const inactive = dedupeById([
+        ...archived,
+        ...managedBase.filter(isArchivedGroup),
+        ...independentBase.filter(isArchivedGroup)
+    ]);
+
+    // Keep active groups in their original sections and show paused groups in a dedicated section.
+    const managed = dedupeById(managedBase.filter((group) => !isArchivedGroup(group)));
+    const independent = dedupeById(independentBase.filter((group) => !isArchivedGroup(group)));
     const pendingJoined = readPendingJoinGroups();
-    const allGroups = [...favorites, ...managed, ...independent];
+    const activeGroups = [...favorites, ...managed, ...independent];
+    const allGroups = [...activeGroups, ...inactive];
     const groupsById = new Map(
         allGroups
             .map((group) => [getPendingGroupId(group as Record<string, unknown>), group] as const)
@@ -464,7 +476,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
         }
     }
 
-    const pendingFromGroups = allGroups
+    const pendingFromGroups = activeGroups
         .filter((group) => isPendingMembership(group as Record<string, unknown>))
         .map((group) => {
             const normalized = normalizePendingJoinGroup(group as Record<string, unknown>);
@@ -506,7 +518,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
         return array.findIndex((item) => getPendingGroupId(item) === groupId) === index;
     });
 
-    const joined = allGroups.filter((g) => {
+    const joined = activeGroups.filter((g) => {
         const role = mapRole(g.role);
         const groupId = getPendingGroupId(g as Record<string, unknown>);
         const membershipApproved = isApprovedMembership(g as Record<string, unknown>);
@@ -521,6 +533,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
         favorites,
         managed,
         independent,
+        inactive,
         pending,
         joined
     };
@@ -761,16 +774,16 @@ function extractRemainingRequestsFromHeaders(headers: Headers): number | null {
 
 async function extractApiErrorMessage(res: Response): Promise<string> {
     const text = await res.text().catch(() => "");
-    if (!text) return `Request failed: ${res.status}`;
+    if (!text) return "Đã xảy ra lỗi";
 
     try {
         const parsed = JSON.parse(text) as { message?: unknown };
         if (typeof parsed.message === "string" && parsed.message.trim()) {
-            return parsed.message;
+            return sanitizeErrorMessage(parsed.message, "Đã xảy ra lỗi");
         }
     } catch {}
 
-    return text;
+    return sanitizeErrorMessage(text, "Đã xảy ra lỗi");
 }
 
 function parseSseChunk(data: string): string {
@@ -792,7 +805,12 @@ function parseSseChunk(data: string): string {
             case "done":
                 return "";
             case "error":
-                throw new Error(typeof parsed.message === "string" ? parsed.message : "AI error");
+                throw new Error(
+                    sanitizeErrorMessage(
+                        typeof parsed.message === "string" ? parsed.message : "AI error",
+                        "Đã xảy ra lỗi"
+                    )
+                );
             default:
                 return "";
         }
@@ -841,7 +859,12 @@ export function parseSseBlock(
 
         if (parsed.type === "done") return { chunk: "", done: true };
         if (parsed.type === "error") {
-            throw new Error(typeof parsed.message === "string" ? parsed.message : "AI error");
+            throw new Error(
+                sanitizeErrorMessage(
+                    typeof parsed.message === "string" ? parsed.message : "AI error",
+                    "Đã xảy ra lỗi"
+                )
+            );
         }
 
         // Xử lý metadata event - extract remainingRequests và dailyLimit

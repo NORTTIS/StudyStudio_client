@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronLeft, ChevronRight, Filter, Search, AlertTriangle, ListTodo } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -314,6 +315,98 @@ function DateFilterModal(props: {
     );
 }
 
+type DropdownOption = {
+    value: string;
+    label: string;
+};
+
+function FancyDropdown({
+    value,
+    options,
+    onChange,
+    ariaLabel
+}: {
+    value: string;
+    options: DropdownOption[];
+    onChange: (value: string) => void;
+    ariaLabel: string;
+}) {
+    const [open, setOpen] = React.useState(false);
+    const rootRef = React.useRef<HTMLDivElement | null>(null);
+
+    const activeLabel = options.find((option) => option.value === value)?.label ?? options[0]?.label ?? "";
+
+    React.useEffect(() => {
+        if (!open) return;
+
+        const onPointerDown = (event: PointerEvent) => {
+            if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        };
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setOpen(false);
+        };
+
+        document.addEventListener("pointerdown", onPointerDown);
+        document.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [open]);
+
+    return (
+        <div ref={rootRef} className="relative">
+            <button
+                type="button"
+                aria-label={ariaLabel}
+                aria-expanded={open}
+                onClick={() => setOpen((current) => !current)}
+                className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 text-left text-sm text-zinc-800 outline-none transition hover:border-orange-200 hover:bg-white focus:border-orange-300 focus:bg-white">
+                <span className="truncate font-medium">{activeLabel}</span>
+                <ChevronDown className={cn("h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200", open && "rotate-180")} />
+            </button>
+
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
+                        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute top-full left-0 z-30 mt-2 min-w-full overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+                        <div className="p-1">
+                            {options.map((option) => {
+                                const isActive = option.value === value;
+                                return (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(option.value);
+                                            setOpen(false);
+                                        }}
+                                        className={cn(
+                                            "flex w-full items-center rounded-xl px-4 py-2.5 text-left text-sm transition",
+                                            isActive
+                                                ? "bg-gradient-to-r from-orange-50 to-orange-100/70 font-semibold text-orange-700"
+                                                : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950"
+                                        )}>
+                                        <span>{option.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
 export function GroupListScreen() {
     const locale = useLocale();
     const t = useTranslations("GroupTaskListPage");
@@ -474,37 +567,28 @@ export function GroupListScreen() {
                                 />
                             </label>
 
-                            <label className="relative block">
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => {
-                                        setStatusFilter(e.target.value);
-                                        setPage(1);
-                                    }}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300 focus:bg-white">
-                                    <option value="all">{t("allStatus")}</option>
-                                    {statusOptions.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                            </label>
+                            <FancyDropdown
+                                value={statusFilter}
+                                options={[{ value: "all", label: t("allStatus") }, ...statusOptions.map((s) => ({ value: s.id, label: s.name }))]}
+                                onChange={(nextValue) => {
+                                    setStatusFilter(nextValue);
+                                    setPage(1);
+                                }}
+                                ariaLabel={t("allStatus")}
+                            />
 
-                            <label className="relative block">
-                                <select
-                                    value={sortByDeadline}
-                                    onChange={(e) => {
-                                        setSortByDeadline(e.target.value === "desc" ? "desc" : "asc");
-                                        setPage(1);
-                                    }}
-                                    className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 text-sm text-zinc-800 outline-none transition focus:border-zinc-300 focus:bg-white">
-                                    <option value="asc">{`${t("sortLabel")}: ${t("sortAsc")}`}</option>
-                                    <option value="desc">{`${t("sortLabel")}: ${t("sortDesc")}`}</option>
-                                </select>
-                                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                            </label>
+                            <FancyDropdown
+                                value={sortByDeadline}
+                                options={[
+                                    { value: "asc", label: `${t("sortLabel")}: ${t("sortAsc")}` },
+                                    { value: "desc", label: `${t("sortLabel")}: ${t("sortDesc")}` }
+                                ]}
+                                onChange={(nextValue) => {
+                                    setSortByDeadline(nextValue === "desc" ? "desc" : "asc");
+                                    setPage(1);
+                                }}
+                                ariaLabel={t("sortLabel")}
+                            />
 
                             <button
                                 type="button"
@@ -588,13 +672,13 @@ export function GroupListScreen() {
                                                     className={cn(
                                                         "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
                                                         row.severityClass === "text-red-600" &&
-                                                            "border-red-200 bg-red-50 text-red-600",
+                                                        "border-red-200 bg-red-50 text-red-600",
                                                         row.severityClass === "text-orange-600" &&
-                                                            "border-orange-200 bg-orange-50 text-orange-600",
+                                                        "border-orange-200 bg-orange-50 text-orange-600",
                                                         row.severityClass === "text-amber-600" &&
-                                                            "border-amber-200 bg-amber-50 text-amber-600",
+                                                        "border-amber-200 bg-amber-50 text-amber-600",
                                                         row.severityClass === "text-sky-600" &&
-                                                            "border-sky-200 bg-sky-50 text-sky-600"
+                                                        "border-sky-200 bg-sky-50 text-sky-600"
                                                     )}>
                                                     {row.severityLabel}
                                                 </span>
@@ -605,11 +689,11 @@ export function GroupListScreen() {
                                                     className={cn(
                                                         "inline-flex min-h-11 items-center justify-center rounded-full border px-4 font-semibold text-sm shadow-sm",
                                                         row.priorityClass === "text-rose-600" &&
-                                                            "border-rose-200 bg-rose-50 text-rose-600",
+                                                        "border-rose-200 bg-rose-50 text-rose-600",
                                                         row.priorityClass === "text-amber-700" &&
-                                                            "border-amber-200 bg-amber-50 text-amber-700",
+                                                        "border-amber-200 bg-amber-50 text-amber-700",
                                                         row.priorityClass === "text-emerald-700" &&
-                                                            "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                        "border-emerald-200 bg-emerald-50 text-emerald-700"
                                                     )}>
                                                     {row.priorityLabel}
                                                 </span>

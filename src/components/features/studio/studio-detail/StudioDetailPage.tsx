@@ -90,14 +90,38 @@ interface StudioDetailPageProps {
     colorHex?: string | null;
 }
 
+function toBooleanLike(value: unknown): boolean | null {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") {
+        if (value === 1) return true;
+        if (value === 0) return false;
+    }
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true" || normalized === "1") return true;
+        if (normalized === "false" || normalized === "0") return false;
+    }
+    return null;
+}
+
 type StudioPendingApprovalItem = StudioPendingMemberDto & {
     id: string;
     fullName: string;
     colorHex?: string | null;
 };
 
+type GroupUpdatedEventDetail = {
+    id?: string;
+    name?: string;
+    description?: string;
+    requiresMemberApproval?: boolean;
+    isArchived?: boolean;
+};
+
 const studioMemberApprovalStorageKey = (studioId: string) => `studio:${studioId}:requires-member-approval`;
 const studioAutoPausedGroupsStorageKey = (studioId: string) => `studio:${studioId}:auto-paused-group-ids`;
+const groupArchiveStorageKey = (groupId: string) => `group:${groupId}:is-archived`;
+const GROUP_UPDATED_EVENT = "group:updated";
 
 const readStudioMemberApprovalFallback = (studioId: string): boolean | null => {
     if (!studioId) return null;
@@ -114,6 +138,26 @@ const writeStudioMemberApprovalFallback = (studioId: string, value: boolean) => 
     if (!studioId) return;
     try {
         localStorage.setItem(studioMemberApprovalStorageKey(studioId), value ? "1" : "0");
+    } catch {
+        // Ignore storage failure and keep API as source of truth.
+    }
+};
+
+const readGroupArchiveOverride = (groupId: string): boolean | null => {
+    if (!groupId) return null;
+    try {
+        const raw = localStorage.getItem(groupArchiveStorageKey(groupId));
+        if (raw === null) return null;
+        return raw === "1";
+    } catch {
+        return null;
+    }
+};
+
+const writeGroupArchiveOverride = (groupId: string, value: boolean) => {
+    if (!groupId) return;
+    try {
+        localStorage.setItem(groupArchiveStorageKey(groupId), value ? "1" : "0");
     } catch {
         // Ignore storage failure and keep API as source of truth.
     }
@@ -245,14 +289,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     const [memberPendingRemoval, setMemberPendingRemoval] = useState<StudioMemberResponse | null>(null);
     const [requiresMemberApproval, setRequiresMemberApproval] = useState(false);
     const [isUpdatingMemberApproval, setIsUpdatingMemberApproval] = useState(false);
-    const [isStudioArchived, setIsStudioArchived] = useState(Boolean(initialStudio?.isArchived ?? false));
+    const [isStudioArchived, setIsStudioArchived] = useState(toBooleanLike(initialStudio?.isArchived) === true);
     const [isUpdatingStudioArchive, setIsUpdatingStudioArchive] = useState(false);
     const [groupArchiveStateById, setGroupArchiveStateById] = useState<Record<string, boolean>>(() => {
         return initialGroups.reduce<Record<string, boolean>>((acc, group) => {
             const groupId = String(group.id || "").trim();
             if (!groupId) return acc;
 
-            acc[groupId] = Boolean((group as GroupCardDto & { isArchived?: boolean | null }).isArchived ?? false);
+            const overrideArchived = readGroupArchiveOverride(groupId);
+            acc[groupId] = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
             return acc;
         }, {});
     });
@@ -308,25 +353,27 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     }, [initialStudio]);
 
     useEffect(() => {
-        setIsStudioArchived(Boolean(initialStudio?.isArchived ?? false));
+        setIsStudioArchived(toBooleanLike(initialStudio?.isArchived) === true);
     }, [initialStudio?.isArchived]);
 
     useEffect(() => {
         setGroupArchiveStateById(
-            initialGroups.reduce<Record<string, boolean>>((acc, group) => {
+            groupList.reduce<Record<string, boolean>>((acc, group) => {
                 const groupId = String(group.id || "").trim();
                 if (!groupId) return acc;
 
-                acc[groupId] = Boolean((group as GroupCardDto & { isArchived?: boolean | null }).isArchived ?? false);
+                const overrideArchived = readGroupArchiveOverride(groupId);
+                acc[groupId] = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
                 return acc;
             }, {})
         );
-    }, [initialGroups]);
+    }, [groupList]);
 
     const groups: TransformedGroup[] = useMemo(() => {
-        return initialGroups.map((group) => {
+        return groupList.map((group) => {
             const groupId = String(group.id || "").trim();
-            const fallbackArchived = Boolean((group as GroupCardDto & { isArchived?: boolean | null }).isArchived ?? false);
+            const overrideArchived = readGroupArchiveOverride(groupId);
+            const fallbackArchived = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
             const isArchived = groupId in groupArchiveStateById ? groupArchiveStateById[groupId] : fallbackArchived;
 
             return {
@@ -341,11 +388,11 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 role: mapRole(group.role),
                 colorHex: group.colorHex ?? null,
                 iconEmoji: group.iconEmoji ?? null,
-                isOpen: group.isOpen ?? true,
+                isOpen: toBooleanLike(group.isOpen) ?? true,
                 isArchived
             };
         });
-    }, [groupArchiveStateById, initialGroups]);
+    }, [groupArchiveStateById, groupList]);
 
     const filteredGroups = useMemo(() => {
         const query = groupSearchQuery.trim().toLowerCase();
@@ -359,11 +406,22 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         });
     }, [groupSearchQuery, groups]);
 
+    const activeFilteredGroups = useMemo(
+        () => filteredGroups.filter((group) => !group.isArchived),
+        [filteredGroups]
+    );
+
+    const archivedFilteredGroups = useMemo(
+        () => filteredGroups.filter((group) => group.isArchived),
+        [filteredGroups]
+    );
+
     const quickAssignEligibleGroups = useMemo(() => {
-        return initialGroups
+        return groupList
             .filter((group) => {
                 const groupId = String(group.id || "").trim();
-                const fallbackArchived = Boolean((group as GroupCardDto & { isArchived?: boolean | null }).isArchived ?? false);
+                const overrideArchived = readGroupArchiveOverride(groupId);
+                const fallbackArchived = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
                 const isArchived = groupId in groupArchiveStateById ? groupArchiveStateById[groupId] : fallbackArchived;
                 return !isArchived;
             })
@@ -373,20 +431,22 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 memberCount: group.memberCount ?? 0
             }))
             .filter((group) => !!group.id);
-    }, [groupArchiveStateById, initialGroups]);
+    }, [groupArchiveStateById, groupList]);
 
     const syncGroupArchiveWithStudio = useCallback(async (nextIsArchived: boolean) => {
         if (!studioId) return;
 
         if (nextIsArchived) {
-            const groupIdsToPause = initialGroups
+            const groupIdsToPause = groupList
                 .map((group) => String(group.id || "").trim())
                 .filter((groupId) => {
                     if (!groupId) return false;
 
                     const fallbackArchived = Boolean(
-                        (initialGroups.find((group) => String(group.id || "").trim() === groupId) as GroupCardDto & { isArchived?: boolean | null } | undefined)
-                            ?.isArchived ?? false
+                        readGroupArchiveOverride(groupId)
+                        ?? (groupList.find((group) => String(group.id || "").trim() === groupId) as GroupCardDto & { isArchived?: boolean | null } | undefined)
+                            ?.isArchived
+                        ?? false
                     );
                     const isArchived = groupId in groupArchiveStateById ? groupArchiveStateById[groupId] : fallbackArchived;
                     return !isArchived;
@@ -423,6 +483,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                     const next = { ...prev };
                     successGroupIds.forEach((groupId) => {
                         next[groupId] = true;
+                        writeGroupArchiveOverride(groupId, true);
                     });
                     return next;
                 });
@@ -476,6 +537,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 const next = { ...prev };
                 successGroupIds.forEach((groupId) => {
                     next[groupId] = false;
+                    writeGroupArchiveOverride(groupId, false);
                 });
                 return next;
             });
@@ -492,7 +554,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 variant: "destructive"
             });
         }
-    }, [groupArchiveStateById, initialGroups, locale, studioId, toast]);
+    }, [groupArchiveStateById, groupList, locale, studioId, toast]);
 
     useEffect(() => {
         const source = initialStudio as (StudioResponse & {
@@ -583,16 +645,127 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
 
     const loadGroups = useCallback(async () => {
         try {
-            const res = await getStudioGroups(studioId);
+            const res = await getStudioGroups(studioId, locale);
             if (res.status === "success" && res.data?.studioGroups) {
                 setGroupList(res.data.studioGroups);
             }
         } catch { /* silent fail */ }
-    }, [studioId]);
+    }, [locale, studioId]);
+
+    const syncGroupArchiveOverrides = useCallback(() => {
+        setGroupArchiveStateById((prev) => {
+            const next = { ...prev };
+            let hasChanged = false;
+
+            groupList.forEach((group) => {
+                const groupId = String(group.id || "").trim();
+                if (!groupId) return;
+
+                const overrideArchived = readGroupArchiveOverride(groupId);
+                if (overrideArchived === null) return;
+
+                if (next[groupId] !== overrideArchived) {
+                    next[groupId] = overrideArchived;
+                    hasChanged = true;
+                }
+            });
+
+            return hasChanged ? next : prev;
+        });
+    }, [groupList]);
 
     useEffect(() => {
         loadData();
-    }, [loadData]);
+        loadGroups();
+    }, [loadData, loadGroups]);
+
+    useEffect(() => {
+        const refreshGroups = () => {
+            void loadGroups();
+        };
+
+        const handleWindowFocus = () => {
+            syncGroupArchiveOverrides();
+            refreshGroups();
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                syncGroupArchiveOverrides();
+                refreshGroups();
+            }
+        };
+
+        const handlePageShow = () => {
+            syncGroupArchiveOverrides();
+            refreshGroups();
+        };
+
+        window.addEventListener("focus", handleWindowFocus);
+        window.addEventListener("pageshow", handlePageShow);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener("focus", handleWindowFocus);
+            window.removeEventListener("pageshow", handlePageShow);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [loadGroups, syncGroupArchiveOverrides]);
+
+    useEffect(() => {
+        const handleGroupUpdated = (event: Event) => {
+            const detail = (event as CustomEvent<GroupUpdatedEventDetail>).detail;
+            const groupId = String(detail?.id || "").trim();
+
+            if (!groupId) return;
+
+            if (typeof detail.isArchived !== "undefined") {
+                const isArchived = Boolean(detail.isArchived);
+                writeGroupArchiveOverride(groupId, isArchived);
+                setGroupArchiveStateById((prev) => ({
+                    ...prev,
+                    [groupId]: isArchived
+                }));
+            }
+
+            setGroupList((prev) =>
+                prev.map((group) => {
+                    if (String(group.id || "").trim() !== groupId) return group;
+
+                    return {
+                        ...group,
+                        ...(typeof detail.name !== "undefined" ? { name: detail.name ?? group.name } : {}),
+                        ...(typeof detail.description !== "undefined"
+                            ? { description: detail.description ?? group.description }
+                            : {}),
+                        ...(typeof detail.requiresMemberApproval !== "undefined"
+                            ? { isOpen: !detail.requiresMemberApproval }
+                            : {}),
+                        ...(typeof detail.isArchived !== "undefined"
+                            ? { isArchived: Boolean(detail.isArchived) }
+                            : {})
+                    };
+                })
+            );
+        };
+
+        window.addEventListener(GROUP_UPDATED_EVENT, handleGroupUpdated);
+        return () => window.removeEventListener(GROUP_UPDATED_EVENT, handleGroupUpdated);
+    }, []);
+
+    useEffect(() => {
+        const handleStorage = (event: StorageEvent) => {
+            if (!event.key?.startsWith("group:") || !event.key.endsWith(":is-archived")) return;
+            syncGroupArchiveOverrides();
+        };
+
+        window.addEventListener("storage", handleStorage);
+        return () => window.removeEventListener("storage", handleStorage);
+    }, [syncGroupArchiveOverrides]);
+
+    useEffect(() => {
+        syncGroupArchiveOverrides();
+    }, [syncGroupArchiveOverrides]);
 
     useEffect(() => {
         if (!isStudioOwner && (activeTab === "analytics" || activeTab === "settings")) {
@@ -1120,6 +1293,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                     </p>
                                                 ) : null}
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -1271,10 +1445,10 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}
                                         className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                                        <div className="min-w-0 lg:col-span-8">
+                                        <div className={`min-w-0 ${isStudioOwner ? "lg:col-span-8" : "lg:col-span-12"}`}>
                                             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                                                {filteredGroups.length > 0 ? (
-                                                    filteredGroups.map((group) => (
+                                                {activeFilteredGroups.length > 0 ? (
+                                                    activeFilteredGroups.map((group) => (
                                                         <motion.div
                                                             key={group.id}
                                                             layout
@@ -1283,9 +1457,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                             whileHover={{ y: -6 }}
                                                             transition={{ duration: 0.24 }}>
                                                             {(() => {
-                                                                const isGroupArchived = Boolean(group.isArchived);
-                                                                const isGroupOpen = group.isOpen !== false;
-                                                                const isGroupActive = !isGroupArchived && isGroupOpen;
+                                                                const isGroupArchived = toBooleanLike(group.isArchived) === true;
+                                                                const isGroupActive = !isGroupArchived;
+                                                                const isEffectiveOpen = isGroupActive && !isStudioArchived;
                                                                 return (
                                                                     <Link
                                                                         href={`/${locale}/group/${group.id}`}
@@ -1334,22 +1508,22 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                                         {group.name}
                                                                                     </h3>
                                                                                     <span
-                                                                                        aria-label={isGroupActive ? "active" : "inactive"}
-                                                                                        title={isGroupActive ? (locale === "vi" ? "Đang hoạt động" : "Active") : (locale === "vi" ? "Đang dừng" : "Paused")}
+                                                                                        aria-label={isEffectiveOpen ? "active" : "inactive"}
+                                                                                        title={isEffectiveOpen ? (locale === "vi" ? "Đang hoạt động" : "Active") : (locale === "vi" ? "Đang dừng" : "Paused")}
                                                                                         className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center"
                                                                                     >
                                                                                         <span
                                                                                             aria-hidden="true"
-                                                                                            className={`absolute inset-0 rounded-full animate-ping motion-reduce:animate-none ${isGroupActive
+                                                                                            className={`absolute inset-0 rounded-full animate-ping motion-reduce:animate-none ${isEffectiveOpen
                                                                                                 ? "bg-emerald-400/60"
                                                                                                 : "bg-red-500/75"}`}
                                                                                         />
                                                                                         <span
-                                                                                            className={`relative h-2.5 w-2.5 rounded-full ${isGroupActive
+                                                                                            className={`relative h-2.5 w-2.5 rounded-full ${isEffectiveOpen
                                                                                                 ? "bg-emerald-500"
                                                                                                 : "bg-red-600"}`}
                                                                                             style={{
-                                                                                                boxShadow: isGroupActive
+                                                                                                boxShadow: isEffectiveOpen
                                                                                                     ? "0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 10px rgba(16, 185, 129, 0.28)"
                                                                                                     : "0 0 0 4px rgba(220, 38, 38, 0.26), 0 0 12px rgba(220, 38, 38, 0.42)"
                                                                                             }}
@@ -1460,15 +1634,61 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                             })()}
                                                         </motion.div>
                                                     ))
-                                                ) : (
+                                                ) : activeFilteredGroups.length === 0 && archivedFilteredGroups.length === 0 ? (
                                                     <div className="col-span-2">
                                                         <EmptyBlock
                                                             title={t("noGroups")}
                                                             subtitle={groupSearchQuery ? t("detail.noGroupsSubtitle") : t("detail.noGroupsSubtitle")}
                                                         />
                                                     </div>
-                                                )}
+                                                ) : null}
                                             </div>
+
+                                            {archivedFilteredGroups.length > 0 ? (
+                                                <div className="mt-5 rounded-[24px] border border-amber-200/70 bg-amber-50/70 p-4">
+                                                    <div className="mb-3 flex items-center justify-between gap-2">
+                                                        <h4 className="font-semibold text-amber-800 text-sm">
+                                                            {locale === "vi" ? "Nhóm đang lưu trữ" : "Archived groups"}
+                                                        </h4>
+                                                        <span className="rounded-full border border-amber-300/70 bg-white/80 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                                                            {archivedFilteredGroups.length}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                        {archivedFilteredGroups.map((group) => (
+                                                            <Link
+                                                                key={`archived-${group.id}`}
+                                                                href={`/${locale}/group/${group.id}`}
+                                                                onClick={(event) => {
+                                                                    event.preventDefault();
+                                                                    event.stopPropagation();
+                                                                    toast({
+                                                                        variant: "destructive",
+                                                                        description: locale === "vi"
+                                                                            ? "Nhóm này đang lưu trữ, không thể truy cập."
+                                                                            : "This group is archived and cannot be accessed."
+                                                                    });
+                                                                }}
+                                                                className="group cursor-not-allowed rounded-2xl border border-amber-200/70 bg-white/90 p-4 opacity-80 shadow-sm transition">
+                                                                <div className="flex items-start justify-between gap-3">
+                                                                    <div className="min-w-0">
+                                                                        <p className="truncate font-semibold text-slate-800 text-sm">
+                                                                            {group.name}
+                                                                        </p>
+                                                                        <p className="mt-1 text-slate-500 text-xs">
+                                                                            {group.members} {t("members")} • {group.tasks} {t("detail.tasks")}
+                                                                        </p>
+                                                                    </div>
+                                                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-[11px] text-amber-700">
+                                                                        {locale === "vi" ? "Lưu trữ" : "Archived"}
+                                                                    </span>
+                                                                </div>
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         {isStudioOwner && (
@@ -1524,7 +1744,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                         ? "border-b-2 border-orange-600 text-orange-600"
                                                                         : "text-slate-500 hover:text-slate-700"
                                                                         }`}>
-                                                                    Phê duyệt
+                                                                    {locale === "vi" ? "Phê duyệt" : "Approvals"}
                                                                 </button>
                                                             </div>
 
@@ -1534,7 +1754,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                         <MemberList
                                                                             members={members}
                                                                             studioOwnerId={initialStudio?.ownerId}
-                                                                            groups={initialGroups.map((group) => ({
+                                                                            groups={groupList.map((group) => ({
                                                                                 id: group.id || "",
                                                                                 name: group.name || ""
                                                                             }))}
@@ -1588,10 +1808,14 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                     ) : pendingApprovals.length === 0 ? (
                                                                         <div className="rounded-2xl border border-gray-100 bg-white p-4 py-6 text-center shadow-sm">
                                                                             <p className="text-slate-600 text-sm">
-                                                                                Chưa có yêu cầu phê duyệt nào
+                                                                                {locale === "vi"
+                                                                                    ? "Chưa có yêu cầu phê duyệt nào"
+                                                                                    : "No approval requests yet"}
                                                                             </p>
                                                                             <p className="mt-1 text-slate-400 text-xs">
-                                                                                Những yêu cầu mới sẽ hiển thị tại đây
+                                                                                {locale === "vi"
+                                                                                    ? "Những yêu cầu mới sẽ hiển thị tại đây"
+                                                                                    : "New requests will appear here"}
                                                                             </p>
                                                                         </div>
                                                                     ) : (
@@ -1624,7 +1848,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                                             disabled={isBusy || isStudioArchived}
                                                                                             onClick={() => void handleApprovePendingMember(item.id)}
                                                                                             className="h-8 flex-1 rounded-lg bg-orange-600 px-3 text-xs font-medium text-white hover:bg-orange-700">
-                                                                                            {isApproving ? "Đang duyệt..." : "Phê duyệt"}
+                                                                                            {isApproving
+                                                                                                ? (locale === "vi" ? "Đang duyệt..." : "Approving...")
+                                                                                                : (locale === "vi" ? "Phê duyệt" : "Approve")}
                                                                                         </Button>
                                                                                         <Button
                                                                                             type="button"
@@ -1632,7 +1858,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                                             disabled={isBusy || isStudioArchived}
                                                                                             onClick={() => void handleRejectPendingMember(item.id)}
                                                                                             className="h-8 flex-1 rounded-lg border-red-200 px-3 text-xs font-medium text-red-600 hover:bg-red-50">
-                                                                                            {isRejecting ? "Đang từ chối..." : "Từ chối"}
+                                                                                            {isRejecting
+                                                                                                ? (locale === "vi" ? "Đang từ chối..." : "Rejecting...")
+                                                                                                : (locale === "vi" ? "Từ chối" : "Reject")}
                                                                                         </Button>
                                                                                     </div>
                                                                                 </div>
@@ -1719,6 +1947,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                 </aside>
                                             </div>
                                         )}
+
                                     </motion.div>
                                 )}
 
@@ -2039,15 +2268,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                             </div>
                                         </section>
 
-                                        <section className="overflow-hidden rounded-[28px] border border-red-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
-                                            <div className="border-b border-red-200 px-6 py-5">
-                                                <h2 className="text-sm font-bold text-red-700">
-                                                    {t("detail.danger.title")}
+                                        <section className="overflow-hidden rounded-[28px] border border-amber-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                                            <div className="border-b border-amber-200 px-6 py-5">
+                                                <h2 className="text-sm font-bold text-amber-700">
+                                                    {locale === "vi" ? "Lưu trữ" : "Archive"}
                                                 </h2>
                                             </div>
 
                                             <div className="px-6 py-6">
-                                                <div className={`mb-4 rounded-[24px] border p-5 transition-all duration-300 ${isStudioArchived
+                                                <div className={`rounded-[24px] border p-5 transition-all duration-300 ${isStudioArchived
                                                     ? "border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50"
                                                     : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50"}`}>
                                                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -2060,13 +2289,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                             </div>
                                                             <div>
                                                                 <div className={`text-sm font-bold ${isStudioArchived ? "text-amber-700" : "text-emerald-700"}`}>
-                                                                    {locale === "vi" ? "Trạng thái hoạt động của studio" : "Studio activity status"}
+                                                                    {locale === "vi" ? "Trạng thái lưu trữ của studio" : "Studio archive status"}
                                                                 </div>
                                                                 <div className="mt-1 text-xs text-gray-600">
                                                                     {isStudioArchived
                                                                         ? (locale === "vi"
-                                                                            ? "Studio đang dừng hoạt động. Chỉ nên dùng tab cài đặt để mở lại."
-                                                                            : "Studio is paused. Use the settings tab to reopen it.")
+                                                                            ? "Studio đang được lưu trữ. Chỉ nên dùng tab cài đặt để mở lại."
+                                                                            : "Studio is archived. Use the settings tab to reopen it.")
                                                                         : (locale === "vi"
                                                                             ? "Studio đang hoạt động bình thường."
                                                                             : "Studio is currently active.")}
@@ -2079,7 +2308,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                 className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${isStudioArchived
                                                                     ? "bg-amber-100 text-amber-700"
                                                                     : "bg-gray-100 text-gray-500"}`}>
-                                                                {locale === "vi" ? "Đang dừng" : "Paused"}
+                                                                {locale === "vi" ? "Lưu trữ" : "Archive"}
                                                             </span>
                                                             <Switch
                                                                 checked={!isStudioArchived}
@@ -2093,12 +2322,22 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                 className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${!isStudioArchived
                                                                     ? "bg-emerald-100 text-emerald-700"
                                                                     : "bg-gray-100 text-gray-500"}`}>
-                                                                {locale === "vi" ? "Đang hoạt động" : "Active"}
+                                                                {locale === "vi" ? "Hoạt động" : "Active"}
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </section>
 
+                                        <section className="overflow-hidden rounded-[28px] border border-red-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                                            <div className="border-b border-red-200 px-6 py-5">
+                                                <h2 className="text-sm font-bold text-red-700">
+                                                    {t("detail.danger.title")}
+                                                </h2>
+                                            </div>
+
+                                            <div className="px-6 py-6">
                                                 <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
                                                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                                         <div>

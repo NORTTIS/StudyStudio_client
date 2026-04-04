@@ -11,6 +11,7 @@ export type GroupsPageData = {
     favorites: GroupCardDto[];
     managed: GroupCardDto[];
     independent: GroupCardDto[];
+    inactive: GroupCardDto[];
     pending: GroupCardDto[];
     joined: GroupCardDto[];
 };

@@ -54,6 +54,15 @@ type GroupDetailResponse = {
     data?: GroupDetail | null;
 };
 
+type StudioResponse = components["schemas"]["StudioResponse"];
+
+type StudioResponseApiResponse = {
+    status?: string | null;
+    code?: string | null;
+    message?: string | null;
+    data?: StudioResponse | null;
+};
+
 type GroupUpdatedDetail = {
     id: string;
     name?: string | null;
@@ -62,6 +71,7 @@ type GroupUpdatedDetail = {
     memberCount?: number | null;
     requiresMemberApproval?: boolean | null;
     isArchived?: boolean | null;
+    studioIsArchived?: boolean | null;
 };
 
 type ApiGroupMembersResponse = {
@@ -213,6 +223,7 @@ export function GroupStudioHeader({
     const [groupColorHex, setGroupColorHex] = React.useState<string>("#FF5F3D");
     const [requiresMemberApproval, setRequiresMemberApproval] = React.useState<boolean>(false);
     const [isArchived, setIsArchived] = React.useState<boolean>(false);
+    const [isStudioArchived, setIsStudioArchived] = React.useState<boolean>(false);
     const [statusPulseKey, setStatusPulseKey] = React.useState(0);
 
     const [inviteOpen, setInviteOpen] = React.useState(false);
@@ -310,6 +321,34 @@ export function GroupStudioHeader({
                 setGroupAlias(data?.alias || "");
                 setGroupColorHex(data?.colorHex || "#FF5F3D");
                 setIsArchived(Boolean(data?.isArchived ?? false));
+
+                const resolvedStudioId = String(data?.studioId ?? "").trim();
+                if (resolvedStudioId) {
+                    const studioRes = await fetch(`${apiBase}/studio/${resolvedStudioId}`, {
+                        headers: {
+                            Accept: "application/json",
+                            ...(token ? { Authorization: `Bearer ${token}` } : {})
+                        },
+                        cache: "no-store"
+                    });
+
+                    const studioText = await readText(studioRes);
+                    let studioJson: unknown = null;
+                    try {
+                        studioJson = studioText ? JSON.parse(studioText) : null;
+                    } catch { }
+
+                    const studioData = (studioJson as StudioResponseApiResponse | null)?.data;
+                    if (studioRes.ok && studioData) {
+                        setIsStudioArchived(Boolean(studioData.isArchived ?? false));
+                    } else {
+                        // Fallback to group state only when studio detail cannot be resolved.
+                        setIsStudioArchived(Boolean(data?.isArchived ?? false));
+                    }
+                } else {
+                    setIsStudioArchived(Boolean(data?.isArchived ?? false));
+                }
+
                 const memberApprovalValue =
                     (data as GroupDetail & {
                         requiresMemberApproval?: boolean | null;
@@ -390,6 +429,9 @@ export function GroupStudioHeader({
             if (typeof d.isArchived !== "undefined" && d.isArchived != null) {
                 setIsArchived(Boolean(d.isArchived));
             }
+            if (typeof d.studioIsArchived !== "undefined" && d.studioIsArchived != null) {
+                setIsStudioArchived(Boolean(d.studioIsArchived));
+            }
         };
 
         window.addEventListener(GROUP_UPDATED_EVENT, onUpdated);
@@ -398,6 +440,7 @@ export function GroupStudioHeader({
 
     const curPath = stripLocale(pathname || "");
     const canInvite = userRole === "owner" || userRole === "moderator";
+    const isInviteDisabled = isArchived || isStudioArchived;
     const canLeaveGroup = userRole !== "owner";
     const apiBase = getApiBase();
 
@@ -582,28 +625,28 @@ export function GroupStudioHeader({
                                         transition={{ duration: 0.22 }}
                                         className="flex items-center gap-2 font-medium text-[#8B6B4A] text-sm">
                                         <span
-                                            aria-label={isArchived ? "inactive" : "active"}
-                                            title={isArchived ? "Đang dừng" : "Đang hoạt động"}
+                                            aria-label={isStudioArchived ? "inactive" : "active"}
+                                            title={isStudioArchived ? "Đang dừng" : "Đang hoạt động"}
                                             className="relative inline-flex h-2.5 w-2.5 items-center justify-center"
                                         >
                                             <span
                                                 aria-hidden="true"
                                                 className={twMerge(
                                                     "absolute inset-0 rounded-full animate-ping motion-reduce:animate-none",
-                                                    isArchived ? "bg-red-500/75" : "bg-emerald-400/60"
+                                                    isStudioArchived ? "bg-red-500/75" : "bg-emerald-400/60"
                                                 )}
                                             />
                                             <motion.span
-                                                key={`${isArchived ? "inactive" : "active"}-${statusPulseKey}`}
+                                                key={`${isStudioArchived ? "inactive" : "active"}-${statusPulseKey}`}
                                                 initial={{ scale: 0.85, opacity: 0.75 }}
                                                 animate={{ scale: [1, 1.18, 1], opacity: [0.85, 1, 1] }}
                                                 transition={{ duration: 0.34, ease: "easeOut" }}
                                                 className={twMerge(
                                                     "relative h-2.5 w-2.5 rounded-full",
-                                                    isArchived ? "bg-red-600" : "bg-emerald-500"
+                                                    isStudioArchived ? "bg-red-600" : "bg-emerald-500"
                                                 )}
                                                 style={{
-                                                    boxShadow: isArchived
+                                                    boxShadow: isStudioArchived
                                                         ? "0 0 0 4px rgba(220, 38, 38, 0.26), 0 0 12px rgba(220, 38, 38, 0.42)"
                                                         : "0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 10px rgba(16, 185, 129, 0.28)"
                                                 }}
@@ -748,11 +791,15 @@ export function GroupStudioHeader({
                             {canInvite ? (
                                 <motion.button
                                     type="button"
-                                    onClick={() => setInviteOpen(true)}
+                                    onClick={() => {
+                                        if (isInviteDisabled) return;
+                                        setInviteOpen(true);
+                                    }}
                                     whileHover={{ y: -2 }}
                                     whileTap={{ scale: 0.98 }}
                                     transition={{ duration: 0.18 }}
-                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-red-600 px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-orange-500 hover:to-red-700 hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300">
+                                    disabled={isInviteDisabled}
+                                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-red-600 px-5 font-semibold text-sm text-white shadow-md shadow-orange-200 transition-all duration-200 hover:from-orange-500 hover:to-red-700 hover:shadow-lg hover:shadow-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:from-orange-500 disabled:hover:to-red-600 disabled:hover:shadow-md">
                                     <UserPlus className="h-4 w-4" />
                                     {tCommon("addMember")}
                                 </motion.button>
@@ -840,7 +887,7 @@ export function GroupStudioHeader({
                     open={inviteOpen}
                     onClose={() => setInviteOpen(false)}
                     groupName={groupName || "Group"}
-                    canManage={canInvite}
+                    canManage={canInvite && !isInviteDisabled}
                     hasModerator={hasModerator}
                     onCreateLink={async ({ role }) => {
                         const url = await createInviteLinkApi(role);

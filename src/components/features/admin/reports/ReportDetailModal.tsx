@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Report = {
     id: string;
@@ -139,29 +140,33 @@ export function ReportDetailModal({ report, onClose }: ReportDetailModalProps) {
                         <label className="mb-2 block font-medium text-[#261E33] text-sm">
                             {t("modal.updateStatus")}
                         </label>
-                        <select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value as Report["status"])}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
-                            <option value="Open">Open</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Closed">Closed</option>
-                        </select>
+                        <Select value={status} onValueChange={(value) => setStatus(value as Report["status"])}>
+                            <SelectTrigger className="w-full rounded-lg px-4">
+                                <SelectValue placeholder={t("modal.updateStatus")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Open">Open</SelectItem>
+                                <SelectItem value="In Progress">In Progress</SelectItem>
+                                <SelectItem value="Resolved">Resolved</SelectItem>
+                                <SelectItem value="Closed">Closed</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <label className="mb-2 block font-medium text-[#261E33] text-sm">
                             {t("modal.updatePriority")}
                         </label>
-                        <select
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value as Report["priority"])}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                            <option value="Critical">Critical</option>
-                        </select>
+                        <Select value={priority} onValueChange={(value) => setPriority(value as Report["priority"])}>
+                            <SelectTrigger className="w-full rounded-lg px-4">
+                                <SelectValue placeholder={t("modal.updatePriority")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Low">Low</SelectItem>
+                                <SelectItem value="Medium">Medium</SelectItem>
+                                <SelectItem value="High">High</SelectItem>
+                                <SelectItem value="Critical">Critical</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 

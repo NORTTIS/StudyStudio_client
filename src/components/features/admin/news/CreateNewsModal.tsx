@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type CreateNewsModalProps = {
     onClose: () => void;
@@ -86,30 +87,34 @@ export function CreateNewsModal({ onClose }: CreateNewsModalProps) {
                             <label className="mb-2 block font-medium text-[#261E33] text-sm">
                                 {t("createModal.typeLabel")}
                             </label>
-                            <select
-                                value={type}
-                                onChange={(e) => setType(e.target.value as any)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
-                                <option value="System">System</option>
-                                <option value="Update">Update</option>
-                                <option value="Maintenance">Maintenance</option>
-                                <option value="Announcement">Announcement</option>
-                            </select>
+                            <Select value={type} onValueChange={(value) => setType(value as typeof type)}>
+                                <SelectTrigger className="w-full rounded-lg px-4">
+                                    <SelectValue placeholder={t("createModal.typeLabel")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="System">System</SelectItem>
+                                    <SelectItem value="Update">Update</SelectItem>
+                                    <SelectItem value="Maintenance">Maintenance</SelectItem>
+                                    <SelectItem value="Announcement">Announcement</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div>
                             <label className="mb-2 block font-medium text-[#261E33] text-sm">
                                 {t("createModal.priorityLabel")}
                             </label>
-                            <select
-                                value={priority}
-                                onChange={(e) => setPriority(e.target.value as any)}
-                                className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
-                                <option value="Low">Low</option>
-                                <option value="Normal">Normal</option>
-                                <option value="High">High</option>
-                                <option value="Urgent">Urgent</option>
-                            </select>
+                            <Select value={priority} onValueChange={(value) => setPriority(value as typeof priority)}>
+                                <SelectTrigger className="w-full rounded-lg px-4">
+                                    <SelectValue placeholder={t("createModal.priorityLabel")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Low">Low</SelectItem>
+                                    <SelectItem value="Normal">Normal</SelectItem>
+                                    <SelectItem value="High">High</SelectItem>
+                                    <SelectItem value="Urgent">Urgent</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
 
@@ -118,13 +123,15 @@ export function CreateNewsModal({ onClose }: CreateNewsModalProps) {
                         <label className="mb-2 block font-medium text-[#261E33] text-sm">
                             {t("createModal.statusLabel")}
                         </label>
-                        <select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value as any)}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-[#FF5F3D] focus:outline-none focus:ring-2 focus:ring-[#FF5F3D]/20">
-                            <option value="Draft">Draft</option>
-                            <option value="Published">Published</option>
-                        </select>
+                        <Select value={status} onValueChange={(value) => setStatus(value as typeof status)}>
+                            <SelectTrigger className="w-full rounded-lg px-4">
+                                <SelectValue placeholder={t("createModal.statusLabel")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Draft">Draft</SelectItem>
+                                <SelectItem value="Published">Published</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 

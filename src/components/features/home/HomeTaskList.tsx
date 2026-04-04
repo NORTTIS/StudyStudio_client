@@ -27,6 +27,7 @@ import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type HomeTaskListResponse = components["schemas"]["HomeTaskListResponse"];
 type HomeTaskListResponseApiResponse = components["schemas"]["HomeTaskListResponseApiResponse"];
@@ -429,11 +430,11 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
         return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     }, [minDate]);
 
-    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-        setMonth(new Date(month.getFullYear(), Number(e.target.value), 1));
+    const handleMonthChange = (value: string) =>
+        setMonth(new Date(month.getFullYear(), Number(value), 1));
 
-    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-        setMonth(new Date(Number(e.target.value), month.getMonth(), 1));
+    const handleYearChange = (value: string) =>
+        setMonth(new Date(Number(value), month.getMonth(), 1));
 
     const goPrevMonth = () => {
         const next = new Date(month.getFullYear(), month.getMonth() - 1, 1);
@@ -470,150 +471,152 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                  <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      ref={rootRef}
-                      className="fixed z-[20000] rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl"
-                      style={{ top: popupPosition.top, left: popupPosition.left, width: popupPosition.width }}>
-                      <div className="mb-4 flex items-center gap-3">
-                          <div className="relative flex-1">
-                              <select
-                                  value={month.getMonth()}
-                                  onChange={handleMonthChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400">
-                                  {monthOptions.map((item) => (
-                                      <option key={item.value} value={item.value}>
-                                          {item.label}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
-                          </div>
+                <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl"
+                    style={{ top: popupPosition.top, left: popupPosition.left, width: popupPosition.width }}>
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="flex-1">
+                            <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
+                                <SelectTrigger className="h-12 w-full border-slate-200 bg-white/80 text-base font-semibold text-slate-800">
+                                    <SelectValue placeholder={monthOptions[month.getMonth()]?.label} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {monthOptions.map((item) => (
+                                        <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                          <div className="relative w-[140px]">
-                              <select
-                                  value={month.getFullYear()}
-                                  onChange={handleYearChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-slate-200 bg-white/80 px-4 pr-10 text-base font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-violet-400">
-                                  {yearOptions.map((year) => (
-                                      <option key={year} value={year}>
-                                          {year}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-slate-500" />
-                          </div>
-                      </div>
+                        <div className="w-[140px]">
+                            <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
+                                <SelectTrigger className="h-12 w-full border-slate-200 bg-white/80 text-base font-semibold text-slate-800">
+                                    <SelectValue placeholder={String(month.getFullYear())} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {yearOptions.map((year) => (
+                                        <SelectItem key={year} value={String(year)}>
+                                            {year}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
 
-                      <div className="rounded-[22px] border border-slate-200 bg-white/80 p-4">
-                          <div className="mb-4 flex items-center justify-between">
-                              <button
-                                  type="button"
-                                  onClick={goPrevMonth}
-                                  disabled={isPrevDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronLeft className="h-5 w-5" />
-                              </button>
+                    <div className="rounded-[22px] border border-slate-200 bg-white/80 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={goPrevMonth}
+                                disabled={isPrevDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
 
-                              <div className="text-[18px] font-bold text-slate-900">
-                                  {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
-                              </div>
+                            <div className="text-[18px] font-bold text-slate-900">
+                                {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
+                            </div>
 
-                              <button
-                                  type="button"
-                                  onClick={goNextMonth}
-                                  disabled={isNextDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronRight className="h-5 w-5" />
-                              </button>
-                          </div>
+                            <button
+                                type="button"
+                                onClick={goNextMonth}
+                                disabled={isNextDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                          <DayPicker
-                              mode="single"
-                              month={month}
-                              onMonthChange={setMonth}
-                              selected={selectedDate}
-                              onSelect={pickDate}
-                              disabled={
-                                  maxDate && minDate
-                                      ? { before: minDate, after: maxDate }
-                                      : maxDate
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={
+                                maxDate && minDate
+                                    ? { before: minDate, after: maxDate }
+                                    : maxDate
                                         ? { after: maxDate }
                                         : minDate
-                                          ? { before: minDate }
-                                          : undefined
-                              }
-                              showOutsideDays
-                              className="w-full"
-                              styles={{
-                                  day: { outline: "none", boxShadow: "none" },
-                                  button: { outline: "none", boxShadow: "none" }
-                              }}
-                              classNames={{
-                                  months: "flex w-full flex-col",
-                                  month: "w-full space-y-3",
-                                  month_caption: "hidden",
-                                  caption: "hidden",
-                                  caption_label: "hidden",
-                                  nav: "hidden",
-                                  table: "w-full border-collapse",
-                                  month_grid: "w-full border-collapse",
-                                  tbody: "w-full",
-                                  weekdays: "flex w-full justify-between",
-                                  weekday: "h-10 w-10 text-center text-[13px] font-semibold text-slate-500",
-                                  weeks: "w-full",
-                                  week: "mt-2 flex w-full justify-between",
-                                  day: "h-10 w-10 p-0 text-center",
-                                  cell: "h-10 w-10 p-0 text-center",
-                                  day_button:
-                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-slate-800 shadow-none outline-none ring-0 transition hover:bg-violet-50 focus:outline-none focus:ring-0",
-                                  selected: "!rounded-xl !bg-violet-500 !text-white",
-                                  day_selected: "!rounded-xl !bg-violet-500 !text-white hover:!bg-violet-500",
-                                  today: "font-bold text-violet-600",
-                                  day_today: "font-bold text-violet-600",
-                                  outside: "opacity-30",
-                                  day_outside: "opacity-30",
-                                  disabled: "cursor-not-allowed opacity-30",
-                                  day_disabled: "cursor-not-allowed opacity-30",
-                                  hidden: "invisible",
-                                  day_hidden: "invisible"
-                              }}
-                          />
-                      </div>
+                                            ? { before: minDate }
+                                            : undefined
+                            }
+                            showOutsideDays
+                            className="w-full"
+                            styles={{
+                                day: { outline: "none", boxShadow: "none" },
+                                button: { outline: "none", boxShadow: "none" }
+                            }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                month_caption: "hidden",
+                                caption: "hidden",
+                                caption_label: "hidden",
+                                nav: "hidden",
+                                table: "w-full border-collapse",
+                                month_grid: "w-full border-collapse",
+                                tbody: "w-full",
+                                weekdays: "flex w-full justify-between",
+                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-slate-500",
+                                weeks: "w-full",
+                                week: "mt-2 flex w-full justify-between",
+                                day: "h-10 w-10 p-0 text-center",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day_button:
+                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-slate-800 shadow-none outline-none ring-0 transition hover:bg-violet-50 focus:outline-none focus:ring-0",
+                                selected: "!rounded-xl !bg-violet-500 !text-white",
+                                day_selected: "!rounded-xl !bg-violet-500 !text-white hover:!bg-violet-500",
+                                today: "font-bold text-violet-600",
+                                day_today: "font-bold text-violet-600",
+                                outside: "opacity-30",
+                                day_outside: "opacity-30",
+                                disabled: "cursor-not-allowed opacity-30",
+                                day_disabled: "cursor-not-allowed opacity-30",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                          <button
-                              type="button"
-                              onClick={() => pickDate(new Date())}
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
-                              {t ? t("today") : "Today"}
-                          </button>
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 1))}
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
-                              {t ? t("tomorrow") : "Tomorrow"}
-                          </button>
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 7))}
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
-                              {t ? t("nextWeek") : "Next week"}
-                          </button>
-                          <button
-                              type="button"
-                              onClick={() => {
-                                  onChange("");
-                                  setOpen(false);
-                              }}
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
-                              {t ? t("noDate") : "No date"}
-                          </button>
-                      </div>
-                  </motion.div>,
-                  document.body
-              )
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => pickDate(new Date())}
+                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                            {t ? t("today") : "Today"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 1))}
+                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                            {t ? t("tomorrow") : "Tomorrow"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 7))}
+                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                            {t ? t("nextWeek") : "Next week"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
+                            {t ? t("noDate") : "No date"}
+                        </button>
+                    </div>
+                </motion.div>,
+                document.body
+            )
             : null;
 
     return (
@@ -827,46 +830,54 @@ function TaskListDetailLayer({
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:w-[560px]">
                                     <FilterField>
                                         <div className="relative">
-                                            <select
+                                            <Select
                                                 value={selectedSource}
-                                                onChange={(event) => {
-                                                    setSelectedSource(event.target.value);
+                                                onValueChange={(value) => {
+                                                    setSelectedSource(value);
                                                     setPage(1);
-                                                }}
-                                                className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
-                                                <option value="all">{t("allGroups")}</option>
-                                                {groups.map((group) => (
-                                                    <option
-                                                        key={group.groupId ?? group.groupName}
-                                                        value={group.groupId ?? ""}>
-                                                        {group.groupName}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <ChevronsUpDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                                                }}>
+                                                <SelectTrigger className="h-[72px] w-full rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 shadow-none">
+                                                    <SelectValue placeholder={t("allGroups")} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">{t("allGroups")}</SelectItem>
+                                                    {groups
+                                                        .filter((group) => Boolean(group.groupId))
+                                                        .map((group) => (
+                                                            <SelectItem
+                                                                key={group.groupId ?? group.groupName}
+                                                                value={group.groupId as string}>
+                                                                {group.groupName}
+                                                            </SelectItem>
+                                                        ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </FilterField>
 
                                     <FilterField>
                                         <div className="relative">
-                                            <select
+                                            <Select
                                                 value={sortBy}
-                                                onChange={(event) => {
-                                                    const nextSort = event.target.value as SortValue;
+                                                onValueChange={(value) => {
+                                                    const nextSort = value as SortValue;
                                                     setSortBy(nextSort);
                                                     setSortFilterValue("");
                                                     setDeadlineFilter({ startDate: "", endDate: "" });
                                                     setOpenDeadlineFilter(false);
                                                     setPage(1);
-                                                }}
-                                                className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
-                                                <option value="none">{t("sortNone")}</option>
-                                                <option value="deadline">{t("sortDeadline")}</option>
-                                                <option value="priority">{t("sortPriority")}</option>
-                                                <option value="severity">{t("sortSeverity")}</option>
-                                                <option value="status">{t("sortStatus")}</option>
-                                            </select>
-                                            <ChevronsUpDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                                                }}>
+                                                <SelectTrigger className="h-[72px] w-full rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 shadow-none">
+                                                    <SelectValue placeholder={t("sortNone")} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">{t("sortNone")}</SelectItem>
+                                                    <SelectItem value="deadline">{t("sortDeadline")}</SelectItem>
+                                                    <SelectItem value="priority">{t("sortPriority")}</SelectItem>
+                                                    <SelectItem value="severity">{t("sortSeverity")}</SelectItem>
+                                                    <SelectItem value="status">{t("sortStatus")}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </FilterField>
 
@@ -879,48 +890,39 @@ function TaskListDetailLayer({
                                                 className="sm:col-span-2">
                                                 <FilterField>
                                                     <div className="relative">
-                                                        <select
-                                                            value={sortFilterValue}
-                                                            onChange={(event) => setSortFilterValue(event.target.value)}
-                                                            className="h-[72px] w-full appearance-none rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 outline-none">
-                                                            <option value="">{t("selectFilter")}</option>
-                                                            {sortBy === "priority" && (
-                                                                <>
-                                                                    <option value={t("priorityLow")}>
-                                                                        {t("priorityLow")}
-                                                                    </option>
-                                                                    <option value={t("priorityMedium")}>
-                                                                        {t("priorityMedium")}
-                                                                    </option>
-                                                                    <option value={t("priorityHigh")}>
-                                                                        {t("priorityHigh")}
-                                                                    </option>
-                                                                </>
-                                                            )}
-                                                            {sortBy === "severity" && (
-                                                                <>
-                                                                    <option value={t("severityLow")}>
-                                                                        {t("severityLow")}
-                                                                    </option>
-                                                                    <option value={t("severityNormal")}>
-                                                                        {t("severityNormal")}
-                                                                    </option>
-                                                                    <option value={t("severityImportant")}>
-                                                                        {t("severityImportant")}
-                                                                    </option>
-                                                                    <option value={t("severityCritical")}>
-                                                                        {t("severityCritical")}
-                                                                    </option>
-                                                                </>
-                                                            )}
-                                                            {sortBy === "status" &&
-                                                                statusOptions.map((status) => (
-                                                                    <option key={status} value={status}>
-                                                                        {status}
-                                                                    </option>
-                                                                ))}
-                                                        </select>
-                                                        <ChevronsUpDown className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                                                        <Select
+                                                            value={sortFilterValue || "all"}
+                                                            onValueChange={(value) =>
+                                                                setSortFilterValue(value === "all" ? "" : value)
+                                                            }>
+                                                            <SelectTrigger className="h-[72px] w-full rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 shadow-none">
+                                                                <SelectValue placeholder={t("selectFilter")} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">{t("selectFilter")}</SelectItem>
+                                                                {sortBy === "priority" && (
+                                                                    <>
+                                                                        <SelectItem value={t("priorityLow")}>{t("priorityLow")}</SelectItem>
+                                                                        <SelectItem value={t("priorityMedium")}>{t("priorityMedium")}</SelectItem>
+                                                                        <SelectItem value={t("priorityHigh")}>{t("priorityHigh")}</SelectItem>
+                                                                    </>
+                                                                )}
+                                                                {sortBy === "severity" && (
+                                                                    <>
+                                                                        <SelectItem value={t("severityLow")}>{t("severityLow")}</SelectItem>
+                                                                        <SelectItem value={t("severityNormal")}>{t("severityNormal")}</SelectItem>
+                                                                        <SelectItem value={t("severityImportant")}>{t("severityImportant")}</SelectItem>
+                                                                        <SelectItem value={t("severityCritical")}>{t("severityCritical")}</SelectItem>
+                                                                    </>
+                                                                )}
+                                                                {sortBy === "status" &&
+                                                                    statusOptions.map((status) => (
+                                                                        <SelectItem key={status} value={status}>
+                                                                            {status}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                            </SelectContent>
+                                                        </Select>
                                                     </div>
                                                 </FilterField>
                                             </motion.div>

@@ -6,7 +6,7 @@ import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import "react-day-picker/dist/style.css";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { components } from "@/api/types";
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -270,13 +270,13 @@ function TrelloDatePicker({ label, value, onChange, min, locale, i18n }: TrelloD
         return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     }, [minDate]);
 
-    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const nextMonth = Number(e.target.value);
+    const handleMonthChange = (value: string) => {
+        const nextMonth = Number(value);
         setMonth(new Date(month.getFullYear(), nextMonth, 1));
     };
 
-    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const nextYear = Number(e.target.value);
+    const handleYearChange = (value: string) => {
+        const nextYear = Number(value);
         setMonth(new Date(nextYear, month.getMonth(), 1));
     };
 
@@ -305,148 +305,150 @@ function TrelloDatePicker({ label, value, onChange, min, locale, i18n }: TrelloD
     const popup =
         mounted && open && popupPosition
             ? createPortal(
-                  <div
-                      ref={rootRef}
-                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                      style={{
-                          top: popupPosition.top,
-                          left: popupPosition.left,
-                          width: popupPosition.width
-                      }}>
-                      <div className="mb-4 flex items-center gap-3">
-                          <div className="relative flex-1">
-                              <select
-                                  value={month.getMonth()}
-                                  onChange={handleMonthChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {i18n.months.map((monthLabel, monthIndex) => (
-                                      <option key={monthLabel} value={String(monthIndex)}>
-                                          {monthLabel}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
+                <div
+                    ref={rootRef}
+                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                    style={{
+                        top: popupPosition.top,
+                        left: popupPosition.left,
+                        width: popupPosition.width
+                    }}>
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="flex-1">
+                            <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
+                                <SelectTrigger className="h-12 w-full font-semibold text-base">
+                                    <SelectValue placeholder={i18n.months[month.getMonth()]} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {i18n.months.map((monthLabel, monthIndex) => (
+                                        <SelectItem key={monthLabel} value={String(monthIndex)}>
+                                            {monthLabel}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                          <div className="relative w-[140px]">
-                              <select
-                                  value={month.getFullYear()}
-                                  onChange={handleYearChange}
-                                  className="h-12 w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-4 pr-10 font-semibold text-base text-zinc-800 outline-none hover:border-zinc-300 focus:border-orange-400">
-                                  {yearOptions.map((year) => (
-                                      <option key={year} value={year}>
-                                          {year}
-                                      </option>
-                                  ))}
-                              </select>
-                              <ChevronRight className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 rotate-90 text-zinc-500" />
-                          </div>
-                      </div>
+                        <div className="w-[140px]">
+                            <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
+                                <SelectTrigger className="h-12 w-full font-semibold text-base">
+                                    <SelectValue placeholder={String(month.getFullYear())} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {yearOptions.map((year) => (
+                                        <SelectItem key={year} value={String(year)}>
+                                            {year}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
 
-                      <div className="rounded-[20px] border border-zinc-200 p-4">
-                          <div className="mb-4 flex items-center justify-between">
-                              <button
-                                  type="button"
-                                  onClick={goPrevMonth}
-                                  disabled={isPrevDisabled}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                  <ChevronLeft className="h-5 w-5" />
-                              </button>
+                    <div className="rounded-[20px] border border-zinc-200 p-4">
+                        <div className="mb-4 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={goPrevMonth}
+                                disabled={isPrevDisabled}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
 
-                              <div className="font-bold text-[18px] text-zinc-900">
-                                  {i18n.months[month.getMonth()]} {month.getFullYear()}
-                              </div>
+                            <div className="font-bold text-[18px] text-zinc-900">
+                                {i18n.months[month.getMonth()]} {month.getFullYear()}
+                            </div>
 
-                              <button
-                                  type="button"
-                                  onClick={goNextMonth}
-                                  className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
-                                  <ChevronRight className="h-5 w-5" />
-                              </button>
-                          </div>
+                            <button
+                                type="button"
+                                onClick={goNextMonth}
+                                className="grid h-11 w-11 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                          <DayPicker
-                              mode="single"
-                              month={month}
-                              onMonthChange={setMonth}
-                              selected={selectedDate}
-                              onSelect={pickDate}
-                              disabled={minDate ? { before: minDate } : undefined}
-                              showOutsideDays
-                              className="w-full"
-                              styles={{
-                                  day: {
-                                      outline: "none",
-                                      boxShadow: "none"
-                                  },
-                                  button: {
-                                      outline: "none",
-                                      boxShadow: "none"
-                                  }
-                              }}
-                              classNames={{
-                                  months: "flex w-full flex-col",
-                                  month: "w-full space-y-3",
-                                  caption: "hidden",
-                                  table: "w-full border-collapse",
-                                  tbody: "w-full",
-                                  head_row: "flex w-full justify-between",
-                                  head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
-                                  row: "mt-2 flex w-full justify-between",
-                                  cell: "h-10 w-10 p-0 text-center",
-                                  day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                  day_button:
-                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                  selected: "!bg-orange-500 !text-white",
-                                  day_selected:
-                                      "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
-                                  today: "text-orange-600 font-bold",
-                                  day_today: "text-orange-600 font-bold",
-                                  outside: "text-zinc-300",
-                                  day_outside: "text-zinc-300",
-                                  disabled: "text-zinc-300 opacity-40",
-                                  day_disabled: "text-zinc-300 opacity-40",
-                                  hidden: "invisible",
-                                  day_hidden: "invisible"
-                              }}
-                          />
-                      </div>
+                        <DayPicker
+                            mode="single"
+                            month={month}
+                            onMonthChange={setMonth}
+                            selected={selectedDate}
+                            onSelect={pickDate}
+                            disabled={minDate ? { before: minDate } : undefined}
+                            showOutsideDays
+                            className="w-full"
+                            styles={{
+                                day: {
+                                    outline: "none",
+                                    boxShadow: "none"
+                                },
+                                button: {
+                                    outline: "none",
+                                    boxShadow: "none"
+                                }
+                            }}
+                            classNames={{
+                                months: "flex w-full flex-col",
+                                month: "w-full space-y-3",
+                                caption: "hidden",
+                                table: "w-full border-collapse",
+                                tbody: "w-full",
+                                head_row: "flex w-full justify-between",
+                                head_cell: "h-10 w-10 text-center text-[13px] font-semibold text-zinc-500",
+                                row: "mt-2 flex w-full justify-between",
+                                cell: "h-10 w-10 p-0 text-center",
+                                day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                day_button:
+                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                selected: "!bg-orange-500 !text-white",
+                                day_selected:
+                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                today: "text-orange-600 font-bold",
+                                day_today: "text-orange-600 font-bold",
+                                outside: "text-zinc-300",
+                                day_outside: "text-zinc-300",
+                                disabled: "text-zinc-300 opacity-40",
+                                day_disabled: "text-zinc-300 opacity-40",
+                                hidden: "invisible",
+                                day_hidden: "invisible"
+                            }}
+                        />
+                    </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                          <button
-                              type="button"
-                              onClick={() => pickDate(new Date())}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              {i18n.today}
-                          </button>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => pickDate(new Date())}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            {i18n.today}
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 1))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              {i18n.tomorrow}
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 1))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            {i18n.tomorrow}
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => pickDate(addDays(new Date(), 7))}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
-                              {i18n.nextWeek}
-                          </button>
+                        <button
+                            type="button"
+                            onClick={() => pickDate(addDays(new Date(), 7))}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-zinc-700 hover:bg-zinc-50">
+                            {i18n.nextWeek}
+                        </button>
 
-                          <button
-                              type="button"
-                              onClick={() => {
-                                  onChange("");
-                                  setOpen(false);
-                              }}
-                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
-                              {i18n.noDate}
-                          </button>
-                      </div>
-                  </div>,
-                  document.body
-              )
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onChange("");
+                                setOpen(false);
+                            }}
+                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-base text-rose-500 hover:bg-rose-50">
+                            {i18n.noDate}
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )
             : null;
 
     return (
