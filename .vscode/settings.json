@@ -20,6 +20,5 @@
 "i18n-ally.enabledFrameworks": ["next-intl"],
 "i18n-ally.namespace": true,
 "js/ts.autoClosingTags.enabled": false,
-"i18n-ally.keystyle": "nested",
-"typescript.autoClosingTags": false
+"i18n-ally.keystyle": "nested"
 }
