@@ -2,9 +2,9 @@
 
 import {
     CalendarDays,
+    ChevronDown,
     ChevronLeft,
     ChevronRight,
-    Filter,
     MoreHorizontal,
     RotateCcw,
     Search,
@@ -116,8 +116,6 @@ type DeletedByOption = {
     name: string;
     avatarUrl?: string | null;
 };
-
-type FilterView = "root" | "deletedBy" | "deletedDate";
 
 type DeletedDateFilter = {
     startDate: string;
@@ -717,19 +715,28 @@ function DeletedDateRangePicker({
     const t = useTranslations("TrashedPage");
 
     return (
-        <div className="flex flex-col gap-4 p-4">
-            <TrelloDatePicker
-                label={t("filters.dateRange.fromDate")}
-                value={value.startDate}
-                onChange={(v) => onChange({ ...value, startDate: v })}
-                max={value.endDate || undefined}
-            />
-            <TrelloDatePicker
-                label={t("filters.dateRange.toDate")}
-                value={value.endDate}
-                onChange={(v) => onChange({ ...value, endDate: v })}
-                min={value.startDate || undefined}
-            />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5">
+                <span className="font-medium text-sm text-zinc-600">{t("filters.dateRange.fromDate")}</span>
+                <input
+                    type="date"
+                    value={value.startDate}
+                    max={value.endDate || undefined}
+                    onChange={(e) => onChange({ ...value, startDate: e.target.value })}
+                    className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                />
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+                <span className="font-medium text-sm text-zinc-600">{t("filters.dateRange.toDate")}</span>
+                <input
+                    type="date"
+                    value={value.endDate}
+                    min={value.startDate || undefined}
+                    onChange={(e) => onChange({ ...value, endDate: e.target.value })}
+                    className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
+                />
+            </label>
         </div>
     );
 }
@@ -873,96 +880,95 @@ function DeletedByPicker({
     onSelect: (value: string | null) => void;
 }) {
     const t = useTranslations("TrashedPage");
-    const [localSearch, setLocalSearch] = React.useState("");
-
-    const q = normalizeText(localSearch);
-    const filtered = !q
-        ? options
-        : options.filter((x) => normalizeText(x.name).includes(q) || normalizeText(x.id).includes(q));
 
     return (
-        <div className="overflow-hidden">
-            <div className="border-zinc-200 border-b px-4 py-3">
-                <div className="relative">
-                    <Search className="pointer-events-none absolute top-1/2 left-0 h-5 w-5 -translate-y-1/2 text-zinc-400" />
-                    <input
-                        value={localSearch}
-                        onChange={(e) => setLocalSearch(e.target.value)}
-                        placeholder={t("filters.deletedBy.searchPlaceholder")}
-                        className="h-10 w-full border-none bg-transparent pl-8 text-sm text-zinc-900 outline-none placeholder:text-zinc-400"
-                    />
-                </div>
-            </div>
+        <div className="max-h-[320px] overflow-y-auto p-2">
+            <button
+                type="button"
+                onClick={() => onSelect(null)}
+                className={cn(
+                    "mb-1 flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm transition",
+                    selectedId === null
+                        ? "bg-orange-50 font-semibold text-orange-600"
+                        : "font-medium text-zinc-700 hover:bg-zinc-50"
+                )}>
+                {t("filters.deletedBy.all")}
+            </button>
 
-            <div className="max-h-[280px] overflow-y-auto py-2">
+            {options.map((option) => (
                 <button
+                    key={option.id}
                     type="button"
-                    onClick={() => onSelect(null)}
+                    onClick={() => onSelect(option.id)}
                     className={cn(
-                        "flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50",
-                        selectedId === null && "bg-zinc-100"
+                        "mb-1 flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm transition",
+                        selectedId === option.id
+                            ? "bg-orange-50 font-semibold text-orange-600"
+                            : "font-medium text-zinc-700 hover:bg-zinc-50"
                     )}>
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-zinc-700 text-white">
-                        <Users className="h-4 w-4" />
-                    </div>
-                    <div className="font-semibold text-sm text-zinc-900">{t("filters.deletedBy.all")}</div>
+                    <span className="truncate">{option.name}</span>
                 </button>
+            ))}
+        </div>
+    );
+}
 
-                {filtered.map((option) => {
-                    const initials = getInitials(option.name);
-                    const tone = pickAvatarTone(option.name || option.id);
-                    const hasAvatar = option.avatarUrl && String(option.avatarUrl).trim();
+function DeletedByFilterPopover({
+    open,
+    deletedByOptions,
+    deletedByFilter,
+    onChangeDeletedBy,
+    onClose
+}: {
+    open: boolean;
+    deletedByOptions: DeletedByOption[];
+    deletedByFilter: string | null;
+    onChangeDeletedBy: (value: string | null) => void;
+    onClose: () => void;
+}) {
+    React.useEffect(() => {
+        if (!open) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        const onPointerDown = () => onClose();
 
-                    return (
-                        <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => onSelect(option.id)}
-                            className={cn(
-                                "flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50",
-                                selectedId === option.id && "bg-zinc-100"
-                            )}>
-                            {hasAvatar ? (
-                                <img
-                                    src={option.avatarUrl!}
-                                    alt={option.name}
-                                    className="h-10 w-10 shrink-0 rounded-full object-cover"
-                                />
-                            ) : (
-                                <div
-                                    className={cn(
-                                        "grid h-10 w-10 shrink-0 place-items-center rounded-full font-bold text-xs text-white",
-                                        tone
-                                    )}>
-                                    {initials}
-                                </div>
-                            )}
-                            <div className="font-semibold text-sm text-zinc-900">{option.name}</div>
-                        </button>
-                    );
-                })}
+        window.addEventListener("keydown", onKeyDown);
+        window.addEventListener("pointerdown", onPointerDown);
+
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+            window.removeEventListener("pointerdown", onPointerDown);
+        };
+    }, [open, onClose]);
+
+    if (!open) return null;
+
+    return (
+        <div
+            className="absolute top-[calc(100%+10px)] right-0 z-30 flex max-h-[calc(100vh-240px)] w-[320px] flex-col overflow-hidden rounded-[20px] border border-zinc-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.12)]"
+            onPointerDown={(e) => e.stopPropagation()}>
+            <div className="flex-1 overflow-y-auto">
+                <DeletedByPicker
+                    options={deletedByOptions}
+                    selectedId={deletedByFilter}
+                    onSelect={(value) => {
+                        onChangeDeletedBy(value);
+                        onClose();
+                    }}
+                />
             </div>
         </div>
     );
 }
 
-function FilterPopover({
+function DeletedDateFilterPopover({
     open,
-    view,
-    onChangeView,
-    deletedByOptions,
-    deletedByFilter,
-    onChangeDeletedBy,
     deletedDateFilter,
     onChangeDeletedDate,
     onClose
 }: {
     open: boolean;
-    view: FilterView;
-    onChangeView: (view: FilterView) => void;
-    deletedByOptions: DeletedByOption[];
-    deletedByFilter: string | null;
-    onChangeDeletedBy: (value: string | null) => void;
     deletedDateFilter: DeletedDateFilter;
     onChangeDeletedDate: (next: DeletedDateFilter) => void;
     onClose: () => void;
@@ -989,93 +995,26 @@ function FilterPopover({
 
     return (
         <div
-            className="absolute top-[calc(100%+10px)] right-0 z-30 flex max-h-[calc(100vh-240px)] w-[320px] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl"
+            className="absolute top-[calc(100%+10px)] right-0 z-30 flex max-h-[calc(100vh-240px)] w-[360px] flex-col overflow-hidden rounded-[20px] border border-zinc-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.12)]"
             onPointerDown={(e) => e.stopPropagation()}>
-            {view === "root" && (
-                <>
-                    <div className="border-zinc-200 border-b px-4 py-3 font-medium text-sm text-zinc-500 flex-shrink-0">
-                        {t("filters.title")}
-                    </div>
-                    <div className="p-2">
-                        <button
-                            type="button"
-                            onClick={() => onChangeView("deletedBy")}
-                            className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
-                            <span>{t("filters.deletedBy.label")}</span>
-                            <ChevronRight className="h-4 w-4 text-zinc-400" />
-                        </button>
+            <div className="flex-1 overflow-y-auto px-4 py-3">
+                <DeletedDateRangePicker value={deletedDateFilter} onChange={onChangeDeletedDate} />
+            </div>
 
-                        <button
-                            type="button"
-                            onClick={() => onChangeView("deletedDate")}
-                            className="mt-1.5 flex w-full items-center justify-between rounded-xl px-4 py-3 text-left font-semibold text-sm text-zinc-900 hover:bg-zinc-100">
-                            <span>{t("filters.deletedDate.label")}</span>
-                            <ChevronRight className="h-4 w-4 text-zinc-400" />
-                        </button>
-                    </div>
-                </>
-            )}
-
-            {view === "deletedBy" && (
-                <>
-                    <div className="flex items-center gap-2 border-zinc-200 border-b px-4 py-3 flex-shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => onChangeView("root")}
-                            className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
-                            {t("common.back")}
-                        </button>
-                        <div className="font-semibold text-sm text-zinc-900">
-                            {t("filters.deletedBy.selectTitle")}
-                        </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        <DeletedByPicker
-                            options={deletedByOptions}
-                            selectedId={deletedByFilter}
-                            onSelect={(value) => {
-                                onChangeDeletedBy(value);
-                                onClose();
-                            }}
-                        />
-                    </div>
-                </>
-            )}
-
-            {view === "deletedDate" && (
-                <>
-                    <div className="flex items-center gap-2 border-zinc-200 border-b px-4 py-3 flex-shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => onChangeView("root")}
-                            className="rounded-lg px-2 py-1 font-semibold text-sm text-zinc-600 hover:bg-zinc-100">
-                            {t("common.back")}
-                        </button>
-                        <div className="font-semibold text-sm text-zinc-900">
-                            {t("filters.deletedDate.selectTitle")}
-                        </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto px-4 py-3">
-                        <DeletedDateRangePicker value={deletedDateFilter} onChange={onChangeDeletedDate} />
-                    </div>
-
-                    <div className="flex flex-shrink-0 items-center justify-end gap-3 border-zinc-200 border-t bg-white px-4 py-4">
-                        <button
-                            type="button"
-                            onClick={() => onChangeDeletedDate({ startDate: "", endDate: "" })}
-                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
-                            {t("filters.deletedDate.clearSelection")}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-sm text-white hover:bg-orange-700">
-                            {t("filters.deletedDate.apply")}
-                        </button>
-                    </div>
-                </>
-            )}
+            <div className="flex flex-shrink-0 items-center justify-end gap-3 border-zinc-200 border-t bg-white px-4 py-4">
+                <button
+                    type="button"
+                    onClick={() => onChangeDeletedDate({ startDate: "", endDate: "" })}
+                    className="rounded-xl border border-zinc-200 bg-white px-4 py-2 font-semibold text-sm text-zinc-700 hover:bg-zinc-100">
+                    {t("filters.deletedDate.clearSelection")}
+                </button>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-xl bg-zinc-900 px-4 py-2 font-semibold text-sm text-white hover:bg-zinc-800">
+                    {t("filters.deletedDate.apply")}
+                </button>
+            </div>
         </div>
     );
 }
@@ -1117,8 +1056,8 @@ export default function Trashed() {
         endDate: ""
     });
 
-    const [openFilter, setOpenFilter] = React.useState(false);
-    const [filterView, setFilterView] = React.useState<FilterView>("root");
+    const [openDeletedByFilter, setOpenDeletedByFilter] = React.useState(false);
+    const [openDeletedDateFilter, setOpenDeletedDateFilter] = React.useState(false);
 
     const [confirmRestore, setConfirmRestore] = React.useState<{
         open: boolean;
@@ -1161,11 +1100,10 @@ export default function Trashed() {
             for (const member of members) {
                 const userId = String(member?.userId ?? "").trim();
                 if (!userId) continue;
-                
-                // Filter by role: only Owner and Moderator
+
                 const role = String(member?.role ?? "").trim().toLowerCase();
                 if (!role || !["owner", "moderator"].includes(role)) continue;
-                
+
                 const fullName = buildFullName(member?.firstName, member?.lastName, member?.email);
                 nextMemberNameMap[userId] = fullName || member?.email || t("fallbacks.unknown");
                 nextMemberAvatarMap[userId] = member?.avatarUrl ?? null;
@@ -1263,9 +1201,6 @@ export default function Trashed() {
         return filteredItems.slice(start, start + ITEMS_PER_PAGE);
     }, [filteredItems, page]);
 
-    const activeFilterCount =
-        (deletedByFilter ? 1 : 0) + (deletedDateFilter.startDate || deletedDateFilter.endDate ? 1 : 0);
-
     const selectedDeletedByName =
         deletedByOptions.find((x) => x.id === deletedByFilter)?.name ||
         (deletedByFilter ? memberNameMap[deletedByFilter] || t("fallbacks.unknown") : "");
@@ -1290,6 +1225,9 @@ export default function Trashed() {
     ]
         .filter(Boolean)
         .join(" ");
+
+    const deletedByButtonLabel = selectedDeletedByName || t("filters.deletedBy.all");
+    const deletedDateButtonLabel = deletedDateLabel || t("filters.deletedDate.label");
 
     const handleAskRestore = (item: TrashItem) => {
         setOpenMenuKey(null);
@@ -1331,7 +1269,6 @@ export default function Trashed() {
         try {
             await refresh();
         } catch (e: any) {
-            // Restore succeeded but refresh failed - don't rollback, just log
             setError(mapErrorMessage(e?.message) || t("errors.cannotRefreshList"));
         } finally {
             setProcessingId(null);
@@ -1360,7 +1297,6 @@ export default function Trashed() {
         try {
             await refresh();
         } catch (e: any) {
-            // Delete succeeded but refresh failed - don't rollback, just log
             setError(mapErrorMessage(e?.message) || t("errors.cannotRefreshList"));
         } finally {
             setProcessingId(null);
@@ -1436,14 +1372,14 @@ export default function Trashed() {
                     <div className="rounded-[28px] border border-zinc-200 bg-white p-6 shadow-sm">
                         <h1 className="font-bold text-[40px] text-zinc-900 tracking-tight">{t("title")}</h1>
 
-                        <div className="mt-8 flex items-center gap-3">
-                            <div className="relative w-full max-w-[680px]">
+                        <div className="mt-8 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+                            <div className="relative w-full">
                                 <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-zinc-400" />
                                 <input
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder={t("search.placeholder")}
-                                    className="h-11 w-full rounded-xl border border-zinc-200 bg-white pr-4 pl-11 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-zinc-300"
+                                    className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50/70 pr-4 pl-11 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-zinc-300 focus:bg-white"
                                 />
                             </div>
 
@@ -1451,70 +1387,55 @@ export default function Trashed() {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setOpenFilter((prev) => !prev);
-                                        setFilterView("root");
+                                        setOpenDeletedByFilter((prev) => !prev);
+                                        setOpenDeletedDateFilter(false);
                                     }}
-                                    className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-                                    aria-label={t("filters.ariaLabel")}>
-                                    <Filter className="h-5 w-5" />
-                                    {activeFilterCount > 0 ? (
-                                        <span className="absolute -top-1 -right-1 grid h-5 min-w-5 place-items-center rounded-full bg-orange-500 px-1 font-bold text-[10px] text-white">
-                                            {activeFilterCount}
-                                        </span>
-                                    ) : null}
+                                    className={cn(
+                                        "inline-flex h-12 min-w-[220px] items-center justify-between gap-3 rounded-2xl border bg-white px-4 font-medium text-sm transition",
+                                        openDeletedByFilter
+                                            ? "border-zinc-300 bg-zinc-50 text-zinc-900"
+                                            : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                    )}
+                                    aria-label={t("filters.deletedBy.label")}>
+                                    <span className="truncate text-left">{deletedByButtonLabel}</span>
+                                    <ChevronDown className="h-4 w-4 shrink-0 text-indigo-400" />
                                 </button>
 
-                                <FilterPopover
-                                    open={openFilter}
-                                    view={filterView}
-                                    onChangeView={setFilterView}
+                                <DeletedByFilterPopover
+                                    open={openDeletedByFilter}
                                     deletedByOptions={deletedByOptions}
                                     deletedByFilter={deletedByFilter}
                                     onChangeDeletedBy={setDeletedByFilter}
-                                    deletedDateFilter={deletedDateFilter}
-                                    onChangeDeletedDate={setDeletedDateFilter}
-                                    onClose={() => setOpenFilter(false)}
+                                    onClose={() => setOpenDeletedByFilter(false)}
                                 />
                             </div>
-                        </div>
 
-                        {(deletedByFilter || deletedDateFilter.startDate || deletedDateFilter.endDate) && (
-                            <div className="mt-4 flex flex-wrap items-center gap-2">
-                                {deletedByFilter ? (
-                                    <div className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-sm text-zinc-700">
-                                        <span>{t("chips.deletedBy", { name: selectedDeletedByName })}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setDeletedByFilter(null)}
-                                            className="rounded-full p-0.5 hover:bg-zinc-200">
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                ) : null}
-
-                                {(deletedDateFilter.startDate || deletedDateFilter.endDate) && (
-                                    <div className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5 text-sm text-zinc-700">
-                                        <span>{t("chips.deletedDate", { dateRange: deletedDateLabel })}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setDeletedDateFilter({ startDate: "", endDate: "" })}
-                                            className="rounded-full p-0.5 hover:bg-zinc-200">
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                )}
-
+                            <div className="relative">
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setDeletedByFilter(null);
-                                        setDeletedDateFilter({ startDate: "", endDate: "" });
+                                        setOpenDeletedDateFilter((prev) => !prev);
+                                        setOpenDeletedByFilter(false);
                                     }}
-                                    className="font-semibold text-sm text-zinc-600 hover:text-zinc-900">
-                                    {t("filters.clearAll")}
+                                    className={cn(
+                                        "inline-flex h-12 min-w-[220px] items-center justify-between gap-3 rounded-2xl border bg-white px-4 font-medium text-sm transition",
+                                        openDeletedDateFilter
+                                            ? "border-zinc-300 bg-zinc-50 text-zinc-900"
+                                            : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
+                                    )}
+                                    aria-label={t("filters.deletedDate.label")}>
+                                    <span className="truncate text-left">{deletedDateButtonLabel}</span>
+                                    <ChevronDown className="h-4 w-4 shrink-0 text-indigo-400" />
                                 </button>
+
+                                <DeletedDateFilterPopover
+                                    open={openDeletedDateFilter}
+                                    deletedDateFilter={deletedDateFilter}
+                                    onChangeDeletedDate={setDeletedDateFilter}
+                                    onClose={() => setOpenDeletedDateFilter(false)}
+                                />
                             </div>
-                        )}
+                        </div>
 
                         <div className="mt-8 overflow-x-auto">
                             <table className="min-w-full table-fixed border-separate border-spacing-0">

@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, Clock3, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
@@ -37,7 +38,6 @@ export function ApproveMemberSection({
     onRequiresMemberApprovalChange
 }: ApproveMemberSectionProps) {
     const t = useTranslations("GroupSettingView.approveMember");
-    const groupT = useTranslations("GroupSettingView");
     const [items, setItems] = useState<PendingMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -58,16 +58,18 @@ export function ApproveMemberSection({
             const response = await getPendingMembers(groupId);
 
             if (response?.status === "success" && response?.data) {
-                const pendingMembers = (response.data.pendingMembers || []).map((member) => {
-                    const firstName = member.firstName || "";
-                    const lastName = member.lastName || "";
-                    const name = `${firstName} ${lastName}`.trim() || member.email || "Unknown";
-                    return {
-                        ...member,
-                        id: member.userId || "",
-                        name
-                    };
-                }).filter((member) => !isPendingJoinRequestCanceledByMember(groupId, member));
+                const pendingMembers = (response.data.pendingMembers || [])
+                    .map((member) => {
+                        const firstName = member.firstName || "";
+                        const lastName = member.lastName || "";
+                        const name = `${firstName} ${lastName}`.trim() || member.email || "Unknown";
+                        return {
+                            ...member,
+                            id: member.userId || "",
+                            name
+                        };
+                    })
+                    .filter((member) => !isPendingJoinRequestCanceledByMember(groupId, member));
 
                 setItems(pendingMembers);
             } else {
@@ -89,7 +91,6 @@ export function ApproveMemberSection({
         void loadPendingMembers();
     }, [loadPendingMembers]);
 
-    // Listen for pending join changes from other components
     useEffect(() => {
         const handlePendingJoinChanged = (event: Event) => {
             const customEvent = event as CustomEvent<{ groupId?: string; marker?: { userId?: string } }>;
@@ -114,7 +115,7 @@ export function ApproveMemberSection({
         return () => {
             pendingJoinEvents.removeEventListener(PENDING_JOIN_CHANGED_EVENT, handlePendingJoinChanged);
         };
-    }, [loadPendingMembers]);
+    }, [groupId, loadPendingMembers]);
 
     const approvalEnabled = !!requiresMemberApproval;
     const approvalTone = approvalEnabled
@@ -123,7 +124,7 @@ export function ApproveMemberSection({
             title: "text-orange-800",
             description: "text-orange-700/80",
             badge: "bg-orange-600 text-white",
-            badgeText: "Đang bật",
+            badgeText: t("statusOn"),
             switchTrack: "data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-gray-300"
         }
         : {
@@ -131,7 +132,7 @@ export function ApproveMemberSection({
             title: "text-slate-800",
             description: "text-slate-500",
             badge: "bg-slate-200 text-slate-700",
-            badgeText: "Đang tắt",
+            badgeText: t("statusOff"),
             switchTrack: "data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-slate-300"
         };
 
@@ -146,7 +147,6 @@ export function ApproveMemberSection({
 
             if (response?.status === "success") {
                 setItems((prev) => prev.filter((item) => item.id !== userId));
-                // Dispatch event to notify other components that pending members have changed
                 pendingJoinEvents.dispatchEvent(
                     new CustomEvent(PENDING_JOIN_CHANGED_EVENT, {
                         detail: { groupId, userId }
@@ -173,7 +173,6 @@ export function ApproveMemberSection({
             await rejectPendingMember(groupId, userId);
 
             setItems((prev) => prev.filter((item) => item.id !== userId));
-            // Dispatch event to notify other components that pending members have changed
             pendingJoinEvents.dispatchEvent(
                 new CustomEvent(PENDING_JOIN_CHANGED_EVENT, {
                     detail: { groupId, userId }
@@ -196,9 +195,7 @@ export function ApproveMemberSection({
                     </div>
                     <div>
                         <h2 className="font-bold text-gray-900 text-sm">{t("title")}</h2>
-                        <p className="mt-0.5 text-gray-500 text-xs">
-                            {t("subtitle")}
-                        </p>
+                        <p className="mt-0.5 text-gray-500 text-xs">{t("subtitle")}</p>
                     </div>
                 </div>
 
@@ -209,34 +206,62 @@ export function ApproveMemberSection({
 
             <div className="px-6 py-6">
                 {showMemberApprovalToggle ? (
-                    <div
+                    <motion.div
+                        layout
+                        initial={false}
+                        animate={{
+                            scale: approvalEnabled ? 1.01 : 1,
+                            boxShadow: approvalEnabled
+                                ? "0 16px 34px rgba(249, 115, 22, 0.12)"
+                                : "0 10px 24px rgba(148, 163, 184, 0.08)"
+                        }}
+                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                         className={`mb-5 flex items-center justify-between rounded-2xl border px-4 py-4 shadow-sm transition-all duration-300 ease-out ${approvalTone.wrapper}`}
                     >
                         <div className="flex items-center gap-3">
-                            <div className={`rounded-full px-3 py-1 font-semibold text-[11px] uppercase tracking-[0.14em] transition-colors duration-300 ${approvalTone.badge}`}>
+                            <motion.div
+                                key={approvalTone.badgeText}
+                                initial={{ opacity: 0, y: 6, scale: 0.92 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ duration: 0.22, ease: "easeOut" }}
+                                className={`rounded-full px-3 py-1 font-semibold text-[11px] uppercase tracking-[0.14em] transition-colors duration-300 ${approvalTone.badge}`}
+                            >
                                 {approvalTone.badgeText}
-                            </div>
+                            </motion.div>
                             <div>
-                                <div className={`font-semibold text-xs transition-colors duration-300 ${approvalTone.title}`}>
-                                    {approvalEnabled ? "Phê duyệt thành viên đang bật" : "Phê duyệt thành viên đang tắt"}
-                                </div>
-                                <div className={`mt-0.5 text-xs transition-colors duration-300 ${approvalTone.description}`}>
-                                    {approvalEnabled
-                                        ? "Thành viên sẽ phải chờ duyệt trước khi tham gia nhóm"
-                                        : "Thành viên sẽ vào nhóm ngay khi dùng link mời"}
-                                </div>
+                                <AnimatePresence mode="wait" initial={false}>
+                                    <motion.div
+                                        key={approvalEnabled ? "approval-on" : "approval-off"}
+                                        initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
+                                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                        exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+                                        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                                    >
+                                        <div className={`font-semibold text-xs transition-colors duration-300 ${approvalTone.title}`}>
+                                            {approvalEnabled ? t("enabledTitle") : t("disabledTitle")}
+                                        </div>
+                                        <div className={`mt-0.5 text-xs transition-colors duration-300 ${approvalTone.description}`}>
+                                            {approvalEnabled ? t("enabledDescription") : t("disabledDescription")}
+                                        </div>
+                                    </motion.div>
+                                </AnimatePresence>
                             </div>
                         </div>
-                        <Switch
-                            checked={requiresMemberApproval}
-                            onCheckedChange={(checked) => {
-                                if (!canEditMemberApproval) return;
-                                onRequiresMemberApprovalChange?.(checked);
-                            }}
-                            disabled={!canEditMemberApproval}
-                            className={`scale-110 transition-all duration-300 ease-out data-[state=checked]:shadow-[0_0_0_6px_rgba(249,115,22,0.12)] ${approvalTone.switchTrack}`}
-                        />
-                    </div>
+                        <motion.div
+                            animate={{ rotate: approvalEnabled ? 0 : -2, scale: approvalEnabled ? 1.03 : 1 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                        >
+                            <Switch
+                                checked={requiresMemberApproval}
+                                onCheckedChange={(checked) => {
+                                    if (!canEditMemberApproval) return;
+                                    onRequiresMemberApprovalChange?.(checked);
+                                }}
+                                disabled={!canEditMemberApproval}
+                                className={`scale-110 transition-all duration-300 ease-out data-[state=checked]:shadow-[0_0_0_6px_rgba(249,115,22,0.12)] ${approvalTone.switchTrack}`}
+                            />
+                        </motion.div>
+                    </motion.div>
                 ) : null}
 
                 {loading ? (

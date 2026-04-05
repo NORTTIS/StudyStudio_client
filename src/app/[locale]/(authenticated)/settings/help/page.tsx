@@ -2,7 +2,7 @@
 
 import { Button, ConfigProvider, Input, message, Typography } from "antd";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useMessages, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type { components } from "@/api/types";
 import { sendReport } from "@/app/[locale]/(authenticated)/settings/user";
@@ -43,6 +43,17 @@ interface FAQItem {
 
 export default function HelpPage() {
     const t = useTranslations("HelpPage");
+    const locale = useLocale();
+    const messages = useMessages() as {
+        HelpPage?: {
+            faq?: {
+                contactCard?: {
+                    title?: string;
+                    description?: string;
+                };
+            };
+        };
+    };
     const pathname = usePathname();
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -68,6 +79,16 @@ export default function HelpPage() {
         { id: "3", question: t("faq.item3.question"), answer: t("faq.item3.answer") },
         { id: "4", question: t("faq.item4.question"), answer: t("faq.item4.answer") }
     ];
+
+    const contactCardTitle =
+        messages.HelpPage?.faq?.contactCard?.title ??
+        (locale === "vi" ? "Không tìm thấy câu trả lời?" : "Still can't find the answer?");
+
+    const contactCardDescription =
+        messages.HelpPage?.faq?.contactCard?.description ??
+        (locale === "vi"
+            ? "Điền form bên trái để gửi báo cáo, đội hỗ trợ sẽ phản hồi trong 24 giờ làm việc."
+            : "Fill out the form on the left to send a report. Our support team will respond within 24 business hours.");
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -495,10 +516,10 @@ export default function HelpPage() {
                                 gap: 8
                             }}>
                             <Text strong style={{ color: "#fff", fontSize: 13 }}>
-                                Không tìm thấy câu trả lời?
+                                {contactCardTitle}
                             </Text>
                             <Text style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "1.5" }}>
-                                Điền form bên trái để gửi báo cáo, đội hỗ trợ sẽ phản hồi trong 24 giờ làm việc.
+                                {contactCardDescription}
                             </Text>
                             <div
                                 style={{

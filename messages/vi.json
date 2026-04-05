@@ -809,6 +809,10 @@
         "faq": {
             "title": "Câu hỏi thường gặp",
             "subtitle": "Tìm câu trả lời nhanh cho các câu hỏi phổ biến",
+            "contactCard": {
+                "title": "Không tìm thấy câu trả lời?",
+                "description": "Điền form bên trái để gửi báo cáo, đội hỗ trợ sẽ phản hồi trong 24 giờ làm việc."
+            },
             "item1": {
                 "question": "Làm thế nào để đặt lại mật khẩu?",
                 "answer": "Bạn có thể đặt lại mật khẩu bằng cách vào trang Đăng nhập và nhấp vào 'Quên mật khẩu'. Làm theo hướng dẫn được gửi đến email của bạn."
@@ -847,8 +851,16 @@
         "backToList": "Quay lại danh sách",
         "groupsTitle": "Danh sách nhóm",
         "noGroups": "Chưa có nhóm nào trong studio này",
+        "allStudios": "Tất cả studio",
         "yourStudios": "Studio của bạn",
         "joinedStudios": "Studio bạn tham gia",
+        "archivedStudios": "Studio lưu trữ",
+        "filters": {
+            "all": "Tất cả",
+            "owned": "Studio của tôi",
+            "joined": "Tham gia",
+            "archived": "Lưu trữ"
+        },
         "roles": {
             "owner": "Chủ sở hữu",
             "member": "Thành viên"
@@ -883,7 +895,7 @@
             "taglinePlaceholder": "Nhập slogan ngắn gọn",
             "startDate": "Ngày bắt đầu",
             "endDate": "Ngày kết thúc",
-            "aliasLabel": "Tên gọi khác"
+            "aliasLabel": "Biệt danh"
         },
         "studioLimit": {
             "title": "Đã đạt giới hạn studio",
@@ -1887,6 +1899,20 @@
         "from": "Từ",
         "noContent": "Không có nội dung"
     },
+    "BannerUpload": {
+        "alt": "Ảnh nền",
+        "empty": "Chưa có ảnh nền",
+        "actions": {
+            "upload": "Tải ảnh nền",
+            "delete": "Xóa ảnh nền"
+        },
+        "errors": {
+            "requestUploadUrl": "Không lấy được đường dẫn tải lên",
+            "completeUpload": "Hoàn tất tải lên thất bại",
+            "uploadFailed": "Tải lên thất bại. Vui lòng thử lại.",
+            "deleteFailed": "Xóa thất bại. Vui lòng thử lại."
+        }
+    },
     "BillingHistoryTab": {
         "search": {
             "placeholder": "Tìm theo người dùng, email hoặc hóa đơn..."
@@ -2141,6 +2167,7 @@
             "dateRangeError": "Ngày bắt đầu phải trước ngày kết thúc."
         },
         "inactive": "Đã lưu trữ",
+        "archivedFilter": "Lưu trữ",
         "inactiveEmpty": "Không có nhóm nào bị lưu trữ",
         "pendingApproval": "Đang chờ xét duyệt",
         "pendingApprovalEmpty": "Không có nhóm nào đang chờ xét duyệt"
@@ -2688,6 +2715,8 @@
             "descriptionLabel": "Mô tả",
             "masterStudioLabel": "Studio quản lý",
             "bannerLabel": "Ảnh nền",
+            "colorLabel": "Màu",
+            "iconLabel": "Biểu tượng",
             "aliasLabel": "Biệt danh",
             "aliasPlaceholder": "VD: THPT Hoang Dieu",
             "taglineLabel": "Slogan",
@@ -2745,6 +2774,12 @@
             "pendingCount": "{count} chờ duyệt",
             "loading": "Đang tải danh sách chờ phê duyệt...",
             "empty": "Hiện không có thành viên nào chờ phê duyệt",
+            "statusOn": "Đang bật",
+            "statusOff": "Đang tắt",
+            "enabledTitle": "Phê duyệt thành viên đang bật",
+            "disabledTitle": "Phê duyệt thành viên đang tắt",
+            "enabledDescription": "Thành viên sẽ phải chờ duyệt trước khi tham gia nhóm",
+            "disabledDescription": "Thành viên sẽ vào nhóm ngay khi dùng link mời",
             "requestedRole": "Vai trò: {role}",
             "requestedAt": "Yêu cầu lúc: {time}",
             "approve": "Phê duyệt",
@@ -2829,7 +2864,19 @@
             "today": "Hôm nay",
             "tomorrow": "Ngày mai",
             "nextWeek": "Tuần tới",
-            "noDate": "Không có ngày"
+            "noDate": "Không có ngày",
+            "month1": "Tháng 1",
+            "month2": "Tháng 2",
+            "month3": "Tháng 3",
+            "month4": "Tháng 4",
+            "month5": "Tháng 5",
+            "month6": "Tháng 6",
+            "month7": "Tháng 7",
+            "month8": "Tháng 8",
+            "month9": "Tháng 9",
+            "month10": "Tháng 10",
+            "month11": "Tháng 11",
+            "month12": "Tháng 12"
         },
         "filters": {
             "title": "Bộ lọc",
@@ -3210,7 +3257,19 @@
                 "today": "Hôm nay",
                 "tomorrow": "Ngày mai",
                 "nextWeek": "Tuần tới",
-                "noDate": "Không có ngày"
+                "noDate": "Không có ngày",
+                "month1": "Tháng 1",
+                "month2": "Tháng 2",
+                "month3": "Tháng 3",
+                "month4": "Tháng 4",
+                "month5": "Tháng 5",
+                "month6": "Tháng 6",
+                "month7": "Tháng 7",
+                "month8": "Tháng 8",
+                "month9": "Tháng 9",
+                "month10": "Tháng 10",
+                "month11": "Tháng 11",
+                "month12": "Tháng 12"
             },
             "filters": {
                 "title": "Bộ lọc",

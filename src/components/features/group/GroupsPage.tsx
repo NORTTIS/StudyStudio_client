@@ -263,7 +263,7 @@ export function GroupsPage() {
     const [studioOpenById, setStudioOpenById] = useState<Record<string, boolean>>({});
     const [openCreate, setOpenCreate] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [groupTypeFilter, setGroupTypeFilter] = useState<"all" | "independent" | "managed" | "joined">("all");
+    const [groupTypeFilter, setGroupTypeFilter] = useState<"all" | "independent" | "managed" | "joined" | "archived">("all");
 
     const [expandFav, setExpandFav] = useState(false);
     const [expandAll, setExpandAll] = useState(false);
@@ -355,7 +355,10 @@ export function GroupsPage() {
         if (groupTypeFilter !== "all" && groupTypeFilter !== "independent") return [];
         return filterGroupsBySearch(ownedIndependent, searchQuery);
     }, [groupTypeFilter, ownedIndependent, searchQuery]);
-    const filteredInactive = useMemo(() => filterGroupsBySearch(inactive, searchQuery), [inactive, searchQuery]);
+    const filteredInactive = useMemo(() => {
+        if (groupTypeFilter !== "all" && groupTypeFilter !== "archived") return [];
+        return filterGroupsBySearch(inactive, searchQuery);
+    }, [groupTypeFilter, inactive, searchQuery]);
     const filteredJoined = useMemo(() => {
         if (groupTypeFilter !== "all" && groupTypeFilter !== "joined") return [];
         return filterGroupsBySearch(joined, searchQuery);
@@ -548,11 +551,12 @@ export function GroupsPage() {
                                         <div className="flex flex-wrap items-center gap-2">
                                             <Filter className="hidden h-4 w-4 text-slate-400 lg:block" />
                                             {[
-                                                { value: "all" as const, label: t("allGroups") },
-                                                { value: "independent" as const, label: t("independent") },
-                                                { value: "managed" as const, label: t("managed") },
-                                                { value: "joined" as const, label: t("joined") }
-                                            ].map((item) => (
+                                            { value: "all" as const, label: t("allGroups") },
+                                            { value: "independent" as const, label: t("independent") },
+                                            { value: "managed" as const, label: t("managed") },
+                                            { value: "joined" as const, label: t("joined") },
+                                            { value: "archived" as const, label: t("archivedFilter") }
+                                        ].map((item) => (
                                                 <button
                                                     key={item.value}
                                                     type="button"
@@ -668,7 +672,7 @@ export function GroupsPage() {
                             </SectionReveal>
                         )}
 
-                        {isAllFilter && (loading || filteredInactive.length > 0) && (
+                        {(isAllFilter || groupTypeFilter === "archived") && (loading || filteredInactive.length > 0) && (
                             <SectionReveal delay={0.135}>
                                 <GroupsSection
                                     icon={Archive}

@@ -147,7 +147,6 @@ function StudioCard({
 
     return (
         <motion.div
-            layout
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
@@ -486,6 +485,7 @@ export default function MasterPageClient({
     const [studios, setStudios] = useState<StudioUI[]>(initialStudios);
     const [subscriptionInfo, setSubscriptionInfo] = useState<StudioListSubscription | null>(initialSubscription);
     const [searchQuery, setSearchQuery] = useState("");
+    const [studioFilter, setStudioFilter] = useState<"all" | "owned" | "joined" | "archived">("all");
     const [isLoading, setIsLoading] = useState(false);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -514,35 +514,34 @@ export default function MasterPageClient({
         return { ownedStudios: owned, joinedStudios: joined };
     }, [studios]);
 
-    const { filteredOwnedStudios, filteredJoinedStudios } = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return { filteredOwnedStudios: ownedStudios, filteredJoinedStudios: joinedStudios };
-        }
+    const filteredStudios = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
 
-        const query = searchQuery.toLowerCase();
-        const filterFn = (studio: StudioUI) =>
-            studio.name.toLowerCase().includes(query) || studio.description.toLowerCase().includes(query);
+        return studios.filter((studio) => {
+            if (studioFilter === "owned" && studio.studioRole !== 0) return false;
+            if (studioFilter === "joined" && studio.studioRole === 0) return false;
+            if (studioFilter === "archived") {
+                if (!studio.isArchived) return false;
+            } else if (studio.isArchived) {
+                return false;
+            }
 
-        return {
-            filteredOwnedStudios: ownedStudios.filter(filterFn),
-            filteredJoinedStudios: joinedStudios.filter(filterFn)
-        };
-    }, [searchQuery, ownedStudios, joinedStudios]);
+            if (!query) return true;
 
-    const filteredOwnedActiveStudios = useMemo(
-        () => filteredOwnedStudios.filter((studio) => !studio.isArchived),
-        [filteredOwnedStudios]
-    );
+            return [studio.name, studio.description, studio.alias, studio.tagline]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase()
+                .includes(query);
+        });
+    }, [searchQuery, studioFilter, studios]);
 
-    const filteredJoinedActiveStudios = useMemo(
-        () => filteredJoinedStudios.filter((studio) => !studio.isArchived),
-        [filteredJoinedStudios]
-    );
-
-    const filteredArchivedStudios = useMemo(
-        () => [...filteredOwnedStudios, ...filteredJoinedStudios].filter((studio) => studio.isArchived),
-        [filteredOwnedStudios, filteredJoinedStudios]
-    );
+    const currentSectionTitle = useMemo(() => {
+        if (studioFilter === "owned") return t("yourStudios");
+        if (studioFilter === "joined") return t("joinedStudios");
+        if (studioFilter === "archived") return t("archivedStudios");
+        return t("allStudios");
+    }, [studioFilter, t]);
 
     const studioLimit = subscriptionInfo?.studioLimit ?? 3;
     const studioCreated = subscriptionInfo?.studioCreated ?? studios.length;
@@ -813,8 +812,8 @@ export default function MasterPageClient({
             <div className="mb-10">
                 <SectionHeader title={title} count={studioList.length} />
 
-                <motion.div layout className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
-                    <AnimatePresence>
+                <motion.div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
+                    <AnimatePresence initial={false}>
                         {studioList.map((studio) => (
                             <StudioCard
                                 key={studio.id}
@@ -839,10 +838,7 @@ export default function MasterPageClient({
         );
     };
 
-    const hasOwnedStudios = filteredOwnedActiveStudios.length > 0;
-    const hasJoinedStudios = filteredJoinedActiveStudios.length > 0;
-    const hasArchivedStudios = filteredArchivedStudios.length > 0;
-    const hasNoResults = !(hasOwnedStudios || hasJoinedStudios || hasArchivedStudios);
+    const hasNoResults = filteredStudios.length === 0;
 
     return (
         <div className="h-screen overflow-hidden bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
@@ -931,26 +927,49 @@ export default function MasterPageClient({
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.08, duration: 0.35 }}
                                 className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                                <div className="relative flex-1 rounded-[22px] border border-slate-200/80 bg-slate-50/80 lg:max-w-xl">
-                                    <Input
-                                        type="text"
-                                        placeholder={t("searchPlaceholder")}
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="h-14 rounded-[22px] border-transparent bg-transparent pl-12 pr-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur transition-all duration-200 focus:scale-[1.01] focus:shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
-                                    />
-                                    <svg
-                                        className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                <div className="flex flex-1 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
+                                    <div className="relative w-full rounded-[22px] border border-slate-200/80 bg-slate-50/80 xl:max-w-[360px]">
+                                        <Input
+                                            type="text"
+                                            placeholder={t("searchPlaceholder")}
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="h-14 rounded-[22px] border-transparent bg-transparent pl-12 pr-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur transition-all duration-200 focus:scale-[1.01] focus:shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
                                         />
-                                    </svg>
+                                        <svg
+                                            className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                            />
+                                        </svg>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-2 xl:flex-1">
+                                        {[
+                                            { value: "all" as const, label: t("filters.all") },
+                                            { value: "owned" as const, label: t("filters.owned") },
+                                            { value: "joined" as const, label: t("filters.joined") },
+                                            { value: "archived" as const, label: t("filters.archived") }
+                                        ].map((item) => (
+                                            <button
+                                                key={item.value}
+                                                type="button"
+                                                onClick={() => setStudioFilter(item.value)}
+                                                className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all ${
+                                                    studioFilter === item.value
+                                                        ? "bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_12px_28px_rgba(230,73,45,0.24)]"
+                                                        : "border border-slate-200 bg-white text-slate-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+                                                }`}>
+                                                {item.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -985,12 +1004,7 @@ export default function MasterPageClient({
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}>
-                                        {renderStudioSection(t("yourStudios"), filteredOwnedActiveStudios)}
-                                        {renderStudioSection(t("joinedStudios"), filteredJoinedActiveStudios)}
-                                        {renderStudioSection(
-                                            locale === "vi" ? "Studio đang lưu trữ" : "Archived studios",
-                                            filteredArchivedStudios
-                                        )}
+                                        {renderStudioSection(currentSectionTitle, filteredStudios)}
                                     </motion.div>
                                 )}
                             </AnimatePresence>

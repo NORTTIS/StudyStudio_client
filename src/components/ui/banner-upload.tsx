@@ -1,6 +1,7 @@
 "use client";
 
 import { ImagePlus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import {
     completeGroupBannerUpload,
@@ -11,7 +12,7 @@ import {
     requestStudioBannerUpload,
     toPublicUrl,
     uploadToPresignedUrl,
-    validateBannerFile,
+    validateBannerFile
 } from "@/api/banner-logo";
 import { hexToGradient } from "@/lib/utils";
 
@@ -34,8 +35,9 @@ export function BannerUpload({
     onUploadSuccess,
     onDeleteSuccess,
     onError,
-    disabled,
+    disabled
 }: BannerUploadProps) {
+    const t = useTranslations("BannerUpload");
     const [uploading, setUploading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,36 +57,30 @@ export function BannerUpload({
 
         setUploading(true);
         try {
-            const uploadReqFn = entityType === "group"
-                ? requestGroupBannerUpload
-                : requestStudioBannerUpload;
-            const completeReqFn = entityType === "group"
-                ? completeGroupBannerUpload
-                : completeStudioBannerUpload;
+            const uploadReqFn = entityType === "group" ? requestGroupBannerUpload : requestStudioBannerUpload;
+            const completeReqFn = entityType === "group" ? completeGroupBannerUpload : completeStudioBannerUpload;
 
-            // Step 1: request presigned URL
             const res1 = await uploadReqFn(entityId, {
                 contentType: file.type,
-                fileSize: file.size,
+                fileSize: file.size
             });
+
             if (res1.status !== "success" || !res1.data) {
-                throw new Error(res1.message || "Không lấy được đường dẫn tải lên");
+                throw new Error(res1.message || t("errors.requestUploadUrl"));
             }
+
             const { uploadUrl, fileKey } = res1.data;
 
-            // Step 2: upload file to presigned URL
             await uploadToPresignedUrl(uploadUrl, file);
 
-            // Step 3: complete upload
             const res3 = await completeReqFn(entityId, { fileKey });
             if (res3.status !== "success") {
-                throw new Error(res3.message || "Hoàn tất tải lên thất bại");
+                throw new Error(res3.message || t("errors.completeUpload"));
             }
 
-            // Strip presigned query params → clean public URL for display
             onUploadSuccess?.(toPublicUrl(uploadUrl));
         } catch (err) {
-            onError?.(err instanceof Error ? err.message : "Tải lên thất bại. Vui lòng thử lại.");
+            onError?.(err instanceof Error ? err.message : t("errors.uploadFailed"));
         } finally {
             setUploading(false);
             if (inputRef.current) inputRef.current.value = "";
@@ -97,49 +93,46 @@ export function BannerUpload({
             await deleteFn(entityId);
             onDeleteSuccess?.();
         } catch {
-            onError?.("Xóa thất bại. Vui lòng thử lại.");
+            onError?.(t("errors.deleteFailed"));
         }
     };
 
     return (
-        <div className="relative w-[500px] h-[250px] rounded-xl overflow-hidden border border-border bg-muted/50 group/upload">
+        <div className="group/upload relative h-[250px] w-[500px] overflow-hidden rounded-xl border border-border bg-muted/50">
             {displayUrl ? (
-                <img
-                    src={displayUrl}
-                    alt="Ảnh nền"
-                    className="w-full h-full object-cover"
-                />
+                <img src={displayUrl} alt={t("alt")} className="h-full w-full object-cover" />
             ) : (
-                <div
-                    className="w-[500px] h-[250px] flex items-center justify-center"
-                    style={{ background: gradient }}
-                >
-                    <span className="text-white/60 text-sm font-medium">Chưa có ảnh nền</span>
+                <div className="flex h-[250px] w-[500px] items-center justify-center" style={{ background: gradient }}>
+                    <span className="font-medium text-sm text-white/60">{t("empty")}</span>
                 </div>
             )}
 
             {uploading && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent border-white" />
                 </div>
             )}
 
             {!disabled && !uploading && (
-                <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover/upload:opacity-100 transition-opacity bg-black/40">
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover/upload:opacity-100">
                     <button
                         type="button"
                         onClick={() => inputRef.current?.click()}
-                        className="p-2 bg-white/90 rounded-full hover:bg-white text-gray-700 transition-colors"
+                        className="rounded-full bg-white/90 p-2 text-gray-700 transition-colors hover:bg-white"
+                        aria-label={t("actions.upload")}
+                        title={t("actions.upload")}
                     >
-                        <ImagePlus className="w-4 h-4" />
+                        <ImagePlus className="h-4 w-4" />
                     </button>
                     {bannerUrl && (
                         <button
                             type="button"
                             onClick={handleDelete}
-                            className="p-2 bg-white/90 rounded-full hover:bg-white text-red-500 transition-colors"
+                            className="rounded-full bg-white/90 p-2 text-red-500 transition-colors hover:bg-white"
+                            aria-label={t("actions.delete")}
+                            title={t("actions.delete")}
                         >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="h-4 w-4" />
                         </button>
                     )}
                 </div>

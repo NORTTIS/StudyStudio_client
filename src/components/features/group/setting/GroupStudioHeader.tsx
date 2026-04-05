@@ -848,10 +848,10 @@ export function GroupStudioHeader({
                                         className={twMerge(
                                             "group relative inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium text-sm transition-all duration-200",
                                             tabDisabled
-                                                ? "bg-[#F3F4F6] text-[#9CA3AF]"
+                                                ? "text-[#94A3B8] opacity-55"
                                                 : active
-                                                    ? "text-white shadow-md shadow-orange-200"
-                                                    : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                                ? "text-white shadow-md shadow-orange-200"
+                                                : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
                                         )}>
                                         {active && !tabDisabled ? (
                                             <motion.div
@@ -869,10 +869,10 @@ export function GroupStudioHeader({
                                             className={twMerge(
                                                 "relative z-10 h-4 w-4 transition-colors duration-200",
                                                 tabDisabled
-                                                    ? "text-[#9CA3AF]"
+                                                    ? "text-[#94A3B8]"
                                                     : active
-                                                        ? "text-white"
-                                                        : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                    ? "text-white"
+                                                    : "text-[#8C8C8C] group-hover:text-[#EA580C]"
                                             )}
                                         />
                                         <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
