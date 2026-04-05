@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { locales } from "./i18n/request";
 
@@ -9,7 +9,7 @@ const intlMiddleware = createMiddleware({
     localeDetection: false
 });
 
-export default function middleware(request: Request) {
+export default function middleware(request: NextRequest) {
     const requestUrl = new URL(request.url);
     const adminPath = requestUrl.pathname.match(/^\/(en|vi)(\/admin(?:\/.*)?)$/);
 
