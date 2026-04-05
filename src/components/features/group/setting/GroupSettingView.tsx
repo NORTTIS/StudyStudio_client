@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { Power, Settings, Trash2, UserPlus, Users } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -9,6 +10,7 @@ import { z } from "zod";
 import type { components } from "@/api/types";
 
 import { Container } from "@/components/common";
+import { approvePendingMember, getPendingMembers } from "@/api/invites";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
 import { ApproveMemberSection } from "@/components/features/group/setting/ApproveMemberSection";
 import { getRoleIcon, getRoleColor } from "@/components/features/group/RoleUtils";
@@ -802,6 +804,39 @@ export function GroupSettingView() {
                 })
             );
 
+            if (!checked) {
+                const pendingResponse = await getPendingMembers(groupId, locale);
+                const pendingMembers = pendingResponse?.data?.pendingMembers ?? [];
+                const pendingUserIds = pendingMembers
+                    .map((member) => String(member.userId ?? "").trim())
+                    .filter(Boolean);
+
+                if (pendingUserIds.length > 0) {
+                    const approvalResults = await Promise.allSettled(
+                        pendingUserIds.map((userId) => approvePendingMember(groupId, userId, locale))
+                    );
+
+                    const failedApprovals = approvalResults.filter((result) => {
+                        if (result.status !== "fulfilled") return true;
+                        return result.value?.status !== "success";
+                    });
+
+                    pendingJoinEvents.dispatchEvent(
+                        new CustomEvent(PENDING_JOIN_CHANGED_EVENT, {
+                            detail: { groupId }
+                        })
+                    );
+
+                    if (failedApprovals.length > 0) {
+                        setGeneralError(
+                            locale === "vi"
+                                ? "Đã tắt phê duyệt thành viên nhưng một số yêu cầu chờ chưa được chấp nhận tự động."
+                                : "Member approval was disabled, but some pending requests could not be auto-approved."
+                        );
+                    }
+                }
+            }
+
             await loadGroup(groupId);
         } catch {
             setRequiresMemberApproval(previous);
@@ -1197,13 +1232,13 @@ export function GroupSettingView() {
                                         />
                                         <div className="flex items-center gap-2">
                                             <ColorPicker
-                                                label="Màu"
+                                                label={t("groupInfo.colorLabel")}
                                                 value={isEditing ? colorHex : initialColorHex}
                                                 onChange={isEditing ? setColorHex : undefined}
                                                 disabled={!isEditing}
                                             />
                                             <EmojiPicker
-                                                label="icon"
+                                                label={t("groupInfo.iconLabel")}
                                                 value={isEditing ? iconEmoji : initialIconEmoji}
                                                 onChange={isEditing ? setIconEmoji : undefined}
                                                 disabled={!isEditing}
@@ -1560,62 +1595,106 @@ export function GroupSettingView() {
 
                     {myRoleInGroup === "Owner" ? (
                         <>
-                            <section className="rounded-2xl border border-amber-200 bg-white shadow-sm">
-                                <div className="border-amber-200 border-b px-6 py-5">
-                                    <h2 className="font-bold text-amber-700 text-sm">
+                            <section
+                                className={`rounded-2xl border bg-white shadow-sm transition-colors duration-300 ${isGroupPaused ? "border-amber-200" : "border-emerald-200"}`}>
+                                <div
+                                    className={`border-b px-6 py-5 transition-colors duration-300 ${isGroupPaused ? "border-amber-200" : "border-emerald-200"}`}>
+                                    <h2
+                                        className={`font-bold text-sm transition-colors duration-300 ${isGroupPaused ? "text-amber-700" : "text-emerald-700"}`}>
                                         {locale === "vi" ? "Lưu trữ" : "Archive"}
                                     </h2>
                                 </div>
 
                                 <div className="px-6 py-6">
-                                    <div
+                                    <motion.div
+                                        layout
+                                        initial={false}
+                                        animate={{
+                                            scale: isGroupPaused ? 1.01 : 1,
+                                            boxShadow: isGroupPaused
+                                                ? "0 16px 34px rgba(245, 158, 11, 0.14)"
+                                                : "0 16px 34px rgba(16, 185, 129, 0.12)"
+                                        }}
+                                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                                         className={`rounded-2xl border p-5 transition-all duration-300 ${isGroupPaused
                                             ? "border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50"
                                             : "border-emerald-200 bg-gradient-to-r from-emerald-50 to-lime-50"}`}>
                                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                             <div className="flex items-start gap-3">
-                                                <div
+                                                <motion.div
+                                                    animate={{
+                                                        scale: isUpdatingArchive ? [1, 1.06, 1] : 1,
+                                                        rotate: isGroupPaused ? -3 : 0
+                                                    }}
+                                                    transition={{
+                                                        duration: isUpdatingArchive ? 1 : 0.24,
+                                                        repeat: isUpdatingArchive ? Infinity : 0,
+                                                        ease: "easeInOut"
+                                                    }}
                                                     className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ${isGroupPaused
                                                         ? "bg-amber-100 text-amber-700"
                                                         : "bg-emerald-100 text-emerald-700"} ${isUpdatingArchive ? "animate-pulse" : ""}`}>
                                                     <Power className="h-4 w-4" />
-                                                </div>
+                                                </motion.div>
                                                 <div>
-                                                    <div
-                                                        className={`font-bold text-sm transition-colors duration-300 ${isGroupPaused
-                                                            ? "text-amber-700"
-                                                            : "text-emerald-700"}`}>
-                                                        {t("access.title")}
-                                                    </div>
-                                                    <div className="mt-1 text-xs text-gray-600">
-                                                        {isGroupPaused
-                                                            ? t("access.inactiveDescription")
-                                                            : t("access.activeDescription")}
-                                                    </div>
+                                                    <AnimatePresence mode="wait" initial={false}>
+                                                        <motion.div
+                                                            key={isGroupPaused ? "group-archived" : "group-active"}
+                                                            initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
+                                                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                                                            exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+                                                            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                                                        >
+                                                            <div
+                                                                className={`font-bold text-sm transition-colors duration-300 ${isGroupPaused
+                                                                    ? "text-amber-700"
+                                                                    : "text-emerald-700"}`}>
+                                                                {t("access.title")}
+                                                            </div>
+                                                            <div className="mt-1 text-xs text-gray-600">
+                                                                {isGroupPaused
+                                                                    ? t("access.inactiveDescription")
+                                                                    : t("access.activeDescription")}
+                                                            </div>
+                                                        </motion.div>
+                                                    </AnimatePresence>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center gap-3">
-                                                <span
+                                                <motion.span
+                                                    key={`archive-inactive-${isGroupPaused ? "on" : "off"}`}
+                                                    initial={{ opacity: 0, y: 6, scale: 0.92 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    transition={{ duration: 0.22, ease: "easeOut" }}
                                                     className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${isGroupPaused
                                                         ? "bg-amber-100 text-amber-700"
                                                         : "bg-gray-100 text-gray-500"}`}>
                                                     {t("access.inactiveLabel")}
-                                                </span>
-                                                <Switch
-                                                    checked={!isGroupPaused}
-                                                    onCheckedChange={(checked) => {
-                                                        void handleArchiveToggle(!checked);
-                                                    }}
-                                                    disabled={!canToggleArchive || isUpdatingArchive || isParentStudioArchived}
-                                                    className="transition-all duration-300 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500"
-                                                />
-                                                <span
+                                                </motion.span>
+                                                <motion.div
+                                                    animate={{ rotate: isGroupPaused ? -2 : 0, scale: isGroupPaused ? 1 : 1.03 }}
+                                                    transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                                                >
+                                                    <Switch
+                                                        checked={!isGroupPaused}
+                                                        onCheckedChange={(checked) => {
+                                                            void handleArchiveToggle(!checked);
+                                                        }}
+                                                        disabled={!canToggleArchive || isUpdatingArchive || isParentStudioArchived}
+                                                        className="transition-all duration-300 data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500"
+                                                    />
+                                                </motion.div>
+                                                <motion.span
+                                                    key={`archive-active-${!isGroupPaused ? "on" : "off"}`}
+                                                    initial={{ opacity: 0, y: 6, scale: 0.92 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    transition={{ duration: 0.22, ease: "easeOut" }}
                                                     className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-xs transition-all duration-300 ${!isGroupPaused
                                                         ? "bg-emerald-100 text-emerald-700"
                                                         : "bg-gray-100 text-gray-500"}`}>
                                                     {t("access.activeLabel")}
-                                                </span>
+                                                </motion.span>
                                             </div>
                                         </div>
 
@@ -1632,7 +1711,7 @@ export function GroupSettingView() {
                                                     : "This group cannot be reactivated while its parent studio is paused."}
                                             </div>
                                         ) : null}
-                                    </div>
+                                    </motion.div>
                                 </div>
                             </section>
 

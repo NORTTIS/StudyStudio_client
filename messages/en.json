@@ -659,8 +659,16 @@
             "backToList": "Back to list",
             "groupsTitle": "Groups List",
             "noGroups": "No groups in this studio yet",
+            "allStudios": "All studios",
             "yourStudios": "Your Studios",
             "joinedStudios": "Studios You Join",
+            "archivedStudios": "Archived studios",
+            "filters": {
+                "all": "All",
+                "owned": "My studios",
+                "joined": "Joined",
+                "archived": "Archived"
+            },
             "inactiveStudioTitle": "This studio is paused",
             "inactiveStudioDescription": "The studio \"{studioName}\" is currently stopped. Only the owner can reopen it from Settings.",
             "inactiveStudioOk": "Got it",
@@ -796,7 +804,7 @@
                     "saveChanges": "Save changes",
                     "primaryColor": "Primary color",
                     "bannerLabel": "Background image",
-                    "aliasLabel": "Nickname",
+                    "aliasLabel": "Alias",
                     "aliasPlaceholder": "e.g. Hoang Dieu High School",
                     "taglineLabel": "Slogan",
                     "taglinePlaceholder": "Enter a short slogan",
@@ -1289,6 +1297,10 @@
         "faq": {
             "title": "Frequently Asked Questions",
             "subtitle": "Find quick answers to common questions",
+            "contactCard": {
+                "title": "Still can't find the answer?",
+                "description": "Fill out the form on the left to send a report. Our support team will respond within 24 business hours."
+            },
             "item1": {
                 "question": "How do I reset my password?",
                 "answer": "You can reset your password by going to the Login page and clicking 'Forgot Password'. Follow the instructions sent to your email."
@@ -1327,8 +1339,16 @@
         "backToList": "Back to list",
         "groupsTitle": "Groups List",
         "noGroups": "No groups in this studio yet",
+        "allStudios": "All studios",
         "yourStudios": "Your Studios",
         "joinedStudios": "Studios You Join",
+        "archivedStudios": "Archived studios",
+        "filters": {
+            "all": "All",
+            "owned": "My studios",
+            "joined": "Joined",
+            "archived": "Archived"
+        },
         "leaveStudioTitle": "Leave studio",
         "leaveStudioDescription": "Are you sure you want to leave \"{studioName}\"? You can only rejoin if you are invited again.",
         "leaveStudioCancel": "Cancel",
@@ -1455,7 +1475,7 @@
                 "saveChanges": "Save changes",
                 "primaryColor": "Primary color",
                 "bannerLabel": "Background image",
-                "aliasLabel": "Nickname",
+                "aliasLabel": "Alias",
                 "aliasPlaceholder": "e.g. Hoang Dieu High School",
                 "taglineLabel": "Slogan",
                 "taglinePlaceholder": "Enter a short slogan",
@@ -2031,7 +2051,7 @@
         "groupNamePlaceholder": "Enter group name...",
         "colorAndIconLabel": "Color and icon",
         "bannerLabel": "Background image",
-        "aliasLabel": "Nickname",
+        "aliasLabel": "Alias",
         "aliasPlaceholder": "e.g. Hoang Dieu High School",
         "taglineLabel": "Slogan",
         "taglinePlaceholder": "Enter a short slogan",
@@ -2349,6 +2369,20 @@
         "from": "From",
         "noContent": "No content"
     },
+    "BannerUpload": {
+        "alt": "Background image",
+        "empty": "No background image",
+        "actions": {
+            "upload": "Upload background image",
+            "delete": "Delete background image"
+        },
+        "errors": {
+            "requestUploadUrl": "Could not get upload URL",
+            "completeUpload": "Failed to complete upload",
+            "uploadFailed": "Upload failed. Please try again.",
+            "deleteFailed": "Delete failed. Please try again."
+        }
+    },
     "BillingHistoryTab": {
         "search": {
             "placeholder": "Search by user, email, or invoice..."
@@ -2590,6 +2624,7 @@
             "dateRangeError": "Start date must be before end date."
         },
         "inactive": "Archived",
+        "archivedFilter": "Archived",
         "inactiveEmpty": "No archived groups",
         "pendingApproval": "Pending Approval",
         "pendingApprovalEmpty": "No pending groups"
@@ -3137,7 +3172,9 @@
             "descriptionLabel": "Description",
             "masterStudioLabel": "Managing Studio",
             "bannerLabel": "Background image",
-            "aliasLabel": "Nickname",
+            "colorLabel": "Color",
+            "iconLabel": "Icon",
+            "aliasLabel": "Alias",
             "aliasPlaceholder": "e.g. Hoang Dieu High School",
             "taglineLabel": "Slogan",
             "taglinePlaceholder": "Enter a short slogan"
@@ -3201,6 +3238,12 @@
             "pendingCount": "{count} pending",
             "loading": "Loading pending approvals...",
             "empty": "No pending member requests",
+            "statusOn": "Enabled",
+            "statusOff": "Disabled",
+            "enabledTitle": "Member approval is enabled",
+            "disabledTitle": "Member approval is disabled",
+            "enabledDescription": "Members must wait for approval before joining the group",
+            "disabledDescription": "Members will join the group immediately when using an invite link",
             "requestedRole": "Role: {role}",
             "requestedAt": "Requested at: {time}",
             "approve": "Approve",
@@ -3278,7 +3321,19 @@
             "today": "Today",
             "tomorrow": "Tomorrow",
             "nextWeek": "Next week",
-            "noDate": "No date"
+            "noDate": "No date",
+            "month1": "January",
+            "month2": "February",
+            "month3": "March",
+            "month4": "April",
+            "month5": "May",
+            "month6": "June",
+            "month7": "July",
+            "month8": "August",
+            "month9": "September",
+            "month10": "October",
+            "month11": "November",
+            "month12": "December"
         },
         "filters": {
             "title": "Filters",
@@ -3557,7 +3612,7 @@
                 "descriptionLabel": "Description",
                 "masterStudioLabel": "Managing Studio",
                 "bannerLabel": "Background image",
-                "aliasLabel": "Nickname",
+                "aliasLabel": "Alias",
                 "aliasPlaceholder": "e.g. Hoang Dieu High School",
                 "taglineLabel": "Slogan",
                 "taglinePlaceholder": "Enter a short slogan"
@@ -3659,7 +3714,19 @@
                 "today": "Today",
                 "tomorrow": "Tomorrow",
                 "nextWeek": "Next week",
-                "noDate": "No date"
+                "noDate": "No date",
+                "month1": "January",
+                "month2": "February",
+                "month3": "March",
+                "month4": "April",
+                "month5": "May",
+                "month6": "June",
+                "month7": "July",
+                "month8": "August",
+                "month9": "September",
+                "month10": "October",
+                "month11": "November",
+                "month12": "December"
             },
             "filters": {
                 "title": "Filters",
