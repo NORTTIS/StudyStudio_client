@@ -189,7 +189,7 @@ export function StudioInviteAcceptPage() {
         }
     }, [hydrated, searchParams]);
 
-    const syncMembershipStatus = useCallback(async (): Promise<"accepted" | "pending" | "none"> => {
+    const syncMembershipStatus = useCallback(async (): Promise<"accepted" | "pending" | "rejected" | "none"> => {
         const targetStudioId = String(studioId || studioIdFromToken || "").trim();
         if (!targetStudioId) return "none";
 
@@ -207,7 +207,16 @@ export function StudioInviteAcceptPage() {
                 }) =>
                     String(item.id || "").trim() === targetStudioId
             );
-            if (!currentStudio) return "none";
+            if (!currentStudio) {
+                if (status === "pending") {
+                    removePendingStudioJoinRequest(targetStudioId);
+                    setStudioId(targetStudioId);
+                    setStatus("rejected");
+                    return "rejected";
+                }
+
+                return "none";
+            }
 
             const isApprovedMember = currentStudio.studioRole === 1 && currentStudio.isMember === true;
             if (isApprovedMember) {
@@ -228,11 +237,19 @@ export function StudioInviteAcceptPage() {
                 setStatus("pending");
                 return "pending";
             }
+
+            if (status === "pending") {
+                removePendingStudioJoinRequest(targetStudioId);
+                setStudioId(targetStudioId);
+                setStatus("rejected");
+                return "rejected";
+            }
+
             return "none";
         } catch {
             return "none";
         }
-    }, [locale, router, studioId, studioIdFromToken]);
+    }, [locale, router, status, studioId, studioIdFromToken]);
 
     const handleAcceptInvite = useCallback(async () => {
         try {
@@ -245,7 +262,7 @@ export function StudioInviteAcceptPage() {
             }
 
             const membershipStatus = await syncMembershipStatus();
-            if (membershipStatus === "accepted" || membershipStatus === "pending") {
+            if (membershipStatus === "accepted" || membershipStatus === "pending" || membershipStatus === "rejected") {
                 return;
             }
 
@@ -387,6 +404,10 @@ export function StudioInviteAcceptPage() {
                 }
 
                 router.refresh();
+                return;
+            }
+
+            if (membershipStatus === "rejected") {
                 return;
             }
 

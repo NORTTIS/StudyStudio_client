@@ -641,6 +641,7 @@ export default function MasterPageClient({
     });
     const [updatingArchiveStudioId, setUpdatingArchiveStudioId] = useState<string | null>(null);
     const isLoadingRef = useRef(false);
+    const hasPendingReloadRef = useRef(false);
 
     const { ownedStudios, joinedStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
@@ -722,9 +723,13 @@ export default function MasterPageClient({
     );
 
     const loadData = useCallback(async () => {
-        if (isLoadingRef.current) return;
+        if (isLoadingRef.current) {
+            hasPendingReloadRef.current = true;
+            return;
+        }
 
         isLoadingRef.current = true;
+        hasPendingReloadRef.current = false;
         setIsLoading(true);
         try {
             let resolvedProfile = userProfile;
@@ -741,7 +746,8 @@ export default function MasterPageClient({
                 const wasRejected = consumeRejectedStudioJoinRequest(
                     request.studioId,
                     normalizedUserId || undefined,
-                    normalizedEmail || undefined
+                    normalizedEmail || undefined,
+                    request.requestedAt
                 );
 
                 if (wasRejected) {
@@ -776,7 +782,9 @@ export default function MasterPageClient({
                 setSubscriptionInfo(studiosResult.data.subscription);
             } else {
                 const existingStudioIds = new Set<string>(mockStudios.map((studio: StudioUI) => studio.id));
-                const syntheticPendingStudios = await resolveSyntheticPendingStudios(pendingRequests, existingStudioIds);
+                const syntheticPendingStudios = pendingRequests
+                    .filter((request) => !existingStudioIds.has(request.studioId))
+                    .map((request) => buildPendingStudioCard(request, locale));
                 setStudios([...mockStudios, ...syntheticPendingStudios]);
             }
         } catch (error) {
@@ -787,7 +795,8 @@ export default function MasterPageClient({
                 const wasRejected = consumeRejectedStudioJoinRequest(
                     request.studioId,
                     normalizedUserId || undefined,
-                    normalizedEmail || undefined
+                    normalizedEmail || undefined,
+                    request.requestedAt
                 );
 
                 if (wasRejected) {
@@ -798,11 +807,18 @@ export default function MasterPageClient({
                 return true;
             });
             const existingStudioIds = new Set<string>(mockStudios.map((studio: StudioUI) => studio.id));
-            const syntheticPendingStudios = await resolveSyntheticPendingStudios(pendingRequests, existingStudioIds);
+            const syntheticPendingStudios = pendingRequests
+                .filter((request) => !existingStudioIds.has(request.studioId))
+                .map((request) => buildPendingStudioCard(request, locale));
             setStudios([...mockStudios, ...syntheticPendingStudios]);
         } finally {
             isLoadingRef.current = false;
             setIsLoading(false);
+
+            if (hasPendingReloadRef.current) {
+                hasPendingReloadRef.current = false;
+                void loadData();
+            }
         }
     }, [locale, resolveSyntheticPendingStudios, userProfile]);
 

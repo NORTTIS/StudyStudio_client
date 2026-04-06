@@ -6,6 +6,7 @@ export interface PendingStudioJoinRequest {
 
 const STORAGE_KEY = "studio:pending-join-requests";
 const REJECTED_STORAGE_KEY = "studio:rejected-join-requests";
+const REJECTED_REQUEST_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 
 export interface RejectedStudioJoinRequest {
     studioId: string;
@@ -16,6 +17,27 @@ export interface RejectedStudioJoinRequest {
 
 function canUseStorage() {
     return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+
+function parseIsoTimeMs(value?: string | null) {
+    const raw = String(value ?? "").trim();
+    if (!raw) return null;
+
+    const parsed = Date.parse(raw);
+    if (Number.isNaN(parsed)) return null;
+
+    return parsed;
+}
+
+function pruneRejectedStudioJoinRequests(items: RejectedStudioJoinRequest[]) {
+    const now = Date.now();
+
+    return items.filter((item) => {
+        const rejectedAtMs = parseIsoTimeMs(item.rejectedAt);
+        if (rejectedAtMs === null) return false;
+
+        return now - rejectedAtMs <= REJECTED_REQUEST_TTL_MS;
+    });
 }
 
 export function getPendingStudioJoinRequests(): PendingStudioJoinRequest[] {
@@ -60,14 +82,20 @@ function getRejectedStudioJoinRequests(): RejectedStudioJoinRequest[] {
         const parsed = JSON.parse(raw) as RejectedStudioJoinRequest[];
         if (!Array.isArray(parsed)) return [];
 
-        return parsed
+        const normalized = pruneRejectedStudioJoinRequests(parsed
             .map((item) => ({
                 studioId: String(item?.studioId ?? "").trim(),
                 userId: String(item?.userId ?? "").trim() || undefined,
                 email: String(item?.email ?? "").trim().toLowerCase() || undefined,
                 rejectedAt: String(item?.rejectedAt ?? "").trim() || new Date().toISOString()
             }))
-            .filter((item) => !!item.studioId && (!!item.userId || !!item.email));
+            .filter((item) => !!item.studioId && (!!item.userId || !!item.email)));
+
+        if (normalized.length !== parsed.length) {
+            setRejectedStudioJoinRequests(normalized);
+        }
+
+        return normalized;
     } catch {
         return [];
     }
@@ -136,10 +164,11 @@ export function markRejectedStudioJoinRequest(studioId: string, userId?: string,
     writeRejectedStudioJoinRequest(studioId, userId, email);
 }
 
-export function consumeRejectedStudioJoinRequest(studioId: string, userId?: string, email?: string) {
+export function consumeRejectedStudioJoinRequest(studioId: string, userId?: string, email?: string, requestedAt?: string) {
     const normalizedStudioId = String(studioId ?? "").trim();
     const normalizedUserId = String(userId ?? "").trim();
     const normalizedEmail = String(email ?? "").trim().toLowerCase();
+    const requestTimeMs = parseIsoTimeMs(requestedAt);
 
     if (!normalizedStudioId || (!normalizedUserId && !normalizedEmail)) return false;
 
@@ -151,8 +180,10 @@ export function consumeRejectedStudioJoinRequest(studioId: string, userId?: stri
 
         const matchesUserId = normalizedUserId && item.userId === normalizedUserId;
         const matchesEmail = normalizedEmail && item.email === normalizedEmail;
+        const rejectedAtMs = parseIsoTimeMs(item.rejectedAt);
+        const isCurrentRequestOrNewer = requestTimeMs === null || rejectedAtMs === null || rejectedAtMs >= requestTimeMs;
 
-        if (matchesUserId || matchesEmail) {
+        if ((matchesUserId || matchesEmail) && isCurrentRequestOrNewer) {
             consumed = true;
             return false;
         }

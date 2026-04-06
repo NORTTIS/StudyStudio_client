@@ -992,7 +992,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         const targetPendingMember = pendingApprovals.find((item) => item.id === userId);
 
         try {
-            await rejectStudioPendingMember(studioId, userId, locale);
+            const response = await rejectStudioPendingMember(studioId, userId, locale);
+
+            if (response.status !== "success") {
+                setPendingApprovalsError(
+                    response.message
+                    || (locale === "vi" ? "Từ chối yêu cầu thất bại" : "Failed to reject request")
+                );
+                return;
+            }
+
             writeRejectedStudioJoinRequest(
                 studioId,
                 String(userId || "").trim() || undefined,
@@ -1091,20 +1100,12 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         if (!studio || !isStudioOwner || isUpdatingMemberApproval || isEditing) return;
 
         const previous = requiresMemberApproval;
+        let toggleApplied = false;
         setRequiresMemberApproval(checked);
         setIsUpdatingMemberApproval(true);
         setPendingApprovalsError("");
 
         try {
-            if (!checked) {
-                const autoApprovedAll = await autoApproveAllPendingMembers();
-
-                if (!autoApprovedAll) {
-                    setRequiresMemberApproval(previous);
-                    return;
-                }
-            }
-
             const result = await toggleStudioMemberApproval(studio.id, checked, locale);
 
             if (result.status !== "success") {
@@ -1116,21 +1117,37 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 return;
             }
 
+            toggleApplied = true;
             writeStudioMemberApprovalFallback(studio.id, checked);
 
             if (!checked) {
-                toast({
-                    description:
-                        locale === "vi"
-                            ? "Đã tự động duyệt toàn bộ yêu cầu chờ và tắt phê duyệt"
-                            : "All pending members were auto-approved and approval was disabled",
-                    variant: "success"
-                });
+                const autoApprovedAll = await autoApproveAllPendingMembers();
+
+                if (autoApprovedAll) {
+                    toast({
+                        description:
+                            locale === "vi"
+                                ? "Đã tự động duyệt toàn bộ yêu cầu chờ và tắt phê duyệt"
+                                : "All pending members were auto-approved and approval was disabled",
+                        variant: "success"
+                    });
+                } else {
+                    toast({
+                        description:
+                            locale === "vi"
+                                ? "Đã tắt phê duyệt, nhưng một số yêu cầu chờ chưa được tự động duyệt"
+                                : "Approval was disabled, but some pending members could not be auto-approved",
+                        variant: "destructive"
+                    });
+                }
+
                 return;
             }
         } catch (error) {
             console.error("Update studio member approval failed:", error);
-            setRequiresMemberApproval(previous);
+            if (!toggleApplied) {
+                setRequiresMemberApproval(previous);
+            }
             setPendingApprovalsError(
                 locale === "vi" ? "Không thể cập nhật cài đặt duyệt thành viên" : "Failed to update approval setting"
             );
