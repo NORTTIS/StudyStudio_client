@@ -440,12 +440,12 @@ export default function GroupCalendar() {
                 });
 
                 const calEvents: CalEvent[] = filteredTasks
-                    .filter((task) => task.startDate && task.dueDate)
+                    .filter((task) => task.startDate || task.dueDate)
                     .flatMap((task, index) => {
                         const baseId = String(task.taskId ?? "").trim() || `task_${index}`;
                         const title = String(task.taskTitle ?? "").trim() || t("untitledTask");
-                        const start = String(task.startDate ?? "").trim();
-                        const end = String(task.dueDate ?? "").trim();
+                        const start = String(task.startDate ?? task.dueDate ?? "").trim();
+                        const end = String(task.dueDate ?? task.startDate ?? "").trim();
                         const hasAssignees = Boolean(task.assignees && task.assignees.length > 0);
                         const color = hasAssignees ? severityColorOf(task.taskSeverity) : "#e5e7eb";
                         const textColor = hasAssignees ? "#ffffff" : "#374151";

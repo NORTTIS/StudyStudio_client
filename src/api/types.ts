@@ -9137,6 +9137,7 @@ export interface components {
             /** Format: int32 */
             groupCount?: number;
             isArchived?: boolean;
+            isMember?: boolean;
             isOpen?: boolean;
             /** Format: int32 */
             memberCount?: number;

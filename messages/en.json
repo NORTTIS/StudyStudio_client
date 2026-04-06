@@ -182,6 +182,24 @@
             "overdueDescription": "Overdue {count}/{total}"
         }
     },
+    "PersonalCalendar": {
+        "title": "Personal Calendar",
+        "subtitle": "Your personal tasks",
+        "viewMonth": "Month",
+        "viewWeek": "Week",
+        "viewDay": "Day",
+        "today": "Today",
+        "monthPrefix": "Month",
+        "loading": "Loading calendar...",
+        "cannotLoad": "Cannot load calendar data",
+        "untitledTask": "Untitled task",
+        "noStatus": "No status",
+        "personalTask": "Personal task",
+        "more": "more",
+        "retry": "Retry",
+        "statusLabel": "Status",
+        "progressLabel": "Progress"
+    },
     "TaskDetailModal": {
         "mentionAll": {
             "label": "everyone",

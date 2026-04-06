@@ -1,25 +1,26 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
     AlertTriangle,
     CalendarDays,
     CheckCircle2,
     Clock3,
+    Flame,
     Layers3,
     Sparkles,
     TrendingUp,
-    Flame,
     X
 } from "lucide-react";
-import * as React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import useSWR from "swr";
 import { useTranslations } from "next-intl";
+import * as React from "react";
+import useSWR from "swr";
 import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import HomeTopTabs from "./HomeTopTabs";
+import PersonalCalendar from "./PersonalCalendar";
 
 type HomeSummaryResponse = components["schemas"]["HomeSummaryResponse"];
 type HomeSummaryResponseApiResponse = components["schemas"]["HomeSummaryResponseApiResponse"];
@@ -144,7 +145,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch { }
+            } catch {}
             return;
         }
 
@@ -153,7 +154,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch { }
+            } catch {}
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -226,7 +227,7 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
                 onClick && "cursor-pointer",
                 s.card
             )}>
-            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/60 blur-3xl opacity-70" />
+            <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/60 opacity-70 blur-3xl" />
 
             <div className="relative flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -235,7 +236,7 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
                         {hasDelta ? (
                             <span
                                 className={cx(
-                                    "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                                    "rounded-full px-2 py-0.5 font-semibold text-[11px]",
                                     isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
                                 )}>
                                 {isPositive ? `+${delta}` : `${delta}`}
@@ -333,7 +334,7 @@ function OverviewCard({
                     </div>
 
                     <div className="rounded-2xl border border-white/70 bg-white/70 px-3 py-2 text-right shadow-sm backdrop-blur">
-                        <p className="text-[11px] uppercase tracking-wide text-slate-400">{quantityLabel}</p>
+                        <p className="text-[11px] text-slate-400 uppercase tracking-wide">{quantityLabel}</p>
                         <p className="mt-1 font-semibold text-slate-700 text-sm">
                             {value}/{total}
                         </p>
@@ -379,9 +380,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-            status?: string;
-            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-        }
+              status?: string;
+              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+          }
         | null
         | undefined;
 
@@ -489,14 +490,14 @@ function DetailLayer({
                         transition={{ duration: 0.25 }}
                         className="relative flex max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
                         {/* Layer 1: Header */}
-                        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5 md:px-8">
+                        <div className="flex items-center justify-between border-slate-200 border-b bg-white px-6 py-5 md:px-8">
                             <div>
-                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
+                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 font-medium text-violet-700 text-xs shadow-sm">
                                     <Sparkles className="h-3.5 w-3.5" />
                                     {t("detailedBadge")}
                                 </div>
 
-                                <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+                                <h2 className="mt-3 font-bold text-2xl text-slate-900 tracking-tight md:text-3xl">
                                     {t("detailsTitle")}
                                 </h2>
                             </div>
@@ -529,7 +530,7 @@ function DetailLayer({
                                 <motion.div
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm">
+                                    className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-red-600 text-sm shadow-sm">
                                     <div className="flex items-center gap-3">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                                             <AlertTriangle className="h-5 w-5" />
@@ -641,6 +642,7 @@ export default function HomeSummary() {
     const t = useTranslations("HomeSummary");
     const [cacheKey, setCacheKey] = React.useState(0);
     const [openDetail, setOpenDetail] = React.useState(false);
+    const [openCalendar, setOpenCalendar] = React.useState(false);
 
     React.useEffect(() => {
         setCacheKey((prev) => prev + 1);
@@ -690,7 +692,7 @@ export default function HomeSummary() {
                     localStorage.removeItem(key);
                 }
             });
-        } catch { }
+        } catch {}
     }, [accountKey, hasSummary]);
 
     const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);
@@ -704,15 +706,15 @@ export default function HomeSummary() {
         <>
             <div
                 id="home-summary-section"
-                className="relative overflow-hidden scroll-mt-24 bg-[linear-gradient(180deg,#F8FAFC_0%,#F8F7FF_34%,#F4F7FB_66%,#F1F5F9_100%)]">
+                className="relative scroll-mt-24 overflow-hidden bg-[linear-gradient(180deg,#F8FAFC_0%,#F8F7FF_34%,#F4F7FB_66%,#F1F5F9_100%)]">
                 <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute left-[-80px] top-[-40px] h-72 w-72 rounded-full bg-violet-200/25 blur-3xl" />
-                    <div className="absolute right-[-80px] top-[18%] h-80 w-80 rounded-full bg-sky-200/20 blur-3xl" />
+                    <div className="absolute top-[-40px] left-[-80px] h-72 w-72 rounded-full bg-violet-200/25 blur-3xl" />
+                    <div className="absolute top-[18%] right-[-80px] h-80 w-80 rounded-full bg-sky-200/20 blur-3xl" />
                     <div className="absolute bottom-[-120px] left-[15%] h-96 w-96 rounded-full bg-emerald-100/20 blur-3xl" />
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:28px_28px] opacity-40" />
                 </div>
 
-                <Container className="relative pb-8 pt-8">
+                <Container className="relative pt-8 pb-8">
                     <div className="space-y-8">
                         <SectionReveal>
                             <section className="relative overflow-hidden rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.68))] px-6 py-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
@@ -720,7 +722,7 @@ export default function HomeSummary() {
 
                                 <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="min-w-0">
-                                        <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-[38px]">
+                                        <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text font-bold text-3xl text-transparent tracking-tight md:text-[38px]">
                                             {t("title")}
                                         </h1>
 
@@ -732,6 +734,7 @@ export default function HomeSummary() {
                                     <div className="flex items-center gap-3">
                                         <Button
                                             variant="outline"
+                                            onClick={() => setOpenCalendar(true)}
                                             className="h-11 rounded-2xl border-white/80 bg-white/75 px-4 text-slate-700 shadow-sm backdrop-blur transition-[transform,box-shadow,border-color,background-color] hover:bg-white">
                                             <CalendarDays className="mr-2 h-4 w-4" />
                                             {t("calendar")}
@@ -753,7 +756,7 @@ export default function HomeSummary() {
                                     <motion.div
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-sm text-red-600 shadow-sm">
+                                        className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-red-600 text-sm shadow-sm">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                                                 <AlertTriangle className="h-5 w-5" />
@@ -832,6 +835,8 @@ export default function HomeSummary() {
                 totalTasks={totalTasks}
                 t={t}
             />
+
+            <PersonalCalendar open={openCalendar} onClose={() => setOpenCalendar(false)} />
         </>
     );
 }

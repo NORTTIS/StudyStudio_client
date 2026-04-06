@@ -107,6 +107,7 @@ export function TemplateDetailModal({
                         ? "Template đã được kích hoạt."
                         : "Template đã bị vô hiệu hóa."
                 });
+                onSuccessRef.current();
             } else {
                 toastRef.current({ description: result.message, variant: "destructive" });
             }
@@ -136,6 +137,7 @@ export function TemplateDetailModal({
                 setTemplate(result.data);
                 setIsEditing(false);
                 toastRef.current({ description: "Đã cập nhật template." });
+                onSuccessRef.current();
             } else {
                 toastRef.current({ description: result.message, variant: "destructive" });
             }

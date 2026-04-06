@@ -182,6 +182,24 @@
             "overdueDescription": "Quá hạn {count}/{total}"
         }
     },
+    "PersonalCalendar": {
+        "title": "Lịch cá nhân",
+        "subtitle": "Công việc cá nhân của bạn",
+        "viewMonth": "Tháng",
+        "viewWeek": "Tuần",
+        "viewDay": "Ngày",
+        "today": "Hôm nay",
+        "monthPrefix": "Tháng",
+        "loading": "Đang tải lịch...",
+        "cannotLoad": "Không thể tải dữ liệu lịch",
+        "untitledTask": "Công việc không tiêu đề",
+        "noStatus": "Chưa có trạng thái",
+        "personalTask": "Công việc cá nhân",
+        "more": "thêm",
+        "retry": "Thử lại",
+        "statusLabel": "Trạng thái",
+        "progressLabel": "Tiến độ"
+    },
     "TaskDetailModal": {
         "mentionAll": {
             "label": "mọi người",
