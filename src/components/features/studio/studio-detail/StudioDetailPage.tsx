@@ -53,6 +53,7 @@ import { AliasInput } from "@/components/ui/alias-input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { writeRejectedStudioJoinRequest } from "@/utils/studio-pending";
 import { hexToGradient } from "@/lib/utils";
 import { Archive, ArchiveRestore, LogOut, Power, Search } from "lucide-react";
 import AIMaster from "./AIMaster";
@@ -106,9 +107,28 @@ function toBooleanLike(value: unknown): boolean | null {
 
 type StudioPendingApprovalItem = StudioPendingMemberDto & {
     id: string;
+    requestKey: string;
     fullName: string;
     colorHex?: string | null;
 };
+
+function dedupeStudioPendingApprovals(items: StudioPendingApprovalItem[]) {
+    const seen = new Set<string>();
+
+    return items.filter((item) => {
+        const key =
+            String(item.id || "").trim()
+            || String(item.email || "").trim().toLowerCase()
+            || String(item.requestKey || "").trim();
+
+        if (!key || seen.has(key)) {
+            return false;
+        }
+
+        seen.add(key);
+        return true;
+    });
+}
 
 type GroupUpdatedEventDetail = {
     id?: string;
@@ -622,10 +642,15 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         const firstName = String(member.firstName ?? "").trim();
         const lastName = String(member.lastName ?? "").trim();
         const fullName = `${firstName} ${lastName}`.trim() || String(member.email || "Unknown");
+        const userId = String(member.userId || "").trim();
+        const email = String(member.email || "").trim().toLowerCase();
+        const requestedAt = String(member.requestedAt || "").trim();
+        const requestKey = [userId, email, requestedAt, fullName].filter(Boolean).join(":");
 
         return {
             ...member,
-            id: String(member.userId || ""),
+            id: userId,
+            requestKey,
             fullName,
             colorHex: null
         };
@@ -645,9 +670,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             const response = await getStudioPendingMembers(studioId, locale);
 
             if (response.status === "success" && response.data) {
-                const items = (response.data.pendingMembers || [])
+                const items = dedupeStudioPendingApprovals((response.data.pendingMembers || [])
                     .map(mapPendingApproval)
-                    .filter((item) => item.id);
+                    .filter((item) => item.id));
                 setPendingApprovals(items);
                 return;
             }
@@ -964,8 +989,24 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         setApprovalActionByUserId((prev) => ({ ...prev, [userId]: "reject" }));
         setPendingApprovalsError("");
 
+        const targetPendingMember = pendingApprovals.find((item) => item.id === userId);
+
         try {
-            await rejectStudioPendingMember(studioId, userId, locale);
+            const response = await rejectStudioPendingMember(studioId, userId, locale);
+
+            if (response.status !== "success") {
+                setPendingApprovalsError(
+                    response.message
+                    || (locale === "vi" ? "Từ chối yêu cầu thất bại" : "Failed to reject request")
+                );
+                return;
+            }
+
+            writeRejectedStudioJoinRequest(
+                studioId,
+                String(userId || "").trim() || undefined,
+                String(targetPendingMember?.email || "").trim().toLowerCase() || undefined
+            );
             setPendingApprovals((prev) => prev.filter((item) => item.id !== userId));
             await loadPendingApprovals();
         } catch (error) {
@@ -978,10 +1019,88 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         }
     };
 
-    const handleMemberApprovalToggle = async (checked: boolean) => {
+    const autoApproveAllPendingMembers = useCallback(async () => {
+        if (!studioId || !isStudioOwner) return true;
+
+        const pendingResponse = await getStudioPendingMembers(studioId, locale);
+        if (pendingResponse.status !== "success" || !pendingResponse.data) {
+            setPendingApprovalsError(
+                pendingResponse.message
+                || (locale === "vi"
+                    ? "Tắt phê duyệt thành công nhưng không tải được danh sách chờ để tự động duyệt"
+                    : "Approval was disabled, but pending members could not be loaded for auto-approval")
+            );
+            await loadPendingApprovals();
+            return false;
+        }
+
+        const pendingItems = dedupeStudioPendingApprovals((pendingResponse.data.pendingMembers || [])
+            .map(mapPendingApproval)
+            .filter((item) => item.id));
+
+        if (pendingItems.length === 0) {
+            setPendingApprovals([]);
+            return true;
+        }
+
+        setPendingApprovals(pendingItems);
+
+        const settled = await Promise.allSettled(
+            pendingItems.map(async (item) => {
+                setApprovalActionByUserId((prev) => ({ ...prev, [item.id]: "approve" }));
+                const response = await approveStudioPendingMember(studioId, item.id, locale);
+
+                if (response.status !== "success") {
+                    throw new Error(response.message || "Failed to approve member");
+                }
+
+                return item.id;
+            })
+        );
+
+        const approvedUserIds: string[] = [];
+        let failedCount = 0;
+
+        settled.forEach((result) => {
+            if (result.status === "fulfilled") {
+                approvedUserIds.push(result.value);
+                return;
+            }
+
+            failedCount += 1;
+        });
+
+        setApprovalActionByUserId((prev) => {
+            const next = { ...prev };
+            pendingItems.forEach((item) => {
+                next[item.id] = null;
+            });
+            return next;
+        });
+
+        if (approvedUserIds.length > 0) {
+            setPendingApprovals((prev) => prev.filter((item) => !approvedUserIds.includes(item.id)));
+        }
+
+        await Promise.all([loadPendingApprovals(), loadData()]);
+
+        if (failedCount > 0) {
+            setPendingApprovalsError(
+                locale === "vi"
+                    ? `Đã tắt phê duyệt nhưng còn ${failedCount} yêu cầu chưa tự động duyệt được`
+                    : `${failedCount} pending members could not be auto-approved after disabling approval`
+            );
+            return false;
+        }
+
+        return true;
+    }, [isStudioOwner, loadData, loadPendingApprovals, locale, mapPendingApproval, studioId]);
+
+    const handleMemberApprovalToggle = useCallback(async (checked: boolean) => {
         if (!studio || !isStudioOwner || isUpdatingMemberApproval || isEditing) return;
 
         const previous = requiresMemberApproval;
+        let toggleApplied = false;
         setRequiresMemberApproval(checked);
         setIsUpdatingMemberApproval(true);
         setPendingApprovalsError("");
@@ -998,17 +1117,44 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 return;
             }
 
+            toggleApplied = true;
             writeStudioMemberApprovalFallback(studio.id, checked);
+
+            if (!checked) {
+                const autoApprovedAll = await autoApproveAllPendingMembers();
+
+                if (autoApprovedAll) {
+                    toast({
+                        description:
+                            locale === "vi"
+                                ? "Đã tự động duyệt toàn bộ yêu cầu chờ và tắt phê duyệt"
+                                : "All pending members were auto-approved and approval was disabled",
+                        variant: "success"
+                    });
+                } else {
+                    toast({
+                        description:
+                            locale === "vi"
+                                ? "Đã tắt phê duyệt, nhưng một số yêu cầu chờ chưa được tự động duyệt"
+                                : "Approval was disabled, but some pending members could not be auto-approved",
+                        variant: "destructive"
+                    });
+                }
+
+                return;
+            }
         } catch (error) {
             console.error("Update studio member approval failed:", error);
-            setRequiresMemberApproval(previous);
+            if (!toggleApplied) {
+                setRequiresMemberApproval(previous);
+            }
             setPendingApprovalsError(
                 locale === "vi" ? "Không thể cập nhật cài đặt duyệt thành viên" : "Failed to update approval setting"
             );
         } finally {
             setIsUpdatingMemberApproval(false);
         }
-    };
+    }, [autoApproveAllPendingMembers, isEditing, isStudioOwner, isUpdatingMemberApproval, locale, requiresMemberApproval, studio, toast]);
 
     const handleStudioArchiveToggle = async (nextIsActive: boolean) => {
         if (!studio || !isStudioOwner || isUpdatingStudioArchive) return;
@@ -1154,6 +1300,28 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     };
 
     const normalizeStudioInviteRole = (role: string) => String(role).trim().toLowerCase() || "member";
+
+    const extractTokenFromInviteUrl = (inviteUrl: string) => {
+        const raw = String(inviteUrl || "").trim();
+        if (!raw) return "";
+
+        try {
+            const parsed = new URL(raw);
+            const tokenFromQuery = String(parsed.searchParams.get("token") ?? "").trim();
+            if (tokenFromQuery) return tokenFromQuery;
+
+            const pathMatch = parsed.pathname.match(/\/(?:invite|studio-invite)\/([^/?#]+)/i);
+            if (pathMatch?.[1]) return decodeURIComponent(pathMatch[1]);
+        } catch {
+            const queryMatch = raw.match(/[?&]token=([^&#]+)/i);
+            if (queryMatch?.[1]) return decodeURIComponent(queryMatch[1]);
+
+            const pathMatch = raw.match(/\/(?:invite|studio-invite)\/([^/?#]+)/i);
+            if (pathMatch?.[1]) return decodeURIComponent(pathMatch[1]);
+        }
+
+        return "";
+    };
 
     if (membersLoading) {
         return (
@@ -1708,8 +1876,22 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                 ) : activeFilteredGroups.length === 0 && archivedFilteredGroups.length === 0 ? (
                                                     <div className="col-span-2">
                                                         <EmptyBlock
-                                                            title={t("noGroups")}
-                                                            subtitle={groupSearchQuery ? t("detail.noGroupsSubtitle") : t("detail.noGroupsSubtitle")}
+                                                            title={
+                                                                isStudioOwner
+                                                                    ? t("noGroups")
+                                                                    : locale === "vi"
+                                                                        ? "Bạn chưa tham gia vào nhóm nào"
+                                                                        : "You haven't joined any groups yet"
+                                                            }
+                                                            subtitle={
+                                                                groupSearchQuery
+                                                                    ? t("detail.noGroupsSubtitle")
+                                                                    : isStudioOwner
+                                                                        ? t("detail.noGroupsSubtitle")
+                                                                        : locale === "vi"
+                                                                            ? "Hãy tham gia một nhóm trong studio này để bắt đầu cộng tác"
+                                                                            : "Join a group in this studio to start collaborating"
+                                                            }
                                                         />
                                                     </div>
                                                 ) : null}
@@ -1916,7 +2098,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                             const isBusy = isApproving || isRejecting;
                                                                             return (
                                                                                 <div
-                                                                                    key={item.id}
+                                                                                    key={item.requestKey}
                                                                                     className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                                                                                     <div className="flex items-start gap-3 mb-3">
                                                                                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white text-xs font-semibold" style={{
@@ -2578,14 +2760,38 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 variant="studio"
                 canManage={true}
                 onCreateLink={async ({ role }) => {
-                    const result = await createStudioInviteLink(
-                        { studioId: studio?.id, role: normalizeStudioInviteRole(role) },
-                        locale
-                    );
-                    if (result.status === "success" && result.data?.inviteUrl) {
-                        return result.data.inviteUrl;
+                    try {
+                        const result = await createStudioInviteLink(
+                            { studioId: studio?.id, role: normalizeStudioInviteRole(role) },
+                            locale
+                        );
+
+                        if (result.status === "success" && result.data) {
+                            const tokenFromApi = String(result.data.token ?? "").trim();
+                            const inviteUrlFromApi = String(result.data.inviteUrl ?? "").trim();
+                            const token = tokenFromApi || extractTokenFromInviteUrl(inviteUrlFromApi);
+
+                            if (token) {
+                                const origin = typeof window !== "undefined" ? window.location.origin : "";
+                                return `${origin}/${locale}/studio-invite/${encodeURIComponent(token)}`;
+                            }
+
+                            if (inviteUrlFromApi) {
+                                return inviteUrlFromApi;
+                            }
+                        }
+
+                        throw new Error(result.message || t("detail.invite.createLinkError"));
+                    } catch (error) {
+                        toast({
+                            description:
+                                error instanceof Error && error.message
+                                    ? error.message
+                                    : t("detail.invite.createLinkError"),
+                            variant: "destructive"
+                        });
+                        throw error;
                     }
-                    throw new Error(t("detail.invite.createLinkError"));
                 }}
                 onSendInvite={async ({ email, role }) => {
                     await sendStudioInviteEmail(

@@ -1441,6 +1441,8 @@
             "studioNotFound": "Studio not found",
             "studioNotFoundSubtitle": "Please check the URL or go back to the studios list",
             "noGroupsSubtitle": "Create your first group to start collaborating",
+            "noJoinedGroups": "You haven't joined any groups yet",
+            "noJoinedGroupsSubtitle": "Join a group in this studio to start collaborating",
             "validation": {
                 "dateRangeError": "Start date must be less than or equal to end date"
             },

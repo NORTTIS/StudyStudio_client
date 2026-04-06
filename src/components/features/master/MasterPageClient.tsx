@@ -4,10 +4,11 @@ import { Archive, ChevronDown, FolderKanban, LogOut, Users2 } from "lucide-react
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     createStudio,
     deleteStudio,
+    getStudioById,
     getStudios,
     leaveStudio,
     toggleStudioArchive,
@@ -37,7 +38,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { mockStudios } from "@/mocks/studios-data";
-import { getPendingStudioJoinRequests, removePendingStudioJoinRequest } from "@/utils/studio-pending";
+import {
+    consumeRejectedStudioJoinRequest,
+    getPendingStudioJoinRequests,
+    removePendingStudioJoinRequest
+} from "@/utils/studio-pending";
 
 interface MasterPageClientProps {
     initialUserProfile: UserProfile | null;
@@ -554,8 +559,49 @@ function buildPendingStudioCard(
         alias: null,
         isOpen: true,
         isApproved: false,
+        isMember: false,
         isPendingApproval: true
     };
+}
+
+function shouldDropPendingStudio(code?: string | null, message?: string | null) {
+    const normalizedCode = String(code || "").trim().toLowerCase();
+    const normalizedMessage = String(message || "").trim().toLowerCase();
+
+    const codeLooksMissing =
+        normalizedCode === "404"
+        || normalizedCode === "not_found"
+        || normalizedCode === "studio_not_found"
+        || normalizedCode === "invalid_studio"
+        || normalizedCode.includes("not_found")
+        || normalizedCode.includes("studio_not_found");
+
+    const messageLooksMissing =
+        normalizedMessage.includes("studio")
+        && (
+            normalizedMessage.includes("kh")
+            || normalizedMessage.includes("not found")
+            || normalizedMessage.includes("does not exist")
+            || normalizedMessage.includes("no longer exists")
+            || normalizedMessage.includes("ton tai")
+            || normalizedMessage.includes("tồn tại")
+        );
+
+    return codeLooksMissing || messageLooksMissing;
+}
+
+function isPendingStudioAccessDenied(code?: string | null, message?: string | null) {
+    const normalizedCode = String(code || "").trim().toLowerCase();
+    const normalizedMessage = String(message || "").trim().toLowerCase();
+
+    return (
+        normalizedCode === "auth003"
+        || normalizedCode === "forbidden"
+        || normalizedMessage.includes("không có quyền truy cập")
+        || normalizedMessage.includes("khong co quyen truy cap")
+        || normalizedMessage.includes("access denied")
+        || normalizedMessage.includes("forbidden")
+    );
 }
 
 export default function MasterPageClient({
@@ -594,15 +640,17 @@ export default function MasterPageClient({
         archived: true
     });
     const [updatingArchiveStudioId, setUpdatingArchiveStudioId] = useState<string | null>(null);
+    const isLoadingRef = useRef(false);
+    const hasPendingReloadRef = useRef(false);
 
     const { ownedStudios, joinedStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
         const joined: StudioUI[] = [];
 
         studios.forEach((studio) => {
-            if (studio.studioRole === 0) {
+            if (studio.studioRole === 0 && !studio.isArchived) {
                 owned.push(studio);
-            } else {
+            } else if (!studio.isArchived) {
                 joined.push(studio);
             }
         });
@@ -632,26 +680,89 @@ export default function MasterPageClient({
     const studioCreated = subscriptionInfo?.studioCreated ?? studios.length;
     const totalStudios = studioCreated;
 
+    const resolveSyntheticPendingStudios = useCallback(
+        async (
+            requests: { studioId: string; studioName?: string; requestedAt: string }[],
+            existingStudioIds: Set<string>
+        ) => {
+            const results = await Promise.all(
+                requests
+                    .filter((request) => !existingStudioIds.has(request.studioId))
+                    .map(async (request) => {
+                        try {
+                            const result = await getStudioById(request.studioId, locale);
+
+                            if (result.status === "success") {
+                                if (result.data?.isMember === true) {
+                                    removePendingStudioJoinRequest(request.studioId);
+                                    return null;
+                                }
+
+                                return buildPendingStudioCard(request, locale);
+                            }
+
+                            if (shouldDropPendingStudio(result.code, result.message)) {
+                                removePendingStudioJoinRequest(request.studioId);
+                                return null;
+                            }
+
+                            if (isPendingStudioAccessDenied(result.code, result.message)) {
+                                return buildPendingStudioCard(request, locale);
+                            }
+
+                            return buildPendingStudioCard(request, locale);
+                        } catch {
+                            return buildPendingStudioCard(request, locale);
+                        }
+                    })
+            );
+
+            return results.filter((item): item is StudioUI => !!item);
+        },
+        [locale]
+    );
+
     const loadData = useCallback(async () => {
+        if (isLoadingRef.current) {
+            hasPendingReloadRef.current = true;
+            return;
+        }
+
+        isLoadingRef.current = true;
+        hasPendingReloadRef.current = false;
         setIsLoading(true);
         try {
+            let resolvedProfile = userProfile;
             const profileResult = await getUserProfile(locale);
             if (profileResult.status === "success" && profileResult.data) {
+                resolvedProfile = profileResult.data;
                 setUserProfile(profileResult.data);
             }
 
             const studiosResult = await getStudios(locale);
-            const pendingRequests = getPendingStudioJoinRequests();
+            const normalizedUserId = String(resolvedProfile?.userId || "").trim();
+            const normalizedEmail = String(resolvedProfile?.email || "").trim().toLowerCase();
+            const pendingRequests = getPendingStudioJoinRequests().filter((request) => {
+                const wasRejected = consumeRejectedStudioJoinRequest(
+                    request.studioId,
+                    normalizedUserId || undefined,
+                    normalizedEmail || undefined,
+                    request.requestedAt
+                );
+
+                if (wasRejected) {
+                    removePendingStudioJoinRequest(request.studioId);
+                    return false;
+                }
+
+                return true;
+            });
 
             if (studiosResult.status === "success" && studiosResult.data) {
-                const pendingStudioIds = new Set(getPendingStudioJoinRequests().map((item) => item.studioId));
-
                 const approvedStudios = studiosResult.data.studios.map((studio: StudioUI) => {
-                    const isPendingApproval = studio.studioRole === 1 && (
-                        studio.isApproved === false || pendingStudioIds.has(studio.id)
-                    );
+                    const isPendingApproval = studio.studioRole === 1 && studio.isMember !== true;
 
-                    if (studio.isApproved !== false) {
+                    if (!isPendingApproval) {
                         removePendingStudioJoinRequest(studio.id);
                     }
 
@@ -661,39 +772,84 @@ export default function MasterPageClient({
                     };
                 });
 
-                const existingStudioIds = new Set(approvedStudios.map((studio: StudioUI) => studio.id));
-                const syntheticPendingStudios = pendingRequests
-                    .filter((request) => !existingStudioIds.has(request.studioId))
-                    .map((request) => buildPendingStudioCard(request, locale));
+                const visibleStudios = approvedStudios.filter(
+                    (studio: StudioUI) => studio.studioRole === 0 || studio.isMember === true || studio.isPendingApproval
+                );
+                const existingStudioIds = new Set<string>(visibleStudios.map((studio: StudioUI) => studio.id));
+                const syntheticPendingStudios = await resolveSyntheticPendingStudios(pendingRequests, existingStudioIds);
 
-                const mergedStudios = [...approvedStudios, ...syntheticPendingStudios];
-
-                setStudios(mergedStudios);
+                setStudios([...visibleStudios, ...syntheticPendingStudios]);
                 setSubscriptionInfo(studiosResult.data.subscription);
             } else {
-                const existingStudioIds = new Set(mockStudios.map((studio) => studio.id));
+                const existingStudioIds = new Set<string>(mockStudios.map((studio: StudioUI) => studio.id));
                 const syntheticPendingStudios = pendingRequests
                     .filter((request) => !existingStudioIds.has(request.studioId))
                     .map((request) => buildPendingStudioCard(request, locale));
-
                 setStudios([...mockStudios, ...syntheticPendingStudios]);
             }
         } catch (error) {
             console.error("Load data failed, using mock data:", error);
-            const pendingRequests = getPendingStudioJoinRequests();
-            const existingStudioIds = new Set(mockStudios.map((studio) => studio.id));
+            const normalizedUserId = String(userProfile?.userId || "").trim();
+            const normalizedEmail = String(userProfile?.email || "").trim().toLowerCase();
+            const pendingRequests = getPendingStudioJoinRequests().filter((request) => {
+                const wasRejected = consumeRejectedStudioJoinRequest(
+                    request.studioId,
+                    normalizedUserId || undefined,
+                    normalizedEmail || undefined,
+                    request.requestedAt
+                );
+
+                if (wasRejected) {
+                    removePendingStudioJoinRequest(request.studioId);
+                    return false;
+                }
+
+                return true;
+            });
+            const existingStudioIds = new Set<string>(mockStudios.map((studio: StudioUI) => studio.id));
             const syntheticPendingStudios = pendingRequests
                 .filter((request) => !existingStudioIds.has(request.studioId))
                 .map((request) => buildPendingStudioCard(request, locale));
-
             setStudios([...mockStudios, ...syntheticPendingStudios]);
         } finally {
+            isLoadingRef.current = false;
             setIsLoading(false);
+
+            if (hasPendingReloadRef.current) {
+                hasPendingReloadRef.current = false;
+                void loadData();
+            }
         }
-    }, [locale]);
+    }, [locale, resolveSyntheticPendingStudios, userProfile]);
 
     useEffect(() => {
         loadData();
+    }, [loadData]);
+
+    useEffect(() => {
+        const handleWindowFocus = () => {
+            void loadData();
+        };
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                void loadData();
+            }
+        };
+        const handleStorage = (event: StorageEvent) => {
+            if (!event.key || event.key.includes("studio:pending-join-requests") || event.key.includes("studio:rejected-join-requests")) {
+                void loadData();
+            }
+        };
+
+        window.addEventListener("focus", handleWindowFocus);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("storage", handleStorage);
+
+        return () => {
+            window.removeEventListener("focus", handleWindowFocus);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("storage", handleStorage);
+        };
     }, [loadData]);
 
     const handleCreateStudio = async (data: {
@@ -848,6 +1004,12 @@ export default function MasterPageClient({
             const result = await leaveStudio(studio.id, locale);
 
             if (result.status !== "success") {
+                if (shouldDropPendingStudio(result.code, result.message)) {
+                    removePendingStudioJoinRequest(studio.id);
+                    setStudios((prev) => prev.filter((item) => item.id !== studio.id));
+                    return;
+                }
+
                 toast({
                     description: result.message || t("pendingStudioCancelError"),
                     variant: "destructive"
@@ -856,6 +1018,7 @@ export default function MasterPageClient({
             }
 
             removePendingStudioJoinRequest(studio.id);
+            setStudios((prev) => prev.filter((item) => item.id !== studio.id));
             await loadData();
         } catch {
             toast({ description: t("pendingStudioCancelError"), variant: "destructive" });
