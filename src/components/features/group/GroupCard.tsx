@@ -310,7 +310,7 @@ export function GroupCard({
                                     onClick={(e) => e.stopPropagation()}>
                                     {isPendingApproval ? (
                                         <DropdownMenuItem
-                                            className="text-red-600 focus:text-red-600"
+                                            className="text-red-600 focus:bg-red-50 focus:text-red-700"
                                             onSelect={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
@@ -320,7 +320,7 @@ export function GroupCard({
                                         </DropdownMenuItem>
                                     ) : (
                                         <DropdownMenuItem
-                                            className="text-red-600 focus:text-red-600"
+                                            className="text-red-600 focus:bg-red-50 focus:text-red-700"
                                             onSelect={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();

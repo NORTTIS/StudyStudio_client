@@ -1,5 +1,6 @@
 "use client";
 
+import { Archive, ChevronDown, FolderKanban, LogOut, Users2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,6 +10,7 @@ import {
     deleteStudio,
     getStudios,
     leaveStudio,
+    toggleStudioArchive,
     type StudioListSubscription,
     type StudioUI,
     updateStudio
@@ -86,21 +88,88 @@ function FloatingOrb({ className }: { className: string }) {
     );
 }
 
-function SectionHeader({ title, count }: { title: string; count: number }) {
+function StudioBoardSection({
+    sectionKey,
+    title,
+    count,
+    icon: Icon,
+    children,
+    collapsed,
+    onToggle
+}: {
+    sectionKey: string;
+    title: string;
+    count: number;
+    icon: React.ElementType;
+    children: React.ReactNode;
+    collapsed: boolean;
+    onToggle: (sectionKey: string) => void;
+}) {
+    const sectionStyle = sectionKey.includes("archived")
+        ? {
+            shell: "bg-[linear-gradient(135deg,rgba(255,245,245,0.98),rgba(255,255,255,0.96)_40%,rgba(254,236,236,0.94)_100%)]",
+            leftGlow: "bg-rose-200/30",
+            rightGlow: "bg-red-200/22",
+            header: "bg-[linear-gradient(90deg,rgba(255,231,231,0.95),rgba(255,244,244,0.92),rgba(254,232,232,0.88))]",
+            icon: "bg-[linear-gradient(135deg,#FB7185_0%,#EF4444_55%,#DC2626_100%)] ring-rose-100/80"
+        }
+        : sectionKey.includes("joined")
+            ? {
+                shell: "bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(255,255,255,0.96)_40%,rgba(238,242,255,0.94)_100%)]",
+                leftGlow: "bg-sky-200/30",
+                rightGlow: "bg-indigo-200/22",
+                header: "bg-[linear-gradient(90deg,rgba(224,242,254,0.95),rgba(239,246,255,0.92),rgba(238,242,255,0.88))]",
+                icon: "bg-[linear-gradient(135deg,#38BDF8_0%,#3B82F6_55%,#4F46E5_100%)] ring-sky-100/80"
+            }
+            : {
+                shell: "bg-[linear-gradient(135deg,rgba(255,247,238,0.98),rgba(255,255,255,0.96)_38%,rgba(250,245,255,0.94)_100%)]",
+                leftGlow: "bg-orange-200/30",
+                rightGlow: "bg-violet-200/22",
+                header: "bg-[linear-gradient(90deg,rgba(255,241,226,0.95),rgba(255,248,242,0.92),rgba(244,237,255,0.88))]",
+                icon: "bg-[linear-gradient(135deg,#FB923C_0%,#F97316_55%,#EA580C_100%)] ring-orange-100/80"
+            };
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.35 }}
-            className="mb-5 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-                <h2 className="text-[22px] font-semibold text-[#261E33]">{title}</h2>
-                <span className="rounded-full border border-[#ECE7E2] bg-white px-3 py-1 text-sm text-[#6F6B99] shadow-sm">
-                    {count}
-                </span>
+        <motion.section
+            initial={{ opacity: 0, y: 18, scale: 0.995 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+            className={`relative isolate overflow-hidden rounded-[34px] border border-white/80 ${sectionStyle.shell} shadow-[0_24px_72px_rgba(15,23,42,0.08)] backdrop-blur-2xl`}>
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.48),rgba(255,255,255,0.14))]" />
+            <div className={`pointer-events-none absolute -left-10 top-8 h-32 w-32 rounded-full blur-3xl ${sectionStyle.leftGlow}`} />
+            <div className={`pointer-events-none absolute -right-12 top-0 h-40 w-40 rounded-full blur-3xl ${sectionStyle.rightGlow}`} />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/95" />
+
+            <div className={`relative border-white/70 border-b ${sectionStyle.header} px-5 py-4 md:px-6`}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3.5">
+                        <div className={`flex h-11 w-11 items-center justify-center rounded-[18px] text-white shadow-[0_12px_28px_rgba(15,23,42,0.18)] ring-4 ${sectionStyle.icon}`}>
+                            <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2.5">
+                                <h2 className="truncate font-semibold text-[#261F32] text-[16px] md:text-[18px]">
+                                    {title}
+                                </h2>
+                                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-white/80 bg-white/80 px-2 font-bold text-[#7C6A5A] text-[11px] shadow-sm">
+                                    {count}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => onToggle(sectionKey)}
+                        className={`inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/80 px-4 py-2 text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:bg-white ${sectionKey.includes("archived") ? "hover:text-red-600" : sectionKey.includes("joined") ? "hover:text-blue-600" : "hover:text-[#EA580C]"}`}>
+                        <span>{collapsed ? "Mở rộng" : "Thu gọn"}</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : "rotate-0"}`} />
+                    </button>
+                </div>
             </div>
-        </motion.div>
+
+            {!collapsed ? <div className="relative px-5 py-5 md:px-6">{children}</div> : null}
+        </motion.section>
     );
 }
 
@@ -109,10 +178,12 @@ interface StudioCardProps {
     onClick: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onToggleArchive?: () => void;
     onLeave?: () => void;
     onCancelPendingRequest?: () => void;
     pendingCancelLoading?: boolean;
     isLeavingLoading?: boolean;
+    isArchiveUpdating?: boolean;
     canEdit: boolean;
 }
 
@@ -121,30 +192,32 @@ function StudioCard({
     onClick,
     onEdit,
     onDelete,
+    onToggleArchive,
     onLeave,
     onCancelPendingRequest,
     pendingCancelLoading = false,
     isLeavingLoading = false,
+    isArchiveUpdating = false,
     canEdit
 }: StudioCardProps) {
     const t = useTranslations("MasterPage");
+    const locale = useLocale();
     const gradient = getColorGradient(studio.colorHex);
     const hoverShadow = getHoverShadow(studio.colorHex);
     const focusRing = getFocusRing(studio.colorHex);
     const isOwner = studio.studioRole === 0;
     const isMember = studio.studioRole === 1;
     const isPendingApproval = !isOwner && !!studio.isPendingApproval;
-    const isStudioOpen = studio.isOpen !== false;
-    const isStudioActive = !studio.isArchived && isStudioOpen;
-    const canShowOwnerActions = canEdit && !studio.isArchived;
-    const isInactiveForViewer = !isOwner && !isStudioActive;
+    const isStudioArchived = studio.isArchived === true;
+    const isStudioActive = !isStudioArchived;
+    const canShowOwnerActions = canEdit;
+    const isInactiveForViewer = !isOwner && isStudioArchived;
     const inactiveMutedClass = isInactiveForViewer ? "opacity-60" : "";
     const [isHovered, setIsHovered] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
 
     const cardShadow = isHovered || isFocused ? hoverShadow : "0 20px 60px rgba(15,23,42,0.06)";
     const borderColor = isHovered ? `${studio.colorHex || "#FF5F3D"}35` : "rgba(255,255,255,0.72)";
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -178,11 +251,8 @@ function StudioCard({
             <div
                 className={`relative h-36 overflow-visible px-5 pt-5 ${inactiveMutedClass}`}
                 style={{
-                    background: studio.bannerUrl
-                        ? `url(${studio.bannerUrl}) center/cover no-repeat`
-                        : gradient
-                }}
-            >
+                    background: studio.bannerUrl ? `url(${studio.bannerUrl}) center/cover no-repeat` : gradient
+                }}>
                 {studio.bannerUrl && <div className="absolute inset-0 bg-black/10" />}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.36),transparent_36%)]" />
                 <div className="absolute inset-x-0 top-0 h-px bg-white/40" />
@@ -193,32 +263,77 @@ function StudioCard({
                 />
 
                 <div className="relative flex items-start justify-between gap-3">
-                    {studio.alias ? (
+                    <div className="flex flex-col items-start gap-2">
                         <span
-                            className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
-                            style={{
-                                backgroundColor: `white`,
-                                borderColor: `${studio.colorHex ?? "#FF5F3D"}40`,
-                                color: studio.colorHex ?? "#FF5F3D"
-                            }}>
-                            {studio.alias}
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-[11px] shadow-sm ${
+                                isStudioActive
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-red-100 text-red-700"
+                            }`}>
+                            {isStudioActive ? (locale === "vi" ? "Hoạt động" : "Active") : (locale === "vi" ? "Lưu trữ" : "Archived")}
                         </span>
-                    ) : (<div className="rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/95 backdrop-blur">
-                        Studio
-                    </div>)}
+                    </div>
 
+                    <div className="flex items-start gap-2">
+                        {studio.studioRole !== undefined && (
+                            <motion.div whileHover={{ scale: 1.04 }}>
+                                <RolePill role={isOwner ? "owner" : "member"} />
+                            </motion.div>
+                        )}
 
-                    {studio.studioRole !== undefined && (
-                        <motion.div whileHover={{ scale: 1.04 }}>
-                            <RolePill role={isOwner ? "owner" : "member"} />
-                        </motion.div>
-                    )}
+                        {false ? (
+                            <div className="flex items-center gap-2">
+                                <motion.button
+                                    whileHover={{ y: -2, scale: 1.04 }}
+                                    whileTap={{ scale: 0.96 }}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit();
+                                    }}
+                                    className="rounded-xl border border-white/20 bg-white/15 p-2 text-white shadow-sm backdrop-blur transition hover:bg-white/25"
+                                    title="Chỉnh sửa">
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                        />
+                                    </svg>
+                                </motion.button>
 
-                    {isPendingApproval ? (
-                        <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 shadow-sm">
-                            {t("pendingJoinBadge")}
-                        </span>
-                    ) : null}
+                                <motion.button
+                                    whileHover={{ y: -2, scale: 1.04 }}
+                                    whileTap={{ scale: 0.96 }}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete();
+                                    }}
+                                    className="rounded-xl border border-red-200/60 bg-white/15 p-2 text-red-100 shadow-sm backdrop-blur transition hover:bg-red-500/20"
+                                    title="Xóa studio">
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                    </svg>
+                                </motion.button>
+                            </div>
+                        ) : null}
+
+                    </div>
                 </div>
 
                 <motion.div
@@ -238,41 +353,38 @@ function StudioCard({
                 <div className="mb-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                            <span
-                                aria-label={isStudioActive ? "active" : "inactive"}
-                                title={isStudioActive ? t("detail.activeBadge") : t("inactiveStudioTitle")}
-                                className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center">
-                                <span
-                                    aria-hidden="true"
-                                    className={`absolute inset-0 rounded-full ${isStudioActive ? "bg-emerald-500/65" : "bg-red-500/75"} animate-ping motion-reduce:animate-none`}
-                                />
-                                <span
-                                    aria-hidden="true"
-                                    className={`relative h-2.5 w-2.5 rounded-full transition-transform duration-300 group-hover:scale-110 ${isStudioActive ? "bg-emerald-500" : "bg-red-600"}`}
-                                    style={{
-                                        boxShadow: isStudioActive
-                                            ? "0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 10px rgba(16, 185, 129, 0.35)"
-                                            : "0 0 0 3px rgba(220, 38, 38, 0.28), 0 0 12px rgba(220, 38, 38, 0.42)"
-                                    }}
-                                />
-                            </span>
-
                             <h3 className="truncate text-[19px] font-semibold text-[#261E33] transition duration-300 group-hover:text-[#FF5F3D]">
                                 {studio.name}
                             </h3>
                         </div>
-                        {studio.tagline ? (
-                            <p className="mt-1 italic text-[#9B8CA8] text-xs">{studio.tagline}</p>
-                        ) : null}
+                        {studio.tagline ? <p className="mt-1 italic text-[#9B8CA8] text-xs">{studio.tagline}</p> : null}
                         <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#6F6B99]">{studio.description}</p>
                     </div>
 
-                    {(canShowOwnerActions || isMember) && (
+                    {canShowOwnerActions ? (
                         <motion.div
                             initial={false}
                             animate={{ opacity: isHovered ? 1 : 0.55, y: isHovered ? 0 : 2 }}
                             className="flex shrink-0 gap-2 transition-all duration-200">
-                            {canShowOwnerActions && (
+                            <motion.button
+                                whileHover={{ y: -2, scale: 1.04 }}
+                                whileTap={{ scale: 0.96 }}
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleArchive?.();
+                                }}
+                                disabled={isArchiveUpdating}
+                                className={`rounded-xl border p-2 shadow-sm transition disabled:opacity-50 ${
+                                    isStudioArchived
+                                        ? "border-emerald-100 bg-white/95 hover:bg-emerald-50"
+                                        : "border-amber-100 bg-white/95 hover:bg-amber-50"
+                                }`}
+                                title={isStudioArchived ? "Mở lại studio" : "Lưu trữ studio"}>
+                                <Archive className={`h-4 w-4 ${isStudioArchived ? "text-emerald-600" : "text-amber-600"}`} />
+                            </motion.button>
+
+                            {!isStudioArchived ? (
                                 <>
                                     <motion.button
                                         whileHover={{ y: -2, scale: 1.04 }}
@@ -283,18 +395,9 @@ function StudioCard({
                                             onEdit();
                                         }}
                                         className="rounded-xl border border-gray-200 bg-white/95 p-2 shadow-sm transition hover:bg-gray-50"
-                                        title="Edit">
-                                        <svg
-                                            className="h-4 w-4 text-gray-500"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                            />
+                                        title="Chỉnh sửa">
+                                        <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </motion.button>
 
@@ -307,51 +410,35 @@ function StudioCard({
                                             onDelete();
                                         }}
                                         className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50"
-                                        title="Delete">
-                                        <svg
-                                            className="h-4 w-4 text-red-500"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                            />
+                                        title="Xóa studio">
+                                        <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </motion.button>
                                 </>
-                            )}
-
-                            {isMember && (
-                                <motion.button
-                                    whileHover={{ y: -2, scale: 1.04 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onLeave?.();
-                                    }}
-                                    disabled={isLeavingLoading}
-                                    className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50 disabled:opacity-50"
-                                    title={t("leaveStudio")}>
-                                    <svg
-                                        className="h-4 w-4 text-red-500"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                                        />
-                                    </svg>
-                                </motion.button>
-                            )}
+                            ) : null}
                         </motion.div>
-                    )}
+                    ) : isMember && !isPendingApproval ? (
+                        <motion.div
+                            initial={false}
+                            animate={{ opacity: isHovered ? 1 : 0.55, y: isHovered ? 0 : 2 }}
+                            className="flex shrink-0 gap-2 transition-all duration-200">
+                            <motion.button
+                                whileHover={{ y: -2, scale: 1.04 }}
+                                whileTap={{ scale: 0.96 }}
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onLeave?.();
+                                }}
+                                disabled={isLeavingLoading}
+                                className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50 disabled:opacity-50"
+                                title={t("leaveStudio")}
+                                aria-label={t("leaveStudio")}>
+                                <LogOut className="h-4 w-4 text-red-500" />
+                            </motion.button>
+                        </motion.div>
+                    ) : null}
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3">
@@ -498,6 +585,15 @@ export default function MasterPageClient({
     const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
     const [leaveTargetStudio, setLeaveTargetStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+        "all-owned": true,
+        "all-joined": true,
+        "all-archived": true,
+        owned: true,
+        joined: true,
+        archived: true
+    });
+    const [updatingArchiveStudioId, setUpdatingArchiveStudioId] = useState<string | null>(null);
 
     const { ownedStudios, joinedStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
@@ -520,11 +616,7 @@ export default function MasterPageClient({
         return studios.filter((studio) => {
             if (studioFilter === "owned" && studio.studioRole !== 0) return false;
             if (studioFilter === "joined" && studio.studioRole === 0) return false;
-            if (studioFilter === "archived") {
-                if (!studio.isArchived) return false;
-            } else if (studio.isArchived) {
-                return false;
-            }
+            if (studioFilter === "archived" && !studio.isArchived) return false;
 
             if (!query) return true;
 
@@ -535,13 +627,6 @@ export default function MasterPageClient({
                 .includes(query);
         });
     }, [searchQuery, studioFilter, studios]);
-
-    const currentSectionTitle = useMemo(() => {
-        if (studioFilter === "owned") return t("yourStudios");
-        if (studioFilter === "joined") return t("joinedStudios");
-        if (studioFilter === "archived") return t("archivedStudios");
-        return t("allStudios");
-    }, [studioFilter, t]);
 
     const studioLimit = subscriptionInfo?.studioLimit ?? 3;
     const studioCreated = subscriptionInfo?.studioCreated ?? studios.length;
@@ -805,51 +890,110 @@ export default function MasterPageClient({
         }
     };
 
-    const renderStudioSection = (title: string, studioList: StudioUI[]) => {
+    const handleToggleArchiveStudio = async (studio: StudioUI) => {
+        if (!studio.id || updatingArchiveStudioId) return;
+
+        const nextIsArchived = !studio.isArchived;
+        setUpdatingArchiveStudioId(studio.id);
+
+        try {
+            const result = await toggleStudioArchive(studio.id, nextIsArchived, locale);
+
+            if (result.status !== "success") {
+                toast({
+                    description: result.message || (nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại"),
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            await loadData();
+        } catch (error) {
+            console.error("Toggle studio archive failed:", error);
+            toast({
+                description: nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại",
+                variant: "destructive"
+            });
+        } finally {
+            setUpdatingArchiveStudioId(null);
+        }
+    };
+
+    const toggleSection = useCallback((sectionKey: string) => {
+        setCollapsedSections((prev) => ({
+            ...prev,
+            [sectionKey]: !prev[sectionKey]
+        }));
+    }, []);
+
+    const renderStudioSection = (sectionKey: string, title: string, studioList: StudioUI[]) => {
         if (studioList.length === 0) return null;
+
+        const sectionIcon =
+            sectionKey.includes("archived") ? Archive : sectionKey.includes("joined") ? Users2 : FolderKanban;
 
         return (
             <div className="mb-10">
-                <SectionHeader title={title} count={studioList.length} />
-
-                <motion.div className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-3">
-                    <AnimatePresence initial={false}>
-                        {studioList.map((studio) => (
-                            <StudioCard
-                                key={studio.id}
-                                studio={studio}
-                                onClick={() => handleStudioClick(studio)}
-                                onEdit={() => handleOpenEditModal(studio)}
-                                onDelete={() => handleOpenDeleteModal(studio)}
-                                onLeave={() => {
-                                    handleOpenLeaveDialog(studio);
-                                }}
-                                onCancelPendingRequest={() => {
-                                    void handleCancelPendingStudio(studio);
-                                }}
-                                pendingCancelLoading={isCancelingPendingStudio && studio.isPendingApproval}
-                                isLeavingLoading={leavingStudioId === studio.id}
-                                canEdit={studio.studioRole === 0}
-                            />
-                        ))}
-                    </AnimatePresence>
-                </motion.div>
+                <StudioBoardSection
+                    sectionKey={sectionKey}
+                    title={title}
+                    count={studioList.length}
+                    icon={sectionIcon}
+                    collapsed={!!collapsedSections[sectionKey]}
+                    onToggle={toggleSection}>
+                    <motion.div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+                        <AnimatePresence initial={false}>
+                            {studioList.map((studio) => (
+                                <StudioCard
+                                    key={studio.id}
+                                    studio={studio}
+                                    onClick={() => handleStudioClick(studio)}
+                                    onEdit={() => handleOpenEditModal(studio)}
+                                    onDelete={() => handleOpenDeleteModal(studio)}
+                                    onToggleArchive={() => {
+                                        void handleToggleArchiveStudio(studio);
+                                    }}
+                                    onLeave={() => {
+                                        handleOpenLeaveDialog(studio);
+                                    }}
+                                    onCancelPendingRequest={() => {
+                                        void handleCancelPendingStudio(studio);
+                                    }}
+                                    pendingCancelLoading={isCancelingPendingStudio && studio.isPendingApproval}
+                                    isLeavingLoading={leavingStudioId === studio.id}
+                                    isArchiveUpdating={updatingArchiveStudioId === studio.id}
+                                    canEdit={studio.studioRole === 0}
+                                />
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
+                </StudioBoardSection>
             </div>
         );
     };
 
     const hasNoResults = filteredStudios.length === 0;
+    const managedStudiosForAll = useMemo(
+        () => filteredStudios.filter((studio) => studio.studioRole === 0 && !studio.isArchived),
+        [filteredStudios]
+    );
+    const archivedStudiosForAll = useMemo(
+        () => filteredStudios.filter((studio) => studio.isArchived),
+        [filteredStudios]
+    );
+    const joinedStudiosForAll = useMemo(
+        () => filteredStudios.filter((studio) => studio.studioRole !== 0 && !studio.isArchived),
+        [filteredStudios]
+    );
 
     return (
-        <div className="h-screen overflow-hidden bg-[linear-gradient(180deg,#FAFAFB_0%,#F7F8FA_100%)] text-[#261E33]">
+        <div className="h-screen overflow-hidden bg-white text-[#261E33]">
             <div className="flex h-full">
                 <DashboardSidebar />
 
-                <main className="relative h-screen flex-1 overflow-y-auto overflow-x-hidden">
+                <main className="relative h-screen flex-1 overflow-y-auto overflow-x-hidden bg-white">
                     <FloatingOrb className="left-[-120px] top-[-40px] h-72 w-72 bg-orange-200/25" />
                     <FloatingOrb className="right-[-100px] top-[12%] h-80 w-80 bg-violet-200/20" />
-                    <FloatingOrb className="bottom-[-120px] left-[15%] h-80 w-80 bg-sky-200/15" />
-
                     <Header userProfile={userProfile} />
 
                     <Container>
@@ -1004,7 +1148,19 @@ export default function MasterPageClient({
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}>
-                                        {renderStudioSection(currentSectionTitle, filteredStudios)}
+                                        {studioFilter === "all" ? (
+                                            <div className="space-y-8">
+                                                {renderStudioSection("all-owned", t("yourStudios"), managedStudiosForAll)}
+                                                {renderStudioSection("all-joined", t("joinedStudios"), joinedStudiosForAll)}
+                                                {renderStudioSection("all-archived", t("archivedStudios"), archivedStudiosForAll)}
+                                            </div>
+                                        ) : studioFilter === "owned" ? (
+                                            renderStudioSection("owned", t("yourStudios"), filteredStudios)
+                                        ) : studioFilter === "joined" ? (
+                                            renderStudioSection("joined", t("joinedStudios"), filteredStudios)
+                                        ) : (
+                                            renderStudioSection("archived", t("archivedStudios"), filteredStudios)
+                                        )}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
