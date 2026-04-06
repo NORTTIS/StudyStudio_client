@@ -6,10 +6,13 @@ import { useRef, useState } from "react";
 import {
     completeGroupBannerUpload,
     completeStudioBannerUpload,
+    completeTemplateBannerUpload,
     deleteGroupBanner,
     deleteStudioBanner,
+    deleteTemplateBanner,
     requestGroupBannerUpload,
     requestStudioBannerUpload,
+    requestTemplateBannerUpload,
     toPublicUrl,
     uploadToPresignedUrl,
     validateBannerFile
@@ -17,7 +20,7 @@ import {
 import { hexToGradient } from "@/lib/utils";
 
 interface BannerUploadProps {
-    entityType: "group" | "studio";
+    entityType: "group" | "studio" | "template";
     entityId: string;
     bannerUrl?: string | null;
     colorHex?: string | null;
@@ -57,8 +60,18 @@ export function BannerUpload({
 
         setUploading(true);
         try {
-            const uploadReqFn = entityType === "group" ? requestGroupBannerUpload : requestStudioBannerUpload;
-            const completeReqFn = entityType === "group" ? completeGroupBannerUpload : completeStudioBannerUpload;
+            let uploadReqFn: typeof requestGroupBannerUpload;
+            let completeReqFn: typeof completeGroupBannerUpload;
+            if (entityType === "group") {
+                uploadReqFn = requestGroupBannerUpload;
+                completeReqFn = completeGroupBannerUpload;
+            } else if (entityType === "studio") {
+                uploadReqFn = requestStudioBannerUpload;
+                completeReqFn = completeStudioBannerUpload;
+            } else {
+                uploadReqFn = requestTemplateBannerUpload;
+                completeReqFn = completeTemplateBannerUpload;
+            }
 
             const res1 = await uploadReqFn(entityId, {
                 contentType: file.type,
@@ -89,7 +102,14 @@ export function BannerUpload({
 
     const handleDelete = async () => {
         try {
-            const deleteFn = entityType === "group" ? deleteGroupBanner : deleteStudioBanner;
+            let deleteFn: typeof deleteGroupBanner;
+            if (entityType === "group") {
+                deleteFn = deleteGroupBanner;
+            } else if (entityType === "studio") {
+                deleteFn = deleteStudioBanner;
+            } else {
+                deleteFn = deleteTemplateBanner;
+            }
             await deleteFn(entityId);
             onDeleteSuccess?.();
         } catch {
@@ -98,11 +118,11 @@ export function BannerUpload({
     };
 
     return (
-        <div className="group/upload relative h-[250px] w-[500px] overflow-hidden rounded-xl border border-border bg-muted/50">
+        <div className="group/upload relative h-[250px] w-full overflow-hidden rounded-xl border border-border bg-muted/50">
             {displayUrl ? (
                 <img src={displayUrl} alt={t("alt")} className="h-full w-full object-cover" />
             ) : (
-                <div className="flex h-[250px] w-[500px] items-center justify-center" style={{ background: gradient }}>
+                <div className="flex h-[250px] w-full items-center justify-center" style={{ background: gradient }}>
                     <span className="font-medium text-sm text-white/60">{t("empty")}</span>
                 </div>
             )}

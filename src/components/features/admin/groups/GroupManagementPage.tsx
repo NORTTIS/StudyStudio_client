@@ -323,7 +323,7 @@ export function GroupManagementPage() {
     return (
         <div style={{ minHeight: "100vh", background: "#F8F8F8" }}>
             {contextHolder}
-            <div style={{ display: "flex", minHeight: "100vh" }}>
+            <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
                 <DashboardSidebar />
                 <main style={{ flex: 1 }}>
                     <Header userProfile={null} />

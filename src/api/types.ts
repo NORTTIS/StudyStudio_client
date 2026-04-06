@@ -1247,6 +1247,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/templates/{templateId}/hard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/users": {
         parameters: {
             query?: never;
@@ -7599,6 +7638,7 @@ export interface components {
             description?: string | null;
             groupName: string;
             groupTaskStatuses: components["schemas"]["TemplateTaskStatusRequest"][];
+            isActive?: boolean;
         };
         DailyActivityPoint: {
             /** Format: int32 */
@@ -8017,6 +8057,8 @@ export interface components {
             groupId?: string;
             /** Format: int32 */
             position?: number;
+            /** Format: uuid */
+            statusId?: string;
             statusName?: string | null;
         };
         GroupTaskStatusResponseApiResponse: {
@@ -9422,12 +9464,16 @@ export interface components {
             status?: string | null;
         };
         TemplateResponse: {
+            bannerUrl?: string | null;
+            colorHex?: string | null;
             /** Format: date-time */
             createdAt?: string;
             groupDescription?: string | null;
             /** Format: uuid */
             groupId?: string;
             groupName?: string | null;
+            groupTaskStatuses?: components["schemas"]["GroupTaskStatusResponse"][] | null;
+            isActive?: boolean;
             isSystemTemplate?: boolean;
             /** Format: uuid */
             templateId?: string;
@@ -9728,8 +9774,12 @@ export interface components {
             taskSeverity?: components["schemas"]["TaskSeverity"];
         };
         UpdateTemplateRequest: {
+            groupDescription?: string | null;
             /** Format: uuid */
             groupId: string;
+            groupName?: string | null;
+            groupTaskStatuses?: components["schemas"]["TemplateTaskStatusRequest"][] | null;
+            isActive?: boolean | null;
             isSystemTemplate?: boolean;
         };
         UpdateUserStatusRequest: {

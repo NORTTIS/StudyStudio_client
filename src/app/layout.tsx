@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { Noto_Sans } from "next/font/google";
+import { Noto_Sans, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const appSans = Noto_Sans({
     variable: "--font-app-sans",
+    subsets: ["latin", "vietnamese"],
+    display: "swap"
+});
+
+const appInter = Inter({
+    variable: "--font-app-inter",
     subsets: ["latin", "vietnamese"],
     display: "swap"
 });
@@ -25,7 +31,7 @@ export default async function RootLayout({
 
     return (
         <html lang={locale || "en"} suppressHydrationWarning>
-            <body className={`${appSans.variable} font-sans antialiased`} suppressHydrationWarning>
+            <body className={`${appSans.variable} ${appInter.variable} font-sans antialiased`} suppressHydrationWarning>
                 {children}
                 <Toaster />
             </body>

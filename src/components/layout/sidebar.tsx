@@ -8,6 +8,7 @@ import {
     CreditCard,
     FileText,
     LayoutDashboard,
+    LayoutTemplate,
     Newspaper,
     Users
 } from "lucide-react";
@@ -52,6 +53,7 @@ export function DashboardSidebar() {
         { name: t("dashboard"), href: "/admin/dashboard", icon: LayoutDashboard },
         { name: t("users"), href: "/admin/users", icon: Users },
         { name: t("adminGroups"), href: "/admin/groups", icon: Users },
+        { name: t("templates"), href: "/admin/templates", icon: LayoutTemplate },
         { name: t("studios"), href: "/admin/studios", icon: BarChart3 },
         { name: t("subscriptions"), href: "/admin/subscriptions", icon: CreditCard },
         { name: t("reports"), href: "/admin/reports", icon: FileText },
@@ -92,6 +94,7 @@ export function DashboardSidebar() {
         "/admin/dashboard": ["/admin/dashboard"],
         "/admin/users": ["/admin/users"],
         "/admin/groups": ["/admin/groups"],
+        "/admin/templates": ["/admin/templates"],
         "/admin/studios": ["/admin/studios"],
         "/admin/subscriptions": ["/admin/subscriptions"],
         "/admin/reports": ["/admin/reports"],

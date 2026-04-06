@@ -343,7 +343,7 @@ export function UserManagementPage() {
     };
 
     return (
-        <div style={{ minHeight: "100vh", background: "#F8F8F8" }}>
+        <div style={{ minHeight: "100vh", background: "#F8F8F8", fontFamily: "'Inter', sans-serif" }}>
             {contextHolder}
             <div style={{ display: "flex", minHeight: "100vh" }}>
                 <DashboardSidebar />

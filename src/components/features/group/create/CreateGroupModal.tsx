@@ -13,6 +13,7 @@ import { EmojiPicker } from "@/components/ui/emoji-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { BatchUploadModal } from "./BatchUploadModal";
+import { hexToGradient } from "@/lib/utils";
 
 type GroupType = "independent" | "managed";
 type CreateMode = "single" | "batch";
@@ -38,6 +39,8 @@ type TemplateResponse = {
     templateId?: string;
     groupName?: string | null;
     groupDescription?: string | null;
+    bannerUrl?: string | null;
+    colorHex?: string | null;
 };
 
 const RAW_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -112,7 +115,7 @@ export function CreateGroupModal({
     const [groupLimit, setGroupLimit] = useState<number>(5);
     const [groupCreated, setGroupCreated] = useState<number>(0);
     const [ownerStudios, setOwnerStudios] = useState<StudioResponse[]>([]);
-    const [templates, setTemplates] = useState<Array<{ id: string; name: string; desc: string }>>([]);
+    const [templates, setTemplates] = useState<Array<{ id: string; name: string; desc: string; bannerUrl: string | null; colorHex: string | null }>>([]);
 
     const [downloadingTemplate, setDownloadingTemplate] = useState(false);
     const [batchUploadOpen, setBatchUploadOpen] = useState(false);
@@ -284,7 +287,9 @@ export function CreateGroupModal({
                     .map((template) => ({
                         id: template.templateId as string,
                         name: template.groupName || t("templateFallbackName"),
-                        desc: template.groupDescription || ""
+                        desc: template.groupDescription || "",
+                        bannerUrl: template.bannerUrl ?? null,
+                        colorHex: template.colorHex ?? null
                     }));
 
                 setOwnerStudios(owner);
@@ -831,6 +836,7 @@ export function CreateGroupModal({
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-1">
                                     {templates.map((template) => {
                                         const selected = templateId === template.id;
+                                        const gradient = hexToGradient(template.colorHex ?? "#FF5F3D");
                                         return (
                                             <button
                                                 key={template.id}
@@ -844,11 +850,27 @@ export function CreateGroupModal({
                                                     : "border-[#E6E6E6] hover:border-[#CFCFCF] hover:shadow-sm"
                                                     }`}
                                                 title={`${template.name}\n\n${template.desc || ""}`}>
-                                                <div className="flex items-center justify-center bg-white py-8">
-                                                    <div className="grid h-14 w-14 place-items-center rounded-xl border border-[#E6E6E6] bg-white text-[#6F6B99]">
-                                                        <ImageIcon className="h-6 w-6" />
+                                                {template.bannerUrl ? (
+                                                    <div className="relative h-28 overflow-hidden">
+                                                        <img
+                                                            src={template.bannerUrl}
+                                                            alt={template.name}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/20" />
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                                                            <div className="line-clamp-1 font-semibold text-white text-sm drop-shadow-sm">
+                                                                {template.name}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                ) : (
+                                                    <div className="flex items-center justify-center py-6" style={{ background: gradient }}>
+                                                        <div className="grid h-14 w-14 place-items-center rounded-xl border border-white/30 bg-white/20 text-white">
+                                                            <ImageIcon className="h-6 w-6" />
+                                                        </div>
+                                                    </div>
+                                                )}
 
                                                 <div className="h-px bg-[#E6E6E6]" />
 

@@ -13,7 +13,7 @@
 
 import { type ApiResponse, apiDelete, apiFetch } from "./api-client";
 
-export type BannerEntityType = "group" | "studio";
+export type BannerEntityType = "group" | "studio" | "template";
 export type LogoEntityType = "studio";
 
 export const BANNER_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -56,6 +56,38 @@ export async function completeGroupBannerUpload(
 }
 
 export async function deleteGroupBanner(
+    groupId: string,
+    locale = "vi"
+): Promise<ApiResponse<void>> {
+    return apiDelete<void>(`/avatar/group/${groupId}/banner`, locale);
+}
+
+// ─── Template Banner ────────────────────────────────────────────────────────
+// Template is a group variant — reuse group endpoints with groupId
+
+export async function requestTemplateBannerUpload(
+    groupId: string,
+    body: { contentType: string; fileSize: number },
+    locale = "vi"
+): Promise<ApiResponse<RequestBannerUploadResponse>> {
+    return apiFetch<RequestBannerUploadResponse>(
+        `/avatar/group/${groupId}/banner/request-upload`,
+        { method: "POST", body: JSON.stringify(body), locale }
+    );
+}
+
+export async function completeTemplateBannerUpload(
+    groupId: string,
+    body: { fileKey: string },
+    locale = "vi"
+): Promise<ApiResponse<void>> {
+    return apiFetch<void>(
+        `/avatar/group/${groupId}/banner/complete`,
+        { method: "POST", body: JSON.stringify(body), locale }
+    );
+}
+
+export async function deleteTemplateBanner(
     groupId: string,
     locale = "vi"
 ): Promise<ApiResponse<void>> {

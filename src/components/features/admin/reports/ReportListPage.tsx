@@ -6,7 +6,7 @@ import { AdminReportsTab } from "./AdminReportsTab";
 
 export function ReportListPage() {
     return (
-        <div className="min-h-screen bg-[#F8F8F8]">
+        <div className="min-h-screen bg-[#F8F8F8] font-[family-name:var(--font-app-inter)]">
             <div className="flex min-h-screen">
                 <DashboardSidebar />
                 <main className="flex-1">

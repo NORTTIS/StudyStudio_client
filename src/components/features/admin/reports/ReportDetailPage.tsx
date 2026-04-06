@@ -142,7 +142,7 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
 
     if (!report) {
         return (
-            <div className="min-h-screen bg-[#F8F8F8]">
+            <div className="min-h-screen bg-[#F8F8F8] font-[family-name:var(--font-app-inter)]">
                 <div className="flex min-h-screen">
                     <DashboardSidebar />
                     <main className="flex-1">
@@ -179,7 +179,7 @@ export function ReportDetailPage({ reportId }: { reportId: string }) {
     const currentStep = STATUS_ORDER[status];
 
     return (
-        <div className="min-h-screen bg-[#F8F8F8]">
+        <div className="min-h-screen bg-[#F8F8F8] font-[family-name:var(--font-app-inter)]">
             <div className="flex min-h-screen">
                 <DashboardSidebar />
                 <main className="flex-1">
