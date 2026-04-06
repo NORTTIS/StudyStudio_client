@@ -58,6 +58,7 @@ export type Studio = {
     isOpen?: boolean | null;
     isArchived?: boolean | null;
     isApproved?: boolean | null;
+    isMember?: boolean | null;
 };
 
 // Map API response to UI format
@@ -83,6 +84,7 @@ export type StudioUI = {
     isOpen?: boolean | null;
     isArchived?: boolean | null;
     isApproved?: boolean | null;
+    isMember?: boolean | null;
     isPendingApproval?: boolean;
 };
 
@@ -147,6 +149,7 @@ function mapStudioToUI(studio: Studio): StudioUI {
         isOpen: studio.isOpen ?? true,
         isArchived: studio.isArchived ?? false,
         isApproved: studio.isApproved ?? null,
+        isMember: studio.isMember ?? null,
         isPendingApproval: false
     };
 }
@@ -157,6 +160,7 @@ function mapStudioToUI(studio: Studio): StudioUI {
 export async function getStudios(locale = "vi") {
     const result = await apiFetch<{ studios: Studio[]; subscription?: StudioListSubscription }>("/studio", {
         method: "GET",
+        cache: "no-store",
         locale
     });
 
@@ -186,6 +190,7 @@ export async function getStudios(locale = "vi") {
 export async function getStudioById(id: string, locale = "vi") {
     const result = await apiFetch<Studio>(`/studio/${id}`, {
         method: "GET",
+        cache: "no-store",
         locale
     });
 

@@ -3,6 +3,7 @@
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import { getStudios } from "@/api/studios";
 import { Button } from "@/components/ui/button";
 import { markPendingJoinRequestCanceled, removePendingJoinGroup, savePendingJoinGroup } from "@/components/features/group/group.api";
 import { cancelPendingJoinRequest } from "@/api/invites";
@@ -167,12 +168,12 @@ async function requestWithAutoMethod(url: string, payload?: AnyObj) {
     return res;
 }
 
-async function getGroupRequiresApproval(base: string, groupId: string): Promise<boolean | null> {
+async function getGroupInviteContext(base: string, groupId: string): Promise<{ requiresApproval: boolean | null; studioId: string }> {
     const normalizedGroupId = String(groupId || "").trim();
-    if (!normalizedGroupId) return null;
+    if (!normalizedGroupId) return { requiresApproval: null, studioId: "" };
 
     const accessToken = getAccessToken();
-    if (!accessToken) return null;
+    if (!accessToken) return { requiresApproval: null, studioId: "" };
 
     const detailUrl = base
         ? `${base}/group/${encodeURIComponent(normalizedGroupId)}/detail`
@@ -189,14 +190,38 @@ async function getGroupRequiresApproval(base: string, groupId: string): Promise<
             cache: "no-store"
         });
 
-        if (!res.ok) return null;
+        if (!res.ok) return { requiresApproval: null, studioId: "" };
 
         const body = await readBody(res);
         const data = (body.json?.data ?? body.json ?? {}) as AnyObj;
         const flag = data.requiresMemberApproval ?? data.memberApprovalRequired;
-        return typeof flag === "boolean" ? flag : null;
+        const studioId = String(data.studioId ?? "").trim();
+        return {
+            requiresApproval: typeof flag === "boolean" ? flag : null,
+            studioId
+        };
     } catch {
-        return null;
+        return { requiresApproval: null, studioId: "" };
+    }
+}
+
+async function isCurrentUserStudioMember(studioId: string, locale: string): Promise<boolean> {
+    const normalizedStudioId = String(studioId || "").trim();
+    if (!normalizedStudioId) return false;
+
+    try {
+        const result = await getStudios(locale);
+        if (result.status !== "success" || !result.data) return false;
+
+        const studio = result.data.studios.find(
+            (item: { id: string; studioRole?: 0 | 1; isMember?: boolean | null }) =>
+                String(item.id || "").trim() === normalizedStudioId
+        );
+        if (!studio) return false;
+
+        return studio.studioRole === 0 || studio.isMember === true;
+    } catch {
+        return false;
     }
 }
 
@@ -289,15 +314,16 @@ export function InviteAcceptPage() {
             setStatus("submitting");
 
             const attempts: { url: string; payload?: AnyObj }[] = [
+                { url: `${base}/group/invite/accept`, payload: { token } },
+                { url: `${base}/group/invite/accept`, payload: { invitationToken: token } },
+                { url: `${base}/group/invite/accept`, payload: { inviteToken: token } },
+
                 { url: `${base}/invite/accept`, payload: { token } },
                 { url: `${base}/invite/accept`, payload: { invitationToken: token } },
                 { url: `${base}/invite/accept`, payload: { inviteToken: token } },
 
-                { url: `${base}/group/invite/accept`, payload: { token } },
-                { url: `${base}/group/invite/accept`, payload: { invitationToken: token } },
-
-                { url: `${base}/invite/accept?token=${encodeURIComponent(token)}` },
-                { url: `${base}/group/invite/accept?token=${encodeURIComponent(token)}` }
+                { url: `${base}/group/invite/accept?token=${encodeURIComponent(token)}` },
+                { url: `${base}/invite/accept?token=${encodeURIComponent(token)}` }
             ];
 
             let last404 = "";
@@ -355,7 +381,8 @@ export function InviteAcceptPage() {
                 const responseData = (body.json?.data ?? body.json ?? {}) as AnyObj;
                 const gid = String(responseData.groupId || responseData.id || "").trim();
 
-                const serverRequiresApproval = gid ? await getGroupRequiresApproval(base, gid) : null;
+                const inviteContext = gid ? await getGroupInviteContext(base, gid) : { requiresApproval: null, studioId: "" };
+                const serverRequiresApproval = inviteContext.requiresApproval;
                 const responseRequiresApproval = toBooleanLike(
                     responseData.requiresMemberApproval ?? responseData.memberApprovalRequired
                 );
@@ -371,12 +398,20 @@ export function InviteAcceptPage() {
                     serverRequiresApproval !== null
                         ? serverRequiresApproval
                         : responseRequiresApproval;
+                const bypassApprovalForStudioMember =
+                    effectiveRequiresApproval === true
+                    && !!inviteContext.studioId
+                    && await isCurrentUserStudioMember(inviteContext.studioId, locale);
 
                 const isPendingByApprovalFlag = isApprovedRaw === false;
                 const isPendingByResponse = isPendingRaw === true || pendingStatusRaw;
-                const isPendingByInviteHint = pendingApprovalHintFromLink && effectiveRequiresApproval === true && isApprovedRaw !== true;
+                const isPendingByInviteHint =
+                    !bypassApprovalForStudioMember
+                    && pendingApprovalHintFromLink
+                    && effectiveRequiresApproval === true
+                    && isApprovedRaw !== true;
 
-                const isApproved = effectiveRequiresApproval === false
+                const isApproved = bypassApprovalForStudioMember || effectiveRequiresApproval === false
                     ? true
                     : !(isPendingByApprovalFlag || isPendingByResponse || isPendingByInviteHint);
 

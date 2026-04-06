@@ -4,11 +4,11 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { acceptStudioInvite } from "@/api/studio-invites";
-import { leaveStudio } from "@/api/studios";
+import { getStudios, leaveStudio } from "@/api/studios";
 import { Button } from "@/components/ui/button";
-import { removePendingStudioJoinRequest, upsertPendingStudioJoinRequest } from "@/utils/studio-pending";
+import { removePendingStudioJoinRequest } from "@/utils/studio-pending";
 
-type Status = "idle" | "submitting" | "accepted" | "already" | "pending" | "need_login" | "error";
+type Status = "idle" | "submitting" | "accepted" | "already" | "pending" | "rejected" | "need_login" | "error";
 
 function normalizeToken(t: string | string[] | undefined) {
     if (!t) return "";
@@ -82,6 +82,56 @@ function isAlreadyInStudioMessage(msg: string) {
     );
 }
 
+function isPendingApprovalAccessDenied(code: string, message: string) {
+    const normalizedCode = String(code || "").trim().toLowerCase();
+    const normalizedMessage = String(message || "").trim().toLowerCase();
+
+    return (
+        normalizedCode === "auth003"
+        || normalizedCode === "forbidden"
+        || normalizedMessage.includes("không có quyền truy cập")
+        || normalizedMessage.includes("khong co quyen truy cap")
+        || normalizedMessage.includes("access denied")
+        || normalizedMessage.includes("forbidden")
+    );
+}
+
+function isPendingStudioMessage(code: string, message: string) {
+    const normalizedCode = String(code || "").trim().toLowerCase();
+    const normalizedMessage = String(message || "").trim().toLowerCase();
+
+    return (
+        normalizedCode === "pending"
+        || normalizedCode === "already_pending"
+        || normalizedCode === "request_pending"
+        || normalizedCode === "join_request_pending"
+        || normalizedMessage.includes("pending")
+        || normalizedMessage.includes("awaiting approval")
+        || normalizedMessage.includes("request is pending")
+        || normalizedMessage.includes("already pending")
+        || normalizedMessage.includes("chờ duyệt")
+        || normalizedMessage.includes("cho duyet")
+        || normalizedMessage.includes("đang chờ")
+        || normalizedMessage.includes("dang cho")
+    );
+}
+
+function isRejectedMessage(code: string, message: string) {
+    const normalizedCode = String(code || "").trim().toLowerCase();
+    const normalizedMessage = String(message || "").trim().toLowerCase();
+
+    return (
+        normalizedCode === "studio_rejected"
+        || normalizedCode === "join_request_rejected"
+        || normalizedCode === "request_rejected"
+        || normalizedMessage.includes("đã bị từ chối")
+        || normalizedMessage.includes("da bi tu choi")
+        || normalizedMessage.includes("request rejected")
+        || normalizedMessage.includes("join request rejected")
+        || normalizedMessage.includes("membership rejected")
+    );
+}
+
 export function StudioInviteAcceptPage() {
     const params = useParams<{ token?: string | string[] }>();
     const token = normalizeToken(params?.token);
@@ -139,6 +189,51 @@ export function StudioInviteAcceptPage() {
         }
     }, [hydrated, searchParams]);
 
+    const syncMembershipStatus = useCallback(async (): Promise<"accepted" | "pending" | "none"> => {
+        const targetStudioId = String(studioId || studioIdFromToken || "").trim();
+        if (!targetStudioId) return "none";
+
+        try {
+            const result = await getStudios(locale);
+            if (result.status !== "success" || !result.data) return "none";
+
+            const currentStudio = result.data.studios.find(
+                (item: {
+                    id: string;
+                    studioRole?: 0 | 1;
+                    isMember?: boolean | null;
+                    isPendingApproval?: boolean | null;
+                    isApproved?: boolean | null;
+                }) =>
+                    String(item.id || "").trim() === targetStudioId
+            );
+            if (!currentStudio) return "none";
+
+            const isApprovedMember = currentStudio.studioRole === 1 && currentStudio.isMember === true;
+            if (isApprovedMember) {
+                removePendingStudioJoinRequest(targetStudioId);
+                setStudioId(targetStudioId);
+                setStatus("accepted");
+                router.replace(`/${locale}/master/${targetStudioId}`);
+                return "accepted";
+            }
+
+            const stillPending =
+                currentStudio.studioRole === 1
+                && currentStudio.isMember !== true
+                && (currentStudio.isPendingApproval === true || currentStudio.isApproved === false);
+
+            if (stillPending) {
+                setStudioId(targetStudioId);
+                setStatus("pending");
+                return "pending";
+            }
+            return "none";
+        } catch {
+            return "none";
+        }
+    }, [locale, router, studioId, studioIdFromToken]);
+
     const handleAcceptInvite = useCallback(async () => {
         try {
             setError("");
@@ -146,6 +241,11 @@ export function StudioInviteAcceptPage() {
             if (!token) {
                 setStatus("error");
                 setError(t("errorMissingToken"));
+                return;
+            }
+
+            const membershipStatus = await syncMembershipStatus();
+            if (membershipStatus === "accepted" || membershipStatus === "pending") {
                 return;
             }
 
@@ -161,6 +261,25 @@ export function StudioInviteAcceptPage() {
                 if (isAlreadyInStudioMessage(alreadyStudioSignal)) {
                     setStudioId(sid);
                     setStatus("already");
+                    return;
+                }
+
+                if (sid && isRejectedMessage(normalizedErrorCode, normalizedMessage)) {
+                    removePendingStudioJoinRequest(sid);
+                    setStudioId(sid);
+                    setStatus("rejected");
+                    return;
+                }
+
+                if (sid && isPendingApprovalAccessDenied(normalizedErrorCode, normalizedMessage)) {
+                    setStudioId(sid);
+                    setStatus("pending");
+                    return;
+                }
+
+                if (sid && isPendingStudioMessage(normalizedErrorCode, normalizedMessage)) {
+                    setStudioId(sid);
+                    setStatus("pending");
                     return;
                 }
 
@@ -202,9 +321,6 @@ export function StudioInviteAcceptPage() {
 
             if (response.data?.isApproved === false) {
                 setStudioId(sid);
-                if (sid) {
-                    upsertPendingStudioJoinRequest(sid, response.data?.studioName || undefined);
-                }
                 setStatus("pending");
                 return;
             }
@@ -236,7 +352,7 @@ export function StudioInviteAcceptPage() {
             setStatus("error");
             setError(errorMessage);
         }
-    }, [locale, router, studioIdFromToken, t, token]);
+    }, [locale, router, studioIdFromToken, syncMembershipStatus, t, token]);
 
     const handleCancelRequest = useCallback(async () => {
         const targetStudioId = String(studioId || studioIdFromToken || "").trim();
@@ -250,6 +366,30 @@ export function StudioInviteAcceptPage() {
         setError("");
 
         try {
+            const membershipStatus = await syncMembershipStatus();
+            if (membershipStatus === "accepted") {
+                const targetStudioId = String(studioId || studioIdFromToken || "").trim();
+                const alreadyMemberMessage =
+                    locale === "vi"
+                        ? "Bạn đã ở trong studio này. Trang sẽ được tải lại."
+                        : "You are already in this studio. The page will reload.";
+
+                if (typeof window !== "undefined") {
+                    window.alert(alreadyMemberMessage);
+                }
+
+                setStatus("already");
+
+                if (targetStudioId) {
+                    router.replace(`/${locale}/master/${targetStudioId}`);
+                } else {
+                    router.replace(`/${locale}/master`);
+                }
+
+                router.refresh();
+                return;
+            }
+
             const result = await leaveStudio(targetStudioId, locale);
 
             if (result.status !== "success") {
@@ -266,7 +406,34 @@ export function StudioInviteAcceptPage() {
         } finally {
             setCancelingRequest(false);
         }
-    }, [locale, router, studioId, studioIdFromToken, t]);
+    }, [locale, router, studioId, studioIdFromToken, syncMembershipStatus, t]);
+
+    useEffect(() => {
+        if (status !== "pending") return;
+
+        const checkStatus = () => {
+            if (document.visibilityState !== "visible") return;
+            void syncMembershipStatus();
+        };
+
+        const intervalId = window.setInterval(checkStatus, 15000);
+        const handleFocus = () => {
+            checkStatus();
+        };
+        const handleVisibilityChange = () => {
+            checkStatus();
+        };
+
+        checkStatus();
+        window.addEventListener("focus", handleFocus);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            window.clearInterval(intervalId);
+            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [status, syncMembershipStatus]);
 
     if (!hydrated) {
         return (
@@ -292,6 +459,23 @@ export function StudioInviteAcceptPage() {
                     <>
                         <h1 className="mb-2 font-bold text-2xl">{t("success")}</h1>
                         <p className="mb-6 text-muted-foreground text-sm">{t("redirecting")}</p>
+                    </>
+                ) : status === "rejected" ? (
+                    <>
+                        <h1 className="mb-2 font-bold text-2xl">
+                            {locale === "vi" ? "Yêu cầu đã bị từ chối" : "Request rejected"}
+                        </h1>
+                        <p className="mb-6 text-muted-foreground text-sm">
+                            {locale === "vi"
+                                ? "Owner đã từ chối yêu cầu tham gia studio này."
+                                : "The owner rejected your request to join this studio."}
+                        </p>
+
+                        <div className="space-y-3">
+                            <Button className="w-full" onClick={onBackHome}>
+                                {t("backHome")}
+                            </Button>
+                        </div>
                     </>
                 ) : status === "pending" ? (
                     <>

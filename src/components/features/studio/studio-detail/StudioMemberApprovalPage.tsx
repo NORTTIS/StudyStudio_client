@@ -27,6 +27,21 @@ export interface StudioMemberApprovalItem {
     colorHex?: string | null;
 }
 
+function dedupeApprovalItems(items: StudioMemberApprovalItem[]) {
+    const seen = new Set<string>();
+
+    return items.filter((item) => {
+        const key = String(item.id || "").trim() || String(item.email || "").trim().toLowerCase();
+
+        if (!key || seen.has(key)) {
+            return false;
+        }
+
+        seen.add(key);
+        return true;
+    });
+}
+
 interface StudioMemberApprovalPageProps {
     studioName?: string;
     studioColorHex?: string | null;
@@ -133,9 +148,9 @@ export default function StudioMemberApprovalPage({
             const result = await getStudioPendingMembers(studioId, locale);
 
             if (result.status === "success" && result.data) {
-                const items = (result.data.pendingMembers || [])
+                const items = dedupeApprovalItems((result.data.pendingMembers || [])
                     .map(mapPendingMember)
-                    .filter((item) => item.id);
+                    .filter((item) => item.id));
                 setApprovals(items);
                 return;
             }
