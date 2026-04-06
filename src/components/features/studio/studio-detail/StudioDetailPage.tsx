@@ -54,7 +54,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { hexToGradient } from "@/lib/utils";
-import { LogOut, Power, Search } from "lucide-react";
+import { Archive, ArchiveRestore, LogOut, Power, Search } from "lucide-react";
 import AIMaster from "./AIMaster";
 import AnalyticMaster from "./analytic/AnalyticMaster";
 import { MemberDetailModal } from "./MemberDetailModal";
@@ -291,6 +291,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     const [isUpdatingMemberApproval, setIsUpdatingMemberApproval] = useState(false);
     const [isStudioArchived, setIsStudioArchived] = useState(toBooleanLike(initialStudio?.isArchived) === true);
     const [isUpdatingStudioArchive, setIsUpdatingStudioArchive] = useState(false);
+    const [updatingGroupArchiveId, setUpdatingGroupArchiveId] = useState<string | null>(null);
     const [groupArchiveStateById, setGroupArchiveStateById] = useState<Record<string, boolean>>(() => {
         return initialGroups.reduce<Record<string, boolean>>((acc, group) => {
             const groupId = String(group.id || "").trim();
@@ -317,6 +318,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     const [editAlias, setEditAlias] = useState("");
     const [isLeavingStudio, setIsLeavingStudio] = useState(false);
     const [groupList, setGroupList] = useState<GroupCardDto[]>(initialGroups);
+    const [archivedGroupBlockedTarget, setArchivedGroupBlockedTarget] = useState<TransformedGroup | null>(null);
 
     const clampStudioName = useCallback((value: string) => value.slice(0, STUDIO_NAME_MAX_LENGTH), []);
     const clampStudioDescription = useCallback((value: string) => value.slice(0, STUDIO_DESCRIPTION_MAX_LENGTH), []);
@@ -555,6 +557,53 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             });
         }
     }, [groupArchiveStateById, groupList, locale, studioId, toast]);
+
+    const handleGroupArchiveToggle = useCallback(async (group: TransformedGroup, nextIsArchived: boolean) => {
+        if (!isStudioOwner || updatingGroupArchiveId) return;
+
+        const groupId = String(group.id || "").trim();
+        if (!groupId) return;
+
+        const previousIsArchived = Boolean(group.isArchived);
+        setUpdatingGroupArchiveId(groupId);
+        setGroupArchiveStateById((prev) => ({
+            ...prev,
+            [groupId]: nextIsArchived
+        }));
+
+        try {
+            const result = await toggleGroupArchive(groupId, nextIsArchived, locale);
+            if (result.status !== "success") {
+                throw new Error(result.message || "Failed to update group archive state");
+            }
+
+            writeGroupArchiveOverride(groupId, nextIsArchived);
+            setGroupList((prev) =>
+                prev.map((item) =>
+                    String(item.id || "").trim() === groupId
+                        ? { ...item, isArchived: nextIsArchived }
+                        : item
+                )
+            );
+        } catch (error) {
+            setGroupArchiveStateById((prev) => ({
+                ...prev,
+                [groupId]: previousIsArchived
+            }));
+            writeGroupArchiveOverride(groupId, previousIsArchived);
+            toast({
+                description:
+                    error instanceof Error && error.message
+                        ? error.message
+                        : (locale === "vi"
+                            ? "Không thể cập nhật trạng thái lưu trữ của nhóm."
+                            : "Unable to update the group's archive state."),
+                variant: "destructive"
+            });
+        } finally {
+            setUpdatingGroupArchiveId(null);
+        }
+    }, [isStudioOwner, locale, toast, updatingGroupArchiveId]);
 
     useEffect(() => {
         const source = initialStudio as (StudioResponse & {
@@ -1149,9 +1198,9 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             <div className="flex h-full">
                 <DashboardSidebar />
 
-                {/* Relative container — banner only covers content area, not sidebar */}
+                {/* Relative container - banner only covers content area, not sidebar */}
                 <div className="relative flex-1 overflow-hidden">
-                    {/* Banner — scoped to content area only */}
+                    {/* Banner - scoped to content area only */}
                     {bannerUrl && (
                         <div className="pointer-events-none absolute inset-0 z-0">
                             <GroupBannerBackground bannerUrl={bannerUrl} colorHex={colorHex ?? null} />
@@ -1375,6 +1424,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                             {t("detail.tabs.settings")}
                                         </TabButton>
                                     )}
+
                                 </div>
 
                                 <div className="flex w-full flex-col gap-3 xl:w-auto xl:flex-row xl:items-center xl:justify-end">
@@ -1460,6 +1510,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                 const isGroupArchived = toBooleanLike(group.isArchived) === true;
                                                                 const isGroupActive = !isGroupArchived;
                                                                 const isEffectiveOpen = isGroupActive && !isStudioArchived;
+                                                                const isTogglingArchive = updatingGroupArchiveId === group.id;
                                                                 return (
                                                                     <Link
                                                                         href={`/${locale}/group/${group.id}`}
@@ -1503,35 +1554,55 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                             </motion.div>
 
                                                                             <div className="min-w-0 flex-1">
-                                                                                <div className="flex min-w-0 flex-nowrap items-center gap-2">
-                                                                                    <h3 className="truncate text-base font-semibold text-slate-800 transition group-hover:text-[#FF5F3D]">
-                                                                                        {group.name}
-                                                                                    </h3>
-                                                                                    <span
-                                                                                        aria-label={isEffectiveOpen ? "active" : "inactive"}
-                                                                                        title={isEffectiveOpen ? (locale === "vi" ? "Đang hoạt động" : "Active") : (locale === "vi" ? "Đang dừng" : "Paused")}
-                                                                                        className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center"
-                                                                                    >
+                                                                                <div className="flex items-start justify-between gap-2">
+                                                                                    <div className="min-w-0 flex flex-wrap items-center gap-2">
+                                                                                        <h3 className="truncate text-base font-semibold text-slate-800 transition group-hover:text-[#FF5F3D]">
+                                                                                            {group.name}
+                                                                                        </h3>
                                                                                         <span
-                                                                                            aria-hidden="true"
-                                                                                            className={`absolute inset-0 rounded-full animate-ping motion-reduce:animate-none ${isEffectiveOpen
-                                                                                                ? "bg-emerald-400/60"
-                                                                                                : "bg-red-500/75"}`}
-                                                                                        />
-                                                                                        <span
-                                                                                            className={`relative h-2.5 w-2.5 rounded-full ${isEffectiveOpen
-                                                                                                ? "bg-emerald-500"
-                                                                                                : "bg-red-600"}`}
-                                                                                            style={{
-                                                                                                boxShadow: isEffectiveOpen
-                                                                                                    ? "0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 10px rgba(16, 185, 129, 0.28)"
-                                                                                                    : "0 0 0 4px rgba(220, 38, 38, 0.26), 0 0 12px rgba(220, 38, 38, 0.42)"
-                                                                                            }}
-                                                                                        />
-                                                                                    </span>
-                                                                                    <div className="shrink-0">
-                                                                                        <RolePill role={group.role} />
+                                                                                            aria-label={isEffectiveOpen ? "active" : "inactive"}
+                                                                                            title={isEffectiveOpen ? (locale === "vi" ? "Đang hoạt động" : "Active") : (locale === "vi" ? "Đang dừng" : "Paused")}
+                                                                                            className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center"
+                                                                                        >
+                                                                                            <span
+                                                                                                aria-hidden="true"
+                                                                                                className={`absolute inset-0 rounded-full animate-ping motion-reduce:animate-none ${isEffectiveOpen
+                                                                                                    ? "bg-emerald-400/60"
+                                                                                                    : "bg-red-500/75"}`}
+                                                                                            />
+                                                                                            <span
+                                                                                                className={`relative h-2.5 w-2.5 rounded-full ${isEffectiveOpen
+                                                                                                    ? "bg-emerald-500"
+                                                                                                    : "bg-red-600"}`}
+                                                                                                style={{
+                                                                                                    boxShadow: isEffectiveOpen
+                                                                                                        ? "0 0 0 4px rgba(16, 185, 129, 0.14), 0 0 10px rgba(16, 185, 129, 0.28)"
+                                                                                                        : "0 0 0 4px rgba(220, 38, 38, 0.26), 0 0 12px rgba(220, 38, 38, 0.42)"
+                                                                                                }}
+                                                                                            />
+                                                                                        </span>
+                                                                                        <div className="shrink-0">
+                                                                                            <RolePill role={group.role} />
+                                                                                        </div>
                                                                                     </div>
+
+                                                                                    {isStudioOwner ? (
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            aria-label={locale === "vi" ? "Lưu trữ nhóm" : "Archive group"}
+                                                                                            title={locale === "vi" ? "Lưu trữ nhóm" : "Archive group"}
+                                                                                            disabled={isTogglingArchive}
+                                                                                            onClick={(event) => {
+                                                                                                event.preventDefault();
+                                                                                                event.stopPropagation();
+                                                                                                void handleGroupArchiveToggle(group, true);
+                                                                                            }}
+                                                                                            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition ${isTogglingArchive
+                                                                                                ? "cursor-wait border-amber-200 bg-amber-50 text-amber-500"
+                                                                                                : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800"}`}>
+                                                                                            <Archive className={`h-4 w-4 ${isTogglingArchive ? "animate-pulse" : ""}`} />
+                                                                                        </button>
+                                                                                    ) : null}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -1656,36 +1727,55 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                     </div>
 
                                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                                        {archivedFilteredGroups.map((group) => (
-                                                            <Link
-                                                                key={`archived-${group.id}`}
-                                                                href={`/${locale}/group/${group.id}`}
-                                                                onClick={(event) => {
-                                                                    event.preventDefault();
-                                                                    event.stopPropagation();
-                                                                    toast({
-                                                                        variant: "destructive",
-                                                                        description: locale === "vi"
-                                                                            ? "Nhóm này đang lưu trữ, không thể truy cập."
-                                                                            : "This group is archived and cannot be accessed."
-                                                                    });
-                                                                }}
-                                                                className="group cursor-not-allowed rounded-2xl border border-amber-200/70 bg-white/90 p-4 opacity-80 shadow-sm transition">
-                                                                <div className="flex items-start justify-between gap-3">
-                                                                    <div className="min-w-0">
-                                                                        <p className="truncate font-semibold text-slate-800 text-sm">
-                                                                            {group.name}
-                                                                        </p>
-                                                                        <p className="mt-1 text-slate-500 text-xs">
-                                                                            {group.members} {t("members")} • {group.tasks} {t("detail.tasks")}
-                                                                        </p>
+                                                        {archivedFilteredGroups.map((group) => {
+                                                            const isTogglingArchive = updatingGroupArchiveId === group.id;
+
+                                                            return (
+                                                                <Link
+                                                                    key={`archived-${group.id}`}
+                                                                    href={isStudioOwner ? `/${locale}/group/${group.id}/setting` : `/${locale}/group/${group.id}`}
+                                                                    onClick={(event) => {
+                                                                        if (isStudioOwner) return;
+                                                                        event.preventDefault();
+                                                                        event.stopPropagation();
+                                                                        setArchivedGroupBlockedTarget(group);
+                                                                    }}
+                                                                    className="group rounded-2xl border border-amber-200/70 bg-white/90 p-4 opacity-80 shadow-sm transition hover:bg-white">
+                                                                    <div className="flex items-start justify-between gap-3">
+                                                                        <div className="min-w-0">
+                                                                            <p className="truncate font-semibold text-slate-800 text-sm">
+                                                                                {group.name}
+                                                                            </p>
+                                                                            <p className="mt-1 text-slate-500 text-xs">
+                                                                                {group.members} {t("members")} - {group.tasks} {t("detail.tasks")}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-[11px] text-amber-700">
+                                                                                {locale === "vi" ? "Lưu trữ" : "Archived"}
+                                                                            </span>
+                                                                            {isStudioOwner ? (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    aria-label={locale === "vi" ? "Hủy lưu trữ nhóm" : "Unarchive group"}
+                                                                                    title={locale === "vi" ? "Hủy lưu trữ nhóm" : "Unarchive group"}
+                                                                                    disabled={isTogglingArchive}
+                                                                                    onClick={(event) => {
+                                                                                        event.preventDefault();
+                                                                                        event.stopPropagation();
+                                                                                        void handleGroupArchiveToggle(group, false);
+                                                                                    }}
+                                                                                    className={`inline-flex h-8 w-8 items-center justify-center rounded-xl border transition ${isTogglingArchive
+                                                                                        ? "cursor-wait border-emerald-200 bg-emerald-50 text-emerald-500"
+                                                                                        : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"}`}>
+                                                                                    <ArchiveRestore className={`h-4 w-4 ${isTogglingArchive ? "animate-pulse" : ""}`} />
+                                                                                </button>
+                                                                            ) : null}
+                                                                        </div>
                                                                     </div>
-                                                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-[11px] text-amber-700">
-                                                                        {locale === "vi" ? "Lưu trữ" : "Archived"}
-                                                                    </span>
-                                                                </div>
-                                                            </Link>
-                                                        ))}
+                                                                </Link>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             ) : null}
@@ -2268,9 +2358,82 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                             </div>
                                         </section>
 
-                                        <section className="overflow-hidden rounded-[28px] border border-amber-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
-                                            <div className="border-b border-amber-200 px-6 py-5">
-                                                <h2 className="text-sm font-bold text-amber-700">
+                                        {false && (
+                                            <section className="overflow-hidden rounded-[28px] border border-red-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                                            <div className="border-b border-red-200 px-6 py-5">
+                                                <h2 className="text-sm font-bold text-red-700">
+                                                    {t("detail.danger.title")}
+                                                </h2>
+                                            </div>
+
+                                            <div className="px-6 py-6">
+                                                <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
+                                                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                                        <div>
+                                                            <div className="text-sm font-bold text-red-700">
+                                                                {t("deleteModal.title")}
+                                                            </div>
+                                                            <div className="mt-1 text-xs leading-6 text-red-600">
+                                                                {t("detail.danger.deleteDescription")}
+                                                            </div>
+                                                        </div>
+
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button
+                                                                    type="button"
+                                                                    disabled={isStudioArchived}
+                                                                    className="h-11 rounded-2xl bg-red-600 px-5 text-sm font-semibold text-white hover:bg-red-700">
+                                                                    <svg
+                                                                        className="mr-2 h-4 w-4"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24">
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth={2}
+                                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                        />
+                                                                    </svg>
+                                                                    {t("deleteModal.title")}
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>
+                                                                        {t("detail.danger.confirmTitle")}
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        {t("detail.danger.confirmDescription")}
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>
+                                                                        {t("deleteModal.cancel")}
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        className="bg-red-600 hover:bg-red-700"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            handleDeleteStudio();
+                                                                        }}>
+                                                                        {t("detail.danger.confirmDelete")}
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            </section>
+                                        )}
+
+                                        <section className={`overflow-hidden rounded-[28px] border bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)] transition-colors duration-300 ${isStudioArchived ? "border-amber-200" : "border-emerald-200"}`}>
+                                            <div className={`border-b px-6 py-5 transition-colors duration-300 ${isStudioArchived ? "border-amber-200" : "border-emerald-200"}`}>
+                                                <h2 className={`text-sm font-bold transition-colors duration-300 ${isStudioArchived ? "text-amber-700" : "text-emerald-700"}`}>
                                                     {locale === "vi" ? "Lưu trữ" : "Archive"}
                                                 </h2>
                                             </div>
@@ -2488,6 +2651,36 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                 void handleRemoveMemberFromStudio(memberPendingRemoval);
                             }}>
                             {removingMemberUserId ? (locale === "vi" ? "Đang xóa..." : "Removing...") : t("detail.removeMember.confirmButton")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={!!archivedGroupBlockedTarget}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setArchivedGroupBlockedTarget(null);
+                    }
+                }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {locale === "vi" ? "Nhóm đang lưu trữ" : "Archived group"}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {locale === "vi"
+                                ? `"${archivedGroupBlockedTarget?.name || ""}" đang được lưu trữ nên bạn không thể truy cập lúc này.`
+                                : `\"${archivedGroupBlockedTarget?.name || ""}\" is archived, so you cannot access it right now.`}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setArchivedGroupBlockedTarget(null);
+                            }}>
+                            {locale === "vi" ? "Đã hiểu" : "OK"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

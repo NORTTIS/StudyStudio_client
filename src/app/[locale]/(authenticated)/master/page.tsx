@@ -50,6 +50,7 @@ const mapStudioToUI = (studio: StudioResponse): StudioUI => ({
     tagline: studio.tagline ?? null,
     alias: studio.alias ?? null,
     isOpen: studio.isOpen ?? true,
+    isArchived: studio.isArchived ?? false,
     isApproved: (studio as StudioResponse & { isApproved?: boolean | null }).isApproved ?? null,
     isPendingApproval: false
 });
