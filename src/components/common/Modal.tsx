@@ -2,7 +2,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
 
 interface ModalProps {
@@ -27,6 +28,7 @@ export function Modal({
     className
 }: ModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
+    const [mounted, setMounted] = useState(false);
 
     const sizeStyles = {
         sm: "max-w-sm",
@@ -36,6 +38,11 @@ export function Modal({
     };
 
     // Handle ESC key
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     useEffect(() => {
         if (!isOpen) return;
 
@@ -92,17 +99,17 @@ export function Modal({
         };
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!(isOpen && mounted)) return null;
 
-    return (
+    return createPortal((
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
+            className="fixed inset-0 z-[12000] flex items-center justify-center overflow-y-auto p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? "modal-title" : undefined}>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/50 transition-opacity"
+                className="fixed inset-0 z-0 bg-black/50 transition-opacity"
                 onClick={closeOnOverlayClick ? onClose : undefined}
                 aria-hidden="true"
             />
@@ -147,7 +154,7 @@ export function Modal({
                 <div className="px-6 py-4">{children}</div>
             </div>
         </div>
-    );
+    ), document.body);
 }
 
 interface ModalFooterProps {

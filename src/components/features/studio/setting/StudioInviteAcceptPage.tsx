@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { acceptStudioInvite } from "@/api/studio-invites";
 import { getStudios, leaveStudio } from "@/api/studios";
 import { Button } from "@/components/ui/button";
-import { removePendingStudioJoinRequest } from "@/utils/studio-pending";
+import { getPendingStudioJoinRequests, removePendingStudioJoinRequest } from "@/utils/studio-pending";
 
 type Status = "idle" | "submitting" | "accepted" | "already" | "pending" | "rejected" | "need_login" | "error";
 
@@ -193,6 +193,11 @@ export function StudioInviteAcceptPage() {
         const targetStudioId = String(studioId || studioIdFromToken || "").trim();
         if (!targetStudioId) return "none";
 
+        const localPendingRequest = getPendingStudioJoinRequests().find(
+            (item) => String(item.studioId || "").trim() === targetStudioId
+        );
+        const hasLocalPendingRequest = !!localPendingRequest;
+
         try {
             const result = await getStudios(locale);
             if (result.status !== "success" || !result.data) return "none";
@@ -208,11 +213,10 @@ export function StudioInviteAcceptPage() {
                     String(item.id || "").trim() === targetStudioId
             );
             if (!currentStudio) {
-                if (status === "pending") {
-                    removePendingStudioJoinRequest(targetStudioId);
+                if (status === "pending" || hasLocalPendingRequest) {
                     setStudioId(targetStudioId);
-                    setStatus("rejected");
-                    return "rejected";
+                    setStatus("pending");
+                    return "pending";
                 }
 
                 return "none";
@@ -238,11 +242,10 @@ export function StudioInviteAcceptPage() {
                 return "pending";
             }
 
-            if (status === "pending") {
-                removePendingStudioJoinRequest(targetStudioId);
+            if (status === "pending" || hasLocalPendingRequest) {
                 setStudioId(targetStudioId);
-                setStatus("rejected");
-                return "rejected";
+                setStatus("pending");
+                return "pending";
             }
 
             return "none";

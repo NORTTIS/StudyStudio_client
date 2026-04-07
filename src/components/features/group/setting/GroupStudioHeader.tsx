@@ -210,6 +210,7 @@ export function GroupStudioHeader({
     const tGroupCard = useTranslations("GroupCard");
 
     const groupId = groupIdProp || searchParams.get("id") || extractGroupIdFromPath(pathname || "") || "";
+    const fromStudioId = String(searchParams.get("fromStudioId") || "").trim();
 
     const [groupName, setGroupName] = React.useState<string>("Group");
     const [groupAvatarUrl, setGroupAvatarUrl] = React.useState<string | null>(null);
@@ -265,6 +266,13 @@ export function GroupStudioHeader({
         ],
         [t, tCommon]
     );
+
+    const withNavigationContext = React.useCallback((href: string) => {
+        if (!fromStudioId) return href;
+
+        const separator = href.includes("?") ? "&" : "?";
+        return `${href}${separator}fromStudioId=${encodeURIComponent(fromStudioId)}`;
+    }, [fromStudioId]);
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -443,6 +451,7 @@ export function GroupStudioHeader({
     const isInviteDisabled = isArchived || isStudioArchived;
     const canLeaveGroup = userRole !== "owner";
     const apiBase = getApiBase();
+    const backHref = fromStudioId ? `/${locale}/master/${encodeURIComponent(fromStudioId)}` : `/${locale}/group`;
 
     const visibleTabs = React.useMemo(() => {
         const canSeeSetting = userRole === "owner" || userRole === "moderator";
@@ -660,7 +669,7 @@ export function GroupStudioHeader({
                             <div className="mt-2 flex items-start gap-3">
                                 <div>
                                     <Link
-                                        href={`/${locale}/group`}
+                                        href={backHref}
                                         className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#F0E2D6] bg-[#FFFDFB] text-[#EA580C] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:bg-linear-to-r hover:from-orange-500 hover:to-red-600 hover:text-white hover:shadow-md hover:shadow-orange-200">
                                         <ArrowLeft className="h-4 w-4" />
                                     </Link>
@@ -824,7 +833,7 @@ export function GroupStudioHeader({
                                     ? curPath === target
                                     : curPath === target || curPath.startsWith(`${target}/`);
 
-                            const href = groupId ? tab.href(locale, groupId) : "#";
+                            const href = groupId ? withNavigationContext(tab.href(locale, groupId)) : "#";
                             return (
                                 <Link
                                     key={tab.key}

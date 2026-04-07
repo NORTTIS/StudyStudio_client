@@ -3257,8 +3257,6 @@ export default function HomePersonalTaskScreen() {
                         <h2 className="font-bold text-[30px] text-slate-900 leading-tight tracking-[-0.02em] md:text-[36px]">
                             {t("title")}
                         </h2>
-
-                        <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">{t("subtitle")}</p>
                     </div>
 
                     {!mounted ? (

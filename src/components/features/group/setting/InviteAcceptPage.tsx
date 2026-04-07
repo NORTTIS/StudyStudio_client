@@ -5,7 +5,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { getStudios } from "@/api/studios";
 import { Button } from "@/components/ui/button";
-import { markPendingJoinRequestCanceled, removePendingJoinGroup, savePendingJoinGroup } from "@/components/features/group/group.api";
+import {
+    markPendingJoinRequestCanceled,
+    readPendingJoinGroups,
+    removePendingJoinGroup,
+    savePendingJoinGroup
+} from "@/components/features/group/group.api";
 import { cancelPendingJoinRequest } from "@/api/invites";
 
 type AnyObj = Record<string, any>;
@@ -112,6 +117,15 @@ function isPendingApprovalMessage(msg: string) {
         m.includes("approval") ||
         m.includes("chờ") ||
         m.includes("duyệt")
+    );
+}
+
+function isPendingGroupMembership(groupId: string): boolean {
+    if (!groupId) return false;
+    const pendingGroups = readPendingJoinGroups();
+    return pendingGroups.some(
+        (group) =>
+            String(group.id ?? group.groupId ?? "").trim() === groupId.trim()
     );
 }
 
@@ -301,6 +315,19 @@ export function InviteAcceptPage() {
         }
     }, [hydrated, searchParams]);
 
+    // Kiem tra trang thai pending khi page load
+    useEffect(() => {
+        if (!hydrated) return;
+        if (!hasAuth) return;
+        if (status !== "idle") return;
+
+        // Neu user da co pending request cho nhom nay thi hien thi trang thai pending
+        if (groupIdFromToken && isPendingGroupMembership(groupIdFromToken)) {
+            setGroupId(groupIdFromToken);
+            setStatus("pending");
+        }
+    }, [hydrated, hasAuth, status, groupIdFromToken]);
+
     const acceptInvite = useCallback(async () => {
         try {
             setError("");
@@ -353,17 +380,24 @@ export function InviteAcceptPage() {
                         body.text?.trim() ||
                         `Accept invitation failed (HTTP ${res.status}).`;
 
+                    const responseGroupId = String(body.json?.data?.groupId || body.json?.groupId || groupIdFromToken || "").trim();
+
+                    // Kiem tra localStorage truoc - neu dang cho phe duyet thi hien thi trang thai pending
+                    if (responseGroupId && isPendingGroupMembership(responseGroupId)) {
+                        setGroupId(responseGroupId);
+                        setStatus("pending");
+                        return;
+                    }
+
                     if (isAlreadyMemberMessage(msg)) {
-                        const existingGroupId = String(body.json?.data?.groupId || body.json?.groupId || groupIdFromToken || "").trim();
-                        if (existingGroupId) setGroupId(existingGroupId);
+                        if (responseGroupId) setGroupId(responseGroupId);
                         setStatus("already");
                         return;
                     }
 
                     if (res.status === 400) {
                         if (isPendingApprovalMessage(msg)) {
-                            const pendingGroupId = String(body.json?.data?.groupId || body.json?.groupId || groupIdFromToken || "").trim();
-                            if (pendingGroupId) setGroupId(pendingGroupId);
+                            if (responseGroupId) setGroupId(responseGroupId);
                             setStatus("pending");
                             return;
                         }
@@ -449,6 +483,12 @@ export function InviteAcceptPage() {
                 `Accept invitation failed. Endpoint not found (last 404: ${last404 || "(none)"}), or request body fields mismatch.`
             );
         } catch (e: any) {
+            // Kiem tra localStorage truoc - neu dang cho phe duyet thi hien thi trang thai pending
+            if (groupIdFromToken && isPendingGroupMembership(groupIdFromToken)) {
+                setGroupId(groupIdFromToken);
+                setStatus("pending");
+                return;
+            }
             if (isAlreadyMemberMessage(String(e?.message || ""))) {
                 if (groupIdFromToken) setGroupId(groupIdFromToken);
                 setStatus("already");

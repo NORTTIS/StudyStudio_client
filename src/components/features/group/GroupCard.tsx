@@ -67,8 +67,10 @@ export function GroupCard({
     const isOwner = groupRole === "owner";
     const isArchived = toBooleanLike((group as Record<string, unknown>).isArchived) === true;
     const isGroupOpen = group.isOpen !== false;
-    const isGroupActive = !isArchived && isGroupOpen;
-    const isEffectiveOpen = isGroupActive && isStudioOpen !== false;
+    // Status dot is meant to represent Active vs Archived (per UI copy),
+    // not whether the group/studio is temporarily paused/closed.
+    const isDotActive = !isArchived;
+    const isEffectiveOpen = !isArchived && isGroupOpen && isStudioOpen !== false;
     const isInactiveForViewer = !isOwner && !isEffectiveOpen;
     const rawStatus = String(
         (group as Record<string, unknown>).membershipStatus ??
@@ -222,18 +224,30 @@ export function GroupCard({
                             </div>
 
                             <span
-                                aria-label={isEffectiveOpen ? "active" : "inactive"}
-                                title={isEffectiveOpen ? "Đang hoạt động" : "Đã lưu trữ"}
+                                aria-label={isDotActive ? "active" : "inactive"}
+                                title={
+                                    isDotActive
+                                        ? locale === "vi"
+                                            ? "Đang hoạt động"
+                                            : "Active"
+                                        : isArchived
+                                            ? locale === "vi"
+                                                ? "Đã lưu trữ"
+                                                : "Archived"
+                                            : locale === "vi"
+                                                ? "Tạm dừng"
+                                                : "Inactive"
+                                }
                                 className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center">
                                 <span
                                     aria-hidden="true"
-                                    className={`absolute inset-0 rounded-full ${isEffectiveOpen ? "bg-emerald-500/65" : "bg-red-500/75"} animate-ping motion-reduce:animate-none`}
+                                    className={`absolute inset-0 rounded-full ${isDotActive ? "bg-emerald-500/65" : "bg-red-500/75"} animate-ping motion-reduce:animate-none`}
                                 />
                                 <span
                                     aria-hidden="true"
-                                    className={`relative h-2.5 w-2.5 rounded-full transition-transform duration-300 group-hover/card:scale-110 ${isEffectiveOpen ? "bg-emerald-500" : "bg-red-600"}`}
+                                    className={`relative h-2.5 w-2.5 rounded-full transition-transform duration-300 group-hover/card:scale-110 ${isDotActive ? "bg-emerald-500" : "bg-red-600"}`}
                                     style={{
-                                        boxShadow: isEffectiveOpen
+                                        boxShadow: isDotActive
                                             ? "0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 10px rgba(16, 185, 129, 0.35)"
                                             : "0 0 0 3px rgba(220, 38, 38, 0.28), 0 0 12px rgba(220, 38, 38, 0.42)"
                                     }}

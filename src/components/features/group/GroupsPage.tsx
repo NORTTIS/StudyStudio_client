@@ -470,13 +470,9 @@ export function GroupsPage() {
                         <Card className="relative overflow-hidden rounded-[32px] bg-white/65 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,190,140,0.24),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(196,181,253,0.18),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,248,242,0.52))]" />
 
-                            <CardHeader className="relative pt-7 pb-4">
+                            <CardHeader className="relative pt-7 pb-4 pl-8 md:pl-10">
                                 <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                                     <div className="flex items-center gap-4">
-                                        <IconBadge variant="orange" size="lg" className="rounded-[22px]">
-                                            <Users className="h-6 w-6 text-white" />
-                                        </IconBadge>
-
                                         <div>
                                             <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/70 px-3 py-1 font-semibold text-[11px] text-orange-700 uppercase tracking-[0.18em] shadow-sm backdrop-blur">
                                                 <Sparkles className="h-3.5 w-3.5" />
@@ -909,9 +905,12 @@ function GroupsSection({
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/95" />
             <div className="pointer-events-none absolute inset-y-0 right-0 w-[35%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.30),transparent_70%)] opacity-70" />
 
-            <div
+            <button
+                type="button"
+                onClick={showToggleButton ? onToggle : undefined}
                 className={cn(
-                    "relative border-b border-white/70 bg-gradient-to-r px-5 py-4 backdrop-blur-2xl md:px-6",
+                    "relative w-full border-b border-white/70 bg-gradient-to-r px-5 py-4 text-left backdrop-blur-2xl md:px-6",
+                    showToggleButton && "cursor-pointer",
                     theme.header
                 )}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -954,21 +953,17 @@ function GroupsSection({
                     </div>
 
                     {showToggleButton && (
-                        <motion.button
-                            type="button"
-                            onClick={onToggle}
-                            whileHover={{ y: -1, scale: 1.01 }}
-                            whileTap={{ scale: 0.98 }}
+                        <div
                             className={cn(
-                                "inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-4 py-2 font-medium text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:bg-white",
+                                "inline-flex items-center gap-2 self-start rounded-full border border-white/80 bg-white/75 px-4 py-2 font-medium text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:bg-white sm:self-auto",
                                 theme.buttonHover
                             )}>
                             <span>{expanded ? t("collapse") : t("viewAll")}</span>
                             <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />
-                        </motion.button>
+                        </div>
                     )}
                 </div>
-            </div>
+            </button>
 
             {titleOnly && !expanded ? null : (
                 <motion.div className={cn("relative px-5 py-5 md:px-6", theme.content)}>

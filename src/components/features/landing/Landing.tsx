@@ -180,7 +180,7 @@ export default function LandingPage() {
                         </div>
 
                         <div className={`${fadeUp} ${delay4}`}>
-                            <PreviewFrame src="/images/2.png" alt={t("previews.management")} tone="glass" />
+                            <PreviewFrame src="/images/management.png" alt={t("previews.management")} tone="glass" />
                         </div>
                     </div>
                 </div>
@@ -190,7 +190,7 @@ export default function LandingPage() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
                         <div className={`${fadeUp} ${delay2} order-2 lg:order-1`}>
-                            <PreviewFrame src="/images/2.png" alt={t("previews.group")} tone="warm" />
+                            <PreviewFrame src="/images/group.png" alt={t("previews.group")} tone="warm" />
                         </div>
 
                         <div className={`${fadeUp} ${delay1} order-1 lg:order-2`}>
@@ -252,7 +252,7 @@ export default function LandingPage() {
                         </div>
 
                         <div className={`${fadeUp} ${delay2}`}>
-                            <PreviewFrame src="/images/2.png" alt={t("previews.personal")} tone="light" />
+                            <PreviewFrame src="/images/personal.png" alt={t("previews.personal")} tone="light" />
                         </div>
                     </div>
                 </div>

@@ -6,6 +6,7 @@ import { CheckCircle2, Clock3, Layers3, MessageSquare, Plus, Users, X } from "lu
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import type {
     DailyActivityPoint,
     GroupSummaryResponse,
@@ -612,6 +613,13 @@ function TeamMemberProgressLayer({
     onMemberClick?: (member: MemberProgressItem) => void;
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     React.useEffect(() => {
         if (!open) return;
         const onKeyDown = (event: KeyboardEvent) => {
@@ -737,6 +745,13 @@ function MemberDetailModal({
     onClose: () => void;
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
     React.useEffect(() => {
         if (!open) return;
         const onKeyDown = (event: KeyboardEvent) => {
@@ -750,12 +765,12 @@ function MemberDetailModal({
         };
     }, [open, onClose]);
 
-    if (!member) return null;
+    if (!(member && mounted)) return null;
 
     const percent = getProgressPercent(member.completedTasks, member.totalTasks);
     const status = getMemberStatus(percent, t);
 
-    return (
+    return createPortal((
         <AnimatePresence>
             {open && (
                 <motion.div
@@ -918,7 +933,7 @@ function MemberDetailModal({
                 </motion.div>
             )}
         </AnimatePresence>
-    );
+    ), document.body);
 }
 
 // ==================== Main Component ====================
