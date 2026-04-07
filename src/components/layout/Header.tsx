@@ -85,7 +85,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(userProfileProp || null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(userProfileProp ?? null);
     const [isLoadingProfile, setIsLoadingProfile] = useState(!userProfileProp);
 
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -94,6 +94,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const isAdmin = userProfile?.isAdmin;
 
     useEffect(() => {
+        // Already have profile from props, no need to fetch
         if (userProfileProp) {
             setUserProfile(userProfileProp);
             setIsLoadingProfile(false);
@@ -106,12 +107,6 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
                 if (result.status === "success" && result.data) {
                     setUserProfile(result.data);
-
-                    if (result.data.language && result.data.language !== locale) {
-                        const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}(?=\/)/i, "");
-                        router.push(`/${result.data.language}${pathWithoutLocale}`);
-                        return;
-                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch user profile:", error);
@@ -121,7 +116,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
         };
 
         void fetchUserProfile();
-    }, [locale, pathname, router, userProfileProp]);
+    }, [locale, userProfileProp]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

@@ -642,6 +642,12 @@ export default function MasterPageClient({
     const [updatingArchiveStudioId, setUpdatingArchiveStudioId] = useState<string | null>(null);
     const isLoadingRef = useRef(false);
     const hasPendingReloadRef = useRef(false);
+    const userProfileRef = useRef<UserProfile | null>(initialUserProfile);
+    const lastLoadStartedAtRef = useRef(0);
+
+    useEffect(() => {
+        userProfileRef.current = userProfile;
+    }, [userProfile]);
 
     const { ownedStudios, joinedStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
@@ -722,41 +728,36 @@ export default function MasterPageClient({
         [locale]
     );
 
-    const loadData = useCallback(async () => {
+    const loadData = useCallback(async (options?: { force?: boolean }) => {
+        const forceReload = options?.force === true;
+        const now = Date.now();
+        const elapsedSinceLastStart = now - lastLoadStartedAtRef.current;
+
+        if (!forceReload && elapsedSinceLastStart < 3000) {
+            return;
+        }
+
         if (isLoadingRef.current) {
-            hasPendingReloadRef.current = true;
+            if (forceReload) {
+                hasPendingReloadRef.current = true;
+            }
             return;
         }
 
         isLoadingRef.current = true;
+        lastLoadStartedAtRef.current = now;
         hasPendingReloadRef.current = false;
         setIsLoading(true);
         try {
-            let resolvedProfile = userProfile;
-            const profileResult = await getUserProfile(locale);
-            if (profileResult.status === "success" && profileResult.data) {
-                resolvedProfile = profileResult.data;
-                setUserProfile(profileResult.data);
+            // Only fetch user profile if not already loaded from initial props
+            let resolvedProfile = userProfileRef.current;
+            if (!resolvedProfile && initialUserProfile) {
+                resolvedProfile = initialUserProfile;
+                userProfileRef.current = initialUserProfile;
+                setUserProfile(initialUserProfile);
             }
 
             const studiosResult = await getStudios(locale);
-            const normalizedUserId = String(resolvedProfile?.userId || "").trim();
-            const normalizedEmail = String(resolvedProfile?.email || "").trim().toLowerCase();
-            const pendingRequests = getPendingStudioJoinRequests().filter((request) => {
-                const wasRejected = consumeRejectedStudioJoinRequest(
-                    request.studioId,
-                    normalizedUserId || undefined,
-                    normalizedEmail || undefined,
-                    request.requestedAt
-                );
-
-                if (wasRejected) {
-                    removePendingStudioJoinRequest(request.studioId);
-                    return false;
-                }
-
-                return true;
-            });
 
             if (studiosResult.status === "success" && studiosResult.data) {
                 const approvedStudios = studiosResult.data.studios.map((studio: StudioUI) => {
@@ -775,41 +776,45 @@ export default function MasterPageClient({
                 const visibleStudios = approvedStudios.filter(
                     (studio: StudioUI) => studio.studioRole === 0 || studio.isMember === true || studio.isPendingApproval
                 );
-                const existingStudioIds = new Set<string>(visibleStudios.map((studio: StudioUI) => studio.id));
-                const syntheticPendingStudios = await resolveSyntheticPendingStudios(pendingRequests, existingStudioIds);
 
-                setStudios([...visibleStudios, ...syntheticPendingStudios]);
+                // Only resolve pending studios if there are any and we have a profile
+                if (visibleStudios.length > 0 && resolvedProfile) {
+                    const normalizedUserId = String(resolvedProfile?.userId || "").trim();
+                    const normalizedEmail = String(resolvedProfile?.email || "").trim().toLowerCase();
+                    const pendingRequests = getPendingStudioJoinRequests().filter((request) => {
+                        const wasRejected = consumeRejectedStudioJoinRequest(
+                            request.studioId,
+                            normalizedUserId || undefined,
+                            normalizedEmail || undefined,
+                            request.requestedAt
+                        );
+
+                        if (wasRejected) {
+                            removePendingStudioJoinRequest(request.studioId);
+                            return false;
+                        }
+
+                        return true;
+                    });
+
+                    const existingStudioIds = new Set<string>(visibleStudios.map((studio: StudioUI) => studio.id));
+                    const syntheticPendingStudios = await resolveSyntheticPendingStudios(pendingRequests, existingStudioIds);
+
+                    setStudios([...visibleStudios, ...syntheticPendingStudios]);
+                } else {
+                    setStudios(visibleStudios);
+                }
+
                 setSubscriptionInfo(studiosResult.data.subscription);
             } else {
                 const existingStudioIds = new Set<string>(mockStudios.map((studio: StudioUI) => studio.id));
-                const syntheticPendingStudios = pendingRequests
-                    .filter((request) => !existingStudioIds.has(request.studioId))
-                    .map((request) => buildPendingStudioCard(request, locale));
+                const syntheticPendingStudios: StudioUI[] = [];
                 setStudios([...mockStudios, ...syntheticPendingStudios]);
             }
         } catch (error) {
             console.error("Load data failed, using mock data:", error);
-            const normalizedUserId = String(userProfile?.userId || "").trim();
-            const normalizedEmail = String(userProfile?.email || "").trim().toLowerCase();
-            const pendingRequests = getPendingStudioJoinRequests().filter((request) => {
-                const wasRejected = consumeRejectedStudioJoinRequest(
-                    request.studioId,
-                    normalizedUserId || undefined,
-                    normalizedEmail || undefined,
-                    request.requestedAt
-                );
-
-                if (wasRejected) {
-                    removePendingStudioJoinRequest(request.studioId);
-                    return false;
-                }
-
-                return true;
-            });
             const existingStudioIds = new Set<string>(mockStudios.map((studio: StudioUI) => studio.id));
-            const syntheticPendingStudios = pendingRequests
-                .filter((request) => !existingStudioIds.has(request.studioId))
-                .map((request) => buildPendingStudioCard(request, locale));
+            const syntheticPendingStudios: StudioUI[] = [];
             setStudios([...mockStudios, ...syntheticPendingStudios]);
         } finally {
             isLoadingRef.current = false;
@@ -817,39 +822,13 @@ export default function MasterPageClient({
 
             if (hasPendingReloadRef.current) {
                 hasPendingReloadRef.current = false;
-                void loadData();
+                void loadData({ force: true });
             }
         }
-    }, [locale, resolveSyntheticPendingStudios, userProfile]);
+    }, [locale, resolveSyntheticPendingStudios, initialUserProfile]);
 
     useEffect(() => {
-        loadData();
-    }, [loadData]);
-
-    useEffect(() => {
-        const handleWindowFocus = () => {
-            void loadData();
-        };
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible") {
-                void loadData();
-            }
-        };
-        const handleStorage = (event: StorageEvent) => {
-            if (!event.key || event.key.includes("studio:pending-join-requests") || event.key.includes("studio:rejected-join-requests")) {
-                void loadData();
-            }
-        };
-
-        window.addEventListener("focus", handleWindowFocus);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        window.addEventListener("storage", handleStorage);
-
-        return () => {
-            window.removeEventListener("focus", handleWindowFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-            window.removeEventListener("storage", handleStorage);
-        };
+        void loadData({ force: true });
     }, [loadData]);
 
     const handleCreateStudio = async (data: {
@@ -880,7 +859,7 @@ export default function MasterPageClient({
             if (result.status === "success") {
                 toast({ description: t("modal.createSuccess"), variant: "success" });
                 setIsCreateModalOpen(false);
-                loadData();
+                void loadData({ force: true });
             } else {
                 toast({
                     description: result.message || t("modal.createError"),
@@ -928,7 +907,7 @@ export default function MasterPageClient({
             if (result.status === "success") {
                 setIsCreateModalOpen(false);
                 setSelectedStudio(null);
-                loadData();
+                void loadData({ force: true });
             } else {
                 toast({
                     description: result.message || t("modal.editError"),
@@ -951,7 +930,7 @@ export default function MasterPageClient({
                 toast({ description: t("deleteModal.success"), variant: "success" });
                 setIsDeleteModalOpen(false);
                 setSelectedStudio(null);
-                loadData();
+                void loadData({ force: true });
             } else {
                 toast({
                     description: result.message || t("deleteModal.error"),
@@ -1019,7 +998,7 @@ export default function MasterPageClient({
 
             removePendingStudioJoinRequest(studio.id);
             setStudios((prev) => prev.filter((item) => item.id !== studio.id));
-            await loadData();
+            await loadData({ force: true });
         } catch {
             toast({ description: t("pendingStudioCancelError"), variant: "destructive" });
         } finally {
@@ -1045,7 +1024,7 @@ export default function MasterPageClient({
 
             setIsLeaveDialogOpen(false);
             setLeaveTargetStudio(null);
-            await loadData();
+            await loadData({ force: true });
         } catch {
             // Silent fail: leave action intentionally has no toast per UX request.
         } finally {
@@ -1070,7 +1049,7 @@ export default function MasterPageClient({
                 return;
             }
 
-            await loadData();
+            await loadData({ force: true });
         } catch (error) {
             console.error("Toggle studio archive failed:", error);
             toast({
