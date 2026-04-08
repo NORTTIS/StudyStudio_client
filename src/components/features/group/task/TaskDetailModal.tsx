@@ -285,7 +285,9 @@ function expandMentionAll(payloadText: string, membersById: Record<string, strin
         .trim();
 }
 
-type UpdateTaskRequest = components["schemas"]["UpdateTaskRequest"];
+type UpdateTaskRequest = components["schemas"]["UpdateTaskRequest"] & {
+    assignees?: string | null;
+};
 
 type PopupPosition = {
     top: number;
@@ -1083,20 +1085,18 @@ function relativeTimeOf(input: string | null | undefined, locale: string) {
     return rtf.format(Math.round(diffMs / day), "day");
 }
 
-function priorityTone(label?: string | null) {
-    const v = String(label ?? "").toLowerCase();
-    if (v === "high") return "text-rose-600";
-    if (v === "medium") return "text-yellow-500";
-    if (v === "low") return "text-emerald-700";
+function priorityTone(value?: number | null) {
+    if (value === 2) return "text-rose-600";
+    if (value === 1) return "text-yellow-500";
+    if (value === 0) return "text-emerald-700";
     return "text-zinc-700";
 }
 
-function severityTone(label?: string | null) {
-    const v = String(label ?? "").toLowerCase();
-    if (v === "critical") return "text-red-600";
-    if (v === "major") return "text-orange-600";
-    if (v === "moderate") return "text-yellow-500";
-    if (v === "minor") return "text-sky-600";
+function severityTone(value?: number | null) {
+    if (value === 3) return "text-red-600";
+    if (value === 2) return "text-orange-600";
+    if (value === 1) return "text-yellow-500";
+    if (value === 0) return "text-sky-600";
     return "text-zinc-700";
 }
 
@@ -2482,6 +2482,17 @@ export default function TaskDetailModal(props: {
         setIsEditing(false);
     }, [task]);
 
+    React.useEffect(() => {
+        if (statusId) return;
+        if (task?.statusId) {
+            setStatusId(task.statusId);
+            return;
+        }
+        if (statusOptions.length > 0) {
+            setStatusId(statusOptions[0].statusId);
+        }
+    }, [statusId, statusOptions, task?.statusId]);
+
     const assigneeOptions = React.useMemo(
         () =>
             members.map((m) => {
@@ -2503,6 +2514,10 @@ export default function TaskDetailModal(props: {
     const selectedAssigneeDisplay = React.useMemo(() => {
         if (selectedAssignee) return selectedAssignee;
 
+        if (!assigneeId) {
+            return { userId: "", label: t("unassigned"), avatarUrl: "" };
+        }
+
         if (task?.assigneeId && task.assigneeName) {
             return {
                 userId: task.assigneeId,
@@ -2512,12 +2527,12 @@ export default function TaskDetailModal(props: {
         }
 
         return { userId: "", label: t("unassigned"), avatarUrl: "" };
-    }, [selectedAssignee, task?.assigneeAvatarUrl, task?.assigneeId, task?.assigneeName, t]);
+    }, [assigneeId, selectedAssignee, task?.assigneeAvatarUrl, task?.assigneeId, task?.assigneeName, t]);
 
     const selectedStatusName = React.useMemo(() => {
         const hit = statusOptions.find((s) => s.statusId === statusId);
-        return hit?.statusName ?? task?.statusName ?? t("emptyStatus");
-    }, [statusId, statusOptions, task?.statusName, t]);
+        return hit?.statusName ?? task?.statusName ?? statusOptions[0]?.statusName ?? "";
+    }, [statusId, statusOptions, task?.statusName]);
 
     const selectedPriorityValue = React.useMemo(() => normalizePriorityValue(Number(priority)), [priority]);
     const selectedPriorityLabel = React.useMemo(
@@ -2593,6 +2608,7 @@ export default function TaskDetailModal(props: {
                     taskName: taskNameTrimmed,
                     taskDescription: descriptionTrimmed || null,
                     assigneeId: assigneeId || null,
+                    assignees: assigneeId || null,
                     groupStatusId: statusId || null,
                     startDate: toApiDateTimeOrNull(startDate),
                     dueDate: toApiDateTimeOrNull(dueDate),
@@ -2830,8 +2846,8 @@ export default function TaskDetailModal(props: {
                                 <div>
                                     <div className="text-sm font-semibold text-zinc-600">{t("status")}</div>
                                     <Select
-                                        value={statusId || "no-status"}
-                                        onValueChange={(v) => setStatusId(v === "no-status" ? "" : v)}
+                                        value={statusId}
+                                        onValueChange={setStatusId}
                                         disabled={!isEditing}>
                                         <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                             <span className="truncate">{selectedStatusName}</span>
@@ -2844,10 +2860,6 @@ export default function TaskDetailModal(props: {
                                             sideOffset={8}
                                             avoidCollisions
                                             className="z-[10010] min-w-[216px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                            <SelectItem value="no-status" className={selectItemClassName}>
-                                                {t("noStatus")}
-                                            </SelectItem>
-
                                             {statusOptions.map((s) => (
                                                 <SelectItem
                                                     key={s.statusId}
@@ -2869,7 +2881,7 @@ export default function TaskDetailModal(props: {
                                             <span
                                                 className={cn(
                                                     "inline-flex items-center gap-2",
-                                                    priorityTone(selectedPriorityLabel)
+                                                    priorityTone(selectedPriorityValue)
                                                 )}>
                                                 <span className="h-2 w-2 rounded-full bg-current" />
                                                 {selectedPriorityLabel}
@@ -2905,7 +2917,7 @@ export default function TaskDetailModal(props: {
                                             <span
                                                 className={cn(
                                                     "inline-flex items-center gap-2",
-                                                    severityTone(selectedSeverityLabel)
+                                                    severityTone(selectedSeverityValue)
                                                 )}>
                                                 <span className="h-2 w-2 rounded-full bg-current" />
                                                 {selectedSeverityLabel}

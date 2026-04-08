@@ -1261,11 +1261,11 @@ export default function HomeTaskList() {
     }, [groups, sanitizedItems]);
 
     React.useEffect(() => {
-        if (selectedSource !== "all" && !groupsWithTasks.some((group) => group.groupId === selectedSource)) {
+        if (selectedSource !== "all" && !groups.some((group) => group.groupId === selectedSource)) {
             setSelectedSource("all");
             setPage(1);
         }
-    }, [selectedSource, groupsWithTasks]);
+    }, [selectedSource, groups]);
 
     const sourceFilteredItems = React.useMemo(() => {
         if (selectedSource !== "all") {
@@ -1440,7 +1440,7 @@ export default function HomeTaskList() {
                                         </p>
                                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
                                             <LayoutGrid className="h-4 w-4 text-sky-600" />
-                                            {groupsWithTasks.length}
+                                            {groups.length}
                                         </div>
                                     </div>
                                 </div>
@@ -1468,8 +1468,10 @@ export default function HomeTaskList() {
                                             <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-violet-50 text-violet-600 shadow-sm">
                                                 <FolderKanban className="h-8 w-8" />
                                             </div>
-                                            <p className="mt-4 text-lg font-semibold text-slate-800">{t("noGroups")}</p>
-                                            <p className="mt-1 text-sm text-slate-500">{t("noGroupsHint")}</p>
+                                            <p className="mt-4 text-lg font-semibold text-slate-800">
+                                                {t("noAssignedTasks")}
+                                            </p>
+                                            <p className="mt-1 text-sm text-slate-500">{t("noAssignedTasksHint")}</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -1488,10 +1490,6 @@ export default function HomeTaskList() {
                                             </p>
 
                                             <div className="mt-3 flex flex-wrap gap-2">
-                                                <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                                                    {t("topGroup")}
-                                                </span>
-
                                                 {typeof group.highestSeverity !== "undefined" ? (
                                                     <span
                                                         className={cn(
@@ -1533,7 +1531,7 @@ export default function HomeTaskList() {
                 open={openDetail}
                 onClose={handleCloseDetail}
                 isLoading={isLoading}
-                groups={groupsWithTasks}
+                groups={groups}
                 paginatedItems={paginatedItems}
                 page={page}
                 totalPages={totalPages}

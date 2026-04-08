@@ -167,13 +167,14 @@ function SectionTitle({
 // ─── Benchmark Formula Tooltip ──────────────────────────────────
 function BenchmarkTooltip() {
     const [open, setOpen] = useState(false);
+    const t = useTranslations("AnalysisHome");
 
     return (
         <div className="relative inline-flex">
             <button
                 onClick={() => setOpen((o) => !o)}
                 className="flex h-4 w-4 items-center justify-center rounded-full text-slate-400 hover:text-orange-500 transition-colors cursor-help"
-                title="Công thức tính Benchmark">
+                title={t("benchmark.formulaTitle")}>
                 <HelpCircle className="h-4 w-4" />
             </button>
 
@@ -182,7 +183,7 @@ function BenchmarkTooltip() {
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
                     <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl">
                         <p className="mb-3 font-bold text-slate-700 text-xs uppercase tracking-wide">
-                            Công thức tính Benchmark
+                            {t("benchmark.formulaTitle")}
                         </p>
 
                         <div className="space-y-3">
@@ -190,24 +191,23 @@ function BenchmarkTooltip() {
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
-                                    <span className="font-semibold text-slate-700 text-xs">Bạn — Điểm tuần này</span>
+                                    <span className="font-semibold text-slate-700 text-xs">{t("benchmark.youScore")}</span>
                                 </div>
                                 <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
-                                    <span className="font-medium text-orange-600">Hoàn thành task</span> → 10 × Priority
+                                    <span className="font-medium text-orange-600">{t("benchmark.completedTask")}</span> → 10 × Priority
                                     × Severity
                                     <br />
-                                    <span className="font-medium text-orange-600">Tạo task</span> → +3 điểm (flat)
+                                    <span className="font-medium text-orange-600">{t("benchmark.createTask")}</span> → {t("benchmark.createTaskPoints")}
                                     <br />
-                                    <span className="font-medium text-orange-600">Cập nhật task</span> → +1 điểm (flat)
+                                    <span className="font-medium text-orange-600">{t("benchmark.updateTask")}</span> → {t("benchmark.updateTaskPoints")}
                                     <br />
-                                    <span className="font-medium text-orange-600">Comment / Tin nhắn nhóm</span> → +1
-                                    điểm (flat)
+                                    <span className="font-medium text-orange-600">{t("benchmark.commentMessage")}</span> → {t("benchmark.commentMessagePoints")}
                                     <br />
                                     <span className="mt-1 block text-slate-400 italic">
-                                        Priority: Low=1.0, Med=1.5, High=2.0
+                                        {t("benchmark.priorityFormula")}
                                     </span>
                                     <span className="text-slate-400 italic">
-                                        Severity: Minor=1.0, Mod=1.2, Major=1.5, Critical=2.0
+                                        {t("benchmark.severityFormula")}
                                     </span>
                                 </div>
                             </div>
@@ -217,12 +217,11 @@ function BenchmarkTooltip() {
                                 <div className="flex items-center gap-2">
                                     <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
                                     <span className="font-semibold text-slate-700 text-xs">
-                                        TB nhóm — Trung bình cộng
+                                        {t("benchmark.groupAvg")}
                                     </span>
                                 </div>
                                 <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
-                                    Tổng điểm tất cả thành viên trong nhóm
-                                    <br />÷ Số thành viên của nhóm
+                                    {t("benchmark.groupAvgFormula")}
                                 </div>
                             </div>
 
@@ -231,11 +230,11 @@ function BenchmarkTooltip() {
                                 <div className="flex items-center gap-2">
                                     <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
                                     <span className="font-semibold text-slate-700 text-xs">
-                                        Xu hướng — Trung bình 3 tuần
+                                        {t("benchmark.trendLabel")}
                                     </span>
                                 </div>
                                 <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
-                                    Trung bình cộng điểm của bạn trong 3 tuần gần nhất (bao gồm tuần hiện tại)
+                                    {t("benchmark.trendFormula")}
                                 </div>
                             </div>
                         </div>
@@ -364,14 +363,15 @@ function DeltaBadge({ delta }: { delta: number }) {
 
 // ─── Custom Tooltip: Area Chart ──────────────────────────────
 function AreaChartTooltip({ active, payload, label }: any) {
+    const t = useTranslations("AnalysisHome");
     if (!(active && payload?.length)) return null;
     // Filter out ReferenceLine payload entries (they have no dataKey)
     const filtered = payload.filter((entry: any) => entry.dataKey);
     if (!filtered.length) return null;
 
     const nameMap: Record<string, string> = {
-        completed: "Hoàn thành",
-        overdue: "Quá hạn"
+        completed: t("chart.completed"),
+        overdue: t("chart.overdue")
     };
 
     return (
@@ -390,6 +390,7 @@ function AreaChartTooltip({ active, payload, label }: any) {
 
 // ─── Custom Tooltip: Pie/Donut ───────────────────────────────
 function DonutTooltip({ active, payload }: any) {
+    const t = useTranslations("AnalysisHome");
     if (!(active && payload?.length)) return null;
     const d = payload[0];
     return (
@@ -397,7 +398,7 @@ function DonutTooltip({ active, payload }: any) {
             <div className="flex items-center gap-2 text-sm">
                 <span className="h-3 w-3 rounded-full" style={{ backgroundColor: d.payload.color }} />
                 <span className="font-medium text-slate-700">{d.name}</span>
-                <span className="ml-auto font-bold text-slate-900">{d.value} tasks</span>
+                <span className="ml-auto font-bold text-slate-900">{t("common.tasksCount", { count: d.value })}</span>
             </div>
         </div>
     );
@@ -405,6 +406,7 @@ function DonutTooltip({ active, payload }: any) {
 
 // ─── Custom Tooltip: Bar Chart ───────────────────────────────
 function BarChartTooltip({ active, payload, label }: any) {
+    const t = useTranslations("AnalysisHome");
     if (!(active && payload?.length)) return null;
     return (
         <div className="rounded-xl border border-slate-100 bg-white/95 p-3 shadow-xl backdrop-blur-sm">
@@ -413,16 +415,13 @@ function BarChartTooltip({ active, payload, label }: any) {
                 <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
                     <span className="text-slate-600">
-                        {entry.name === "you"
-                            ? "Bạn"
-                            : entry.name === "avg"
-                                ? "TB nhóm"
-                                : entry.name === "groupAvg"
-                                    ? "TB nhóm"
-                                    : entry.name === "user"
-                                        ? "Bạn"
-                                        : entry.name}
-                        :
+                        {entry.name === "you" || entry.name === "user"
+                            ? t("benchmark.you")
+                            : entry.name === "avg" || entry.name === "groupAvg"
+                                ? t("benchmark.groupAverage")
+                                : entry.name === "trend"
+                                    ? t("benchmark.trend")
+                                    : entry.name}
                     </span>
                     <span className="ml-auto font-semibold text-slate-900">{entry.value}</span>
                 </div>
@@ -445,6 +444,7 @@ function DonutCenterLabel({
     total: number;
     label?: string;
 }) {
+    const t = useTranslations("AnalysisHome");
     if (!(cx && cy)) return null;
     return (
         <g>
@@ -464,7 +464,7 @@ function DonutCenterLabel({
                 dominantBaseline="middle"
                 className="fill-slate-400"
                 style={{ fontSize: 11, fontFamily: "inherit" }}>
-                {label ?? "Đúng hạn"}
+                {label ?? t("onTime.label")}
             </text>
             <text
                 x={cx}
@@ -473,7 +473,7 @@ function DonutCenterLabel({
                 dominantBaseline="middle"
                 className="fill-slate-300"
                 style={{ fontSize: 10, fontFamily: "inherit" }}>
-                Tổng {total} công việc
+                {t("onTime.totalTasks", { total })}
             </text>
         </g>
     );
@@ -483,11 +483,13 @@ function DonutCenterLabel({
 function MyTaskStatusCard({
     data,
     completionRate,
-    total
+    total,
+    completedLabel
 }: {
     data: Array<{ name: string; value: number; color: string }>;
     completionRate: number;
     total: number;
+    completedLabel: string;
 }) {
     return (
         <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -512,7 +514,7 @@ function MyTaskStatusCard({
                                     cy={cy}
                                     onTimeRate={completionRate}
                                     total={total}
-                                    label="Hoàn thành"
+                                    label={completedLabel}
                                 />
                             )}>
                             {data.map((entry, index) => (
@@ -552,6 +554,7 @@ function RiskAlertCard({
     description: string;
     group: string;
 }) {
+    const t = useTranslations("AnalysisHome");
     const config: Record<
         string,
         {
@@ -567,21 +570,21 @@ function RiskAlertCard({
             iconBg: "bg-red-500",
             icon: <AlertCircle className="h-4 w-4 text-white" />,
             badge: "bg-red-100 text-red-700",
-            badgeLabel: "Quá hạn"
+            badgeLabel: t("risk.types.overdue")
         },
         due_soon: {
             bg: "bg-orange-50 border-orange-100",
             iconBg: "bg-orange-500",
             icon: <Clock className="h-4 w-4 text-white" />,
             badge: "bg-orange-100 text-orange-700",
-            badgeLabel: "Sắp đến hạn"
+            badgeLabel: t("risk.types.dueSoon")
         },
         stuck: {
             bg: "bg-amber-50 border-amber-100",
             iconBg: "bg-amber-500",
             icon: <Zap className="h-4 w-4 text-white" />,
             badge: "bg-amber-100 text-amber-700",
-            badgeLabel: "Bị stuck"
+            badgeLabel: t("risk.types.stuck")
         }
     };
     const c = config[type] ?? config.overdue;
@@ -626,6 +629,7 @@ function GroupFilterDropdown({
     onSelect: (groupId: string, groupName: string) => void;
 }) {
     const [open, setOpen] = useState(false);
+    const t = useTranslations("AnalysisHome");
 
     return (
         <div className="relative">
@@ -633,8 +637,7 @@ function GroupFilterDropdown({
                 onClick={() => setOpen((o) => !o)}
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-medium text-slate-700 text-sm shadow-sm transition-all hover:border-orange-300 hover:text-orange-600">
                 <Filter className="h-4 w-4" />
-                {selectedGroupName || "Tất cả nhóm"}
-                <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", open && "rotate-180")} />
+                {selectedGroupName || t("groupFilter.allGroups")}
             </button>
 
             {open && (
@@ -709,12 +712,13 @@ function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; del
     );
 }
 export default function AnalysisHome() {
-    const [priorityTab, setPriorityTab] = useState<"priority" | "urgency">("priority");
+    const locale = useLocale();
+    const t = useTranslations("AnalysisHome");
 
     // ── API State ────────────────────────────────────────────────
     const [userId, setUserId] = useState<string | null>(null);
     const [selectedGroupId, setSelectedGroupId] = useState<string>("");
-    const [selectedGroupName, setSelectedGroupName] = useState<string>("Tất cả nhóm");
+    const [selectedGroupName, setSelectedGroupName] = useState<string>("");
 
     // Data states
     const [kpiData, setKpiData] = useState<UserKpiSummaryResponse | null>(null);
@@ -741,6 +745,7 @@ export default function AnalysisHome() {
     // Filter states
     const [trendPeriod, setTrendPeriod] = useState<TrendPeriod>(30);
     const [benchmarkPeriod, setBenchmarkPeriod] = useState<BenchmarkPeriod>(7);
+    const [priorityTab, setPriorityTab] = useState<"priority" | "urgency">("priority");
 
     // ── Fetch on mount ───────────────────────────────────────────
     useEffect(() => {
@@ -748,8 +753,6 @@ export default function AnalysisHome() {
         if (!user?.id) return;
         const uid = user.id;
         setUserId(uid);
-
-        const locale = "vi";
 
         Promise.all([
             getUserKpiSummary(uid, locale).then((r) => {
@@ -792,9 +795,9 @@ export default function AnalysisHome() {
     }, []);
 
     // ── Refetch benchmark when group filter or period changes ─────
-    const fetchBenchmark = useCallback((uid: string, groupId: string | undefined, weeks: number, locale = "vi") => {
+    const fetchBenchmark = useCallback((uid: string, groupId: string | undefined, weeks: number, currentLocale: string) => {
         setBenchmarkLoading(true);
-        getUserBenchmark(uid, weeks, groupId, locale).then((r) => {
+        getUserBenchmark(uid, weeks, groupId, currentLocale).then((r) => {
             if (r.status === "success" && r.data) setBenchmarkData(r.data);
             setBenchmarkLoading(false);
         });
@@ -802,13 +805,13 @@ export default function AnalysisHome() {
 
     useEffect(() => {
         if (!userId) return;
-        fetchBenchmark(userId, selectedGroupId || undefined, benchmarkPeriod);
-    }, [userId, selectedGroupId, benchmarkPeriod, fetchBenchmark]);
+        fetchBenchmark(userId, selectedGroupId || undefined, benchmarkPeriod, locale);
+    }, [userId, selectedGroupId, benchmarkPeriod, fetchBenchmark, locale]);
 
     // ── Refetch trend when period changes ──────────────────────
-    const fetchTrend = useCallback((uid: string, period: number, locale = "vi") => {
+    const fetchTrend = useCallback((uid: string, period: number, currentLocale: string) => {
         setTrendLoading(true);
-        getUserProductivityTrend(uid, period, locale).then((r) => {
+        getUserProductivityTrend(uid, period, currentLocale).then((r) => {
             if (r.status === "success" && r.data) setTrendData(r.data);
             setTrendLoading(false);
         });
@@ -816,8 +819,8 @@ export default function AnalysisHome() {
 
     useEffect(() => {
         if (!userId) return;
-        fetchTrend(userId, trendPeriod);
-    }, [userId, trendPeriod, fetchTrend]);
+        fetchTrend(userId, trendPeriod, locale);
+    }, [userId, trendPeriod, fetchTrend, locale]);
 
     // ── Derived values ──────────────────────────────────────────
     const totalOnTime = onTimeData?.segments?.find((s) => s.name === "Đúng hạn")?.value ?? 0;
@@ -883,7 +886,7 @@ export default function AnalysisHome() {
                             <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="min-w-0">
                                     <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#EA580C_55%,#C2410C_100%)] bg-clip-text font-bold text-3xl text-transparent tracking-tight md:text-[38px]">
-                                        Phân tích hiệu suất cá nhân
+                                        {t("hero.title")}
                                     </h1>
 
                                     <div className="mt-4">
@@ -903,11 +906,11 @@ export default function AnalysisHome() {
                     ) : kpiData ? (
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                             <KpiCard
-                                title="Tổng công việc"
+                                title={t("cards.totalTasks.title")}
                                 value={kpiData.totalTasks ?? 0}
                                 badge={
                                     kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
-                                        ? `${kpiData.totalChangePercent > 0 ? "+" : ""}${kpiData.totalChangePercent}% tuần trước`
+                                        ? t("cards.totalTasks.badge", { percent: kpiData.totalChangePercent > 0 ? `+${kpiData.totalChangePercent}` : kpiData.totalChangePercent })
                                         : undefined
                                 }
                                 badgeType={
@@ -920,24 +923,24 @@ export default function AnalysisHome() {
                                 accentColor={C.blue}
                             />
                             <KpiCard
-                                title="Hoàn thành"
+                                title={t("cards.completed.title")}
                                 value={kpiData.completed ?? 0}
-                                sub="tasks"
+                                sub={t("common.tasks")}
                                 progress={kpiData.completionRate ?? 0}
                                 accentColor={C.teal}
                             />
                             <KpiCard
-                                title="Đang thực hiện"
+                                title={t("cards.inProgress.title")}
                                 value={kpiData.inProgress ?? 0}
-                                sub="tasks"
-                                badge="Active"
+                                sub={t("common.tasks")}
+                                badge={t("cards.inProgress.badge")}
                                 badgeType="neutral"
                                 accentColor={C.amber}
                             />
                             <KpiCard
-                                title="Quá hạn"
+                                title={t("cards.overdue.title")}
                                 value={kpiData.overdueTasks ?? 0}
-                                badge="Cần chú ý"
+                                badge={t("cards.overdue.badge")}
                                 badgeType={kpiData.overdueTasks ? "down" : "neutral"}
                                 accentColor={C.red}
                             />
@@ -954,10 +957,10 @@ export default function AnalysisHome() {
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         {/* My Task Status Donut */}
                         <Card>
-                            <SectionTitle subtitle="Cá nhân + các nhóm">
+                            <SectionTitle subtitle={t("sections.taskDistributionSubtitle")}>
                                 <span className="flex items-center gap-2">
                                     <Target className="h-4 w-4 text-orange-500" />
-                                    Phân bố trạng thái task
+                                    {t("sections.taskDistribution")}
                                 </span>
                             </SectionTitle>
                             {taskStatusLoading ? (
@@ -973,21 +976,22 @@ export default function AnalysisHome() {
                                     }))}
                                     completionRate={taskStatusRate}
                                     total={taskStatusTotal}
+                                    completedLabel={t("onTime.completed")}
                                 />
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-10 text-center">
                                     <CheckCircle2 className="mb-2 h-8 w-8 text-slate-300" />
-                                    <p className="text-slate-400 text-sm">Không có dữ liệu</p>
+                                    <p className="text-slate-400 text-sm">{t("noData.noTasks")}</p>
                                 </div>
                             )}
                         </Card>
 
                         {/* Group Ranking */}
                         <Card>
-                            <SectionTitle subtitle="Top contributors">
+                            <SectionTitle subtitle={t("sections.topContributors")}>
                                 <span className="flex items-center gap-2">
                                     <Star className="h-4 w-4 text-amber-500" />
-                                    Tỉ lệ độ đóng góp trong các nhóm
+                                    {t("sections.contributionRate")}
                                 </span>
                             </SectionTitle>
 
@@ -1011,18 +1015,13 @@ export default function AnalysisHome() {
                                                         <p className="truncate font-semibold text-slate-800 text-sm">
                                                             {item.groupName}
                                                         </p>
-                                                        {item.userRankWithinGroup && item.userRankWithinGroup > 0 ? (
-                                                            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
-                                                                #{item.userRankWithinGroup} contributor
-                                                            </span>
-                                                        ) : null}
                                                     </div>
                                                     <div className="ml-2 flex shrink-0 items-center gap-2">
                                                         <span className="font-bold text-sm" style={{ color: C.orange }}>
                                                             {item.contributionRate ?? 0}%
                                                         </span>
                                                         <span className="text-slate-400 text-xs">
-                                                            ({item.score ?? 0} pts)
+                                                            ({item.score ?? 0} {t("common.pointsShort")})
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1042,12 +1041,12 @@ export default function AnalysisHome() {
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-10 text-center">
                                     <Star className="mb-2 h-8 w-8 text-slate-300" />
-                                    <p className="text-slate-400 text-sm">Không có nhóm</p>
+                                    <p className="text-slate-400 text-sm">{t("noData.noGroups")}</p>
                                 </div>
                             )}
                             {rankings.length > 8 && (
                                 <p className="mt-2 text-center text-slate-400 text-xs">
-                                    ↓ Cuộn để xem thêm ({rankings.length} nhóm)
+                                    {t("scrollHint", { count: rankings.length })}
                                 </p>
                             )}
                         </Card>
@@ -1058,7 +1057,7 @@ export default function AnalysisHome() {
                         {/* Productivity Area Chart */}
                         <Card className="lg:col-span-2">
                             <SectionTitle
-                                subtitle={`Xu hướng ${trendPeriod} ngày`}
+                                subtitle={t("trend.subtitle", { days: trendPeriod })}
                                 action={
                                     <div className="flex items-center gap-2">
                                         <div className="inline-flex rounded-2xl bg-slate-100 p-1">
@@ -1072,7 +1071,7 @@ export default function AnalysisHome() {
                                                             ? "bg-white text-orange-500 shadow-sm"
                                                             : "text-slate-500 hover:text-orange-500"
                                                     )}>
-                                                    {p}d
+                                                    {t("trend.daysShort", { days: p })}
                                                 </button>
                                             ))}
                                         </div>
@@ -1080,7 +1079,7 @@ export default function AnalysisHome() {
                                 }>
                                 <span className="flex items-center gap-2">
                                     <Target className="h-4 w-4 text-orange-500" />
-                                    Xu hướng năng suất
+                                    {t("sections.productivityTrend")}
                                 </span>
                             </SectionTitle>
 
@@ -1125,7 +1124,7 @@ export default function AnalysisHome() {
                                             <Area
                                                 type="monotone"
                                                 dataKey="completed"
-                                                name="Hoàn thành"
+                                                name={t("chart.completed")}
                                                 stroke={C.teal}
                                                 strokeWidth={2}
                                                 fill="url(#tealGradient)"
@@ -1135,7 +1134,7 @@ export default function AnalysisHome() {
                                             <Area
                                                 type="monotone"
                                                 dataKey="overdue"
-                                                name="Quá hạn"
+                                                name={t("chart.overdue")}
                                                 stroke={C.red}
                                                 strokeWidth={2}
                                                 fill="url(#redGradient)"
@@ -1147,7 +1146,7 @@ export default function AnalysisHome() {
                                                 stroke={C.slateMid}
                                                 strokeDasharray="4 4"
                                                 label={{
-                                                    value: "TB",
+                                                    value: t("common.averageShort"),
                                                     position: "insideTopRight",
                                                     fontSize: 10,
                                                     fill: C.slateMid
@@ -1159,7 +1158,7 @@ export default function AnalysisHome() {
                             ) : (
                                 <div className="flex h-64 flex-col items-center justify-center">
                                     <TrendingUp className="mb-2 h-8 w-8 text-slate-300" />
-                                    <p className="text-slate-400 text-sm">Không có dữ liệu xu hướng</p>
+                                    <p className="text-slate-400 text-sm">{t("noData.noTrendData")}</p>
                                 </div>
                             )}
                         </Card>
@@ -1171,14 +1170,14 @@ export default function AnalysisHome() {
                             <SectionTitle>
                                 <span className="flex items-center gap-2">
                                     <Zap className="h-4 w-4 text-orange-500" />
-                                    Độ ưu tiên &amp; Khẩn cấp
+                                    {t("sections.priorityUrgency")}
                                 </span>
                             </SectionTitle>
 
                             <TabBar
                                 tabs={[
-                                    { key: "priority", label: "Độ ưu tiên" },
-                                    { key: "urgency", label: "Độ khẩn cấp" }
+                                    { key: "priority", label: t("tabs.priority") },
+                                    { key: "urgency", label: t("tabs.urgency") }
                                 ]}
                                 activeTab={priorityTab}
                                 onTabChange={(key) => setPriorityTab(key as "priority" | "urgency")}
@@ -1199,28 +1198,28 @@ export default function AnalysisHome() {
                                                     className="h-2 w-2 rounded-full"
                                                     style={{ backgroundColor: STATUS_COLORS.completed }}
                                                 />
-                                                Hoàn thành
+                                                {t("status.done")}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <span
                                                     className="h-2 w-2 rounded-full"
                                                     style={{ backgroundColor: STATUS_COLORS.inProgress }}
                                                 />
-                                                Đang làm
+                                                {t("status.inProgress")}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <span
                                                     className="h-2 w-2 rounded-full"
                                                     style={{ backgroundColor: STATUS_COLORS.overdue }}
                                                 />
-                                                Quá hạn
+                                                {t("status.overdue")}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <span
                                                     className="h-2 w-2 rounded-full"
                                                     style={{ backgroundColor: STATUS_COLORS.todo }}
                                                 />
-                                                Chưa bắt đầu
+                                                {t("status.notStarted")}
                                             </span>
                                         </div>
                                         {priorityItems.map((item) => {
@@ -1240,7 +1239,7 @@ export default function AnalysisHome() {
                                                             )}>
                                                             {item.priority ?? "—"}
                                                         </span>
-                                                        <span className="text-slate-400 text-xs">{total} tasks</span>
+                                                        <span className="text-slate-400 text-xs">{t("common.tasksCount", { count: total })}</span>
                                                     </div>
                                                     <div className="flex h-7 w-full overflow-hidden rounded-xl bg-slate-100 font-semibold text-xs shadow-inner">
                                                         {(item.completed ?? 0) > 0 && (
@@ -1285,7 +1284,7 @@ export default function AnalysisHome() {
                                                         )}
                                                         {total === 0 && (
                                                             <div className="flex w-full items-center justify-center text-slate-400">
-                                                                Không có task
+                                                                {t("noData.noTasksPlural")}
                                                             </div>
                                                         )}
                                                     </div>
@@ -1295,7 +1294,7 @@ export default function AnalysisHome() {
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center justify-center py-8">
-                                        <p className="text-slate-400 text-sm">Không có dữ liệu ưu tiên</p>
+                                        <p className="text-slate-400 text-sm">{t("noData.noPriorityData")}</p>
                                     </div>
                                 )
                             ) : urgencyLoading ? (
@@ -1312,28 +1311,28 @@ export default function AnalysisHome() {
                                                 className="h-2 w-2 rounded-full"
                                                 style={{ backgroundColor: STATUS_COLORS.completed }}
                                             />
-                                            Hoàn thành
+                                            {t("status.done")}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <span
                                                 className="h-2 w-2 rounded-full"
                                                 style={{ backgroundColor: STATUS_COLORS.inProgress }}
                                             />
-                                            Đang làm
+                                            {t("status.inProgress")}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <span
                                                 className="h-2 w-2 rounded-full"
                                                 style={{ backgroundColor: STATUS_COLORS.overdue }}
                                             />
-                                            Quá hạn
+                                            {t("status.overdue")}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <span
                                                 className="h-2 w-2 rounded-full"
                                                 style={{ backgroundColor: STATUS_COLORS.todo }}
                                             />
-                                            Chưa bắt đầu
+                                            {t("status.notStarted")}
                                         </span>
                                     </div>
                                     {urgencyItems.map((item) => {
@@ -1355,7 +1354,7 @@ export default function AnalysisHome() {
                                                         )}>
                                                         {item.urgency ?? "—"}
                                                     </span>
-                                                    <span className="text-slate-400 text-xs">{total} tasks</span>
+                                                    <span className="text-slate-400 text-xs">{t("common.tasksCount", { count: total })}</span>
                                                 </div>
                                                 <div className="flex h-7 w-full overflow-hidden rounded-xl bg-slate-100 font-semibold text-xs shadow-inner">
                                                     {(item.completed ?? 0) > 0 && (
@@ -1400,7 +1399,7 @@ export default function AnalysisHome() {
                                                     )}
                                                     {total === 0 && (
                                                         <div className="flex w-full items-center justify-center text-slate-400">
-                                                            Không có task
+                                                            {t("noData.noTasksPlural")}
                                                         </div>
                                                     )}
                                                 </div>
@@ -1410,17 +1409,17 @@ export default function AnalysisHome() {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-8">
-                                    <p className="text-slate-400 text-sm">Không có dữ liệu khẩn cấp</p>
+                                    <p className="text-slate-400 text-sm">{t("noData.noUrgencyData")}</p>
                                 </div>
                             )}
                         </Card>
 
                         {/* Risk Alerts */}
                         <Card className="max-h-120 overflow-y-scroll">
-                            <SectionTitle subtitle={`${alertItems.length} cảnh báo`}>
+                            <SectionTitle subtitle={t("risk.subtitle", { count: alertItems.length })}>
                                 <span className="flex items-center gap-2">
                                     <AlertCircle className="h-4 w-4 text-red-500" />
-                                    Cảnh báo rủi ro
+                                    {t("risk.title")}
                                 </span>
                             </SectionTitle>
 
@@ -1438,7 +1437,7 @@ export default function AnalysisHome() {
                                             type={alert.type ?? "overdue"}
                                             title={alert.title ?? ""}
                                             description={alert.description ?? ""}
-                                            group={alert.group ?? "—"}
+                                            group={alert.group ?? t("common.dash")}
                                         />
                                     ))}
                                 </div>
@@ -1447,8 +1446,8 @@ export default function AnalysisHome() {
                                     <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-orange-50">
                                         <CheckCircle2 className="h-6 w-6 text-orange-500" />
                                     </div>
-                                    <p className="font-medium text-slate-600 text-sm">Không có cảnh báo</p>
-                                    <p className="text-slate-400 text-xs">Tất cả tasks đang on-track</p>
+                                    <p className="font-medium text-slate-600 text-sm">{t("risk.emptyTitle")}</p>
+                                    <p className="text-slate-400 text-xs">{t("risk.emptyDescription")}</p>
                                 </div>
                             )}
                         </Card>
@@ -1460,10 +1459,10 @@ export default function AnalysisHome() {
                             <div>
                                 <span className="flex items-center gap-2 font-semibold text-slate-700 text-sm uppercase tracking-wide">
                                     <Activity className="h-4 w-4 text-orange-500" />
-                                    Benchmark hiệu suất
+                                    {t("sections.benchmark")}
                                     <BenchmarkTooltip />
                                 </span>
-                                <p className="mt-0.5 text-slate-400 text-xs">So sánh vs tuần trước và TB nhóm</p>
+                                <p className="mt-0.5 text-slate-400 text-xs">{t("sections.benchmarkSubtitle")}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="inline-flex rounded-2xl bg-slate-100 p-1">
@@ -1477,7 +1476,7 @@ export default function AnalysisHome() {
                                                     ? "bg-white text-orange-500 shadow-sm"
                                                     : "text-slate-500 hover:text-orange-500"
                                             )}>
-                                            {w}w
+                                            {t("benchmark.weeksShort", { weeks: w })}
                                         </button>
                                     ))}
                                 </div>
@@ -1524,7 +1523,7 @@ export default function AnalysisHome() {
                                             />
                                             <Bar
                                                 dataKey="user"
-                                                name="Bạn"
+                                                name={t("benchmark.you")}
                                                 fill={C.teal}
                                                 radius={[4, 4, 0, 0]}
                                                 maxBarSize={24}
@@ -1532,7 +1531,7 @@ export default function AnalysisHome() {
                                             />
                                             <Bar
                                                 dataKey="groupAvg"
-                                                name="TB nhóm"
+                                                name={t("benchmark.groupAverage")}
                                                 fill={C.slateMid}
                                                 radius={[4, 4, 0, 0]}
                                                 maxBarSize={24}
@@ -1541,7 +1540,7 @@ export default function AnalysisHome() {
                                             <Line
                                                 type="monotone"
                                                 dataKey="trend"
-                                                name="Xu hướng"
+                                                name={t("benchmark.trend")}
                                                 stroke={C.orange}
                                                 strokeWidth={2}
                                                 dot={false}
@@ -1552,7 +1551,7 @@ export default function AnalysisHome() {
                                                 stroke={C.slateMid}
                                                 strokeDasharray="4 4"
                                                 label={{
-                                                    value: "TB",
+                                                    value: t("common.averageShort"),
                                                     position: "insideTopRight",
                                                     fontSize: 10,
                                                     fill: C.slateMid
@@ -1565,7 +1564,7 @@ export default function AnalysisHome() {
                         ) : (
                             <div className="flex h-60 flex-col items-center justify-center">
                                 <Activity className="mb-2 h-8 w-8 text-slate-300" />
-                                <p className="text-slate-400 text-sm">Không có dữ liệu benchmark</p>
+                                <p className="text-slate-400 text-sm">{t("noData.noBenchmarkData")}</p>
                             </div>
                         )}
                     </Card>

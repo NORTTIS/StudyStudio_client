@@ -252,6 +252,7 @@
         "cards": {
             "totalTasks": {
                 "title": "Total Tasks",
+                "badge": "{percent}% vs last week",
                 "note": "Total current tasks"
             },
             "completed": {
@@ -260,75 +261,114 @@
             },
             "inProgress": {
                 "title": "In Progress",
+                "badge": "Pending",
                 "note": "Tasks in progress"
+            },
+            "overdue": {
+                "title": "Overdue",
+                "badge": "Needs attention"
             }
         },
         "sections": {
-            "statusDistribution": "1. Task Status Distribution",
-            "progressOverTime": "2. Task Progress Over Time",
-            "workloadByGroup": "3. Workload by Group",
-            "contributionActivity": "4. Contribution Activity {year}"
+            "taskDistribution": "Task Status Distribution",
+            "taskDistributionSubtitle": "Personal + Groups",
+            "topContributors": "Group Contribution",
+            "contributionRate": "Contribution Rate Across Groups",
+            "productivityTrend": "Productivity Trend",
+            "priorityUrgency": "Priority & Urgency",
+            "benchmark": "Performance Benchmark",
+            "benchmarkSubtitle": "Compare with last week and group average"
+        },
+        "tabs": {
+            "priority": "Priority",
+            "urgency": "Urgency"
         },
         "trend": {
-            "week": "Week",
-            "month": "Month",
-            "year": "Year"
+            "subtitle": "Productivity in the last {days} days",
+            "daysShort": "{days}d"
         },
         "status": {
             "todo": "To do",
             "inProgress": "In progress",
             "done": "Done",
-            "overdue": "Overdue"
+            "overdue": "Overdue",
+            "notStarted": "Not started"
         },
-        "chart": {
-            "totalTasks": "Total tasks",
-            "taskStatus": "Task status",
-            "taskCompleted": "Task completed",
-            "workload": "Workload",
-            "tasksUnit": "tasks"
+        "priority": {
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low"
         },
-        "trendLabels": {
-            "weekdays": {
-                "mon": "Mon",
-                "tue": "Tue",
-                "wed": "Wed",
-                "thu": "Thu",
-                "fri": "Fri",
-                "sat": "Sat",
-                "sun": "Sun"
-            },
-            "weeks": {
-                "week1": "Week 1",
-                "week2": "Week 2",
-                "week3": "Week 3",
-                "week4": "Week 4",
-                "week5": "Week 5"
-            },
-            "months": {
-                "m1": "Jan",
-                "m2": "Feb",
-                "m3": "Mar",
-                "m4": "Apr",
-                "m5": "May",
-                "m6": "Jun",
-                "m7": "Jul",
-                "m8": "Aug",
-                "m9": "Sep",
-                "m10": "Oct",
-                "m11": "Nov",
-                "m12": "Dec"
+        "urgency": {
+            "critical": "Critical",
+            "high": "High",
+            "medium": "Medium",
+            "low": "Low"
+        },
+        "benchmark": {
+            "formulaTitle": "Benchmark Calculation Formula",
+            "youScore": "You — This Week's Score",
+            "completedTask": "Complete task",
+            "createTask": "Create task",
+            "createTaskPoints": "+3 points (flat)",
+            "updateTask": "Update task",
+            "updateTaskPoints": "+1 point (flat)",
+            "commentMessage": "Comment / Group message",
+            "commentMessagePoints": "+1 point (flat)",
+            "priorityFormula": "Priority: Low=1.0, Med=1.5, High=2.0",
+            "severityFormula": "Severity: Minor=1.0, Mod=1.2, Major=1.5, Critical=2.0",
+            "groupAvg": "Group Avg — Average",
+            "groupAvgFormula": "Total points of all members ÷ Number of group members",
+            "trendLabel": "Trend — 3-week average",
+            "trendFormula": "Average of your scores in the last 3 weeks (including current week)",
+            "weeksShort": "{weeks} weeks",
+            "you": "You",
+            "groupAverage": "Group Avg",
+            "trend": "Trend"
+        },
+        "risk": {
+            "title": "Risk Alerts",
+            "subtitle": "{count} alerts to note",
+            "emptyTitle": "Everything is fine",
+            "emptyDescription": "No risk alerts",
+            "types": {
+                "overdue": "Overdue",
+                "dueSoon": "Due soon",
+                "stuck": "Stuck"
             }
         },
-        "heatmap": {
-            "day": {
-                "mon": "Mon",
-                "wed": "Wed",
-                "fri": "Fri"
-            },
-            "less": "Less",
-            "more": "More",
-            "taskSingular": "task",
-            "taskPlural": "tasks"
+        "groupRanking": {
+            "contributor": "in group"
+        },
+        "onTime": {
+            "label": "On time",
+            "completed": "Completed",
+            "totalTasks": "{total} total tasks"
+        },
+        "chart": {
+            "completed": "Completed",
+            "overdue": "Overdue",
+            "averageShort": "Avg"
+        },
+        "noData": {
+            "noTasks": "No data",
+            "noGroups": "No groups",
+            "noTrendData": "No trend data",
+            "noPriorityData": "No priority data",
+            "noUrgencyData": "No urgency data",
+            "noBenchmarkData": "No benchmark data",
+            "noTasksPlural": "No tasks"
+        },
+        "scrollHint": "↓ Scroll for more ({count} groups)",
+        "groupFilter": {
+            "allGroups": "All groups"
+        },
+        "common": {
+            "tasks": "tasks",
+            "pointsShort": "pts",
+            "tasksCount": "{count} tasks",
+            "dash": "—",
+            "averageShort": "Avg"
         }
     },
     "HomePage": {
@@ -2015,6 +2055,8 @@
         "availableGroups": "Available groups",
         "noGroups": "No groups",
         "noGroupsHint": "Create or join a group to get started",
+        "noAssignedTasks": "No assigned tasks yet",
+        "noAssignedTasksHint": "Assigned work will appear here when it is available",
         "taskCountLabel": "tasks",
         "topGroup": "Top group",
         "viewDetails": "View details"
@@ -2024,10 +2066,16 @@
         "today": "Today",
         "tomorrow": "Tomorrow",
         "untitledTask": "Untitled task",
+        "untitledStatus": "Untitled",
         "menu": "Menu",
         "editTaskName": "Edit task name",
         "delete": "Delete",
         "cancel": "Cancel",
+        "progressLabel": "Progress",
+        "progressTodo": "To do",
+        "progressStarted": "Started",
+        "progressInProgress": "In progress",
+        "progressReview": "Review",
         "progressDone": "Done",
         "columnMenu": "Column menu",
         "editStatusName": "Edit status name",
@@ -2039,10 +2087,31 @@
         "pleaseEnterTaskTitle": "Please enter task title",
         "startDateAfterDueDate": "Start date cannot be after due date",
         "createTaskFailed": "Failed to create task",
+        "updateTaskFailed": "Failed to update task",
         "taskName": "Task name",
         "close": "Close",
+        "status": "Status",
+        "priority": "Priority",
+        "severity": "Severity",
+        "priorityLow": "Low",
+        "priorityMedium": "Medium",
+        "priorityHigh": "High",
+        "severityMinor": "Minor",
+        "severityModerate": "Moderate",
+        "severityMajor": "Major",
+        "severityCritical": "Critical",
+        "overdue": "Overdue",
         "startDate": "Start date",
         "dueDate": "Due date",
+        "estimatedHours": "Estimated hours",
+        "estimatedHoursPlaceholder": "Example: 8",
+        "actualHours": "Actual hours",
+        "actualHoursPlaceholder": "Example: 4",
+        "description": "Description",
+        "noDescription": "(No description)",
+        "edit": "Edit",
+        "saving": "Saving...",
+        "saveChange": "Save change",
         "enterTaskDescription": "Enter task description...",
         "creatingTask": "Creating...",
         "createTask": "Create task",
