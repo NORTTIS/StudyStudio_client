@@ -204,6 +204,7 @@
         "confirmDeleteDescription": "Bạn có chắc muốn xóa bình luận này không?",
         "writeReply": "Viết phản hồi...",
         "writeComment": "Viết bình luận...",
+        "unknownMentionUser": "Người dùng không xác định",
         "noMembersToMention": "Không có thành viên để mention.",
         "errors": {
             "sendCommentFailed": "Gửi bình luận thất bại",

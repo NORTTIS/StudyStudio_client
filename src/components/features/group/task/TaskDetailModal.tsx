@@ -285,10 +285,6 @@ function expandMentionAll(payloadText: string, membersById: Record<string, strin
         .trim();
 }
 
-type UpdateTaskRequest = components["schemas"]["UpdateTaskRequest"] & {
-    assignees?: string | null;
-};
-
 type PopupPosition = {
     top: number;
     left: number;
@@ -1808,7 +1804,11 @@ function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
     return roleStr === "3" || roleStr === "4" || roleStr === "commenter" || roleStr === "viewer";
 }
 
-async function apiUpdateTask(args: { groupId: string; taskId: string; payload: UpdateTaskRequest }) {
+async function apiUpdateTask(args: {
+    groupId: string;
+    taskId: string;
+    payload: components["schemas"]["UpdateTaskRequest"];
+}) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
@@ -2482,17 +2482,6 @@ export default function TaskDetailModal(props: {
         setIsEditing(false);
     }, [task]);
 
-    React.useEffect(() => {
-        if (statusId) return;
-        if (task?.statusId) {
-            setStatusId(task.statusId);
-            return;
-        }
-        if (statusOptions.length > 0) {
-            setStatusId(statusOptions[0].statusId);
-        }
-    }, [statusId, statusOptions, task?.statusId]);
-
     const assigneeOptions = React.useMemo(
         () =>
             members.map((m) => {
@@ -2531,8 +2520,8 @@ export default function TaskDetailModal(props: {
 
     const selectedStatusName = React.useMemo(() => {
         const hit = statusOptions.find((s) => s.statusId === statusId);
-        return hit?.statusName ?? task?.statusName ?? statusOptions[0]?.statusName ?? "";
-    }, [statusId, statusOptions, task?.statusName]);
+        return hit?.statusName ?? task?.statusName ?? t("noStatus");
+    }, [statusId, statusOptions, task?.statusName, t]);
 
     const selectedPriorityValue = React.useMemo(() => normalizePriorityValue(Number(priority)), [priority]);
     const selectedPriorityLabel = React.useMemo(
@@ -2608,7 +2597,6 @@ export default function TaskDetailModal(props: {
                     taskName: taskNameTrimmed,
                     taskDescription: descriptionTrimmed || null,
                     assigneeId: assigneeId || null,
-                    assignees: assigneeId || null,
                     groupStatusId: statusId || null,
                     startDate: toApiDateTimeOrNull(startDate),
                     dueDate: toApiDateTimeOrNull(dueDate),
