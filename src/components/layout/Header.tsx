@@ -42,25 +42,6 @@ const LogoutIcon = () => (
     </svg>
 );
 
-const UserIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-        <path
-            d="M3.41 22C3.41 18.13 7.26 15 12 15C16.74 15 20.59 18.13 20.59 22"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-    </svg>
-);
-
 const ChevronDownIcon = ({ open = false }: { open?: boolean }) => (
     <svg
         width="16"
@@ -90,7 +71,6 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
     const userMenuRef = useRef<HTMLDivElement>(null);
 
-    const isHomePage = pathname === `/${locale}/home` || pathname.endsWith("/home");
     const isAdmin = userProfile?.isAdmin;
 
     useEffect(() => {
@@ -245,14 +225,6 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
                                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]">
                                         <SettingsIcon />
                                         <span>{t("settings")}</span>
-                                    </Link>
-
-                                    <Link
-                                        href={`/${locale}/profile`}
-                                        onClick={() => setIsUserMenuOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#6F6B99] transition-all duration-200 hover:bg-[#F4F5FA] hover:text-[#261E33]">
-                                        <UserIcon />
-                                        <span>{t("profile")}</span>
                                     </Link>
                                 </div>
                             )}

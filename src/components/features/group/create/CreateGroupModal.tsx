@@ -64,6 +64,12 @@ function getRandomBrandColor(): string {
     return BRAND_COLORS[Math.floor(Math.random() * BRAND_COLORS.length)];
 }
 
+function normalizeBatchGroupPrefix(value: string): string {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    return /\s$/.test(value) ? value : `${trimmed} `;
+}
+
 type CreateGroupModalVariant = "default" | "studio";
 const countLineBreaks = (value: string) => (value.match(/\n/g) || []).length;
 
@@ -340,9 +346,10 @@ export function CreateGroupModal({
             let res;
 
             if (createMode === "batch") {
+                const normalizedGroupPrefix = normalizeBatchGroupPrefix(groupPrefix);
                 const payload = {
                     studioId: studioId || null,
-                    groupPrefix: groupPrefix.trim(),
+                    groupPrefix: normalizedGroupPrefix,
                     groupCount,
                     description: description.trim(),
                     templateId: templateId ? templateId : null
@@ -677,7 +684,7 @@ export function CreateGroupModal({
                                                 <div className="mt-2 flex items-center justify-between gap-3">
                                                     <p className="text-[#6F6B99] text-xs">
                                                         {t("groupPrefixHint", {
-                                                            prefix: groupPrefix || t("prefixFallback")
+                                                            prefix: groupPrefix.trim() || t("prefixFallback")
                                                         })}
                                                     </p>
                                                     <div className="shrink-0 text-[#6F6B99] text-xs">
