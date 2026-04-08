@@ -56,8 +56,8 @@ export function GroupCard({
     view?: "grid" | "list";
 }) {
     const t = useTranslations("GroupCard");
-    const router = useRouter();
     const locale = useLocale();
+    const router = useRouter();
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [showInactiveDialog, setShowInactiveDialog] = useState(false);
@@ -71,6 +71,11 @@ export function GroupCard({
     // not whether the group/studio is temporarily paused/closed.
     const isDotActive = !isArchived;
     const isEffectiveOpen = !isArchived && isGroupOpen && isStudioOpen !== false;
+    const localizedStatusLabel = isDotActive
+        ? t("statusActive")
+        : isArchived
+          ? t("statusArchived")
+          : t("statusInactive");
     const isInactiveForViewer = !isOwner && !isEffectiveOpen;
     const rawStatus = String(
         (group as Record<string, unknown>).membershipStatus ??
@@ -182,8 +187,8 @@ export function GroupCard({
             className={`group/card overflow-hidden rounded-xl border border-[#E5E5E5] bg-white shadow-sm transition ${isInactiveForViewer
                 ? "cursor-not-allowed bg-[#FCFCFC]"
                 : isPendingApproval && !isOwner
-                    ? "cursor-default"
-                    : "cursor-pointer hover:bg-[#FAFAFA]"}`}>
+                  ? "cursor-default"
+                  : "cursor-pointer hover:bg-[#FAFAFA]"}`}>
             {group.bannerUrl ? (
                 <div className={`relative h-16 w-full overflow-hidden bg-[#F4F5FA] ${inactiveMutedClass}`}>
                     <img
@@ -224,20 +229,8 @@ export function GroupCard({
                             </div>
 
                             <span
-                                aria-label={isDotActive ? "active" : "inactive"}
-                                title={
-                                    isDotActive
-                                        ? locale === "vi"
-                                            ? "Đang hoạt động"
-                                            : "Active"
-                                        : isArchived
-                                            ? locale === "vi"
-                                                ? "Đã lưu trữ"
-                                                : "Archived"
-                                            : locale === "vi"
-                                                ? "Tạm dừng"
-                                                : "Inactive"
-                                }
+                                aria-label={localizedStatusLabel}
+                                title={localizedStatusLabel}
                                 className="relative inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center">
                                 <span
                                     aria-hidden="true"

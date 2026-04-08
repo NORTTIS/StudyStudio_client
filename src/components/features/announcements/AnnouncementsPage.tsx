@@ -173,6 +173,10 @@ export function AnnouncementsPage() {
             const detail = (event as CustomEvent<AnnouncementDeletedDetail>).detail;
             if (!detail) return;
 
+            if (detail.announcementId) {
+                saveDeletedSystemAnnouncementId(String(detail.announcementId));
+            }
+
             setUserAnnouncements((prev) =>
                 prev.filter((ann) => {
                     if (detail.userAnnouncementId && ann.userAnnouncementId === detail.userAnnouncementId) return false;

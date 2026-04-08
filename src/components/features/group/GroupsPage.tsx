@@ -876,6 +876,7 @@ function GroupsSection({
 
     const theme = sectionThemes[iconVariant];
     const showToggleButton = titleOnly ? items.length > 0 : canToggle;
+    const HeaderTag = showToggleButton ? "button" : "div";
 
     return (
         <motion.section
@@ -905,12 +906,13 @@ function GroupsSection({
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/95" />
             <div className="pointer-events-none absolute inset-y-0 right-0 w-[35%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.30),transparent_70%)] opacity-70" />
 
-            <button
-                type="button"
+            <HeaderTag
+                type={showToggleButton ? "button" : undefined}
                 onClick={showToggleButton ? onToggle : undefined}
                 className={cn(
                     "relative w-full border-b border-white/70 bg-gradient-to-r px-5 py-4 text-left backdrop-blur-2xl md:px-6",
-                    showToggleButton && "cursor-pointer",
+                    showToggleButton
+                        && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white/60",
                     theme.header
                 )}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -963,7 +965,7 @@ function GroupsSection({
                         </div>
                     )}
                 </div>
-            </button>
+            </HeaderTag>
 
             {titleOnly && !expanded ? null : (
                 <motion.div className={cn("relative px-5 py-5 md:px-6", theme.content)}>

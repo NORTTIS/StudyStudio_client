@@ -124,8 +124,7 @@ function isPendingGroupMembership(groupId: string): boolean {
     if (!groupId) return false;
     const pendingGroups = readPendingJoinGroups();
     return pendingGroups.some(
-        (group) =>
-            String(group.id ?? group.groupId ?? "").trim() === groupId.trim()
+        (group) => String(group.id ?? "").trim() === groupId.trim()
     );
 }
 
@@ -522,7 +521,7 @@ export function InviteAcceptPage() {
                 {status === "accepted" ? (
                     <>
                         <h1 className="mb-2 text-2xl font-bold">{t("successTitle")}</h1>
-                        <p className="mb-6 text-sm text-muted-foreground">{t("redirecting")}</p>
+                        <p className="mb-6 text-sm text-muted-foreground">{t("redirectingToGroup")}</p>
                     </>
                 ) : status === "pending" ? (
                     <>
@@ -531,11 +530,10 @@ export function InviteAcceptPage() {
 
                         <div className="space-y-3">
                             <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
-                                {t("backHome")}
+                                {t("backToGroups")}
                             </Button>
                             <Button
-                                variant="outline"
-                                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                className={GROUP_PRIMARY_BUTTON_CLASS}
                                 onClick={handleCancelRequest}
                             >
                                 {t("cancelRequest")}
@@ -548,11 +546,11 @@ export function InviteAcceptPage() {
                         <p className="mb-6 text-sm text-muted-foreground">{t("alreadyMember")}</p>
 
                         <div className="space-y-3">
-                            <Button className="w-full" onClick={goToGroup}>
+                            <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={goToGroup}>
                                 {t("goToGroups")}
                             </Button>
                             <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
-                                {t("backHome")}
+                                {t("backToGroups")}
                             </Button>
                         </div>
                     </>
@@ -571,7 +569,7 @@ export function InviteAcceptPage() {
                                 {t("loginToContinue")}
                             </Button>
                             <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
-                                {t("backHome")}
+                                {t("backToGroups")}
                             </Button>
                         </div>
                     </>
@@ -588,7 +586,7 @@ export function InviteAcceptPage() {
                             </Button>
 
                             <Button className={GROUP_PRIMARY_BUTTON_CLASS} onClick={onBackHome}>
-                                {t("backHome")}
+                                {t("backToGroups")}
                             </Button>
                         </div>
                     </>

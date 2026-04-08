@@ -56,28 +56,21 @@ type StudioUpdatedEventDetail = {
 };
 
 const STUDIO_UPDATED_EVENT = "studio:updated";
-const studioArchiveStorageKey = (studioId: string) => `studio:${studioId}:is-archived`;
+const studioArchiveOverrides = new Map<string, boolean>();
 
 function readStudioArchiveOverride(studioId: string): boolean | null {
-    if (!studioId || typeof window === "undefined") return null;
-
-    try {
-        const raw = window.localStorage.getItem(studioArchiveStorageKey(studioId));
-        if (raw === null) return null;
-        return raw === "1";
-    } catch {
-        return null;
-    }
+    if (!studioId) return null;
+    return studioArchiveOverrides.has(studioId) ? studioArchiveOverrides.get(studioId) ?? null : null;
 }
 
 function writeStudioArchiveOverride(studioId: string, value: boolean) {
-    if (!studioId || typeof window === "undefined") return;
+    if (!studioId) return;
+    studioArchiveOverrides.set(studioId, value);
+}
 
-    try {
-        window.localStorage.setItem(studioArchiveStorageKey(studioId), value ? "1" : "0");
-    } catch {
-        // Ignore storage failures and keep API as source of truth.
-    }
+function clearStudioArchiveOverride(studioId: string) {
+    if (!studioId) return;
+    studioArchiveOverrides.delete(studioId);
 }
 
 function applyStudioArchiveOverride(studio: StudioUI): StudioUI {
@@ -86,6 +79,11 @@ function applyStudioArchiveOverride(studio: StudioUI): StudioUI {
 
     const overrideArchived = readStudioArchiveOverride(studioId);
     if (overrideArchived === null) return studio;
+
+    if (Boolean(studio.isArchived) === overrideArchived) {
+        clearStudioArchiveOverride(studioId);
+        return studio;
+    }
 
     return {
         ...studio,
@@ -659,7 +657,7 @@ export default function MasterPageClient({
     const [studios, setStudios] = useState<StudioUI[]>(() => initialStudios.map(applyStudioArchiveOverride));
     const [subscriptionInfo, setSubscriptionInfo] = useState<StudioListSubscription | null>(initialSubscription);
     const [searchQuery, setSearchQuery] = useState("");
-    const [studioFilter, setStudioFilter] = useState<"all" | "owned" | "joined" | "archived">("all");
+    const [studioFilter, setStudioFilter] = useState<"all" | "owned" | "joined" | "pending" | "archived">("all");
     const [isLoading, setIsLoading] = useState(false);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -675,9 +673,11 @@ export default function MasterPageClient({
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
         "all-owned": true,
         "all-joined": true,
+        "all-pending": true,
         "all-archived": true,
         owned: true,
         joined: true,
+        pending: true,
         archived: true
     });
     const [updatingArchiveStudioId, setUpdatingArchiveStudioId] = useState<string | null>(null);
@@ -690,19 +690,22 @@ export default function MasterPageClient({
         userProfileRef.current = userProfile;
     }, [userProfile]);
 
-    const { ownedStudios, joinedStudios } = useMemo(() => {
+    const { ownedStudios, joinedStudios, pendingStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
         const joined: StudioUI[] = [];
+        const pending: StudioUI[] = [];
 
         studios.forEach((studio) => {
             if (studio.studioRole === 0 && !studio.isArchived) {
                 owned.push(studio);
+            } else if (!studio.isArchived && studio.isPendingApproval) {
+                pending.push(studio);
             } else if (!studio.isArchived) {
                 joined.push(studio);
             }
         });
 
-        return { ownedStudios: owned, joinedStudios: joined };
+        return { ownedStudios: owned, joinedStudios: joined, pendingStudios: pending };
     }, [studios]);
 
     const filteredStudios = useMemo(() => {
@@ -710,7 +713,8 @@ export default function MasterPageClient({
 
         return studios.filter((studio) => {
             if (studioFilter === "owned" && studio.studioRole !== 0) return false;
-            if (studioFilter === "joined" && studio.studioRole === 0) return false;
+            if (studioFilter === "joined" && (studio.studioRole === 0 || studio.isPendingApproval)) return false;
+            if (studioFilter === "pending" && !studio.isPendingApproval) return false;
             if (studioFilter === "archived" && !studio.isArchived) return false;
 
             if (!query) return true;
@@ -1120,7 +1124,7 @@ export default function MasterPageClient({
             const result = await toggleStudioArchive(studio.id, nextIsArchived, locale);
 
             if (result.status !== "success") {
-                writeStudioArchiveOverride(studio.id, Boolean(studio.isArchived));
+                clearStudioArchiveOverride(studio.id);
                 setStudios((prev) =>
                     prev.map((item) =>
                         item.id === studio.id
@@ -1141,7 +1145,7 @@ export default function MasterPageClient({
             await loadData({ force: true });
         } catch (error) {
             console.error("Toggle studio archive failed:", error);
-            writeStudioArchiveOverride(studio.id, Boolean(studio.isArchived));
+            clearStudioArchiveOverride(studio.id);
             setStudios((prev) =>
                 prev.map((item) =>
                     item.id === studio.id
@@ -1219,12 +1223,16 @@ export default function MasterPageClient({
         () => filteredStudios.filter((studio) => studio.studioRole === 0 && !studio.isArchived),
         [filteredStudios]
     );
+    const pendingStudiosForAll = useMemo(
+        () => filteredStudios.filter((studio) => studio.studioRole !== 0 && !studio.isArchived && !!studio.isPendingApproval),
+        [filteredStudios]
+    );
     const archivedStudiosForAll = useMemo(
         () => filteredStudios.filter((studio) => studio.isArchived),
         [filteredStudios]
     );
     const joinedStudiosForAll = useMemo(
-        () => filteredStudios.filter((studio) => studio.studioRole !== 0 && !studio.isArchived),
+        () => filteredStudios.filter((studio) => studio.studioRole !== 0 && !studio.isArchived && !studio.isPendingApproval),
         [filteredStudios]
     );
 
@@ -1342,6 +1350,7 @@ export default function MasterPageClient({
                                             { value: "all" as const, label: t("filters.all") },
                                             { value: "owned" as const, label: t("filters.owned") },
                                             { value: "joined" as const, label: t("filters.joined") },
+                                            { value: "pending" as const, label: t("filters.pending") },
                                             { value: "archived" as const, label: t("filters.archived") }
                                         ].map((item) => (
                                             <button
@@ -1394,6 +1403,7 @@ export default function MasterPageClient({
                                         {studioFilter === "all" ? (
                                             <div className="space-y-8">
                                                 {renderStudioSection("all-owned", t("yourStudios"), managedStudiosForAll)}
+                                                {renderStudioSection("all-pending", t("pendingStudios"), pendingStudiosForAll)}
                                                 {renderStudioSection("all-joined", t("joinedStudios"), joinedStudiosForAll)}
                                                 {renderStudioSection("all-archived", t("archivedStudios"), archivedStudiosForAll)}
                                             </div>
@@ -1401,6 +1411,8 @@ export default function MasterPageClient({
                                             renderStudioSection("owned", t("yourStudios"), filteredStudios)
                                         ) : studioFilter === "joined" ? (
                                             renderStudioSection("joined", t("joinedStudios"), filteredStudios)
+                                        ) : studioFilter === "pending" ? (
+                                            renderStudioSection("pending", t("pendingStudios"), filteredStudios)
                                         ) : (
                                             renderStudioSection("archived", t("archivedStudios"), filteredStudios)
                                         )}

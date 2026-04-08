@@ -305,13 +305,33 @@ export function NotificationDropdown() {
             const detail = (event as CustomEvent<AnnouncementDeletedDetail>).detail;
             if (!detail) return;
 
-            setNotifications((prev) =>
-                prev.filter((notification) => {
+            setNotifications((prev) => {
+                const deletedActionIds = prev
+                    .filter((notification) => {
+                        if (detail.userAnnouncementId && notification.actionId === detail.userAnnouncementId) return true;
+                        if (detail.announcementId && notification.announcementId === detail.announcementId) return true;
+                        return false;
+                    })
+                    .map((notification) => notification.actionId);
+
+                if (detail.userAnnouncementId) {
+                    deletedActionIds.push(detail.userAnnouncementId);
+                }
+
+                if (detail.announcementId) {
+                    deletedActionIds.push(detail.announcementId);
+                }
+
+                if (deletedActionIds.length > 0) {
+                    saveManyStoredIds(DELETED_NOTIFICATIONS_STORAGE_KEY, deletedActionIds);
+                }
+
+                return prev.filter((notification) => {
                     if (detail.userAnnouncementId && notification.actionId === detail.userAnnouncementId) return false;
                     if (detail.announcementId && notification.announcementId === detail.announcementId) return false;
                     return true;
-                })
-            );
+                });
+            });
 
             setSelectedNotification((prev) => {
                 if (!prev) return prev;
