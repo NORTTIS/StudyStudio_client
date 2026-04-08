@@ -39,6 +39,7 @@ type RawNotification = Notification & {
 type ExtendedNotification = Notification & {
     isFallback?: boolean;
     actionId: string;
+    announcementId?: string;
 };
 
 function getStoredIds(key: string): string[] {

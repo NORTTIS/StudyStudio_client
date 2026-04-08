@@ -71,11 +71,7 @@ export function GroupCard({
     // not whether the group/studio is temporarily paused/closed.
     const isDotActive = !isArchived;
     const isEffectiveOpen = !isArchived && isGroupOpen && isStudioOpen !== false;
-    const localizedStatusLabel = isDotActive
-        ? t("statusActive")
-        : isArchived
-          ? t("statusArchived")
-          : t("statusInactive");
+    const localizedStatusLabel = isArchived ? t("statusArchived") : t("statusActive");
     const isInactiveForViewer = !isOwner && !isEffectiveOpen;
     const rawStatus = String(
         (group as Record<string, unknown>).membershipStatus ??

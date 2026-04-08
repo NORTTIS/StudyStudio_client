@@ -746,11 +746,18 @@ function MemberDetailModal({
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
     const [mounted, setMounted] = React.useState(false);
+    const [displayedMember, setDisplayedMember] = React.useState<MemberProgressItem | null>(member);
 
     React.useEffect(() => {
         setMounted(true);
         return () => setMounted(false);
     }, []);
+
+    React.useEffect(() => {
+        if (member) {
+            setDisplayedMember(member);
+        }
+    }, [member]);
 
     React.useEffect(() => {
         if (!open) return;
@@ -765,14 +772,15 @@ function MemberDetailModal({
         };
     }, [open, onClose]);
 
-    if (!(member && mounted)) return null;
+    if (!mounted) return null;
 
-    const percent = getProgressPercent(member.completedTasks, member.totalTasks);
+    const activeMember = displayedMember;
+    const percent = activeMember ? getProgressPercent(activeMember.completedTasks, activeMember.totalTasks) : 0;
     const status = getMemberStatus(percent, t);
 
     return createPortal((
-        <AnimatePresence>
-            {open && (
+        <AnimatePresence onExitComplete={() => setDisplayedMember(member)}>
+            {open && activeMember && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -793,7 +801,7 @@ function MemberDetailModal({
                                     <Layers3 className="h-5 w-5 text-orange-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-slate-900">{member.name}</h3>
+                                    <h3 className="font-semibold text-slate-900">{activeMember.name}</h3>
                                     <div className={cn("font-medium text-xs", status.textClass)}>{status.label}</div>
                                 </div>
                             </div>
@@ -824,8 +832,8 @@ function MemberDetailModal({
                                 </div>
                                 <div className="mt-1 text-slate-500 text-xs">
                                     {t("memberModal.taskCount", {
-                                        completed: member.completedTasks,
-                                        total: member.totalTasks
+                                        completed: activeMember.completedTasks,
+                                        total: activeMember.totalTasks
                                     })}
                                 </div>
                             </div>
@@ -835,14 +843,14 @@ function MemberDetailModal({
                                 <div className="rounded-xl border border-slate-100 bg-emerald-50/50 p-3 text-center">
                                     <CheckCircle2 className="mx-auto mb-1.5 h-5 w-5 text-emerald-500" />
                                     <div className="font-bold text-slate-900">
-                                        {member.completedScore?.toFixed(1) ?? 0}
+                                        {activeMember.completedScore?.toFixed(1) ?? 0}
                                     </div>
                                     <div className="text-slate-500 text-xs">{t("memberModal.completePts")}</div>
                                 </div>
                                 <div className="rounded-xl border border-slate-100 bg-blue-50/50 p-3 text-center">
                                     <Plus className="mx-auto mb-1.5 h-5 w-5 text-blue-500" />
                                     <div className="font-bold text-slate-900">
-                                        {member.createdScore?.toFixed(1) ?? 0}
+                                        {activeMember.createdScore?.toFixed(1) ?? 0}
                                     </div>
                                     <div className="text-slate-500 text-xs">{t("memberModal.createPts")}</div>
                                 </div>
@@ -858,7 +866,7 @@ function MemberDetailModal({
                                         </svg>
                                     </div>
                                     <div className="font-bold text-slate-900">
-                                        {member.updatedScore?.toFixed(1) ?? 0}
+                                        {activeMember.updatedScore?.toFixed(1) ?? 0}
                                     </div>
                                     <div className="text-slate-500 text-xs">{t("memberModal.updatePts")}</div>
                                 </div>
@@ -874,7 +882,7 @@ function MemberDetailModal({
                                         </svg>
                                     </div>
                                     <div className="font-bold text-slate-900">
-                                        {member.deletedScore?.toFixed(1) ?? 0}
+                                        {activeMember.deletedScore?.toFixed(1) ?? 0}
                                     </div>
                                     <div className="text-slate-500 text-xs">
                                         {t("memberModal.activityItems.deleted")} pts
@@ -883,7 +891,7 @@ function MemberDetailModal({
                                 <div className="rounded-xl border border-slate-100 bg-purple-50/50 p-3 text-center">
                                     <MessageSquare className="mx-auto mb-1.5 h-5 w-5 text-purple-500" />
                                     <div className="font-bold text-slate-900">
-                                        {(member.messagesSent ?? 0) + (member.commentsCreated ?? 0)}
+                                        {(activeMember.messagesSent ?? 0) + (activeMember.commentsCreated ?? 0)}
                                     </div>
                                     <div className="text-slate-500 text-xs">
                                         {t("memberModal.activityItems.messages")}
@@ -896,26 +904,26 @@ function MemberDetailModal({
                                 <div className="mt-3 flex justify-between border-slate-200 border-t pt-3 font-semibold">
                                     <span className="text-slate-700">{t("memberModal.totalScore")}</span>
                                     <span className="font-mono text-orange-600">
-                                        {member.totalScore?.toFixed(1) ?? 0}
+                                        {activeMember.totalScore?.toFixed(1) ?? 0}
                                     </span>
                                 </div>
                             </div>
 
                             {/* Contribution rate */}
-                            {member.contributionScoreRate !== undefined && (
+                            {activeMember.contributionScoreRate !== undefined && (
                                 <div className="rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4">
                                     <div className="flex items-center justify-between">
                                         <span className="font-medium text-slate-700 text-sm">
                                             {t("memberModal.contributionRate")}
                                         </span>
                                         <span className="font-bold text-lg text-orange-600">
-                                            {member.contributionScoreRate.toFixed(2)}%
+                                            {activeMember.contributionScoreRate.toFixed(2)}%
                                         </span>
                                     </div>
                                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-orange-100">
                                         <div
                                             className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-400"
-                                            style={{ width: `${Math.min(100, member.contributionScoreRate)}%` }}
+                                            style={{ width: `${Math.min(100, activeMember.contributionScoreRate)}%` }}
                                         />
                                     </div>
                                 </div>
@@ -925,7 +933,7 @@ function MemberDetailModal({
                             <div className="flex items-center gap-2 text-slate-500 text-sm">
                                 <Clock3 className="h-4 w-4" />
                                 <span>
-                                    {t("memberModal.lastActivity")}: {member.lastActivity}
+                                    {t("memberModal.lastActivity")}: {activeMember.lastActivity}
                                 </span>
                             </div>
                         </div>

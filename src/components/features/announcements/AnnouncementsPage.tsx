@@ -17,6 +17,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getUserData } from "@/api/auth";
 import {
     deleteUserAnnouncement,
     getAllAnnouncements,
@@ -51,10 +52,19 @@ type PublicAnnouncementItem = Announcement & {
 
 const DELETED_SYSTEM_ANNOUNCEMENTS_KEY = "study_studio_deleted_system_announcements";
 
+function getDeletedSystemAnnouncementsStorageKey(): string {
+    if (typeof window === "undefined") return DELETED_SYSTEM_ANNOUNCEMENTS_KEY;
+
+    const userId = String(getUserData()?.id ?? "").trim();
+    return userId
+        ? `${DELETED_SYSTEM_ANNOUNCEMENTS_KEY}:${userId}`
+        : `${DELETED_SYSTEM_ANNOUNCEMENTS_KEY}:anonymous`;
+}
+
 function readDeletedSystemAnnouncementIds(): string[] {
     if (typeof window === "undefined") return [];
     try {
-        const raw = window.localStorage.getItem(DELETED_SYSTEM_ANNOUNCEMENTS_KEY);
+        const raw = window.localStorage.getItem(getDeletedSystemAnnouncementsStorageKey());
         const parsed = raw ? JSON.parse(raw) : [];
         return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
     } catch {
@@ -67,7 +77,7 @@ function saveDeletedSystemAnnouncementId(id: string) {
     try {
         const current = readDeletedSystemAnnouncementIds();
         if (!current.includes(id)) {
-            window.localStorage.setItem(DELETED_SYSTEM_ANNOUNCEMENTS_KEY, JSON.stringify([...current, id]));
+            window.localStorage.setItem(getDeletedSystemAnnouncementsStorageKey(), JSON.stringify([...current, id]));
         }
     } catch {
         // ignore
@@ -173,7 +183,7 @@ export function AnnouncementsPage() {
             const detail = (event as CustomEvent<AnnouncementDeletedDetail>).detail;
             if (!detail) return;
 
-            if (detail.announcementId) {
+            if (detail.announcementId && !detail.userAnnouncementId) {
                 saveDeletedSystemAnnouncementId(String(detail.announcementId));
             }
 

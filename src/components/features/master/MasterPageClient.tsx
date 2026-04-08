@@ -73,17 +73,24 @@ function clearStudioArchiveOverride(studioId: string) {
     studioArchiveOverrides.delete(studioId);
 }
 
+function clearSyncedStudioArchiveOverride(studio: StudioUI) {
+    const studioId = String(studio.id || "").trim();
+    if (!studioId) return;
+
+    const overrideArchived = readStudioArchiveOverride(studioId);
+    if (overrideArchived === null) return;
+
+    if (Boolean(studio.isArchived) === overrideArchived) {
+        clearStudioArchiveOverride(studioId);
+    }
+}
+
 function applyStudioArchiveOverride(studio: StudioUI): StudioUI {
     const studioId = String(studio.id || "").trim();
     if (!studioId) return studio;
 
     const overrideArchived = readStudioArchiveOverride(studioId);
     if (overrideArchived === null) return studio;
-
-    if (Boolean(studio.isArchived) === overrideArchived) {
-        clearStudioArchiveOverride(studioId);
-        return studio;
-    }
 
     return {
         ...studio,
@@ -712,9 +719,9 @@ export default function MasterPageClient({
         const query = searchQuery.trim().toLowerCase();
 
         return studios.filter((studio) => {
-            if (studioFilter === "owned" && studio.studioRole !== 0) return false;
-            if (studioFilter === "joined" && (studio.studioRole === 0 || studio.isPendingApproval)) return false;
-            if (studioFilter === "pending" && !studio.isPendingApproval) return false;
+            if (studioFilter === "owned" && (studio.studioRole !== 0 || studio.isArchived)) return false;
+            if (studioFilter === "joined" && (studio.studioRole === 0 || studio.isPendingApproval || studio.isArchived)) return false;
+            if (studioFilter === "pending" && (!studio.isPendingApproval || studio.isArchived)) return false;
             if (studioFilter === "archived" && !studio.isArchived) return false;
 
             if (!query) return true;
@@ -808,6 +815,8 @@ export default function MasterPageClient({
                 const approvedStudios = studiosResult.data.studios.map((studio: StudioUI) => {
                     const normalizedStudio = applyStudioArchiveOverride(studio);
                     const isPendingApproval = normalizedStudio.studioRole === 1 && normalizedStudio.isMember !== true;
+
+                    clearSyncedStudioArchiveOverride(studio);
 
                     if (!isPendingApproval) {
                         removePendingStudioJoinRequest(normalizedStudio.id);

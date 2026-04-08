@@ -1,4 +1,4 @@
 export const SURFACE_LAYERS = {
-    modalOverlay: "z-50",
+    modalOverlay: "z-40",
     modalContent: "z-50"
 } as const;

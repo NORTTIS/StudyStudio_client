@@ -38,12 +38,13 @@ export function Modal({
         xl: "max-w-xl"
     };
 
-    // Handle ESC key
+    // Set mounted flag for SSR safety
     useEffect(() => {
         setMounted(true);
         return () => setMounted(false);
     }, []);
 
+    // Handle ESC key
     useEffect(() => {
         if (!isOpen) return;
 

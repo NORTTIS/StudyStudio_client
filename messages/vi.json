@@ -128,18 +128,6 @@
             "feature2Description": "Tương tác thông minh hơn với dữ liệu, task, nhóm và lịch trình để tăng tốc ra quyết định hằng ngày."
         }
     },
-    "HomeSummary": {
-        "overview": {
-            "completedTitle": "Hoàn thành",
-            "remainingTitle": "Còn lại",
-            "overdueTitle": "Quá hạn",
-            "completedDescription": "{count} trên {total} công việc đã hoàn tất",
-            "remainingDescription": "{count} công việc vẫn đang chờ xử lý",
-            "overdueDescription": "{count} công việc cần được ưu tiên"
-        },
-        "currentOverview": "Tổng quan hiện tại",
-        "quantity": "Số lượng"
-    },
     "TaskDetailModal": {
         "mentionAll": {
             "label": "mọi người",
@@ -401,7 +389,7 @@
         "emailInvalid": "Email không đúng định dạng (ví dụ: abc@gmail.com)",
         "emailNoSpaces": "Email không được chứa khoảng trắng",
         "passwordRequired": "Mật khẩu là bắt buộc",
-        "passwordInvalid": "Mật khẩu phải từ 10–20 ký tự, chứa ít nhất một chữ hoa, một chữ thường, một chữ số và có thể bao gồm ký tự đặc biệt (không khoảng trắng)",
+        "passwordInvalid": "Mật khẩu phải từ 10 đến 20 ký tự, chứa ít nhất một chữ hoa, một chữ thường, một chữ số và có thể bao gồm ký tự đặc biệt (không khoảng trắng)",
         "confirmPasswordRequired": "Vui lòng nhập lại mật khẩu",
         "confirmPasswordMismatch": "Mật khẩu nhập lại không khớp",
         "continueWithGoogle": "Tiếp tục với Google",
@@ -630,7 +618,7 @@
         "newPassword": "Mật khẩu mới",
         "newPasswordPlaceholder": "Nhập mật khẩu mới",
         "newPasswordRequired": "Mật khẩu mới không được để trống",
-        "passwordInvalid": "Mật khẩu mới phải từ 10–20 ký tự, chứa ít nhất một chữ hoa, một chữ thường, một chữ số và có thể bao gồm ký tự đặc biệt (không khoảng trắng)",
+        "passwordInvalid": "Mật khẩu mới phải từ 10 đến 20 ký tự, chứa ít nhất một chữ hoa, một chữ thường, một chữ số và có thể bao gồm ký tự đặc biệt (không khoảng trắng)",
         "confirmPassword": "Xác nhận mật khẩu",
         "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
         "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
@@ -648,7 +636,7 @@
             "fair": "Trung bình",
             "good": "Khá",
             "strong": "Mạnh",
-            "reqLength": "10–20 ký tự",
+            "reqLength": "10 đến 20 ký tự",
             "reqUpper": "Chữ hoa (A–Z)",
             "reqLower": "Chữ thường (a–z)",
             "reqNumber": "Chữ số (0–9)"
@@ -889,7 +877,6 @@
             "inviteMember": "Mời thành viên",
             "studioNotFound": "Studio không tồn tại",
             "studioNotFoundSubtitle": "Vui lòng kiểm tra lại đường dẫn hoặc quay về danh sách studio",
-            "noGroupsSubtitle": "Tạo nhóm đầu tiên để bắt đầu cộng tác trong studio này",
             "validation": {
                 "dateRangeError": "Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc"
             },

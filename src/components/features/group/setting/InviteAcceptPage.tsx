@@ -381,13 +381,6 @@ export function InviteAcceptPage() {
 
                     const responseGroupId = String(body.json?.data?.groupId || body.json?.groupId || groupIdFromToken || "").trim();
 
-                    // Kiem tra localStorage truoc - neu dang cho phe duyet thi hien thi trang thai pending
-                    if (responseGroupId && isPendingGroupMembership(responseGroupId)) {
-                        setGroupId(responseGroupId);
-                        setStatus("pending");
-                        return;
-                    }
-
                     if (isAlreadyMemberMessage(msg)) {
                         if (responseGroupId) setGroupId(responseGroupId);
                         setStatus("already");
@@ -403,6 +396,12 @@ export function InviteAcceptPage() {
 
                         setStatus("error");
                         setError(msg);
+                        return;
+                    }
+
+                    if (responseGroupId && isPendingGroupMembership(responseGroupId)) {
+                        setGroupId(responseGroupId);
+                        setStatus("pending");
                         return;
                     }
 

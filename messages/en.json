@@ -128,18 +128,6 @@
             "personal": "Personal workspace preview"
         }
     },
-    "HomeSummary": {
-        "overview": {
-            "completedTitle": "Completed",
-            "remainingTitle": "Remaining",
-            "overdueTitle": "Overdue",
-            "completedDescription": "{count} out of {total} tasks have been completed",
-            "remainingDescription": "{count} tasks are still pending",
-            "overdueDescription": "{count} tasks need immediate attention"
-        },
-        "currentOverview": "Current Overview",
-        "quantity": "Quantity"
-    },
     "TaskDetailModal": {
         "mentionAll": {
             "label": "everyone",
@@ -889,7 +877,6 @@
             "inviteMember": "Invite Member",
             "studioNotFound": "Studio not found",
             "studioNotFoundSubtitle": "Please check the URL or go back to the studios list",
-            "noGroupsSubtitle": "Create your first group to start collaborating in this studio",
             "validation": {
                 "dateRangeError": "Start date must be less than or equal to end date"
             },
@@ -1816,54 +1803,6 @@
             "alreadyFree": "You are using the Free plan",
             "paymentFailed": "Unable to create payment",
             "paymentError": "An error occurred. Please try again!"
-        }
-    },
-    "PaymentHistoryPage": {
-        "title": "Payment History",
-        "subtitle": "View all your payment transactions",
-        "backButton": "Back",
-        "loading": "Loading...",
-        "empty": {
-            "title": "No transactions yet",
-            "description": "You haven't made any payment transactions yet",
-            "upgradeButton": "Upgrade plan now"
-        },
-        "table": {
-            "paymentId": "Payment ID",
-            "plan": "Subscription Plan",
-            "status": "Status",
-            "date": "Payment Date",
-            "actions": "Actions",
-            "viewDetails": "View Details"
-        }
-    },
-    "PaymentStatusPage": {
-        "title": "Payment Details",
-        "subtitle": "Detailed information about the transaction",
-        "backButton": "Back",
-        "loading": "Loading...",
-        "notFound": {
-            "title": "Payment not found",
-            "description": "Payment ID is invalid or has been deleted"
-        },
-        "details": {
-            "title": "Payment Information",
-            "plan": "Subscription Plan",
-            "amount": "Amount",
-            "createdAt": "Created Date",
-            "paidAt": "Payment Date"
-        },
-        "actions": {
-            "cancel": "Cancel Payment",
-            "cancelling": "Cancelling...",
-            "backToBilling": "Back to Subscription Plans"
-        },
-        "messages": {
-            "cancelSuccess": "Payment cancelled successfully",
-            "cancelFailed": "Unable to cancel payment",
-            "cancelError": "An error occurred. Please try again!",
-            "paymentSuccess": "Payment successful! Confirmation email has been sent. Redirecting to billing page...",
-            "emailSent": "📧 Payment confirmation email has been sent to your email address"
         }
     },
     "GroupsPage": {

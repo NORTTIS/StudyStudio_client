@@ -909,10 +909,11 @@ function GroupsSection({
             <HeaderTag
                 type={showToggleButton ? "button" : undefined}
                 onClick={showToggleButton ? onToggle : undefined}
+                aria-expanded={showToggleButton ? expanded : undefined}
                 className={cn(
                     "relative w-full border-b border-white/70 bg-gradient-to-r px-5 py-4 text-left backdrop-blur-2xl md:px-6",
                     showToggleButton
-                        && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white/60",
+                        && "cursor-pointer transition-[transform,box-shadow,background-color] duration-200 hover:brightness-[1.02] active:scale-[0.998] active:brightness-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white/60",
                     theme.header
                 )}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
