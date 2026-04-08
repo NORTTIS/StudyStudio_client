@@ -1,16 +1,25 @@
 # StudyStudio — Frontend
 
-> Collaborative workspace platform for university students
-> Built with **Next.js 16 + React 19** | Part of **SEP490 Graduation Thesis**
+<p align="center">
+    <img src="logo.png" alt="StudyStudio" width="420">
+</p>
 
-![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js)
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=flat-square&logo=tailwindcss)
-![pnpm](https://img.shields.io/badge/pnpm-9-F69220?style=flat-square&logo=pnpm)
-![i18n](https://img.shields.io/badge/i18n-vi%2Ben-10B981?style=flat-square)
-![SignalR](https://img.shields.io/badge/SignalR-ready-512BD4?style=flat-square&logo=.net)
-![MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+<p align="center">
+    <strong>Không gian học tập dành cho sinh viên</strong>
+</p>
+
+<p align="center">
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js" alt="Next.js"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react" alt="React"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss" alt="TailwindCSS"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/pnpm-9-F69220?style=for-the-badge&logo=pnpm" alt="pnpm"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/i18n-vi%2Ben-10B981?style=for-the-badge" alt="i18n"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/SignalR-Real--Time-512BD4?style=for-the-badge&logo=.net" alt="SignalR"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/Zustand-State-FF6B6B?style=for-the-badge" alt="Zustand"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/TanStack-Query-FF4154?style=for-the-badge" alt="TanStack Query"></a>
+    <a href="https://github.com/your-username/StudyStudio"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License"></a>
+</p>
 
 ---
 
@@ -21,34 +30,51 @@
 3. [Architecture](#architecture)
 4. [Project Structure](#project-structure)
 5. [Getting Started](#getting-started)
-6. [Features](#features)
-7. [AI Integration](#ai-integration)
-8. [Internationalization](#internationalization)
-9. [State Management](#state-management)
-10. [API Integration](#api-integration)
-11. [Code Quality](#code-quality)
-12. [Troubleshooting](#troubleshooting)
-13. [Documentation](#documentation)
-14. [License](#license)
+6. [Installation](#installation)
+7. [Features](#features)
+8. [AI Integration](#ai-integration)
+9. [Internationalization](#internationalization)
+10. [State Management](#state-management)
+11. [API Integration](#api-integration)
+12. [Code Quality](#code-quality)
+13. [Troubleshooting](#troubleshooting)
+14. [Documentation](#documentation)
+15. [Team](#team)
+16. [Changelog](#changelog)
 
 ---
 
 ## 🧠 About the Frontend
 
-**StudyStudio Frontend** is a Next.js 16 application that provides the user interface for the StudyStudio collaborative workspace platform. It communicates with the ASP.NET Core 8.0 Backend API and supports real-time features via SignalR.
+**StudyStudio Frontend** is a Next.js 16 application that provides the user interface for the StudyStudio collaborative workspace platform. Built with React 19 and TypeScript, it delivers a modern, responsive experience with real-time capabilities.
 
-**Key capabilities:**
+**Core capabilities:**
 - 📱 Server-side rendering with Next.js App Router
-- 🌐 Full Vietnamese and English localization
+- 🌐 Full Vietnamese and English localization (next-intl)
 - 📊 Interactive analytics dashboards (ECharts + Recharts)
-- 💬 Real-time group chat and @mention notifications
+- 💬 Real-time group chat and @mention notifications (SignalR)
 - 🤖 AI chat interface with SSE streaming
-- 📋 Kanban boards with drag-and-drop
+- 📋 Kanban boards with drag-and-drop (@dnd-kit)
 - 📅 Calendar view with FullCalendar
+- 💳 Payment integration with PayOS
 
 ---
 
 ## 💻 Tech Stack
+
+<p align="center">
+
+| | | |
+|:---:|:---:|:---:|
+| ![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js) | ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react) | ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript) |
+| ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss) | ![pnpm](https://img.shields.io/badge/pnpm-9-F69220?style=for-the-badge&logo=pnpm) | ![Zustand](https://img.shields.io/badge/Zustand-State-FF6B6B?style=for-the-badge) |
+| ![TanStack Query](https://img.shields.io/badge/TanStack-Query-FF4154?style=for-the-badge) | ![React Hook Form](https://img.shields.io/badge/React%20Hook%20Form-7-EC5990?style=for-the-badge) | ![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1?style=for-the-badge) |
+| ![SignalR](https://img.shields.io/badge/SignalR-Real--Time-512BD4?style=for-the-badge&logo=.net) | ![ECharts](https://img.shields.io/badge/ECharts-6-AA344D?style=for-the-badge) | ![Recharts](https://img.shields.io/badge/Recharts-3-FF6F61?style=for-the-badge) |
+| ![FullCalendar](https://img.shields.io/badge/FullCalendar-6-3F51B5?style=for-the-badge) | ![dnd-kit](https://img.shields.io/badge/dnd--kit-Drag%20%26%20Drop-CC0000?style=for-the-badge) | ![next-intl](https://img.shields.io/badge/next--intl-4-10B981?style=for-the-badge) |
+
+</p>
+
+### Detailed Tech Stack
 
 | Category | Technology | Version | Purpose |
 |----------|-----------|---------|---------|
@@ -71,6 +97,8 @@
 | i18n | next-intl | 4.6.1 | Localization |
 | Linting | Biome | 2.3.10 | Lint + format |
 | Type Gen | openapi-typescript | — | Swagger → types |
+| Animations | framer-motion | 12.x | UI animations |
+| UI Components | shadcn/ui + Radix | latest | Accessible components |
 
 ---
 
@@ -80,24 +108,56 @@
 
 ```
 mystudio/src/app/
-├── [locale]/                      # i18n routing
+├── [locale]/                      # i18n routing (/vi/*, /en/*)
 │   ├── (authenticated)/           # Protected routes (requires JWT)
-│   │   ├── home/                  # Dashboard
-│   │   ├── master/[studioId]/     # Studio detail pages
-│   │   │   ├── page.tsx           # Server component (fetches data)
-│   │   │   └── ClientComponent.tsx # Client component (UI)
-│   │   ├── group/[groupId]/       # Group pages
-│   │   │   ├── board/             # Kanban board
-│   │   │   ├── list/              # List view
-│   │   │   ├── discuss/           # Real-time chat
-│   │   │   ├── calendar/          # Calendar view
-│   │   │   ├── documents/         # Document management
-│   │   │   └── analytic/          # Analytics
-│   │   └── settings/              # User settings
-│   └── (guest)/                   # Public routes
+│   │   ├── layout.tsx            # Auth layout with sidebar
+│   │   ├── (user)/              # User routes
+│   │   │   ├── home/            # Dashboard (AI, Analysis, Announcements)
+│   │   │   ├── master/          # Studio management
+│   │   │   │   └── [studioId]/  # Studio detail
+│   │   │   ├── group/           # Group management
+│   │   │   │   └── [groupId]/
+│   │   │   │       ├── board/   # Kanban board
+│   │   │   │       ├── discuss/ # Real-time chat
+│   │   │   │       ├── list/    # List view
+│   │   │   │       ├── calendar/# Calendar view
+│   │   │   │       ├── documents/# Document management
+│   │   │   │       ├── ai-qa/   # Group AI
+│   │   │   │       ├── analytic/# Group analytics
+│   │   │   │       ├── setting/ # Group settings
+│   │   │   │       └── trashed/ # Trash bin
+│   │   │   ├── settings/        # User settings
+│   │   │   │   ├── security/
+│   │   │   │   ├── billing/
+│   │   │   │   └── help/
+│   │   │   └── payment/        # Payment pages
+│   │   │       ├── history/
+│   │   │       ├── success/
+│   │   │       └── cancel/
+│   │   └── admin/              # Admin routes
+│   │       ├── dashboard/
+│   │       ├── users/
+│   │       ├── groups/
+│   │       ├── studios/
+│   │       ├── subscriptions/
+│   │       ├── revenue/
+│   │       ├── reports/
+│   │       ├── news/
+│   │       └── templates/
+│   │
+│   └── (guest)/                 # Public routes (no auth required)
+│       ├── layout.tsx          # Guest layout
 │       ├── login/
 │       ├── register/
-│       └── landing/
+│       ├── forgot-password/
+│       ├── reset-password/
+│       ├── verify-email/
+│       ├── landing/            # Landing page
+│       │   ├── personal/
+│       │   ├── group/
+│       │   ├── management/
+│       │   └── plan/
+│       └── studio-invite/      # Studio invite
 ```
 
 ### Data Flow Pattern
@@ -111,7 +171,7 @@ returns data to Client Component
     ↓
 Client Component (use TanStack Query for client-side data)
     ↓
-uiFetch for mutations
+apiFetch for mutations (auto-attaches JWT)
 ```
 
 ### Real-time (SignalR)
@@ -147,61 +207,78 @@ mystudio/
 ├── biome.json                   # Biome linter config
 ├── lefthook.yml                 # Git hooks
 ├── tsconfig.json
+├── screenshot.mjs              # Screenshot utility
+├── serve.mjs                   # Local server for screenshots
 ├── src/
-│   ├── app/[locale]/           # Next.js App Router (i18n routing)
-│   │   ├── layout.tsx          # Root layout with providers
-│   │   ├── page.tsx           # Landing page redirect
-│   │   ├── (authenticated)/   # Protected routes
-│   │   │   ├── layout.tsx     # Auth layout with sidebar
-│   │   │   ├── home/
-│   │   │   ├── master/
-│   │   │   ├── group/
-│   │   │   └── settings/
-│   │   └── (guest)/           # Public routes
-│   │       ├── login/
-│   │       ├── register/
-│   │       └── landing/
+│   ├── app/                   # Next.js App Router
+│   │   └── [locale]/         # i18n routing
+│   │       ├── (authenticated)/
+│   │       ├── (guest)/
+│   │       └── page.tsx      # Root redirect
 │   │
 │   ├── api/                   # API layer
-│   │   ├── api-client.ts      # Client-side fetch (apiFetch)
-│   │   ├── server-client.ts   # Server-side fetch (serverFetchApi)
-│   │   ├── types.ts          # Auto-generated from Swagger
-│   │   └── *.ts              # API functions (studios.ts, etc.)
+│   │   ├── api-client.ts     # Client-side fetch (apiFetch)
+│   │   ├── server-client.ts  # Server-side fetch (serverFetchApi)
+│   │   ├── types.ts         # Auto-generated from Swagger
+│   │   └── *.ts             # API functions (auth.ts, studios.ts, etc.)
 │   │
 │   ├── components/
 │   │   ├── common/           # Shared components
+│   │   │   ├── Alert.tsx
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Container.tsx
+│   │   │   ├── EmptyState.tsx
 │   │   │   ├── ErrorDisplay.tsx
-│   │   │   ├── LoadingSpinner.tsx
-│   │   │   └── RolePill.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Loading.tsx
+│   │   │   ├── LoadingPage.tsx
+│   │   │   └── Logo.tsx
 │   │   ├── features/         # Feature-specific components
 │   │   │   ├── login/
 │   │   │   ├── register/
+│   │   │   ├── forgot-password/
+│   │   │   ├── reset-password/
 │   │   │   ├── home/         # Dashboard components
-│   │   │   ├── group/
-│   │   │   │   ├── board/    # Kanban board
-│   │   │   │   ├── discuss/  # Real-time chat
-│   │   │   │   ├── task/     # Task forms & detail
-│   │   │   │   ├── analytic/ # Group analytics
-│   │   │   │   └── setting/  # Group settings
 │   │   │   ├── master/       # Studio components
-│   │   │   ├── admin/        # Admin dashboard
-│   │   │   ├── payment/      # Payment components
-│   │   │   └── landing/      # Landing page
+│   │   │   ├── group/        # Group components
+│   │   │   │   ├── board/
+│   │   │   │   ├── discuss/
+│   │   │   │   ├── calendar/
+│   │   │   │   ├── documents/
+│   │   │   │   ├── ai-qa/
+│   │   │   │   ├── analytic/
+│   │   │   │   ├── setting/
+│   │   │   │   └── trashed/
+│   │   │   ├── payment/
+│   │   │   ├── admin/
+│   │   │   └── landing/
 │   │   ├── layout/           # Layout components
 │   │   │   ├── Sidebar.tsx
 │   │   │   ├── Header.tsx
-│   │   │   └── MobileNav.tsx
-│   │   └── ui/               # shadcn/ui components
+│   │   │   └── Footer.tsx
+│   │   └── ui/               # shadcn/ui + Radix components
+│   │       ├── button.tsx
+│   │       ├── input.tsx
+│   │       ├── card.tsx
+│   │       ├── badge.tsx
+│   │       ├── avatar.tsx
+│   │       ├── tabs.tsx
+│   │       ├── dialog.tsx
+│   │       ├── dropdown-menu.tsx
+│   │       ├── calendar.tsx
+│   │       └── ...
 │   │
 │   ├── hooks/                # Custom React hooks
 │   ├── store/                # Zustand stores
-│   ├── lib/                  # Utilities
-│   │   ├── signalr.ts       # SignalR connection
-│   │   ├── utils.ts        # cn() helper, etc.
-│   │   └── env.ts          # Environment validation (Zod)
-│   │
-│   └── i18n/                 # next-intl config
-│       └── request.ts       # Server-side i18n config
+│   ├── utils/                # Utilities
+│   │   ├── utils.ts         # cn() helper, etc.
+│   │   ├── env.ts           # Environment validation (Zod)
+│   │   └── payment-status.ts
+│   ├── i18n/                 # next-intl config
+│   │   └── request.ts       # Server-side i18n config
+│   └── lib/                  # Libraries
+│       └── utils.ts
 │
 └── messages/                 # Translation files
     ├── vi.json               # Vietnamese
@@ -220,82 +297,107 @@ mystudio/
 | pnpm | 9.x | ✅ |
 | Backend API | Running | ✅ (http://localhost:8080) |
 
-### Installation
+---
+
+## 📦 Installation
+
+### 1. Clone the repository
 
 ```bash
-# Clone and navigate
-cd mystudio
-
-# Install dependencies
-pnpm install
-
-# Copy environment variables
-cp .env.example .env.local
-# Edit .env.local with your API URL
+git clone https://github.com/your-username/StudyStudio.git
+cd StudyStudio
 ```
 
-### Development
+### 2. Install dependencies
 
 ```bash
-# Start development server
+cd mystudio
+pnpm install
+```
+
+### 3. Setup environment variables
+
+```bash
+# Copy environment template
+cp .env.example .env.local
+
+# Edit .env.local with your configuration
+NEXT_PUBLIC_API_URL=http://localhost:8080
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### 4. Start development
+
+```bash
 pnpm dev
 # → http://localhost:3000
+```
 
-# Build for production
+### 5. Build for production
+
+```bash
+# Build with API types regeneration
 pnpm build
-# → Builds with API types regeneration
 
 # Build skipping API types (faster)
 pnpm build:skip-api
+```
 
+### 6. Other commands
+
+```bash
 # Lint code
 pnpm lint
 
 # Format code
 pnpm format
-```
 
-### Docker Development
-
-```bash
-# Start backend stack first
-cd ../StudyStudio_backend
-docker compose up -d
-
-# Then run frontend
-cd ../mystudio
-pnpm dev
-```
-
-### Environment Variables
-
-```bash
-# .env.example — copy to .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8080
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Generate API types from Swagger
+pnpm api:types
 ```
 
 ---
 
 ## ✨ Features
 
-All features are implemented across frontend and backend. Below are the **frontend components** for each feature.
+### User Features
 
-| Feature | Components |
-|---------|-----------|
-| **FE-01: User & Access** | `login/`, `register/`, `settings/`, `announcements/` |
-| **FE-02: Group Collaboration** | `group/board/`, `group/discuss/`, `group/task/`, `group/setting/` |
-| **FE-03: Studio Management** | `master/StudioModal/`, `master/studio-detail/`, `master/MemberList/` |
-| **FE-04: Task Management** | `group/task/TaskForm.tsx`, `group/task/TaskDetailModal.tsx`, `group/calendar/` |
-| **FE-05: Document Management** | `group/documents/GroupDocumentsPage.tsx` |
-| **FE-06: AI Intelligence** | `home/AIHome.tsx`, `group/ai-qa/GroupAiQaPage.tsx`, `master/AIMaster.tsx` |
-| **FE-07: Payments** | `payment/PaymentPage.tsx`, `payment/PaymentHistoryPage.tsx`, `landing/LandingPlan.tsx` |
-| **FE-08: Admin Dashboard** | `admin/dashboard/`, `admin/users/`, `admin/groups/`, `admin/reports/` |
-| **FE-09: Analytics** | `home/AnalysisHome.tsx`, `group/analytic/`, `master/analytic/` |
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Dashboard** | `/vi/home`, `/en/home` | Overview with AI, Analysis, Announcements tabs |
+| **Studio Management** | `/vi/master`, `/en/master` | Create and manage workspaces |
+| **Group Board** | `/vi/group/[id]/board` | Kanban board with drag-and-drop |
+| **Group Discuss** | `/vi/group/[id]/discuss` | Real-time chat with @mentions |
+| **Group Calendar** | `/vi/group/[id]/calendar` | Calendar view with FullCalendar |
+| **Group Documents** | `/vi/group/[id]/documents` | Document management with B2 upload |
+| **Group AI** | `/vi/group/[id]/ai-qa` | AI-powered Q&A for group |
+| **Group Analytics** | `/vi/group/[id]/analytic` | Group-level analytics charts |
+| **Payment** | `/vi/payment` | Subscription and billing |
 
-### Key UI Screenshots
+### Admin Features
 
-> 📸 Add screenshots here: place `.png` or `.gif` files in the `public/screenshots/` folder
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Admin Dashboard** | `/vi/admin/dashboard` | System overview |
+| **User Management** | `/vi/admin/users` | User CRUD operations |
+| **Group Management** | `/vi/admin/groups` | Group CRUD operations |
+| **Studio Management** | `/vi/admin/studios` | Studio CRUD operations |
+| **Subscriptions** | `/vi/admin/subscriptions` | Subscription plans management |
+| **Revenue** | `/vi/admin/revenue` | Revenue analytics |
+| **Reports** | `/vi/admin/reports` | System reports |
+| **News** | `/vi/admin/news` | Announcement management |
+| **Templates** | `/vi/admin/templates` | Group templates |
+
+### Authentication
+
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Login** | `/vi/login`, `/en/login` | Email + Google OAuth |
+| **Register** | `/vi/register`, `/en/register` | Account creation |
+| **Forgot Password** | `/vi/forgot-password` | Password reset request |
+| **Reset Password** | `/vi/reset-password` | Password reset form |
+| **Verify Email** | `/vi/verify-email` | Email verification |
+| **User Settings** | `/vi/settings` | Profile, security, billing |
 
 ---
 
@@ -330,13 +432,21 @@ while (true) {
 
 ### AI Pages
 
-| Level | File | Access |
-|-------|------|--------|
-| Personal AI | `src/components/features/home/AIHome.tsx` | Any logged-in user |
-| Group AI | `src/components/features/group/ai-qa/GroupAiQaPage.tsx` | Group members |
-| Master AI | `src/components/features/master/studio-detail/AIMaster.tsx` | Studio Owner only |
+| Level | Route | Access |
+|-------|-------|--------|
+| Personal AI | `/vi/home/ai` | Any logged-in user |
+| Group AI | `/vi/group/[id]/ai-qa` | Group members |
+| Master AI | `/vi/master/[id]` | Studio Owner only |
 
-> 📖 Backend AI docs: [StudyStudio_backend/StudioStudio_Server/Docs/AI/](StudyStudio_backend/StudioStudio_Server/Docs/AI/)
+### Frontend Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `AIHome` | `components/features/home/` | Personal AI chat interface |
+| `GroupAiQaPage` | `components/features/group/ai-qa/` | Group AI chat |
+| `AIMaster` | `components/features/master/` | Master AI for studio |
+
+> 📖 Backend AI docs: [StudyStudio_backend/StudioStudio_Server/Docs/AI/](../StudyStudio_backend/StudioStudio_Server/Docs/AI/)
 
 ---
 
@@ -551,15 +661,32 @@ lsof -ti:3000 | xargs kill
 
 ## 👥 Team — SEP490-G62
 
-| Name | Role |
-|------|------|
-| Vũ Xuân Bắc | Technical Leader |
-| Lê Tuấn Dũng | BA / Test Leader |
-| Lê Đức Mạnh | PM / Developer |
-| Dương Tiến Đạt | Design / Developer |
-| Nguyễn Quang Minh | Developer |
+| Name | Student ID | Role |
+|------|-----------|------|
+| Vũ Xuân Bắc | HE182325 | Technical Leader |
+| Lê Tuấn Dũng | HE180884 | BA / Test Leader |
+| Lê Đức Mạnh | HE180916 | PM / Developer |
+| Dương Tiến Đạt | HE180717 | Design / Developer |
+| Nguyễn Quang Minh | HE180190 | Developer |
 
 **Supervisor:** Nguyễn Thị Hạnh
+
+---
+
+## 📋 Changelog
+
+| Version | Date | Description |
+|---------|------|-------------|
+| **v1.0** | 2026-02-08 | Init Project + CI/CD + Exception Handling + i18n |
+| **v1.1** | 2026-02-11 | Authentication — JWT, Google OAuth, email verification |
+| **v1.2** | 2026-02-23 | Group Collaboration — CRUD, RBAC, member management |
+| **v2.0** | 2026-03 | Task & Document — Kanban, calendar, B2 upload, Qdrant |
+| **v2.1** | 2026-03 | Studio Management — batch assign, random assign |
+| **v2.2** | 2026-03 | SignalR Real-time — chat, @mention |
+| **v3.0** | 2026-03 | AI Integration — Gemini, ReAct Agent, 3-tier AI |
+| **v3.1** | 2026-03-26 | Notifications — email, push, announcements |
+| **v3.2** | 2026-03-31 | Analytics Dashboard — KPI, trends, heatmaps |
+| **v4.0** | 2026-04-07 | Admin & Polish — archive, restore, Redis, CI/CD |
 
 ---
 

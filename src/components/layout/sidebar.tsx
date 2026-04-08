@@ -46,7 +46,7 @@ export function DashboardSidebar() {
         { name: t("home"), href: "/home", icon: LayoutDashboard },
         { name: t("groups"), href: "/group", icon: Users },
         { name: t("master"), href: "/master", icon: BarChart3 },
-        { name: t("announcements"), href: "/announcements", icon: Bell }
+        { name: t("announcements"), href: "/home/announcements", icon: Bell }
     ];
 
     const adminNavigation = [
@@ -87,10 +87,10 @@ export function DashboardSidebar() {
     const currentPath = stripLocale(pathname || "");
 
     const activeGroups: Record<string, string[]> = {
-        "/home": ["/home", "/ai", "/analysis"],
+        "/home": ["/home", "/home/ai", "/home/analysis"],
         "/group": ["/group"],
         "/master": ["/master"],
-        "/announcements": ["/announcements"],
+        "/home/announcements": ["/home/announcements"],
         "/admin/dashboard": ["/admin/dashboard"],
         "/admin/users": ["/admin/users"],
         "/admin/groups": ["/admin/groups"],

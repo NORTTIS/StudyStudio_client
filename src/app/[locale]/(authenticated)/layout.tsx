@@ -1,51 +1,46 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { isAuthenticated } from "@/api/auth";
 import { LoadingPage } from "@/components/common";
+import { getUserProfile } from "@/api/user-profile";
 
 const { getRefreshToken, refreshAccessToken } = await import("@/api/auth");
 
-export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
+export default function AuthenticatedLayout({ children }: { children: ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const locale = useLocale();
-    const [isChecking, setIsChecking] = useState(true);
+    const [phase, setPhase] = useState<"loading" | "profile-check" | "ready">("loading");
 
     useEffect(() => {
-        // Check authentication on mount
-        const checkAuth = async () => {
+        const init = async () => {
+            // Phase 1: JWT auth check
             if (!isAuthenticated()) {
-                // Try to refresh token if we have a refresh token
-
-                if (getRefreshToken()) {
-                    // Attempt to refresh the access token
-                    const newTokens = await refreshAccessToken(locale);
-
-                    if (newTokens) {
-                        // Token refreshed successfully, user is authenticated
-                        setIsChecking(false);
-                        return;
-                    }
+                const refreshed = getRefreshToken() ? await refreshAccessToken(locale) : false;
+                if (!refreshed) {
+                    router.replace(`/${locale}/login?redirect=${encodeURIComponent(pathname)}`);
+                    return;
                 }
-
-                // No valid tokens, redirect to login
-                const redirectUrl = encodeURIComponent(pathname);
-                router.replace(`/${locale}/login?redirect=${redirectUrl}`);
-            } else {
-                setIsChecking(false);
             }
+            setPhase("profile-check");
+
+            // Phase 2: Admin redirect
+            const result = await getUserProfile(locale);
+            if (result.status === "success" && result.data?.isAdmin) {
+                router.replace(`/${locale}/admin/dashboard`);
+                return;
+            }
+
+            setPhase("ready");
         };
+        init();
+    }, [router, locale, pathname]);
 
-        checkAuth();
-    }, [router, pathname, locale]);
-
-    // Show loading state while checking authentication
-    if (isChecking) {
-        return <LoadingPage />;
-    }
+    if (phase !== "ready") return <LoadingPage />;
 
     return <>{children}</>;
 }

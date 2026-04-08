@@ -13,7 +13,7 @@ import {
 } from "@ant-design/icons";
 import { Badge, Button, ConfigProvider, Modal, message, Skeleton, Spin, Table, Tag, Typography } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cancelPayment, createPayment, getPaymentHistory, type PaymentHistory, retryPayment } from "@/api/payment";
 import { getSubscriptionPlans, type SubscriptionPlan } from "@/api/subscription-plans";
 import { getUserProfile } from "@/api/user-profile";
@@ -27,17 +27,16 @@ const MUTED = "#6F6B99";
 const BORDER = "#E5E5E5";
 const BG = "#F8F8F8";
 
-const formatPrice = (vnd: number) => (vnd === 0 ? "Miễn phí" : `${vnd.toLocaleString("vi-VN")}₫`);
-
 /* ══════════════════════════════════════════════════════════════
    STATUS TAG
 ══════════════════════════════════════════════════════════════ */
 function StatusTag({ status }: { status: number }) {
+    const t = useTranslations("BillingPage");
     const map: Record<number, { color: string; label: string; icon: React.ReactNode }> = {
-        0: { color: "warning", label: "Chờ xử lý", icon: <ClockCircleOutlined /> },
-        1: { color: "success", label: "Đã thanh toán", icon: <CheckCircleFilled /> },
-        2: { color: "default", label: "Đã hủy", icon: <ExclamationCircleFilled /> },
-        3: { color: "error", label: "Thất bại", icon: <ExclamationCircleFilled /> }
+        0: { color: "warning", label: t("status.pending"), icon: <ClockCircleOutlined /> },
+        1: { color: "success", label: t("status.paid"), icon: <CheckCircleFilled /> },
+        2: { color: "default", label: t("status.cancelled"), icon: <ExclamationCircleFilled /> },
+        3: { color: "error", label: t("status.failed"), icon: <ExclamationCircleFilled /> }
     };
     const info = map[status] ?? { color: "default", label: String(status), icon: null };
     return (
@@ -63,6 +62,7 @@ function PlanCard({
     isProcessing: boolean;
     onSelect: () => void;
 }) {
+    const t = useTranslations("BillingPage");
     const isPremium = plan.isFeatured;
 
     return (
@@ -135,7 +135,7 @@ function PlanCard({
                                     borderRadius: 20,
                                     letterSpacing: "0.04em"
                                 }}>
-                                ĐANG DÙNG
+                                {t("planCard.inUseBadge")}
                             </span>
                         )}
                         {isPremium && !isCurrent && (
@@ -148,7 +148,7 @@ function PlanCard({
                                     padding: "3px 12px",
                                     borderRadius: 20
                                 }}>
-                                PHỔ BIẾN
+                                {t("planCard.popularBadge")}
                             </span>
                         )}
                     </div>
@@ -162,7 +162,7 @@ function PlanCard({
                         </Text>
                         {plan.price > 0 && (
                             <Text style={{ fontSize: 13, color: isPremium ? "rgba(255,255,255,0.5)" : MUTED }}>
-                                ₫ /tháng
+                                {t("planCard.perMonth")}
                             </Text>
                         )}
                     </div>
@@ -221,12 +221,12 @@ function PlanCard({
                                 : {})
                         }}>
                         {isCurrent
-                            ? "Đang sử dụng"
+                                                        ? t("planCard.actions.current")
                             : isDisabled
-                              ? "Không khả dụng"
+                                                            ? t("planCard.actions.unavailable")
                               : isPremium
-                                ? "Nâng cấp ngay"
-                                : "Chọn gói này"}
+                                                                ? t("planCard.actions.upgradeNow")
+                                                                : t("planCard.actions.selectPlan")}
                     </Button>
                 </div>
             </div>
@@ -238,9 +238,11 @@ function PlanCard({
    MAIN PAGE
 ══════════════════════════════════════════════════════════════ */
 export default function BillingPage() {
-    const _t = useTranslations("BillingPage");
+    const t = useTranslations("BillingPage");
     const locale = useLocale();
     const [messageApi, contextHolder] = message.useMessage();
+    const messageApiRef = useRef(messageApi);
+    messageApiRef.current = messageApi;
 
     const [currentPlan, setCurrentPlan] = useState("free");
     const [isProcessing, setIsProcessing] = useState(false);
@@ -252,6 +254,12 @@ export default function BillingPage() {
     const [pendingPayments, setPendingPayments] = useState<PaymentHistory[]>([]);
     const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const [paymentToCancel, setPaymentToCancel] = useState<string | null>(null);
+
+    const formatPrice = (vnd: number) => {
+        if (vnd === 0) return t("price.free");
+        const localeCode = locale === "vi" ? "vi-VN" : "en-US";
+        return `${vnd.toLocaleString(localeCode)}₫`;
+    };
 
     // Check for success query param
     const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
@@ -311,7 +319,7 @@ export default function BillingPage() {
                         // If it became premium or success payment found, stop retrying
                         if (isPremium || histories.some((p: PaymentHistory) => p.status === 1)) {
                             if (isReturningFromSuccess) {
-                                messageApi.success("Đã đồng bộ thông tin thanh toán!");
+                                messageApiRef.current?.success(t("messages.paymentSynced"));
                             }
                             break;
                         }
@@ -325,10 +333,6 @@ export default function BillingPage() {
 
                 const pending = histories.filter((p: PaymentHistory) => p.status === 0);
                 setPendingPayments(pending);
-
-                if (pending.length > 0 && !isPremium) {
-                    messageApi.warning(`Bạn có ${pending.length} thanh toán đang chờ xử lý.`);
-                }
             } catch (err) {
                 console.error("Load billing data failed:", err);
                 setCurrentPlan("free");
@@ -340,7 +344,7 @@ export default function BillingPage() {
             }
         };
         loadData();
-    }, [locale, messageApi, isReturningFromSuccess]);
+    }, [locale, isReturningFromSuccess]);
 
     const subscriptionPlans = availablePlans.map((plan) => ({
         id: plan.billingCycle === 0 ? "free" : "premium",
@@ -348,11 +352,11 @@ export default function BillingPage() {
         price: plan.price,
         isFeatured: plan.billingCycle > 0,
         features: [
-            `Tối đa ${plan.maxStudios} Không gian quản lý`,
-            `Tối đa ${plan.maxGroups} Không gian nhóm`,
-            `Tối đa ${plan.maxMembersPerGroup} thành viên/nhóm`,
-            `${plan.maxStorageMb} MB lưu trữ/nhóm`,
-            `${plan.maxAiRequestsPerDay} lượt AI mỗi ngày`
+            t("features.maxStudios", { count: plan.maxStudios }),
+            t("features.maxGroups", { count: plan.maxGroups }),
+            t("features.maxMembersPerGroup", { count: plan.maxMembersPerGroup }),
+            t("features.maxStorageMb", { count: plan.maxStorageMb }),
+            t("features.maxAiRequestsPerDay", { count: plan.maxAiRequestsPerDay })
         ]
     }));
 
@@ -363,9 +367,9 @@ export default function BillingPage() {
             id: payment.paymentId,
             invoice: `PAY-${payment.paymentId.slice(0, 8).toUpperCase()}`,
             date: payment.paidAt
-                ? new Date(payment.paidAt).toLocaleDateString("vi-VN")
-                : new Date().toLocaleDateString("vi-VN"),
-            description: plan?.planName ?? "Premium Plan",
+                ? new Date(payment.paidAt).toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US")
+                : new Date().toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US"),
+            description: plan?.planName ?? t("history.defaultPlanName"),
             amount: plan?.price ?? 299000,
             status: payment.status
         };
@@ -381,7 +385,7 @@ export default function BillingPage() {
         try {
             const result = await cancelPayment(paymentToCancel, locale);
             if (result.status === "success") {
-                messageApi.success("Đã hủy thanh toán thành công");
+                messageApi.success(t("messages.cancelSuccess"));
                 setIsLoadingHistory(true);
                 const h = await getPaymentHistory(locale);
                 if (h.status === "success" && h.data) {
@@ -390,10 +394,10 @@ export default function BillingPage() {
                 }
                 setIsLoadingHistory(false);
             } else {
-                messageApi.error(result.message || "Không thể hủy thanh toán");
+                messageApi.error(result.message || t("messages.cancelFailed"));
             }
         } catch {
-            messageApi.error("Có lỗi xảy ra khi hủy thanh toán");
+            messageApi.error(t("messages.cancelError"));
             setIsLoadingHistory(false);
         } finally {
             setCancelModalOpen(false);
@@ -408,10 +412,10 @@ export default function BillingPage() {
             if (result.status === "success" && result.data) {
                 window.location.href = result.data.paymentUrl;
             } else {
-                messageApi.error(result.message || "Không thể lấy lại link thanh toán");
+                messageApi.error(result.message || t("messages.retryPaymentLinkFailed"));
             }
         } catch {
-            messageApi.error("Có lỗi xảy ra. Vui lòng thử lại!");
+            messageApi.error(t("messages.genericError"));
         } finally {
             setIsProcessing(false);
         }
@@ -421,13 +425,13 @@ export default function BillingPage() {
         if (planId === "free") {
             messageApi.warning(
                 currentPlan === "premium"
-                    ? "Không thể chuyển từ Premium về Free. Vui lòng liên hệ hỗ trợ."
-                    : "Bạn đã đang sử dụng gói Free"
+                    ? t("messages.cannotDowngradePremium")
+                    : t("messages.alreadyOnFree")
             );
             return;
         }
         if (planId === "premium" && currentPlan === "premium") {
-            messageApi.info("Bạn đã đang sử dụng gói Premium");
+            messageApi.info(t("messages.alreadyOnPremium"));
             return;
         }
 
@@ -436,17 +440,17 @@ export default function BillingPage() {
         try {
             const premiumPlan = availablePlans.find((p) => p.billingCycle > 0);
             if (!premiumPlan) {
-                messageApi.error("Không tìm thấy gói Premium");
+                messageApi.error(t("messages.premiumPlanNotFound"));
                 return;
             }
             const result = await createPayment(premiumPlan.planId, locale);
             if (result.status === "success" && result.data) {
                 window.location.href = result.data.paymentUrl;
             } else {
-                messageApi.error(result.message || "Không thể tạo thanh toán");
+                messageApi.error(result.message || t("messages.createPaymentFailed"));
             }
         } catch {
-            messageApi.error("Có lỗi xảy ra. Vui lòng thử lại!");
+            messageApi.error(t("messages.genericError"));
         } finally {
             setIsProcessing(false);
             setSelectedPlan(null);
@@ -456,7 +460,7 @@ export default function BillingPage() {
     /* Table columns */
     const columns = [
         {
-            title: "Mã giao dịch",
+            title: t("table.transactionCode"),
             dataIndex: "invoice",
             key: "invoice",
             render: (v: string) => (
@@ -466,25 +470,25 @@ export default function BillingPage() {
             )
         },
         {
-            title: "Ngày",
+            title: t("table.date"),
             dataIndex: "date",
             key: "date",
             render: (v: string) => <Text style={{ color: MUTED, fontSize: 13 }}>{v}</Text>
         },
         {
-            title: "Gói",
+            title: t("table.plan"),
             dataIndex: "description",
             key: "description",
             render: (v: string) => <Text style={{ fontSize: 13 }}>{v}</Text>
         },
         {
-            title: "Trạng thái",
+            title: t("table.status"),
             dataIndex: "status",
             key: "status",
             render: (status: number) => <StatusTag status={status} />
         },
         {
-            title: "Số tiền",
+            title: t("table.amount"),
             dataIndex: "amount",
             key: "amount",
             align: "right" as const,
@@ -511,29 +515,6 @@ export default function BillingPage() {
             {contextHolder}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 28, paddingBottom: 60 }}>
-                {/* ══ PENDING BANNER ══ */}
-                {pendingPayments.length > 0 && (
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 14,
-                            padding: "16px 20px",
-                            borderRadius: 14,
-                            background: "#FFFBE6",
-                            border: "1.5px solid #FFE58F"
-                        }}>
-                        <WarningFilled style={{ color: "#FAAD14", fontSize: 20, flexShrink: 0, marginTop: 2 }} />
-                        <div>
-                            <Text strong style={{ color: "#7C5B00", display: "block", fontSize: 14 }}>
-                                Bạn có {pendingPayments.length} thanh toán chờ xử lý
-                            </Text>
-                            <Text style={{ color: "#A07800", fontSize: 13 }}>
-                                Bạn có thể thử lại hoặc hủy trong lịch sử bên dưới.
-                            </Text>
-                        </div>
-                    </div>
-                )}
 
                 {/* ══ ACTIVE PLAN HERO ══ */}
                 {isLoadingPlan ? (
@@ -575,7 +556,9 @@ export default function BillingPage() {
 
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                                    <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>Gói hiện tại</Text>
+                                    <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
+                                        {t("currentPlan.heroLabel")}
+                                    </Text>
                                     <span
                                         style={{
                                             background: PRIMARY,
@@ -586,7 +569,7 @@ export default function BillingPage() {
                                             borderRadius: 20,
                                             letterSpacing: "0.05em"
                                         }}>
-                                        ACTIVE
+                                        {t("currentPlan.activeBadge")}
                                     </span>
                                 </div>
                                 <Title level={3} style={{ color: "#fff", margin: "0 0 4px" }}>
@@ -594,8 +577,8 @@ export default function BillingPage() {
                                 </Title>
                                 <Text style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>
                                     {activePlan.price === 0
-                                        ? "Hoàn toàn miễn phí"
-                                        : `${formatPrice(activePlan.price)} / tháng`}
+                                        ? t("currentPlan.freeDescription")
+                                        : t("currentPlan.paidDescription", { price: formatPrice(activePlan.price) })}
                                 </Text>
                             </div>
 
@@ -615,7 +598,7 @@ export default function BillingPage() {
                                         flexShrink: 0,
                                         boxShadow: "0 4px 16px rgba(255,95,61,0.4)"
                                     }}>
-                                    Nâng cấp Premium
+                                    {t("currentPlan.changeButton")}
                                 </Button>
                             )}
                         </div>
@@ -627,9 +610,9 @@ export default function BillingPage() {
                     <div>
                         <div style={{ marginBottom: 16 }}>
                             <Title level={5} style={{ margin: 0, color: DARK }}>
-                                Các gói dịch vụ
+                                {t("plansTitle")}
                             </Title>
-                            <Text style={{ color: MUTED, fontSize: 13 }}>Chọn gói phù hợp với nhu cầu của bạn</Text>
+                            <Text style={{ color: MUTED, fontSize: 13 }}>{t("plansSubtitle")}</Text>
                         </div>
                         <div style={{ display: "flex", gap: 20 }}>
                             {subscriptionPlans.map((plan) => (
@@ -651,7 +634,7 @@ export default function BillingPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                         <HistoryOutlined style={{ color: PRIMARY, fontSize: 18 }} />
                         <Title level={5} style={{ margin: 0, color: DARK }}>
-                            Lịch sử thanh toán
+                            {t("historyTitle")}
                         </Title>
                         <Badge count={billingHistory.length} style={{ background: PRIMARY }} />
                     </div>
@@ -668,7 +651,7 @@ export default function BillingPage() {
                             <div style={{ padding: 40, textAlign: "center" }}>
                                 <Spin size="large" />
                                 <Text style={{ display: "block", color: MUTED, marginTop: 12, fontSize: 13 }}>
-                                    Đang tải lịch sử...
+                                    {t("history.loading")}
                                 </Text>
                             </div>
                         ) : (
@@ -687,7 +670,7 @@ export default function BillingPage() {
                                                     marginBottom: 8
                                                 }}
                                             />
-                                            <Text style={{ color: MUTED }}>Chưa có lịch sử thanh toán</Text>
+                                            <Text style={{ color: MUTED }}>{t("history.empty")}</Text>
                                         </div>
                                     )
                                 }}
@@ -725,10 +708,10 @@ export default function BillingPage() {
                         <ExclamationCircleFilled style={{ fontSize: 28, color: "#ff4d4f" }} />
                     </div>
                     <Title level={4} style={{ color: DARK, marginBottom: 8 }}>
-                        Xác nhận hủy thanh toán
+                        {t("cancelModal.title")}
                     </Title>
                     <Text style={{ color: MUTED, fontSize: 13 }}>
-                        Bạn có chắc chắn muốn hủy thanh toán này? Hành động này không thể hoàn tác.
+                        {t("cancelModal.description")}
                     </Text>
                 </div>
                 <div style={{ display: "flex", gap: 12 }}>
@@ -740,7 +723,7 @@ export default function BillingPage() {
                             setCancelModalOpen(false);
                             setPaymentToCancel(null);
                         }}>
-                        Không, giữ lại
+                        {t("cancelModal.keep")}
                     </Button>
                     <Button
                         block
@@ -749,7 +732,7 @@ export default function BillingPage() {
                         size="large"
                         style={{ borderRadius: 10 }}
                         onClick={handleConfirmCancel}>
-                        Có, hủy thanh toán
+                        {t("cancelModal.confirm")}
                     </Button>
                 </div>
             </Modal>

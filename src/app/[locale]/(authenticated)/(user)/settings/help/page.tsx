@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useLocale, useMessages, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type { components } from "@/api/types";
-import { sendReport } from "@/app/[locale]/(authenticated)/settings/user";
+import { sendReport } from "@/app/[locale]/(authenticated)/(user)/settings/user";
 
 const { TextArea } = Input;
 const { Text, Title } = Typography;

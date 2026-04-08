@@ -13,7 +13,7 @@ import { Button, ConfigProvider, Input, message, Progress, Typography } from "an
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { changePassword } from "@/app/[locale]/(authenticated)/settings/user";
+import { changePassword } from "@/app/[locale]/(authenticated)/(user)/settings/user";
 
 const { Text, Title } = Typography;
 

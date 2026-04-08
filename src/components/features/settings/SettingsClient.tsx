@@ -36,8 +36,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import type { components } from "@/api/types";
-import type { UpdateProfileRequest } from "@/app/[locale]/(authenticated)/settings/user";
-import { deleteUserProfile, updateUserProfile } from "@/app/[locale]/(authenticated)/settings/user";
+import type { UpdateProfileRequest } from "@/app/[locale]/(authenticated)/(user)/settings/user";
+import { deleteUserProfile, updateUserProfile } from "@/app/[locale]/(authenticated)/(user)/settings/user";
 import { useToast } from "@/components/ui/use-toast";
 
 const { Title, Text } = Typography;

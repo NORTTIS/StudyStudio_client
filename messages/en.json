@@ -715,7 +715,10 @@
         "currentPlan": {
             "title": "Current Subscription Plan",
             "subtitle": "You are currently using the",
-            "changeButton": "Change Plan",
+            "heroLabel": "Current plan",
+            "freeDescription": "Completely free",
+            "paidDescription": "{price} / month",
+            "changeButton": "Upgrade Premium",
             "cancelButton": "Cancel Subscription",
             "activeBadge": "Active"
         },
@@ -748,12 +751,18 @@
             "twoMonthsAgo": "2 months ago",
             "threeMonthsAgo": "3 months ago",
             "annual": "Annual plan",
-            "subscription": "Monthly subscription"
+            "subscription": "Monthly subscription",
+            "defaultPlanName": "Premium Plan",
+            "loading": "Loading history...",
+            "empty": "No billing history yet"
         },
         "table": {
             "invoice": "Invoice",
+            "transactionCode": "Transaction code",
             "date": "Date",
             "description": "Description",
+            "plan": "Plan",
+            "status": "Status",
             "amount": "Amount"
         },
         "invoiceInfo": {
@@ -765,6 +774,52 @@
             "saveSuccess": "Invoice information saved successfully!",
             "editButton": "Edit Invoice Information",
             "updateButton": "Update Invoice Information"
+        },
+        "status": {
+            "pending": "Pending",
+            "paid": "Paid",
+            "cancelled": "Cancelled",
+            "failed": "Failed"
+        },
+        "planCard": {
+            "inUseBadge": "IN USE",
+            "popularBadge": "POPULAR",
+            "perMonth": "₫ /month",
+            "actions": {
+                "current": "In use",
+                "unavailable": "Unavailable",
+                "upgradeNow": "Upgrade now",
+                "selectPlan": "Select this plan"
+            }
+        },
+        "price": {
+            "free": "Free"
+        },
+        "features": {
+            "maxStudios": "Up to {count} management studios",
+            "maxGroups": "Up to {count} group studios",
+            "maxMembersPerGroup": "Up to {count} members/group",
+            "maxStorageMb": "{count} MB storage/group",
+            "maxAiRequestsPerDay": "{count} AI requests per day"
+        },
+        "messages": {
+            "paymentSynced": "Payment information has been synced!",
+            "cancelSuccess": "Payment canceled successfully",
+            "cancelFailed": "Unable to cancel payment",
+            "cancelError": "An error occurred while canceling payment",
+            "retryPaymentLinkFailed": "Unable to retrieve payment link",
+            "genericError": "Something went wrong. Please try again!",
+            "cannotDowngradePremium": "Cannot downgrade from Premium to Free. Please contact support.",
+            "alreadyOnFree": "You are already on the Free plan",
+            "alreadyOnPremium": "You are already on the Premium plan",
+            "premiumPlanNotFound": "Premium plan not found",
+            "createPaymentFailed": "Unable to create payment"
+        },
+        "cancelModal": {
+            "title": "Confirm payment cancellation",
+            "description": "Are you sure you want to cancel this payment? This action cannot be undone.",
+            "keep": "No, keep it",
+            "confirm": "Yes, cancel payment"
         }
     },
     "HelpPage": {

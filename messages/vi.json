@@ -712,13 +712,6 @@
     "BillingPage": {
         "plansTitle": "Gói đăng ký",
         "plansSubtitle": "Chọn gói phù hợp với nhu cầu của bạn",
-        "currentPlan": {
-            "title": "Gói đăng ký hiện tại",
-            "subtitle": "Bạn hiện đang sử dụng gói",
-            "changeButton": "Nâng cấp Premium",
-            "cancelButton": "Hủy gói đăng ký",
-            "activeBadge": "Đang hoạt động"
-        },
         "plans": {
             "period": "/tháng",
             "current": "Gói hiện tại",
@@ -742,20 +735,6 @@
             }
         },
         "historyTitle": "Lịch sử thanh toán",
-        "history": {
-            "today": "Hôm nay",
-            "lastMonth": "Tháng trước",
-            "twoMonthsAgo": "2 tháng trước",
-            "threeMonthsAgo": "3 tháng trước",
-            "annual": "Gói năm",
-            "subscription": "Đăng ký hàng tháng"
-        },
-        "table": {
-            "invoice": "Số hóa đơn",
-            "date": "Ngày",
-            "description": "Mô tả",
-            "amount": "Số tiền"
-        },
         "invoiceInfo": {
             "title": "Thông tin hóa đơn",
             "subtitle": "Cập nhật thông tin thanh toán và hóa đơn của bạn",
@@ -765,6 +744,82 @@
             "saveSuccess": "Thông tin hóa đơn đã được lưu thành công!",
             "editButton": "Chỉnh sửa thông tin hóa đơn",
             "updateButton": "Cập nhật thông tin hóa đơn"
+        },
+        "status": {
+            "pending": "Chờ xử lý",
+            "paid": "Đã thanh toán",
+            "cancelled": "Đã hủy",
+            "failed": "Thất bại"
+        },
+        "planCard": {
+            "inUseBadge": "ĐANG DÙNG",
+            "popularBadge": "PHỔ BIẾN",
+            "perMonth": "₫ /tháng",
+            "actions": {
+                "current": "Đang sử dụng",
+                "unavailable": "Không khả dụng",
+                "upgradeNow": "Nâng cấp ngay",
+                "selectPlan": "Chọn gói này"
+            }
+        },
+        "price": {
+            "free": "Miễn phí"
+        },
+        "features": {
+            "maxStudios": "Tối đa {count} Không gian quản lý",
+            "maxGroups": "Tối đa {count} Không gian nhóm",
+            "maxMembersPerGroup": "Tối đa {count} thành viên/nhóm",
+            "maxStorageMb": "{count} MB lưu trữ/nhóm",
+            "maxAiRequestsPerDay": "{count} lượt AI mỗi ngày"
+        },
+        "messages": {
+            "paymentSynced": "Đã đồng bộ thông tin thanh toán!",
+            "cancelSuccess": "Đã hủy thanh toán thành công",
+            "cancelFailed": "Không thể hủy thanh toán",
+            "cancelError": "Có lỗi xảy ra khi hủy thanh toán",
+            "retryPaymentLinkFailed": "Không thể lấy lại link thanh toán",
+            "genericError": "Có lỗi xảy ra. Vui lòng thử lại!",
+            "cannotDowngradePremium": "Không thể chuyển từ Premium về Free. Vui lòng liên hệ hỗ trợ.",
+            "alreadyOnFree": "Bạn đã đang sử dụng gói Free",
+            "alreadyOnPremium": "Bạn đã đang sử dụng gói Premium",
+            "premiumPlanNotFound": "Không tìm thấy gói Premium",
+            "createPaymentFailed": "Không thể tạo thanh toán"
+        },
+        "cancelModal": {
+            "title": "Xác nhận hủy thanh toán",
+            "description": "Bạn có chắc chắn muốn hủy thanh toán này? Hành động này không thể hoàn tác.",
+            "keep": "Không, giữ lại",
+            "confirm": "Có, hủy thanh toán"
+        },
+        "table": {
+            "invoice": "Số hóa đơn",
+            "transactionCode": "Mã giao dịch",
+            "date": "Ngày",
+            "description": "Mô tả",
+            "plan": "Gói",
+            "status": "Trạng thái",
+            "amount": "Số tiền"
+        },
+        "currentPlan": {
+            "title": "Gói đăng ký hiện tại",
+            "subtitle": "Bạn hiện đang sử dụng gói",
+            "heroLabel": "Gói hiện tại",
+            "freeDescription": "Hoàn toàn miễn phí",
+            "paidDescription": "{price} / tháng",
+            "changeButton": "Nâng cấp Premium",
+            "cancelButton": "Hủy gói đăng ký",
+            "activeBadge": "Đang hoạt động"
+        },
+        "history": {
+            "today": "Hôm nay",
+            "lastMonth": "Tháng trước",
+            "twoMonthsAgo": "2 tháng trước",
+            "threeMonthsAgo": "3 tháng trước",
+            "annual": "Gói năm",
+            "subscription": "Đăng ký hàng tháng",
+            "defaultPlanName": "Gói Premium",
+            "loading": "Đang tải lịch sử...",
+            "empty": "Chưa có lịch sử thanh toán"
         }
     },
     "HelpPage": {

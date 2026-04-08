@@ -3,9 +3,9 @@
  * Handles user profile operations, password changes, and report submissions
  */
 
-import { apiFetch } from "../../../../api/api-client";
-import { getAccessToken, isTokenExpired, refreshAccessToken } from "../../../../api/auth";
-import type { components } from "../../../../api/types";
+import { apiFetch } from "../../../../../api/api-client";
+import { getAccessToken, isTokenExpired, refreshAccessToken } from "../../../../../api/auth";
+import type { components } from "../../../../../api/types";
 
 // ===== Type Definitions =====
 
