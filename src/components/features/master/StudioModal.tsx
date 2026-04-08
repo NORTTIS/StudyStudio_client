@@ -119,9 +119,18 @@ interface StudioModalProps {
     studio?: StudioUI | null;
     mode: "create" | "edit";
     existingStudios?: StudioUI[];
+    isSubmitting?: boolean;
 }
 
-export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingStudios = [] }: StudioModalProps) {
+export function StudioModal({
+    isOpen,
+    onClose,
+    onSubmit,
+    studio,
+    mode,
+    existingStudios = [],
+    isSubmitting = false
+}: StudioModalProps) {
     const t = useTranslations("MasterPage");
     const aliasLabel = t.has("modal.aliasLabel") ? t("modal.aliasLabel") : t("detail.settings.aliasLabel");
     const [formData, setFormData] = useState<StudioFormData>({
@@ -256,6 +265,7 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return;
 
         const currentData = { ...formData };
         const schemaErrors = getSchemaErrors(currentData, mode);
@@ -670,7 +680,9 @@ export function StudioModal({ isOpen, onClose, onSubmit, studio, mode, existingS
                             {t("modal.cancel")}
                         </Button>
                         <Button type="submit" className="bg-[#FF5F3D] hover:bg-[#ff4620]">
-                            {mode === "create" ? t("modal.create") : t("modal.save")}
+                            {isSubmitting
+                                ? (mode === "create" ? `${t("modal.create")}...` : `${t("modal.save")}...`)
+                                : (mode === "create" ? t("modal.create") : t("modal.save"))}
                         </Button>
                     </div>
                 </form>

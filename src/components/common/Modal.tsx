@@ -105,7 +105,7 @@ export function Modal({
 
     return createPortal((
         <div
-            className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4"
+            className="fixed inset-0 z-[140] flex items-center justify-center overflow-y-auto p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? "modal-title" : undefined}>

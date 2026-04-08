@@ -439,7 +439,7 @@ export default function GroupDocumentsPage() {
                         <Button
                             type="button"
                             disabled={isUploading}
-                            className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
+                            className="mt-3 rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
                             {t("browseFile")}
                         </Button>
                     </div>

@@ -677,6 +677,7 @@ export default function MasterPageClient({
     const [selectedStudio, setSelectedStudio] = useState<StudioUI | null>(null);
     const [leaveTargetStudio, setLeaveTargetStudio] = useState<StudioUI | null>(null);
     const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+    const [isStudioModalSubmitting, setIsStudioModalSubmitting] = useState(false);
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
         "all-owned": true,
         "all-joined": true,
@@ -689,6 +690,7 @@ export default function MasterPageClient({
     });
     const [updatingArchiveStudioId, setUpdatingArchiveStudioId] = useState<string | null>(null);
     const isLoadingRef = useRef(false);
+    const isStudioModalSubmittingRef = useRef(false);
     const hasPendingReloadRef = useRef(false);
     const userProfileRef = useRef<UserProfile | null>(initialUserProfile);
     const lastLoadStartedAtRef = useRef(0);
@@ -918,11 +920,14 @@ export default function MasterPageClient({
         endDate?: string | null;
         colorHex?: string | null;
     }) => {
+        if (isStudioModalSubmittingRef.current) return;
         if (totalStudios >= studioLimit) {
             setIsLimitModalOpen(true);
             return;
         }
 
+        isStudioModalSubmittingRef.current = true;
+        setIsStudioModalSubmitting(true);
         try {
             const studioData = {
                 name: data.name.trim(),
@@ -948,6 +953,9 @@ export default function MasterPageClient({
         } catch (error) {
             console.error("Create studio failed:", error);
             toast({ description: t("modal.createError"), variant: "destructive" });
+        } finally {
+            isStudioModalSubmittingRef.current = false;
+            setIsStudioModalSubmitting(false);
         }
     };
 
@@ -964,7 +972,10 @@ export default function MasterPageClient({
         alias?: string | null;
     }) => {
         if (!selectedStudio) return;
+        if (isStudioModalSubmittingRef.current) return;
 
+        isStudioModalSubmittingRef.current = true;
+        setIsStudioModalSubmitting(true);
         try {
             const result = await updateStudio(
                 selectedStudio.id,
@@ -996,6 +1007,9 @@ export default function MasterPageClient({
         } catch (error) {
             console.error("Update studio failed:", error);
             toast({ description: t("modal.editError"), variant: "destructive" });
+        } finally {
+            isStudioModalSubmittingRef.current = false;
+            setIsStudioModalSubmitting(false);
         }
     };
 
@@ -1038,12 +1052,16 @@ export default function MasterPageClient({
     };
 
     const handleOpenCreateModal = () => {
+        isStudioModalSubmittingRef.current = false;
+        setIsStudioModalSubmitting(false);
         setModalMode("create");
         setSelectedStudio(null);
         setIsCreateModalOpen(true);
     };
 
     const handleOpenEditModal = (studio: StudioUI) => {
+        isStudioModalSubmittingRef.current = false;
+        setIsStudioModalSubmitting(false);
         setModalMode("edit");
         setSelectedStudio(studio);
         setIsCreateModalOpen(true);
@@ -1440,6 +1458,7 @@ export default function MasterPageClient({
                 studio={selectedStudio}
                 mode={modalMode}
                 existingStudios={studios}
+                isSubmitting={isStudioModalSubmitting}
             />
 
             <DeleteConfirmModal
