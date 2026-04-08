@@ -204,6 +204,7 @@
         "confirmDeleteDescription": "Bạn có chắc muốn xóa bình luận này không?",
         "writeReply": "Viết phản hồi...",
         "writeComment": "Viết bình luận...",
+        "unknownMentionUser": "Người dùng không xác định",
         "noMembersToMention": "Không có thành viên để mention.",
         "errors": {
             "sendCommentFailed": "Gửi bình luận thất bại",
@@ -252,6 +253,7 @@
         "cards": {
             "totalTasks": {
                 "title": "Tổng công việc",
+                "badge": "{percent}% tuần trước",
                 "note": "Tổng số công việc hiện tại"
             },
             "completed": {
@@ -260,75 +262,114 @@
             },
             "inProgress": {
                 "title": "Đang thực hiện",
+                "badge": "Đang chờ",
                 "note": "Công việc đang thực hiện"
+            },
+            "overdue": {
+                "title": "Quá hạn",
+                "badge": "Cần chú ý"
             }
         },
         "sections": {
-            "statusDistribution": "1. Phân bố trạng thái công việc",
-            "progressOverTime": "2. Tiến độ công việc theo thời gian",
-            "workloadByGroup": "3. Khối lượng công việc theo nhóm",
-            "contributionActivity": "4. Hoạt động đóng góp {year}"
+            "taskDistribution": "Phân bố trạng thái task",
+            "taskDistributionSubtitle": "Cá nhân + các nhóm",
+            "topContributors": "Đóng góp theo nhóm",
+            "contributionRate": "Tỉ lệ đóng góp trong các nhóm",
+            "productivityTrend": "Xu hướng năng suất",
+            "priorityUrgency": "Độ ưu tiên & Khẩn cấp",
+            "benchmark": "Benchmark hiệu suất",
+            "benchmarkSubtitle": "So sánh vs tuần trước và TB nhóm"
+        },
+        "tabs": {
+            "priority": "Độ ưu tiên",
+            "urgency": "Độ khẩn cấp"
         },
         "trend": {
-            "week": "Tuần",
-            "month": "Tháng",
-            "year": "Năm"
+            "subtitle": "Năng suất trong {days} ngày qua",
+            "daysShort": "{days}ng"
         },
         "status": {
             "todo": "Cần làm",
             "inProgress": "Đang thực hiện",
             "done": "Hoàn thành",
-            "overdue": "Quá hạn"
+            "overdue": "Quá hạn",
+            "notStarted": "Chưa bắt đầu"
         },
-        "chart": {
-            "totalTasks": "Tổng công việc",
-            "taskStatus": "Trạng thái công việc",
-            "taskCompleted": "Công việc hoàn thành",
-            "workload": "Khối lượng",
-            "tasksUnit": "công việc"
+        "priority": {
+            "high": "Cao",
+            "medium": "Trung bình",
+            "low": "Thấp"
         },
-        "trendLabels": {
-            "weekdays": {
-                "mon": "T2",
-                "tue": "T3",
-                "wed": "T4",
-                "thu": "T5",
-                "fri": "T6",
-                "sat": "T7",
-                "sun": "CN"
-            },
-            "weeks": {
-                "week1": "Tuần 1",
-                "week2": "Tuần 2",
-                "week3": "Tuần 3",
-                "week4": "Tuần 4",
-                "week5": "Tuần 5"
-            },
-            "months": {
-                "m1": "T1",
-                "m2": "T2",
-                "m3": "T3",
-                "m4": "T4",
-                "m5": "T5",
-                "m6": "T6",
-                "m7": "T7",
-                "m8": "T8",
-                "m9": "T9",
-                "m10": "T10",
-                "m11": "T11",
-                "m12": "T12"
+        "urgency": {
+            "critical": "Khẩn cấp",
+            "high": "Cao",
+            "medium": "Trung bình",
+            "low": "Thấp"
+        },
+        "benchmark": {
+            "formulaTitle": "Công thức tính Benchmark",
+            "youScore": "Bạn — Điểm tuần này",
+            "completedTask": "Hoàn thành task",
+            "createTask": "Tạo task",
+            "createTaskPoints": "+3 điểm (flat)",
+            "updateTask": "Cập nhật task",
+            "updateTaskPoints": "+1 điểm (flat)",
+            "commentMessage": "Comment / Tin nhắn nhóm",
+            "commentMessagePoints": "+1 điểm (flat)",
+            "priorityFormula": "Priority: Low=1.0, Med=1.5, High=2.0",
+            "severityFormula": "Severity: Minor=1.0, Mod=1.2, Major=1.5, Critical=2.0",
+            "groupAvg": "TB nhóm — Trung bình cộng",
+            "groupAvgFormula": "Tổng điểm tất cả thành viên trong nhóm ÷ Số thành viên của nhóm",
+            "trendLabel": "Xu hướng — Trung bình 3 tuần",
+            "trendFormula": "Trung bình cộng điểm của bạn trong 3 tuần gần nhất (bao gồm tuần hiện tại)",
+            "weeksShort": "{weeks} tuần",
+            "you": "Bạn",
+            "groupAverage": "TB nhóm",
+            "trend": "Xu hướng"
+        },
+        "risk": {
+            "title": "Cảnh báo rủi ro",
+            "subtitle": "{count} cảnh báo cần chú ý",
+            "emptyTitle": "Mọi thứ đều ổn",
+            "emptyDescription": "Không có cảnh báo rủi ro nào",
+            "types": {
+                "overdue": "Quá hạn",
+                "dueSoon": "Sắp đến hạn",
+                "stuck": "Bị stuck"
             }
         },
-        "heatmap": {
-            "day": {
-                "mon": "T2",
-                "wed": "T4",
-                "fri": "T6"
-            },
-            "less": "Ít",
-            "more": "Nhiều",
-            "taskSingular": "công việc",
-            "taskPlural": "công việc"
+        "groupRanking": {
+            "contributor": "trong nhóm"
+        },
+        "onTime": {
+            "label": "Đúng hạn",
+            "completed": "Hoàn thành",
+            "totalTasks": "Tổng {total} công việc"
+        },
+        "chart": {
+            "completed": "Hoàn thành",
+            "overdue": "Quá hạn",
+            "averageShort": "TB"
+        },
+        "noData": {
+            "noTasks": "Không có dữ liệu",
+            "noGroups": "Không có nhóm",
+            "noTrendData": "Không có dữ liệu xu hướng",
+            "noPriorityData": "Không có dữ liệu ưu tiên",
+            "noUrgencyData": "Không có dữ liệu khẩn cấp",
+            "noBenchmarkData": "Không có dữ liệu benchmark",
+            "noTasksPlural": "Không có task"
+        },
+        "scrollHint": "↓ Cuộn để xem thêm ({count} nhóm)",
+        "groupFilter": {
+            "allGroups": "Tất cả nhóm"
+        },
+        "common": {
+            "tasks": "công việc",
+            "pointsShort": "điểm",
+            "tasksCount": "{count} công việc",
+            "dash": "—",
+            "averageShort": "TB"
         }
     },
     "HomePage": {
@@ -2094,6 +2135,8 @@
         "availableGroups": "Nhóm có sẵn",
         "noGroups": "Không có nhóm",
         "noGroupsHint": "Tạo hoặc tham gia nhóm để bắt đầu",
+        "noAssignedTasks": "Chưa có công việc được phân công",
+        "noAssignedTasksHint": "Khi có công việc được giao, danh sách sẽ hiển thị ở đây",
         "taskCountLabel": "công việc",
         "topGroup": "Nhóm hàng đầu",
         "viewDetails": "Xem chi tiết"
@@ -2103,10 +2146,16 @@
         "today": "Hôm nay",
         "tomorrow": "Ngày mai",
         "untitledTask": "Công việc không tên",
+        "untitledStatus": "Chưa đặt tên",
         "menu": "Menu",
         "editTaskName": "Chỉnh sửa tên công việc",
         "delete": "Xóa",
         "cancel": "Hủy",
+        "progressLabel": "Tiến độ",
+        "progressTodo": "Cần làm",
+        "progressStarted": "Đã bắt đầu",
+        "progressInProgress": "Đang thực hiện",
+        "progressReview": "Đang rà soát",
         "progressDone": "Hoàn thành",
         "columnMenu": "Menu cột",
         "editStatusName": "Chỉnh sửa tên trạng thái",
@@ -2118,10 +2167,31 @@
         "pleaseEnterTaskTitle": "Vui lòng nhập tiêu đề công việc",
         "startDateAfterDueDate": "Ngày bắt đầu không được sau ngày kết thúc",
         "createTaskFailed": "Tạo công việc thất bại",
+        "updateTaskFailed": "Cập nhật công việc thất bại",
         "taskName": "Tên công việc",
         "close": "Đóng",
+        "status": "Trạng thái",
+        "priority": "Độ ưu tiên",
+        "severity": "Độ quan trọng",
+        "priorityLow": "Thấp",
+        "priorityMedium": "Trung bình",
+        "priorityHigh": "Cao",
+        "severityMinor": "Nhẹ",
+        "severityModerate": "Vừa",
+        "severityMajor": "Quan trọng",
+        "severityCritical": "Khẩn cấp",
+        "overdue": "Quá hạn",
         "startDate": "Ngày bắt đầu",
-        "dueDate": "Hạn chót",
+        "dueDate": "Hạn hoàn thành",
+        "estimatedHours": "Giờ ước tính",
+        "estimatedHoursPlaceholder": "Ví dụ: 8",
+        "actualHours": "Giờ thực tế",
+        "actualHoursPlaceholder": "Ví dụ: 4",
+        "description": "Mô tả",
+        "noDescription": "(Chưa có mô tả)",
+        "edit": "Chỉnh sửa",
+        "saving": "Đang lưu...",
+        "saveChange": "Lưu thay đổi",
         "enterTaskDescription": "Nhập mô tả công việc...",
         "creatingTask": "Đang tạo...",
         "createTask": "Tạo công việc",

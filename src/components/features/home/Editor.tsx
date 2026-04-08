@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 type TaskProgressEditorProps = {
@@ -19,19 +20,23 @@ function normalizeProgressValue(n?: number | null) {
     return value;
 }
 
-function progressLabelOf(n?: number | null) {
+function progressLabelOf(n: number, t: (key: string) => string) {
     const value = normalizeProgressValue(n);
-    if (value === 0) return "To do";
-    if (value < 50) return "Started";
-    if (value < 75) return "In progress";
-    if (value < 100) return "Review";
-    return "Done";
+    if (value === 0) return t("progressTodo");
+    if (value < 50) return t("progressStarted");
+    if (value < 75) return t("progressInProgress");
+    if (value < 100) return t("progressReview");
+    return t("progressDone");
 }
 
 export function TaskProgressEditor({ value, onChange, disabled = false }: TaskProgressEditorProps) {
+    const t = useTranslations("HomePersonalTask");
     const selectedProgressValue = React.useMemo(() => normalizeProgressValue(Number(value)), [value]);
 
-    const selectedProgressLabel = React.useMemo(() => progressLabelOf(selectedProgressValue), [selectedProgressValue]);
+    const selectedProgressLabel = React.useMemo(
+        () => progressLabelOf(selectedProgressValue, t),
+        [selectedProgressValue, t]
+    );
 
     const handleProgressInputChange = (nextValue: string) => {
         const digits = nextValue.replace(/\D+/g, "");
@@ -81,7 +86,7 @@ export function TaskProgressEditor({ value, onChange, disabled = false }: TaskPr
 
     return (
         <div className="sm:col-span-2 xl:col-span-3">
-            <div className="font-semibold text-sm text-zinc-600">Progress</div>
+            <div className="font-semibold text-sm text-zinc-600">{t("progressLabel")}</div>
 
             <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
                 <div className="mb-3 flex items-center justify-between gap-3 text-sm">
