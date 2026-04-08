@@ -60,7 +60,7 @@ const canceledPendingJoinStorageKey = "my-studio:canceled-pending-joins";
 export const pendingJoinEvents = new EventTarget();
 export const PENDING_JOIN_CHANGED_EVENT = "pending-join-changed";
 
-function readPendingJoinGroups(): PendingGroupCard[] {
+export function readPendingJoinGroups(): PendingGroupCard[] {
     if (typeof window === "undefined") return [];
 
     try {

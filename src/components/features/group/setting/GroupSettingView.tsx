@@ -1214,23 +1214,27 @@ export function GroupSettingView() {
 
                             <div className="mb-6 flex items-end gap-6">
                                 {/* Identity strip */}
-                                <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row sm:items-start">
+                                <div className="grid w-full grid-cols-1 gap-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
                                     {/* Banner thumbnail */}
 
 
                                     {/* Avatar + Color/Emoji */}
-                                    <div className="flex items-end gap-3 sm:flex-col sm:items-start">
-                                        <AvatarUpload
-                                            entityType="group"
-                                            entityId={groupId ?? ""}
-                                            avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
-                                            colorHex={isEditing ? colorHex : initialColorHex}
-                                            iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
-                                            onUploadSuccess={(url) => setAvatarUrl(url)}
-                                            onError={(msg) => setGeneralError(msg)}
-                                            disabled={!isEditing}
-                                        />
-                                        <div className="flex items-center gap-2">
+                                    <div className="rounded-2xl border border-gray-100 bg-[#FCFCFD] p-4">
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex justify-center">
+                                                <AvatarUpload
+                                                    entityType="group"
+                                                    entityId={groupId ?? ""}
+                                                    avatarUrl={isEditing ? avatarUrl : initialAvatarUrl}
+                                                    colorHex={isEditing ? colorHex : initialColorHex}
+                                                    iconEmoji={isEditing ? iconEmoji : initialIconEmoji}
+                                                    onUploadSuccess={(url) => setAvatarUrl(url)}
+                                                    onError={(msg) => setGeneralError(msg)}
+                                                    disabled={!isEditing}
+                                                    size={96}
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
                                             <ColorPicker
                                                 label={t("groupInfo.colorLabel")}
                                                 value={isEditing ? colorHex : initialColorHex}
@@ -1243,9 +1247,10 @@ export function GroupSettingView() {
                                                 onChange={isEditing ? setIconEmoji : undefined}
                                                 disabled={!isEditing}
                                             />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="w-full sm:flex-1">
+                                    <div className="w-full">
                                         <p className="mb-2 text-xs font-semibold text-gray-700">
                                             {t("groupInfo.bannerLabel") || "Ảnh bìa"}
                                         </p>

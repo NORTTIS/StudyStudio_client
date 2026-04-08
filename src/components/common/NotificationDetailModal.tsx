@@ -351,7 +351,7 @@ export function NotificationDetailModal({ isOpen, onClose, notification, locale 
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-h-[90vh] w-[calc(100%-24px)] max-w-3xl overflow-hidden rounded-2xl border bg-background p-0 shadow-2xl [&>button]:hidden">
+            <DialogContent className="max-h-[90vh] w-[calc(100%-24px)] max-w-3xl overflow-hidden rounded-2xl border bg-background p-0 shadow-2xl [&>button:last-child]:hidden">
                 <DialogHeader className="relative border-b px-6 py-5 pr-20">
                     <div className="flex items-center justify-between gap-4">
                         <DialogTitle className="text-left text-xl font-semibold">{t("detailTitle")}</DialogTitle>

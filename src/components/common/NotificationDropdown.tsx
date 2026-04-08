@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Bell, CheckCheck, CheckCircle2, Info, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Bell, CheckCheck, CheckCircle2, ChevronRight, Info, RefreshCw, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ANNOUNCEMENT_DELETED_EVENT, dispatchAnnouncementDeleted, type AnnouncementDeletedDetail } from "@/lib/announcement-events";
 import { cn } from "@/lib/utils";
 import { NotificationDetailModal } from "./NotificationDetailModal";
 
@@ -38,6 +39,7 @@ type RawNotification = Notification & {
 type ExtendedNotification = Notification & {
     isFallback?: boolean;
     actionId: string;
+    announcementId?: string;
 };
 
 function getStoredIds(key: string): string[] {
@@ -180,7 +182,7 @@ function NotificationItem({
                 {getNotificationIcon(notification.type)}
             </div>
 
-            <div className="min-w-0 flex-1 pr-8">
+            <div className="min-w-0 flex-1">
                 <div className="flex items-start gap-2">
                     <p
                         className={cn(
@@ -202,18 +204,24 @@ function NotificationItem({
                 <p className="mt-3 text-muted-foreground text-xs">{formatDate(notification.date)}</p>
             </div>
 
-            <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                }}
-                className="absolute top-3 right-3 h-8 w-8 rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
-                aria-label={deleteLabel}>
-                <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                    }}
+                    className="h-9 w-9 rounded-full border border-red-200 bg-red-50 text-red-600 hover:border-red-300 hover:bg-red-100 hover:text-red-700"
+                    aria-label={deleteLabel}>
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-50 text-orange-500 transition-transform group-hover:translate-x-0.5">
+                    <ChevronRight className="h-4 w-4" />
+                </div>
+            </div>
         </div>
     );
 }
@@ -292,6 +300,59 @@ export function NotificationDropdown() {
     useEffect(() => {
         loadNotifications();
     }, [loadNotifications]);
+
+    useEffect(() => {
+        const handleAnnouncementDeleted = (event: Event) => {
+            const detail = (event as CustomEvent<AnnouncementDeletedDetail>).detail;
+            if (!detail) return;
+
+            setNotifications((prev) => {
+                const deletedActionIds = prev
+                    .filter((notification) => {
+                        if (detail.userAnnouncementId && notification.actionId === detail.userAnnouncementId) return true;
+                        if (detail.announcementId && notification.announcementId === detail.announcementId) return true;
+                        return false;
+                    })
+                    .map((notification) => notification.actionId);
+
+                if (detail.userAnnouncementId) {
+                    deletedActionIds.push(detail.userAnnouncementId);
+                }
+
+                if (detail.announcementId) {
+                    deletedActionIds.push(detail.announcementId);
+                }
+
+                if (deletedActionIds.length > 0) {
+                    saveManyStoredIds(DELETED_NOTIFICATIONS_STORAGE_KEY, deletedActionIds);
+                }
+
+                return prev.filter((notification) => {
+                    if (detail.userAnnouncementId && notification.actionId === detail.userAnnouncementId) return false;
+                    if (detail.announcementId && notification.announcementId === detail.announcementId) return false;
+                    return true;
+                });
+            });
+
+            setSelectedNotification((prev) => {
+                if (!prev) return prev;
+                if (detail.userAnnouncementId && prev.actionId === detail.userAnnouncementId) {
+                    setIsDetailModalOpen(false);
+                    return null;
+                }
+                if (detail.announcementId && prev.announcementId === detail.announcementId) {
+                    setIsDetailModalOpen(false);
+                    return null;
+                }
+                return prev;
+            });
+        };
+
+        window.addEventListener(ANNOUNCEMENT_DELETED_EVENT, handleAnnouncementDeleted);
+        return () => {
+            window.removeEventListener(ANNOUNCEMENT_DELETED_EVENT, handleAnnouncementDeleted);
+        };
+    }, []);
 
     const formatDate = useCallback(
         (dateString: string) => {
@@ -403,6 +464,10 @@ export function NotificationDropdown() {
 
             if (result.status === "success" || isNotificationNotFoundMessage(result.message)) {
                 saveDeletedNotificationId(deletingActionId);
+                dispatchAnnouncementDeleted({
+                    announcementId: deletingNotification.announcementId,
+                    userAnnouncementId: deletingActionId
+                });
                 return;
             }
 

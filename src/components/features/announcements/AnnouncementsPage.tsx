@@ -17,6 +17,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getUserData } from "@/api/auth";
 import {
     deleteUserAnnouncement,
     getAllAnnouncements,
@@ -26,12 +27,62 @@ import {
     type Announcement,
     type UserAnnouncement
 } from "@/api/user-announcements";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { ANNOUNCEMENT_DELETED_EVENT, dispatchAnnouncementDeleted, type AnnouncementDeletedDetail } from "@/lib/announcement-events";
+
+type PublicAnnouncementItem = Announcement & {
+    userAnnouncementId?: string;
+    isRead?: boolean;
+};
+
+const DELETED_SYSTEM_ANNOUNCEMENTS_KEY = "study_studio_deleted_system_announcements";
+
+function getDeletedSystemAnnouncementsStorageKey(): string {
+    if (typeof window === "undefined") return DELETED_SYSTEM_ANNOUNCEMENTS_KEY;
+
+    const userId = String(getUserData()?.id ?? "").trim();
+    return userId
+        ? `${DELETED_SYSTEM_ANNOUNCEMENTS_KEY}:${userId}`
+        : `${DELETED_SYSTEM_ANNOUNCEMENTS_KEY}:anonymous`;
+}
+
+function readDeletedSystemAnnouncementIds(): string[] {
+    if (typeof window === "undefined") return [];
+    try {
+        const raw = window.localStorage.getItem(getDeletedSystemAnnouncementsStorageKey());
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveDeletedSystemAnnouncementId(id: string) {
+    if (typeof window === "undefined") return;
+    try {
+        const current = readDeletedSystemAnnouncementIds();
+        if (!current.includes(id)) {
+            window.localStorage.setItem(getDeletedSystemAnnouncementsStorageKey(), JSON.stringify([...current, id]));
+        }
+    } catch {
+        // ignore
+    }
+}
 
 export function AnnouncementsPage() {
     const locale = useLocale();
@@ -40,7 +91,7 @@ export function AnnouncementsPage() {
 
     const isMentionType = (type: string) => type === "Mention" || type === "mention" || type === "4";
 
-    const [publicAnnouncements, setPublicAnnouncements] = useState<Announcement[]>([]);
+    const [publicAnnouncements, setPublicAnnouncements] = useState<PublicAnnouncementItem[]>([]);
     const [userAnnouncements, setUserAnnouncements] = useState<UserAnnouncement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -49,23 +100,33 @@ export function AnnouncementsPage() {
     const [sortBy, setSortBy] = useState("newest");
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [selectedDetail, setSelectedDetail] = useState<Announcement | UserAnnouncement | null>(null);
+    const [selectedDetail, setSelectedDetail] = useState<(PublicAnnouncementItem | UserAnnouncement) | null>(null);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<
+        | { kind: "personal"; item: UserAnnouncement }
+        | { kind: "system"; announcementId: string }
+        | null
+    >(null);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const loadAnnouncements = useCallback(async () => {
         setIsLoading(true);
         try {
+            const deletedSystemIds = new Set(readDeletedSystemAnnouncementIds());
             const [publicResult, userResult] = await Promise.allSettled([
                 getAllAnnouncements(locale),
                 getUserAnnouncements(locale)
             ]);
 
-            let systemAnnouncements: Announcement[] = [];
+            let systemAnnouncements: PublicAnnouncementItem[] = [];
 
             // Lấy thông báo chưa đọc từ /api/announcements (lọc type != Mention)
             if (publicResult.status === "fulfilled" && publicResult.value.status === "success") {
                 const all = publicResult.value.data || [];
-                systemAnnouncements = all.filter((ann) => !isMentionType(ann.type));
+                systemAnnouncements = all
+                    .filter((ann) => !isMentionType(ann.type))
+                    .filter((ann) => !deletedSystemIds.has(String(ann.announcementId)));
             }
 
             // Lấy thông báo đã đọc từ /api/announcements/user (type != Mention)
@@ -74,20 +135,24 @@ export function AnnouncementsPage() {
                 const readAnnouncements = all.filter((ann) => !isMentionType(ann.type));
 
                 // Map UserAnnouncement to Announcement for type compatibility
-                const normalizedRead: Announcement[] = readAnnouncements.map((a) => ({
+                const normalizedRead: PublicAnnouncementItem[] = readAnnouncements.map((a) => ({
                     announcementId: a.announcementId,
                     title: a.title,
                     content: a.content,
                     type: a.type,
                     isActive: true,
                     createdAt: a.createdAt,
-                    publishedAt: a.publishedAt
+                    publishedAt: a.publishedAt,
+                    userAnnouncementId: a.userAnnouncementId,
+                    isRead: a.isRead
                 }));
 
                 // Merge: thêm các thông báo đã đọc không có trong danh sách chưa đọc
                 const readIds = new Set(normalizedRead.map((a) => a.announcementId));
                 const newAnnouncements = systemAnnouncements.filter((a) => !readIds.has(a.announcementId));
-                const combined = [...newAnnouncements, ...normalizedRead];
+                const combined = [...newAnnouncements, ...normalizedRead].filter(
+                    (ann) => !deletedSystemIds.has(String(ann.announcementId))
+                );
                 setPublicAnnouncements(combined);
             } else {
                 setPublicAnnouncements(systemAnnouncements);
@@ -113,19 +178,64 @@ export function AnnouncementsPage() {
         loadAnnouncements();
     }, [loadAnnouncements]);
 
+    useEffect(() => {
+        const handleAnnouncementDeleted = (event: Event) => {
+            const detail = (event as CustomEvent<AnnouncementDeletedDetail>).detail;
+            if (!detail) return;
+
+            if (detail.announcementId && !detail.userAnnouncementId) {
+                saveDeletedSystemAnnouncementId(String(detail.announcementId));
+            }
+
+            setUserAnnouncements((prev) =>
+                prev.filter((ann) => {
+                    if (detail.userAnnouncementId && ann.userAnnouncementId === detail.userAnnouncementId) return false;
+                    if (detail.announcementId && ann.announcementId === detail.announcementId) return false;
+                    return true;
+                })
+            );
+
+            setPublicAnnouncements((prev) =>
+                prev.filter((ann) => {
+                    if (detail.userAnnouncementId && ann.userAnnouncementId === detail.userAnnouncementId) return false;
+                    if (detail.announcementId && ann.announcementId === detail.announcementId) return false;
+                    return true;
+                })
+            );
+
+            setSelectedDetail((prev) => {
+                if (!prev) return prev;
+                if ("userAnnouncementId" in prev && detail.userAnnouncementId && prev.userAnnouncementId === detail.userAnnouncementId) {
+                    setSelectedId(null);
+                    return null;
+                }
+                if ("announcementId" in prev && detail.announcementId && prev.announcementId === detail.announcementId) {
+                    setSelectedId(null);
+                    return null;
+                }
+                return prev;
+            });
+        };
+
+        window.addEventListener(ANNOUNCEMENT_DELETED_EVENT, handleAnnouncementDeleted);
+        return () => {
+            window.removeEventListener(ANNOUNCEMENT_DELETED_EVENT, handleAnnouncementDeleted);
+        };
+    }, []);
+
     const handleViewDetail = async (id: string, isPersonalTab: boolean) => {
         setSelectedId(id);
         setIsDetailLoading(true);
 
         try {
-            let localData: Announcement | UserAnnouncement | null = null;
+            let localData: PublicAnnouncementItem | UserAnnouncement | null = null;
 
             if (isPersonalTab) {
                 // Tab cá nhân - tìm trong userAnnouncements
                 localData = userAnnouncements.find((a) => a.userAnnouncementId === id) || null;
             } else {
                 // Tab hệ thống - tìm trong publicAnnouncements
-                localData = publicAnnouncements.find((a) => "announcementId" in a && a.announcementId === id) || null;
+                localData = publicAnnouncements.find((a) => a.announcementId === id) || null;
             }
 
             if (localData) {
@@ -144,7 +254,15 @@ export function AnnouncementsPage() {
             const result = await getAnnouncementById(actualId, locale);
 
             if (result.status === "success" && result.data) {
-                setSelectedDetail(result.data);
+                setSelectedDetail({
+                    ...result.data,
+                    ...(localData && "userAnnouncementId" in localData && localData.userAnnouncementId
+                        ? {
+                              userAnnouncementId: localData.userAnnouncementId,
+                              isRead: "isRead" in localData ? localData.isRead : undefined
+                          }
+                        : {})
+                });
             }
         } catch (error) {
             console.error("Failed to fetch detail:", error);
@@ -173,18 +291,73 @@ export function AnnouncementsPage() {
         }
     };
 
-    const handleDeleteAnnouncement = async (e: React.MouseEvent, userAnnouncementId: string) => {
+    const openDeleteAnnouncementConfirm = (target: UserAnnouncement) => {
+        setDeleteTarget({ kind: "personal", item: target });
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const openDeleteSystemAnnouncementConfirm = (announcementId: string) => {
+        const id = String(announcementId || "").trim();
+        if (!id) return;
+        setDeleteTarget({ kind: "system", announcementId: id });
+        setIsDeleteConfirmOpen(true);
+    };
+
+    const handleDeleteAnnouncement = (e: React.MouseEvent, target: UserAnnouncement) => {
         e.stopPropagation();
+        openDeleteAnnouncementConfirm(target);
+    };
 
-        const confirmed = window.confirm(t("confirmDelete"));
-        if (!confirmed) return;
+    const confirmDeleteAnnouncement = async () => {
+        if (!deleteTarget) return;
 
+        if (deleteTarget.kind === "system") {
+            const targetAnnouncementId = deleteTarget.announcementId;
+            saveDeletedSystemAnnouncementId(targetAnnouncementId);
+            setPublicAnnouncements((prev) => prev.filter((ann) => String(ann.announcementId) !== targetAnnouncementId));
+            if (selectedDetail && "announcementId" in selectedDetail && String(selectedDetail.announcementId) === targetAnnouncementId) {
+                setSelectedId(null);
+                setSelectedDetail(null);
+            }
+            if (selectedId === targetAnnouncementId) {
+                setSelectedId(null);
+                setSelectedDetail(null);
+            }
+            dispatchAnnouncementDeleted({ announcementId: targetAnnouncementId });
+            setIsDeleteConfirmOpen(false);
+            setDeleteTarget(null);
+            toast({
+                description: t("deleteSuccess"),
+                variant: "success"
+            });
+            return;
+        }
+
+        const targetId = deleteTarget.item.userAnnouncementId;
+        const targetAnnouncementId = deleteTarget.item.announcementId;
+        setIsDeleting(true);
         try {
-            const result = await deleteUserAnnouncement(userAnnouncementId, locale);
+            const result = await deleteUserAnnouncement(targetId, locale);
             if (result.status === "success") {
-                setUserAnnouncements((prev) => prev.filter((ann) => ann.userAnnouncementId !== userAnnouncementId));
+                setUserAnnouncements((prev) => prev.filter((ann) => ann.userAnnouncementId !== targetId));
+                setPublicAnnouncements((prev) => prev.filter((ann) => ann.userAnnouncementId !== targetId));
+                if (selectedDetail && "userAnnouncementId" in selectedDetail && selectedDetail.userAnnouncementId === targetId) {
+                    setSelectedId(null);
+                    setSelectedDetail(null);
+                }
+                if (selectedId === targetAnnouncementId || selectedId === targetId) {
+                    setSelectedId(null);
+                    setSelectedDetail(null);
+                }
+                dispatchAnnouncementDeleted({
+                    announcementId: targetAnnouncementId,
+                    userAnnouncementId: targetId
+                });
+                setIsDeleteConfirmOpen(false);
+                setDeleteTarget(null);
                 toast({
-                    description: t("deleteSuccess")
+                    description: t("deleteSuccess"),
+                    variant: "success"
                 });
             } else {
                 toast({
@@ -197,6 +370,8 @@ export function AnnouncementsPage() {
                 description: t("deleteFailed"),
                 variant: "destructive"
             });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -301,8 +476,8 @@ export function AnnouncementsPage() {
                                 initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.22 }}
-                                className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 font-semibold text-orange-700 text-sm">
-                                <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_4px_rgba(249,115,22,0.12)]" />
+                                className="mb-1 inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/70 px-3 py-1 font-semibold text-[11px] text-orange-700 uppercase tracking-[0.18em] shadow-sm backdrop-blur">
+                                <SoundOutlined className="text-[14px]" />
                                 {t("learningHub")}
                             </motion.div>
 
@@ -525,12 +700,16 @@ export function AnnouncementsPage() {
                                             onClick={() =>
                                                 handleViewDetail(
                                                     activeTab === "public"
-                                                        ? (ann as Announcement).announcementId
+                                                        ? (ann as PublicAnnouncementItem).announcementId
                                                         : (ann as UserAnnouncement).userAnnouncementId,
                                                     activeTab === "personal"
                                                 )
                                             }
                                             onDelete={handleDeleteAnnouncement}
+                                            onDeleteSystem={(e, announcementId) => {
+                                                e.stopPropagation();
+                                                openDeleteSystemAnnouncementConfirm(announcementId);
+                                            }}
                                             formatDate={formatDate}
                                             getTypeMeta={getTypeMeta}
                                             unreadLabel={t("new")}
@@ -553,7 +732,7 @@ export function AnnouncementsPage() {
                         setSelectedDetail(null);
                     }
                 }}>
-                <DialogContent className="max-h-[90vh] overflow-hidden rounded-[28px] border border-orange-100 bg-white p-0 sm:max-w-[760px]">
+                <DialogContent className="max-h-[90vh] overflow-hidden rounded-[28px] border border-orange-100 bg-white p-0 sm:max-w-[760px] [&>button:last-child]:hidden">
                     <DialogTitle className="sr-only">Announcement Details</DialogTitle>
                     {isDetailLoading ? (
                         <div className="flex justify-center p-20">
@@ -610,6 +789,35 @@ export function AnnouncementsPage() {
                     </button>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog
+                open={isDeleteConfirmOpen}
+                onOpenChange={(open) => {
+                    setIsDeleteConfirmOpen(open);
+                    if (!open && !isDeleting) {
+                        setDeleteTarget(null);
+                    }
+                }}>
+                <AlertDialogContent className="rounded-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t("confirmDeleteTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("confirmDelete")}</AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isDeleting}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                void confirmDeleteAnnouncement();
+                            }}
+                            className="bg-red-500 text-white hover:bg-red-600">
+                            {isDeleting ? t("deleting") : t("delete")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -648,6 +856,7 @@ function AnnouncementCard({
     isUserAnn,
     onClick,
     onDelete,
+    onDeleteSystem,
     formatDate,
     getTypeMeta,
     unreadLabel,
@@ -657,7 +866,8 @@ function AnnouncementCard({
     item: Announcement | UserAnnouncement;
     isUserAnn?: boolean;
     onClick: () => void;
-    onDelete?: (e: React.MouseEvent, userAnnouncementId: string) => void;
+    onDelete?: (e: React.MouseEvent, target: UserAnnouncement) => void;
+    onDeleteSystem?: (e: React.MouseEvent, announcementId: string) => void;
     formatDate: (value: string) => string;
     unreadLabel: string;
     systemLabel: string;
@@ -674,6 +884,7 @@ function AnnouncementCard({
     const userAnn = item as UserAnnouncement;
     const isUnread = isUserAnn && "isRead" in item && !item.isRead;
     const canDelete = isUserAnn && "userAnnouncementId" in item;
+    const systemAnnouncementId = !isUserAnn && "announcementId" in item ? String((item as Announcement).announcementId) : "";
     const meta = getTypeMeta(item.type);
 
     return (
@@ -728,8 +939,16 @@ function AnnouncementCard({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="text-red-500 opacity-100 transition-opacity hover:bg-red-50 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100"
-                            onClick={(e) => onDelete(e, userAnn.userAnnouncementId)}>
+                            className="h-10 w-10 rounded-full border border-red-200 bg-red-50 text-red-600 opacity-100 transition-all hover:border-red-300 hover:bg-red-100 hover:text-red-700"
+                            onClick={(e) => onDelete(e, userAnn)}>
+                            <DeleteOutlined />
+                        </Button>
+                    ) : systemAnnouncementId && onDeleteSystem ? (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-full border border-red-200 bg-red-50 text-red-600 opacity-100 transition-all hover:border-red-300 hover:bg-red-100 hover:text-red-700"
+                            onClick={(e) => onDeleteSystem(e, systemAnnouncementId)}>
                             <DeleteOutlined />
                         </Button>
                     ) : null}

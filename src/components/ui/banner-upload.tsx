@@ -118,11 +118,11 @@ export function BannerUpload({
     };
 
     return (
-        <div className="group/upload relative h-[250px] w-full overflow-hidden rounded-xl border border-border bg-muted/50">
+        <div className="group/upload relative aspect-[16/7] min-h-[180px] w-full overflow-hidden rounded-xl border border-border bg-muted/50">
             {displayUrl ? (
                 <img src={displayUrl} alt={t("alt")} className="h-full w-full object-cover" />
             ) : (
-                <div className="flex h-[250px] w-full items-center justify-center" style={{ background: gradient }}>
+                <div className="flex h-full w-full items-center justify-center" style={{ background: gradient }}>
                     <span className="font-medium text-sm text-white/60">{t("empty")}</span>
                 </div>
             )}

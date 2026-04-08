@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ChevronDown, FolderKanban, LogOut, Users2 } from "lucide-react";
+import { Archive, ChevronDown, FolderKanban, LogOut, Sparkles, Users2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
@@ -48,6 +48,54 @@ interface MasterPageClientProps {
     initialUserProfile: UserProfile | null;
     initialStudios: StudioUI[];
     initialSubscription: StudioListSubscription | null;
+}
+
+type StudioUpdatedEventDetail = {
+    id?: string;
+    isArchived?: boolean;
+};
+
+const STUDIO_UPDATED_EVENT = "studio:updated";
+const studioArchiveOverrides = new Map<string, boolean>();
+
+function readStudioArchiveOverride(studioId: string): boolean | null {
+    if (!studioId) return null;
+    return studioArchiveOverrides.has(studioId) ? studioArchiveOverrides.get(studioId) ?? null : null;
+}
+
+function writeStudioArchiveOverride(studioId: string, value: boolean) {
+    if (!studioId) return;
+    studioArchiveOverrides.set(studioId, value);
+}
+
+function clearStudioArchiveOverride(studioId: string) {
+    if (!studioId) return;
+    studioArchiveOverrides.delete(studioId);
+}
+
+function clearSyncedStudioArchiveOverride(studio: StudioUI) {
+    const studioId = String(studio.id || "").trim();
+    if (!studioId) return;
+
+    const overrideArchived = readStudioArchiveOverride(studioId);
+    if (overrideArchived === null) return;
+
+    if (Boolean(studio.isArchived) === overrideArchived) {
+        clearStudioArchiveOverride(studioId);
+    }
+}
+
+function applyStudioArchiveOverride(studio: StudioUI): StudioUI {
+    const studioId = String(studio.id || "").trim();
+    if (!studioId) return studio;
+
+    const overrideArchived = readStudioArchiveOverride(studioId);
+    if (overrideArchived === null) return studio;
+
+    return {
+        ...studio,
+        isArchived: overrideArchived
+    };
 }
 
 function hexToRgba(hex: string, opacity: number): string {
@@ -145,8 +193,10 @@ function StudioBoardSection({
             <div className={`pointer-events-none absolute -right-12 top-0 h-40 w-40 rounded-full blur-3xl ${sectionStyle.rightGlow}`} />
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/95" />
 
-            <div className={`relative border-white/70 border-b ${sectionStyle.header} px-5 py-4 md:px-6`}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button
+                type="button"
+                onClick={() => onToggle(sectionKey)}
+                className={`relative flex w-full flex-col gap-3 border-white/70 border-b px-5 py-4 text-left transition sm:flex-row sm:items-center sm:justify-between md:px-6 ${sectionStyle.header} ${sectionKey.includes("archived") ? "hover:text-red-600" : sectionKey.includes("joined") ? "hover:text-blue-600" : "hover:text-[#EA580C]"}`}>
                     <div className="flex min-w-0 items-center gap-3.5">
                         <div className={`flex h-11 w-11 items-center justify-center rounded-[18px] text-white shadow-[0_12px_28px_rgba(15,23,42,0.18)] ring-4 ${sectionStyle.icon}`}>
                             <Icon className="h-5 w-5" />
@@ -163,15 +213,11 @@ function StudioBoardSection({
                         </div>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={() => onToggle(sectionKey)}
-                        className={`inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/80 px-4 py-2 text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:bg-white ${sectionKey.includes("archived") ? "hover:text-red-600" : sectionKey.includes("joined") ? "hover:text-blue-600" : "hover:text-[#EA580C]"}`}>
+                    <div className="inline-flex items-center gap-2 self-start rounded-full border border-white/80 bg-white/80 px-4 py-2 text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:bg-white sm:self-auto">
                         <span>{collapsed ? "Mở rộng" : "Thu gọn"}</span>
                         <ChevronDown className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : "rotate-0"}`} />
-                    </button>
-                </div>
-            </div>
+                    </div>
+            </button>
 
             {!collapsed ? <div className="relative px-5 py-5 md:px-6">{children}</div> : null}
         </motion.section>
@@ -615,10 +661,10 @@ export default function MasterPageClient({
     const { toast } = useToast();
 
     const [userProfile, setUserProfile] = useState<UserProfile | null>(initialUserProfile);
-    const [studios, setStudios] = useState<StudioUI[]>(initialStudios);
+    const [studios, setStudios] = useState<StudioUI[]>(() => initialStudios.map(applyStudioArchiveOverride));
     const [subscriptionInfo, setSubscriptionInfo] = useState<StudioListSubscription | null>(initialSubscription);
     const [searchQuery, setSearchQuery] = useState("");
-    const [studioFilter, setStudioFilter] = useState<"all" | "owned" | "joined" | "archived">("all");
+    const [studioFilter, setStudioFilter] = useState<"all" | "owned" | "joined" | "pending" | "archived">("all");
     const [isLoading, setIsLoading] = useState(false);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -634,9 +680,11 @@ export default function MasterPageClient({
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
         "all-owned": true,
         "all-joined": true,
+        "all-pending": true,
         "all-archived": true,
         owned: true,
         joined: true,
+        pending: true,
         archived: true
     });
     const [updatingArchiveStudioId, setUpdatingArchiveStudioId] = useState<string | null>(null);
@@ -649,27 +697,31 @@ export default function MasterPageClient({
         userProfileRef.current = userProfile;
     }, [userProfile]);
 
-    const { ownedStudios, joinedStudios } = useMemo(() => {
+    const { ownedStudios, joinedStudios, pendingStudios } = useMemo(() => {
         const owned: StudioUI[] = [];
         const joined: StudioUI[] = [];
+        const pending: StudioUI[] = [];
 
         studios.forEach((studio) => {
             if (studio.studioRole === 0 && !studio.isArchived) {
                 owned.push(studio);
+            } else if (!studio.isArchived && studio.isPendingApproval) {
+                pending.push(studio);
             } else if (!studio.isArchived) {
                 joined.push(studio);
             }
         });
 
-        return { ownedStudios: owned, joinedStudios: joined };
+        return { ownedStudios: owned, joinedStudios: joined, pendingStudios: pending };
     }, [studios]);
 
     const filteredStudios = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
 
         return studios.filter((studio) => {
-            if (studioFilter === "owned" && studio.studioRole !== 0) return false;
-            if (studioFilter === "joined" && studio.studioRole === 0) return false;
+            if (studioFilter === "owned" && (studio.studioRole !== 0 || studio.isArchived)) return false;
+            if (studioFilter === "joined" && (studio.studioRole === 0 || studio.isPendingApproval || studio.isArchived)) return false;
+            if (studioFilter === "pending" && (!studio.isPendingApproval || studio.isArchived)) return false;
             if (studioFilter === "archived" && !studio.isArchived) return false;
 
             if (!query) return true;
@@ -761,14 +813,17 @@ export default function MasterPageClient({
 
             if (studiosResult.status === "success" && studiosResult.data) {
                 const approvedStudios = studiosResult.data.studios.map((studio: StudioUI) => {
-                    const isPendingApproval = studio.studioRole === 1 && studio.isMember !== true;
+                    const normalizedStudio = applyStudioArchiveOverride(studio);
+                    const isPendingApproval = normalizedStudio.studioRole === 1 && normalizedStudio.isMember !== true;
+
+                    clearSyncedStudioArchiveOverride(studio);
 
                     if (!isPendingApproval) {
-                        removePendingStudioJoinRequest(studio.id);
+                        removePendingStudioJoinRequest(normalizedStudio.id);
                     }
 
                     return {
-                        ...studio,
+                        ...normalizedStudio,
                         isPendingApproval
                     };
                 });
@@ -830,6 +885,30 @@ export default function MasterPageClient({
     useEffect(() => {
         void loadData({ force: true });
     }, [loadData]);
+
+    useEffect(() => {
+        const handleStudioUpdated = (event: Event) => {
+            const detail = (event as CustomEvent<StudioUpdatedEventDetail>).detail;
+            const studioId = String(detail?.id || "").trim();
+
+            if (!studioId || typeof detail?.isArchived !== "boolean") return;
+
+            writeStudioArchiveOverride(studioId, detail.isArchived);
+            setStudios((prev) =>
+                prev.map((studio) =>
+                    studio.id === studioId
+                        ? {
+                            ...studio,
+                            isArchived: detail.isArchived
+                        }
+                        : studio
+                )
+            );
+        };
+
+        window.addEventListener(STUDIO_UPDATED_EVENT, handleStudioUpdated);
+        return () => window.removeEventListener(STUDIO_UPDATED_EVENT, handleStudioUpdated);
+    }, []);
 
     const handleCreateStudio = async (data: {
         name: string;
@@ -1039,9 +1118,32 @@ export default function MasterPageClient({
         setUpdatingArchiveStudioId(studio.id);
 
         try {
+            writeStudioArchiveOverride(studio.id, nextIsArchived);
+            setStudios((prev) =>
+                prev.map((item) =>
+                    item.id === studio.id
+                        ? {
+                            ...item,
+                            isArchived: nextIsArchived
+                        }
+                        : item
+                )
+            );
+
             const result = await toggleStudioArchive(studio.id, nextIsArchived, locale);
 
             if (result.status !== "success") {
+                clearStudioArchiveOverride(studio.id);
+                setStudios((prev) =>
+                    prev.map((item) =>
+                        item.id === studio.id
+                            ? {
+                                ...item,
+                                isArchived: Boolean(studio.isArchived)
+                            }
+                            : item
+                    )
+                );
                 toast({
                     description: result.message || (nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại"),
                     variant: "destructive"
@@ -1052,6 +1154,17 @@ export default function MasterPageClient({
             await loadData({ force: true });
         } catch (error) {
             console.error("Toggle studio archive failed:", error);
+            clearStudioArchiveOverride(studio.id);
+            setStudios((prev) =>
+                prev.map((item) =>
+                    item.id === studio.id
+                        ? {
+                            ...item,
+                            isArchived: Boolean(studio.isArchived)
+                        }
+                        : item
+                )
+            );
             toast({
                 description: nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại",
                 variant: "destructive"
@@ -1119,12 +1232,16 @@ export default function MasterPageClient({
         () => filteredStudios.filter((studio) => studio.studioRole === 0 && !studio.isArchived),
         [filteredStudios]
     );
+    const pendingStudiosForAll = useMemo(
+        () => filteredStudios.filter((studio) => studio.studioRole !== 0 && !studio.isArchived && !!studio.isPendingApproval),
+        [filteredStudios]
+    );
     const archivedStudiosForAll = useMemo(
         () => filteredStudios.filter((studio) => studio.isArchived),
         [filteredStudios]
     );
     const joinedStudiosForAll = useMemo(
-        () => filteredStudios.filter((studio) => studio.studioRole !== 0 && !studio.isArchived),
+        () => filteredStudios.filter((studio) => studio.studioRole !== 0 && !studio.isArchived && !studio.isPendingApproval),
         [filteredStudios]
     );
 
@@ -1155,6 +1272,7 @@ export default function MasterPageClient({
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.05 }}
                                             className="inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700 shadow-sm">
+                                            <Sparkles className="h-3.5 w-3.5" />
                                             {t("detail.workspaceBadge")}
                                         </motion.div>
 
@@ -1241,6 +1359,7 @@ export default function MasterPageClient({
                                             { value: "all" as const, label: t("filters.all") },
                                             { value: "owned" as const, label: t("filters.owned") },
                                             { value: "joined" as const, label: t("filters.joined") },
+                                            { value: "pending" as const, label: t("filters.pending") },
                                             { value: "archived" as const, label: t("filters.archived") }
                                         ].map((item) => (
                                             <button
@@ -1293,6 +1412,7 @@ export default function MasterPageClient({
                                         {studioFilter === "all" ? (
                                             <div className="space-y-8">
                                                 {renderStudioSection("all-owned", t("yourStudios"), managedStudiosForAll)}
+                                                {renderStudioSection("all-pending", t("pendingStudios"), pendingStudiosForAll)}
                                                 {renderStudioSection("all-joined", t("joinedStudios"), joinedStudiosForAll)}
                                                 {renderStudioSection("all-archived", t("archivedStudios"), archivedStudiosForAll)}
                                             </div>
@@ -1300,6 +1420,8 @@ export default function MasterPageClient({
                                             renderStudioSection("owned", t("yourStudios"), filteredStudios)
                                         ) : studioFilter === "joined" ? (
                                             renderStudioSection("joined", t("joinedStudios"), filteredStudios)
+                                        ) : studioFilter === "pending" ? (
+                                            renderStudioSection("pending", t("pendingStudios"), filteredStudios)
                                         ) : (
                                             renderStudioSection("archived", t("archivedStudios"), filteredStudios)
                                         )}

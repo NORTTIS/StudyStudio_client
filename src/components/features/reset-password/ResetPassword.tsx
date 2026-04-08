@@ -86,7 +86,7 @@ export function ResetPassword({ token }: Props) {
             password: z
                 .string()
                 .min(1, t("passwordRequired"))
-                .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{10,20}$/, t("passwordInvalid")),
+                .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)\S{10,20}$/, t("passwordInvalid")),
             confirmPassword: z.string().min(1, t("confirmPasswordRequired"))
         })
         .refine((data) => data.password === data.confirmPassword, {

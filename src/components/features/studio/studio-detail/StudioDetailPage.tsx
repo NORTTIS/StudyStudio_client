@@ -139,9 +139,11 @@ type GroupUpdatedEventDetail = {
 };
 
 const studioMemberApprovalStorageKey = (studioId: string) => `studio:${studioId}:requires-member-approval`;
+const studioArchiveStorageKey = (studioId: string) => `studio:${studioId}:is-archived`;
 const studioAutoPausedGroupsStorageKey = (studioId: string) => `studio:${studioId}:auto-paused-group-ids`;
 const groupArchiveStorageKey = (groupId: string) => `group:${groupId}:is-archived`;
 const GROUP_UPDATED_EVENT = "group:updated";
+const STUDIO_UPDATED_EVENT = "studio:updated";
 
 const readStudioMemberApprovalFallback = (studioId: string): boolean | null => {
     if (!studioId) return null;
@@ -158,6 +160,15 @@ const writeStudioMemberApprovalFallback = (studioId: string, value: boolean) => 
     if (!studioId) return;
     try {
         localStorage.setItem(studioMemberApprovalStorageKey(studioId), value ? "1" : "0");
+    } catch {
+        // Ignore storage failure and keep API as source of truth.
+    }
+};
+
+const writeStudioArchiveOverride = (studioId: string, value: boolean) => {
+    if (!studioId) return;
+    try {
+        localStorage.setItem(studioArchiveStorageKey(studioId), value ? "1" : "0");
     } catch {
         // Ignore storage failure and keep API as source of truth.
     }
@@ -429,13 +440,13 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     }, [groupSearchQuery, groups]);
 
     const activeFilteredGroups = useMemo(
-        () => filteredGroups.filter((group) => !group.isArchived),
-        [filteredGroups]
+        () => filteredGroups.filter((group) => !group.isArchived && !isStudioArchived),
+        [filteredGroups, isStudioArchived]
     );
 
     const archivedFilteredGroups = useMemo(
-        () => filteredGroups.filter((group) => group.isArchived),
-        [filteredGroups]
+        () => filteredGroups.filter((group) => group.isArchived || isStudioArchived),
+        [filteredGroups, isStudioArchived]
     );
 
     const quickAssignEligibleGroups = useMemo(() => {
@@ -445,7 +456,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 const overrideArchived = readGroupArchiveOverride(groupId);
                 const fallbackArchived = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
                 const isArchived = groupId in groupArchiveStateById ? groupArchiveStateById[groupId] : fallbackArchived;
-                return !isArchived;
+                return !isArchived && !isStudioArchived;
             })
             .map((group) => ({
                 id: group.id || "",
@@ -453,7 +464,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 memberCount: group.memberCount ?? 0
             }))
             .filter((group) => !!group.id);
-    }, [groupArchiveStateById, groupList]);
+    }, [groupArchiveStateById, groupList, isStudioArchived]);
 
     const syncGroupArchiveWithStudio = useCallback(async (nextIsArchived: boolean) => {
         if (!studioId) return;
@@ -580,6 +591,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
 
     const handleGroupArchiveToggle = useCallback(async (group: TransformedGroup, nextIsArchived: boolean) => {
         if (!isStudioOwner || updatingGroupArchiveId) return;
+        if (isStudioArchived && !nextIsArchived) return;
 
         const groupId = String(group.id || "").trim();
         if (!groupId) return;
@@ -623,7 +635,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         } finally {
             setUpdatingGroupArchiveId(null);
         }
-    }, [isStudioOwner, locale, toast, updatingGroupArchiveId]);
+    }, [isStudioArchived, isStudioOwner, locale, toast, updatingGroupArchiveId]);
 
     useEffect(() => {
         const source = initialStudio as (StudioResponse & {
@@ -972,7 +984,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             }
 
             setPendingApprovals((prev) => prev.filter((item) => item.id !== userId));
-            await loadPendingApprovals();
+            await Promise.all([loadPendingApprovals(), loadData()]);
         } catch (error) {
             console.error("Approve studio pending member failed:", error);
             setPendingApprovalsError(
@@ -1177,6 +1189,16 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 });
                 return;
             }
+
+            writeStudioArchiveOverride(studio.id, nextIsArchived);
+            window.dispatchEvent(
+                new CustomEvent(STUDIO_UPDATED_EVENT, {
+                    detail: {
+                        id: studio.id,
+                        isArchived: nextIsArchived
+                    }
+                })
+            );
 
             if (nextIsArchived && activeTab !== "settings" && activeTab !== "groups") {
                 setActiveTab("settings");
@@ -1681,7 +1703,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                 const isTogglingArchive = updatingGroupArchiveId === group.id;
                                                                 return (
                                                                     <Link
-                                                                        href={`/${locale}/group/${group.id}`}
+                                                                        href={`/${locale}/group/${group.id}?fromStudioId=${encodeURIComponent(studioId)}`}
                                                                         className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-white/80 bg-white/88 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur transition-all duration-300 hover:border-orange-200 hover:shadow-[0_22px_50px_rgba(255,95,61,0.12)]">
                                                                         <div className="flex items-center gap-3">
                                                                             <motion.div
@@ -1911,11 +1933,14 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                         {archivedFilteredGroups.map((group) => {
                                                             const isTogglingArchive = updatingGroupArchiveId === group.id;
+                                                            const canUnarchiveGroup = isStudioOwner && !isStudioArchived;
 
                                                             return (
                                                                 <Link
                                                                     key={`archived-${group.id}`}
-                                                                    href={isStudioOwner ? `/${locale}/group/${group.id}/setting` : `/${locale}/group/${group.id}`}
+                                                                    href={isStudioOwner
+                                                                        ? `/${locale}/group/${group.id}/setting?fromStudioId=${encodeURIComponent(studioId)}`
+                                                                        : `/${locale}/group/${group.id}?fromStudioId=${encodeURIComponent(studioId)}`}
                                                                     onClick={(event) => {
                                                                         if (isStudioOwner) return;
                                                                         event.preventDefault();
@@ -1936,7 +1961,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                                             <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-[11px] text-amber-700">
                                                                                 {locale === "vi" ? "Lưu trữ" : "Archived"}
                                                                             </span>
-                                                                            {isStudioOwner ? (
+                                                                            {canUnarchiveGroup ? (
                                                                                 <button
                                                                                     type="button"
                                                                                     aria-label={locale === "vi" ? "Hủy lưu trữ nhóm" : "Unarchive group"}

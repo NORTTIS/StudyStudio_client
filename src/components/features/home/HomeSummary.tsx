@@ -145,7 +145,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch {}
+            } catch { }
             return;
         }
 
@@ -154,7 +154,7 @@ function useStatDelta(key: string, currentValue: number, enabled: boolean, accou
             try {
                 localStorage.removeItem(storageKey);
                 localStorage.removeItem(baselineKey);
-            } catch {}
+            } catch { }
         }, timeout);
 
         return () => window.clearTimeout(timer);
@@ -179,7 +179,8 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
         neutral: {
             card: "border-[#DCE6F4]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(246,249,252,0.98)_55%,rgba(232,239,250,0.92)_100%)] backdrop-blur-xl",
             glow: "",
-            iconWrap: "bg-[#EAF1FB] text-[#4B607D]",
+            iconWrap: "bg-[#EAF1FB] text-[#4B607D] h-11 w-11 rounded-2xl",
+            iconSize: "h-5 w-5",
             label: "text-slate-500",
             value: "text-slate-900",
             note: "text-[#63738A]"
@@ -187,7 +188,8 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
         danger: {
             card: "border-[#F4D0C6]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(255,248,245,0.98)_55%,rgba(255,234,228,0.94)_100%)] backdrop-blur-xl",
             glow: "",
-            iconWrap: "bg-[#FDE2D9] text-[#C14E35]",
+            iconWrap: "bg-[#FDE2D9] text-[#C14E35] h-12 w-12 rounded-full",
+            iconSize: "h-5.5 w-5.5",
             label: "text-slate-500",
             value: "text-slate-900",
             note: "text-[#B56A57]"
@@ -195,7 +197,8 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
         success: {
             card: "border-[#CDE9D9]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(244,252,248,0.98)_55%,rgba(227,246,236,0.94)_100%)] backdrop-blur-xl",
             glow: "",
-            iconWrap: "bg-[#DFF4E9] text-[#1F7A55]",
+            iconWrap: "bg-[#DFF4E9] text-[#1F7A55] h-10 w-10 rounded-xl",
+            iconSize: "h-4.5 w-4.5",
             label: "text-slate-500",
             value: "text-slate-900",
             note: "text-[#4F876B]"
@@ -203,7 +206,8 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
         violet: {
             card: "border-[#DDD3F8]/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(250,247,255,0.98)_55%,rgba(239,232,255,0.94)_100%)] backdrop-blur-xl",
             glow: "",
-            iconWrap: "bg-[#EEE7FF] text-[#6A4FD8]",
+            iconWrap: "bg-[#EEE7FF] text-[#6A4FD8] h-11 w-11 rounded-2xl",
+            iconSize: "h-5 w-5",
             label: "text-slate-500",
             value: "text-slate-900",
             note: "text-[#7864AF]"
@@ -251,10 +255,10 @@ function StatCard({ label, value, icon, tone = "neutral", note, delta, index = 0
                 <motion.div
                     whileHover={{ rotate: 8, scale: 1.05 }}
                     className={cx(
-                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
+                        "flex shrink-0 items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
                         s.iconWrap
                     )}>
-                    {icon}
+                    <span className={s.iconSize}>{icon}</span>
                 </motion.div>
             </div>
         </motion.button>
@@ -380,9 +384,9 @@ function extractSummaryData(payload: unknown): HomeSummaryResponse | null {
     const source = payload as
         | HomeSummaryResponseApiResponse
         | {
-              status?: string;
-              data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
-          }
+            status?: string;
+            data?: HomeSummaryResponseApiResponse | HomeSummaryResponse | null;
+        }
         | null
         | undefined;
 
@@ -692,7 +696,7 @@ export default function HomeSummary() {
                     localStorage.removeItem(key);
                 }
             });
-        } catch {}
+        } catch { }
     }, [accountKey, hasSummary]);
 
     const remainingDelta = useStatDelta("remainingTaskCount", remainingTaskCount, hasSummary, accountKey);
@@ -722,7 +726,11 @@ export default function HomeSummary() {
 
                                 <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="min-w-0">
-                                        <h1 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text font-bold text-3xl text-transparent tracking-tight md:text-[38px]">
+                                        <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/70 px-3 py-1 font-semibold text-[11px] text-orange-700 uppercase tracking-[0.18em] shadow-sm backdrop-blur">
+                                            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                                            {t("heroPill")}
+                                        </div>
+                                        <h1 className="mt-3 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text font-bold text-3xl text-transparent tracking-tight md:text-[38px]">
                                             {t("title")}
                                         </h1>
 
@@ -769,7 +777,7 @@ export default function HomeSummary() {
                                     </motion.div>
                                 ) : (
                                     <div className="space-y-5">
-                                        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                        <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                             <StatCard
                                                 label={t("remainingTasksLabel")}
                                                 value={remainingTaskCount}

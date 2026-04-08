@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { acceptStudioInvite } from "@/api/studio-invites";
 import { getStudios, leaveStudio } from "@/api/studios";
 import { Button } from "@/components/ui/button";
-import { removePendingStudioJoinRequest } from "@/utils/studio-pending";
+import { getPendingStudioJoinRequests, removePendingStudioJoinRequest } from "@/utils/studio-pending";
 
 type Status = "idle" | "submitting" | "accepted" | "already" | "pending" | "rejected" | "need_login" | "error";
 
@@ -193,6 +193,11 @@ export function StudioInviteAcceptPage() {
         const targetStudioId = String(studioId || studioIdFromToken || "").trim();
         if (!targetStudioId) return "none";
 
+        const localPendingRequest = getPendingStudioJoinRequests().find(
+            (item) => String(item.studioId || "").trim() === targetStudioId
+        );
+        const hasLocalPendingRequest = !!localPendingRequest;
+
         try {
             const result = await getStudios(locale);
             if (result.status !== "success" || !result.data) return "none";
@@ -208,11 +213,10 @@ export function StudioInviteAcceptPage() {
                     String(item.id || "").trim() === targetStudioId
             );
             if (!currentStudio) {
-                if (status === "pending") {
-                    removePendingStudioJoinRequest(targetStudioId);
+                if (status === "pending" || hasLocalPendingRequest) {
                     setStudioId(targetStudioId);
-                    setStatus("rejected");
-                    return "rejected";
+                    setStatus("pending");
+                    return "pending";
                 }
 
                 return "none";
@@ -238,11 +242,10 @@ export function StudioInviteAcceptPage() {
                 return "pending";
             }
 
-            if (status === "pending") {
-                removePendingStudioJoinRequest(targetStudioId);
+            if (status === "pending" || hasLocalPendingRequest) {
                 setStudioId(targetStudioId);
-                setStatus("rejected");
-                return "rejected";
+                setStatus("pending");
+                return "pending";
             }
 
             return "none";
@@ -479,7 +482,7 @@ export function StudioInviteAcceptPage() {
                 {status === "accepted" ? (
                     <>
                         <h1 className="mb-2 font-bold text-2xl">{t("success")}</h1>
-                        <p className="mb-6 text-muted-foreground text-sm">{t("redirecting")}</p>
+                        <p className="mb-6 text-muted-foreground text-sm">{t("redirectingToStudio")}</p>
                     </>
                 ) : status === "rejected" ? (
                     <>
@@ -494,7 +497,7 @@ export function StudioInviteAcceptPage() {
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={onBackHome}>
-                                {t("backHome")}
+                                {t("backToStudios")}
                             </Button>
                         </div>
                     </>
@@ -507,12 +510,11 @@ export function StudioInviteAcceptPage() {
 
                         <div className="space-y-3">
                             <Button className="w-full" onClick={onBackHome}>
-                                {t("backHome")}
+                                {t("backToStudios")}
                             </Button>
 
                             <Button
-                                variant="outline"
-                                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                className="w-full bg-orange-600 text-white hover:bg-orange-700"
                                 onClick={handleCancelRequest}
                                 disabled={cancelingRequest}>
                                 {cancelingRequest ? t("cancelingRequest") : t("cancelRequest")}
@@ -525,11 +527,11 @@ export function StudioInviteAcceptPage() {
                         <p className="mb-6 text-muted-foreground text-sm">{t("alreadyMember")}</p>
 
                         <div className="space-y-3">
-                            <Button className="w-full" onClick={goToStudio}>
+                            <Button className="w-full bg-orange-600 text-white hover:bg-orange-700" onClick={goToStudio}>
                                 {t("goToStudio")}
                             </Button>
-                            <Button variant="outline" className="w-full" onClick={onBackHome}>
-                                {t("backHome")}
+                            <Button className="w-full bg-orange-600 text-white hover:bg-orange-700" onClick={onBackHome}>
+                                {t("backToStudios")}
                             </Button>
                         </div>
                     </>
@@ -547,8 +549,8 @@ export function StudioInviteAcceptPage() {
                             <Button className="w-full" onClick={goLogin}>
                                 {t("loginButton")}
                             </Button>
-                            <Button variant="outline" className="w-full" onClick={onBackHome}>
-                                {t("backHome")}
+                            <Button className="w-full bg-orange-600 text-white hover:bg-orange-700" onClick={onBackHome}>
+                                {t("backToStudios")}
                             </Button>
                         </div>
                     </>
@@ -564,8 +566,8 @@ export function StudioInviteAcceptPage() {
                                 {t("acceptButton")}
                             </Button>
 
-                            <Button variant="outline" className="w-full" onClick={onBackHome}>
-                                {t("backHome")}
+                            <Button className="w-full bg-orange-600 text-white hover:bg-orange-700" onClick={onBackHome}>
+                                {t("backToStudios")}
                             </Button>
                         </div>
                     </>

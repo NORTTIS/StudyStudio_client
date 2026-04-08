@@ -2,8 +2,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
+import { SURFACE_LAYERS } from "@/lib/layers";
 
 interface ModalProps {
     isOpen: boolean;
@@ -27,6 +29,7 @@ export function Modal({
     className
 }: ModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
+    const [mounted, setMounted] = useState(false);
 
     const sizeStyles = {
         sm: "max-w-sm",
@@ -34,6 +37,12 @@ export function Modal({
         lg: "max-w-lg",
         xl: "max-w-xl"
     };
+
+    // Set mounted flag for SSR safety
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     // Handle ESC key
     useEffect(() => {
@@ -92,17 +101,17 @@ export function Modal({
         };
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!(isOpen && mounted)) return null;
 
-    return (
+    return createPortal((
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
+            className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? "modal-title" : undefined}>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/50 transition-opacity"
+                className={twMerge("fixed inset-0 bg-black/50 transition-opacity", SURFACE_LAYERS.modalOverlay)}
                 onClick={closeOnOverlayClick ? onClose : undefined}
                 aria-hidden="true"
             />
@@ -110,7 +119,12 @@ export function Modal({
             {/* Modal Content */}
             <div
                 ref={modalRef}
-                className={twMerge("relative z-10 w-full rounded-lg bg-white shadow-xl", sizeStyles[size], className)}>
+                className={twMerge(
+                    "relative w-full rounded-lg bg-white shadow-xl",
+                    SURFACE_LAYERS.modalContent,
+                    sizeStyles[size],
+                    className
+                )}>
                 {/* Header */}
                 {(title || showCloseButton) && (
                     <div className="flex items-center justify-between px-6 py-4">
@@ -147,7 +161,7 @@ export function Modal({
                 <div className="px-6 py-4">{children}</div>
             </div>
         </div>
-    );
+    ), document.body);
 }
 
 interface ModalFooterProps {
