@@ -1,6 +1,14 @@
 "use client";
 
-import { ChevronDown, ChevronLeft, ChevronRight, Filter, Search, AlertTriangle, ListTodo } from "lucide-react";
+import {
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Search,
+    AlertTriangle,
+    ListTodo,
+    CalendarDays
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -21,23 +29,34 @@ type TaskSeverity = components["schemas"]["TaskSeverity"];
 type TaskRow = {
     id: string;
     title: string;
+    statusId: string;
+    assigneeId: string;
     assigneeName: string;
     assigneeAvatarUrl: string | null;
     assigneeInitials: string;
     severityLabel: string;
     severityClass: string;
+    taskSeverity: TaskSeverity;
     priorityLabel: string;
     priorityClass: string;
+    taskPriority: TaskPriority;
     statusName: string;
     startLabel: string;
     dueLabel: string;
+    dueDate: string | null;
+    progress: number;
 };
 
 type DateFilterValues = {
-    startDateFrom: string;
-    startDateTo: string;
-    dueDateFrom: string;
-    dueDateTo: string;
+    startDate: string;
+    dueDate: string;
+};
+
+type DropdownOption = {
+    value: string;
+    label: string;
+    avatarUrl?: string | null;
+    initials?: string;
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -113,6 +132,18 @@ function normalizeDateInput(value: string) {
     return String(value).trim();
 }
 
+function formatFilterDate(input: string, locale: string) {
+    const raw = String(input).trim();
+    if (!raw) return "";
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return raw;
+    return new Intl.DateTimeFormat(locale.toLowerCase().startsWith("vi") ? "vi-VN" : "en-US", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    }).format(date);
+}
+
 function severityClassOf(v?: TaskSeverity) {
     if (v === 3) return "text-red-600";
     if (v === 2) return "text-orange-600";
@@ -144,7 +175,7 @@ function buildInitials(name: string) {
     if (!s) return "U";
     const parts = s.split(/\s+/).filter(Boolean);
     const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : "";
     return `${first}${last}`.toUpperCase() || "U";
 }
 
@@ -157,6 +188,35 @@ function buildAssignee(user: UserDto | null | undefined, unassignedText: string)
         avatarUrl: String(user?.avatarUrl ?? "").trim() || null,
         initials: buildInitials(assigneeName)
     };
+}
+
+function mergeStatusOptions(
+    current: Array<{ id: string; name: string }>,
+    incoming: Array<{ id: string; name: string }>
+) {
+    const merged = new Map<string, { id: string; name: string }>();
+    [...current, ...incoming].forEach((option) => {
+        if (!option.id || !option.name) return;
+        merged.set(option.id, option);
+    });
+    return Array.from(merged.values());
+}
+
+function mergeDropdownOptions(current: DropdownOption[], incoming: DropdownOption[]) {
+    const merged = new Map<string, DropdownOption>();
+    [...current, ...incoming].forEach((option) => {
+        if (!option.value || !option.label) return;
+        merged.set(option.value, option);
+    });
+    return Array.from(merged.values());
+}
+
+function isOverdueTask(dueDate: string | null | undefined, progress: number | undefined) {
+    if (!dueDate) return false;
+    const now = new Date();
+    const due = new Date(dueDate);
+    const notDone = (progress ?? 100) < 100;
+    return due < now && notDone;
 }
 
 async function apiGetGroupTasks(args: {
@@ -212,11 +272,41 @@ async function apiGetGroupTasks(args: {
     return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
 }
 
+function FilterChip({
+    active,
+    label,
+    onClick,
+    icon
+}: {
+    active?: boolean;
+    label: string;
+    onClick?: () => void;
+    icon?: React.ReactNode;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border px-3.5 text-sm font-semibold transition-all duration-200",
+                active
+                    ? "border-orange-200 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-100/80 text-orange-700 shadow-[0_10px_24px_rgba(251,146,60,0.14)]"
+                    : "border-zinc-200/80 bg-white/90 text-zinc-700 shadow-[0_2px_10px_rgba(15,23,42,0.03)] hover:-translate-y-[1px] hover:border-orange-200 hover:bg-white hover:shadow-[0_10px_24px_rgba(251,146,60,0.10)]"
+            )}>
+            {icon ? <span className="flex shrink-0 items-center justify-center">{icon}</span> : null}
+            <span className="truncate text-center">{label}</span>
+        </button>
+    );
+}
+
 function TableSkeleton() {
     return (
         <div className="space-y-3">
             {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-2xl border border-zinc-200/80 bg-white/70" />
+                <div
+                    key={i}
+                    className="h-20 animate-pulse rounded-[24px] border border-zinc-200/70 bg-gradient-to-r from-white via-zinc-50 to-orange-50/30"
+                />
             ))}
         </div>
     );
@@ -235,114 +325,127 @@ function DateFilterModal(props: {
     if (!open) return null;
 
     return createPortal(
-        <div
-            className="fixed inset-0 z-[12000] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
-            onPointerDown={(e) => {
-                if (e.target === e.currentTarget) onClose();
-            }}>
-            <div
-                className="w-full max-w-xl rounded-[28px] border border-zinc-200 bg-white p-5 shadow-2xl"
-                onPointerDown={(e) => e.stopPropagation()}>
-                <div className="mb-5 flex items-center justify-between">
-                    <h3 className="font-semibold text-lg text-zinc-900">{t("dateFilterTitle")}</h3>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50">
-                        {t("cancel")}
-                    </button>
-                </div>
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[12000] flex items-center justify-center bg-black/40 p-4 backdrop-blur-md"
+                onPointerDown={(e) => {
+                    if (e.target === e.currentTarget) onClose();
+                }}>
+                <motion.div
+                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                    transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    className="relative w-full max-w-xl overflow-hidden rounded-[32px] border border-white/80 bg-white/95 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.20)]"
+                    onPointerDown={(e) => e.stopPropagation()}>
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-orange-100/60 via-amber-50/50 to-sky-100/40" />
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <label className="flex flex-col gap-1.5">
-                        <span className="font-medium text-sm text-zinc-600">{t("startFrom")}</span>
-                        <input
-                            type="date"
-                            value={values.startDateFrom}
-                            onChange={(e) => onChange({ startDateFrom: normalizeDateInput(e.target.value) })}
-                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
-                        />
-                    </label>
+                    <div className="relative">
+                        <div className="mb-6 flex items-start justify-between gap-4">
+                            <div>
+                                <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-400 text-white shadow-lg">
+                                    <CalendarDays className="h-5 w-5" />
+                                </div>
+                                <h3 className="font-semibold text-xl text-zinc-900">{t("dateFilterTitle")}</h3>
+                            </div>
 
-                    <label className="flex flex-col gap-1.5">
-                        <span className="font-medium text-sm text-zinc-600">{t("startTo")}</span>
-                        <input
-                            type="date"
-                            value={values.startDateTo}
-                            onChange={(e) => onChange({ startDateTo: normalizeDateInput(e.target.value) })}
-                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
-                        />
-                    </label>
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="rounded-2xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-50">
+                                {t("cancel")}
+                            </button>
+                        </div>
 
-                    <label className="flex flex-col gap-1.5">
-                        <span className="font-medium text-sm text-zinc-600">{t("dueFrom")}</span>
-                        <input
-                            type="date"
-                            value={values.dueDateFrom}
-                            onChange={(e) => onChange({ dueDateFrom: normalizeDateInput(e.target.value) })}
-                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
-                        />
-                    </label>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <label className="group flex flex-col gap-2">
+                                <span className="font-semibold text-sm text-zinc-700">{t("startDate")}</span>
+                                <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-1 transition group-focus-within:border-orange-300 group-focus-within:bg-white group-focus-within:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]">
+                                    <input
+                                        type="date"
+                                        value={values.startDate}
+                                        onChange={(e) => onChange({ startDate: normalizeDateInput(e.target.value) })}
+                                        className="h-11 w-full rounded-xl bg-transparent px-3 text-sm text-zinc-800 outline-none"
+                                    />
+                                </div>
+                            </label>
 
-                    <label className="flex flex-col gap-1.5">
-                        <span className="font-medium text-sm text-zinc-600">{t("dueTo")}</span>
-                        <input
-                            type="date"
-                            value={values.dueDateTo}
-                            onChange={(e) => onChange({ dueDateTo: normalizeDateInput(e.target.value) })}
-                            className="h-11 rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none transition focus:border-zinc-300"
-                        />
-                    </label>
-                </div>
+                            <label className="group flex flex-col gap-2">
+                                <span className="font-semibold text-sm text-zinc-700">{t("dueDate")}</span>
+                                <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-1 transition group-focus-within:border-orange-300 group-focus-within:bg-white group-focus-within:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]">
+                                    <input
+                                        type="date"
+                                        value={values.dueDate}
+                                        onChange={(e) => onChange({ dueDate: normalizeDateInput(e.target.value) })}
+                                        className="h-11 w-full rounded-xl bg-transparent px-3 text-sm text-zinc-800 outline-none"
+                                    />
+                                </div>
+                            </label>
+                        </div>
 
-                <div className="mt-5 flex items-center justify-end gap-2.5">
-                    <button
-                        type="button"
-                        onClick={onClear}
-                        className="h-10 rounded-xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
-                        {t("clearFilter")}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onSubmit}
-                        className="h-10 rounded-xl bg-zinc-900 px-4 font-semibold text-sm text-white hover:bg-zinc-800">
-                        {t("applyFilter")}
-                    </button>
-                </div>
-            </div>
-        </div>,
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={onClear}
+                                className="h-11 rounded-2xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50">
+                                {t("clearFilter")}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={onSubmit}
+                                className="h-11 rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 px-5 font-semibold text-sm text-white shadow-[0_12px_24px_rgba(24,24,27,0.16)] transition hover:-translate-y-[1px] hover:shadow-[0_16px_28px_rgba(24,24,27,0.20)]">
+                                {t("applyFilter")}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>,
         document.body
     );
 }
-
-type DropdownOption = {
-    value: string;
-    label: string;
-};
 
 function FancyDropdown({
     value,
     options,
     onChange,
-    ariaLabel
+    ariaLabel,
+    emptyValue,
+    emptyLabel
 }: {
     value: string;
     options: DropdownOption[];
     onChange: (value: string) => void;
     ariaLabel: string;
+    emptyValue?: string;
+    emptyLabel?: string;
 }) {
     const [open, setOpen] = React.useState(false);
+    const [portalReady, setPortalReady] = React.useState(false);
     const rootRef = React.useRef<HTMLDivElement | null>(null);
+    const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+    const menuRef = React.useRef<HTMLDivElement | null>(null);
 
-    const activeLabel = options.find((option) => option.value === value)?.label ?? options[0]?.label ?? "";
+    const isEmptyState = emptyValue !== undefined && emptyLabel && value === emptyValue;
+    const activeOption = options.find((option) => option.value === value);
+    const activeLabel = activeOption?.label ?? options[0]?.label ?? "";
+    const triggerText = isEmptyState ? emptyLabel : activeLabel;
+
+    React.useEffect(() => {
+        setPortalReady(typeof document !== "undefined");
+    }, []);
 
     React.useEffect(() => {
         if (!open) return;
 
         const onPointerDown = (event: PointerEvent) => {
-            if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
+            const target = event.target as Node;
+            if (rootRef.current?.contains(target)) return;
+            if (menuRef.current?.contains(target)) return;
+            setOpen(false);
         };
 
         const onKeyDown = (event: KeyboardEvent) => {
@@ -358,51 +461,118 @@ function FancyDropdown({
         };
     }, [open]);
 
+    const triggerRect = triggerRef.current?.getBoundingClientRect();
+    const dropdownStyle: React.CSSProperties = {
+        position: "fixed",
+        top: triggerRect ? triggerRect.bottom + 10 : 0,
+        left: triggerRect ? triggerRect.left : 0,
+        minWidth: triggerRect ? triggerRect.width : "auto"
+    };
+
     return (
         <div ref={rootRef} className="relative">
             <button
+                ref={triggerRef}
                 type="button"
                 aria-label={ariaLabel}
                 aria-expanded={open}
                 onClick={() => setOpen((current) => !current)}
-                className="flex h-12 w-full items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50/70 px-4 text-left text-sm text-zinc-800 outline-none transition hover:border-orange-200 hover:bg-white focus:border-orange-300 focus:bg-white">
-                <span className="truncate font-medium">{activeLabel}</span>
-                <ChevronDown className={cn("h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200", open && "rotate-180")} />
+                className={cn(
+                    "group flex h-12 w-full min-w-0 items-center justify-between gap-3 rounded-2xl border px-3.5 text-left outline-none transition-all duration-200",
+                    "border-zinc-200/80 bg-white/90 shadow-[0_2px_10px_rgba(15,23,42,0.03)]",
+                    "hover:-translate-y-[1px] hover:border-orange-200 hover:bg-white hover:shadow-[0_10px_24px_rgba(251,146,60,0.10)]",
+                    "focus:border-orange-300 focus:bg-white focus:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]"
+                )}>
+                <span className="flex min-w-0 items-center gap-2.5">
+                    {!isEmptyState && activeOption?.avatarUrl ? (
+                        <Image
+                            src={activeOption.avatarUrl}
+                            alt={activeOption.label}
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 shrink-0 rounded-full object-cover ring-2 ring-white"
+                        />
+                    ) : null}
+
+                    {!isEmptyState && !activeOption?.avatarUrl && activeOption?.initials ? (
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 text-[10px] font-bold text-orange-700">
+                            {activeOption.initials}
+                        </span>
+                    ) : null}
+
+                    <span
+                        className={cn(
+                            "min-w-0 truncate text-sm leading-normal",
+                            isEmptyState ? "font-normal text-zinc-500" : "font-semibold text-zinc-800"
+                        )}>
+                        {triggerText}
+                    </span>
+                </span>
+
+                <ChevronDown
+                    className={cn(
+                        "h-4 w-4 shrink-0 text-zinc-400 transition-all duration-200 group-hover:text-orange-500",
+                        open && "rotate-180 text-orange-500"
+                    )}
+                />
             </button>
 
-            <AnimatePresence>
-                {open && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                        className="absolute top-full left-0 z-30 mt-2 min-w-full overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
-                        <div className="p-1">
-                            {options.map((option) => {
-                                const isActive = option.value === value;
-                                return (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        onClick={() => {
-                                            onChange(option.value);
-                                            setOpen(false);
-                                        }}
-                                        className={cn(
-                                            "flex w-full items-center rounded-xl px-4 py-2.5 text-left text-sm transition",
-                                            isActive
-                                                ? "bg-gradient-to-r from-orange-50 to-orange-100/70 font-semibold text-orange-700"
-                                                : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950"
-                                        )}>
-                                        <span>{option.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
+            {open &&
+                portalReady &&
+                createPortal(
+                    <AnimatePresence>
+                        <motion.div
+                            ref={menuRef}
+                            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                            style={dropdownStyle}
+                            className="z-[9999] overflow-hidden rounded-3xl border border-white/80 bg-white/95 shadow-[0_24px_60px_rgba(15,23,42,0.16)] backdrop-blur">
+                            <div className="max-h-[320px] overflow-y-auto p-2">
+                                {options.map((option) => {
+                                    const isActive = option.value === value;
+
+                                    return (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onChange(option.value);
+                                                setOpen(false);
+                                            }}
+                                            className={cn(
+                                                "flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left text-sm transition-all duration-150",
+                                                isActive
+                                                    ? "bg-gradient-to-r from-orange-50 via-amber-50 to-orange-100/70 font-semibold text-orange-700 shadow-sm"
+                                                    : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950"
+                                            )}>
+                                            {option.avatarUrl ? (
+                                                <Image
+                                                    src={option.avatarUrl}
+                                                    alt={option.label}
+                                                    width={28}
+                                                    height={28}
+                                                    className="h-7 w-7 shrink-0 rounded-full object-cover"
+                                                />
+                                            ) : null}
+
+                                            {!option.avatarUrl && option.initials ? (
+                                                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-700">
+                                                    {option.initials}
+                                                </span>
+                                            ) : null}
+
+                                            <span className="truncate">{option.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>,
+                    document.body
                 )}
-            </AnimatePresence>
         </div>
     );
 }
@@ -410,6 +580,8 @@ function FancyDropdown({
 export function GroupListScreen() {
     const locale = useLocale();
     const t = useTranslations("GroupTaskListPage");
+    const allAssigneesLabel = t("allAssignees");
+    const selectAssigneeLabel = t("selectAssignee");
 
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
@@ -419,6 +591,7 @@ export function GroupListScreen() {
     const [loadError, setLoadError] = React.useState<string | null>(null);
     const [rows, setRows] = React.useState<TaskRow[]>([]);
     const [statusOptions, setStatusOptions] = React.useState<Array<{ id: string; name: string }>>([]);
+    const [assigneeOptions, setAssigneeOptions] = React.useState<DropdownOption[]>([]);
     const [page, setPage] = React.useState(1);
     const [totalPages, setTotalPages] = React.useState(1);
     const [totalCount, setTotalCount] = React.useState(0);
@@ -429,19 +602,18 @@ export function GroupListScreen() {
     const [searchInput, setSearchInput] = React.useState("");
     const [searchKeyword, setSearchKeyword] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
-    const [sortByDeadline, setSortByDeadline] = React.useState<"asc" | "desc">("desc");
+    const [assigneeFilter, setAssigneeFilter] = React.useState("all");
+    const [severityFilter, setSeverityFilter] = React.useState("all");
+    const [priorityFilter, setPriorityFilter] = React.useState("all");
+    const [overdueOnly, setOverdueOnly] = React.useState(false);
     const [filterOpen, setFilterOpen] = React.useState(false);
     const [draftDateFilter, setDraftDateFilter] = React.useState<DateFilterValues>({
-        startDateFrom: "",
-        startDateTo: "",
-        dueDateFrom: "",
-        dueDateTo: ""
+        startDate: "",
+        dueDate: ""
     });
     const [appliedDateFilter, setAppliedDateFilter] = React.useState<DateFilterValues>({
-        startDateFrom: "",
-        startDateTo: "",
-        dueDateFrom: "",
-        dueDateTo: ""
+        startDate: "",
+        dueDate: ""
     });
 
     React.useEffect(() => {
@@ -476,12 +648,12 @@ export function GroupListScreen() {
                 groupId,
                 search: searchKeyword || undefined,
                 statusId: statusFilter !== "all" ? statusFilter : undefined,
-                startDateFrom: appliedDateFilter.startDateFrom || undefined,
-                startDateTo: appliedDateFilter.startDateTo || undefined,
-                dueDateFrom: appliedDateFilter.dueDateFrom || undefined,
-                dueDateTo: appliedDateFilter.dueDateTo || undefined,
+                startDateFrom: appliedDateFilter.startDate || undefined,
+                startDateTo: appliedDateFilter.startDate || undefined,
+                dueDateFrom: appliedDateFilter.dueDate || undefined,
+                dueDateTo: appliedDateFilter.dueDate || undefined,
                 sortBy: "dueDate",
-                sortAscending: sortByDeadline === "asc",
+                sortAscending: false,
                 page,
                 pageSize,
                 fallbackMessage: t("cannotLoad"),
@@ -499,27 +671,43 @@ export function GroupListScreen() {
             const nextRows = (data?.items ?? []).map((item, index) => {
                 const id = String(item.taskId ?? "").trim() || `task_${index}`;
                 const title = String(item.taskTitle ?? "").trim() || t("untitledTask");
+                const statusId = String(item.statusId ?? "").trim();
                 const statusName = String(item.statusName ?? "").trim() || "-";
                 const primaryAssignee = item.assignees?.[0] ?? null;
                 const assignee = buildAssignee(primaryAssignee, t("unassigned"));
+                const assigneeId = String(primaryAssignee?.id ?? "").trim() || "__unassigned__";
 
                 return {
                     id,
                     title,
+                    statusId,
+                    assigneeId,
                     assigneeName: assignee.name,
                     assigneeAvatarUrl: assignee.avatarUrl,
                     assigneeInitials: assignee.initials,
                     severityLabel: severityLabelOf(item.taskSeverity, t),
                     severityClass: severityClassOf(item.taskSeverity),
+                    taskSeverity: item.taskSeverity ?? 0,
                     priorityLabel: priorityLabelOf(item.taskPriority, t),
                     priorityClass: priorityClassOf(item.taskPriority),
+                    taskPriority: item.taskPriority ?? 0,
                     statusName,
                     startLabel: formatShortDate(item.startDate ?? null, locale),
-                    dueLabel: formatShortDate(item.dueDate ?? null, locale)
+                    dueLabel: formatShortDate(item.dueDate ?? null, locale),
+                    dueDate: item.dueDate ?? null,
+                    progress: item.progress ?? 0
                 } satisfies TaskRow;
             });
 
-            setStatusOptions(nextStatuses);
+            const nextAssignees = nextRows.map((row) => ({
+                value: row.assigneeId,
+                label: row.assigneeName,
+                avatarUrl: row.assigneeAvatarUrl,
+                initials: row.assigneeInitials
+            }));
+
+            setStatusOptions((prev) => mergeStatusOptions(prev, nextStatuses));
+            setAssigneeOptions((prev) => mergeDropdownOptions(prev, nextAssignees));
             setRows(nextRows);
             setTotalPages(Math.max(1, Number(data?.totalPages ?? 1)));
             setTotalCount(Math.max(0, Number(data?.totalCount ?? 0)));
@@ -528,13 +716,42 @@ export function GroupListScreen() {
         } finally {
             setLoading(false);
         }
-    }, [appliedDateFilter, groupId, locale, page, searchKeyword, sortByDeadline, statusFilter, t]);
+    }, [appliedDateFilter, groupId, locale, page, searchKeyword, statusFilter, t]);
 
     React.useEffect(() => {
         void refresh();
     }, [refresh]);
 
+    const filteredRows = React.useMemo(() => {
+        return rows.filter((row) => {
+            if (assigneeFilter !== "all" && row.assigneeId !== assigneeFilter) return false;
+            if (statusFilter !== "all" && row.statusId !== statusFilter) return false;
+            if (severityFilter !== "all" && row.taskSeverity !== Number(severityFilter)) return false;
+            if (priorityFilter !== "all" && row.taskPriority !== Number(priorityFilter)) return false;
+            if (overdueOnly && !isOverdueTask(row.dueDate, row.progress)) return false;
+            return true;
+        });
+    }, [rows, assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly]);
+
     const showPagination = !loading && loadError === null;
+
+    const appliedDateFilterLabel = [
+        appliedDateFilter.startDate
+            ? `${t("startDate")}: ${formatFilterDate(appliedDateFilter.startDate, locale)}`
+            : "",
+        appliedDateFilter.dueDate ? `${t("dueDate")}: ${formatFilterDate(appliedDateFilter.dueDate, locale)}` : ""
+    ]
+        .filter(Boolean)
+        .join(" • ");
+
+    const activeFilterCount =
+        Number(assigneeFilter !== "all") +
+        Number(statusFilter !== "all") +
+        Number(severityFilter !== "all") +
+        Number(priorityFilter !== "all") +
+        Number(overdueOnly) +
+        Number(Boolean(appliedDateFilter.startDate || appliedDateFilter.dueDate)) +
+        Number(Boolean(searchKeyword));
 
     const openTaskDetail = (taskId: string) => {
         setDetailTaskId(taskId);
@@ -546,62 +763,145 @@ export function GroupListScreen() {
         setDetailTaskId(null);
     };
 
+    const clearAllFilters = () => {
+        setSearchInput("");
+        setSearchKeyword("");
+        setStatusFilter("all");
+        setAssigneeFilter("all");
+        setSeverityFilter("all");
+        setPriorityFilter("all");
+        setOverdueOnly(false);
+        setDraftDateFilter({ startDate: "", dueDate: "" });
+        setAppliedDateFilter({ startDate: "", dueDate: "" });
+        setPage(1);
+    };
+
     return (
         <div className="pb-8">
             <TaskDetailModal open={detailOpen} onClose={closeTaskDetail} taskId={detailTaskId} onSaved={refresh} />
 
             <Container className="bg-transparent">
                 <section className="mt-6 space-y-5">
-                    <div className="rounded-[30px] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
-                        <div className="grid gap-3 lg:grid-cols-[1.5fr_0.75fr_0.8fr_auto]">
-                            <label className="relative block">
-                                <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                                <input
-                                    value={searchInput}
-                                    onChange={(e) => {
-                                        setSearchInput(e.target.value);
+                    <motion.div
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                        className="relative overflow-hidden rounded-[32px] border border-white/70 bg-gradient-to-br from-white via-white to-orange-50/40 p-4 shadow-[0_10px_35px_rgba(15,23,42,0.06)] backdrop-blur sm:p-5">
+                        <div className="pointer-events-none absolute -top-10 -right-10 h-36 w-36 rounded-full bg-orange-200/20 blur-3xl" />
+                        <div className="pointer-events-none absolute -bottom-8 left-1/3 h-28 w-28 rounded-full bg-amber-200/20 blur-3xl" />
+
+                        <div className="relative space-y-3">
+                            <div className="flex justify-end">
+                                {activeFilterCount > 0 ? (
+                                    <button
+                                        type="button"
+                                        onClick={clearAllFilters}
+                                        className="rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50">
+                                        {t("clearFilter")}
+                                    </button>
+                                ) : null}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                                <label className="group relative min-w-0">
+                                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-zinc-400 transition group-focus-within:text-orange-500" />
+                                    <input
+                                        value={searchInput}
+                                        onChange={(e) => {
+                                            setSearchInput(e.target.value);
+                                            setPage(1);
+                                        }}
+                                        placeholder={t("searchPlaceholder")}
+                                        className="h-12 w-full rounded-2xl border border-zinc-200/80 bg-white/90 py-0 pr-4 pl-10 text-sm text-zinc-800 outline-none shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-all duration-200 placeholder:text-zinc-400 focus:border-orange-300 focus:bg-white focus:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]"
+                                    />
+                                </label>
+
+                                <FancyDropdown
+                                    value={assigneeFilter}
+                                    options={[{ value: "all", label: allAssigneesLabel }, ...assigneeOptions]}
+                                    onChange={(nextValue) => {
+                                        setAssigneeFilter(nextValue);
                                         setPage(1);
                                     }}
-                                    placeholder={t("searchPlaceholder")}
-                                    className="h-12 w-full rounded-2xl border border-zinc-200 bg-zinc-50/70 pr-4 pl-11 text-sm text-zinc-800 outline-none transition focus:border-zinc-300 focus:bg-white"
+                                    ariaLabel={selectAssigneeLabel}
+                                    emptyValue="all"
+                                    emptyLabel={selectAssigneeLabel}
                                 />
-                            </label>
 
-                            <FancyDropdown
-                                value={statusFilter}
-                                options={[{ value: "all", label: t("allStatus") }, ...statusOptions.map((s) => ({ value: s.id, label: s.name }))]}
-                                onChange={(nextValue) => {
-                                    setStatusFilter(nextValue);
-                                    setPage(1);
-                                }}
-                                ariaLabel={t("allStatus")}
-                            />
+                                <FancyDropdown
+                                    value={statusFilter}
+                                    options={[
+                                        { value: "all", label: t("allStatus") },
+                                        ...statusOptions.map((s) => ({ value: s.id, label: s.name }))
+                                    ]}
+                                    onChange={(nextValue) => {
+                                        setStatusFilter(nextValue);
+                                        setPage(1);
+                                    }}
+                                    ariaLabel={t("selectStatusPlaceholder")}
+                                    emptyValue="all"
+                                    emptyLabel={t("selectStatusPlaceholder")}
+                                />
 
-                            <FancyDropdown
-                                value={sortByDeadline}
-                                options={[
-                                    { value: "asc", label: `${t("sortLabel")}: ${t("sortAsc")}` },
-                                    { value: "desc", label: `${t("sortLabel")}: ${t("sortDesc")}` }
-                                ]}
-                                onChange={(nextValue) => {
-                                    setSortByDeadline(nextValue === "desc" ? "desc" : "asc");
-                                    setPage(1);
-                                }}
-                                ariaLabel={t("sortLabel")}
-                            />
+                                <FancyDropdown
+                                    value={severityFilter}
+                                    options={[
+                                        { value: "all", label: t("allSeverities") },
+                                        { value: "0", label: t("minor") },
+                                        { value: "1", label: t("moderate") },
+                                        { value: "2", label: t("major") },
+                                        { value: "3", label: t("critical") }
+                                    ]}
+                                    onChange={(nextValue) => {
+                                        setSeverityFilter(nextValue);
+                                        setPage(1);
+                                    }}
+                                    ariaLabel={t("selectSeverity")}
+                                    emptyValue="all"
+                                    emptyLabel={t("selectSeverity")}
+                                />
+                            </div>
 
-                            <button
-                                type="button"
-                                onClick={() => setFilterOpen(true)}
-                                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-semibold text-sm text-zinc-700 transition hover:bg-zinc-50">
-                                <Filter className="h-4 w-4" />
-                                {t("dateFilterButton")}
-                            </button>
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                                <FancyDropdown
+                                    value={priorityFilter}
+                                    options={[
+                                        { value: "all", label: t("allPriorities") },
+                                        { value: "0", label: t("low") },
+                                        { value: "1", label: t("medium") },
+                                        { value: "2", label: t("high") }
+                                    ]}
+                                    onChange={(nextValue) => {
+                                        setPriorityFilter(nextValue);
+                                        setPage(1);
+                                    }}
+                                    ariaLabel={t("selectPriority")}
+                                    emptyValue="all"
+                                    emptyLabel={t("selectPriority")}
+                                />
+
+                                <FilterChip
+                                    active={overdueOnly}
+                                    onClick={() => {
+                                        setOverdueOnly((v) => !v);
+                                        setPage(1);
+                                    }}
+                                    label={t("overdueTasks")}
+                                    icon={<AlertTriangle className="h-4 w-4" />}
+                                />
+
+                                <FilterChip
+                                    active={Boolean(appliedDateFilterLabel)}
+                                    onClick={() => setFilterOpen(true)}
+                                    label={appliedDateFilterLabel || t("dateFilterButton")}
+                                    icon={<CalendarDays className="h-4 w-4" />}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="overflow-hidden rounded-[30px] border border-zinc-200 bg-white shadow-sm">
-                        <div className="border-b border-zinc-200 px-5 py-4">
+                    <div className="overflow-hidden rounded-[30px] border border-zinc-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+                        <div className="border-b border-zinc-200 bg-gradient-to-r from-zinc-50 to-orange-50/30 px-5 py-4">
                             <div className="grid grid-cols-7 gap-4 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500">
                                 <div>{t("taskName")}</div>
                                 <div>{t("assignee")}</div>
@@ -627,19 +927,22 @@ export function GroupListScreen() {
                                         {t("reload")}
                                     </button>
                                 </div>
-                            ) : rows.length === 0 ? (
+                            ) : filteredRows.length === 0 ? (
                                 <div className="rounded-[24px] border border-dashed border-zinc-200 bg-zinc-50/60 px-6 py-14 text-center">
                                     <ListTodo className="mx-auto h-9 w-9 text-zinc-400" />
                                     <p className="mt-4 font-medium text-zinc-600">{t("noData")}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {rows.map((row) => (
-                                        <button
+                                    {filteredRows.map((row, index) => (
+                                        <motion.button
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.22, delay: index * 0.02 }}
                                             key={row.id}
                                             type="button"
                                             onClick={() => openTaskDetail(row.id)}
-                                            className="grid w-full grid-cols-7 gap-4 rounded-[24px] border border-zinc-200/80 bg-zinc-50/45 px-5 py-5 text-center transition hover:border-zinc-300 hover:bg-zinc-50">
+                                            className="grid w-full grid-cols-7 gap-4 rounded-[24px] border border-zinc-200/80 bg-gradient-to-r from-white via-zinc-50/40 to-orange-50/20 px-5 py-5 text-center shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:border-zinc-300 hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
                                             <div className="flex items-center justify-center">
                                                 <p className="line-clamp-2 font-semibold text-[15px] text-zinc-900">
                                                     {row.title}
@@ -712,7 +1015,7 @@ export function GroupListScreen() {
                                             <div className="flex items-center justify-center font-medium text-sm text-slate-600">
                                                 {row.dueLabel}
                                             </div>
-                                        </button>
+                                        </motion.button>
                                     ))}
                                 </div>
                             )}
@@ -725,7 +1028,7 @@ export function GroupListScreen() {
                                 type="button"
                                 disabled={page <= 1}
                                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
                                 <ChevronLeft className="h-4 w-4" />
                                 {t("previous")}
                             </button>
@@ -738,7 +1041,7 @@ export function GroupListScreen() {
                                 type="button"
                                 disabled={page >= totalPages}
                                 onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
                                 {t("next")}
                                 <ChevronRight className="h-4 w-4" />
                             </button>
@@ -755,10 +1058,8 @@ export function GroupListScreen() {
                 onClose={() => setFilterOpen(false)}
                 onClear={() => {
                     const emptyFilter = {
-                        startDateFrom: "",
-                        startDateTo: "",
-                        dueDateFrom: "",
-                        dueDateTo: ""
+                        startDate: "",
+                        dueDate: ""
                     };
                     setDraftDateFilter(emptyFilter);
                     setAppliedDateFilter(emptyFilter);

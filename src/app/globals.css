@@ -17,6 +17,10 @@
     --radius: 0.5rem;
 
     --shadow-color: #000000;
+    --app-scrollbar-size: 7px;
+    --app-scrollbar-track: rgba(15, 23, 42, 0.04);
+    --app-scrollbar-thumb: rgba(100, 116, 139, 0.26);
+    --app-scrollbar-thumb-hover: rgba(100, 116, 139, 0.4);
 }
 
 .dark {
@@ -30,6 +34,9 @@
     --ring: #737373;
 
     --shadow-color: #000000;
+    --app-scrollbar-track: rgba(255, 255, 255, 0.06);
+    --app-scrollbar-thumb: rgba(148, 163, 184, 0.3);
+    --app-scrollbar-thumb-hover: rgba(148, 163, 184, 0.42);
 }
 
 @theme inline {
@@ -52,7 +59,34 @@
 @layer base {
     * {
         @apply border-border outline-ring/50;
+        scrollbar-color: var(--app-scrollbar-thumb) var(--app-scrollbar-track);
+        scrollbar-width: thin;
     }
+
+    *::-webkit-scrollbar {
+        width: var(--app-scrollbar-size);
+        height: var(--app-scrollbar-size);
+    }
+
+    *::-webkit-scrollbar-track {
+        background: var(--app-scrollbar-track);
+        border-radius: 9999px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background: var(--app-scrollbar-thumb);
+        border: 2px solid transparent;
+        border-radius: 9999px;
+        background-clip: padding-box;
+    }
+
+    *::-webkit-scrollbar-thumb:hover,
+    *::-webkit-scrollbar-thumb:active {
+        background: var(--app-scrollbar-thumb-hover);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
+
     body {
         @apply bg-background text-foreground font-sans;
     }
@@ -167,51 +201,72 @@
         display: none;
     }
 
-    .board-top-scrollbar {
-        --board-scroll-track: #e5e7eb;
-        --board-scroll-thumb: #ffffff;
-        --board-scroll-thumb-hover: #ffffff;
+    .board-top-scrollbar,
+    .board-bottom-scrollbar {
+        --board-scroll-track: rgba(15, 23, 42, 0.07);
+        --board-scroll-thumb: rgba(100, 116, 139, 0.24);
+        --board-scroll-thumb-hover: rgba(100, 116, 139, 0.38);
         scrollbar-color: var(--board-scroll-thumb) var(--board-scroll-track);
         scrollbar-width: thin;
     }
 
+    .dark .board-top-scrollbar,
+    .dark .board-bottom-scrollbar {
+        --board-scroll-track: rgba(255, 255, 255, 0.06);
+        --board-scroll-thumb: rgba(148, 163, 184, 0.3);
+        --board-scroll-thumb-hover: rgba(148, 163, 184, 0.42);
+    }
+
     .board-top-scrollbar:hover,
     .board-top-scrollbar:focus,
-    .board-top-scrollbar:active {
+    .board-top-scrollbar:active,
+    .board-bottom-scrollbar:hover,
+    .board-bottom-scrollbar:focus,
+    .board-bottom-scrollbar:active {
         scrollbar-color: var(--board-scroll-thumb-hover)
             var(--board-scroll-track);
     }
 
-    .board-top-scrollbar::-webkit-scrollbar {
+    .board-top-scrollbar::-webkit-scrollbar,
+    .board-bottom-scrollbar::-webkit-scrollbar {
         -webkit-appearance: none;
-        height: 10px;
+        height: 7px;
     }
 
-    .board-top-scrollbar::-webkit-scrollbar-track {
+    .board-top-scrollbar::-webkit-scrollbar-track,
+    .board-bottom-scrollbar::-webkit-scrollbar-track {
         background: var(--board-scroll-track) !important;
         background-color: var(--board-scroll-track) !important;
         border-radius: 9999px;
     }
 
     .board-top-scrollbar::-webkit-scrollbar-track:hover,
-    .board-top-scrollbar::-webkit-scrollbar-track:active {
+    .board-top-scrollbar::-webkit-scrollbar-track:active,
+    .board-bottom-scrollbar::-webkit-scrollbar-track:hover,
+    .board-bottom-scrollbar::-webkit-scrollbar-track:active {
         background: var(--board-scroll-track) !important;
         background-color: var(--board-scroll-track) !important;
         border-radius: 9999px;
     }
 
-    .board-top-scrollbar::-webkit-scrollbar-thumb {
+    .board-top-scrollbar::-webkit-scrollbar-thumb,
+    .board-bottom-scrollbar::-webkit-scrollbar-thumb {
         -webkit-appearance: none;
         background: var(--board-scroll-thumb) !important;
         background-color: var(--board-scroll-thumb) !important;
         border-radius: 9999px;
-        border: 2px solid var(--board-scroll-track);
+        border: 1px solid transparent;
+        background-clip: padding-box;
     }
 
     .board-top-scrollbar::-webkit-scrollbar-thumb:hover,
     .board-top-scrollbar::-webkit-scrollbar-thumb:active,
     .board-top-scrollbar::-webkit-scrollbar-thumb:horizontal:hover,
-    .board-top-scrollbar::-webkit-scrollbar-thumb:horizontal:active {
+    .board-top-scrollbar::-webkit-scrollbar-thumb:horizontal:active,
+    .board-bottom-scrollbar::-webkit-scrollbar-thumb:hover,
+    .board-bottom-scrollbar::-webkit-scrollbar-thumb:active,
+    .board-bottom-scrollbar::-webkit-scrollbar-thumb:horizontal:hover,
+    .board-bottom-scrollbar::-webkit-scrollbar-thumb:horizontal:active {
         background: var(--board-scroll-thumb-hover) !important;
         background-color: var(--board-scroll-thumb-hover) !important;
     }

@@ -196,9 +196,11 @@ const toMemberRole = (r?: string | null) => {
 };
 
 export function GroupStudioHeader({
-    groupId: groupIdProp
+    groupId: groupIdProp,
+    headerAction
 }: {
     groupId?: string;
+    headerAction?: React.ReactNode;
 }) {
     const locale = useLocale();
     const pathname = usePathname();
@@ -617,7 +619,7 @@ export function GroupStudioHeader({
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className={`relative w-full overflow-hidden rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6`}>
+                className={`relative w-full overflow-visible rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6`}>
                 <div className="mb-6 flex flex-col justify-between gap-4">
 
 
@@ -763,6 +765,8 @@ export function GroupStudioHeader({
                         </div>
 
                         <div className="flex shrink-0 flex-wrap items-center gap-3 self-start">
+                            {headerAction}
+
                             <motion.div
                                 layout
                                 whileHover={{ y: -1 }}
@@ -830,7 +834,7 @@ export function GroupStudioHeader({
 
                             const active =
                                 tab.key === "board"
-                                    ? curPath === target
+                                    ? curPath === target || /^\/group\/task\/[^/]+$/i.test(curPath)
                                     : curPath === target || curPath.startsWith(`${target}/`);
 
                             const href = groupId ? withNavigationContext(tab.href(locale, groupId)) : "#";

@@ -4,9 +4,7 @@ import {
     CalendarDays,
     ChevronLeft,
     ChevronRight,
-    ChevronsUpDown,
     Search,
-    SlidersHorizontal,
     Sparkles,
     X,
     FolderKanban,
@@ -27,6 +25,17 @@ import { apiFetch } from "@/api/api-client";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type HomeTaskListResponse = components["schemas"]["HomeTaskListResponse"];
@@ -36,9 +45,10 @@ type UserGroupDto = components["schemas"]["UserGroupDto"];
 
 const PAGE_SIZE = 5;
 const FETCH_ALL_SIZE = 1000;
+const OVERDUE_FILTER_VALUE = "__overdue__";
 
 type SourceFilterValue = "all" | string;
-type SortValue = "none" | "deadline" | "priority" | "severity" | "status";
+type TaskFilterValue = "all" | string;
 
 type DeadlineFilter = {
     startDate: string;
@@ -79,10 +89,12 @@ type TaskListDetailLayerProps = {
     paginationItems: Array<number | "...">;
     selectedSource: SourceFilterValue;
     setSelectedSource: React.Dispatch<React.SetStateAction<SourceFilterValue>>;
-    sortBy: SortValue;
-    setSortBy: React.Dispatch<React.SetStateAction<SortValue>>;
-    sortFilterValue: string;
-    setSortFilterValue: React.Dispatch<React.SetStateAction<string>>;
+    priorityFilterValue: TaskFilterValue;
+    setPriorityFilterValue: React.Dispatch<React.SetStateAction<TaskFilterValue>>;
+    severityFilterValue: TaskFilterValue;
+    setSeverityFilterValue: React.Dispatch<React.SetStateAction<TaskFilterValue>>;
+    statusFilterValue: TaskFilterValue;
+    setStatusFilterValue: React.Dispatch<React.SetStateAction<TaskFilterValue>>;
     deadlineFilter: DeadlineFilter;
     setDeadlineFilter: React.Dispatch<React.SetStateAction<DeadlineFilter>>;
     openDeadlineFilter: boolean;
@@ -92,8 +104,6 @@ type TaskListDetailLayerProps = {
     statusOptions: string[];
     hasDeadlineFilter: boolean;
     deadlineFilterLabel: string;
-    showExtraFilter: boolean;
-    showDeadlineFilter: boolean;
     setPage: React.Dispatch<React.SetStateAction<number>>;
     handleTaskClick: (item: HomeTaskListItemResponse) => void;
     t: (key: string) => string;
@@ -295,6 +305,32 @@ function formatDueDate(value?: string | null) {
     return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
 }
 
+function normalizeStatusName(value?: string | null) {
+    return String(value ?? "")
+        .trim()
+        .toLocaleLowerCase();
+}
+
+function normalizeProgressValue(n?: number | null) {
+    if (typeof n !== "number" || !Number.isFinite(n)) return 0;
+    const value = Math.floor(n);
+    if (value < 0) return 0;
+    if (value > 100) return 100;
+    return value;
+}
+
+function isOverdueTask(dueDate?: string | null, progress?: number | null) {
+    if (!dueDate) return false;
+    if (normalizeProgressValue(progress) >= 100) return false;
+
+    const due = new Date(dueDate);
+    if (Number.isNaN(due.getTime())) return false;
+
+    const dueDay = startOfDay(due);
+    const today = startOfDay(new Date());
+    return dueDay < today;
+}
+
 function getSourceLabel(item: HomeTaskListItemResponse, t?: (key: string) => string) {
     return item.groupName || item.sourceName || (t ? t("groupSource") : "Nhóm");
 }
@@ -306,26 +342,58 @@ function buildTaskDetailHref(item: HomeTaskListItemResponse) {
     return `/group/${item.groupId}?taskId=${taskId}&openTaskDetail=1`;
 }
 
-function TaskStatusBadge({ label }: { label?: string | null }) {
+function TaskStatusBadge({
+    label,
+    overdue = false,
+    overdueLabel = "Overdue"
+}: {
+    label?: string | null;
+    overdue?: boolean;
+    overdueLabel?: string;
+}) {
     return (
-        <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm backdrop-blur">
-            {label || "-"}
+        <span
+            className={cn(
+                "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm",
+                overdue
+                    ? "border-rose-200 bg-rose-50 text-rose-700"
+                    : "border-slate-200 bg-white text-slate-700"
+            )}>
+            {overdue ? "!" : null}
+            <span className={cn(overdue && "ml-1")}>{overdue ? overdueLabel : label || "-"}</span>
         </span>
     );
+}
+
+function FilterTriggerLabel(params: {
+    t: (key: string) => string;
+    priorityFilterValue: TaskFilterValue;
+    severityFilterValue: TaskFilterValue;
+    statusFilterValue: TaskFilterValue;
+}) {
+    const activeCount = [params.priorityFilterValue, params.severityFilterValue, params.statusFilterValue].filter(
+        (value) => value !== "all"
+    ).length;
+
+    if (!activeCount) return params.t("selectFilter");
+    return `${params.t("selectFilter")} (${activeCount})`;
 }
 
 function FilterField({ children, className }: { children: React.ReactNode; className?: string }) {
     return (
         <div
             className={cn(
-                "relative overflow-hidden rounded-[24px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.90),rgba(248,250,252,0.82))] shadow-[0_10px_28px_rgba(15,23,42,0.05)] backdrop-blur-xl",
+                "relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]",
                 className
             )}>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_32%)]" />
             <div className="relative">{children}</div>
         </div>
     );
 }
+
+/** Same height & radius as SelectTrigger (detail modal filter row). */
+const FILTER_ROW_INNER_CLASS =
+    "h-11 min-h-11 w-full rounded-xl border-0 bg-transparent px-4 text-sm font-medium leading-none text-slate-900 shadow-none";
 
 function TableSkeleton() {
     return (
@@ -364,8 +432,8 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
         if (!trigger) return;
 
         const rect = trigger.getBoundingClientRect();
-        const popupWidth = 420;
-        const popupHeight = 560;
+        const popupWidth = 380;
+        const popupHeight = 500;
         const gap = 8;
         const viewportPadding = 12;
         const spaceBelow = window.innerHeight - rect.bottom;
@@ -430,11 +498,13 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
         return Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
     }, [minDate]);
 
-    const handleMonthChange = (value: string) =>
-        setMonth(new Date(month.getFullYear(), Number(value), 1));
+    const handleMonthChange = (nextValue: string) => {
+        setMonth(new Date(month.getFullYear(), Number(nextValue), 1));
+    };
 
-    const handleYearChange = (value: string) =>
-        setMonth(new Date(Number(value), month.getMonth(), 1));
+    const handleYearChange = (nextValue: string) => {
+        setMonth(new Date(Number(nextValue), month.getMonth(), 1));
+    };
 
     const goPrevMonth = () => {
         const next = new Date(month.getFullYear(), month.getMonth() - 1, 1);
@@ -475,15 +545,17 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                     initial={{ opacity: 0, y: 8, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     ref={rootRef}
-                    className="fixed z-[20000] rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl"
+                    className="fixed z-[20000] rounded-[20px] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_rgba(15,23,42,0.18)]"
                     style={{ top: popupPosition.top, left: popupPosition.left, width: popupPosition.width }}>
-                    <div className="mb-4 flex items-center gap-3">
+                    <div className="mb-3 flex items-center gap-2">
                         <div className="flex-1">
                             <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
-                                <SelectTrigger className="h-12 w-full border-slate-200 bg-white/80 text-base font-semibold text-slate-800">
-                                    <SelectValue placeholder={monthOptions[month.getMonth()]?.label} />
+                                <SelectTrigger className="h-10 w-full border-slate-200 bg-white text-sm font-semibold text-slate-800 leading-none">
+                                    <div className="flex min-h-0 flex-1 items-center overflow-hidden">
+                                        <SelectValue placeholder={monthOptions[month.getMonth()]?.label} />
+                                    </div>
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="z-[20001] rounded-xl border-slate-200 bg-white">
                                     {monthOptions.map((item) => (
                                         <SelectItem key={item.value} value={item.value}>
                                             {item.label}
@@ -495,10 +567,12 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
 
                         <div className="w-[140px]">
                             <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
-                                <SelectTrigger className="h-12 w-full border-slate-200 bg-white/80 text-base font-semibold text-slate-800">
-                                    <SelectValue placeholder={String(month.getFullYear())} />
+                                <SelectTrigger className="h-10 w-full border-slate-200 bg-white text-sm font-semibold text-slate-800 leading-none">
+                                    <div className="flex min-h-0 flex-1 items-center overflow-hidden">
+                                        <SelectValue placeholder={String(month.getFullYear())} />
+                                    </div>
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="z-[20001] rounded-xl border-slate-200 bg-white">
                                     {yearOptions.map((year) => (
                                         <SelectItem key={year} value={String(year)}>
                                             {year}
@@ -509,17 +583,17 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                         </div>
                     </div>
 
-                    <div className="rounded-[22px] border border-slate-200 bg-white/80 p-4">
-                        <div className="mb-4 flex items-center justify-between">
+                    <div className="rounded-[16px] border border-slate-200 bg-white p-3">
+                        <div className="mb-3 flex items-center justify-between">
                             <button
                                 type="button"
                                 onClick={goPrevMonth}
                                 disabled={isPrevDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                <ChevronLeft className="h-5 w-5" />
+                                className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronLeft className="h-4 w-4" />
                             </button>
 
-                            <div className="text-[18px] font-bold text-slate-900">
+                            <div className="text-base font-bold text-slate-900">
                                 {monthOptions[month.getMonth()]?.label} {month.getFullYear()}
                             </div>
 
@@ -527,8 +601,8 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                                 type="button"
                                 onClick={goNextMonth}
                                 disabled={isNextDisabled}
-                                className="grid h-11 w-11 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                <ChevronRight className="h-5 w-5" />
+                                className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>
 
@@ -564,13 +638,13 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                                 month_grid: "w-full border-collapse",
                                 tbody: "w-full",
                                 weekdays: "flex w-full justify-between",
-                                weekday: "h-10 w-10 text-center text-[13px] font-semibold text-slate-500",
+                                weekday: "h-9 w-9 text-center text-xs font-semibold text-slate-500",
                                 weeks: "w-full",
                                 week: "mt-2 flex w-full justify-between",
-                                day: "h-10 w-10 p-0 text-center",
-                                cell: "h-10 w-10 p-0 text-center",
+                                day: "h-9 w-9 p-0 text-center",
+                                cell: "h-9 w-9 p-0 text-center",
                                 day_button:
-                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-slate-800 shadow-none outline-none ring-0 transition hover:bg-violet-50 focus:outline-none focus:ring-0",
+                                    "h-9 w-9 rounded-lg border-0 bg-transparent p-0 text-xs font-medium text-slate-800 shadow-none outline-none ring-0 transition hover:bg-violet-50 focus:outline-none focus:ring-0",
                                 selected: "!rounded-xl !bg-violet-500 !text-white",
                                 day_selected: "!rounded-xl !bg-violet-500 !text-white hover:!bg-violet-500",
                                 today: "font-bold text-violet-600",
@@ -585,23 +659,23 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                         />
                     </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
                             type="button"
                             onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                             {t ? t("today") : "Today"}
                         </button>
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                             {t ? t("tomorrow") : "Tomorrow"}
                         </button>
                         <button
                             type="button"
                             onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50">
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                             {t ? t("nextWeek") : "Next week"}
                         </button>
                         <button
@@ -610,7 +684,7 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                                 onChange("");
                                 setOpen(false);
                             }}
-                            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-rose-500 hover:bg-rose-50">
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-rose-500 hover:bg-rose-50">
                             {t ? t("noDate") : "No date"}
                         </button>
                     </div>
@@ -628,7 +702,7 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                     type="button"
                     onClick={() => setOpen((v) => !v)}
                     className={cn(
-                        "mt-2 flex h-11 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
+                        "mt-2 flex h-10 w-full items-center justify-between rounded-xl border px-3 text-sm transition",
                         open
                             ? "border-violet-400 bg-violet-50 text-slate-900 ring-2 ring-violet-100"
                             : "border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50"
@@ -641,11 +715,7 @@ function TrelloDatePicker({ label, value, onChange, min, max, t }: TrelloDatePic
                             )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
-                        <span
-                            className={cn(
-                                "truncate text-left",
-                                value ? "font-medium text-slate-900" : "text-slate-400"
-                            )}>
+                        <span className={cn("truncate text-left", value ? "font-medium text-slate-900" : "text-slate-400")}>
                             {formatDateDisplay(value, t)}
                         </span>
                     </div>
@@ -666,7 +736,7 @@ function DeadlineRangePicker({
     t?: (key: string) => string;
 }) {
     return (
-        <div className="grid min-w-[360px] grid-cols-1 gap-4 rounded-[24px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-2xl">
+        <div className="grid min-w-[320px] grid-cols-1 gap-3 rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_20px_48px_rgba(15,23,42,0.16)]">
             <TrelloDatePicker
                 label={t ? t("fromDate") : "From date"}
                 value={value.startDate}
@@ -685,7 +755,7 @@ function DeadlineRangePicker({
                 <button
                     type="button"
                     onClick={() => onChange({ startDate: "", endDate: "" })}
-                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
                     {t ? t("clearSelection") : "Clear selection"}
                 </button>
             </div>
@@ -726,7 +796,7 @@ function DeadlineFilterPopover({
         <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute right-0 top-[calc(100%+12px)] z-30"
+            className="absolute right-0 top-[calc(100%+8px)] z-[120]"
             onPointerDown={(e) => e.stopPropagation()}>
             <DeadlineRangePicker value={value} onChange={onChange} t={t} />
         </motion.div>
@@ -744,10 +814,12 @@ function TaskListDetailLayer({
     paginationItems,
     selectedSource,
     setSelectedSource,
-    sortBy,
-    setSortBy,
-    sortFilterValue,
-    setSortFilterValue,
+    priorityFilterValue,
+    setPriorityFilterValue,
+    severityFilterValue,
+    setSeverityFilterValue,
+    statusFilterValue,
+    setStatusFilterValue,
     deadlineFilter,
     setDeadlineFilter,
     openDeadlineFilter,
@@ -757,12 +829,12 @@ function TaskListDetailLayer({
     statusOptions,
     hasDeadlineFilter,
     deadlineFilterLabel,
-    showExtraFilter,
-    showDeadlineFilter,
     setPage,
     handleTaskClick,
     t
 }: TaskListDetailLayerProps) {
+    const overdueStatusLabel = t("overdue");
+
     React.useEffect(() => {
         if (!open) return;
 
@@ -792,15 +864,10 @@ function TaskListDetailLayer({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
                         transition={{ duration: 0.25 }}
-                        className="relative flex max-h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
-                        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5 md:px-8">
+                        className="relative flex max-h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
+                        <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 md:px-8">
                             <div>
-                                <div className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50/90 px-3 py-1.5 text-xs font-medium text-violet-700 shadow-sm">
-                                    <Sparkles className="h-3.5 w-3.5" />
-                                    {t("detailedTitle")}
-                                </div>
-
-                                <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+                                <h2 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
                                     {t("detailedSubtitle")}
                                 </h2>
                             </div>
@@ -808,177 +875,251 @@ function TaskListDetailLayer({
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
+                                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto bg-[#FBFBFD] px-6 py-6 md:px-8">
-                            <div className="mt-2 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-                                <FilterField className="w-full xl:max-w-[720px]">
+                            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:items-center">
+                                <FilterField className="w-full">
                                     <div className="relative">
-                                        <Search className="pointer-events-none absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                                        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                         <input
                                             value={searchInput}
                                             onChange={(event) => setSearchInput(event.target.value)}
                                             placeholder={t("searchPlaceholder")}
-                                            className="h-[72px] w-full rounded-[24px] border-0 bg-transparent pl-14 pr-5 text-[18px] text-slate-900 outline-none placeholder:text-slate-400"
+                                            className={cn(
+                                                FILTER_ROW_INNER_CLASS,
+                                                "pl-10 pr-3 font-normal outline-none placeholder:text-slate-400"
+                                            )}
                                         />
                                     </div>
                                 </FilterField>
 
-                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:w-[560px]">
-                                    <FilterField>
-                                        <div className="relative">
-                                            <Select
-                                                value={selectedSource}
-                                                onValueChange={(value) => {
-                                                    setSelectedSource(value);
+                                <FilterField>
+                                    <div className="relative">
+                                        <Select
+                                            value={selectedSource}
+                                            onValueChange={(value) => {
+                                                setSelectedSource(value);
+                                                setPage(1);
+                                            }}>
+                                            <SelectTrigger
+                                                className={cn(
+                                                    FILTER_ROW_INNER_CLASS,
+                                                    "items-center gap-2 [&_svg]:text-slate-500"
+                                                )}>
+                                                <SelectValue placeholder={t("allGroups")} />
+                                            </SelectTrigger>
+                                            <SelectContent
+                                                position="popper"
+                                                className="z-[140] rounded-xl border-slate-200 bg-white">
+                                                <SelectItem value="all" className="leading-none">
+                                                    {t("allGroups")}
+                                                </SelectItem>
+                                                {groups
+                                                    .filter((group) => Boolean(group.groupId))
+                                                    .map((group) => (
+                                                        <SelectItem
+                                                            key={group.groupId ?? group.groupName}
+                                                            value={group.groupId as string}
+                                                            className="leading-none">
+                                                            {group.groupName}
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </FilterField>
+
+                                <FilterField>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button
+                                                type="button"
+                                                className={cn(
+                                                    FILTER_ROW_INNER_CLASS,
+                                                    "flex items-center justify-between text-left transition hover:bg-slate-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-100"
+                                                )}>
+                                                <span className="truncate leading-normal">
+                                                    {FilterTriggerLabel({
+                                                        t,
+                                                        priorityFilterValue,
+                                                        severityFilterValue,
+                                                        statusFilterValue
+                                                    })}
+                                                </span>
+                                                <Filter className="h-4 w-4 text-slate-500" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent
+                                            align="end"
+                                            className="z-[150] w-64 rounded-xl border-slate-200 bg-white p-2 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+                                            <DropdownMenuSub>
+                                                <DropdownMenuSubTrigger>{t("tableHeaderPriority")}</DropdownMenuSubTrigger>
+                                                <DropdownMenuSubContent className="z-[151] w-52 rounded-xl border-slate-200 bg-white p-2 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue("all")}>
+                                                        {t("allPriorities")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(t("priorityLow"))}>
+                                                        {t("priorityLow")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(t("priorityMedium"))}>
+                                                        {t("priorityMedium")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(t("priorityHigh"))}>
+                                                        {t("priorityHigh")}
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuSubContent>
+                                            </DropdownMenuSub>
+
+                                            <DropdownMenuSub>
+                                                <DropdownMenuSubTrigger>{t("tableHeaderSeverity")}</DropdownMenuSubTrigger>
+                                                <DropdownMenuSubContent className="z-[151] w-52 rounded-xl border-slate-200 bg-white p-2 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+                                                    <DropdownMenuItem onClick={() => setSeverityFilterValue("all")}>
+                                                        {t("allSeverities")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setSeverityFilterValue(t("severityLow"))}>
+                                                        {t("severityLow")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setSeverityFilterValue(t("severityNormal"))}>
+                                                        {t("severityNormal")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSeverityFilterValue(t("severityImportant"))}>
+                                                        {t("severityImportant")}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => setSeverityFilterValue(t("severityCritical"))}>
+                                                        {t("severityCritical")}
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuSubContent>
+                                            </DropdownMenuSub>
+
+                                            <DropdownMenuItem onClick={() => setStatusFilterValue(OVERDUE_FILTER_VALUE)}>
+                                                {overdueStatusLabel}
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuSub>
+                                                <DropdownMenuSubTrigger>{t("tableHeaderStatus")}</DropdownMenuSubTrigger>
+                                                <DropdownMenuSubContent className="z-[151] w-52 rounded-xl border-slate-200 bg-white p-2 shadow-[0_18px_40px_rgba(15,23,42,0.14)]">
+                                                    <DropdownMenuItem onClick={() => setStatusFilterValue("all")}>
+                                                        {t("allStatuses")}
+                                                    </DropdownMenuItem>
+                                                    {statusOptions.map((status) => (
+                                                        <DropdownMenuItem
+                                                            key={status}
+                                                            onClick={() => setStatusFilterValue(status)}>
+                                                            {status}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuSubContent>
+                                            </DropdownMenuSub>
+
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    setPriorityFilterValue("all");
+                                                    setSeverityFilterValue("all");
+                                                    setStatusFilterValue("all");
                                                     setPage(1);
                                                 }}>
-                                                <SelectTrigger className="h-[72px] w-full rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 shadow-none">
-                                                    <SelectValue placeholder={t("allGroups")} />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">{t("allGroups")}</SelectItem>
-                                                    {groups
-                                                        .filter((group) => Boolean(group.groupId))
-                                                        .map((group) => (
-                                                            <SelectItem
-                                                                key={group.groupId ?? group.groupName}
-                                                                value={group.groupId as string}>
-                                                                {group.groupName}
-                                                            </SelectItem>
-                                                        ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </FilterField>
+                                                {t("clearSelection")}
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </FilterField>
 
+                                <motion.div layout initial={false} className="relative sm:col-span-2 xl:col-span-1">
                                     <FilterField>
-                                        <div className="relative">
-                                            <Select
-                                                value={sortBy}
-                                                onValueChange={(value) => {
-                                                    const nextSort = value as SortValue;
-                                                    setSortBy(nextSort);
-                                                    setSortFilterValue("");
-                                                    setDeadlineFilter({ startDate: "", endDate: "" });
-                                                    setOpenDeadlineFilter(false);
-                                                    setPage(1);
-                                                }}>
-                                                <SelectTrigger className="h-[72px] w-full rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 shadow-none">
-                                                    <SelectValue placeholder={t("sortNone")} />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="none">{t("sortNone")}</SelectItem>
-                                                    <SelectItem value="deadline">{t("sortDeadline")}</SelectItem>
-                                                    <SelectItem value="priority">{t("sortPriority")}</SelectItem>
-                                                    <SelectItem value="severity">{t("sortSeverity")}</SelectItem>
-                                                    <SelectItem value="status">{t("sortStatus")}</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setOpenDeadlineFilter((prev) => !prev)}
+                                            className={cn(
+                                                FILTER_ROW_INNER_CLASS,
+                                                "flex items-center justify-between text-left transition hover:bg-slate-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-100"
+                                            )}>
+                                            <span
+                                                className={cn(
+                                                    "flex min-h-0 min-w-0 flex-1 items-center text-left font-normal leading-normal",
+                                                    !hasDeadlineFilter ? "text-slate-400" : "text-slate-900"
+                                                )}>
+                                                {hasDeadlineFilter ? deadlineFilterLabel : t("selectDateRange")}
+                                            </span>
+                                            <CalendarDays className="h-4 w-4 text-slate-500" />
+                                        </button>
                                     </FilterField>
 
-                                    <AnimatePresence initial={false}>
-                                        {showExtraFilter && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -8 }}
-                                                className="sm:col-span-2">
-                                                <FilterField>
-                                                    <div className="relative">
-                                                        <Select
-                                                            value={sortFilterValue || "all"}
-                                                            onValueChange={(value) =>
-                                                                setSortFilterValue(value === "all" ? "" : value)
-                                                            }>
-                                                            <SelectTrigger className="h-[72px] w-full rounded-[24px] border-0 bg-transparent px-7 pr-14 text-[18px] text-slate-900 shadow-none">
-                                                                <SelectValue placeholder={t("selectFilter")} />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="all">{t("selectFilter")}</SelectItem>
-                                                                {sortBy === "priority" && (
-                                                                    <>
-                                                                        <SelectItem value={t("priorityLow")}>{t("priorityLow")}</SelectItem>
-                                                                        <SelectItem value={t("priorityMedium")}>{t("priorityMedium")}</SelectItem>
-                                                                        <SelectItem value={t("priorityHigh")}>{t("priorityHigh")}</SelectItem>
-                                                                    </>
-                                                                )}
-                                                                {sortBy === "severity" && (
-                                                                    <>
-                                                                        <SelectItem value={t("severityLow")}>{t("severityLow")}</SelectItem>
-                                                                        <SelectItem value={t("severityNormal")}>{t("severityNormal")}</SelectItem>
-                                                                        <SelectItem value={t("severityImportant")}>{t("severityImportant")}</SelectItem>
-                                                                        <SelectItem value={t("severityCritical")}>{t("severityCritical")}</SelectItem>
-                                                                    </>
-                                                                )}
-                                                                {sortBy === "status" &&
-                                                                    statusOptions.map((status) => (
-                                                                        <SelectItem key={status} value={status}>
-                                                                            {status}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </FilterField>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-
-                                    <AnimatePresence initial={false}>
-                                        {showDeadlineFilter && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -8 }}
-                                                className="relative sm:col-span-2">
-                                                <FilterField>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setOpenDeadlineFilter((prev) => !prev)}
-                                                        className="flex h-[72px] w-full items-center justify-between rounded-[24px] px-7 text-[18px] text-slate-900 transition">
-                                                        <span
-                                                            className={cn(
-                                                                "truncate",
-                                                                !hasDeadlineFilter && "text-slate-400"
-                                                            )}>
-                                                            {hasDeadlineFilter
-                                                                ? deadlineFilterLabel
-                                                                : t("selectDateRange")}
-                                                        </span>
-                                                        <CalendarDays className="h-5 w-5 text-slate-500" />
-                                                    </button>
-                                                </FilterField>
-
-                                                <DeadlineFilterPopover
-                                                    open={openDeadlineFilter}
-                                                    value={deadlineFilter}
-                                                    onChange={setDeadlineFilter}
-                                                    onClose={() => setOpenDeadlineFilter(false)}
-                                                    t={t}
-                                                />
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                                    <DeadlineFilterPopover
+                                        open={openDeadlineFilter}
+                                        value={deadlineFilter}
+                                        onChange={setDeadlineFilter}
+                                        onClose={() => setOpenDeadlineFilter(false)}
+                                        t={t}
+                                    />
+                                </motion.div>
                             </div>
 
                             <div className="mt-5 flex flex-wrap items-center gap-3">
-                                {sortBy !== "none" && (
-                                    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-600 shadow-sm">
-                                        <SlidersHorizontal className="h-4 w-4 text-sky-600" />
+                                {priorityFilterValue !== "all" && (
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs text-orange-700 shadow-sm">
                                         <span>
-                                            {t("sortingBy")} {sortBy}
+                                            {t("tableHeaderPriority")}: {priorityFilterValue}
                                         </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPriorityFilterValue("all")}
+                                            className="rounded-full p-0.5 hover:bg-orange-100">
+                                            <X className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 )}
 
-                                {showDeadlineFilter && hasDeadlineFilter && (
-                                    <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-700 shadow-sm">
+                                {severityFilterValue !== "all" && (
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs text-rose-700 shadow-sm">
+                                        <span>
+                                            {t("tableHeaderSeverity")}: {severityFilterValue}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSeverityFilterValue("all")}
+                                            className="rounded-full p-0.5 hover:bg-rose-100">
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {statusFilterValue !== "all" && (
+                                    <div
+                                        className={cn(
+                                            "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs shadow-sm",
+                                            statusFilterValue === OVERDUE_FILTER_VALUE
+                                                ? "border border-rose-200 bg-rose-50 text-rose-700"
+                                                : "border border-sky-200 bg-sky-50 text-sky-700"
+                                        )}>
+                                        <span>
+                                            {t("tableHeaderStatus")}:{" "}
+                                            {statusFilterValue === OVERDUE_FILTER_VALUE
+                                                ? overdueStatusLabel
+                                                : statusFilterValue}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStatusFilterValue("all")}
+                                            className={cn(
+                                                "rounded-full p-0.5",
+                                                statusFilterValue === OVERDUE_FILTER_VALUE
+                                                    ? "hover:bg-rose-100"
+                                                    : "hover:bg-sky-100"
+                                            )}>
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {hasDeadlineFilter && (
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs text-violet-700 shadow-sm">
                                         <Clock3 className="h-4 w-4" />
                                         <span>
                                             {t("filterDeadline")}: {deadlineFilterLabel}
@@ -997,23 +1138,23 @@ function TaskListDetailLayer({
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full border-collapse">
                                         <thead>
-                                            <tr className="border-b border-slate-200/80 bg-[linear-gradient(180deg,#F8FAFC_0%,#F1F5F9_100%)]">
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                            <tr className="border-b border-slate-200/80 bg-slate-50">
+                                                <th className="px-5 py-4 text-center text-sm font-semibold text-slate-500">
                                                     {t("tableHeaderTask")}
                                                 </th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                <th className="px-5 py-4 text-center text-sm font-semibold text-slate-500">
                                                     {t("tableHeaderSource")}
                                                 </th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                <th className="px-5 py-4 text-center text-sm font-semibold text-slate-500">
                                                     {t("tableHeaderSeverity")}
                                                 </th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                <th className="px-5 py-4 text-center text-sm font-semibold text-slate-500">
                                                     {t("tableHeaderPriority")}
                                                 </th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                <th className="px-5 py-4 text-center text-sm font-semibold text-slate-500">
                                                     {t("tableHeaderStatus")}
                                                 </th>
-                                                <th className="px-6 py-5 text-center text-[16px] font-semibold text-slate-500">
+                                                <th className="px-5 py-4 text-center text-sm font-semibold text-slate-500">
                                                     {t("tableHeaderDueDate")}
                                                 </th>
                                             </tr>
@@ -1043,64 +1184,82 @@ function TaskListDetailLayer({
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                paginatedItems.map((item, index) => (
-                                                    <motion.tr
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.25, delay: index * 0.03 }}
-                                                        key={item.taskId}
-                                                        onClick={() => handleTaskClick(item)}
-                                                        className="group cursor-pointer border-b border-slate-200/70 transition last:border-b-0 hover:bg-[linear-gradient(180deg,#FCFCFF_0%,#F8FAFC_100%)]">
-                                                        <td className="px-6 py-6 text-center text-[18px] font-semibold text-slate-900">
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleTaskClick(item);
-                                                                }}
-                                                                className="inline-flex items-center gap-2 hover:text-violet-700">
-                                                                <span className="hover:underline">
-                                                                    {item.taskTitle || "-"}
+                                                paginatedItems.map((item, index) => {
+                                                    const overdue = isOverdueTask(item.dueDate, item.progress);
+
+                                                    return (
+                                                        <motion.tr
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ duration: 0.25, delay: index * 0.03 }}
+                                                            key={item.taskId}
+                                                            onClick={() => handleTaskClick(item)}
+                                                            className={cn(
+                                                                "group cursor-pointer border-b border-slate-200/70 transition last:border-b-0 hover:bg-slate-50",
+                                                                overdue && "bg-rose-50/30"
+                                                            )}>
+                                                            <td className="px-5 py-4 text-center text-base font-semibold text-slate-900">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleTaskClick(item);
+                                                                    }}
+                                                                    className="inline-flex items-center gap-2 hover:text-violet-700">
+                                                                    <span className="hover:underline">
+                                                                        {item.taskTitle || "-"}
+                                                                    </span>
+                                                                    <ArrowUpRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
+                                                                </button>
+                                                            </td>
+
+                                                            <td className="px-5 py-4 text-center text-sm font-medium text-slate-600">
+                                                                {getSourceLabel(item, t)}
+                                                            </td>
+
+                                                            <td className="px-5 py-4 text-center">
+                                                                <span
+                                                                    className={cn(
+                                                                        "inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold shadow-sm",
+                                                                        severityTone(item.taskSeverity)
+                                                                    )}>
+                                                                    {getSeverityLabel(item.taskSeverity, t)}
                                                                 </span>
-                                                                <ArrowUpRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" />
-                                                            </button>
-                                                        </td>
+                                                            </td>
 
-                                                        <td className="px-6 py-6 text-center text-[16px] font-medium text-slate-600">
-                                                            {getSourceLabel(item, t)}
-                                                        </td>
+                                                            <td className="px-5 py-4 text-center">
+                                                                <span
+                                                                    className={cn(
+                                                                        "inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold shadow-sm",
+                                                                        priorityTone(item.taskPriority)
+                                                                    )}>
+                                                                    {getPriorityLabel(item.taskPriority, t)}
+                                                                </span>
+                                                            </td>
 
-                                                        <td className="px-6 py-6 text-center">
-                                                            <span
-                                                                className={cn(
-                                                                    "inline-flex rounded-full border px-3 py-1.5 text-[14px] font-semibold shadow-sm",
-                                                                    severityTone(item.taskSeverity)
-                                                                )}>
-                                                                {getSeverityLabel(item.taskSeverity, t)}
-                                                            </span>
-                                                        </td>
+                                                            <td className="px-5 py-4 text-center">
+                                                                <div className="flex justify-center">
+                                                                    <TaskStatusBadge
+                                                                        label={item.statusName}
+                                                                        overdue={overdue}
+                                                                        overdueLabel={overdueStatusLabel}
+                                                                    />
+                                                                </div>
+                                                            </td>
 
-                                                        <td className="px-6 py-6 text-center">
-                                                            <span
-                                                                className={cn(
-                                                                    "inline-flex rounded-full border px-3 py-1.5 text-[14px] font-semibold shadow-sm",
-                                                                    priorityTone(item.taskPriority)
-                                                                )}>
-                                                                {getPriorityLabel(item.taskPriority, t)}
-                                                            </span>
-                                                        </td>
-
-                                                        <td className="px-6 py-6 text-center">
-                                                            <div className="flex justify-center">
-                                                                <TaskStatusBadge label={item.statusName} />
-                                                            </div>
-                                                        </td>
-
-                                                        <td className="px-6 py-6 text-center text-[16px] font-medium text-slate-500">
-                                                            {formatDueDate(item.dueDate)}
-                                                        </td>
-                                                    </motion.tr>
-                                                ))
+                                                            <td className="px-5 py-4 text-center text-sm font-medium text-slate-500">
+                                                                <div className="flex flex-col items-center gap-1">
+                                                                    {overdue ? (
+                                                                        <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                                                                            {overdueStatusLabel}
+                                                                        </span>
+                                                                    ) : null}
+                                                                    <span>{formatDueDate(item.dueDate)}</span>
+                                                                </div>
+                                                            </td>
+                                                        </motion.tr>
+                                                    );
+                                                })
                                             )}
                                         </tbody>
                                     </table>
@@ -1171,8 +1330,9 @@ export default function HomeTaskList() {
     const [searchInput, setSearchInput] = React.useState("");
     const [searchValue, setSearchValue] = React.useState("");
     const [selectedSource, setSelectedSource] = React.useState<SourceFilterValue>("all");
-    const [sortBy, setSortBy] = React.useState<SortValue>("none");
-    const [sortFilterValue, setSortFilterValue] = React.useState("");
+    const [priorityFilterValue, setPriorityFilterValue] = React.useState<TaskFilterValue>("all");
+    const [severityFilterValue, setSeverityFilterValue] = React.useState<TaskFilterValue>("all");
+    const [statusFilterValue, setStatusFilterValue] = React.useState<TaskFilterValue>("all");
     const [deadlineFilter, setDeadlineFilter] = React.useState<DeadlineFilter>({ startDate: "", endDate: "" });
     const [openDeadlineFilter, setOpenDeadlineFilter] = React.useState(false);
     const [page, setPage] = React.useState(1);
@@ -1196,8 +1356,7 @@ export default function HomeTaskList() {
                 const url = buildTaskListUrl({
                     page: 1,
                     pageSize: FETCH_ALL_SIZE,
-                    search: searchValue,
-                    sortBy: sortBy === "none" ? undefined : sortBy
+                    search: searchValue
                 });
 
                 if (!url) {
@@ -1238,7 +1397,7 @@ export default function HomeTaskList() {
         return () => {
             isMounted = false;
         };
-    }, [searchValue, sortBy]);
+    }, [searchValue]);
 
     const rawItems = data?.items ?? [];
 
@@ -1253,12 +1412,6 @@ export default function HomeTaskList() {
         () => rawItems.filter((item) => !!item.groupId && validGroupIds.has(item.groupId)),
         [rawItems, validGroupIds]
     );
-
-    const groupsWithTasks = React.useMemo(() => {
-        const groupIdsWithTasks = new Set(sanitizedItems.map((item) => item.groupId).filter(Boolean));
-
-        return groups.filter((group) => group.groupId && groupIdsWithTasks.has(group.groupId));
-    }, [groups, sanitizedItems]);
 
     React.useEffect(() => {
         if (selectedSource !== "all" && !groups.some((group) => group.groupId === selectedSource)) {
@@ -1277,30 +1430,47 @@ export default function HomeTaskList() {
     const displayItems = React.useMemo(() => {
         let result = [...sourceFilteredItems];
 
-        if (sortBy === "priority" && sortFilterValue) {
-            result = result.filter((item) => getPriorityLabel(item.taskPriority, t) === sortFilterValue);
+        if (priorityFilterValue !== "all") {
+            result = result.filter((item) => getPriorityLabel(item.taskPriority, t) === priorityFilterValue);
         }
-        if (sortBy === "severity" && sortFilterValue) {
-            result = result.filter((item) => getSeverityLabel(item.taskSeverity, t) === sortFilterValue);
+        if (severityFilterValue !== "all") {
+            result = result.filter((item) => getSeverityLabel(item.taskSeverity, t) === severityFilterValue);
         }
-        if (sortBy === "status" && sortFilterValue) {
-            result = result.filter((item) => (item.statusName ?? "") === sortFilterValue);
+        if (statusFilterValue !== "all") {
+            result = result.filter((item) =>
+                statusFilterValue === OVERDUE_FILTER_VALUE
+                    ? isOverdueTask(item.dueDate, item.progress)
+                    : (item.statusName ?? "") === statusFilterValue
+            );
         }
-        if (sortBy === "deadline") {
+        if (deadlineFilter.startDate || deadlineFilter.endDate) {
             result = result.filter((item) => matchDeadlineDate(item.dueDate, deadlineFilter));
         }
 
         return result;
-    }, [sourceFilteredItems, sortBy, sortFilterValue, deadlineFilter]);
+    }, [sourceFilteredItems, priorityFilterValue, severityFilterValue, statusFilterValue, deadlineFilter, t]);
 
-    const statusOptions = React.useMemo(
-        () => Array.from(new Set(sanitizedItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean))),
-        [sanitizedItems]
-    );
+    const statusOptions = React.useMemo(() => {
+        const overdueAliases = new Set([
+            normalizeStatusName(t("overdue")),
+            normalizeStatusName("Overdue"),
+            normalizeStatusName("Quá hạn")
+        ]);
+        const values = new Set(sanitizedItems.map((item) => (item.statusName ?? "").trim()).filter(Boolean));
+        return Array.from(values).filter((status) => !overdueAliases.has(normalizeStatusName(status)));
+    }, [sanitizedItems, t]);
 
     React.useEffect(() => {
         setPage(1);
-    }, [selectedSource, sortBy, sortFilterValue, deadlineFilter.startDate, deadlineFilter.endDate, searchValue]);
+    }, [
+        selectedSource,
+        priorityFilterValue,
+        severityFilterValue,
+        statusFilterValue,
+        deadlineFilter.startDate,
+        deadlineFilter.endDate,
+        searchValue
+    ]);
 
     const totalPages = Math.max(Math.ceil(displayItems.length / PAGE_SIZE), 1);
 
@@ -1360,7 +1530,7 @@ export default function HomeTaskList() {
                 return a.groupName.localeCompare(b.groupName, "vi");
             })
             .slice(0, 3);
-    }, [sanitizedItems]);
+    }, [sanitizedItems, t]);
 
     const handleTaskClick = (item: HomeTaskListItemResponse) => {
         const href = buildTaskDetailHref(item);
@@ -1384,9 +1554,6 @@ export default function HomeTaskList() {
         setSelectedSource("all");
         setPage(1);
     };
-
-    const showExtraFilter = sortBy === "priority" || sortBy === "severity" || sortBy === "status";
-    const showDeadlineFilter = sortBy === "deadline";
 
     const deadlineFilterLabel = [
         deadlineFilter.startDate && `${t("fromDate")} ${formatFilterDateLabel(deadlineFilter.startDate)}`,
@@ -1518,7 +1685,7 @@ export default function HomeTaskList() {
                             <div className="mt-6 flex justify-end">
                                 <Button
                                     onClick={handleOpenDetail}
-                                    className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white hover:from-orange-600 hover:to-red-600 transition shadow-[0_14px_28px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-4">
+                                    className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-4">
                                     {t("viewDetails")}
                                 </Button>
                             </div>
@@ -1538,10 +1705,12 @@ export default function HomeTaskList() {
                 paginationItems={paginationItems}
                 selectedSource={selectedSource}
                 setSelectedSource={setSelectedSource}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                sortFilterValue={sortFilterValue}
-                setSortFilterValue={setSortFilterValue}
+                priorityFilterValue={priorityFilterValue}
+                setPriorityFilterValue={setPriorityFilterValue}
+                severityFilterValue={severityFilterValue}
+                setSeverityFilterValue={setSeverityFilterValue}
+                statusFilterValue={statusFilterValue}
+                setStatusFilterValue={setStatusFilterValue}
                 deadlineFilter={deadlineFilter}
                 setDeadlineFilter={setDeadlineFilter}
                 openDeadlineFilter={openDeadlineFilter}
@@ -1551,8 +1720,6 @@ export default function HomeTaskList() {
                 statusOptions={statusOptions}
                 hasDeadlineFilter={hasDeadlineFilter}
                 deadlineFilterLabel={deadlineFilterLabel}
-                showExtraFilter={showExtraFilter}
-                showDeadlineFilter={showDeadlineFilter}
                 setPage={setPage}
                 handleTaskClick={handleTaskClick}
                 t={t}

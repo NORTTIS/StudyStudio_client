@@ -778,10 +778,10 @@ export default function PersonalCalendar({ open, onClose }: PersonalCalendarProp
                             <span className="font-medium text-slate-400">{t("statusLabel")}:</span>{" "}
                             <span>{tooltip.status}</span>
                         </div>
-                        {tooltip.progress > 0 && (
+                        {Math.max(0, Math.min(100, Number(tooltip.progress ?? 0))) > 0 && (
                             <div>
                                 <span className="font-medium text-slate-400">{t("progressLabel")}:</span>{" "}
-                                <span>{tooltip.progress}%</span>
+                                <span>{Math.max(0, Math.min(100, Number(tooltip.progress ?? 0)))}%</span>
                             </div>
                         )}
                     </div>
