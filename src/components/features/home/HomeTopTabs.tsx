@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Home, Sparkles, BarChart3, Bell } from "lucide-react";
+import { Home, Sparkles, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -65,12 +65,6 @@ export default function HomeTopTabs() {
             label: t("ai"),
             icon: Sparkles,
             href: (l) => `/${l}/home/ai`
-        },
-        {
-            key: "announcements",
-            label: t("announcements"),
-            icon: Bell,
-            href: (l) => `/${l}/home/announcements`
         }
     ];
 

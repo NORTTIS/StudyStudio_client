@@ -1798,6 +1798,10 @@ function toApiDateTimeOrNull(input: string) {
     return `${s}T00:00:00`;
 }
 
+function delay(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function isRestrictedMemberRole(memberRole?: string | null | number): boolean {
     if (!memberRole) return false;
     const roleStr = String(memberRole).trim().toLowerCase();
@@ -1814,6 +1818,13 @@ async function apiUpdateTask(args: {
     if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
 
     const url = apiUrl(`/Task/${encodeURIComponent(args.groupId)}/${encodeURIComponent(args.taskId)}`);
+    const requestPayload = {
+        ...args.payload,
+        // Keep both keys for compatibility because create/update APIs are inconsistent
+        // about the assignee field name in this project/backend pair.
+        assignees: args.payload.assigneeId ?? null
+    };
+
     const res = await fetch(url, {
         method: "PUT",
         credentials: "include",
@@ -1822,7 +1833,7 @@ async function apiUpdateTask(args: {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        body: JSON.stringify(args.payload)
+        body: JSON.stringify(requestPayload)
     });
 
     const raw = await readText(res);
@@ -1832,7 +1843,7 @@ async function apiUpdateTask(args: {
         throw new Error(extractApiMessage(raw, json));
     }
 
-    return json;
+    return (json ?? null) as ApiResponse<TaskItemResponse> | null;
 }
 
 type CommentActionProps = {
@@ -1922,16 +1933,20 @@ export default function TaskDetailModal(props: {
     open: boolean;
     onClose: () => void;
     taskId: string | null;
+    groupIdOverride?: string | null;
     onDelete?: (taskId: string) => void;
     onSaved?: () => Promise<void> | void;
 }) {
-    const { open, onClose, taskId, onSaved } = props;
+    const { open, onClose, taskId, groupIdOverride, onSaved } = props;
     const t = useTranslations("TaskDetailModal");
     const locale = useLocale();
     const mentionAllLabel = t("mentionAll.label");
     const mentionAllSubtitle = t("mentionAll.subtitle");
     const params = useParams<Record<string, string | string[] | undefined>>();
-    const groupId = React.useMemo(() => getGroupIdFromParams(params ?? {}), [params]);
+    const groupId = React.useMemo(
+        () => String(groupIdOverride ?? "").trim() || getGroupIdFromParams(params ?? {}),
+        [groupIdOverride, params]
+    );
     const commentMentionRef = React.useRef<MentionTextareaHandle | null>(null);
     const [mounted, setMounted] = React.useState(false);
 
@@ -2590,7 +2605,7 @@ export default function TaskDetailModal(props: {
         try {
             setSubmitting(true);
 
-            await apiUpdateTask({
+            const updateResult = await apiUpdateTask({
                 groupId,
                 taskId,
                 payload: {
@@ -2608,7 +2623,22 @@ export default function TaskDetailModal(props: {
                 }
             });
 
+            const updatedTaskFromResponse = updateResult?.data
+                ? mapTaskDetailFromTaskItem(updateResult.data, taskId, selectedStatusName, statusId || null)
+                : null;
+
             setTask((prev) => {
+                if (updatedTaskFromResponse) {
+                    return {
+                        ...updatedTaskFromResponse,
+                        assigneeId: assigneeId || null,
+                        assigneeName: assigneeId ? updatedTaskFromResponse.assigneeName : null,
+                        assigneeAvatarUrl: assigneeId ? updatedTaskFromResponse.assigneeAvatarUrl : null,
+                        statusId: statusId || null,
+                        statusName: selectedStatusName
+                    };
+                }
+
                 if (!prev) return prev;
 
                 return {
@@ -2639,7 +2669,11 @@ export default function TaskDetailModal(props: {
             setProgress(String(normalizedProgressValue));
             setIsEditing(false);
 
-            void Promise.allSettled([refreshTaskDetailSilently(), Promise.resolve(onSaved?.())]);
+            void (async () => {
+                // Avoid immediately re-reading stale task detail right after update.
+                await delay(350);
+                await Promise.allSettled([refreshTaskDetailSilently(), Promise.resolve(onSaved?.())]);
+            })();
         } catch (e: unknown) {
             setSaveError(getErrorMessage(e, t("errors.updateTaskFailed")));
         } finally {

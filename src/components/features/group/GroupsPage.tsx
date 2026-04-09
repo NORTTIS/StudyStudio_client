@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ChevronDown, Filter, FolderKanban, Layers, LayoutGrid, List, Plus, Search, Sparkles, Star, Users, Users2, X } from "lucide-react";
+import { Archive, ChevronDown, FolderKanban, Layers, LayoutGrid, List, Plus, Search, Sparkles, Star, Users, Users2, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -525,47 +525,58 @@ export function GroupsPage() {
                                         <UsageBar current={usage.current} max={usage.max} />
                                     </div>
 
-                                    <div className="flex flex-col gap-3 rounded-[24px] border border-slate-200/80 bg-slate-50/80 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur lg:flex-row lg:items-center">
-                                        <div className="relative flex-1">
-                                            <Search className="pointer-events-none absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                                    <div className="rounded-[26px] border border-white/80 bg-white/75 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+                                        <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
+                                        <div className="relative min-w-0 flex-1 xl:max-w-[460px]">
+                                            <Search className="pointer-events-none absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                             <Input
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 placeholder={t("searchGroups")}
-                                                className="h-11 border border-slate-200 bg-slate-100 pl-12 text-[#261E33] placeholder:text-slate-500"
+                                                className="h-12 rounded-[18px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.98)_0%,rgba(255,255,255,0.98)_100%)] pl-12 pr-16 text-[15px] text-[#261E33] shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_12px_24px_rgba(15,23,42,0.04)] transition-all duration-200 placeholder:text-slate-400 focus-visible:border-orange-300 focus-visible:ring-4 focus-visible:ring-orange-100"
                                             />
                                             {searchQuery ? (
                                                 <button
                                                     type="button"
                                                     onClick={() => setSearchQuery("")}
-                                                    className="absolute top-1/2 right-4 -translate-y-1/2 text-slate-500 hover:text-slate-700">
-                                                    <X className="h-4 w-4" />
+                                                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full px-2.5 py-1 font-medium text-xs text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                                                    {locale === "vi" ? "Xóa" : "Clear"}
                                                 </button>
                                             ) : null}
                                         </div>
 
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <Filter className="hidden h-4 w-4 text-slate-400 lg:block" />
+                                        <div className="shrink-0 rounded-[22px] border border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.95)_100%)] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_12px_24px_rgba(15,23,42,0.04)]">
+                                            <div className="flex flex-wrap items-center gap-2">
                                             {[
-                                            { value: "all" as const, label: t("allGroups") },
-                                            { value: "independent" as const, label: t("independent") },
-                                            { value: "managed" as const, label: t("managed") },
-                                            { value: "joined" as const, label: t("joined") },
-                                            { value: "archived" as const, label: t("archivedFilter") }
-                                        ].map((item) => (
-                                                <button
-                                                    key={item.value}
-                                                    type="button"
-                                                    onClick={() => setGroupTypeFilter(item.value)}
-                                                    className={cn(
-                                                        "rounded-xl border px-4 py-2 font-medium text-sm transition-all duration-300",
-                                                        groupTypeFilter === item.value
-                                                            ? "border-0 bg-[linear-gradient(135deg,#F97316_0%,#EA580C_45%,#DC2626_100%)] text-white shadow-[0_14px_28px_rgba(249,115,22,0.28)] hover:brightness-105"
-                                                            : "border-white/70 bg-white text-[#374151] hover:border-[#FDBA74] hover:bg-orange-50 hover:text-[#EA580C]"
-                                                    )}>
-                                                    {item.label}
-                                                </button>
-                                            ))}
+                                                { value: "all" as const, label: t("allGroups"), icon: FolderKanban },
+                                                { value: "independent" as const, label: t("independent"), icon: Users },
+                                                { value: "managed" as const, label: t("managed"), icon: Layers },
+                                                { value: "joined" as const, label: t("joined"), icon: Users2 },
+                                                { value: "archived" as const, label: t("archivedFilter"), icon: Archive }
+                                            ].map((item) => {
+                                                const active = groupTypeFilter === item.value;
+                                                const Icon = item.icon;
+
+                                                return (
+                                                    <button
+                                                        key={item.value}
+                                                        type="button"
+                                                        onClick={() => setGroupTypeFilter(item.value)}
+                                                        className={cn(
+                                                            "rounded-[16px] border px-4 py-2.5 font-medium text-sm transition-all duration-300",
+                                                            active
+                                                                ? "border-transparent bg-[linear-gradient(135deg,#F97316_0%,#EA580C_45%,#DC2626_100%)] text-white shadow-[0_14px_28px_rgba(249,115,22,0.24)] hover:brightness-105"
+                                                                : "border-transparent bg-transparent text-[#4B5563] hover:-translate-y-0.5 hover:bg-orange-50 hover:text-[#EA580C]"
+                                                        )}>
+                                                        <span className="flex items-center gap-2.5">
+                                                            <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-400")} />
+                                                            <span>{item.label}</span>
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                            </div>
+                                        </div>
                                         </div>
                                     </div>
 

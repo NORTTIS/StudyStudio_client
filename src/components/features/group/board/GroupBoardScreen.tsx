@@ -27,13 +27,15 @@ import {
     verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { getUserData } from "@/api/auth";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
-import { mapRole } from "@/components/features/group/group.api";
+import { useGroupHeaderActionSlot } from "@/components/features/group/GroupShell";
+import { getCurrentUserId, mapRole } from "@/components/features/group/group.api";
 import type { components } from "@/api/types";
 
 type ColumnId = string;
@@ -63,6 +65,7 @@ type Task = {
     start?: string;
     startRaw?: string;
     description?: string | null;
+    assigneeId?: string | null;
     assigneeName?: string | null;
     statusName?: string | null;
     priority?: number | null;
@@ -86,6 +89,7 @@ type TaskItemResponse = {
     dueDate?: string;
     startDate?: string;
     assignee?: {
+        id?: string | null;
         firstName?: string | null;
         lastName?: string | null;
         email?: string | null;
@@ -144,6 +148,26 @@ type ApiMessages = {
     invalidStatusId: string;
     enterStatusName: string;
     genericApiError: string;
+};
+
+type DueDateFilterKey = "noDates" | "overdue" | "nextDay" | "nextWeek" | "nextMonth";
+type MemberFilterKey = "noMembers" | "assignedToMe";
+type CardStatusFilterKey = "complete" | "inProgress";
+
+type BoardFilters = {
+    members: MemberFilterKey[];
+    cardStatus: CardStatusFilterKey[];
+    dueDate: DueDateFilterKey[];
+    priorities: number[];
+    severities: number[];
+};
+
+const EMPTY_BOARD_FILTERS: BoardFilters = {
+    members: [],
+    cardStatus: [],
+    dueDate: [],
+    priorities: [],
+    severities: []
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -370,6 +394,84 @@ function isOverdue(raw?: string) {
 
 function isTaskDone(task?: Pick<Task, "progress"> | null) {
     return Number(task?.progress ?? 0) >= 100;
+}
+
+function isTaskInProgress(task?: Pick<Task, "progress"> | null) {
+    const progress = Number(task?.progress ?? 0);
+    return progress > 0 && progress < 100;
+}
+
+function isTaskUnassigned(task?: Pick<Task, "assigneeId" | "assigneeName"> | null) {
+    const assigneeId = String(task?.assigneeId ?? "").trim();
+    const assigneeName = String(task?.assigneeName ?? "").trim();
+    return !assigneeId && !assigneeName;
+}
+
+function buildInitials(firstName?: string | null, lastName?: string | null, fallback?: string | null) {
+    const first = String(firstName ?? "").trim();
+    const last = String(lastName ?? "").trim();
+    const fromNames = `${first.charAt(0)}${last.charAt(0)}`.trim();
+    if (fromNames) return fromNames.toUpperCase();
+
+    const safeFallback = String(fallback ?? "").trim();
+    if (!safeFallback) return "U";
+
+    return safeFallback
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join("");
+}
+
+function startOfDay(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function classifyDueDate(task: Pick<Task, "dueRaw" | "progress">): Set<DueDateFilterKey> {
+    const matches = new Set<DueDateFilterKey>();
+    const rawDue = String(task.dueRaw ?? "").trim();
+
+    if (!rawDue) {
+        matches.add("noDates");
+        return matches;
+    }
+
+    const due = new Date(rawDue);
+    if (Number.isNaN(due.getTime())) return matches;
+
+    const now = new Date();
+    const startToday = startOfDay(now);
+    const endTomorrow = new Date(startToday);
+    endTomorrow.setDate(endTomorrow.getDate() + 1);
+
+    const endNextWeek = new Date(startToday);
+    endNextWeek.setDate(endNextWeek.getDate() + 7);
+
+    const endNextMonth = new Date(startToday);
+    endNextMonth.setMonth(endNextMonth.getMonth() + 1);
+
+    if (due.getTime() < now.getTime() && !isTaskDone(task)) {
+        matches.add("overdue");
+    }
+
+    if (due.getTime() >= startToday.getTime() && due.getTime() <= endTomorrow.getTime()) {
+        matches.add("nextDay");
+    }
+
+    if (due.getTime() >= startToday.getTime() && due.getTime() <= endNextWeek.getTime()) {
+        matches.add("nextWeek");
+    }
+
+    if (due.getTime() >= startToday.getTime() && due.getTime() <= endNextMonth.getTime()) {
+        matches.add("nextMonth");
+    }
+
+    return matches;
+}
+
+function toggleArrayValue<T>(items: T[], value: T) {
+    return items.includes(value) ? items.filter((item) => item !== value) : [...items, value];
 }
 
 async function apiGetGroupDetail(groupId: string, messages: ApiMessages) {
@@ -935,12 +1037,14 @@ function PortalDropdown({
     open,
     onClose,
     anchorRef,
-    children
+    children,
+    width = 208
 }: {
     open: boolean;
     onClose: () => void;
     anchorRef: React.RefObject<HTMLElement>;
     children: React.ReactNode;
+    width?: number;
 }) {
     const menuRef = React.useRef<HTMLDivElement | null>(null);
     const [mounted, setMounted] = React.useState(false);
@@ -952,11 +1056,10 @@ function PortalDropdown({
         const a = anchorRef.current;
         if (!a) return;
         const r = a.getBoundingClientRect();
-        const width = 208;
         const top = r.bottom + 8;
         const left = Math.max(8, r.right - width);
         setPos({ top, left, width });
-    }, [anchorRef]);
+    }, [anchorRef, width]);
 
     React.useEffect(() => {
         if (!open) return;
@@ -1033,6 +1136,110 @@ function MenuItem({
             <span className="font-medium">{label}</span>
         </button>
     );
+}
+
+function FilterCheckbox({
+    checked,
+    label,
+    hint,
+    icon,
+    onChange
+}: {
+    checked: boolean;
+    label: string;
+    hint?: string;
+    icon?: React.ReactNode;
+    onChange: () => void;
+}) {
+    return (
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-zinc-50">
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={onChange}
+                className="h-4 w-4 shrink-0 rounded border-zinc-300 text-orange-600 focus:ring-orange-200"
+            />
+            {icon ? <span className="shrink-0">{icon}</span> : null}
+            <span className="min-w-0">
+                <span className="block font-medium text-sm text-zinc-800">{label}</span>
+                {hint ? <span className="mt-0.5 block text-xs text-zinc-500">{hint}</span> : null}
+            </span>
+        </label>
+    );
+}
+
+function FilterSection({
+    title,
+    children
+}: {
+    title: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <section className="space-y-2">
+            <h3 className="font-semibold text-sm text-zinc-900">{title}</h3>
+            <div className="space-y-1">{children}</div>
+        </section>
+    );
+}
+
+function FilterBarsIcon({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className={className}>
+            <path d="M4 7h16" />
+            <path d="M7 12h10" />
+            <path d="M10 17h4" />
+        </svg>
+    );
+}
+
+function UserOutlineIcon({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+        </svg>
+    );
+}
+
+function DueDateIcon({
+    tone,
+    children
+}: {
+    tone: "neutral" | "red" | "yellow" | "gray";
+    children: React.ReactNode;
+}) {
+    const toneClass =
+        tone === "red"
+            ? "bg-[#D64532] text-white"
+            : tone === "yellow"
+                ? "bg-[#FFC21A] text-white"
+                : "bg-[#F3F4F6] text-zinc-500";
+
+    return <span className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full", toneClass)}>{children}</span>;
+}
+
+function LabelToneDot({
+    tone
+}: {
+    tone: "priority-high" | "priority-medium" | "priority-low" | "severity-critical" | "severity-major" | "severity-moderate" | "severity-minor";
+}) {
+    const toneClass =
+        tone === "priority-high"
+            ? "bg-rose-500"
+            : tone === "priority-medium"
+                ? "bg-amber-500"
+                : tone === "priority-low"
+                    ? "bg-emerald-500"
+                    : tone === "severity-critical"
+                        ? "bg-rose-600"
+                        : tone === "severity-major"
+                            ? "bg-orange-500"
+                            : tone === "severity-moderate"
+                                ? "bg-amber-400"
+                                : "bg-sky-400";
+
+    return <span className={cn("inline-flex h-3 w-3 rounded-full", toneClass)} />;
 }
 
 function useAutosizeTextarea(ref: React.RefObject<HTMLTextAreaElement | null>, value: string) {
@@ -2018,13 +2225,24 @@ function ColumnOverlay({ col, tasks }: { col: Column; tasks: Task[] }) {
     );
 }
 
-export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean }) {
+export function GroupBoardScreen({
+    canDelete = false,
+    groupIdOverride,
+    initialTaskId,
+    onTaskDetailClose
+}: {
+    canDelete?: boolean;
+    groupIdOverride?: string;
+    initialTaskId?: string | null;
+    onTaskDetailClose?: (() => void) | null;
+}) {
     const params = useParams<{ groupId: string }>();
     const router = useRouter();
     const searchParams = useSearchParams();
     const t = useTranslations("GroupBoardScreen");
     const locale = useLocale();
-    const groupId = params?.groupId ? String(params.groupId) : "";
+    const headerActionSlot = useGroupHeaderActionSlot();
+    const groupId = String(groupIdOverride ?? "").trim() || (params?.groupId ? String(params.groupId) : "");
 
     const apiMessages = React.useMemo<ApiMessages>(
         () => ({
@@ -2201,6 +2419,20 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const [detailTaskId, setDetailTaskId] = React.useState<string | null>(null);
 
     const [membersOptions, setMembersOptions] = React.useState<TaskFormOption[]>([]);
+    const [filterOpen, setFilterOpen] = React.useState(false);
+    const [filters, setFilters] = React.useState<BoardFilters>(EMPTY_BOARD_FILTERS);
+    const filterButtonRef = React.useRef<HTMLButtonElement | null>(null);
+    const filterPanelRef = React.useRef<HTMLDivElement | null>(null);
+    const currentUserId = React.useMemo(() => getCurrentUserId(), []);
+    const currentUser = React.useMemo(() => getUserData(), []);
+    const currentUserDisplayName = React.useMemo(
+        () => `${currentUser?.firstName ?? ""} ${currentUser?.lastName ?? ""}`.trim() || currentUser?.email || "",
+        [currentUser]
+    );
+    const currentUserInitials = React.useMemo(
+        () => buildInitials(currentUser?.firstName, currentUser?.lastName, currentUserDisplayName),
+        [currentUser, currentUserDisplayName]
+    );
     const topScrollRef = React.useRef<HTMLDivElement | null>(null);
     const boardScrollRef = React.useRef<HTMLDivElement | null>(null);
     React.useLayoutEffect(() => {
@@ -2314,6 +2546,11 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     };
 
     const openTaskDetail = (taskId: string) => {
+        if (groupId) {
+            router.push(`/${locale}/group/task/${encodeURIComponent(taskId)}`, { scroll: false });
+            return;
+        }
+
         setDetailTaskId(taskId);
         setDetailOpen(true);
     };
@@ -2321,6 +2558,10 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     const closeTaskDetail = () => {
         setDetailOpen(false);
         setDetailTaskId(null);
+
+        if (onTaskDetailClose) {
+            onTaskDetailClose();
+        }
     };
 
     const handleDeleteFromDetail = async (taskId: string) => {
@@ -2335,6 +2576,9 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
         try {
             await apiDeleteTask({ groupId, taskId }, apiMessages);
             await refreshSilently();
+            if (onTaskDetailClose) {
+                onTaskDetailClose();
+            }
         } catch (e: unknown) {
             openErrorModal(getErrorMessage(e, t("deleteTaskFailed")));
         }
@@ -2376,6 +2620,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                         id: String(apiTask.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
                         title: String(apiTask.taskTitle ?? ""),
                         statusDot: priorityToStatusDot(apiTask.taskPriority),
+                        assigneeId: String(apiTask.assignee?.id ?? "").trim() || null,
                         assigneeName,
                         priority: apiTask.taskPriority ?? null,
                         severity: apiTask.taskSeverity ?? null,
@@ -2480,15 +2725,18 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     React.useEffect(() => {
         if (loading) return;
 
-        const taskId = searchParams.get("taskId");
-        const openTaskDetail = searchParams.get("openTaskDetail");
+        const taskIdFromQuery = searchParams.get("taskId");
+        const openTaskDetailFromQuery = searchParams.get("openTaskDetail");
+        const candidateTaskId =
+            String(initialTaskId ?? "").trim()
+            || (openTaskDetailFromQuery === "1" ? String(taskIdFromQuery ?? "").trim() : "");
 
-        if (!taskId || openTaskDetail !== "1") return;
-        if (autoOpenedTaskRef.current === taskId) return;
+        if (!candidateTaskId) return;
+        if (autoOpenedTaskRef.current === candidateTaskId) return;
 
         let found = false;
         for (const col of columns) {
-            if ((board[col.id] ?? []).some((t) => t.id === taskId)) {
+            if ((board[col.id] ?? []).some((t) => t.id === candidateTaskId)) {
                 found = true;
                 break;
             }
@@ -2496,12 +2744,14 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
         if (!found) return;
 
-        autoOpenedTaskRef.current = taskId;
-        setDetailTaskId(taskId);
+        autoOpenedTaskRef.current = candidateTaskId;
+        setDetailTaskId(candidateTaskId);
         setDetailOpen(true);
 
-        router.replace(`/group/${groupId}`, { scroll: false });
-    }, [loading, searchParams, columns, board, router, groupId]);
+        if (!initialTaskId && taskIdFromQuery && openTaskDetailFromQuery === "1") {
+            router.replace(`/${locale}/group/${groupId}`, { scroll: false });
+        }
+    }, [loading, searchParams, columns, board, router, groupId, locale, initialTaskId]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -2937,11 +3187,72 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
 
     const columnIds = React.useMemo(() => columns.map((c) => c.id), [columns]);
 
+    const filterCount = React.useMemo(
+        () =>
+            filters.members.length
+            + filters.cardStatus.length
+            + filters.dueDate.length
+            + filters.priorities.length
+            + filters.severities.length,
+        [filters]
+    );
+
+    const filteredBoard = React.useMemo(() => {
+        const hasAnyFilter = filterCount > 0;
+        if (!hasAnyFilter) return board;
+
+        const nextBoard: Record<ColumnId, Task[]> = {};
+
+        for (const col of columns) {
+            const tasks = board[col.id] ?? [];
+            nextBoard[col.id] = tasks.filter((task) => {
+                if (filters.members.length > 0) {
+                    const memberMatches = filters.members.some((memberFilter) => {
+                        if (memberFilter === "noMembers") return isTaskUnassigned(task);
+                        if (memberFilter === "assignedToMe") {
+                            return Boolean(currentUserId) && String(task.assigneeId ?? "").trim() === currentUserId;
+                        }
+                        return false;
+                    });
+                    if (!memberMatches) return false;
+                }
+
+                if (filters.cardStatus.length > 0) {
+                    const statusMatches = filters.cardStatus.some((statusFilter) => {
+                        if (statusFilter === "complete") return isTaskDone(task);
+                        if (statusFilter === "inProgress") return isTaskInProgress(task);
+                        return false;
+                    });
+                    if (!statusMatches) return false;
+                }
+
+                if (filters.dueDate.length > 0) {
+                    const dueMatches = classifyDueDate(task);
+                    if (!filters.dueDate.some((dueFilter) => dueMatches.has(dueFilter))) return false;
+                }
+
+                if (filters.priorities.length > 0) {
+                    if (task.priority == null) return false;
+                    if (!filters.priorities.includes(Number(task.priority))) return false;
+                }
+
+                if (filters.severities.length > 0) {
+                    if (task.severity == null) return false;
+                    if (!filters.severities.includes(Number(task.severity))) return false;
+                }
+
+                return true;
+            });
+        }
+
+        return nextBoard;
+    }, [board, columns, currentUserId, filterCount, filters]);
+
     const taskIdsByCol = React.useMemo(() => {
         const out: Record<string, string[]> = {};
-        for (const col of columns) out[col.id] = (board[col.id] ?? []).map((t) => t.id);
+        for (const col of columns) out[col.id] = (filteredBoard[col.id] ?? []).map((t) => t.id);
         return out;
-    }, [board, columns]);
+    }, [filteredBoard, columns]);
 
     const statusesOptions = React.useMemo<TaskFormOption[]>(
         () => columns.map((c) => ({ value: c.id, label: c.title })),
@@ -2949,9 +3260,331 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
     );
 
     const totalTaskCount = React.useMemo(
-        () => Object.values(board).reduce((count, tasks) => count + tasks.length, 0),
-        [board]
+        () => Object.values(filteredBoard).reduce((count, tasks) => count + tasks.length, 0),
+        [filteredBoard]
     );
+
+    const headerFilterControl = React.useMemo(
+        () => (
+            <div className="relative flex items-center">
+                <div className="inline-flex items-center overflow-hidden rounded-[10px] border border-[#F0E2D6] bg-[#FFFDFB] shadow-sm">
+                    <button
+                        ref={filterButtonRef}
+                        type="button"
+                        onClick={() => setFilterOpen((open) => !open)}
+                        className={cn(
+                            "inline-flex h-11 w-11 items-center justify-center border-r border-[#F0E2D6] transition focus:outline-none",
+                            filterOpen || filterCount > 0
+                                ? "bg-[#FFF7F0] text-[#EA580C]"
+                                : "bg-[#FFFDFB] text-[#6B7280] hover:bg-[#FFF7F0] hover:text-[#EA580C]"
+                        )}
+                        aria-label={t("filter")}
+                        title={t("filter")}>
+                        <FilterBarsIcon className="h-5 w-5" />
+                    </button>
+
+                    {filterCount > 0 ? (
+                        <>
+                            <div className="inline-flex h-11 items-center gap-2 border-r border-[#F0D7C3] bg-[#FFF3E8] px-3 text-sm text-[#C2410C]">
+                                <span className="h-4 w-4 rounded-full bg-gradient-to-br from-[#FB923C] to-[#EA580C] shadow-[0_0_0_3px_rgba(251,146,60,0.18)]" />
+                                <span className="font-semibold">{totalTaskCount}</span>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setFilters(EMPTY_BOARD_FILTERS)}
+                                className="inline-flex h-11 items-center bg-[#FFF3E8] px-4 font-semibold text-sm text-[#EA580C] transition hover:bg-[#FDE7D7]">
+                                {t("clearAll")}
+                            </button>
+                        </>
+                    ) : null}
+                </div>
+
+                {filterOpen ? (
+                    <div
+                        ref={filterPanelRef}
+                        className="absolute top-full right-0 z-[9999] mt-2 w-[360px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_24px_64px_rgba(15,23,42,0.14)]">
+                        <div className="max-h-[70vh] space-y-5 overflow-y-auto p-3 [scrollbar-color:rgba(100,116,139,0.26)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-400/30 [&::-webkit-scrollbar-thumb:hover]:bg-zinc-400/45">
+                        <div className="relative flex items-center justify-center px-2">
+                            <div className="font-semibold text-base text-zinc-900">{t("filter")}</div>
+
+                            <button
+                                type="button"
+                                onClick={() => setFilterOpen(false)}
+                                className="absolute right-2 rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
+                                aria-label={t("close")}>
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <FilterSection title={t("members")}>
+                            <FilterCheckbox
+                                checked={filters.members.includes("noMembers")}
+                                label={t("noMembers")}
+                                icon={
+                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-500">
+                                        <UserOutlineIcon className="h-4 w-4" />
+                                    </span>
+                                }
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        members: toggleArrayValue(prev.members, "noMembers")
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.members.includes("assignedToMe")}
+                                label={t("cardsAssignedToMe")}
+                                icon={
+                                    currentUser?.avatarUrl ? (
+                                        <img
+                                            src={currentUser.avatarUrl}
+                                            alt={currentUserDisplayName || t("cardsAssignedToMe")}
+                                            className="h-8 w-8 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#2563EB] font-semibold text-[11px] text-white">
+                                            {currentUserInitials}
+                                        </span>
+                                    )
+                                }
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        members: toggleArrayValue(prev.members, "assignedToMe")
+                                    }))
+                                }
+                            />
+                        </FilterSection>
+
+                        <FilterSection title={t("cardStatus")}>
+                            <FilterCheckbox
+                                checked={filters.cardStatus.includes("complete")}
+                                label={t("markedAsComplete")}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        cardStatus: toggleArrayValue(prev.cardStatus, "complete")
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.cardStatus.includes("inProgress")}
+                                label={t("inProgress")}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        cardStatus: toggleArrayValue(prev.cardStatus, "inProgress")
+                                    }))
+                                }
+                            />
+                        </FilterSection>
+
+                        <FilterSection title={t("dueDate")}>
+                            <FilterCheckbox
+                                checked={filters.dueDate.includes("noDates")}
+                                label={t("noDates")}
+                                icon={
+                                    <DueDateIcon tone="neutral">
+                                        <CalendarDays className="h-4 w-4" />
+                                    </DueDateIcon>
+                                }
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        dueDate: toggleArrayValue(prev.dueDate, "noDates")
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.dueDate.includes("overdue")}
+                                label={t("overdue")}
+                                icon={
+                                    <DueDateIcon tone="red">
+                                        <Clock3 className="h-4 w-4" />
+                                    </DueDateIcon>
+                                }
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        dueDate: toggleArrayValue(prev.dueDate, "overdue")
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.dueDate.includes("nextDay")}
+                                label={t("dueInNextDay")}
+                                icon={
+                                    <DueDateIcon tone="yellow">
+                                        <Clock3 className="h-4 w-4" />
+                                    </DueDateIcon>
+                                }
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        dueDate: toggleArrayValue(prev.dueDate, "nextDay")
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.dueDate.includes("nextWeek")}
+                                label={t("dueInNextWeek")}
+                                icon={
+                                    <DueDateIcon tone="gray">
+                                        <Clock3 className="h-4 w-4" />
+                                    </DueDateIcon>
+                                }
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        dueDate: toggleArrayValue(prev.dueDate, "nextWeek")
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.dueDate.includes("nextMonth")}
+                                label={t("dueInNextMonth")}
+                                icon={
+                                    <DueDateIcon tone="gray">
+                                        <Clock3 className="h-4 w-4" />
+                                    </DueDateIcon>
+                                }
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        dueDate: toggleArrayValue(prev.dueDate, "nextMonth")
+                                    }))
+                                }
+                            />
+                        </FilterSection>
+
+                        <FilterSection title={t("labels")}>
+                            <div className="px-2 pt-1 font-medium text-xs uppercase tracking-wide text-zinc-500">
+                                {t("priority")}
+                            </div>
+                            <FilterCheckbox
+                                checked={filters.priorities.includes(2)}
+                                label={t("high")}
+                                icon={<LabelToneDot tone="priority-high" />}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        priorities: toggleArrayValue(prev.priorities, 2)
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.priorities.includes(1)}
+                                label={t("medium")}
+                                icon={<LabelToneDot tone="priority-medium" />}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        priorities: toggleArrayValue(prev.priorities, 1)
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.priorities.includes(0)}
+                                label={t("low")}
+                                icon={<LabelToneDot tone="priority-low" />}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        priorities: toggleArrayValue(prev.priorities, 0)
+                                    }))
+                                }
+                            />
+
+                            <div className="px-2 pt-3 font-medium text-xs uppercase tracking-wide text-zinc-500">
+                                {t("severity")}
+                            </div>
+                            <FilterCheckbox
+                                checked={filters.severities.includes(3)}
+                                label={t("critical")}
+                                icon={<LabelToneDot tone="severity-critical" />}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        severities: toggleArrayValue(prev.severities, 3)
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.severities.includes(2)}
+                                label={t("major")}
+                                icon={<LabelToneDot tone="severity-major" />}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        severities: toggleArrayValue(prev.severities, 2)
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.severities.includes(1)}
+                                label={t("moderate")}
+                                icon={<LabelToneDot tone="severity-moderate" />}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        severities: toggleArrayValue(prev.severities, 1)
+                                    }))
+                                }
+                            />
+                            <FilterCheckbox
+                                checked={filters.severities.includes(0)}
+                                label={t("minor")}
+                                icon={<LabelToneDot tone="severity-minor" />}
+                                onChange={() =>
+                                    setFilters((prev) => ({
+                                        ...prev,
+                                        severities: toggleArrayValue(prev.severities, 0)
+                                    }))
+                                }
+                            />
+                        </FilterSection>
+                        </div>
+                    </div>
+                ) : null}
+            </div>
+        ),
+        [currentUser, currentUserDisplayName, currentUserInitials, filterCount, filterOpen, filters, t, totalTaskCount]
+    );
+
+    React.useEffect(() => {
+        headerActionSlot?.setHeaderAction(headerFilterControl);
+
+        return () => {
+            headerActionSlot?.setHeaderAction(null);
+        };
+    }, [headerActionSlot, headerFilterControl]);
+
+    React.useEffect(() => {
+        if (!filterOpen) return;
+
+        const onPointerDown = (event: PointerEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+            if (filterPanelRef.current?.contains(target)) return;
+            if (filterButtonRef.current?.contains(target)) return;
+            setFilterOpen(false);
+        };
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setFilterOpen(false);
+        };
+
+        window.addEventListener("pointerdown", onPointerDown, true);
+        window.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            window.removeEventListener("pointerdown", onPointerDown, true);
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [filterOpen]);
+
     const isBoardEmpty = columns.length === 0;
     const shouldLockVerticalScroll = !loading && !loadError && isBoardEmpty && totalTaskCount === 0;
     const boardRootClassName = cn("relative z-10", !isBoardEmpty && "min-h-screen");
@@ -3037,6 +3670,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                 open={detailOpen}
                 onClose={closeTaskDetail}
                 taskId={detailTaskId}
+                groupIdOverride={groupId}
                 onDelete={handleDeleteFromDetail}
                 onSaved={refreshSilently}
             />
@@ -3097,7 +3731,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                             <ColumnView
                                 key={col.id}
                                 col={col}
-                                tasks={board[col.id] ?? []}
+                                tasks={filteredBoard[col.id] ?? []}
                                 taskIds={taskIdsByCol[col.id] ?? []}
                                 onOpenCreateTask={openCreateTask}
                                 onOpenTaskDetail={openTaskDetail}
@@ -3147,7 +3781,7 @@ export function GroupBoardScreen({ canDelete = false }: { canDelete?: boolean })
                                     <SortableColumn
                                         key={col.id}
                                         col={col}
-                                        tasks={board[col.id] ?? []}
+                                        tasks={filteredBoard[col.id] ?? []}
                                         taskIds={taskIdsByCol[col.id] ?? []}
                                         onOpenCreateTask={openCreateTask}
                                         onOpenTaskDetail={openTaskDetail}
