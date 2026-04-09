@@ -362,9 +362,9 @@ export function removePendingJoinGroup(groupId: string) {
     pendingJoinEvents.dispatchEvent(new CustomEvent(PENDING_JOIN_CHANGED_EVENT, { detail: { groupId: normalizedId } }));
 }
 
-function getToken() {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem("accessToken") || localStorage.getItem("token") || localStorage.getItem("jwt") || "";
+function getToken(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("accessToken") || localStorage.getItem("token") || localStorage.getItem("jwt") || null;
 }
 
 function getBaseUrl() {
@@ -933,6 +933,7 @@ export async function askGroupAi(payload: AIQuestionRequest): Promise<AskGroupAi
 export async function askGroupAiStream(
     payload: AIAskStreamRequest,
     options?: {
+        signal?: AbortSignal;
         onChunk?: (fullText: string, delta: string) => void;
         onMetadata?: (metadata: { remainingRequests: number | null; dailyLimit: number | null }) => void;
     }
@@ -940,15 +941,19 @@ export async function askGroupAiStream(
     const baseUrl = getBaseUrl();
     const token = getToken();
 
+    const headers: Record<string, string> = {
+        Accept: "text/event-stream, application/json",
+        "Content-Type": "application/json"
+    };
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${baseUrl}/ai/group/ask/stream`, {
         method: "POST",
-        headers: {
-            Accept: "text/event-stream, application/json",
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        headers,
         body: JSON.stringify(payload),
-        cache: "no-store"
+        signal: options?.signal
     });
 
     if (!res.ok) {

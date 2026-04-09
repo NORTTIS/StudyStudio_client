@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import HomeTopTabs from "@/components/features/home/HomeTopTabs";
 import { askPersonalAiStream } from "@/api/personal-ai";
 import { getUserProfile } from "@/api/user-profile";
+import { renderMarkdown } from "@/lib/markdown";
 
 type ChatMessage = {
     id: string;
@@ -25,99 +26,10 @@ type QuickAction = {
     icon: React.ReactNode;
 };
 
-type InlineNode = {
-    type: "text" | "strong";
-    value: string;
-};
-
 const initialMessages: ChatMessage[] = [];
 
 const formatTime = (ts: number, locale: string) =>
     new Date(ts).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
-
-function parseInlineMarkdown(text: string): InlineNode[] {
-    const nodes: InlineNode[] = [];
-    const regex = /\*\*(.+?)\*\*/g;
-    let lastIndex = 0;
-
-    for (const match of text.matchAll(regex)) {
-        const full = match[0];
-        const content = match[1];
-        const index = match.index ?? 0;
-
-        if (index > lastIndex) {
-            nodes.push({ type: "text", value: text.slice(lastIndex, index) });
-        }
-
-        nodes.push({ type: "strong", value: content });
-        lastIndex = index + full.length;
-    }
-
-    if (lastIndex < text.length) {
-        nodes.push({ type: "text", value: text.slice(lastIndex) });
-    }
-
-    if (nodes.length === 0) {
-        return [{ type: "text", value: text }];
-    }
-
-    return nodes;
-}
-
-function renderInline(text: string) {
-    return parseInlineMarkdown(text).map((node, idx) =>
-        node.type === "strong" ? <strong key={`${node.value}-${idx}`}>{node.value}</strong> : node.value
-    );
-}
-
-function renderAssistantMarkdown(content: string) {
-    const lines = content.split(/\r?\n/);
-    const elements: React.ReactNode[] = [];
-    let listItems: string[] = [];
-    let key = 0;
-
-    const flushList = () => {
-        if (listItems.length === 0) return;
-
-        elements.push(
-            <ul
-                key={`ul-${key++}`}
-                className="space-y-2 pl-5 text-[15px] leading-7 text-[#3D3128] list-disc marker:text-[#FF8A65]">
-                {listItems.map((item) => (
-                    <li key={`li-${key++}-${item.slice(0, 16)}`}>{renderInline(item)}</li>
-                ))}
-            </ul>
-        );
-
-        listItems = [];
-    };
-
-    for (let i = 0; i < lines.length; i += 1) {
-        const line = lines[i];
-        const bullet = line.match(/^\s*[*-]\s+(.*)$/);
-
-        if (bullet) {
-            listItems.push(bullet[1]);
-            continue;
-        }
-
-        flushList();
-
-        if (!line.trim()) {
-            elements.push(<div key={`sp-${key++}`} className="h-2" />);
-            continue;
-        }
-
-        elements.push(
-            <p key={`p-${key++}`} className="whitespace-pre-wrap text-[15px] leading-7 text-[#3D3128]">
-                {renderInline(line)}
-            </p>
-        );
-    }
-
-    flushList();
-    return <div className="space-y-2">{elements}</div>;
-}
 
 function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
     return (
@@ -370,6 +282,8 @@ export default function AIHome() {
     const [isComposerFocused, setIsComposerFocused] = React.useState(false);
 
     const bottomAnchorRef = React.useRef<HTMLDivElement | null>(null);
+    const flushTimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+    const isSendingRef = React.useRef(false);
 
     const [usageStats, setUsageStats] = React.useState({
         usedToday: null as number | null,
@@ -402,10 +316,20 @@ export default function AIHome() {
         scrollToBottom("auto");
     }, [messages.length, scrollToBottom]);
 
+    React.useEffect(() => {
+        return () => {
+            if (flushTimerRef.current) {
+                clearInterval(flushTimerRef.current);
+                flushTimerRef.current = null;
+            }
+            isSendingRef.current = false;
+        };
+    }, []);
+
     const sendQuestion = React.useCallback(
         async (question: string) => {
             const trimmed = question.trim();
-            if (!trimmed || isSending) return;
+            if (!trimmed || isSendingRef.current) return;
 
             const now = Date.now();
 
@@ -417,6 +341,36 @@ export default function AIHome() {
             };
 
             const assistantMessageId = `a_${now + 1}`;
+            let chunkQueue = "";
+            let renderedText = "";
+            let finalAnswerText: string | null = null;
+
+            const ensureFlushTimer = () => {
+                if (flushTimerRef.current) return;
+                flushTimerRef.current = setInterval(() => {
+                    if (!chunkQueue) {
+                        if (finalAnswerText != null && renderedText !== finalAnswerText) {
+                            renderedText = finalAnswerText;
+                            setMessages((prev) =>
+                                prev.map((m) => (m.id === assistantMessageId ? { ...m, content: renderedText } : m))
+                            );
+                        }
+                        if (!isSendingRef.current && flushTimerRef.current) {
+                            clearInterval(flushTimerRef.current);
+                            flushTimerRef.current = null;
+                        }
+                        return;
+                    }
+
+                    const step = chunkQueue.slice(0, 8);
+                    chunkQueue = chunkQueue.slice(8);
+                    renderedText += step;
+
+                    setMessages((prev) =>
+                        prev.map((m) => (m.id === assistantMessageId ? { ...m, content: renderedText } : m))
+                    );
+                }, 20);
+            };
 
             setMessages((prev) => [
                 ...prev,
@@ -431,19 +385,20 @@ export default function AIHome() {
 
             scrollToBottom("smooth");
             setInput("");
+            isSendingRef.current = true;
             setIsSending(true);
 
             try {
-                await askPersonalAiStream(
+                const result = await askPersonalAiStream(
                     { question: trimmed },
                     {
-                        onChunk: (fullText) => {
-                            setMessages((prev) =>
-                                prev.map((m) => (m.id === assistantMessageId ? { ...m, content: fullText } : m))
-                            );
+                        onChunk: (_, delta) => {
+                            if (!delta) return;
+                            chunkQueue += delta;
+                            ensureFlushTimer();
                         },
                         onMetadata: (meta) => {
-                            if (meta.remainingRequests !== null && meta.dailyLimit !== null) {
+                            if (meta.remainingRequests != null && meta.dailyLimit != null) {
                                 setUsageStats({
                                     usedToday: meta.dailyLimit - meta.remainingRequests,
                                     remaining: meta.remainingRequests,
@@ -453,15 +408,24 @@ export default function AIHome() {
                         }
                     }
                 );
+
+                // Set final answer and ensure it's rendered
+                finalAnswerText = result.answer || renderedText;
+                ensureFlushTimer();
             } catch {
+                if (flushTimerRef.current) {
+                    clearInterval(flushTimerRef.current);
+                    flushTimerRef.current = null;
+                }
                 setMessages((prev) =>
                     prev.map((m) => (m.id === assistantMessageId ? { ...m, content: tr("error") } : m))
                 );
             } finally {
+                isSendingRef.current = false;
                 setIsSending(false);
             }
         },
-        [isSending, scrollToBottom, tr]
+        [scrollToBottom, tr]
     );
 
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -616,7 +580,10 @@ export default function AIHome() {
                                                     {m.role === "assistant" && !m.content.trim() && isSending ? (
                                                         <TypingDots thinkingText={tr("thinking")} />
                                                     ) : m.role === "assistant" ? (
-                                                        renderAssistantMarkdown(m.content)
+                                                        renderMarkdown(m.content, {
+                                                            textClassName: "text-[15px] leading-7 text-[#3D3128]",
+                                                            listClassName: "space-y-2 pl-5 text-[15px] leading-7 text-[#3D3128] list-disc marker:text-[#FF8A65]",
+                                                        })
                                                     ) : (
                                                         <p className="whitespace-pre-wrap text-sm leading-7">
                                                             {m.content}

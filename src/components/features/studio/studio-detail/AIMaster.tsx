@@ -9,6 +9,7 @@ import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { sanitizeErrorMessage } from "@/utils/error-message";
+import { renderMarkdown } from "@/lib/markdown";
 
 type ChatMessage = {
     id: string;
@@ -21,11 +22,6 @@ type QuickAction = {
     key: string;
     label: string;
     prompt: string;
-};
-
-type InlineNode = {
-    type: "text" | "strong";
-    value: string;
 };
 
 const formatTime = (ts: number, locale: string) =>
@@ -44,150 +40,6 @@ function parseAIError(error: unknown) {
         return sanitizeErrorMessage(error.message, "Đã xảy ra lỗi");
     }
     return "";
-}
-
-function parseInlineMarkdown(text: string): InlineNode[] {
-    const nodes: InlineNode[] = [];
-    const regex = /\*\*(.+?)\*\*/g;
-    let lastIndex = 0;
-
-    for (const match of text.matchAll(regex)) {
-        const full = match[0];
-        const content = match[1];
-        const index = match.index ?? 0;
-
-        if (index > lastIndex) {
-            nodes.push({ type: "text", value: text.slice(lastIndex, index) });
-        }
-        nodes.push({ type: "strong", value: content });
-        lastIndex = index + full.length;
-    }
-
-    if (lastIndex < text.length) {
-        nodes.push({ type: "text", value: text.slice(lastIndex) });
-    }
-
-    if (nodes.length === 0) {
-        return [{ type: "text", value: text }];
-    }
-
-    return nodes;
-}
-
-function renderInline(text: string) {
-    return parseInlineMarkdown(text).map((node, idx) =>
-        node.type === "strong" ? <strong key={`${node.value}-${idx}`}>{node.value}</strong> : node.value
-    );
-}
-
-function renderAssistantMarkdown(content: string) {
-    const lines = content.split(/\r?\n/);
-    const elements: React.ReactNode[] = [];
-    let listItems: string[] = [];
-    let key = 0;
-
-    const flushList = () => {
-        if (listItems.length === 0) return;
-        elements.push(
-            <ul key={`ul-${key++}`} className="list-disc space-y-1 pl-5">
-                {listItems.map((item) => (
-                    <li key={`li-${key++}-${item.slice(0, 16)}`}>{renderInline(item)}</li>
-                ))}
-            </ul>
-        );
-        listItems = [];
-    };
-
-    const isTableSeparator = (line: string) => {
-        const normalized = line.trim().replace(/^\|/, "").replace(/\|$/, "");
-        const cols = normalized.split("|").map((c) => c.trim());
-        if (cols.length < 2) return false;
-        return cols.every((c) => /^:?-{3,}:?$/.test(c));
-    };
-
-    const parseTableRow = (line: string) =>
-        line
-            .trim()
-            .replace(/^\|/, "")
-            .replace(/\|$/, "")
-            .split("|")
-            .map((cell) => cell.trim());
-
-    for (let i = 0; i < lines.length; i += 1) {
-        const line = lines[i];
-
-        if (line.includes("|") && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
-            flushList();
-
-            const header = parseTableRow(line);
-            i += 2;
-            const rows: string[][] = [];
-
-            for (; i < lines.length; i += 1) {
-                const rowLine = lines[i];
-                if (!rowLine.trim()) continue;
-                if (!rowLine.includes("|")) {
-                    i -= 1;
-                    break;
-                }
-                rows.push(parseTableRow(rowLine));
-            }
-
-            elements.push(
-                <div key={`tbl-wrap-${key++}`} className="overflow-x-auto">
-                    <table className="min-w-full border-collapse text-left text-sm">
-                        <thead>
-                            <tr>
-                                {header.map((cell, idx) => (
-                                    <th
-                                        key={`th-${idx}-${cell.slice(0, 12)}`}
-                                        className="border border-[#ECECEC] bg-[#FAFAFA] px-3 py-2 font-semibold">
-                                        {renderInline(cell)}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.map((row, rowIdx) => (
-                                <tr key={`tr-${rowIdx}-${row.join("-").slice(0, 12)}`}>
-                                    {row.map((cell, cellIdx) => (
-                                        <td
-                                            key={`td-${rowIdx}-${cellIdx}-${cell.slice(0, 12)}`}
-                                            className="border border-[#ECECEC] px-3 py-2 align-top">
-                                            {renderInline(cell)}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-            continue;
-        }
-
-        const bullet = line.match(/^\s*[*-]\s+(.*)$/);
-        if (bullet) {
-            listItems.push(bullet[1]);
-            continue;
-        }
-
-        flushList();
-
-        if (!line.trim()) {
-            elements.push(<div key={`sp-${key++}`} className="h-2" />);
-            continue;
-        }
-
-        elements.push(
-            <p key={`p-${key++}`} className="whitespace-pre-wrap">
-                {renderInline(line)}
-            </p>
-        );
-    }
-
-    flushList();
-    return <div className="space-y-2 text-sm leading-7">{elements}</div>;
 }
 
 export default function AIMaster({ studioId }: { studioId?: string }) {
@@ -491,7 +343,7 @@ export default function AIMaster({ studioId }: { studioId?: string }) {
                                             <span>{t("aiThinking")}</span>
                                         </div>
                                     ) : m.role === "assistant" ? (
-                                        renderAssistantMarkdown(m.content)
+                                        renderMarkdown(m.content, { withTables: true })
                                     ) : (
                                         <p className="whitespace-pre-wrap text-sm">{m.content}</p>
                                     )}
