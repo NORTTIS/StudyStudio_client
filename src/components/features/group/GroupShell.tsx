@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { toPublicUrl } from "@/api/banner-logo";
 import ErrorDisplay from "@/components/common/ErrorDisplay";
@@ -121,6 +122,7 @@ export function GroupShell({
 }) {
     const router = useRouter();
     const pathname = usePathname();
+    const locale = useLocale();
     const tCommon = useTranslations("Common");
     const tGroupHeader = useTranslations("GroupStudioHeader");
     const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
@@ -148,9 +150,8 @@ export function GroupShell({
                 if (result.error) {
                     console.error("[GroupShell] Failed to load data:", { status: result.error.status });
                     if (!cancelled) {
-                        const localePrefix = pathname.split("/").filter(Boolean)[0] || "vi";
                         if (result.error.status === 401 || result.error.status === 403) {
-                            setRedirectTarget(`/${localePrefix}/task-access-denied`);
+                            setRedirectTarget(`/${locale}/task-access-denied?reason=forbidden`);
                             return;
                         }
 
@@ -182,7 +183,7 @@ export function GroupShell({
         return () => {
             cancelled = true;
         };
-    }, [groupId, pathname, tGroupHeader]);
+    }, [groupId, locale, tGroupHeader]);
 
     React.useEffect(() => {
         if (!redirectTarget) return;

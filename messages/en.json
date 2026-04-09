@@ -2048,7 +2048,7 @@
         "cannotOpenTitle": "Cannot open task",
         "cannotOpenTask": "Unable to open this task.",
         "invalidLink": "The task link is invalid.",
-        "invalidOrMissingLink": "The task link is no longer valid or does not exist.",
+        "invalidOrMissingLink": "You are not a member of the group.",
         "errors": {
             "loadGroupDetailFailed": "Unable to load group details.",
             "loadGroupMembersFailed": "Unable to load group members."

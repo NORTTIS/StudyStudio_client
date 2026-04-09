@@ -1,6 +1,7 @@
 import { serverFetchApi } from "@/api/server-client";
 import { redirect } from "next/navigation";
 import type { components } from "@/api/types";
+import ErrorDisplay from "@/components/common/ErrorDisplay";
 import {
     GroupTaskDeepLinkPage,
     type GroupTaskDeepLinkResolution
@@ -105,7 +106,13 @@ export default async function Page({
     }
 
     if (initialResolution.status === "error") {
-        redirect(`/${resolvedParams.locale}/task-access-denied?reason=error`);
+        console.error("Failed to resolve task deep link on the server", {
+            locale: resolvedParams.locale,
+            taskId: resolvedParams.taskId,
+            message: initialResolution.message ?? null
+        });
+
+        return <ErrorDisplay message={initialResolution.message || "Unable to open this task right now."} />;
     }
 
     return <GroupTaskDeepLinkPage taskId={resolvedParams.taskId} initialResolution={initialResolution} />;

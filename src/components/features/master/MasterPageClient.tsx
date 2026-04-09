@@ -543,8 +543,8 @@ function buildPendingStudioCard(
 ): StudioUI {
     return {
         id: request.studioId,
-        name: request.studioName || (locale === "vi" ? "Studio chá» duyá»‡t" : "Pending studio"),
-        description: locale === "vi" ? "YÃªu cáº§u tham gia Ä‘ang chá» phÃª duyá»‡t" : "Membership request pending approval",
+        name: request.studioName || (locale === "vi" ? "Studio chờ duyệt" : "Pending studio"),
+        description: locale === "vi" ? "Yêu cầu tham gia đang chờ phê duyệt" : "Membership request pending approval",
         type: "group",
         memberCount: 0,
         groupCount: 0,
@@ -584,7 +584,7 @@ function shouldDropPendingStudio(code?: string | null, message?: string | null) 
             || normalizedMessage.includes("does not exist")
             || normalizedMessage.includes("no longer exists")
             || normalizedMessage.includes("ton tai")
-            || normalizedMessage.includes("tá»“n táº¡i")
+            || normalizedMessage.includes("tồn tại")
         );
 
     return codeLooksMissing || messageLooksMissing;
@@ -597,7 +597,7 @@ function isPendingStudioAccessDenied(code?: string | null, message?: string | nu
     return (
         normalizedCode === "auth003"
         || normalizedCode === "forbidden"
-        || normalizedMessage.includes("khÃ´ng cÃ³ quyá»n truy cáº­p")
+        || normalizedMessage.includes("không có quyền truy cập")
         || normalizedMessage.includes("khong co quyen truy cap")
         || normalizedMessage.includes("access denied")
         || normalizedMessage.includes("forbidden")
@@ -1169,8 +1169,8 @@ export default function MasterPageClient({
                     icon={sectionIcon}
                     collapsed={!!collapsedSections[sectionKey]}
                     onToggle={toggleSection}
-                    collapseLabel={t("detail.panel.collapse")}
-                    expandLabel={tGroups("viewAll")}>
+                    collapseLabel={t("collapse")}
+                    expandLabel={t("expand")}>
                     <motion.div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
                         <AnimatePresence initial={false}>
                             {studioList.map((studio) => (
@@ -1326,7 +1326,7 @@ export default function MasterPageClient({
                                                     type="button"
                                                     onClick={() => setSearchQuery("")}
                                                     className="absolute inset-y-0 right-3 flex items-center rounded-full px-2.5 font-medium text-xs text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
-                                                    {locale === "vi" ? "XÃ³a" : "Clear"}
+                                                    {locale === "vi" ? "Xóa" : "Clear"}
                                                 </button>
                                             ) : null}
                                         </div>

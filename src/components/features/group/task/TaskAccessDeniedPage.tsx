@@ -32,7 +32,12 @@ export function TaskAccessDeniedPage() {
             ? t("accessDeniedTitle")
             : t("cannotOpenTitle");
 
-    const description = t("accessDeniedDescription");
+    const description =
+        reason === "forbidden"
+            ? t("accessDeniedDescription")
+            : reason === "invalid"
+              ? t("invalidOrMissingLink")
+              : t("cannotOpenTask");
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
