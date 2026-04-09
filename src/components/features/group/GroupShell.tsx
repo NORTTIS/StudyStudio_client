@@ -129,6 +129,7 @@ export function GroupShell({
     const [isReady, setIsReady] = React.useState(false);
     const [loadError, setLoadError] = React.useState<string | null>(null);
     const [headerAction, setHeaderAction] = React.useState<React.ReactNode>(null);
+    const [redirectTarget, setRedirectTarget] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -140,12 +141,19 @@ export function GroupShell({
                 if (!cancelled) {
                     setIsReady(false);
                     setLoadError(null);
+                    setRedirectTarget(null);
                 }
 
                 const result = await fetchGroupBanner(groupId);
                 if (result.error) {
                     console.error("[GroupShell] Failed to load data:", { status: result.error.status });
                     if (!cancelled) {
+                        const localePrefix = pathname.split("/").filter(Boolean)[0] || "vi";
+                        if (result.error.status === 401 || result.error.status === 403) {
+                            setRedirectTarget(`/${localePrefix}/task-access-denied`);
+                            return;
+                        }
+
                         setLoadError(tGroupHeader("errors.fetchDetailFailed"));
                     }
                     return;
@@ -174,7 +182,12 @@ export function GroupShell({
         return () => {
             cancelled = true;
         };
-    }, [groupId, tGroupHeader]);
+    }, [groupId, pathname, tGroupHeader]);
+
+    React.useEffect(() => {
+        if (!redirectTarget) return;
+        router.replace(redirectTarget);
+    }, [redirectTarget, router]);
 
     React.useEffect(() => {
         if (!isReady || !groupId || !isArchived) return;
@@ -188,6 +201,10 @@ export function GroupShell({
 
     if (!isReady) {
         return <div className="flex min-h-screen items-center justify-center px-6 text-sm text-[#6F6B99]">{tCommon("loading")}</div>;
+    }
+
+    if (redirectTarget) {
+        return null;
     }
 
     if (loadError) {

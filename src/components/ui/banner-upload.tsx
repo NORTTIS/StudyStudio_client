@@ -139,8 +139,8 @@ export function BannerUpload({
                         type="button"
                         onClick={() => inputRef.current?.click()}
                         className="rounded-full bg-white/90 p-2 text-gray-700 transition-colors hover:bg-white"
-                        aria-label={t("actions.upload")}
-                        title={t("actions.upload")}
+                        aria-label={t("upload")}
+                        title={t("upload")}
                     >
                         <ImagePlus className="h-4 w-4" />
                     </button>
@@ -149,8 +149,8 @@ export function BannerUpload({
                             type="button"
                             onClick={handleDelete}
                             className="rounded-full bg-white/90 p-2 text-red-500 transition-colors hover:bg-white"
-                            aria-label={t("actions.delete")}
-                            title={t("actions.delete")}
+                            aria-label={t("remove")}
+                            title={t("remove")}
                         >
                             <Trash2 className="h-4 w-4" />
                         </button>

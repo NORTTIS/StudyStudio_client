@@ -1,4 +1,5 @@
 import { serverFetchApi } from "@/api/server-client";
+import { redirect } from "next/navigation";
 import type { components } from "@/api/types";
 import {
     GroupTaskDeepLinkPage,
@@ -94,6 +95,18 @@ export default async function Page({
 }) {
     const resolvedParams = await params;
     const initialResolution = await resolveTaskGroupOnServer(resolvedParams.taskId, resolvedParams.locale);
+
+    if (initialResolution.status === "forbidden") {
+        redirect(`/${resolvedParams.locale}/task-access-denied?reason=forbidden`);
+    }
+
+    if (initialResolution.status === "not_found") {
+        redirect(`/${resolvedParams.locale}/task-access-denied?reason=invalid`);
+    }
+
+    if (initialResolution.status === "error") {
+        redirect(`/${resolvedParams.locale}/task-access-denied?reason=error`);
+    }
 
     return <GroupTaskDeepLinkPage taskId={resolvedParams.taskId} initialResolution={initialResolution} />;
 }

@@ -2120,7 +2120,7 @@
         "loadingDescription": "Đang kiểm tra liên kết công việc và quyền truy cập của bạn.",
         "goHome": "Về trang chủ",
         "accessDeniedTitle": "Không có quyền truy cập",
-        "accessDeniedDescription": "Bạn không phải thành viên của nhóm chứa công việc này hoặc liên kết không còn hợp lệ.",
+        "accessDeniedDescription": "Bạn không phải thành viên của nhóm.",
         "cannotOpenTitle": "Không thể mở công việc",
         "cannotOpenTask": "Không thể mở công việc này.",
         "invalidLink": "Liên kết công việc không hợp lệ.",
