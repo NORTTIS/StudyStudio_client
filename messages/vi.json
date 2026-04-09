@@ -906,6 +906,8 @@
     "pending": "Chờ duyệt",
     "archived": "Lưu trữ"
   },
+        "collapse": "Thu gọn",
+        "expand": "Mở rộng",
         "inactiveStudioTitle": "Studio này đang được lưu trữ",
         "inactiveStudioDescription": "Studio \"{studioName}\" đang dừng hoạt động. Chỉ chủ sở hữu mới có thể mở lại trong phần cài đặt.",
         "inactiveStudioOk": "Đã hiểu",
@@ -1017,6 +1019,7 @@
                 "subtitle": "Thông tin tổng quan",
                 "collapse": "Thu gọn",
                 "expand": "Mở rộng",
+                "viewAll": "Xem tất cả",
                 "memberListTitle": "Danh sách thành viên",
                 "quickStatsTitle": "Thống kê nhanh",
                 "quickStatsSubtitle": "Tổng quan hiệu suất",
@@ -2120,11 +2123,11 @@
         "loadingDescription": "Đang kiểm tra liên kết công việc và quyền truy cập của bạn.",
         "goHome": "Về trang chủ",
         "accessDeniedTitle": "Không có quyền truy cập",
-        "accessDeniedDescription": "Bạn không phải thành viên của nhóm chứa công việc này hoặc liên kết không còn hợp lệ.",
+        "accessDeniedDescription": "Bạn không phải thành viên của nhóm.",
         "cannotOpenTitle": "Không thể mở công việc",
         "cannotOpenTask": "Không thể mở công việc này.",
         "invalidLink": "Liên kết công việc không hợp lệ.",
-        "invalidOrMissingLink": "Liên kết công việc không còn hợp lệ hoặc không tồn tại.",
+        "invalidOrMissingLink": "Bạn không phải thành viên của nhóm.",
         "errors": {
             "loadGroupDetailFailed": "Không thể tải chi tiết nhóm.",
             "loadGroupMembersFailed": "Không thể tải danh sách thành viên."

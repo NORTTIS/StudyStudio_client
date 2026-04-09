@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { Archive, ChevronDown, FolderKanban, LogOut, Sparkles, Users2 } from "lucide-react";
+import { Archive, ChevronDown, Clock3, FolderKanban, LogOut, Search, Sparkles, Users2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
@@ -148,7 +148,9 @@ function StudioBoardSection({
     icon: Icon,
     children,
     collapsed,
-    onToggle
+    onToggle,
+    collapseLabel,
+    expandLabel
 }: {
     sectionKey: string;
     title: string;
@@ -157,6 +159,8 @@ function StudioBoardSection({
     children: React.ReactNode;
     collapsed: boolean;
     onToggle: (sectionKey: string) => void;
+    collapseLabel: string;
+    expandLabel: string;
 }) {
     const sectionStyle = sectionKey.includes("archived")
         ? {
@@ -213,9 +217,9 @@ function StudioBoardSection({
                         </div>
                     </div>
 
-                    <div className="inline-flex items-center gap-2 self-start rounded-full border border-white/80 bg-white/80 px-4 py-2 text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] transition hover:bg-white sm:self-auto">
-                        <span>{collapsed ? "Mở rộng" : "Thu gọn"}</span>
-                        <ChevronDown className={`h-4 w-4 transition-transform ${collapsed ? "-rotate-90" : "rotate-0"}`} />
+                    <div className="inline-flex items-center gap-2 self-start rounded-full border border-white/80 bg-white/75 px-4 py-2 font-medium text-[#796B60] text-[13px] shadow-[0_8px_18px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:bg-white sm:self-auto">
+                        <span>{collapsed ? expandLabel : collapseLabel}</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${collapsed ? "rotate-0" : "rotate-180"}`} />
                     </div>
             </button>
 
@@ -269,6 +273,11 @@ function StudioCard({
 
     const cardShadow = isHovered || isFocused ? hoverShadow : "0 20px 60px rgba(15,23,42,0.06)";
     const borderColor = isHovered ? `${studio.colorHex || "#FF5F3D"}35` : "rgba(255,255,255,0.72)";
+    const editLabel = t("detailModal.edit");
+    const deleteLabel = t("detailModal.delete");
+    const archiveLabel = locale === "vi" ? "Lưu trữ studio" : "Archive studio";
+    const reopenLabel = locale === "vi" ? "Mở lại studio" : "Reopen studio";
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -279,13 +288,11 @@ function StudioCard({
             role="button"
             tabIndex={0}
             className={`group relative overflow-hidden rounded-[30px] border bg-white/82 text-left backdrop-blur-2xl transition-all duration-300 ${isPendingApproval || isInactiveForViewer ? "cursor-not-allowed" : "cursor-pointer"}`}
-            style={
-                {
-                    boxShadow: cardShadow,
-                    borderColor,
-                    outline: isFocused ? `2px solid ${focusRing}` : "none"
-                } as React.CSSProperties
-            }
+            style={{
+                boxShadow: cardShadow,
+                borderColor,
+                outline: isFocused ? `2px solid ${focusRing}` : "none"
+            } as React.CSSProperties}
             onClick={onClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -317,9 +324,7 @@ function StudioCard({
                     <div className="flex flex-col items-start gap-2">
                         <span
                             className={`inline-flex items-center rounded-full px-2.5 py-1 font-semibold text-[11px] shadow-sm ${
-                                isStudioActive
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-red-100 text-red-700"
+                                isStudioActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
                             }`}>
                             {isStudioActive ? (locale === "vi" ? "Hoạt động" : "Active") : (locale === "vi" ? "Lưu trữ" : "Archived")}
                         </span>
@@ -331,59 +336,6 @@ function StudioCard({
                                 <RolePill role={isOwner ? "owner" : "member"} />
                             </motion.div>
                         )}
-
-                        {false ? (
-                            <div className="flex items-center gap-2">
-                                <motion.button
-                                    whileHover={{ y: -2, scale: 1.04 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onEdit();
-                                    }}
-                                    className="rounded-xl border border-white/20 bg-white/15 p-2 text-white shadow-sm backdrop-blur transition hover:bg-white/25"
-                                    title="Chỉnh sửa">
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                        />
-                                    </svg>
-                                </motion.button>
-
-                                <motion.button
-                                    whileHover={{ y: -2, scale: 1.04 }}
-                                    whileTap={{ scale: 0.96 }}
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete();
-                                    }}
-                                    className="rounded-xl border border-red-200/60 bg-white/15 p-2 text-red-100 shadow-sm backdrop-blur transition hover:bg-red-500/20"
-                                    title="Xóa studio">
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                        />
-                                    </svg>
-                                </motion.button>
-                            </div>
-                        ) : null}
-
                     </div>
                 </div>
 
@@ -408,7 +360,7 @@ function StudioCard({
                                 {studio.name}
                             </h3>
                         </div>
-                        {studio.tagline ? <p className="mt-1 italic text-[#9B8CA8] text-xs">{studio.tagline}</p> : null}
+                        {studio.tagline ? <p className="mt-1 text-xs italic text-[#9B8CA8]">{studio.tagline}</p> : null}
                         <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[#6F6B99]">{studio.description}</p>
                     </div>
 
@@ -431,7 +383,8 @@ function StudioCard({
                                         ? "border-emerald-100 bg-white/95 hover:bg-emerald-50"
                                         : "border-amber-100 bg-white/95 hover:bg-amber-50"
                                 }`}
-                                title={isStudioArchived ? "Mở lại studio" : "Lưu trữ studio"}>
+                                title={isStudioArchived ? reopenLabel : archiveLabel}
+                                aria-label={isStudioArchived ? reopenLabel : archiveLabel}>
                                 <Archive className={`h-4 w-4 ${isStudioArchived ? "text-emerald-600" : "text-amber-600"}`} />
                             </motion.button>
 
@@ -446,7 +399,8 @@ function StudioCard({
                                             onEdit();
                                         }}
                                         className="rounded-xl border border-gray-200 bg-white/95 p-2 shadow-sm transition hover:bg-gray-50"
-                                        title="Chỉnh sửa">
+                                        title={editLabel}
+                                        aria-label={editLabel}>
                                         <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
@@ -461,7 +415,8 @@ function StudioCard({
                                             onDelete();
                                         }}
                                         className="rounded-xl border border-red-100 bg-white/95 p-2 shadow-sm transition hover:bg-red-50"
-                                        title="Xóa studio">
+                                        title={deleteLabel}
+                                        aria-label={deleteLabel}>
                                         <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -547,7 +502,6 @@ function StudioCard({
         </motion.div>
     );
 }
-
 function EmptyState({ message }: { message: string }) {
     return (
         <motion.div
@@ -656,6 +610,7 @@ export default function MasterPageClient({
     initialSubscription
 }: MasterPageClientProps) {
     const t = useTranslations("MasterPage");
+    const tGroups = useTranslations("GroupsPage");
     const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
@@ -1163,7 +1118,7 @@ export default function MasterPageClient({
                     )
                 );
                 toast({
-                    description: result.message || (nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại"),
+                    description: result.message || (nextIsArchived ? "LÆ°u trá»¯ studio tháº¥t báº¡i" : "Má»Ÿ láº¡i studio tháº¥t báº¡i"),
                     variant: "destructive"
                 });
                 return;
@@ -1184,7 +1139,7 @@ export default function MasterPageClient({
                 )
             );
             toast({
-                description: nextIsArchived ? "Lưu trữ studio thất bại" : "Mở lại studio thất bại",
+                description: nextIsArchived ? "LÆ°u trá»¯ studio tháº¥t báº¡i" : "Má»Ÿ láº¡i studio tháº¥t báº¡i",
                 variant: "destructive"
             });
         } finally {
@@ -1213,7 +1168,9 @@ export default function MasterPageClient({
                     count={studioList.length}
                     icon={sectionIcon}
                     collapsed={!!collapsedSections[sectionKey]}
-                    onToggle={toggleSection}>
+                    onToggle={toggleSection}
+                    collapseLabel={t("collapse")}
+                    expandLabel={t("expand")}>
                     <motion.div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
                         <AnimatePresence initial={false}>
                             {studioList.map((studio) => (
@@ -1348,60 +1305,93 @@ export default function MasterPageClient({
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.08, duration: 0.35 }}
-                                className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                                <div className="flex flex-1 flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
-                                    <div className="relative w-full rounded-[22px] border border-slate-200/80 bg-slate-50/80 xl:max-w-[360px]">
-                                        <Input
-                                            type="text"
-                                            placeholder={t("searchPlaceholder")}
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="h-14 rounded-[22px] border-transparent bg-transparent pl-12 pr-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur transition-all duration-200 focus:scale-[1.01] focus:shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
-                                        />
-                                        <svg
-                                            className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                className="mb-6 rounded-[30px] border border-white/80 bg-white/78 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.06)] backdrop-blur-2xl">
+                                <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
+                                    <div className="flex min-w-0 flex-1 flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:gap-5">
+                                        <div className="relative min-w-0 flex-1 2xl:max-w-[460px]">
+                                            <div className="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center text-slate-400">
+                                                <Search className="h-5 w-5" />
+                                            </div>
+
+                                            <Input
+                                                type="text"
+                                                placeholder={t("searchPlaceholder")}
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="h-14 rounded-[20px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.98)_0%,rgba(255,255,255,0.98)_100%)] pl-12 pr-16 text-[15px] text-[#261E33] shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_14px_28px_rgba(15,23,42,0.05)] transition-all duration-200 placeholder:text-slate-400 focus-visible:border-orange-300 focus-visible:ring-4 focus-visible:ring-orange-100"
                                             />
-                                        </svg>
+
+                                            {searchQuery ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSearchQuery("")}
+                                                    className="absolute inset-y-0 right-3 flex items-center rounded-full px-2.5 font-medium text-xs text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                                                    {locale === "vi" ? "Xóa" : "Clear"}
+                                                </button>
+                                            ) : null}
+                                        </div>
+
+                                        <div className="shrink-0 overflow-x-auto rounded-[24px] border border-slate-200/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.95)_100%)] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_28px_rgba(15,23,42,0.04)]">
+                                            <div className="flex min-w-max items-center gap-2">
+                                            {[
+                                                {
+                                                    value: "all" as const,
+                                                    label: t("filters.all"),
+                                                    icon: FolderKanban
+                                                },
+                                                {
+                                                    value: "owned" as const,
+                                                    label: t("filters.owned"),
+                                                    icon: Sparkles
+                                                },
+                                                {
+                                                    value: "joined" as const,
+                                                    label: t("filters.joined"),
+                                                    icon: Users2
+                                                },
+                                                {
+                                                    value: "pending" as const,
+                                                    label: t("filters.pending"),
+                                                    icon: Clock3
+                                                },
+                                                {
+                                                    value: "archived" as const,
+                                                    label: t("filters.archived"),
+                                                    icon: Archive
+                                                }
+                                            ].map((item) => {
+                                                const active = studioFilter === item.value;
+                                                const Icon = item.icon;
+
+                                                return (
+                                                    <button
+                                                        key={item.value}
+                                                        type="button"
+                                                        onClick={() => setStudioFilter(item.value)}
+                                                        className={`relative overflow-hidden rounded-[18px] border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                                                            active
+                                                                ? "border-transparent bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_16px_30px_rgba(230,73,45,0.28)]"
+                                                                : "border-transparent bg-transparent text-slate-600 hover:-translate-y-0.5 hover:bg-orange-50 hover:text-orange-600"
+                                                        }`}>
+                                                        <span className="relative z-10 flex items-center gap-2.5">
+                                                            <Icon className={`h-4 w-4 ${active ? "text-white" : "text-slate-400"}`} />
+                                                            <span>{item.label}</span>
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-2 xl:flex-1">
-                                        {[
-                                            { value: "all" as const, label: t("filters.all") },
-                                            { value: "owned" as const, label: t("filters.owned") },
-                                            { value: "joined" as const, label: t("filters.joined") },
-                                            { value: "pending" as const, label: t("filters.pending") },
-                                            { value: "archived" as const, label: t("filters.archived") }
-                                        ].map((item) => (
-                                            <button
-                                                key={item.value}
-                                                type="button"
-                                                onClick={() => setStudioFilter(item.value)}
-                                                className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                                                    studioFilter === item.value
-                                                        ? "bg-[linear-gradient(135deg,#E6492D_0%,#FF5A36_55%,#FF6B45_100%)] text-white shadow-[0_12px_28px_rgba(230,73,45,0.24)]"
-                                                        : "border border-slate-200 bg-white text-slate-600 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
-                                                }`}>
-                                                {item.label}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="shrink-0 self-end 2xl:self-auto">
+                                        <Button
+                                            onClick={handleOpenCreateModal}
+                                            className="h-14 rounded-[22px] bg-[linear-gradient(135deg,#D93F21_0%,#F24E2E_55%,#FF603A_100%)] px-7 font-semibold text-white shadow-[0_18px_36px_rgba(217,63,33,0.38)] transition-all duration-200 hover:scale-[1.02] hover:brightness-110 hover:shadow-[0_24px_44px_rgba(217,63,33,0.46)] active:scale-[0.98]">
+                                            {t("createButton")}
+                                        </Button>
+                                    </motion.div>
                                 </div>
-
-                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <Button
-                                        onClick={handleOpenCreateModal}
-                                        className="h-14 rounded-[22px] bg-[linear-gradient(135deg,#D93F21_0%,#F24E2E_55%,#FF603A_100%)] px-6 font-semibold text-white shadow-[0_18px_36px_rgba(217,63,33,0.38)] transition-all duration-200 hover:scale-[1.02] hover:brightness-110 hover:shadow-[0_24px_44px_rgba(217,63,33,0.46)] active:scale-[0.98]">
-                                        {t("createButton")}
-                                    </Button>
-                                </motion.div>
                             </motion.div>
 
                             <AnimatePresence mode="wait">
@@ -1537,3 +1527,6 @@ export default function MasterPageClient({
         </div>
     );
 }
+
+
+
