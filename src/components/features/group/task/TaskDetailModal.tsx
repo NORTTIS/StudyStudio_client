@@ -1922,16 +1922,20 @@ export default function TaskDetailModal(props: {
     open: boolean;
     onClose: () => void;
     taskId: string | null;
+    groupIdOverride?: string | null;
     onDelete?: (taskId: string) => void;
     onSaved?: () => Promise<void> | void;
 }) {
-    const { open, onClose, taskId, onSaved } = props;
+    const { open, onClose, taskId, groupIdOverride, onSaved } = props;
     const t = useTranslations("TaskDetailModal");
     const locale = useLocale();
     const mentionAllLabel = t("mentionAll.label");
     const mentionAllSubtitle = t("mentionAll.subtitle");
     const params = useParams<Record<string, string | string[] | undefined>>();
-    const groupId = React.useMemo(() => getGroupIdFromParams(params ?? {}), [params]);
+    const groupId = React.useMemo(
+        () => String(groupIdOverride ?? "").trim() || getGroupIdFromParams(params ?? {}),
+        [groupIdOverride, params]
+    );
     const commentMentionRef = React.useRef<MentionTextareaHandle | null>(null);
     const [mounted, setMounted] = React.useState(false);
 
