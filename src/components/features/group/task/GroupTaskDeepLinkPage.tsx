@@ -1,102 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { Loader2 } from "lucide-react";
-import type { components } from "@/api/types";
-import { apiFetch } from "@/api/api-client";
 import { GroupShell } from "@/components/features/group/GroupShell";
-import { fetchGroupsPageData, getCurrentUserId } from "@/components/features/group/group.api";
 import { GroupBoardScreen } from "@/components/features/group/board/GroupBoardScreen";
 import { Button } from "@/components/ui/button";
 
-type GroupCardDto = components["schemas"]["GroupCardDto"];
-type GroupDetailResponse = components["schemas"]["GroupDetailResponse"];
-type GroupMemberListResponse = components["schemas"]["GroupMemberListResponse"];
+export type GroupTaskDeepLinkResolution =
+    | { status: "found"; groupId: string }
+    | { status: "forbidden" }
+    | { status: "not_found" }
+    | { status: "error"; message?: string | null };
 
 const PRIMARY_BUTTON_CLASS = "w-full bg-orange-600 text-white hover:bg-orange-700";
-
-function getGroupId(group: GroupCardDto | Record<string, unknown>) {
-    const candidate = group as { id?: unknown; groupId?: unknown; group_id?: unknown };
-    return String(candidate.id ?? candidate.groupId ?? candidate.group_id ?? "").trim();
-}
-
-async function fetchGroupDetail(groupId: string, locale: string) {
-    const response = await apiFetch<GroupDetailResponse>(`/group/${encodeURIComponent(groupId)}/detail`, {
-        method: "GET",
-        locale
-    });
-
-    if (response.status !== "success" || !response.data) {
-        throw new Error(response.message || "Không thể tải chi tiết nhóm.");
-    }
-
-    return response.data;
-}
-
-async function fetchGroupMembers(groupId: string, locale: string) {
-    const response = await apiFetch<GroupMemberListResponse>(`/group/${encodeURIComponent(groupId)}/members`, {
-        method: "GET",
-        locale
-    });
-
-    if (response.status !== "success" || !response.data) {
-        throw new Error(response.message || "Không thể tải danh sách thành viên.");
-    }
-
-    return response.data;
-}
-
-function taskExistsInGroup(detail: GroupDetailResponse, taskId: string) {
-    return (detail.taskStatuses ?? []).some((status) =>
-        (status?.taskList ?? []).some((task) => String(task?.taskId ?? "").trim() === taskId)
-    );
-}
-
-function isCurrentUserMember(memberData: GroupMemberListResponse, currentUserId: string) {
-    const normalizedUserId = String(currentUserId ?? "").trim().toLowerCase();
-    if (!normalizedUserId) return false;
-
-    return (memberData.members ?? []).some((member) => String(member?.userId ?? "").trim().toLowerCase() === normalizedUserId);
-}
-
-async function resolveGroupIdFromTaskId(taskId: string, locale: string) {
-    const groupsPageData = await fetchGroupsPageData();
-    const currentUserId = getCurrentUserId();
-    const allGroups = [
-        ...(groupsPageData.favorites ?? []),
-        ...(groupsPageData.managed ?? []),
-        ...(groupsPageData.independent ?? []),
-        ...(groupsPageData.joined ?? []),
-        ...(groupsPageData.inactive ?? [])
-    ];
-
-    const uniqueGroupIds = Array.from(new Set(allGroups.map((group) => getGroupId(group)).filter(Boolean)));
-
-    const detailResults = await Promise.allSettled(uniqueGroupIds.map((groupId) => fetchGroupDetail(groupId, locale)));
-    const candidateGroupIds = detailResults.flatMap((result, index) => {
-        if (result.status !== "fulfilled") return [];
-        return taskExistsInGroup(result.value, taskId) ? [uniqueGroupIds[index]] : [];
-    });
-
-    if (!currentUserId) return candidateGroupIds[0] ?? ""; // Membership is intentionally skipped for unauthenticated users.
-
-    const membershipResults = await Promise.allSettled(
-        candidateGroupIds.map(async (groupId) => ({
-            groupId,
-            isMember: isCurrentUserMember(await fetchGroupMembers(groupId, locale), currentUserId)
-        }))
-    );
-
-    for (const result of membershipResults) {
-        if (result.status === "fulfilled" && result.value.isMember) {
-            return result.value.groupId;
-        }
-    }
-
-    return "";
-}
 
 function CenterMessage({
     title,
@@ -160,52 +78,25 @@ function Logo() {
     );
 }
 
-export function GroupTaskDeepLinkPage({ taskId }: { taskId: string }) {
+export function GroupTaskDeepLinkPage({
+    taskId,
+    initialResolution
+}: {
+    taskId: string;
+    initialResolution: GroupTaskDeepLinkResolution;
+}) {
     const router = useRouter();
     const locale = useLocale();
+    const t = useTranslations("GroupTaskDeepLinkPage");
     const normalizedTaskId = React.useMemo(() => String(taskId ?? "").trim(), [taskId]);
-
-    const [resolvedGroupId, setResolvedGroupId] = React.useState("");
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState("");
-    const [notMember, setNotMember] = React.useState(false);
-
-    React.useEffect(() => {
-        if (!normalizedTaskId) {
-            setLoading(false);
-            setError("Liên kết công việc không hợp lệ.");
-            return;
-        }
-
-        let alive = true;
-
-        void (async () => {
-            try {
-                setLoading(true);
-                setError("");
-                setNotMember(false);
-
-                const groupId = await resolveGroupIdFromTaskId(normalizedTaskId, locale);
-                if (!alive) return;
-
-                if (!groupId) {
-                    setNotMember(true);
-                    return;
-                }
-
-                setResolvedGroupId(groupId);
-            } catch (err: unknown) {
-                if (!alive) return;
-                setError(err instanceof Error ? err.message : "Không thể mở công việc này.");
-            } finally {
-                if (alive) setLoading(false);
-            }
-        })();
-
-        return () => {
-            alive = false;
-        };
-    }, [normalizedTaskId, locale]);
+    const resolvedGroupId = initialResolution.status === "found" ? initialResolution.groupId : "";
+    const notMember = initialResolution.status === "forbidden";
+    const error =
+        initialResolution.status === "error"
+            ? initialResolution.message || t("cannotOpenTask")
+            : initialResolution.status === "not_found" || !normalizedTaskId
+              ? t("invalidOrMissingLink")
+              : "";
 
     React.useEffect(() => {
         if (!notMember) return;
@@ -225,25 +116,13 @@ export function GroupTaskDeepLinkPage({ taskId }: { taskId: string }) {
         router.replace(`/${locale}/group/${resolvedGroupId}`, { scroll: false });
     }, [router, locale, resolvedGroupId, goHome]);
 
-    if (loading) {
-        return (
-            <CenterMessage
-                title="Đang tải công việc"
-                description="Đang kiểm tra liên kết công việc và quyền truy cập của bạn."
-                status="loading"
-                primaryLabel="Về trang chủ"
-                onPrimary={goHome}
-            />
-        );
-    }
-
     if (notMember) {
         return (
             <CenterMessage
-                title="Không có quyền truy cập"
-                description="Bạn không phải thành viên của nhóm chứa công việc này hoặc liên kết không còn hợp lệ."
+                title={t("accessDeniedTitle")}
+                description={t("accessDeniedDescription")}
                 status="blocked"
-                primaryLabel="Về trang chủ"
+                primaryLabel={t("goHome")}
                 onPrimary={goHome}
             />
         );
@@ -252,10 +131,10 @@ export function GroupTaskDeepLinkPage({ taskId }: { taskId: string }) {
     if (error || !resolvedGroupId) {
         return (
             <CenterMessage
-                title="Không thể mở công việc"
-                description={error || "Liên kết công việc không còn hợp lệ hoặc không tồn tại."}
+                title={t("cannotOpenTitle")}
+                description={error || t("invalidOrMissingLink")}
                 status="error"
-                primaryLabel="Về trang chủ"
+                primaryLabel={t("goHome")}
                 onPrimary={goHome}
             />
         );

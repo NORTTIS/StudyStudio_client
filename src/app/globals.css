@@ -18,9 +18,9 @@
 
     --shadow-color: #000000;
     --app-scrollbar-size: 7px;
-    --app-scrollbar-track: rgba(15, 23, 42, 0.04);
-    --app-scrollbar-thumb: rgba(100, 116, 139, 0.26);
-    --app-scrollbar-thumb-hover: rgba(100, 116, 139, 0.4);
+    --app-scrollbar-track: color-mix(in srgb, var(--primary) 8%, transparent);
+    --app-scrollbar-thumb: color-mix(in srgb, var(--primary) 32%, transparent);
+    --app-scrollbar-thumb-hover: color-mix(in srgb, var(--primary) 46%, transparent);
 }
 
 .dark {
@@ -34,9 +34,9 @@
     --ring: #737373;
 
     --shadow-color: #000000;
-    --app-scrollbar-track: rgba(255, 255, 255, 0.06);
-    --app-scrollbar-thumb: rgba(148, 163, 184, 0.3);
-    --app-scrollbar-thumb-hover: rgba(148, 163, 184, 0.42);
+    --app-scrollbar-track: color-mix(in srgb, var(--primary) 14%, transparent);
+    --app-scrollbar-thumb: color-mix(in srgb, var(--primary) 42%, transparent);
+    --app-scrollbar-thumb-hover: color-mix(in srgb, var(--primary) 58%, transparent);
 }
 
 @theme inline {
@@ -59,6 +59,7 @@
 @layer base {
     * {
         @apply border-border outline-ring/50;
+
         scrollbar-color: var(--app-scrollbar-thumb) var(--app-scrollbar-track);
         scrollbar-width: thin;
     }
@@ -203,18 +204,19 @@
 
     .board-top-scrollbar,
     .board-bottom-scrollbar {
-        --board-scroll-track: rgba(15, 23, 42, 0.07);
-        --board-scroll-thumb: rgba(100, 116, 139, 0.24);
-        --board-scroll-thumb-hover: rgba(100, 116, 139, 0.38);
+        --board-scroll-track: var(--app-scrollbar-track);
+        --board-scroll-thumb: var(--app-scrollbar-thumb);
+        --board-scroll-thumb-hover: var(--app-scrollbar-thumb-hover);
+
         scrollbar-color: var(--board-scroll-thumb) var(--board-scroll-track);
         scrollbar-width: thin;
     }
 
     .dark .board-top-scrollbar,
     .dark .board-bottom-scrollbar {
-        --board-scroll-track: rgba(255, 255, 255, 0.06);
-        --board-scroll-thumb: rgba(148, 163, 184, 0.3);
-        --board-scroll-thumb-hover: rgba(148, 163, 184, 0.42);
+        --board-scroll-track: var(--app-scrollbar-track);
+        --board-scroll-thumb: var(--app-scrollbar-thumb);
+        --board-scroll-thumb-hover: var(--app-scrollbar-thumb-hover);
     }
 
     .board-top-scrollbar:hover,

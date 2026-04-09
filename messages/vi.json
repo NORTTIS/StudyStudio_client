@@ -2115,6 +2115,21 @@
         "major": "Lớn",
         "critical": "Khẩn cấp"
     },
+    "GroupTaskDeepLinkPage": {
+        "loadingTitle": "Đang tải công việc",
+        "loadingDescription": "Đang kiểm tra liên kết công việc và quyền truy cập của bạn.",
+        "goHome": "Về trang chủ",
+        "accessDeniedTitle": "Không có quyền truy cập",
+        "accessDeniedDescription": "Bạn không phải thành viên của nhóm chứa công việc này hoặc liên kết không còn hợp lệ.",
+        "cannotOpenTitle": "Không thể mở công việc",
+        "cannotOpenTask": "Không thể mở công việc này.",
+        "invalidLink": "Liên kết công việc không hợp lệ.",
+        "invalidOrMissingLink": "Liên kết công việc không còn hợp lệ hoặc không tồn tại.",
+        "errors": {
+            "loadGroupDetailFailed": "Không thể tải chi tiết nhóm.",
+            "loadGroupMembersFailed": "Không thể tải danh sách thành viên."
+        }
+    },
     "HomeSummary": {
         "badge": "Tổng quan công việc",
         "heroPill": "Tổng quan",
@@ -2376,7 +2391,7 @@
         "clearAll": "Xóa tất cả",
         "tasks": "công việc",
         "members": "Thành viên",
-        "noMembers": "Chưa phân công",
+        "noMembers": "Không có thành viên",
         "cardsAssignedToMe": "Công việc giao cho tôi",
         "cardStatus": "Trạng thái thẻ",
         "markedAsComplete": "Đã hoàn thành",

@@ -2036,6 +2036,21 @@
         "major": "Major",
         "critical": "Critical"
     },
+    "GroupTaskDeepLinkPage": {
+        "loadingTitle": "Loading task",
+        "loadingDescription": "Checking the task link and your access permissions.",
+        "goHome": "Go to home",
+        "accessDeniedTitle": "Access denied",
+        "accessDeniedDescription": "You are not a member of the group containing this task, or the link is no longer valid.",
+        "cannotOpenTitle": "Cannot open task",
+        "cannotOpenTask": "Unable to open this task.",
+        "invalidLink": "The task link is invalid.",
+        "invalidOrMissingLink": "The task link is no longer valid or does not exist.",
+        "errors": {
+            "loadGroupDetailFailed": "Unable to load group details.",
+            "loadGroupMembersFailed": "Unable to load group members."
+        }
+    },
     "HomeSummary": {
         "badge": "Work Overview",
         "heroPill": "Dashboard Overview",

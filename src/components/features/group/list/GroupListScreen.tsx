@@ -211,12 +211,32 @@ function mergeDropdownOptions(current: DropdownOption[], incoming: DropdownOptio
     return Array.from(merged.values());
 }
 
+function startOfLocalDay(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function parseDueDateForOverdueCheck(value: string) {
+    const raw = String(value).trim();
+    if (!raw) return null;
+
+    const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+        const [, year, month, day] = dateOnlyMatch;
+        return new Date(Number(year), Number(month) - 1, Number(day));
+    }
+
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed;
+}
+
 function isOverdueTask(dueDate: string | null | undefined, progress: number | undefined) {
     if (!dueDate) return false;
-    const now = new Date();
-    const due = new Date(dueDate);
+    const due = parseDueDateForOverdueCheck(dueDate);
+    if (!due) return false;
+
     const notDone = (progress ?? 100) < 100;
-    return due < now && notDone;
+    return startOfLocalDay(due) < startOfLocalDay(new Date()) && notDone;
 }
 
 async function apiGetGroupTasks(args: {
@@ -270,6 +290,73 @@ async function apiGetGroupTasks(args: {
     }
 
     return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
+}
+
+async function apiGetAllGroupTasks(args: {
+    groupId: string;
+    search?: string;
+    statusId?: string;
+    startDateFrom?: string;
+    startDateTo?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    sortBy?: string;
+    sortAscending?: boolean;
+    fallbackMessage: string;
+    missingApiBaseMessage: string;
+}) {
+    const requestArgs = {
+        groupId: args.groupId,
+        search: args.search,
+        statusId: args.statusId,
+        startDateFrom: args.startDateFrom,
+        startDateTo: args.startDateTo,
+        dueDateFrom: args.dueDateFrom,
+        dueDateTo: args.dueDateTo,
+        sortBy: args.sortBy,
+        sortAscending: args.sortAscending,
+        fallbackMessage: args.fallbackMessage,
+        missingApiBaseMessage: args.missingApiBaseMessage
+    };
+
+    const firstPage = await apiGetGroupTasks({
+        ...requestArgs,
+        page: 1,
+        pageSize: 100
+    });
+    const firstData = firstPage?.data;
+    const totalPages = Math.max(1, Number(firstData?.totalPages ?? 1));
+    const items = [...(firstData?.items ?? [])];
+
+    if (totalPages > 1) {
+        const remainingPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+                apiGetGroupTasks({
+                    ...requestArgs,
+                    page: index + 2,
+                    pageSize: 100
+                })
+            )
+        );
+
+        remainingPages.forEach((pageResult) => {
+            items.push(...(pageResult?.data?.items ?? []));
+        });
+    }
+
+    return {
+        ...(firstPage ?? {}),
+        data: firstData
+            ? {
+                  ...firstData,
+                  items,
+                  page: 1,
+                  pageSize: items.length,
+                  totalCount: items.length,
+                  totalPages: Math.max(1, Math.ceil(items.length / 100))
+              }
+            : undefined
+    } as ApiResponse<GroupTaskListResponse> | null;
 }
 
 function FilterChip({
@@ -593,8 +680,6 @@ export function GroupListScreen() {
     const [statusOptions, setStatusOptions] = React.useState<Array<{ id: string; name: string }>>([]);
     const [assigneeOptions, setAssigneeOptions] = React.useState<DropdownOption[]>([]);
     const [page, setPage] = React.useState(1);
-    const [totalPages, setTotalPages] = React.useState(1);
-    const [totalCount, setTotalCount] = React.useState(0);
 
     const [detailOpen, setDetailOpen] = React.useState(false);
     const [detailTaskId, setDetailTaskId] = React.useState<string | null>(null);
@@ -644,7 +729,7 @@ export function GroupListScreen() {
         setLoadError(null);
 
         try {
-            const res = await apiGetGroupTasks({
+            const res = await apiGetAllGroupTasks({
                 groupId,
                 search: searchKeyword || undefined,
                 statusId: statusFilter !== "all" ? statusFilter : undefined,
@@ -654,8 +739,6 @@ export function GroupListScreen() {
                 dueDateTo: appliedDateFilter.dueDate || undefined,
                 sortBy: "dueDate",
                 sortAscending: false,
-                page,
-                pageSize,
                 fallbackMessage: t("cannotLoad"),
                 missingApiBaseMessage: t("missingApiBase")
             });
@@ -706,17 +789,15 @@ export function GroupListScreen() {
                 initials: row.assigneeInitials
             }));
 
-            setStatusOptions((prev) => mergeStatusOptions(prev, nextStatuses));
-            setAssigneeOptions((prev) => mergeDropdownOptions(prev, nextAssignees));
+            setStatusOptions(mergeStatusOptions([], nextStatuses));
+            setAssigneeOptions(mergeDropdownOptions([], nextAssignees));
             setRows(nextRows);
-            setTotalPages(Math.max(1, Number(data?.totalPages ?? 1)));
-            setTotalCount(Math.max(0, Number(data?.totalCount ?? 0)));
         } catch (e: unknown) {
             setLoadError(e instanceof Error ? e.message : t("cannotLoad"));
         } finally {
             setLoading(false);
         }
-    }, [appliedDateFilter, groupId, locale, page, searchKeyword, statusFilter, t]);
+    }, [appliedDateFilter, groupId, locale, searchKeyword, statusFilter, t]);
 
     React.useEffect(() => {
         void refresh();
@@ -732,6 +813,19 @@ export function GroupListScreen() {
             return true;
         });
     }, [rows, assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly]);
+
+    const totalCount = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+    const paginatedRows = React.useMemo(() => {
+        const startIndex = (page - 1) * pageSize;
+        return filteredRows.slice(startIndex, startIndex + pageSize);
+    }, [filteredRows, page, pageSize]);
+
+    React.useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const showPagination = !loading && loadError === null;
 
@@ -934,7 +1028,7 @@ export function GroupListScreen() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {filteredRows.map((row, index) => (
+                                    {paginatedRows.map((row, index) => (
                                         <motion.button
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}

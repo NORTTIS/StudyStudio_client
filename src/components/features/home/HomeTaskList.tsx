@@ -46,6 +46,13 @@ type UserGroupDto = components["schemas"]["UserGroupDto"];
 const PAGE_SIZE = 5;
 const FETCH_ALL_SIZE = 1000;
 const OVERDUE_FILTER_VALUE = "__overdue__";
+const PRIORITY_LOW_FILTER_VALUE = "priority_low";
+const PRIORITY_MEDIUM_FILTER_VALUE = "priority_medium";
+const PRIORITY_HIGH_FILTER_VALUE = "priority_high";
+const SEVERITY_LOW_FILTER_VALUE = "severity_low";
+const SEVERITY_NORMAL_FILTER_VALUE = "severity_normal";
+const SEVERITY_IMPORTANT_FILTER_VALUE = "severity_important";
+const SEVERITY_CRITICAL_FILTER_VALUE = "severity_critical";
 
 type SourceFilterValue = "all" | string;
 type TaskFilterValue = "all" | string;
@@ -275,6 +282,62 @@ function getPriorityLabel(value?: components["schemas"]["TaskPriority"], t?: (ke
             return t ? t("priorityHigh") : "High";
         default:
             return "-";
+    }
+}
+
+function getPriorityFilterLabel(value: TaskFilterValue, t: (key: string) => string) {
+    switch (value) {
+        case PRIORITY_LOW_FILTER_VALUE:
+            return t("priorityLow");
+        case PRIORITY_MEDIUM_FILTER_VALUE:
+            return t("priorityMedium");
+        case PRIORITY_HIGH_FILTER_VALUE:
+            return t("priorityHigh");
+        default:
+            return value;
+    }
+}
+
+function getSeverityFilterLabel(value: TaskFilterValue, t: (key: string) => string) {
+    switch (value) {
+        case SEVERITY_LOW_FILTER_VALUE:
+            return t("severityLow");
+        case SEVERITY_NORMAL_FILTER_VALUE:
+            return t("severityNormal");
+        case SEVERITY_IMPORTANT_FILTER_VALUE:
+            return t("severityImportant");
+        case SEVERITY_CRITICAL_FILTER_VALUE:
+            return t("severityCritical");
+        default:
+            return value;
+    }
+}
+
+function matchesPriorityFilter(value: components["schemas"]["TaskPriority"] | undefined, filter: TaskFilterValue) {
+    switch (filter) {
+        case PRIORITY_LOW_FILTER_VALUE:
+            return value === 0;
+        case PRIORITY_MEDIUM_FILTER_VALUE:
+            return value === 1;
+        case PRIORITY_HIGH_FILTER_VALUE:
+            return value === 2;
+        default:
+            return true;
+    }
+}
+
+function matchesSeverityFilter(value: components["schemas"]["TaskSeverity"] | undefined, filter: TaskFilterValue) {
+    switch (filter) {
+        case SEVERITY_LOW_FILTER_VALUE:
+            return value === 0;
+        case SEVERITY_NORMAL_FILTER_VALUE:
+            return value === 1;
+        case SEVERITY_IMPORTANT_FILTER_VALUE:
+            return value === 2;
+        case SEVERITY_CRITICAL_FILTER_VALUE:
+            return value === 3;
+        default:
+            return true;
     }
 }
 
@@ -962,13 +1025,13 @@ function TaskListDetailLayer({
                                                     <DropdownMenuItem onClick={() => setPriorityFilterValue("all")}>
                                                         {t("allPriorities")}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(t("priorityLow"))}>
+                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(PRIORITY_LOW_FILTER_VALUE)}>
                                                         {t("priorityLow")}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(t("priorityMedium"))}>
+                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(PRIORITY_MEDIUM_FILTER_VALUE)}>
                                                         {t("priorityMedium")}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(t("priorityHigh"))}>
+                                                    <DropdownMenuItem onClick={() => setPriorityFilterValue(PRIORITY_HIGH_FILTER_VALUE)}>
                                                         {t("priorityHigh")}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuSubContent>
@@ -980,18 +1043,18 @@ function TaskListDetailLayer({
                                                     <DropdownMenuItem onClick={() => setSeverityFilterValue("all")}>
                                                         {t("allSeverities")}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setSeverityFilterValue(t("severityLow"))}>
+                                                    <DropdownMenuItem onClick={() => setSeverityFilterValue(SEVERITY_LOW_FILTER_VALUE)}>
                                                         {t("severityLow")}
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setSeverityFilterValue(t("severityNormal"))}>
+                                                    <DropdownMenuItem onClick={() => setSeverityFilterValue(SEVERITY_NORMAL_FILTER_VALUE)}>
                                                         {t("severityNormal")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
-                                                        onClick={() => setSeverityFilterValue(t("severityImportant"))}>
+                                                        onClick={() => setSeverityFilterValue(SEVERITY_IMPORTANT_FILTER_VALUE)}>
                                                         {t("severityImportant")}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
-                                                        onClick={() => setSeverityFilterValue(t("severityCritical"))}>
+                                                        onClick={() => setSeverityFilterValue(SEVERITY_CRITICAL_FILTER_VALUE)}>
                                                         {t("severityCritical")}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuSubContent>
@@ -1065,7 +1128,7 @@ function TaskListDetailLayer({
                                 {priorityFilterValue !== "all" && (
                                     <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs text-orange-700 shadow-sm">
                                         <span>
-                                            {t("tableHeaderPriority")}: {priorityFilterValue}
+                                            {t("tableHeaderPriority")}: {getPriorityFilterLabel(priorityFilterValue, t)}
                                         </span>
                                         <button
                                             type="button"
@@ -1079,7 +1142,7 @@ function TaskListDetailLayer({
                                 {severityFilterValue !== "all" && (
                                     <div className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs text-rose-700 shadow-sm">
                                         <span>
-                                            {t("tableHeaderSeverity")}: {severityFilterValue}
+                                            {t("tableHeaderSeverity")}: {getSeverityFilterLabel(severityFilterValue, t)}
                                         </span>
                                         <button
                                             type="button"
@@ -1431,10 +1494,10 @@ export default function HomeTaskList() {
         let result = [...sourceFilteredItems];
 
         if (priorityFilterValue !== "all") {
-            result = result.filter((item) => getPriorityLabel(item.taskPriority, t) === priorityFilterValue);
+            result = result.filter((item) => matchesPriorityFilter(item.taskPriority, priorityFilterValue));
         }
         if (severityFilterValue !== "all") {
-            result = result.filter((item) => getSeverityLabel(item.taskSeverity, t) === severityFilterValue);
+            result = result.filter((item) => matchesSeverityFilter(item.taskSeverity, severityFilterValue));
         }
         if (statusFilterValue !== "all") {
             result = result.filter((item) =>
@@ -1448,7 +1511,7 @@ export default function HomeTaskList() {
         }
 
         return result;
-    }, [sourceFilteredItems, priorityFilterValue, severityFilterValue, statusFilterValue, deadlineFilter, t]);
+    }, [sourceFilteredItems, priorityFilterValue, severityFilterValue, statusFilterValue, deadlineFilter]);
 
     const statusOptions = React.useMemo(() => {
         const overdueAliases = new Set([

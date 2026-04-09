@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 const PRIMARY_BUTTON_CLASS = "w-full bg-orange-600 text-white hover:bg-orange-700";
@@ -23,23 +23,24 @@ function Logo() {
 export function TaskAccessDeniedPage() {
     const router = useRouter();
     const locale = useLocale();
+    const t = useTranslations("GroupTaskDeepLinkPage");
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
             <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
                 <Logo />
 
-                <h1 className="mb-2 font-bold text-2xl text-[#261E33]">Không có quyền truy cập</h1>
-                <p className="mb-6 text-sm text-muted-foreground">
-                    Bạn không phải thành viên của nhóm nên không thể mở công việc này.
-                </p>
+                <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("accessDeniedTitle")}</h1>
+                <p className="mb-6 text-sm text-muted-foreground">{t("accessDeniedDescription")}</p>
 
                 <div className="space-y-3">
                     <Button className={PRIMARY_BUTTON_CLASS} onClick={() => router.push(`/${locale}/home`)}>
-                        Về trang chủ
+                        {t("goHome")}
                     </Button>
                 </div>
             </div>
         </div>
     );
 }
+
+

@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toPublicUrl } from "@/api/banner-logo";
+import ErrorDisplay from "@/components/common/ErrorDisplay";
 import { GroupBannerBackground } from "@/components/features/group/GroupBannerBackground";
 import { GroupStudioHeader } from "@/components/features/group/setting/GroupStudioHeader";
 
@@ -31,6 +32,18 @@ type GroupDetailBannerResponse = {
     studioId?: string | null;
 };
 
+type GroupBannerResult =
+    | {
+          data: unknown;
+          error: null;
+      }
+    | {
+          data: null;
+          error: {
+              status?: number;
+          };
+      };
+
 function getApiBase() {
     const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
     return String(raw).replace(/\/+$/, "");
@@ -57,7 +70,7 @@ function extractBannerSettings(raw: unknown) {
     };
 }
 
-async function fetchGroupBanner(groupId: string) {
+async function fetchGroupBanner(groupId: string): Promise<GroupBannerResult> {
     const base = getApiBase();
     const apiBase = base.endsWith("/api") ? base : `${base}/api`;
     const url = `${apiBase}/group/${encodeURIComponent(groupId)}/detail`;
@@ -75,14 +88,27 @@ async function fetchGroupBanner(groupId: string) {
 
     if (!res.ok) {
         await res.text().catch(() => "");
-        return null;
+        return {
+            data: null,
+            error: {
+                status: res.status
+            }
+        };
     }
 
     const raw = await res.text();
     try {
-        return JSON.parse(raw.replace(/^\uFEFF/, ""));
+        return {
+            data: JSON.parse(raw.replace(/^\uFEFF/, "")),
+            error: null
+        };
     } catch {
-        return null;
+        return {
+            data: null,
+            error: {
+                status: res.status
+            }
+        };
     }
 }
 
@@ -96,28 +122,59 @@ export function GroupShell({
     const router = useRouter();
     const pathname = usePathname();
     const tCommon = useTranslations("Common");
+    const tGroupHeader = useTranslations("GroupStudioHeader");
     const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
     const [colorHex, setColorHex] = React.useState<string | null>(null);
     const [isArchived, setIsArchived] = React.useState(false);
     const [isReady, setIsReady] = React.useState(false);
+    const [loadError, setLoadError] = React.useState<string | null>(null);
     const [headerAction, setHeaderAction] = React.useState<React.ReactNode>(null);
 
     React.useEffect(() => {
         if (!groupId) return;
 
+        let cancelled = false;
+
         void (async () => {
             try {
-                setIsReady(false);
-                const data = await fetchGroupBanner(groupId);
-                const bannerSettings = extractBannerSettings(data);
+                if (!cancelled) {
+                    setIsReady(false);
+                    setLoadError(null);
+                }
+
+                const result = await fetchGroupBanner(groupId);
+                if (result.error) {
+                    console.error("[GroupShell] Failed to load data:", { status: result.error.status });
+                    if (!cancelled) {
+                        setLoadError(tGroupHeader("errors.fetchDetailFailed"));
+                    }
+                    return;
+                }
+
+                const bannerSettings = extractBannerSettings(result.data);
+                if (cancelled) return;
+
                 setBannerUrl(bannerSettings.bannerUrl);
                 setColorHex(bannerSettings.colorHex);
                 setIsArchived(Boolean(bannerSettings.isArchived));
+            } catch (error) {
+                console.error("[GroupShell] Failed to load data:", {
+                    status: error instanceof Response ? error.status : undefined
+                });
+                if (!cancelled) {
+                    setLoadError(tGroupHeader("errors.fetchDetailFailed"));
+                }
             } finally {
-                setIsReady(true);
+                if (!cancelled) {
+                    setIsReady(true);
+                }
             }
         })();
-    }, [groupId]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [groupId, tGroupHeader]);
 
     React.useEffect(() => {
         if (!isReady || !groupId || !isArchived) return;
@@ -131,6 +188,10 @@ export function GroupShell({
 
     if (!isReady) {
         return <div className="flex min-h-screen items-center justify-center px-6 text-sm text-[#6F6B99]">{tCommon("loading")}</div>;
+    }
+
+    if (loadError) {
+        return <ErrorDisplay message={loadError} />;
     }
 
     return (
