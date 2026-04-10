@@ -353,6 +353,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
 
     const clampStudioName = useCallback((value: string) => value.slice(0, STUDIO_NAME_MAX_LENGTH), []);
     const clampStudioDescription = useCallback((value: string) => value.slice(0, STUDIO_DESCRIPTION_MAX_LENGTH), []);
+    const canUseStudioAi = initialStudio?.studioRole === 0;
 
     const formatDateForInput = useCallback((iso: string) => {
         if (!iso) return "";
@@ -1223,13 +1224,24 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
     };
 
     const handleMainTabChange = useCallback((nextTab: "groups" | "ai" | "analytics" | "settings") => {
+        if (nextTab === "ai" && !canUseStudioAi) {
+            setActiveTab("groups");
+            return;
+        }
+
         if (isStudioArchived && nextTab !== "settings" && nextTab !== "groups") {
             setActiveTab("settings");
             return;
         }
 
         setActiveTab(nextTab);
-    }, [isStudioArchived]);
+    }, [canUseStudioAi, isStudioArchived]);
+
+    useEffect(() => {
+        if (activeTab === "ai" && !canUseStudioAi) {
+            setActiveTab("groups");
+        }
+    }, [activeTab, canUseStudioAi]);
 
     const handleRemoveMemberFromStudio = async (member: StudioMemberResponse) => {
         if (!studioId || !isStudioOwner) return;
@@ -1559,21 +1571,23 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                         {t("detail.tabs.groups")}
                                     </TabButton>
 
-                                    <TabButton
-                                        active={activeTab === "ai"}
-                                        onClick={() => handleMainTabChange("ai")}
-                                        disabled={isStudioArchived}
-                                    >
-                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M9.75 3v2.25m4.5-2.25v2.25M4.5 9.75H3m18 0h-1.5M6.364 6.364l-1.06-1.06m13.392 13.392-1.06-1.06M12 7.5a4.5 4.5 0 00-4.5 4.5v1.25a2.25 2.25 0 01-.659 1.591L6 15.682V18h12v-2.318l-.841-.841A2.25 2.25 0 0116.5 13.25V12A4.5 4.5 0 0012 7.5zM9.75 21h4.5"
-                                            />
-                                        </svg>
-                                        {t("detail.tabs.ai")}
-                                    </TabButton>
+                                    {canUseStudioAi && (
+                                        <TabButton
+                                            active={activeTab === "ai"}
+                                            onClick={() => handleMainTabChange("ai")}
+                                            disabled={isStudioArchived}
+                                        >
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M9.75 3v2.25m4.5-2.25v2.25M4.5 9.75H3m18 0h-1.5M6.364 6.364l-1.06-1.06m13.392 13.392-1.06-1.06M12 7.5a4.5 4.5 0 00-4.5 4.5v1.25a2.25 2.25 0 01-.659 1.591L6 15.682V18h12v-2.318l-.841-.841A2.25 2.25 0 0116.5 13.25V12A4.5 4.5 0 0012 7.5zM9.75 21h4.5"
+                                                />
+                                            </svg>
+                                            {t("detail.tabs.ai")}
+                                        </TabButton>
+                                    )}
 
                                     {isStudioOwner && (
                                         <TabButton
@@ -1695,7 +1709,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                             initial={{ opacity: 0, y: 16, scale: 0.98 }}
                                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                                             whileHover={{ y: -6 }}
-                                                            transition={{ duration: 0.24 }}>
+                                                            transition={{ duration: 0.24 }}
+                                                            className="w-full max-w-[390px]">
                                                             {(() => {
                                                                 const isGroupArchived = toBooleanLike(group.isArchived) === true;
                                                                 const isGroupActive = !isGroupArchived;
@@ -2261,7 +2276,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                     </motion.div>
                                 )}
 
-                                {activeTab === "ai" && (
+                                {activeTab === "ai" && canUseStudioAi && (
                                     <motion.div
                                         key="ai"
                                         initial={{ opacity: 0, y: 14 }}
