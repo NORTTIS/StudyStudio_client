@@ -16,6 +16,8 @@ export type AuthTokens = {
     refreshExpireIn: number;
 };
 
+import { clearUserProfileCache } from "@/api/user-profile";
+
 type RefreshResponse = {
     status: "success" | "error";
     code: string;
@@ -47,6 +49,8 @@ let refreshPromise: Promise<AuthTokens | null> | null = null;
  */
 export function setAuthTokens(data: AuthTokens): void {
     if (!isBrowser) return;
+
+    clearUserProfileCache();
 
     const { accessToken, refreshToken, accessExpireIn, ...userData } = data;
 
@@ -123,6 +127,8 @@ export function isTokenExpired(): boolean {
  */
 export function clearAuthTokens(): void {
     if (!isBrowser) return;
+
+    clearUserProfileCache();
 
     // Clear localStorage
     localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
