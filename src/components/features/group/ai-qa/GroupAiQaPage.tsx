@@ -269,6 +269,13 @@ export default function GroupAiQaPage() {
         await sendQuestion(input);
     };
 
+    const onInputKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+        if (e.key !== "Enter" || e.shiftKey) return;
+        e.preventDefault();
+        if (isSending || !input.trim()) return;
+        void sendQuestion(input);
+    };
+
     const onQuickActionClick = React.useCallback(
         async (action: QuickAction) => {
             await sendQuestion(action.prompt, action.label);
@@ -385,6 +392,7 @@ export default function GroupAiQaPage() {
                             <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={onInputKeyDown}
                                 placeholder={t("inputPlaceholder")}
                                 className="min-h-12.5 max-h-50 w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
                             />

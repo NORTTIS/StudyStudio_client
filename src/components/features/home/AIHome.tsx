@@ -433,6 +433,13 @@ export default function AIHome() {
         await sendQuestion(input);
     };
 
+    const onInputKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+        if (e.key !== "Enter" || e.shiftKey) return;
+        e.preventDefault();
+        if (isSending || !input.trim()) return;
+        void sendQuestion(input);
+    };
+
     const onQuickActionClick = React.useCallback(
         async (action: QuickAction) => {
             await sendQuestion(action.prompt);
@@ -631,6 +638,7 @@ export default function AIHome() {
                                     <textarea
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={onInputKeyDown}
                                         onFocus={() => setIsComposerFocused(true)}
                                         onBlur={() => setIsComposerFocused(false)}
                                         placeholder={tr("placeholder")}

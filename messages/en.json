@@ -2,7 +2,7 @@
     "Common": {
         "loading": "Loading...",
         "checkingAuth": "Checking authentication...",
-        "aiQATab": "AI Q&A",
+        "aiQATab": "AI",
         "missingAccessToken": "Missing access token",
         "missingInviteUrl": "missing inviteUrl",
         "inviteCreateFailed": "Failed to create invite link",
