@@ -947,7 +947,7 @@ function DuePill({
     assigneeInitials,
     showAssigneeAvatar
 }: {
-    due: string;
+    due?: string | null;
     overdue: boolean;
     done?: boolean;
     assigneeAvatarUrl?: string | null;
@@ -976,7 +976,7 @@ function DuePill({
                         </span>
                     )
                 ) : null}
-                <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
+                {due ? <div className="whitespace-nowrap font-semibold text-xs">{due}</div> : null}
             </div>
         </div>
     );
@@ -1386,10 +1386,7 @@ function TaskCard({
                                     </p>
                                 </div>
                             </div>
-                            <div
-                                className="relative shrink-0"
-                                onClick={(e) => e.stopPropagation()}
-                                onPointerDown={(e) => e.stopPropagation()}>
+                            <div className="relative shrink-0">
                                 <button
                                     ref={btnRef}
                                     type="button"
@@ -1433,7 +1430,7 @@ function TaskCard({
                         </div>
 
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                            {task.due ? (
+                            {task.due || !isTaskUnassigned(task) ? (
                                 <DuePill
                                     due={task.due}
                                     overdue={overdue}
@@ -1562,7 +1559,7 @@ function GhostTaskCard({ task }: { task: Task }) {
                 </div>
 
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    {task.due ? (
+                    {task.due || !isTaskUnassigned(task) ? (
                         <DuePill
                             due={task.due}
                             overdue={overdue}
@@ -2158,9 +2155,6 @@ function TaskOverlay({ task }: { task: Task }) {
                             due={task.due}
                             overdue={overdue}
                             done={done}
-                            assigneeAvatarUrl={task.assigneeAvatarUrl}
-                            assigneeInitials={task.assigneeInitials}
-                            showAssigneeAvatar={!isTaskUnassigned(task)}
                         />
                     ) : null}
 

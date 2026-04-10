@@ -353,7 +353,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
 
     const clampStudioName = useCallback((value: string) => value.slice(0, STUDIO_NAME_MAX_LENGTH), []);
     const clampStudioDescription = useCallback((value: string) => value.slice(0, STUDIO_DESCRIPTION_MAX_LENGTH), []);
-    const canUseStudioAi = initialStudio?.studioRole !== 1;
+    const canUseStudioAi = initialStudio?.studioRole === 0;
 
     const formatDateForInput = useCallback((iso: string) => {
         if (!iso) return "";

@@ -434,6 +434,7 @@ export default function AIHome() {
     };
 
     const onInputKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+        if (e.nativeEvent.isComposing) return;
         if (e.key !== "Enter" || e.shiftKey) return;
         e.preventDefault();
         if (isSending || !input.trim()) return;
