@@ -114,9 +114,8 @@ export function NotificationDetailModal({ isOpen, onClose, notification, locale 
         const description = detail.description?.toLowerCase?.() ?? "";
 
         return (
-            sourceType === "mention_chat" ||
-            sourceType === "mention_comment" ||
-            sourceType === "chat_message" ||
+            sourceType === "discuss" ||
+            sourceType === "comment" ||
             title.includes("được nhắc đến") ||
             title.includes("mentioned") ||
             description.includes("đã nhắc đến bạn") ||
@@ -126,7 +125,7 @@ export function NotificationDetailModal({ isOpen, onClose, notification, locale 
 
     const sourceMeta = useMemo(() => {
         if (isMentionLikeNotification) {
-            if (detail?.sourceType === "mention_comment") {
+            if (detail?.sourceType === "comment") {
                 return {
                     label: t("mentionedInComment"),
                     icon: MessageSquareText
@@ -140,7 +139,7 @@ export function NotificationDetailModal({ isOpen, onClose, notification, locale 
         }
 
         switch (detail?.sourceType) {
-            case "chat_message":
+            case "discuss":
                 return {
                     label: t("chatMessage"),
                     icon: MessageCircle
@@ -189,10 +188,9 @@ export function NotificationDetailModal({ isOpen, onClose, notification, locale 
 
     const getOriginalMessageTitle = () => {
         switch (detail?.sourceType) {
-            case "mention_chat":
-            case "chat_message":
+            case "discuss":
                 return t("messageContent");
-            case "mention_comment":
+            case "comment":
                 return t("commentContent");
             default:
                 return t("content");

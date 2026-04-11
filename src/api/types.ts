@@ -6698,6 +6698,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Task/{taskId}/group": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaskGroupResponseApiResponse"];
+                        "text/json": components["schemas"]["TaskGroupResponseApiResponse"];
+                        "text/plain": components["schemas"]["TaskGroupResponseApiResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Task/create-personal-task": {
         parameters: {
             query?: never;
@@ -9354,6 +9393,16 @@ export interface components {
             message?: string | null;
             status?: string | null;
         };
+        TaskGroupResponse: {
+            /** Format: uuid */
+            groupId?: string;
+        };
+        TaskGroupResponseApiResponse: {
+            code?: string | null;
+            data?: components["schemas"]["TaskGroupResponse"];
+            message?: string | null;
+            status?: string | null;
+        };
         TaskItemGroupRequest: {
             /** Format: double */
             actualHours?: number | null;
@@ -9808,11 +9857,16 @@ export interface components {
             createdAt?: string;
             /** Format: uuid */
             createdBy?: string | null;
+            /** Format: uuid */
+            groupId?: string | null;
             isRead?: boolean;
             /** Format: uuid */
             mentionedId?: string;
             /** Format: date-time */
             publishedAt?: string | null;
+            sourceType?: string | null;
+            /** Format: uuid */
+            taskId?: string | null;
             title?: string | null;
             type?: string | null;
             /** Format: uuid */

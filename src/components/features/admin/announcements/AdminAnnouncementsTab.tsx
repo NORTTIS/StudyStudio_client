@@ -693,16 +693,6 @@ export function AdminAnnouncementsTab() {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">Thời gian tạo</label>
-                                <input
-                                    type="datetime-local"
-                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                    value={formData.createdAt}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, createdAt: e.target.value }))}
-                                />
-                                <p className="mt-1 text-[#6F6B99] text-xs">Thời gian tạo của thông báo</p>
-                            </div>
 
                             <div className="flex items-center space-x-2">
                                 <input
@@ -713,7 +703,7 @@ export function AdminAnnouncementsTab() {
                                     className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
                                 />
                                 <label htmlFor="isActive" className="font-medium text-[#261E33] text-sm">
-                                    Kích hoạt thông báo ngay
+                                Hiển thị thông báo phía người dùng
                                 </label>
                             </div>
                         </div>
@@ -877,17 +867,6 @@ export function AdminAnnouncementsTab() {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="mb-2 block font-medium text-[#261E33] text-sm">Thời gian tạo</label>
-                                <input
-                                    type="datetime-local"
-                                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                    value={formData.createdAt}
-                                    onChange={(e) => setFormData((prev) => ({ ...prev, createdAt: e.target.value }))}
-                                />
-                                <p className="mt-1 text-[#6F6B99] text-xs">Thời gian tạo của thông báo</p>
-                            </div>
-
                             <div className="flex items-center space-x-2">
                                 <input
                                     id="isActiveEdit"
@@ -897,7 +876,7 @@ export function AdminAnnouncementsTab() {
                                     className="h-4 w-4 rounded border-gray-300 text-[#FF5F3D] focus:ring-[#FF5F3D]"
                                 />
                                 <label htmlFor="isActiveEdit" className="font-medium text-[#261E33] text-sm">
-                                    Kích hoạt thông báo
+                                    Hiển thị thông báo phía người dùng
                                 </label>
                             </div>
                         </div>

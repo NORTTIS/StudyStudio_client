@@ -1065,8 +1065,8 @@
         "empty": "Chưa có thành viên"
     },
     "QuickAssignModal": {
-        "title": "Giao việc nhanh",
-        "subtitle": "Phân công nhiệm vụ cho thành viên nhóm",
+        "title": "Phân nhóm nhanh",
+        "subtitle": "Phân nhóm nhanh cho các thành viên trong không gian quản lý",
         "roles": {
             "moderator": "Điều phối viên",
             "member": "Thành viên",
@@ -1075,34 +1075,34 @@
         },
         "scope": {
             "title": "Phạm vi phân công",
-            "unassignedOnly": "Chỉ thành viên chưa có việc",
-            "unassignedDescription": "Chỉ giao việc cho những thành viên chưa có nhiệm vụ",
+            "unassignedOnly": "Chỉ thành viên chưa có nhóm",
+            "unassignedDescription": "Chỉ phân nhóm cho thành viên chưa có nhóm",
             "allMembers": "Tất cả thành viên",
-            "allMembersDescription": "Giao việc cho toàn bộ thành viên"
+            "allMembersDescription": "Phân nhóm lại cho toàn bộ thành viên"
         },
         "defaultRole": {
             "title": "Vai trò mặc định"
         },
         "targetGroups": {
             "title": "Nhóm mục tiêu",
-            "hint": "Chọn các nhóm để phân công nhiệm vụ",
+            "hint": "Chọn các nhóm để phân nhóm cho thành viên",
             "memberCount": "({count} thành viên)",
             "noGroups": "Không có nhóm"
         },
         "excludeMembers": {
             "title": "Loại trừ thành viên",
-            "hint": "Chọn thành viên cần loại khỏi danh sách phân công",
+            "hint": "Chọn thành viên cần loại khỏi danh sách phân nhóm",
             "none": "Không có thành viên nào bị loại"
         },
-        "success": "Phân công nhiệm vụ thành công",
+        "success": "Phân nhóm thành công",
         "errors": {
-            "assignFailed": "Phân công nhiệm vụ thất bại",
-            "assignException": "Có lỗi khi phân công nhiệm vụ"
+            "assignFailed": "Phân nhóm thất bại",
+            "assignException": "Có lỗi khi phân nhóm"
         },
         "actions": {
             "cancel": "Hủy",
-            "assigning": "Đang phân công...",
-            "assignRandom": "Phân công ngẫu nhiên"
+            "assigning": "Đang phân nhóm ...",
+            "assignRandom": "Phân nhóm"
         }
     },
     "StudioInviteAccept": {

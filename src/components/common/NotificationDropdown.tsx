@@ -2,11 +2,12 @@
 
 import { AlertTriangle, Bell, CheckCheck, CheckCircle2, ChevronRight, Info, RefreshCw, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    deleteUserAnnouncement,
+    deleteAnnouncement,
     getAllAnnouncements,
-    markUserAnnouncementAsRead,
+    markAsRead,
     type Notification
 } from "@/api/notifications";
 import {
@@ -23,7 +24,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ANNOUNCEMENT_DELETED_EVENT, dispatchAnnouncementDeleted, type AnnouncementDeletedDetail } from "@/lib/announcement-events";
+import {
+    ANNOUNCEMENT_DELETED_EVENT,
+    dispatchAnnouncementDeleted,
+    type AnnouncementDeletedDetail
+} from "@/lib/announcement-events";
 import { cn } from "@/lib/utils";
 import { NotificationDetailModal } from "./NotificationDetailModal";
 
@@ -31,7 +36,6 @@ const READ_NOTIFICATIONS_STORAGE_KEY = "study_studio_read_notifications";
 const DELETED_NOTIFICATIONS_STORAGE_KEY = "study_studio_deleted_notifications";
 
 type RawNotification = Notification & {
-    userAnnouncementId?: string;
     announcementId?: string;
     _id?: string;
 };
@@ -128,7 +132,7 @@ function isNotificationNotFoundMessage(message?: string) {
 }
 
 function resolveNotificationActionId(notification: RawNotification): string {
-    return notification.userAnnouncementId || notification.announcementId || notification._id || notification.id;
+    return notification.announcementId || notification._id || notification.id;
 }
 
 function BellButton({ unreadCount }: { unreadCount: number }) {
@@ -229,6 +233,7 @@ function NotificationItem({
 export function NotificationDropdown() {
     const t = useTranslations("Notifications");
     const locale = useLocale();
+    const router = useRouter();
 
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState<ExtendedNotification[]>([]);
@@ -309,7 +314,8 @@ export function NotificationDropdown() {
             setNotifications((prev) => {
                 const deletedActionIds = prev
                     .filter((notification) => {
-                        if (detail.userAnnouncementId && notification.actionId === detail.userAnnouncementId) return true;
+                        if (detail.userAnnouncementId && notification.actionId === detail.userAnnouncementId)
+                            return true;
                         if (detail.announcementId && notification.announcementId === detail.announcementId) return true;
                         return false;
                     })
@@ -397,6 +403,26 @@ export function NotificationDropdown() {
         [locale]
     );
 
+    const getNotificationLink = (notification: ExtendedNotification): string | null => {
+        if (!notification.groupId) return null;
+
+        const basePath = `/${locale}/group`;
+
+        switch (notification.sourceType) {
+            case "task":
+            case "comment":
+                return notification.taskId
+                    ? `${basePath}/task/${notification.taskId}`
+                    : `${basePath}/${notification.groupId}`;
+            case "discuss":
+                return `${basePath}/${notification.groupId}/discuss`;
+            default:
+                return notification.taskId
+                    ? `${basePath}/task/${notification.taskId}`
+                    : `${basePath}/${notification.groupId}`;
+        }
+    };
+
     const handleNotificationClick = async (notification: ExtendedNotification) => {
         if (!notification.read) {
             saveReadNotificationId(notification.actionId);
@@ -405,7 +431,7 @@ export function NotificationDropdown() {
 
             if (!notification.isFallback) {
                 try {
-                    const result = await markUserAnnouncementAsRead(notification.actionId, locale);
+                    const result = await markAsRead(notification.actionId, locale);
 
                     if (result.status !== "success" && !isNotificationNotFoundMessage(result.message)) {
                         console.error("Mark as read API error:", result.message);
@@ -414,6 +440,14 @@ export function NotificationDropdown() {
                     console.error("Mark as read error:", error);
                 }
             }
+        }
+
+        // Redirect if has valid link, otherwise show modal
+        const link = getNotificationLink(notification);
+        if (link) {
+            setOpen(false);
+            router.push(link);
+            return;
         }
 
         setSelectedNotification(notification);
@@ -432,7 +466,7 @@ export function NotificationDropdown() {
             await Promise.all(
                 unreadNotifications
                     .filter((notification) => !notification.isFallback)
-                    .map((notification) => markUserAnnouncementAsRead(notification.actionId, locale))
+                    .map((notification) => markAsRead(notification.actionId, locale))
             );
         } catch (error) {
             console.error("Mark all as read error:", error);
@@ -460,7 +494,7 @@ export function NotificationDropdown() {
         setNotificationToDelete(null);
 
         try {
-            const result = await deleteUserAnnouncement(deletingActionId, locale);
+            const result = await deleteAnnouncement(deletingActionId, locale);
 
             if (result.status === "success" || isNotificationNotFoundMessage(result.message)) {
                 saveDeletedNotificationId(deletingActionId);

@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "api:types": "openapi-typescript http://localhost:8080/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
+        "api:types": "openapi-typescript http://localhost:5006/swagger/v1/swagger.json -o src/api/types.ts --alphabetize || true",
         "build": "pnpm api:types && next build",
         "build:skip-api": "next build",
         "start": "next start",

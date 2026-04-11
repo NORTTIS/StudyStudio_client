@@ -1,7 +1,20 @@
 import { type ApiResponse, apiDelete, apiGet, apiPut } from "./api-client";
 import { localizeNotificationText } from "@/utils/notification-localization";
 
-export type NotificationSourceType = "announcement" | "mention_chat" | "mention_comment" | "chat_message";
+export type NotificationSourceType =
+    | "announcement"
+    | "task"
+    | "discuss"
+    | "comment";
+
+function isNotificationSourceType(value: unknown): value is NotificationSourceType {
+    return (
+        value === "announcement" ||
+        value === "task" ||
+        value === "discuss" ||
+        value === "comment"
+    );
+}
 
 export interface Notification {
     id: string; // userAnnouncementId for user announcements
@@ -35,6 +48,10 @@ interface AnnouncementResponse {
     isActive: boolean;
     createdAt: string;
     publishedAt: string;
+    isRead: boolean;
+    taskId?: string;
+    groupId?: string;
+    sourceType?: string;
 }
 
 interface UserAnnouncementResponse {
@@ -46,6 +63,9 @@ interface UserAnnouncementResponse {
     isRead: boolean;
     createdAt: string;
     publishedAt: string;
+    taskId?: string;
+    groupId?: string;
+    sourceType?: string;
 }
 
 // Dựa trên spec: GET /api/group-messages/{groupId}
@@ -89,39 +109,38 @@ interface TaskCommentListPayload {
 }
 
 /**
- * Fetch user notifications from user announcements API
+ * Fetch all notifications (both type 0-3 and type 4-17) from unified endpoint
+ * Type 0-3: all users see these, with IsRead from UserAnnouncement
+ * Type 4-17: only mentioned users see these, with IsRead
  */
 export async function fetchNotifications(locale = "vi"): Promise<Notification[]> {
     console.log("🔔 API: fetchNotifications được gọi với locale:", locale);
 
     try {
-        console.log("🔔 API: Đang gọi /announcements/user...");
-        const response = await apiGet<UserAnnouncementResponse[]>("/announcements/user", locale);
-        console.log("🔔 API: Phản hồi từ /announcements/user:", response);
+        console.log("🔔 API: Đang gọi /announcements...");
+        const response = await apiGet<AnnouncementResponse[]>("/announcements", locale);
+        console.log("🔔 API: Phản hồi từ /announcements:", response);
 
         if (response.status === "success" && response.data && Array.isArray(response.data)) {
-            const notifications = response.data.map((userAnnouncement: UserAnnouncementResponse) => ({
-                id: userAnnouncement.userAnnouncementId,
-                title: localizeNotificationText(userAnnouncement.title, locale),
-                description: localizeNotificationText(userAnnouncement.content, locale),
-                type: getNotificationType(userAnnouncement.type),
-                date: userAnnouncement.publishedAt,
-                read: userAnnouncement.isRead,
+            const notifications = response.data.map((announcement: AnnouncementResponse) => ({
+                id: announcement.announcementId,
+                title: localizeNotificationText(announcement.title, locale),
+                description: localizeNotificationText(announcement.content, locale),
+                type: getNotificationType(announcement.type),
+                date: announcement.publishedAt,
+                read: announcement.isRead,
                 link: undefined,
-                announcementId: userAnnouncement.announcementId,
-                sourceType: "announcement" as NotificationSourceType
+                announcementId: announcement.announcementId,
+                sourceType: (announcement.sourceType as NotificationSourceType) || "announcement",
+                groupId: announcement.groupId,
+                taskId: announcement.taskId
             }));
-            console.log("🔔 API: Trả về thông báo user:", notifications);
+            console.log("🔔 API: Trả về thông báo:", notifications);
             return notifications;
         }
 
         if (response.status === "error") {
             console.log("🔔 API: Lỗi từ server:", response.message);
-
-            if (response.code === "ANNOUNCEMENT001") {
-                console.log("🔔 API: Không có thông báo nào - trả về mảng rỗng");
-                return [];
-            }
         }
 
         console.log("🔔 API: Không có dữ liệu hợp lệ - trả về mảng rỗng");
@@ -133,13 +152,13 @@ export async function fetchNotifications(locale = "vi"): Promise<Notification[]>
 }
 
 /**
- * Mark a notification as read using userAnnouncementId
- * PUT /api/announcements/user/{userAnnouncementId}/read
+ * Mark a notification as read
+ * PUT /api/announcements/{announcementId}/read
  */
-export async function markUserAnnouncementAsRead(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+export async function markAsRead(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
     try {
         console.log("🔔 API: Đánh dấu thông báo đã đọc ID:", announcementId);
-        const response = await apiPut<string>(`/announcements/user/${announcementId}/read`, {}, locale);
+        const response = await apiPut<string>(`/announcements/${announcementId}/read`, {}, locale);
         console.log("🔔 API: Phản hồi đánh dấu đã đọc:", response);
         return response;
     } catch (error) {
@@ -154,13 +173,13 @@ export async function markUserAnnouncementAsRead(announcementId: string, locale 
 }
 
 /**
- * Delete a notification using userAnnouncementId
- * DELETE /api/announcements/user/{userAnnouncementId}
+ * Delete a notification
+ * DELETE /api/announcements/{announcementId}
  */
-export async function deleteUserAnnouncement(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
+export async function deleteAnnouncement(announcementId: string, locale = "vi"): Promise<ApiResponse<string>> {
     try {
         console.log("🔔 API: Xóa thông báo ID:", announcementId);
-        const response = await apiDelete<string>(`/announcements/user/${announcementId}`, locale);
+        const response = await apiDelete<string>(`/announcements/${announcementId}`, locale);
         console.log("🔔 API: Phản hồi xóa thông báo:", response);
         return response;
     } catch (error) {
@@ -175,60 +194,11 @@ export async function deleteUserAnnouncement(announcementId: string, locale = "v
 }
 
 /**
- * Get all announcements (system + user) merged and sorted by publishedAt descending
- * GET /api/announcements (system) + GET /api/announcements/user (user)
+ * Get all announcements from unified endpoint (replaces old getAllAnnouncements)
+ * Now uses the single /announcements endpoint that returns both type 0-3 and type 4-17
  */
 export async function getAllAnnouncements(locale = "vi"): Promise<Notification[]> {
-    try {
-        console.log("🔔 API: Lấy tất cả announcements (system + user)...");
-
-        const [systemResponse, userResponse] = await Promise.all([
-            apiGet<AnnouncementResponse[]>("/announcements", locale),
-            apiGet<UserAnnouncementResponse[]>("/announcements/user", locale)
-        ]);
-
-        const allNotifications: Notification[] = [];
-
-        if (systemResponse.status === "success" && systemResponse.data) {
-            const systemNotifications = systemResponse.data.map((announcement) => ({
-                id: announcement.announcementId,
-                title: localizeNotificationText(announcement.title, locale),
-                description: localizeNotificationText(announcement.content, locale),
-                type: getNotificationType(announcement.type),
-                date: announcement.publishedAt,
-                read: false,
-                link: undefined,
-                announcementId: announcement.announcementId,
-                isSystem: true,
-                sourceType: "announcement" as NotificationSourceType
-            }));
-            allNotifications.push(...systemNotifications);
-        }
-
-        if (userResponse.status === "success" && userResponse.data) {
-            const userNotifications = userResponse.data.map((userAnnouncement) => ({
-                id: userAnnouncement.userAnnouncementId,
-                title: localizeNotificationText(userAnnouncement.title, locale),
-                description: localizeNotificationText(userAnnouncement.content, locale),
-                type: getNotificationType(userAnnouncement.type),
-                date: userAnnouncement.publishedAt,
-                read: userAnnouncement.isRead,
-                link: undefined,
-                announcementId: userAnnouncement.announcementId,
-                isSystem: false,
-                sourceType: "announcement" as NotificationSourceType
-            }));
-            allNotifications.push(...userNotifications);
-        }
-
-        allNotifications.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-        console.log("🔔 API: Trả về tất cả notifications:", allNotifications.length);
-        return allNotifications;
-    } catch (error) {
-        console.error("🔔 API: Lỗi khi lấy announcements:", error);
-        return [];
-    }
+    return fetchNotifications(locale);
 }
 
 /**
@@ -254,27 +224,27 @@ export async function getNotificationCount(locale = "vi"): Promise<number> {
  */
 export async function getAnnouncementDetail(announcementId: string, locale = "vi"): Promise<Notification | null> {
     try {
-        console.log("🔔 API: Lấy chi tiết thông báo ID:", announcementId);
         const response = await apiGet<AnnouncementResponse>(`/announcements/${announcementId}`, locale);
-        console.log("🔔 API: Phản hồi chi tiết thông báo:", response);
 
         if (response.status === "success" && response.data) {
             const announcement = response.data;
+            const sourceType = isNotificationSourceType(announcement.sourceType)
+                ? announcement.sourceType
+                : "announcement";
+
             return {
                 id: announcement.announcementId,
                 title: localizeNotificationText(announcement.title, locale),
                 description: localizeNotificationText(announcement.content, locale),
                 type: getNotificationType(announcement.type),
                 date: announcement.publishedAt,
-                read: false,
+                read: announcement.isRead,
                 link: undefined,
                 announcementId: announcement.announcementId,
-                sourceType: "announcement"
+                sourceType,
+                groupId: announcement.groupId,
+                taskId: announcement.taskId
             };
-        }
-
-        if (response.status === "error") {
-            console.log("🔔 API: Không tìm thấy thông báo:", response.message);
         }
 
         return null;
@@ -329,21 +299,18 @@ export async function getTaskComments(taskId: string, locale = "vi"): Promise<Ta
 /**
  * Hàm detail tổng quát:
  * - announcement => gọi /announcements/{id}
- * - mention_chat/chat_message => gọi /group-messages/{groupId}
- * - mention_comment => gọi /task-comments/{taskId}
+ * - discuss => gọi /group-messages/{groupId}
+ * - comment => gọi /task-comments/{taskId}
  *
  * Không tạo endpoint mới.
  */
 export async function getNotificationDetail(notification: Notification, locale = "vi"): Promise<Notification | null> {
     try {
-        if (notification.sourceType === "announcement" || notification.announcementId) {
+        if (!notification.sourceType || notification.sourceType === "announcement") {
             return await getAnnouncementDetail(notification.announcementId ?? notification.id, locale);
         }
 
-        if (
-            (notification.sourceType === "mention_chat" || notification.sourceType === "chat_message") &&
-            notification.groupId
-        ) {
+        if (notification.sourceType === "discuss" && notification.groupId) {
             const messages = await getGroupMessages(notification.groupId, locale);
             const matchedMessage = messages.find((item) => item.messageId === notification.messageId);
 
@@ -359,7 +326,7 @@ export async function getNotificationDetail(notification: Notification, locale =
             };
         }
 
-        if (notification.sourceType === "mention_comment" && notification.taskId) {
+        if (notification.sourceType === "comment" && notification.taskId) {
             const comments = await getTaskComments(notification.taskId, locale);
             const matchedComment = comments.find((item) => item.commentId === notification.commentId);
 
