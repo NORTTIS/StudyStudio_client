@@ -2592,6 +2592,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/announcements/{announcementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    announcementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/announcements/{announcementId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    announcementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ObjectApiResponse"];
+                        "text/json": components["schemas"]["ObjectApiResponse"];
+                        "text/plain": components["schemas"]["ObjectApiResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/announcements/{id}": {
         parameters: {
             query?: never;
@@ -2624,121 +2702,6 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/announcements/user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UserAnnouncementResponseListApiResponse"];
-                        "text/json": components["schemas"]["UserAnnouncementResponseListApiResponse"];
-                        "text/plain": components["schemas"]["UserAnnouncementResponseListApiResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/announcements/user/{userAnnouncementId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userAnnouncementId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ObjectApiResponse"];
-                        "text/json": components["schemas"]["ObjectApiResponse"];
-                        "text/plain": components["schemas"]["ObjectApiResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/announcements/user/{userAnnouncementId}/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    userAnnouncementId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ObjectApiResponse"];
-                        "text/json": components["schemas"]["ObjectApiResponse"];
-                        "text/plain": components["schemas"]["ObjectApiResponse"];
-                    };
-                };
-            };
-        };
         post?: never;
         delete?: never;
         options?: never;
@@ -7332,9 +7295,15 @@ export interface components {
             content?: string | null;
             /** Format: date-time */
             createdAt?: string;
+            /** Format: uuid */
+            groupId?: string | null;
             isActive?: boolean;
+            isRead?: boolean;
             /** Format: date-time */
             publishedAt?: string | null;
+            sourceType?: string | null;
+            /** Format: uuid */
+            taskId?: string | null;
             title?: string | null;
             type?: string | null;
         };
@@ -9446,6 +9415,8 @@ export interface components {
             actualHours?: number | null;
             assignee?: components["schemas"]["UserDto"];
             /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
             createdAt?: string;
             /** Format: uuid */
             createdById?: string;
@@ -9848,35 +9819,6 @@ export interface components {
             /** Format: int32 */
             total?: number;
             urgency?: string | null;
-        };
-        UserAnnouncementResponse: {
-            /** Format: uuid */
-            announcementId?: string;
-            content?: string | null;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: uuid */
-            createdBy?: string | null;
-            /** Format: uuid */
-            groupId?: string | null;
-            isRead?: boolean;
-            /** Format: uuid */
-            mentionedId?: string;
-            /** Format: date-time */
-            publishedAt?: string | null;
-            sourceType?: string | null;
-            /** Format: uuid */
-            taskId?: string | null;
-            title?: string | null;
-            type?: string | null;
-            /** Format: uuid */
-            userAnnouncementId?: string;
-        };
-        UserAnnouncementResponseListApiResponse: {
-            code?: string | null;
-            data?: components["schemas"]["UserAnnouncementResponse"][] | null;
-            message?: string | null;
-            status?: string | null;
         };
         UserBenchmarkResponse: {
             benchmark?: components["schemas"]["BenchmarkPoint"][] | null;
