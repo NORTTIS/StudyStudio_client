@@ -94,8 +94,8 @@ export function GroupTaskDeepLinkPage({
     const error =
         initialResolution.status === "error"
             ? initialResolution.message || t("cannotOpenTask")
-            : initialResolution.status === "not_found" || !normalizedTaskId
-              ? t("invalidOrMissingLink")
+                        : initialResolution.status === "not_found" || !normalizedTaskId
+                            ? t("taskNotFound")
               : "";
 
     React.useEffect(() => {
@@ -132,7 +132,7 @@ export function GroupTaskDeepLinkPage({
         return (
             <CenterMessage
                 title={t("cannotOpenTitle")}
-                description={error || t("invalidOrMissingLink")}
+                description={error || t("taskNotFound")}
                 status="error"
                 primaryLabel={t("goHome")}
                 onPrimary={goHome}

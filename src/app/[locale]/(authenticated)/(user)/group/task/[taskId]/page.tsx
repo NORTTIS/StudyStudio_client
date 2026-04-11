@@ -21,6 +21,10 @@ async function resolveTaskGroupOnServer(taskId: string, locale: string): Promise
             return { status: "forbidden" };
         }
 
+        if (response.code === "HTTP_404") {
+            return { status: "not_found" };
+        }
+
         return {
             status: "error",
             message: response.message || null
@@ -49,7 +53,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     }
 
     if (initialResolution.status === "not_found") {
-        redirect(`/${resolvedParams.locale}/task-access-denied?reason=invalid`);
+        redirect(`/${resolvedParams.locale}/task-access-denied?reason=not_found`);
     }
 
     if (initialResolution.status === "error") {

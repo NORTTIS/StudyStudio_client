@@ -35,8 +35,8 @@ export function TaskAccessDeniedPage() {
     const description =
         reason === "forbidden"
             ? t("accessDeniedDescription")
-            : reason === "invalid"
-              ? t("invalidOrMissingLink")
+                        : reason === "not_found"
+                            ? t("taskNotFound")
               : t("cannotOpenTask");
 
     return (

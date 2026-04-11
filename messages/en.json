@@ -2047,6 +2047,7 @@
         "accessDeniedDescription": "You are not a member of the group.",
         "cannotOpenTitle": "Cannot open task",
         "cannotOpenTask": "Unable to open this task.",
+        "taskNotFound": "Task not found.",
         "invalidLink": "The task link is invalid.",
         "invalidOrMissingLink": "You are not a member of the group.",
         "errors": {

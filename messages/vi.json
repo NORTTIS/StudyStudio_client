@@ -2126,6 +2126,7 @@
         "accessDeniedDescription": "Bạn không phải thành viên của nhóm.",
         "cannotOpenTitle": "Không thể mở công việc",
         "cannotOpenTask": "Không thể mở công việc này.",
+        "taskNotFound": "Không tìm thấy công việc.",
         "invalidLink": "Liên kết công việc không hợp lệ.",
         "invalidOrMissingLink": "Bạn không phải thành viên của nhóm.",
         "errors": {
