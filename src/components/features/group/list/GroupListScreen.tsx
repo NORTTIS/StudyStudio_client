@@ -6,6 +6,7 @@ import {
     ChevronRight,
     Search,
     AlertTriangle,
+    Flame,
     ListTodo,
     CalendarDays
 } from "lucide-react";
@@ -1028,8 +1029,11 @@ export function GroupListScreen() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {paginatedRows.map((row, index) => (
-                                        <motion.button
+                                    {paginatedRows.map((row, index) => {
+                                        const overdue = isOverdueTask(row.dueDate, row.progress);
+
+                                        return (
+                                            <motion.button
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.22, delay: index * 0.02 }}
@@ -1106,11 +1110,25 @@ export function GroupListScreen() {
                                                 {row.startLabel}
                                             </div>
 
-                                            <div className="flex items-center justify-center font-medium text-sm text-slate-600">
-                                                {row.dueLabel}
+                                            <div
+                                                className={cn(
+                                                    "flex items-center justify-center font-medium text-sm",
+                                                    overdue ? "text-rose-700" : "text-slate-600"
+                                                )}>
+                                                {overdue ? (
+                                                    <span className="inline-flex items-center gap-1.5 leading-none">
+                                                        {row.dueLabel}
+                                                        <span className="overdue-flame-badge mt-[1px] h-[24px] w-[24px] shrink-0 self-center">
+                                                            <Flame className="overdue-flame-icon h-[14px] w-[14px]" />
+                                                        </span>
+                                                    </span>
+                                                ) : (
+                                                    row.dueLabel
+                                                )}
                                             </div>
                                         </motion.button>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

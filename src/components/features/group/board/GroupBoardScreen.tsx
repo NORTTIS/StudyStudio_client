@@ -27,6 +27,7 @@ import {
     verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import Image from "next/image";
 import { CalendarDays, CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
@@ -40,7 +41,6 @@ import type { components } from "@/api/types";
 
 type ColumnId = string;
 
-// Convert string priority/severity from TaskForm to API numeric types
 const PRIORITY_MAP: Record<string, components["schemas"]["TaskPriority"]> = {
     low: 0,
     medium: 1,
@@ -67,6 +67,8 @@ type Task = {
     description?: string | null;
     assigneeId?: string | null;
     assigneeName?: string | null;
+    assigneeAvatarUrl?: string | null;
+    assigneeInitials?: string | null;
     statusName?: string | null;
     priority?: number | null;
     severity?: number | null;
@@ -917,8 +919,8 @@ function Pill({ children }: { children: React.ReactNode }) {
 function DonePill() {
     const t = useTranslations("GroupBoardScreen");
     return (
-        <span className="inline-flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 font-semibold text-emerald-700 text-xs">
-            <CheckCircle2 className="h-4 w-4" />
+        <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+            <CheckCircle2 className="h-3.5 w-3.5" />
             {t("done")}
         </span>
     );
@@ -931,32 +933,50 @@ function shouldShowProgress(task?: Pick<Task, "progress"> | null) {
 
 function ProgressPill({ progress }: { progress: number }) {
     return (
-        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 font-semibold text-indigo-700 text-xs">
+        <span className="inline-flex h-7 items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
             {progress}%
         </span>
     );
 }
 
-function DuePill({ due, overdue, done }: { due: string; overdue: boolean; done?: boolean }) {
-    const t = useTranslations("GroupBoardScreen");
+function DuePill({
+    due,
+    overdue,
+    done,
+    assigneeAvatarUrl,
+    assigneeInitials,
+    showAssigneeAvatar
+}: {
+    due?: string | null;
+    overdue: boolean;
+    done?: boolean;
+    assigneeAvatarUrl?: string | null;
+    assigneeInitials?: string | null;
+    showAssigneeAvatar?: boolean;
+}) {
     return (
         <div
             className={cn(
-                "inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2",
-                done
-                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                    : overdue
-                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                "inline-flex min-w-0 max-w-full items-center gap-2",
+                done ? "text-emerald-700" : overdue ? "text-rose-700" : "text-zinc-700"
             )}>
-            <Clock3 className="h-4 w-4 shrink-0" />
-            <div className="flex min-w-0 items-center gap-2">
-                <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
-                {!done && overdue ? (
-                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">
-                        {t("overdue")}
-                    </span>
+            <div className="flex min-w-0 items-center gap-2 leading-none">
+                {showAssigneeAvatar ? (
+                    assigneeAvatarUrl ? (
+                        <Image
+                            src={assigneeAvatarUrl}
+                            alt={String(assigneeInitials ?? "Assignee")}
+                            width={24}
+                            height={24}
+                            className="h-6 w-6 shrink-0 rounded-full object-cover"
+                        />
+                    ) : (
+                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-200 font-bold text-[10px] text-zinc-700">
+                            {String(assigneeInitials ?? "U").slice(0, 2).toUpperCase()}
+                        </span>
+                    )
                 ) : null}
+                {due ? <div className="whitespace-nowrap font-semibold text-xs">{due}</div> : null}
             </div>
         </div>
     );
@@ -1350,189 +1370,166 @@ function TaskCard({
                     ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
                     : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
             )}>
-            <div className="flex items-start gap-3">
-                <div className="pt-1">
-                    <div className={cn("h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                    {!isEditing ? (
-                        <>
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
+            <div className="min-w-0">
+                {!isEditing ? (
+                    <>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 flex-1 items-start gap-2">
+                                <div className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", dotClass(task.statusDot))} />
+                                <div className="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
                                     <p
                                         className={cn(
-                                            "line-clamp-3 pr-2 font-semibold text-sm leading-5",
+                                            "min-w-0 flex-1 line-clamp-2 pr-1 font-medium text-sm leading-snug tracking-tight",
                                             done ? "text-zinc-500 line-through" : "text-zinc-900"
                                         )}>
                                         {task.title}
                                     </p>
                                 </div>
-
-                                <div
-                                    className="relative shrink-0"
-                                    onClick={(e) => e.stopPropagation()}
-                                    onPointerDown={(e) => e.stopPropagation()}>
-                                    <button
-                                        ref={btnRef}
-                                        type="button"
-                                        onPointerDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setOpenMenu((v) => !v);
-                                        }}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                                        aria-label={t("menu")}>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </button>
-
-                                    <PortalDropdown
-                                        open={openMenu}
-                                        onClose={() => setOpenMenu(false)}
-                                        anchorRef={btnRef as any}>
-                                        <MenuItem
-                                            icon={<Pencil className="h-4 w-4" />}
-                                            label={t("editName")}
-                                            onClick={() => {
-                                                setOpenMenu(false);
-                                                onStartEdit();
-                                            }}
-                                        />
-                                        <MenuItem
-                                            icon={<Trash2 className="h-4 w-4" />}
-                                            label={t("delete")}
-                                            danger
-                                            onClick={() => {
-                                                setOpenMenu(false);
-                                                onDelete();
-                                            }}
-                                        />
-                                    </PortalDropdown>
-                                </div>
                             </div>
-
-                            <p className={cn("mt-2 truncate text-xs", done ? "text-zinc-400" : "text-zinc-500")}>
-                                {t("assignee")}: {task.assigneeName || t("notAssigned")}
-                            </p>
-                        </>
-                    ) : (
-                        <div
-                            className="space-y-2"
-                            onPointerDownCapture={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}>
-                            <textarea
-                                ref={taRef}
-                                value={draftTitle}
-                                onChange={(e) => onDraftChange(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) {
-                                        e.preventDefault();
-                                        safeCommit();
-                                    }
-                                    if (e.key === "Escape") {
-                                        e.preventDefault();
-                                        onCancelEdit();
-                                    }
-                                }}
-                                onBlur={() => {
-                                    setTimeout(() => {
-                                        if (clickingActionRef.current) {
-                                            clickingActionRef.current = false;
-                                            return;
-                                        }
-                                        safeCommit();
-                                    }, 0);
-                                }}
-                                rows={1}
-                                className={cn(
-                                    "w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2",
-                                    "select-text font-semibold text-sm text-zinc-900 outline-none",
-                                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
-                                )}
-                            />
-
-                            <div className="flex items-center gap-2">
+                            <div className="relative shrink-0">
                                 <button
+                                    ref={btnRef}
                                     type="button"
-                                    onPointerDown={() => (clickingActionRef.current = true)}
+                                    onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setOpenMenu((v) => !v);
+                                    }}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        safeCommit();
                                     }}
-                                    className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
-                                    {t("save")}
+                                    className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                                    aria-label={t("menu")}>
+                                    <MoreHorizontal className="h-3.5 w-3.5" />
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onPointerDown={() => (clickingActionRef.current = true)}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        onCancelEdit();
-                                    }}
-                                    className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label={t("cancel")}>
-                                    <X className="h-4 w-4" />
-                                </button>
+                                <PortalDropdown
+                                    open={openMenu}
+                                    onClose={() => setOpenMenu(false)}
+                                    anchorRef={btnRef as any}>
+                                    <MenuItem
+                                        icon={<Pencil className="h-4 w-4" />}
+                                        label={t("editName")}
+                                        onClick={() => {
+                                            setOpenMenu(false);
+                                            onStartEdit();
+                                        }}
+                                    />
+                                    <MenuItem
+                                        icon={<Trash2 className="h-4 w-4" />}
+                                        label={t("delete")}
+                                        danger
+                                        onClick={() => {
+                                            setOpenMenu(false);
+                                            onDelete();
+                                        }}
+                                    />
+                                </PortalDropdown>
                             </div>
                         </div>
-                    )}
 
-                    {task.due ||
-                        severityLabel ||
-                        done ||
-                        showProgress ||
-                        task.estimatedHours != null ||
-                        task.actualHours != null ? (
-                        <div className="mt-3 space-y-2">
-                            {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
-
-                            {severityLabel ||
-                                done ||
-                                showProgress ||
-                                task.estimatedHours != null ||
-                                task.actualHours != null ? (
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {severityLabel ? (
-                                        <span
-                                            className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                                done
-                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                                    : severityTone(task.severity)
-                                            )}>
-                                            {severityLabel}
-                                        </span>
-                                    ) : null}
-
-                                    {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
-
-                                    {done ? <DonePill /> : null}
-
-                                    {task.estimatedHours != null ? (
-                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 font-semibold text-xs text-blue-700">
-                                            {task.estimatedHours}
-                                            {t("estimatedHours")}
-                                        </span>
-                                    ) : null}
-
-                                    {task.actualHours != null ? (
-                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-green-200 bg-green-50 px-3 py-2 font-semibold text-xs text-green-700">
-                                            {task.actualHours}
-                                            {t("actualHours")}
-                                        </span>
-                                    ) : null}
-                                </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            {task.due || !isTaskUnassigned(task) ? (
+                                <DuePill
+                                    due={task.due}
+                                    overdue={overdue}
+                                    done={done}
+                                    assigneeAvatarUrl={task.assigneeAvatarUrl}
+                                    assigneeInitials={task.assigneeInitials}
+                                    showAssigneeAvatar={!isTaskUnassigned(task)}
+                                />
+                            ) : null}
+                            {severityLabel ? (
+                                <span
+                                    className={cn(
+                                        "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+                                        severityTone(task.severity)
+                                    )}>
+                                    {severityLabel}
+                                </span>
+                            ) : null}
+                            {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
+                            {done ? <DonePill /> : null}
+                            {task.estimatedHours != null ? (
+                                <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                                    {task.estimatedHours}
+                                    {t("estimatedHours")}
+                                </span>
+                            ) : null}
+                            {task.actualHours != null ? (
+                                <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                                    {task.actualHours}
+                                    {t("actualHours")}
+                                </span>
                             ) : null}
                         </div>
-                    ) : null}
-                </div>
+                    </>
+                ) : (
+                    <div
+                        className="space-y-2"
+                        onPointerDownCapture={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}>
+                        <textarea
+                            ref={taRef}
+                            value={draftTitle}
+                            onChange={(e) => onDraftChange(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    safeCommit();
+                                }
+                                if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    onCancelEdit();
+                                }
+                            }}
+                            onBlur={() => {
+                                setTimeout(() => {
+                                    if (clickingActionRef.current) {
+                                        clickingActionRef.current = false;
+                                        return;
+                                    }
+                                    safeCommit();
+                                }, 0);
+                            }}
+                            rows={1}
+                            className={cn(
+                                "w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2",
+                                "select-text font-semibold text-sm text-zinc-900 outline-none",
+                                "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
+                            )}
+                        />
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onPointerDown={() => (clickingActionRef.current = true)}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    safeCommit();
+                                }}
+                                className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
+                                {t("save")}
+                            </button>
+
+                            <button
+                                type="button"
+                                onPointerDown={() => (clickingActionRef.current = true)}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onCancelEdit();
+                                }}
+                                className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
+                                aria-label={t("cancel")}>
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
             </div>
         </div>
     );
@@ -1547,64 +1544,53 @@ function GhostTaskCard({ task }: { task: Task }) {
 
     return (
         <div className={cn("rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3")}>
-            <div className="flex items-start gap-3">
-                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", dotClass(task.statusDot))} />
-                <div className="min-w-0 flex-1">
-                    <p
-                        className={cn(
-                            "line-clamp-3 font-semibold text-sm leading-5",
-                            done ? "text-zinc-500 line-through" : "text-zinc-800"
-                        )}>
-                        {task.title}
-                    </p>
+            <div className="min-w-0">
+                <div className="flex min-w-0 items-start gap-2">
+                    <div className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", dotClass(task.statusDot))} />
+                    <div className="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
+                        <p
+                            className={cn(
+                                "min-w-0 flex-1 line-clamp-2 font-medium text-sm leading-snug tracking-tight",
+                                done ? "text-zinc-500 line-through" : "text-zinc-800"
+                            )}>
+                            {task.title}
+                        </p>
+                    </div>
+                </div>
 
-                    {task.due ||
-                        severityLabel ||
-                        done ||
-                        showProgress ||
-                        task.estimatedHours != null ||
-                        task.actualHours != null ? (
-                        <div className="mt-3 space-y-2">
-                            {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
-
-                            {severityLabel ||
-                                done ||
-                                showProgress ||
-                                task.estimatedHours != null ||
-                                task.actualHours != null ? (
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {severityLabel ? (
-                                        <span
-                                            className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                                done
-                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                                    : severityTone(task.severity)
-                                            )}>
-                                            {severityLabel}
-                                        </span>
-                                    ) : null}
-
-                                    {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
-
-                                    {done ? <DonePill /> : null}
-
-                                    {task.estimatedHours != null ? (
-                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 font-semibold text-xs text-blue-700">
-                                            {task.estimatedHours}
-                                            {t("estimatedHours")}
-                                        </span>
-                                    ) : null}
-
-                                    {task.actualHours != null ? (
-                                        <span className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-green-200 bg-green-50 px-3 py-2 font-semibold text-xs text-green-700">
-                                            {task.actualHours}
-                                            {t("actualHours")}
-                                        </span>
-                                    ) : null}
-                                </div>
-                            ) : null}
-                        </div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {task.due || !isTaskUnassigned(task) ? (
+                        <DuePill
+                            due={task.due}
+                            overdue={overdue}
+                            done={done}
+                            assigneeAvatarUrl={task.assigneeAvatarUrl}
+                            assigneeInitials={task.assigneeInitials}
+                            showAssigneeAvatar={!isTaskUnassigned(task)}
+                        />
+                    ) : null}
+                    {severityLabel ? (
+                        <span
+                            className={cn(
+                                "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+                                severityTone(task.severity)
+                            )}>
+                            {severityLabel}
+                        </span>
+                    ) : null}
+                    {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
+                    {done ? <DonePill /> : null}
+                    {task.estimatedHours != null ? (
+                        <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                            {task.estimatedHours}
+                            {t("estimatedHours")}
+                        </span>
+                    ) : null}
+                    {task.actualHours != null ? (
+                        <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                            {task.actualHours}
+                            {t("actualHours")}
+                        </span>
                     ) : null}
                 </div>
             </div>
@@ -2164,7 +2150,13 @@ function TaskOverlay({ task }: { task: Task }) {
 
             {task.due || severityLabel || done || showProgress ? (
                 <div className="mt-3 space-y-2">
-                    {task.due ? <DuePill due={task.due} overdue={overdue} done={done} /> : null}
+                    {task.due ? (
+                        <DuePill
+                            due={task.due}
+                            overdue={overdue}
+                            done={done}
+                        />
+                    ) : null}
 
                     {severityLabel || done || showProgress ? (
                         <div className="flex flex-wrap items-center gap-2">
@@ -2172,7 +2164,7 @@ function TaskOverlay({ task }: { task: Task }) {
                                 <span
                                     className={cn(
                                         "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
+                                        severityTone(task.severity)
                                     )}>
                                     {severityLabel}
                                 </span>
@@ -2622,6 +2614,12 @@ export function GroupBoardScreen({
                         statusDot: priorityToStatusDot(apiTask.taskPriority),
                         assigneeId: String(apiTask.assignee?.id ?? "").trim() || null,
                         assigneeName,
+                        assigneeAvatarUrl: String(apiTask.assignee?.avatarUrl ?? "").trim() || null,
+                        assigneeInitials: buildInitials(
+                            apiTask.assignee?.firstName,
+                            apiTask.assignee?.lastName,
+                            assigneeName
+                        ),
                         priority: apiTask.taskPriority ?? null,
                         severity: apiTask.taskSeverity ?? null,
                         progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0
@@ -3305,246 +3303,246 @@ export function GroupBoardScreen({
                         ref={filterPanelRef}
                         className="absolute top-full right-0 z-[9999] mt-2 w-[360px] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_24px_64px_rgba(15,23,42,0.14)]">
                         <div className="max-h-[70vh] space-y-5 overflow-y-auto p-3 [scrollbar-color:rgba(100,116,139,0.26)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-400/30 [&::-webkit-scrollbar-thumb:hover]:bg-zinc-400/45">
-                        <div className="relative flex items-center justify-center px-2">
-                            <div className="font-semibold text-base text-zinc-900">{t("filter")}</div>
+                            <div className="relative flex items-center justify-center px-2">
+                                <div className="font-semibold text-base text-zinc-900">{t("filter")}</div>
 
-                            <button
-                                type="button"
-                                onClick={() => setFilterOpen(false)}
-                                className="absolute right-2 rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
-                                aria-label={t("close")}>
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setFilterOpen(false)}
+                                    className="absolute right-2 rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
+                                    aria-label={t("close")}>
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
 
-                        <FilterSection title={t("members")}>
-                            <FilterCheckbox
-                                checked={filters.members.includes("noMembers")}
-                                label={t("noMembers")}
-                                icon={
-                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-500">
-                                        <UserOutlineIcon className="h-4 w-4" />
-                                    </span>
-                                }
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        members: toggleArrayValue(prev.members, "noMembers")
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.members.includes("assignedToMe")}
-                                label={t("cardsAssignedToMe")}
-                                icon={
-                                    currentUser?.avatarUrl ? (
-                                        <img
-                                            src={currentUser.avatarUrl}
-                                            alt={currentUserDisplayName || t("cardsAssignedToMe")}
-                                            className="h-8 w-8 rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#2563EB] font-semibold text-[11px] text-white">
-                                            {currentUserInitials}
+                            <FilterSection title={t("members")}>
+                                <FilterCheckbox
+                                    checked={filters.members.includes("noMembers")}
+                                    label={t("noMembers")}
+                                    icon={
+                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-500">
+                                            <UserOutlineIcon className="h-4 w-4" />
                                         </span>
-                                    )
-                                }
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        members: toggleArrayValue(prev.members, "assignedToMe")
-                                    }))
-                                }
-                            />
-                        </FilterSection>
+                                    }
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            members: toggleArrayValue(prev.members, "noMembers")
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.members.includes("assignedToMe")}
+                                    label={t("cardsAssignedToMe")}
+                                    icon={
+                                        currentUser?.avatarUrl ? (
+                                            <img
+                                                src={currentUser.avatarUrl}
+                                                alt={currentUserDisplayName || t("cardsAssignedToMe")}
+                                                className="h-8 w-8 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#2563EB] font-semibold text-[11px] text-white">
+                                                {currentUserInitials}
+                                            </span>
+                                        )
+                                    }
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            members: toggleArrayValue(prev.members, "assignedToMe")
+                                        }))
+                                    }
+                                />
+                            </FilterSection>
 
-                        <FilterSection title={t("cardStatus")}>
-                            <FilterCheckbox
-                                checked={filters.cardStatus.includes("complete")}
-                                label={t("markedAsComplete")}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        cardStatus: toggleArrayValue(prev.cardStatus, "complete")
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.cardStatus.includes("inProgress")}
-                                label={t("inProgress")}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        cardStatus: toggleArrayValue(prev.cardStatus, "inProgress")
-                                    }))
-                                }
-                            />
-                        </FilterSection>
+                            <FilterSection title={t("cardStatus")}>
+                                <FilterCheckbox
+                                    checked={filters.cardStatus.includes("complete")}
+                                    label={t("markedAsComplete")}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            cardStatus: toggleArrayValue(prev.cardStatus, "complete")
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.cardStatus.includes("inProgress")}
+                                    label={t("inProgress")}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            cardStatus: toggleArrayValue(prev.cardStatus, "inProgress")
+                                        }))
+                                    }
+                                />
+                            </FilterSection>
 
-                        <FilterSection title={t("dueDate")}>
-                            <FilterCheckbox
-                                checked={filters.dueDate.includes("noDates")}
-                                label={t("noDates")}
-                                icon={
-                                    <DueDateIcon tone="neutral">
-                                        <CalendarDays className="h-4 w-4" />
-                                    </DueDateIcon>
-                                }
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        dueDate: toggleArrayValue(prev.dueDate, "noDates")
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.dueDate.includes("overdue")}
-                                label={t("overdue")}
-                                icon={
-                                    <DueDateIcon tone="red">
-                                        <Clock3 className="h-4 w-4" />
-                                    </DueDateIcon>
-                                }
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        dueDate: toggleArrayValue(prev.dueDate, "overdue")
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.dueDate.includes("nextDay")}
-                                label={t("dueInNextDay")}
-                                icon={
-                                    <DueDateIcon tone="yellow">
-                                        <Clock3 className="h-4 w-4" />
-                                    </DueDateIcon>
-                                }
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        dueDate: toggleArrayValue(prev.dueDate, "nextDay")
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.dueDate.includes("nextWeek")}
-                                label={t("dueInNextWeek")}
-                                icon={
-                                    <DueDateIcon tone="gray">
-                                        <Clock3 className="h-4 w-4" />
-                                    </DueDateIcon>
-                                }
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        dueDate: toggleArrayValue(prev.dueDate, "nextWeek")
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.dueDate.includes("nextMonth")}
-                                label={t("dueInNextMonth")}
-                                icon={
-                                    <DueDateIcon tone="gray">
-                                        <Clock3 className="h-4 w-4" />
-                                    </DueDateIcon>
-                                }
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        dueDate: toggleArrayValue(prev.dueDate, "nextMonth")
-                                    }))
-                                }
-                            />
-                        </FilterSection>
+                            <FilterSection title={t("dueDate")}>
+                                <FilterCheckbox
+                                    checked={filters.dueDate.includes("noDates")}
+                                    label={t("noDates")}
+                                    icon={
+                                        <DueDateIcon tone="neutral">
+                                            <CalendarDays className="h-4 w-4" />
+                                        </DueDateIcon>
+                                    }
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            dueDate: toggleArrayValue(prev.dueDate, "noDates")
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.dueDate.includes("overdue")}
+                                    label={t("overdue")}
+                                    icon={
+                                        <DueDateIcon tone="red">
+                                            <Clock3 className="h-4 w-4" />
+                                        </DueDateIcon>
+                                    }
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            dueDate: toggleArrayValue(prev.dueDate, "overdue")
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.dueDate.includes("nextDay")}
+                                    label={t("dueInNextDay")}
+                                    icon={
+                                        <DueDateIcon tone="yellow">
+                                            <Clock3 className="h-4 w-4" />
+                                        </DueDateIcon>
+                                    }
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            dueDate: toggleArrayValue(prev.dueDate, "nextDay")
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.dueDate.includes("nextWeek")}
+                                    label={t("dueInNextWeek")}
+                                    icon={
+                                        <DueDateIcon tone="gray">
+                                            <Clock3 className="h-4 w-4" />
+                                        </DueDateIcon>
+                                    }
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            dueDate: toggleArrayValue(prev.dueDate, "nextWeek")
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.dueDate.includes("nextMonth")}
+                                    label={t("dueInNextMonth")}
+                                    icon={
+                                        <DueDateIcon tone="gray">
+                                            <Clock3 className="h-4 w-4" />
+                                        </DueDateIcon>
+                                    }
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            dueDate: toggleArrayValue(prev.dueDate, "nextMonth")
+                                        }))
+                                    }
+                                />
+                            </FilterSection>
 
-                        <FilterSection title={t("labels")}>
-                            <div className="px-2 pt-1 font-medium text-xs uppercase tracking-wide text-zinc-500">
-                                {t("priority")}
-                            </div>
-                            <FilterCheckbox
-                                checked={filters.priorities.includes(2)}
-                                label={t("high")}
-                                icon={<LabelToneDot tone="priority-high" />}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        priorities: toggleArrayValue(prev.priorities, 2)
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.priorities.includes(1)}
-                                label={t("medium")}
-                                icon={<LabelToneDot tone="priority-medium" />}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        priorities: toggleArrayValue(prev.priorities, 1)
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.priorities.includes(0)}
-                                label={t("low")}
-                                icon={<LabelToneDot tone="priority-low" />}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        priorities: toggleArrayValue(prev.priorities, 0)
-                                    }))
-                                }
-                            />
+                            <FilterSection title={t("labels")}>
+                                <div className="px-2 pt-1 font-medium text-xs uppercase tracking-wide text-zinc-500">
+                                    {t("priority")}
+                                </div>
+                                <FilterCheckbox
+                                    checked={filters.priorities.includes(2)}
+                                    label={t("high")}
+                                    icon={<LabelToneDot tone="priority-high" />}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            priorities: toggleArrayValue(prev.priorities, 2)
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.priorities.includes(1)}
+                                    label={t("medium")}
+                                    icon={<LabelToneDot tone="priority-medium" />}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            priorities: toggleArrayValue(prev.priorities, 1)
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.priorities.includes(0)}
+                                    label={t("low")}
+                                    icon={<LabelToneDot tone="priority-low" />}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            priorities: toggleArrayValue(prev.priorities, 0)
+                                        }))
+                                    }
+                                />
 
-                            <div className="px-2 pt-3 font-medium text-xs uppercase tracking-wide text-zinc-500">
-                                {t("severity")}
-                            </div>
-                            <FilterCheckbox
-                                checked={filters.severities.includes(3)}
-                                label={t("critical")}
-                                icon={<LabelToneDot tone="severity-critical" />}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        severities: toggleArrayValue(prev.severities, 3)
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.severities.includes(2)}
-                                label={t("major")}
-                                icon={<LabelToneDot tone="severity-major" />}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        severities: toggleArrayValue(prev.severities, 2)
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.severities.includes(1)}
-                                label={t("moderate")}
-                                icon={<LabelToneDot tone="severity-moderate" />}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        severities: toggleArrayValue(prev.severities, 1)
-                                    }))
-                                }
-                            />
-                            <FilterCheckbox
-                                checked={filters.severities.includes(0)}
-                                label={t("minor")}
-                                icon={<LabelToneDot tone="severity-minor" />}
-                                onChange={() =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        severities: toggleArrayValue(prev.severities, 0)
-                                    }))
-                                }
-                            />
-                        </FilterSection>
+                                <div className="px-2 pt-3 font-medium text-xs uppercase tracking-wide text-zinc-500">
+                                    {t("severity")}
+                                </div>
+                                <FilterCheckbox
+                                    checked={filters.severities.includes(3)}
+                                    label={t("critical")}
+                                    icon={<LabelToneDot tone="severity-critical" />}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            severities: toggleArrayValue(prev.severities, 3)
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.severities.includes(2)}
+                                    label={t("major")}
+                                    icon={<LabelToneDot tone="severity-major" />}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            severities: toggleArrayValue(prev.severities, 2)
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.severities.includes(1)}
+                                    label={t("moderate")}
+                                    icon={<LabelToneDot tone="severity-moderate" />}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            severities: toggleArrayValue(prev.severities, 1)
+                                        }))
+                                    }
+                                />
+                                <FilterCheckbox
+                                    checked={filters.severities.includes(0)}
+                                    label={t("minor")}
+                                    icon={<LabelToneDot tone="severity-minor" />}
+                                    onChange={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            severities: toggleArrayValue(prev.severities, 0)
+                                        }))
+                                    }
+                                />
+                            </FilterSection>
                         </div>
                     </div>
                 ) : null}

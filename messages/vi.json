@@ -2,7 +2,7 @@
     "Common": {
         "loading": "Đang tải...",
         "checkingAuth": "Đang kiểm tra xác thực...",
-        "aiQATab": "Hỏi đáp AI",
+        "aiQATab": "AI",
         "missingAccessToken": "Thiếu access token",
         "missingInviteUrl": "thiếu inviteUrl",
         "inviteCreateFailed": "Tạo link thất bại",

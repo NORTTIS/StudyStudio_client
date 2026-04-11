@@ -153,6 +153,24 @@
         }
     }
 
+    @keyframes overdue-flame-flicker {
+        0%,
+        100% {
+            transform: translateY(0) scale(1) rotate(-4deg);
+            opacity: 0.94;
+        }
+
+        35% {
+            transform: translateY(-1px) scale(1.08) rotate(3deg);
+            opacity: 1;
+        }
+
+        65% {
+            transform: translateY(0.5px) scale(0.96) rotate(-2deg);
+            opacity: 0.9;
+        }
+    }
+
     .landing-fade-up {
         animation: landing-fade-up 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
     }
@@ -163,6 +181,20 @@
 
     .landing-pop {
         animation: landing-pop 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .overdue-flame-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+    }
+
+    .overdue-flame-icon {
+        color: #fb923c;
+        animation: overdue-flame-flicker 1.6s ease-in-out infinite;
+        transform-origin: 50% 90%;
+        filter: drop-shadow(0 2px 6px rgba(249, 115, 22, 0.28));
     }
 
     .landing-delay-1 {
@@ -188,7 +220,8 @@
     @media (prefers-reduced-motion: reduce) {
         .landing-fade-up,
         .landing-fade-in,
-        .landing-pop {
+        .landing-pop,
+        .overdue-flame-icon {
             animation: none;
         }
     }
