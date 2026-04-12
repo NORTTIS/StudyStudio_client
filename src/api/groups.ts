@@ -9,6 +9,7 @@ import type { components } from "./types";
 export type UpdateGroupRequest = components["schemas"]["UpdateGroupRequest"] & {
     requiresMemberApproval?: boolean;
     memberApprovalRequired?: boolean;
+    allowMemberUpdateProgress?: boolean;
 };
 
 export type UpdateGroupResponse = components["schemas"]["UpdateGroupResponse"];

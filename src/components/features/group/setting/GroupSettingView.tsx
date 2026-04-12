@@ -299,6 +299,8 @@ export function GroupSettingView() {
 
     const [requiresMemberApproval, setRequiresMemberApproval] = useState(false);
     const [initialRequiresMemberApproval, setInitialRequiresMemberApproval] = useState(false);
+    const [allowMemberUpdateProgress, setAllowMemberUpdateProgress] = useState(false);
+    const [initialAllowMemberUpdateProgress, setInitialAllowMemberUpdateProgress] = useState(false);
     const [isArchived, setIsArchived] = useState(false);
     const [isParentStudioArchived, setIsParentStudioArchived] = useState(false);
     const [isUpdatingArchive, setIsUpdatingArchive] = useState(false);
@@ -551,6 +553,11 @@ export function GroupSettingView() {
         setRequiresMemberApproval(requiresApprovalBool);
         setInitialRequiresMemberApproval(requiresApprovalBool);
 
+        const allowProgressValue =
+            (data as Record<string, unknown>).allowMemberUpdateProgress ?? false;
+        setAllowMemberUpdateProgress(Boolean(allowProgressValue));
+        setInitialAllowMemberUpdateProgress(Boolean(allowProgressValue));
+
         const roleFromDetail = toMemberRole(data.userRole);
         setMyRoleInGroup(roleFromDetail);
 
@@ -676,6 +683,7 @@ export function GroupSettingView() {
                     isOpen: !requiresMemberApproval,
                     requiresMemberApproval,
                     memberApprovalRequired: requiresMemberApproval,
+                    allowMemberUpdateProgress,
                     bannerUrl: bannerUrl,
                     tagline: tagline || null,
                     alias: alias || null
@@ -697,7 +705,8 @@ export function GroupSettingView() {
                         name: validation.data.groupName,
                         description: validation.data.description,
                         studioName: masterStudio,
-                        requiresMemberApproval
+                        requiresMemberApproval,
+                        allowMemberUpdateProgress
                     }
                 })
             );
@@ -711,6 +720,7 @@ export function GroupSettingView() {
             setInitialAlias(alias);
             setInitialIsTemplate(isTemplate);
             setInitialRequiresMemberApproval(requiresMemberApproval);
+            setInitialAllowMemberUpdateProgress(allowMemberUpdateProgress);
 
             await loadGroup(groupId);
 
@@ -732,6 +742,7 @@ export function GroupSettingView() {
         setAlias(initialAlias);
         setIsTemplate(initialIsTemplate);
         setRequiresMemberApproval(initialRequiresMemberApproval);
+        setAllowMemberUpdateProgress(initialAllowMemberUpdateProgress);
         setGeneralError("");
         setIsEditing(false);
     };
@@ -1425,6 +1436,22 @@ export function GroupSettingView() {
                                         onCheckedChange={(checked) => {
                                             if (!isEditing) return;
                                             setIsTemplate(checked);
+                                        }}
+                                        disabled={!isEditing}
+                                        className="data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-gray-300"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                    <div>
+                                        <div className="font-semibold text-gray-700 text-xs">{t("allowMemberUpdateProgress.label")}</div>
+                                        <div className="mt-0.5 text-gray-500 text-xs">{t("allowMemberUpdateProgress.description")}</div>
+                                    </div>
+                                    <Switch
+                                        checked={allowMemberUpdateProgress}
+                                        onCheckedChange={(checked) => {
+                                            if (!isEditing) return;
+                                            setAllowMemberUpdateProgress(checked);
                                         }}
                                         disabled={!isEditing}
                                         className="data-[state=checked]:bg-orange-600 data-[state=unchecked]:bg-gray-300"

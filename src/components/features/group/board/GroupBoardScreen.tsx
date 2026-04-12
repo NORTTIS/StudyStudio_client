@@ -118,6 +118,7 @@ type GroupDetailResponse = {
     groupId?: string;
     userRole?: string | null;
     taskStatuses?: TaskStatusDto[] | null;
+    allowMemberUpdateProgress?: boolean;
     bannerUrl?: string | null;
     colorHex?: string | null;
 };
@@ -2414,6 +2415,8 @@ export function GroupBoardScreen({
 
     const [detailOpen, setDetailOpen] = React.useState(false);
     const [detailTaskId, setDetailTaskId] = React.useState<string | null>(null);
+    const [groupDetailSnapshot, setGroupDetailSnapshot] = React.useState<GroupDetailResponse | null>(null);
+    const [groupMembersSnapshot, setGroupMembersSnapshot] = React.useState<GroupMemberDto[]>([]);
 
     const [membersOptions, setMembersOptions] = React.useState<TaskFormOption[]>([]);
     const [filterOpen, setFilterOpen] = React.useState(false);
@@ -2543,11 +2546,6 @@ export function GroupBoardScreen({
     };
 
     const openTaskDetail = (taskId: string) => {
-        if (groupId) {
-            router.push(`/${locale}/group/task/${encodeURIComponent(taskId)}`, { scroll: false });
-            return;
-        }
-
         setDetailTaskId(taskId);
         setDetailOpen(true);
     };
@@ -2659,6 +2657,7 @@ export function GroupBoardScreen({
         ]);
 
         syncColumnsFromDetail(detail?.data);
+        setGroupDetailSnapshot(detail?.data ?? null);
         setCurrentUserRole(normalizeGroupRole(detail?.data?.userRole) ?? getUserRoleOrNull());
 
         const list = members?.data?.members ?? [];
@@ -2684,6 +2683,8 @@ export function GroupBoardScreen({
                 const restricted = isRestrictedRole(m?.role);
                 return !restricted;
             });
+
+        setGroupMembersSnapshot(filteredMembers);
 
         setMembersOptions(
             filteredMembers.map((m) => {
@@ -3677,6 +3678,8 @@ export function GroupBoardScreen({
                 groupIdOverride={groupId}
                 onDelete={handleDeleteFromDetail}
                 onSaved={refreshSilently}
+                groupDetailSnapshot={groupDetailSnapshot}
+                groupMembersSnapshot={groupMembersSnapshot}
             />
 
             <ConfirmModal
