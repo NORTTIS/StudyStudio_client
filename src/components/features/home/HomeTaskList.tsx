@@ -14,7 +14,7 @@ import {
     LayoutGrid
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DayPicker } from "react-day-picker";
@@ -46,6 +46,7 @@ type UserGroupDto = components["schemas"]["UserGroupDto"];
 const PAGE_SIZE = 5;
 const FETCH_ALL_SIZE = 1000;
 const OVERDUE_FILTER_VALUE = "__overdue__";
+const COMPLETED_FILTER_VALUE = "__completed__";
 const PRIORITY_LOW_FILTER_VALUE = "priority_low";
 const PRIORITY_MEDIUM_FILTER_VALUE = "priority_medium";
 const PRIORITY_HIGH_FILTER_VALUE = "priority_high";
@@ -114,6 +115,7 @@ type TaskListDetailLayerProps = {
     setPage: React.Dispatch<React.SetStateAction<number>>;
     handleTaskClick: (item: HomeTaskListItemResponse) => void;
     t: (key: string) => string;
+    locale: string;
 };
 
 const monthOptions = [
@@ -342,30 +344,30 @@ function matchesSeverityFilter(value: components["schemas"]["TaskSeverity"] | un
 }
 
 function priorityTone(value?: components["schemas"]["TaskPriority"]) {
-    if (value === 2) return "border-rose-200 bg-rose-50 text-rose-700";
-    if (value === 1) return "border-amber-200 bg-amber-50 text-amber-700";
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    if (value === 2) return "border-rose-200/90 bg-rose-50/95 text-rose-700 shadow-[0_6px_16px_rgba(244,63,94,0.08)]";
+    if (value === 1) return "border-sky-200/90 bg-sky-50/95 text-sky-700 shadow-[0_6px_16px_rgba(14,165,233,0.08)]";
+    return "border-emerald-200/90 bg-emerald-50/95 text-emerald-700 shadow-[0_6px_16px_rgba(16,185,129,0.08)]";
 }
 
 function severityTone(value?: components["schemas"]["TaskSeverity"]) {
-    if (value === 3) return "border-red-200 bg-red-50 text-red-700";
-    if (value === 2) return "border-orange-200 bg-orange-50 text-orange-700";
-    if (value === 1) return "border-yellow-200 bg-yellow-50 text-yellow-700";
-    return "border-sky-200 bg-sky-50 text-sky-700";
+    if (value === 3) return "border-rose-200/90 bg-rose-50/95 text-rose-700 shadow-[0_6px_16px_rgba(244,63,94,0.08)]";
+    if (value === 2) return "border-orange-200/90 bg-orange-50/95 text-orange-700 shadow-[0_6px_16px_rgba(249,115,22,0.08)]";
+    if (value === 1) return "border-sky-200/90 bg-sky-50/95 text-sky-700 shadow-[0_6px_16px_rgba(14,165,233,0.08)]";
+    return "border-emerald-200/90 bg-emerald-50/95 text-emerald-700 shadow-[0_6px_16px_rgba(16,185,129,0.08)]";
 }
 
-function formatDueDate(value?: string | null) {
+function formatDueDate(value?: string | null, locale?: string) {
     if (!value) return "-";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
 
-    const currentYear = new Date().getFullYear();
-    const year = date.getFullYear();
-    if (year !== currentYear) {
-        return `${year}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
-    }
+    const normalizedLocale = locale?.includes("-") ? locale : locale === "vi" ? "vi-VN" : "en-US";
 
-    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+    return new Intl.DateTimeFormat(normalizedLocale, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    }).format(date);
 }
 
 function normalizeStatusName(value?: string | null) {
@@ -407,23 +409,14 @@ function buildTaskDetailHref(item: HomeTaskListItemResponse) {
 
 function TaskStatusBadge({
     label,
-    overdue = false,
-    overdueLabel = "Overdue"
+    overdue = false
 }: {
     label?: string | null;
     overdue?: boolean;
-    overdueLabel?: string;
 }) {
     return (
-        <span
-            className={cn(
-                "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm",
-                overdue
-                    ? "border-rose-200 bg-rose-50 text-rose-700"
-                    : "border-slate-200 bg-white text-slate-700"
-            )}>
-            {overdue ? "!" : null}
-            <span className={cn(overdue && "ml-1")}>{overdue ? overdueLabel : label || "-"}</span>
+        <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 text-xs font-medium shadow-sm">
+            <span>{label || "-"}</span>
         </span>
     );
 }
@@ -894,9 +887,11 @@ function TaskListDetailLayer({
     deadlineFilterLabel,
     setPage,
     handleTaskClick,
-    t
+    t,
+    locale
 }: TaskListDetailLayerProps) {
     const overdueStatusLabel = t("overdue");
+    const completedStatusLabel = t("progressDone");
 
     React.useEffect(() => {
         if (!open) return;
@@ -981,10 +976,10 @@ function TaskListDetailLayer({
                                                 <SelectItem value="all" className="leading-none">
                                                     {t("allGroups")}
                                                 </SelectItem>
-                                                {groups
-                                                    .filter((group) => Boolean(group.groupId))
-                                                    .map((group) => (
-                                                        <SelectItem
+                                            {groups
+                                                .filter((group) => Boolean(group.groupId))
+                                                .map((group) => (
+                                                    <SelectItem
                                                             key={group.groupId ?? group.groupName}
                                                             value={group.groupId as string}
                                                             className="leading-none">
@@ -1062,6 +1057,9 @@ function TaskListDetailLayer({
 
                                             <DropdownMenuItem onClick={() => setStatusFilterValue(OVERDUE_FILTER_VALUE)}>
                                                 {overdueStatusLabel}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setStatusFilterValue(COMPLETED_FILTER_VALUE)}>
+                                                {completedStatusLabel}
                                             </DropdownMenuItem>
 
                                             <DropdownMenuSub>
@@ -1155,16 +1153,20 @@ function TaskListDetailLayer({
 
                                 {statusFilterValue !== "all" && (
                                     <div
-                                        className={cn(
-                                            "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs shadow-sm",
-                                            statusFilterValue === OVERDUE_FILTER_VALUE
-                                                ? "border border-rose-200 bg-rose-50 text-rose-700"
+                                            className={cn(
+                                                "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs shadow-sm",
+                                                statusFilterValue === OVERDUE_FILTER_VALUE
+                                                    ? "border border-rose-200 bg-rose-50 text-rose-700"
+                                                : statusFilterValue === COMPLETED_FILTER_VALUE
+                                                    ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
                                                 : "border border-sky-200 bg-sky-50 text-sky-700"
-                                        )}>
+                                            )}>
                                         <span>
                                             {t("tableHeaderStatus")}:{" "}
                                             {statusFilterValue === OVERDUE_FILTER_VALUE
                                                 ? overdueStatusLabel
+                                                : statusFilterValue === COMPLETED_FILTER_VALUE
+                                                    ? completedStatusLabel
                                                 : statusFilterValue}
                                         </span>
                                         <button
@@ -1174,6 +1176,8 @@ function TaskListDetailLayer({
                                                 "rounded-full p-0.5",
                                                 statusFilterValue === OVERDUE_FILTER_VALUE
                                                     ? "hover:bg-rose-100"
+                                                : statusFilterValue === COMPLETED_FILTER_VALUE
+                                                    ? "hover:bg-emerald-100"
                                                     : "hover:bg-sky-100"
                                             )}>
                                             <X className="h-4 w-4" />
@@ -1249,6 +1253,12 @@ function TaskListDetailLayer({
                                             ) : (
                                                 paginatedItems.map((item, index) => {
                                                     const overdue = isOverdueTask(item.dueDate, item.progress);
+                                                    const completed = normalizeProgressValue(item.progress) >= 100;
+                                                    const dueDisplayLabel = completed
+                                                        ? item.dueDate
+                                                            ? formatDueDate(item.dueDate, locale)
+                                                            : "Hoàn thành"
+                                                        : formatDueDate(item.dueDate, locale);
 
                                                     return (
                                                         <motion.tr
@@ -1305,19 +1315,22 @@ function TaskListDetailLayer({
                                                                     <TaskStatusBadge
                                                                         label={item.statusName}
                                                                         overdue={overdue}
-                                                                        overdueLabel={overdueStatusLabel}
                                                                     />
                                                                 </div>
                                                             </td>
 
                                                             <td className="px-5 py-4 text-center text-sm font-medium text-slate-500">
-                                                                <div className="flex flex-col items-center gap-1">
-                                                                    {overdue ? (
+                                                                <div
+                                                                    className={cn(
+                                                                        "flex flex-col items-center gap-1",
+                                                                        completed && "text-emerald-700"
+                                                                    )}>
+                                                                    {!completed && overdue ? (
                                                                         <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
                                                                             {overdueStatusLabel}
                                                                         </span>
                                                                     ) : null}
-                                                                    <span>{formatDueDate(item.dueDate)}</span>
+                                                                    <span>{dueDisplayLabel}</span>
                                                                 </div>
                                                             </td>
                                                         </motion.tr>
@@ -1386,6 +1399,7 @@ function TaskListDetailLayer({
 
 export default function HomeTaskList() {
     const router = useRouter();
+    const locale = useLocale();
     const t = useTranslations("HomeTaskList");
     const [data, setData] = React.useState<HomeTaskListResponse | null>(null);
     const [allGroups, setAllGroups] = React.useState<UserGroupDto[]>([]);
@@ -1476,12 +1490,17 @@ export default function HomeTaskList() {
         [rawItems, validGroupIds]
     );
 
+    const assignedGroups = React.useMemo(() => {
+        const assignedGroupIds = new Set(sanitizedItems.map((item) => item.groupId).filter(Boolean));
+        return groups.filter((group) => !!group.groupId && assignedGroupIds.has(group.groupId));
+    }, [groups, sanitizedItems]);
+
     React.useEffect(() => {
-        if (selectedSource !== "all" && !groups.some((group) => group.groupId === selectedSource)) {
+        if (selectedSource !== "all" && !assignedGroups.some((group) => group.groupId === selectedSource)) {
             setSelectedSource("all");
             setPage(1);
         }
-    }, [selectedSource, groups]);
+    }, [selectedSource, assignedGroups]);
 
     const sourceFilteredItems = React.useMemo(() => {
         if (selectedSource !== "all") {
@@ -1503,6 +1522,8 @@ export default function HomeTaskList() {
             result = result.filter((item) =>
                 statusFilterValue === OVERDUE_FILTER_VALUE
                     ? isOverdueTask(item.dueDate, item.progress)
+                    : statusFilterValue === COMPLETED_FILTER_VALUE
+                        ? normalizeProgressValue(item.progress) >= 100
                     : (item.statusName ?? "") === statusFilterValue
             );
         }
@@ -1642,20 +1663,20 @@ export default function HomeTaskList() {
                     <motion.div
                         initial={{ opacity: 0, y: 18 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="relative rounded-[34px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(255,255,255,0.68))] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:p-8">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.10),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(251,146,60,0.08),transparent_30%)]" />
+                        className="relative overflow-hidden rounded-[40px] border border-white/75 bg-[linear-gradient(135deg,rgba(255,250,245,0.96)_0%,rgba(255,255,255,0.92)_42%,rgba(248,250,255,0.9)_100%)] p-6 shadow-[0_22px_70px_rgba(180,83,9,0.10)] backdrop-blur-2xl md:p-8">
+                        <div className="absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.16),transparent_32%),radial-gradient(circle_at_top_right,rgba(96,165,250,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(251,191,36,0.10),transparent_28%)]" />
 
                         <div className="relative">
                             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                                 <div>
-                                    <h2 className="mt-4 bg-[linear-gradient(135deg,#0F172A_0%,#4338CA_55%,#0F766E_100%)] bg-clip-text text-[32px] font-bold leading-tight tracking-[-0.02em] text-transparent md:text-[40px]">
+                                    <h2 className="mt-4 bg-[linear-gradient(135deg,#7C2D12_0%,#EA580C_48%,#FB923C_100%)] bg-clip-text text-[32px] font-bold leading-tight tracking-[-0.02em] text-transparent md:text-[40px]">
                                         {t("title")}
                                     </h2>
                                 </div>
 
                                 <div className="flex flex-wrap gap-3">
-                                    <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
-                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                                    <div className="rounded-[26px] border border-white/80 bg-white/78 px-4 py-3 shadow-[0_10px_30px_rgba(148,163,184,0.10)] backdrop-blur">
+                                        <p className="font-semibold text-[11px] uppercase tracking-wide text-[#7C2D12]">
                                             {t("totalTasks")}
                                         </p>
                                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -1664,13 +1685,13 @@ export default function HomeTaskList() {
                                         </div>
                                     </div>
 
-                                    <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3 shadow-sm backdrop-blur">
-                                        <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                                    <div className="rounded-[26px] border border-white/80 bg-white/78 px-4 py-3 shadow-[0_10px_30px_rgba(148,163,184,0.10)] backdrop-blur">
+                                        <p className="font-semibold text-[11px] uppercase tracking-wide text-[#7C2D12]">
                                             {t("availableGroups")}
                                         </p>
                                         <div className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
                                             <LayoutGrid className="h-4 w-4 text-sky-600" />
-                                            {groups.length}
+                                            {assignedGroups.length}
                                         </div>
                                     </div>
                                 </div>
@@ -1681,7 +1702,7 @@ export default function HomeTaskList() {
                                     Array.from({ length: 3 }).map((_, index) => (
                                         <div
                                             key={index}
-                                            className="rounded-[24px] border border-slate-200/80 bg-white/80 p-4 shadow-sm">
+                                            className="rounded-[30px] border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,250,246,0.86))] p-5 shadow-[0_12px_32px_rgba(148,163,184,0.14)]">
                                             <div className="animate-pulse space-y-3">
                                                 <div className="h-5 w-3/4 rounded bg-slate-200" />
                                                 <div className="h-4 w-1/2 rounded bg-slate-100" />
@@ -1693,7 +1714,7 @@ export default function HomeTaskList() {
                                         </div>
                                     ))
                                 ) : previewGroups.length === 0 ? (
-                                    <div className="md:col-span-3 rounded-[24px] border border-slate-200/80 bg-white/80 p-8 text-center shadow-sm">
+                                    <div className="md:col-span-3 rounded-[30px] border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,250,246,0.86))] p-8 text-center shadow-[0_12px_32px_rgba(148,163,184,0.14)]">
                                         <div className="mx-auto flex max-w-md flex-col items-center">
                                             <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-violet-50 text-violet-600 shadow-sm">
                                                 <FolderKanban className="h-8 w-8" />
@@ -1710,20 +1731,20 @@ export default function HomeTaskList() {
                                             key={group.groupId}
                                             type="button"
                                             onClick={() => handleOpenDetailByGroup(group.groupId)}
-                                            className="rounded-[24px] border border-slate-200/80 bg-white/80 p-4 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-                                            <p className="line-clamp-1 text-xl font-semibold text-slate-900">
+                                            className="rounded-[30px] border border-[#DCE6F0]/95 bg-[linear-gradient(145deg,rgba(248,251,255,0.98)_0%,rgba(241,246,252,0.97)_58%,rgba(235,242,249,0.95)_100%)] p-5 text-left shadow-[0_14px_36px_rgba(71,85,105,0.10)] transition hover:-translate-y-1 hover:border-[#C9D8E8] hover:shadow-[0_20px_42px_rgba(71,85,105,0.15)]">
+                                            <p className="line-clamp-1 text-xl font-bold text-[#1E293B]">
                                                 {group.groupName}
                                             </p>
 
-                                            <p className="mt-3 text-sm font-medium text-slate-500">
+                                            <p className="mt-3 text-sm font-semibold text-[#64748B]">
                                                 {group.taskCount} {t("taskCountLabel")}
                                             </p>
 
-                                            <div className="mt-3 flex flex-wrap gap-2">
+                                            <div className="mt-4 flex flex-wrap gap-2">
                                                 {typeof group.highestSeverity !== "undefined" ? (
                                                     <span
                                                         className={cn(
-                                                            "inline-flex rounded-full border px-3 py-1 text-xs font-semibold",
+                                                            "inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold",
                                                             severityTone(group.highestSeverity)
                                                         )}>
                                                         {getSeverityLabel(group.highestSeverity, t)}
@@ -1733,7 +1754,7 @@ export default function HomeTaskList() {
                                                 {typeof group.highestPriority !== "undefined" ? (
                                                     <span
                                                         className={cn(
-                                                            "inline-flex rounded-full border px-3 py-1 text-xs font-semibold",
+                                                            "inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold",
                                                             priorityTone(group.highestPriority)
                                                         )}>
                                                         {getPriorityLabel(group.highestPriority, t)}
@@ -1761,7 +1782,7 @@ export default function HomeTaskList() {
                 open={openDetail}
                 onClose={handleCloseDetail}
                 isLoading={isLoading}
-                groups={groups}
+                groups={assignedGroups}
                 paginatedItems={paginatedItems}
                 page={page}
                 totalPages={totalPages}
@@ -1786,6 +1807,7 @@ export default function HomeTaskList() {
                 setPage={setPage}
                 handleTaskClick={handleTaskClick}
                 t={t}
+                locale={locale}
             />
         </>
     );

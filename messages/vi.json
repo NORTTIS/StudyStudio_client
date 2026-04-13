@@ -2202,11 +2202,11 @@
         "sortingBy": "Sắp xếp theo",
         "filterDeadline": "Lọc theo hạn",
         "tableHeaderTask": "Công việc",
-        "tableHeaderSource": "Nguồn",
+        "tableHeaderSource": "Nhóm",
         "tableHeaderSeverity": "Độ nghiêm trọng",
         "tableHeaderPriority": "Độ ưu tiên",
         "tableHeaderStatus": "Trạng thái",
-        "tableHeaderDueDate": "Hạn chót",
+        "tableHeaderDueDate": "Hạn hoàn thành",
         "noTasks": "Không có công việc",
         "noTasksHint": "Tạo công việc mới để bắt đầu",
         "previous": "Trước",
@@ -2222,7 +2222,8 @@
         "taskCountLabel": "công việc",
         "topGroup": "Nhóm hàng đầu",
         "viewDetails": "Xem chi tiết",
-        "overdue": "Quá hạn"
+        "overdue": "Quá hạn",
+        "progressDone": "Hoàn thành"
     },
     "HomePersonalTask": {
         "selectDate": "Chọn ngày",

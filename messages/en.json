@@ -2123,11 +2123,11 @@
         "sortingBy": "Sorting by",
         "filterDeadline": "Filter by deadline",
         "tableHeaderTask": "Task",
-        "tableHeaderSource": "Source",
+        "tableHeaderSource": "Group",
         "tableHeaderSeverity": "Severity",
         "tableHeaderPriority": "Priority",
         "tableHeaderStatus": "Status",
-        "tableHeaderDueDate": "Due date",
+        "tableHeaderDueDate": "Completion date",
         "noTasks": "No tasks",
         "noTasksHint": "Create a new task to get started",
         "previous": "Previous",
@@ -2143,7 +2143,8 @@
         "taskCountLabel": "tasks",
         "topGroup": "Top group",
         "viewDetails": "View details",
-        "overdue": "Overdue"
+        "overdue": "Overdue",
+        "progressDone": "Done"
     },
     "HomePersonalTask": {
         "selectDate": "Select a date",

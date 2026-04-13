@@ -14,6 +14,7 @@ import {
     type DroppableContainer,
     KeyboardSensor,
     PointerSensor,
+    pointerWithin,
     useDroppable,
     useSensor,
     useSensors
@@ -34,6 +35,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { getUserData } from "@/api/auth";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
+import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
 import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
 import { useGroupHeaderActionSlot } from "@/components/features/group/GroupShell";
 import { getCurrentUserId, mapRole } from "@/components/features/group/group.api";
@@ -210,10 +212,11 @@ function severityLabelOf(severity: number | null | undefined, t: (key: string) =
 }
 
 function severityTone(severity: number | null | undefined) {
-    if (severity === 3) return "border-rose-200 bg-rose-50 text-rose-700";
-    if (severity === 2) return "border-orange-200 bg-orange-50 text-orange-700";
-    if (severity === 1) return "border-amber-200 bg-amber-50 text-amber-700";
-    return "border-sky-200 bg-sky-50 text-sky-700";
+    const value = Number(severity);
+    if (value === 3) return "border-rose-200 bg-rose-50 text-rose-700";
+    if (value === 2) return "border-orange-200 bg-orange-50 text-orange-700";
+    if (value === 1) return "border-sky-200 bg-sky-50 text-sky-700";
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
 function isUuidLike(v: string) {
@@ -954,6 +957,8 @@ function DuePill({
     assigneeInitials?: string | null;
     showAssigneeAvatar?: boolean;
 }) {
+    const shouldShowDueText = Boolean(due) && !done;
+
     return (
         <div
             className={cn(
@@ -962,21 +967,28 @@ function DuePill({
             )}>
             <div className="flex min-w-0 items-center gap-2 leading-none">
                 {showAssigneeAvatar ? (
-                    assigneeAvatarUrl ? (
-                        <Image
-                            src={assigneeAvatarUrl}
-                            alt={String(assigneeInitials ?? "Assignee")}
-                            width={24}
-                            height={24}
-                            className="h-6 w-6 shrink-0 rounded-full object-cover"
-                        />
-                    ) : (
-                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-200 font-bold text-[10px] text-zinc-700">
-                            {String(assigneeInitials ?? "U").slice(0, 2).toUpperCase()}
-                        </span>
-                    )
+                    <AssigneeAvatar
+                        avatarUrl={assigneeAvatarUrl}
+                        initials={assigneeInitials}
+                        size={24}
+                        className="text-[10px]"
+                    />
                 ) : null}
-                {due ? <div className="whitespace-nowrap font-semibold text-xs">{due}</div> : null}
+                {shouldShowDueText ? <div className="whitespace-nowrap font-semibold text-xs">{due}</div> : null}
+                {overdue && !done ? (
+                    <span title="Overdue" aria-label="Overdue" className="shrink-0">
+                        <svg viewBox="0 0 48 48" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M25.9 3.4c.4 5.4-2.2 9.6-6.2 13.6-3.5 3.5-7.2 7.4-7.2 13.4 0 8.3 6.3 14.2 14.7 14.2 8.7 0 14.8-6.1 14.8-14.3 0-7.1-4.9-11.7-8.6-15.7-2.9-3.1-5.4-6-5.9-10.7-.1-.8-.7-1.4-1.5-1.4-.7 0-1.4.4-1.4.9Z"
+                                fill="#FF5A7A"
+                            />
+                            <path
+                                d="M26.9 18.1c.2 3.1-1.2 5.5-3.4 7.8-1.9 2-4 4.3-4 7.8 0 5 3.7 8.4 8.7 8.4 5.2 0 8.8-3.7 8.8-8.5 0-4.1-2.8-6.9-5.1-9.3-1.8-1.9-3.4-3.7-3.6-6.5 0-.6-.5-1-1.1-1-.6 0-1.1.5-1.1 1.3Z"
+                                fill="#F21155"
+                            />
+                        </svg>
+                    </span>
+                ) : null}
             </div>
         </div>
     );
@@ -1256,8 +1268,8 @@ function LabelToneDot({
                         : tone === "severity-major"
                             ? "bg-orange-500"
                             : tone === "severity-moderate"
-                                ? "bg-amber-400"
-                                : "bg-sky-400";
+                                ? "bg-sky-500"
+                                : "bg-emerald-500";
 
     return <span className={cn("inline-flex h-3 w-3 rounded-full", toneClass)} />;
 }
@@ -1444,7 +1456,7 @@ function TaskCard({
                                 <span
                                     className={cn(
                                         "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
-                                        severityTone(task.severity)
+                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                                     )}>
                                     {severityLabel}
                                 </span>
@@ -1573,7 +1585,7 @@ function GhostTaskCard({ task }: { task: Task }) {
                         <span
                             className={cn(
                                 "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
-                                severityTone(task.severity)
+                                done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                             )}>
                             {severityLabel}
                         </span>
@@ -1949,7 +1961,7 @@ function ColumnView({
                     className={cn("rounded-b-xl transition", isOver && "bg-blue-50/40")}>
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {rendered.map((item) => {
                                     if (item.kind === "ghost")
                                         return <GhostTaskCard key={item.key} task={ghost!.task} />;
@@ -1984,7 +1996,7 @@ function ColumnView({
                                 <div
                                     ref={setEndRef}
                                     className={cn(
-                                        "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
+                                        "h-3 rounded-xl border border-dashed transition",
                                         isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
                                     )}
                                 />
@@ -2164,7 +2176,7 @@ function TaskOverlay({ task }: { task: Task }) {
                                 <span
                                     className={cn(
                                         "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                        severityTone(task.severity)
+                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                                     )}>
                                     {severityLabel}
                                 </span>
@@ -3067,6 +3079,8 @@ export function GroupBoardScreen({
         }
 
         const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
+        const pointerHits = pointerWithin({ ...args, droppableContainers: allow });
+        if (pointerHits.length > 0) return pointerHits;
         return closestCorners({ ...args, droppableContainers: allow });
     }, []);
 
