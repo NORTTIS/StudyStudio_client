@@ -6,7 +6,7 @@ import {
     ChevronRight,
     Search,
     AlertTriangle,
-    Flame,
+    CheckCircle2,
     ListTodo,
     CalendarDays,
     UserX,
@@ -21,6 +21,7 @@ import { createPortal } from "react-dom";
 import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
+import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
@@ -60,6 +61,8 @@ type DropdownOption = {
     label: string;
     avatarUrl?: string | null;
     initials?: string;
+    unassigned?: boolean;
+    textClassName?: string;
 };
 
 function cn(...classes: Array<string | false | null | undefined>) {
@@ -128,11 +131,23 @@ function formatShortDate(input: string | null | undefined, locale: string) {
     const d = new Date(raw);
     if (Number.isNaN(d.getTime())) return "-";
     const dateLocale = locale.toLowerCase().startsWith("vi") ? "vi-VN" : "en-US";
-    return d.toLocaleDateString(dateLocale, { month: "short", day: "numeric" });
+    return d.toLocaleDateString(dateLocale, { year: "numeric", month: "short", day: "numeric" });
 }
 
 function normalizeDateInput(value: string) {
     return String(value).trim();
+}
+
+function formatDateForApi(value: string) {
+    // Return raw YYYY-MM-DD string for backend to parse
+    const date = String(value).trim();
+    if (!date) return undefined;
+    return date;
+}
+
+function formatDueDateForApi(value: string) {
+    // Due dates use same raw format (no time component)
+    return formatDateForApi(value);
 }
 
 function formatFilterDate(input: string, locale: string) {
@@ -148,10 +163,11 @@ function formatFilterDate(input: string, locale: string) {
 }
 
 function severityClassOf(v?: TaskSeverity) {
-    if (v === 3) return "text-red-600";
-    if (v === 2) return "text-orange-600";
-    if (v === 1) return "text-amber-600";
-    return "text-sky-600";
+    const severity = Number(v);
+    if (severity === 3) return "text-red-600";
+    if (severity === 2) return "text-orange-600";
+    if (severity === 1) return "text-sky-600";
+    return "text-emerald-600";
 }
 
 function priorityLabelOf(v: TaskPriority | undefined, t: (key: string) => string) {
@@ -170,6 +186,19 @@ function severityLabelOf(v: TaskSeverity | undefined, t: (key: string) => string
 function priorityClassOf(v?: TaskPriority) {
     if (v === 2) return "text-rose-600";
     if (v === 1) return "text-amber-700";
+    return "text-emerald-700";
+}
+
+function severityFilterTone(value: string) {
+    if (value === "3") return "text-red-600";
+    if (value === "2") return "text-orange-600";
+    if (value === "1") return "text-sky-600";
+    return "text-emerald-600";
+}
+
+function priorityFilterTone(value: string) {
+    if (value === "2") return "text-rose-600";
+    if (value === "1") return "text-amber-700";
     return "text-emerald-700";
 }
 
@@ -256,6 +285,7 @@ async function apiGetGroupTasks(args: {
     statusCategory?: string;
     hasNoAssignee?: boolean;
     hasNoDueDate?: boolean;
+    overdue?: boolean;
     sortBy?: string;
     sortAscending?: boolean;
     page?: number;
@@ -280,6 +310,7 @@ async function apiGetGroupTasks(args: {
     if (args.statusCategory) query.set("statusCategory", args.statusCategory);
     if (args.hasNoAssignee !== undefined) query.set("hasNoAssignee", String(args.hasNoAssignee));
     if (args.hasNoDueDate !== undefined) query.set("hasNoDueDate", String(args.hasNoDueDate));
+    if (args.overdue !== undefined) query.set("overdue", String(args.overdue));
     if (args.sortBy) query.set("sortBy", args.sortBy);
     query.set("sortAscending", String(Boolean(args.sortAscending)));
     query.set("page", String(args.page ?? 1));
@@ -312,12 +343,16 @@ function FilterChip({
     active,
     label,
     onClick,
-    icon
+    icon,
+    activeTone = "orange",
+    labelClassName
 }: {
     active?: boolean;
     label: string;
     onClick?: () => void;
     icon?: React.ReactNode;
+    activeTone?: "orange" | "red";
+    labelClassName?: string;
 }) {
     return (
         <button
@@ -326,11 +361,13 @@ function FilterChip({
             className={cn(
                 "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border px-3.5 text-sm font-semibold transition-all duration-200",
                 active
-                    ? "border-orange-200 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-100/80 text-orange-700 shadow-[0_10px_24px_rgba(251,146,60,0.14)]"
+                    ? activeTone === "red"
+                        ? "border-rose-200 bg-gradient-to-r from-rose-50 via-red-50 to-rose-100/80 text-rose-700 shadow-[0_10px_24px_rgba(244,63,94,0.14)]"
+                        : "border-orange-200 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-100/80 text-orange-700 shadow-[0_10px_24px_rgba(251,146,60,0.14)]"
                     : "border-zinc-200/80 bg-white/90 text-zinc-700 shadow-[0_2px_10px_rgba(15,23,42,0.03)] hover:-translate-y-[1px] hover:border-orange-200 hover:bg-white hover:shadow-[0_10px_24px_rgba(251,146,60,0.10)]"
             )}>
             {icon ? <span className="flex shrink-0 items-center justify-center">{icon}</span> : null}
-            <span className="truncate text-center">{label}</span>
+            <span className={cn("truncate text-center", labelClassName)}>{label}</span>
         </button>
     );
 }
@@ -398,7 +435,7 @@ function DateFilterModal(props: {
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <label className="group flex flex-col gap-2">
-                                <span className="font-semibold text-sm text-zinc-700">{t("startDate")}</span>
+                                <span className="font-semibold text-sm text-zinc-700">{t("filterFrom")}</span>
                                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-1 transition group-focus-within:border-orange-300 group-focus-within:bg-white group-focus-within:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]">
                                     <input
                                         type="date"
@@ -410,7 +447,7 @@ function DateFilterModal(props: {
                             </label>
 
                             <label className="group flex flex-col gap-2">
-                                <span className="font-semibold text-sm text-zinc-700">{t("dueDate")}</span>
+                                <span className="font-semibold text-sm text-zinc-700">{t("filterTo")}</span>
                                 <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-1 transition group-focus-within:border-orange-300 group-focus-within:bg-white group-focus-within:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]">
                                     <input
                                         type="date"
@@ -469,6 +506,9 @@ function FancyDropdown({
     const activeOption = options.find((option) => option.value === value);
     const activeLabel = activeOption?.label ?? options[0]?.label ?? "";
     const triggerText = isEmptyState ? emptyLabel : activeLabel;
+    const triggerTextClassName = isEmptyState
+        ? "font-normal text-zinc-500"
+        : activeOption?.textClassName ?? "font-semibold text-zinc-800";
 
     React.useEffect(() => {
         setPortalReady(typeof document !== "undefined");
@@ -531,16 +571,20 @@ function FancyDropdown({
                     ) : null}
 
                     {!isEmptyState && !activeOption?.avatarUrl && activeOption?.initials ? (
-                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-orange-100 to-amber-100 text-[10px] font-bold text-orange-700">
-                            {activeOption.initials}
-                        </span>
+                        <AssigneeAvatar
+                            name={activeOption.label}
+                            initials={activeOption.initials}
+                            size={28}
+                            unassigned={activeOption.unassigned}
+                            className={cn(
+                                "text-[10px]",
+                                !activeOption.unassigned && "ring-2 ring-white"
+                            )}
+                        />
                     ) : null}
 
                     <span
-                        className={cn(
-                            "min-w-0 truncate text-sm leading-normal",
-                            isEmptyState ? "font-normal text-zinc-500" : "font-semibold text-zinc-800"
-                        )}>
+                        className={cn("min-w-0 truncate text-sm leading-normal", triggerTextClassName)}>
                         {triggerText}
                     </span>
                 </span>
@@ -581,7 +625,7 @@ function FancyDropdown({
                                             className={cn(
                                                 "flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left text-sm transition-all duration-150",
                                                 isActive
-                                                    ? "bg-gradient-to-r from-orange-50 via-amber-50 to-orange-100/70 font-semibold text-orange-700 shadow-sm"
+                                                    ? "bg-gradient-to-r from-orange-50 via-amber-50 to-orange-100/70 font-semibold shadow-sm"
                                                     : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950"
                                             )}>
                                             {option.avatarUrl ? (
@@ -595,12 +639,22 @@ function FancyDropdown({
                                             ) : null}
 
                                             {!option.avatarUrl && option.initials ? (
-                                                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-700">
-                                                    {option.initials}
-                                                </span>
+                                                <AssigneeAvatar
+                                                    name={option.label}
+                                                    initials={option.initials}
+                                                    size={28}
+                                                    unassigned={option.unassigned}
+                                                    className="text-[10px]"
+                                                />
                                             ) : null}
 
-                                            <span className="truncate">{option.label}</span>
+                                            <span
+                                                className={cn(
+                                                    "truncate",
+                                                    isActive ? option.textClassName ?? "text-orange-700" : option.textClassName
+                                                )}>
+                                                {option.label}
+                                            </span>
                                         </button>
                                     );
                                 })}
@@ -643,6 +697,7 @@ export function GroupListScreen() {
     const [severityFilter, setSeverityFilter] = React.useState("all");
     const [priorityFilter, setPriorityFilter] = React.useState("all");
     const [overdueOnly, setOverdueOnly] = React.useState(false);
+    const [completedOnly, setCompletedOnly] = React.useState(false);
     const [cardStatusFilter, setCardStatusFilter] = React.useState("all");
     const [hasNoAssignee, setHasNoAssignee] = React.useState(false);
     const [hasNoDueDate, setHasNoDueDate] = React.useState(false);
@@ -673,7 +728,8 @@ export function GroupListScreen() {
         setAppliedSeverityFilter(severityFilter);
         setAppliedPriorityFilter(priorityFilter);
         setAppliedOverdueOnly(overdueOnly);
-        setAppliedCardStatusFilter(cardStatusFilter);
+        // When "Progress Done" is active, set cardStatusFilter to "completed" via the same API param
+        setAppliedCardStatusFilter(completedOnly ? "completed" : cardStatusFilter);
         setAppliedHasNoAssignee(hasNoAssignee);
         setAppliedHasNoDueDate(hasNoDueDate);
         setAppliedDateFilter(draftDateFilter);
@@ -681,7 +737,7 @@ export function GroupListScreen() {
         setSearchKeyword(normalizedSearch);
         setAppliedSearchKeyword(normalizedSearch);
         setPage(1);
-    }, [assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly, cardStatusFilter, hasNoAssignee, hasNoDueDate, draftDateFilter, searchInput]);
+    }, [assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly, completedOnly, cardStatusFilter, hasNoAssignee, hasNoDueDate, draftDateFilter, searchInput]);
 
     const refresh = React.useCallback(async () => {
         if (!groupId) {
@@ -708,17 +764,18 @@ export function GroupListScreen() {
                 groupId,
                 search: searchKeyword || undefined,
                 statusId: appliedStatusFilter !== "all" ? appliedStatusFilter : undefined,
-                assigneeId: appliedAssigneeFilter !== "all" ? appliedAssigneeFilter : undefined,
+                assigneeId: appliedAssigneeFilter !== "all" && appliedAssigneeFilter !== "__unassigned__" ? appliedAssigneeFilter : undefined,
                 priority: appliedPriorityFilter !== "all" ? Number(appliedPriorityFilter) : undefined,
                 severity: appliedSeverityFilter !== "all" ? Number(appliedSeverityFilter) : undefined,
-                startDateFrom: appliedDateFilter.startDate || undefined,
-                startDateTo: appliedDateFilter.startDate || undefined,
-                dueDateFrom: appliedDateFilter.dueDate || undefined,
-                dueDateTo: appliedDateFilter.dueDate || undefined,
+                startDateFrom: appliedDateFilter.startDate ? formatDateForApi(appliedDateFilter.startDate) : undefined,
+                startDateTo: appliedDateFilter.dueDate ? formatDueDateForApi(appliedDateFilter.dueDate) : undefined,
+                dueDateFrom: appliedDateFilter.startDate ? formatDateForApi(appliedDateFilter.startDate) : undefined,
+                dueDateTo: appliedDateFilter.dueDate ? formatDueDateForApi(appliedDateFilter.dueDate) : undefined,
                 statusCategory: appliedCardStatusFilter !== "all" ? appliedCardStatusFilter : undefined,
-                hasNoAssignee: appliedHasNoAssignee || undefined,
+                hasNoAssignee: appliedAssigneeFilter === "__unassigned__" || appliedHasNoAssignee ? true : undefined,
                 hasNoDueDate: appliedHasNoDueDate || undefined,
-                sortBy: "dueDate",
+                overdue: appliedOverdueOnly || undefined,
+                sortBy: "createdAt",
                 sortAscending: false,
                 page,
                 pageSize,
@@ -769,7 +826,8 @@ export function GroupListScreen() {
                 value: row.assigneeId,
                 label: row.assigneeName,
                 avatarUrl: row.assigneeAvatarUrl,
-                initials: row.assigneeInitials
+                initials: row.assigneeInitials,
+                unassigned: row.assigneeId === "__unassigned__"
             }));
 
             setStatusOptions(mergeStatusOptions([], nextStatuses));
@@ -794,6 +852,7 @@ export function GroupListScreen() {
         appliedCardStatusFilter,
         appliedHasNoAssignee,
         appliedHasNoDueDate,
+        appliedOverdueOnly,
         page,
         pageSize,
         t
@@ -802,19 +861,6 @@ export function GroupListScreen() {
     React.useEffect(() => {
         void refresh();
     }, [refresh]);
-
-    const filteredRows = React.useMemo(() => {
-        const keyword = appliedSearchKeyword.trim().toLocaleLowerCase();
-        const keywordFilteredRows = keyword
-            ? rows.filter((row) => row.title.toLocaleLowerCase().includes(keyword))
-            : rows;
-
-        if (!appliedOverdueOnly) {
-            return keywordFilteredRows;
-        }
-
-        return keywordFilteredRows.filter((row) => isOverdueTask(row.dueDate, row.progress));
-    }, [rows, appliedSearchKeyword, appliedOverdueOnly]);
 
     React.useEffect(() => {
         if (page > totalPages) {
@@ -834,14 +880,15 @@ export function GroupListScreen() {
         .join(" • ");
 
     const activeFilterCount =
-        Number(assigneeFilter !== "all") +
-        Number(statusFilter !== "all") +
-        Number(severityFilter !== "all") +
-        Number(priorityFilter !== "all") +
-        Number(overdueOnly) +
-        Number(cardStatusFilter !== "all") +
-        Number(hasNoAssignee) +
-        Number(hasNoDueDate) +
+        Number(appliedAssigneeFilter !== "all") +
+        Number(appliedStatusFilter !== "all") +
+        Number(appliedSeverityFilter !== "all") +
+        Number(appliedPriorityFilter !== "all") +
+        Number(appliedOverdueOnly) +
+        Number(completedOnly) +
+        Number(appliedCardStatusFilter !== "all") +
+        Number(appliedHasNoAssignee) +
+        Number(appliedHasNoDueDate) +
         Number(Boolean(appliedDateFilter.startDate || appliedDateFilter.dueDate)) +
         Number(Boolean(appliedSearchKeyword));
 
@@ -864,6 +911,7 @@ export function GroupListScreen() {
         setSeverityFilter("all");
         setPriorityFilter("all");
         setOverdueOnly(false);
+        setCompletedOnly(false);
         setCardStatusFilter("all");
         setHasNoAssignee(false);
         setHasNoDueDate(false);
@@ -963,10 +1011,10 @@ export function GroupListScreen() {
                                     value={severityFilter}
                                     options={[
                                         { value: "all", label: t("allSeverities") },
-                                        { value: "0", label: t("minor") },
-                                        { value: "1", label: t("moderate") },
-                                        { value: "2", label: t("major") },
-                                        { value: "3", label: t("critical") }
+                                        { value: "0", label: t("minor"), textClassName: severityFilterTone("0") },
+                                        { value: "1", label: t("moderate"), textClassName: severityFilterTone("1") },
+                                        { value: "2", label: t("major"), textClassName: severityFilterTone("2") },
+                                        { value: "3", label: t("critical"), textClassName: severityFilterTone("3") }
                                     ]}
                                     onChange={(nextValue) => {
                                         setSeverityFilter(nextValue);
@@ -977,14 +1025,14 @@ export function GroupListScreen() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                                 <FancyDropdown
                                     value={priorityFilter}
                                     options={[
                                         { value: "all", label: t("allPriorities") },
-                                        { value: "0", label: t("low") },
-                                        { value: "1", label: t("medium") },
-                                        { value: "2", label: t("high") }
+                                        { value: "0", label: t("low"), textClassName: priorityFilterTone("0") },
+                                        { value: "1", label: t("medium"), textClassName: priorityFilterTone("1") },
+                                        { value: "2", label: t("high"), textClassName: priorityFilterTone("2") }
                                     ]}
                                     onChange={(nextValue) => {
                                         setPriorityFilter(nextValue);
@@ -997,10 +1045,40 @@ export function GroupListScreen() {
                                 <FilterChip
                                     active={overdueOnly}
                                     onClick={() => {
-                                        setOverdueOnly((v) => !v);
+                                        setOverdueOnly((v) => {
+                                            const nextValue = !v;
+                                            if (nextValue) setCompletedOnly(false);
+                                            return nextValue;
+                                        });
+                                        setPage(1);
                                     }}
                                     label={t("overdueTasks")}
-                                    icon={<AlertTriangle className="h-4 w-4" />}
+                                    icon={
+                                        <AlertTriangle
+                                            className={cn("h-4 w-4", overdueOnly ? "text-rose-600" : "text-zinc-500")}
+                                        />
+                                    }
+                                    labelClassName={overdueOnly ? "text-rose-700" : "text-zinc-700"}
+                                    activeTone="red"
+                                />
+
+                                <FilterChip
+                                    active={completedOnly}
+                                    onClick={() => {
+                                        setCompletedOnly((v) => {
+                                            const nextValue = !v;
+                                            if (nextValue) setOverdueOnly(false);
+                                            return nextValue;
+                                        });
+                                        setPage(1);
+                                    }}
+                                    label={t("progressDone")}
+                                    icon={
+                                        <CheckCircle2
+                                            className={cn("h-4 w-4", completedOnly ? "text-emerald-600" : "text-zinc-500")}
+                                        />
+                                    }
+                                    labelClassName={completedOnly ? "text-emerald-700" : "text-zinc-700"}
                                 />
 
                                 <FilterChip
@@ -1076,15 +1154,19 @@ export function GroupListScreen() {
                                         {t("reload")}
                                     </button>
                                 </div>
-                            ) : filteredRows.length === 0 ? (
+                            ) : rows.length === 0 ? (
                                 <div className="rounded-[24px] border border-dashed border-zinc-200 bg-zinc-50/60 px-6 py-14 text-center">
                                     <ListTodo className="mx-auto h-9 w-9 text-zinc-400" />
                                     <p className="mt-4 font-medium text-zinc-600">{t("noData")}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {filteredRows.map((row, index) => {
+                                    {rows.map((row, index) => {
                                         const overdue = isOverdueTask(row.dueDate, row.progress);
+                                        const completed = row.progress >= 100;
+                                        const dueDisplayLabel = completed
+                                            ? (row.dueLabel !== "-" ? row.dueLabel : t("progressDone"))
+                                            : row.dueLabel;
 
                                         return (
                                             <motion.button
@@ -1103,22 +1185,19 @@ export function GroupListScreen() {
 
                                             <div className="flex items-center justify-center">
                                                 <div className="flex items-center gap-2">
-                                                    {row.assigneeAvatarUrl ? (
-                                                        <Image
-                                                            src={row.assigneeAvatarUrl}
-                                                            alt={row.assigneeName}
-                                                            width={32}
-                                                            height={32}
-                                                            className="h-8 w-8 rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <span className="grid h-8 w-8 place-items-center rounded-full bg-zinc-200 font-bold text-[11px] text-zinc-700">
-                                                            {row.assigneeInitials}
+                                                    {row.assigneeId === "__unassigned__" ? (
+                                                        <span className="font-medium text-sm text-zinc-500">
+                                                            {row.assigneeName}
                                                         </span>
+                                                    ) : (
+                                                        <AssigneeAvatar
+                                                            avatarUrl={row.assigneeAvatarUrl}
+                                                            name={row.assigneeName}
+                                                            initials={row.assigneeInitials}
+                                                            size={32}
+                                                            className="text-[11px]"
+                                                        />
                                                     )}
-                                                    <span className="font-medium text-sm text-zinc-800">
-                                                        {row.assigneeName}
-                                                    </span>
                                                 </div>
                                             </div>
 
@@ -1130,10 +1209,10 @@ export function GroupListScreen() {
                                                         "border-red-200 bg-red-50 text-red-600",
                                                         row.severityClass === "text-orange-600" &&
                                                         "border-orange-200 bg-orange-50 text-orange-600",
-                                                        row.severityClass === "text-amber-600" &&
-                                                        "border-amber-200 bg-amber-50 text-amber-600",
                                                         row.severityClass === "text-sky-600" &&
-                                                        "border-sky-200 bg-sky-50 text-sky-600"
+                                                        "border-sky-200 bg-sky-50 text-sky-600",
+                                                        row.severityClass === "text-emerald-600" &&
+                                                        "border-emerald-200 bg-emerald-50 text-emerald-600"
                                                     )}>
                                                     {row.severityLabel}
                                                 </span>
@@ -1167,18 +1246,9 @@ export function GroupListScreen() {
                                             <div
                                                 className={cn(
                                                     "flex items-center justify-center font-medium text-sm",
-                                                    overdue ? "text-rose-700" : "text-slate-600"
+                                                    completed ? "text-emerald-700" : overdue ? "text-rose-700" : "text-slate-600"
                                                 )}>
-                                                {overdue ? (
-                                                    <span className="inline-flex items-center gap-1.5 leading-none">
-                                                        {row.dueLabel}
-                                                        <span className="overdue-flame-badge mt-[1px] h-[24px] w-[24px] shrink-0 self-center">
-                                                            <Flame className="overdue-flame-icon h-[14px] w-[14px]" />
-                                                        </span>
-                                                    </span>
-                                                ) : (
-                                                    row.dueLabel
-                                                )}
+                                                {dueDisplayLabel}
                                             </div>
                                         </motion.button>
                                         );

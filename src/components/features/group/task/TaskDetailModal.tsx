@@ -37,6 +37,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AssigneeAvatar from "./AssigneeAvatar";
 import { useToast } from "@/hooks/use-toast";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
@@ -300,6 +301,8 @@ type TrelloDatePickerProps = {
     disabled?: boolean;
     locale: string;
     i18n: DatePickerTranslations;
+    displayText?: string;
+    displayClassName?: string;
 };
 
 type DatePickerTranslations = {
@@ -1092,8 +1095,8 @@ function priorityTone(value?: number | null) {
 function severityTone(value?: number | null) {
     if (value === 3) return "text-red-600";
     if (value === 2) return "text-orange-600";
-    if (value === 1) return "text-yellow-500";
-    if (value === 0) return "text-sky-600";
+    if (value === 1) return "text-sky-600";
+    if (value === 0) return "text-emerald-600";
     return "text-zinc-700";
 }
 
@@ -1200,7 +1203,17 @@ function getGroupIdFromParams(params: Record<string, string | string[] | undefin
     return firstKey ? readParam(params, firstKey) : null;
 }
 
-function TrelloDatePicker({ label, value, onChange, min, disabled = false, locale, i18n }: TrelloDatePickerProps) {
+function TrelloDatePicker({
+    label,
+    value,
+    onChange,
+    min,
+    disabled = false,
+    locale,
+    i18n,
+    displayText,
+    displayClassName
+}: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
@@ -1506,9 +1519,10 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false, local
                             className={cn(
                                 "truncate text-left text-sm",
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
-                                disabled && "text-zinc-500"
+                                disabled && "text-zinc-500",
+                                disabled && displayClassName
                             )}>
-                            {formatDateDisplay(value, locale, i18n)}
+                            {disabled && displayText ? displayText : formatDateDisplay(value, locale, i18n)}
                         </span>
                     </div>
                 </button>
@@ -2655,6 +2669,12 @@ export default function TaskDetailModal(props: {
         () => progressLabelByValue(selectedProgressValue),
         [selectedProgressValue, progressLabelByValue]
     );
+    const dueDateDisplayText = !isEditing && selectedProgressValue >= 100
+        ? dueDate
+            ? formatDateDisplay(dueDate, locale, datePickerI18n)
+            : t("progressDone")
+        : undefined;
+    const dueDateDisplayClassName = !isEditing && selectedProgressValue >= 100 ? "text-emerald-700" : undefined;
     const descriptionLength = description.length;
     const commentLength = commentDraft.length;
 
@@ -2903,20 +2923,13 @@ export default function TaskDetailModal(props: {
                                         disabled={!isEditing}>
                                         <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                             <div className="flex min-w-0 items-center gap-2">
-                                                {selectedAssigneeDisplay.avatarUrl ? (
-                                                    <Image
-                                                        src={selectedAssigneeDisplay.avatarUrl}
-                                                        alt={selectedAssigneeDisplay.label}
-                                                        width={24}
-                                                        height={24}
-                                                        unoptimized
-                                                        className="h-6 w-6 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
-                                                        {buildInitials(selectedAssigneeDisplay.label)}
-                                                    </div>
-                                                )}
+                                                <AssigneeAvatar
+                                                    avatarUrl={selectedAssigneeDisplay.avatarUrl}
+                                                    name={selectedAssigneeDisplay.label}
+                                                    size={24}
+                                                    unassigned={!assigneeId}
+                                                    className="text-[11px]"
+                                                />
                                                 <span className="truncate">{selectedAssigneeDisplay.label}</span>
                                             </div>
                                         </SelectTrigger>
@@ -2930,9 +2943,7 @@ export default function TaskDetailModal(props: {
                                             className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                             <SelectItem value="unassigned" className={selectItemClassName}>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
-                                                        U
-                                                    </div>
+                                                    <AssigneeAvatar size={24} unassigned className="text-[11px]" />
                                                     <span>{t("unassigned")}</span>
                                                 </div>
                                             </SelectItem>
@@ -2943,20 +2954,12 @@ export default function TaskDetailModal(props: {
                                                     value={m.userId}
                                                     className={selectItemClassName}>
                                                     <div className="flex items-center gap-2">
-                                                        {m.avatarUrl ? (
-                                                            <Image
-                                                                src={m.avatarUrl}
-                                                                alt={m.label}
-                                                                width={24}
-                                                                height={24}
-                                                                unoptimized
-                                                                className="h-6 w-6 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
-                                                                {buildInitials(m.label)}
-                                                            </div>
-                                                        )}
+                                                        <AssigneeAvatar
+                                                            avatarUrl={m.avatarUrl}
+                                                            name={m.label}
+                                                            size={24}
+                                                            className="text-[11px]"
+                                                        />
                                                         <span className="truncate">{m.label}</span>
                                                     </div>
                                                 </SelectItem>
@@ -3085,6 +3088,8 @@ export default function TaskDetailModal(props: {
                                     disabled={!isEditing}
                                     locale={locale}
                                     i18n={datePickerI18n}
+                                    displayText={dueDateDisplayText}
+                                    displayClassName={dueDateDisplayClassName}
                                 />
 
                                 <div>

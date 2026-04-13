@@ -2013,6 +2013,8 @@
     "completed": "Completed",
     "dateFilterButton": "Filter by date",
     "dateFilterTitle": "Date filters",
+    "filterFrom": "From",
+    "filterTo": "To",
     "startFrom": "Start date from",
     "startTo": "Start date to",
     "dueFrom": "Due date from",
@@ -2045,7 +2047,8 @@
     "minor": "Minor",
     "moderate": "Moderate",
     "major": "Major",
-    "critical": "Critical"
+    "critical": "Critical",
+    "progressDone": "Done"
   },
   "GroupTaskDeepLinkPage": {
     "loadingTitle": "Loading task",
@@ -3188,5 +3191,7 @@
       "uploadFailed": "Upload failed",
       "deleteFailed": "Delete failed"
     }
-  }
+  },
+  "startDate": "Date from",
+  "dueDate": "To date"
 }

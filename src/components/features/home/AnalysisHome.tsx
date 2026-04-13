@@ -908,18 +908,7 @@ export default function AnalysisHome() {
                             <KpiCard
                                 title={t("cards.totalTasks.title")}
                                 value={kpiData.totalTasks ?? 0}
-                                badge={
-                                    kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
-                                        ? t("cards.totalTasks.badge", { percent: kpiData.totalChangePercent > 0 ? `+${kpiData.totalChangePercent}` : kpiData.totalChangePercent })
-                                        : undefined
-                                }
-                                badgeType={
-                                    kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
-                                        ? kpiData.totalChangePercent >= 0
-                                            ? "up"
-                                            : "down"
-                                        : "neutral"
-                                }
+                                sub={t("common.tasks")}
                                 accentColor={C.blue}
                             />
                             <KpiCard

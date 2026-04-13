@@ -2092,6 +2092,8 @@
     "completed": "Hoàn thành",
     "dateFilterButton": "Lọc theo ngày",
     "dateFilterTitle": "Lọc theo ngày",
+    "filterFrom": "Từ",
+    "filterTo": "Đến",
     "startFrom": "Ngày bắt đầu từ",
     "startTo": "Ngày bắt đầu đến",
     "dueFrom": "Ngày hết hạn từ",
@@ -2124,7 +2126,8 @@
     "minor": "Nhẹ",
     "moderate": "Vừa",
     "major": "Lớn",
-    "critical": "Khẩn cấp"
+    "critical": "Khẩn cấp",
+    "progressDone": "Hoàn thành"
   },
   "GroupTaskDeepLinkPage": {
     "loadingTitle": "Đang tải công việc",
@@ -3188,5 +3191,7 @@
       "uploadFailed": "Tải lên thất bại",
       "deleteFailed": "Xóa thất bại"
     }
-  }
+  },
+  "startDate": "Từ ngày",
+  "dueDate": "Đến ngày"
 }

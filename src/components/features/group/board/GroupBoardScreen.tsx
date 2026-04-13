@@ -14,6 +14,7 @@ import {
     type DroppableContainer,
     KeyboardSensor,
     PointerSensor,
+    pointerWithin,
     useDroppable,
     useSensor,
     useSensors
@@ -34,6 +35,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { getUserData } from "@/api/auth";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
+import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
 import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
 import { useGroupHeaderActionSlot } from "@/components/features/group/GroupShell";
 import { getCurrentUserId, mapRole } from "@/components/features/group/group.api";
@@ -357,10 +359,11 @@ function severityLabelOf(severity: number | null | undefined, t: (key: string) =
 }
 
 function severityTone(severity: number | null | undefined) {
-    if (severity === 3) return "border-rose-200 bg-rose-50 text-rose-700";
-    if (severity === 2) return "border-orange-200 bg-orange-50 text-orange-700";
-    if (severity === 1) return "border-amber-200 bg-amber-50 text-amber-700";
-    return "border-sky-200 bg-sky-50 text-sky-700";
+    const value = Number(severity);
+    if (value === 3) return "border-rose-200 bg-rose-50 text-rose-700";
+    if (value === 2) return "border-orange-200 bg-orange-50 text-orange-700";
+    if (value === 1) return "border-sky-200 bg-sky-50 text-sky-700";
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
 function isUuidLike(v: string) {
@@ -1296,6 +1299,9 @@ function DuePill({
     assigneeInitials?: string | null;
     showAssigneeAvatar?: boolean;
 }) {
+    const t = useTranslations("GroupBoardScreen");
+    const shouldShowDueText = Boolean(due) && !done;
+
     return (
         <div
             className={cn(
@@ -1304,23 +1310,37 @@ function DuePill({
             )}>
             <div className="flex min-w-0 items-center gap-2 leading-none">
                 {showAssigneeAvatar ? (
-                    assigneeAvatarUrl ? (
-                        <Image
-                            src={assigneeAvatarUrl}
-                            alt={String(assigneeInitials ?? "Assignee")}
-                            width={24}
-                            height={24}
-                            className="h-6 w-6 shrink-0 rounded-full object-cover"
-                        />
-                    ) : (
-                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-200 font-bold text-[10px] text-zinc-700">
-                            {String(assigneeInitials ?? "U").slice(0, 2).toUpperCase()}
-                        </span>
-                    )
+                    <AssigneeAvatar
+                        avatarUrl={assigneeAvatarUrl}
+                        initials={assigneeInitials}
+                        size={24}
+                        className="text-[10px]"
+                    />
+                ) : null}
+                {shouldShowDueText ? <div className="whitespace-nowrap font-semibold text-xs">{due}</div> : null}
+                {overdue && !done ? (
+                    <span title={t("overdue")} className="shrink-0">
+                        <span className="sr-only">{t("overdue")}</span>
+                        <svg
+                            viewBox="0 0 48 48"
+                            className="h-4 w-4"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true">
+                            <path
+                                d="M25.9 3.4c.4 5.4-2.2 9.6-6.2 13.6-3.5 3.5-7.2 7.4-7.2 13.4 0 8.3 6.3 14.2 14.7 14.2 8.7 0 14.8-6.1 14.8-14.3 0-7.1-4.9-11.7-8.6-15.7-2.9-3.1-5.4-6-5.9-10.7-.1-.8-.7-1.4-1.5-1.4-.7 0-1.4.4-1.4.9Z"
+                                fill="#FF5A7A"
+                            />
+                            <path
+                                d="M26.9 18.1c.2 3.1-1.2 5.5-3.4 7.8-1.9 2-4 4.3-4 7.8 0 5 3.7 8.4 8.7 8.4 5.2 0 8.8-3.7 8.8-8.5 0-4.1-2.8-6.9-5.1-9.3-1.8-1.9-3.4-3.7-3.6-6.5 0-.6-.5-1-1.1-1-.6 0-1.1.5-1.1 1.3Z"
+                                fill="#F21155"
+                            />
+                        </svg>
+                    </span>
                 ) : null}
                 {due ? <div className="flex h-7 items-center whitespace-nowrap font-semibold text-xs gap-1.5 border border- bg-blue-50 px-1.5 py-0.5 rounded-full">
                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width={16} height={16} fill="currentColor" className="inline-block">
-                   <path d="M466.6 114.2C461.2 115.9 455.3 116 450.4 113.3C444.6 110.1 438.6 107.1 432.6 104.4C422.2 99.7 418.9 86.1 428.5 79.8C443.5 69.9 461.5 64.1 480.8 64.1C533.4 64.1 576 106.7 576 159.3C576 172.5 573.3 185.1 568.4 196.6C563.9 207.1 550 206.4 543.5 197C539.7 191.5 535.7 186.2 531.5 181C528 176.6 527 170.8 527.7 165.2C527.9 163.3 528.1 161.3 528.1 159.3C528.1 133.2 506.9 112.1 480.9 112.1C476 112.1 471.2 112.9 466.7 114.3zM96.5 196.9C90 206.3 76 207 71.6 196.5C66.7 185 64 172.4 64 159.2C64 106.6 106.6 64 159.2 64C178.5 64 196.5 69.8 211.5 79.7C221.1 86 217.8 99.6 207.4 104.3C201.3 107.1 195.4 110 189.6 113.2C184.7 115.9 178.7 115.8 173.4 114.1C168.9 112.7 164.2 111.9 159.2 111.9C133.1 111.9 112 133.1 112 159.1C112 161.1 112.1 163.1 112.4 165C113.1 170.6 112.1 176.4 108.6 180.8C104.4 186 100.4 191.3 96.6 196.8zM496 352C496 254.8 417.2 176 320 176C222.8 176 144 254.8 144 352C144 449.2 222.8 528 320 528C417.2 528 496 449.2 496 352zM460.5 526.5C422.1 557.4 373.2 576 320 576C266.8 576 217.9 557.4 179.5 526.5L137 569C127.6 578.4 112.4 578.4 103.1 569C93.8 559.6 93.7 544.4 103.1 535.1L145.6 492.6C114.6 454.1 96 405.2 96 352C96 228.3 196.3 128 320 128C443.7 128 544 228.3 544 352C544 405.2 525.4 454.1 494.5 492.5L537 535C546.4 544.4 546.4 559.6 537 568.9C527.6 578.2 512.4 578.3 503.1 568.9L460.6 526.4zM344 248L344 342.1L385 383.1C394.4 392.5 394.4 407.7 385 417C375.6 426.3 360.4 426.4 351.1 417L303.1 369C298.6 364.5 296.1 358.4 296.1 352L296.1 248C296.1 234.7 306.8 224 320.1 224C333.4 224 344.1 234.7 344.1 248z"/></svg> 
+                   <path d="M466.6 114.2C461.2 115.9 455.3 116 450.4 113.3C444.6 110.1 438.6 107.1 432.6 104.4C422.2 99.7 418.9 86.1 428.5 79.8C443.5 69.9 461.5 64.1 480.8 64.1C533.4 64.1 576 106.7 576 159.3C576 172.5 573.3 185.1 568.4 196.6C563.9 207.1 550 206.4 543.5 197C539.7 191.5 535.7 186.2 531.5 181C528 176.6 527 170.8 527.7 165.2C527.9 163.3 528.1 161.3 528.1 159.3C528.1 133.2 506.9 112.1 480.9 112.1C476 112.1 471.2 112.9 466.7 114.3zM96.5 196.9C90 206.3 76 207 71.6 196.5C66.7 185 64 172.4 64 159.2C64 106.6 106.6 64 159.2 64C178.5 64 196.5 69.8 211.5 79.7C221.1 86 217.8 99.6 207.4 104.3C201.3 107.1 195.4 110 189.6 113.2C184.7 115.9 178.7 115.8 173.4 114.1C168.9 112.7 164.2 111.9 159.2 111.9C133.1 111.9 112 133.1 112 159.1C112 161.1 112.1 163.1 112.4 165C113.1 170.6 112.1 176.4 108.6 180.8C104.4 186 100.4 191.3 96.6 196.8zM496 352C496 254.8 417.2 176 320 176C222.8 176 144 254.8 144 352C144 449.2 222.8 528 320 528C417.2 528 496 449.2 496 352zM460.5 526.5C422.1 557.4 373.2 576 320 576C266.8 576 217.9 557.4 179.5 526.5L137 569C127.6 578.4 112.4 578.4 103.1 569C93.8 559.6 93.7 544.4 103.1 535.1L145.6 492.6C114.6 454.1 96 405.2 96 352C96 228.3 196.3 128 320 128C443.7 128 544 228.3 544 352C544 405.2 525.4 454.1 494.5 492.5L537 535C546.4 544.4 546.4 559.6 537 568.9C527.6 578.2 512.4 578.3 503.1 568.9L460.6 526.4zM344 248L344 342.1L385 383.1C394.4 392.5 394.4 407.7 385 417C375.6 426.3 360.4 426.4 351.1 417L303.1 369C298.6 364.5 296.1 358.4 296.1 352L296.1 248C296.1 234.7 306.8 224 320.1 224C333.4 224 344.1 234.7 344.1 248z"/></svg>
                     {due}</div> : null}
             </div>
         </div>
@@ -1601,8 +1621,8 @@ function LabelToneDot({
                         : tone === "severity-major"
                             ? "bg-orange-500"
                             : tone === "severity-moderate"
-                                ? "bg-amber-400"
-                                : "bg-sky-400";
+                                ? "bg-sky-500"
+                                : "bg-emerald-500";
 
     return <span className={cn("inline-flex h-3 w-3 rounded-full", toneClass)} />;
 }
@@ -1789,7 +1809,7 @@ function TaskCard({
                                 <span
                                     className={cn(
                                         "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
-                                        severityTone(task.severity)
+                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                                     )}>
                                     {severityLabel}
                                 </span>
@@ -1918,7 +1938,7 @@ function GhostTaskCard({ task }: { task: Task }) {
                         <span
                             className={cn(
                                 "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
-                                severityTone(task.severity)
+                                done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                             )}>
                             {severityLabel}
                         </span>
@@ -2362,7 +2382,7 @@ function ColumnView({
                                 <div
                                     ref={setEndRef}
                                     className={cn(
-                                        "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
+                                        "h-3 rounded-xl border border-dashed transition",
                                         isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
                                     )}
                                 />
@@ -2576,7 +2596,7 @@ function TaskOverlay({ task }: { task: Task }) {
                                 <span
                                     className={cn(
                                         "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                        severityTone(task.severity)
+                                        done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                                     )}>
                                     {severityLabel}
                                 </span>
@@ -3593,6 +3613,8 @@ export function GroupBoardScreen({
         }
 
         const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
+        const pointerHits = pointerWithin({ ...args, droppableContainers: allow });
+        if (pointerHits.length > 0) return pointerHits;
         return closestCorners({ ...args, droppableContainers: allow });
     }, []);
 

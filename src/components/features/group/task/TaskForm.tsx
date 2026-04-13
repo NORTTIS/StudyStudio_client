@@ -8,18 +8,10 @@ import { useLocale, useTranslations } from "next-intl";
 import "react-day-picker/dist/style.css";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { components } from "@/api/types";
+import AssigneeAvatar from "./AssigneeAvatar";
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
-}
-
-function buildInitials(name?: string | null) {
-    const s = String(name ?? "").trim();
-    if (!s) return "U";
-    const parts = s.split(/\s+/).filter(Boolean);
-    const a = parts[0]?.[0] ?? "";
-    const b = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
-    return `${a}${b}`.toUpperCase() || "U";
 }
 
 function parseDateString(value?: string) {
@@ -106,8 +98,8 @@ function priorityTone(value: TaskPriority) {
 function severityTone(value: TaskSeverity) {
     if (value === 3) return "text-red-600";
     if (value === 2) return "text-orange-600";
-    if (value === 1) return "text-yellow-500";
-    return "text-sky-600";
+    if (value === 1) return "text-sky-600";
+    return "text-emerald-600";
 }
 
 function priorityLabel(value: TaskPriority, t: (key: string) => string) {
@@ -815,19 +807,15 @@ export default function TaskFormModal({
                             <Select
                                 value={assignees ?? "unassigned"}
                                 onValueChange={(v) => setAssignees(v === "unassigned" ? null : v)}>
-                                <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
-                                    <div className="flex min-w-0 items-center gap-2">
-                                        {selectedAssigneeDisplay.avatarUrl ? (
-                                            <img
-                                                src={selectedAssigneeDisplay.avatarUrl}
-                                                alt={selectedAssigneeDisplay.label}
-                                                className="h-6 w-6 rounded-full object-cover"
+                                    <SelectTrigger className="mt-2 flex h-11 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <AssigneeAvatar
+                                                avatarUrl={selectedAssigneeDisplay.avatarUrl}
+                                                name={selectedAssigneeDisplay.label}
+                                                size={24}
+                                                unassigned={!selectedAssignee}
+                                                className="text-[11px]"
                                             />
-                                        ) : (
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
-                                                {buildInitials(selectedAssigneeDisplay.label)}
-                                            </div>
-                                        )}
                                         <span className="truncate">{selectedAssigneeDisplay.label}</span>
                                     </div>
                                 </SelectTrigger>
@@ -841,9 +829,7 @@ export default function TaskFormModal({
                                     className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
                                     <SelectItem value="unassigned" className={selectItemClassName}>
                                         <div className="flex items-center gap-2">
-                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
-                                                U
-                                            </div>
+                                            <AssigneeAvatar size={24} unassigned className="text-[11px]" />
                                             <span>{t("unassigned")}</span>
                                         </div>
                                     </SelectItem>
@@ -851,17 +837,12 @@ export default function TaskFormModal({
                                     {members.map((m) => (
                                         <SelectItem key={m.value} value={m.value} className={selectItemClassName}>
                                             <div className="flex items-center gap-2">
-                                                {m.avatarUrl ? (
-                                                    <img
-                                                        src={m.avatarUrl}
-                                                        alt={m.label}
-                                                        className="h-6 w-6 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
-                                                        {buildInitials(m.label)}
-                                                    </div>
-                                                )}
+                                                <AssigneeAvatar
+                                                    avatarUrl={m.avatarUrl}
+                                                    name={m.label}
+                                                    size={24}
+                                                    className="text-[11px]"
+                                                />
                                                 <span className="truncate">{m.label}</span>
                                             </div>
                                         </SelectItem>
