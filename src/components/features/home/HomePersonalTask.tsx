@@ -49,6 +49,7 @@ import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { TaskProgressEditor } from "@/components/features/home/Editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
 type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
@@ -2677,6 +2678,7 @@ function PersonalTaskDetailModal({
 
 export default function HomePersonalTaskScreen() {
     const t = useTranslations("HomePersonalTask");
+    const { toast } = useToast();
     const [board, setBoard] = React.useState<PersonalTaskBoardResponse | null>(null);
     const [statuses, setStatuses] = React.useState<PersonalTaskStatusDto[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
@@ -2938,7 +2940,9 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
+                void fetchBoard().catch((error) => {
+                    console.error("Failed to refresh personal task board after creating column:", error);
+                });
             } finally {
                 setIsSubmitting(false);
             }
@@ -3039,7 +3043,9 @@ export default function HomePersonalTaskScreen() {
                 }
             });
 
-            await fetchBoard();
+            void fetchBoard().catch((error) => {
+                console.error("Failed to refresh personal task board after updating column:", error);
+            });
 
             setEditingColumn({
                 id: null,
@@ -3081,7 +3087,9 @@ export default function HomePersonalTaskScreen() {
                 method: "DELETE"
             });
 
-            await fetchBoard();
+            void fetchBoard().catch((error) => {
+                console.error("Failed to refresh personal task board after deleting column:", error);
+            });
         } catch (error) {
             console.error("Failed to delete personal status:", error);
         } finally {
@@ -3134,7 +3142,9 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
+                void fetchBoard().catch((error) => {
+                    console.error("Failed to refresh personal task board after creating task:", error);
+                });
                 handleCloseCreateTask();
             } catch (error) {
                 console.error("Failed to create personal task:", error);
@@ -3173,7 +3183,9 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
+                void fetchBoard().catch((error) => {
+                    console.error("Failed to refresh personal task board after renaming task:", error);
+                });
             } catch (error) {
                 console.error("Failed to update personal task:", error);
                 throw error;
@@ -3234,8 +3246,6 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
-
                 setDetailTask((prev) => {
                     if (!prev || String(prev.taskId) !== String(task.taskId)) return prev;
 
@@ -3266,6 +3276,15 @@ export default function HomePersonalTaskScreen() {
                                         : 0
                     };
                 });
+
+                                toast({
+                                    description: t("saveSuccess"),
+                                    variant: "success"
+                                });
+
+                                void fetchBoard().catch((error) => {
+                                    console.error("Failed to refresh personal task board after update:", error);
+                                });
             } catch (error) {
                 console.error("Failed to update personal task detail:", error);
                 throw error;
@@ -3273,7 +3292,7 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(false);
             }
         },
-        [fetchBoard, statuses]
+                        [fetchBoard, statuses, t, toast]
     );
 
     const handleDeleteTask = React.useCallback(async () => {
@@ -3287,7 +3306,9 @@ export default function HomePersonalTaskScreen() {
                 method: "DELETE"
             });
 
-            await fetchBoard();
+            void fetchBoard().catch((error) => {
+                console.error("Failed to refresh personal task board after deleting task:", error);
+            });
 
             if (detailTask?.taskId && String(detailTask.taskId) === String(task.taskId)) {
                 setDetailOpen(false);
