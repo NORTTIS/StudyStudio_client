@@ -111,8 +111,10 @@ type TaskStatusDto = {
     position?: number;
     statusId?: string;
     statusName?: string | null;
-    taskList?: TaskItemResponse[] | null;
 };
+
+type GroupTaskItemResponse = components["schemas"]["GroupTaskItemResponse"];
+type GroupTaskListResponse = components["schemas"]["GroupTaskListResponse"];
 
 type GroupDetailResponse = {
     groupId?: string;
@@ -167,6 +169,16 @@ type BoardFilters = {
     severities: number[];
 };
 
+type DueDateFilterRange = {
+    from?: string;
+    to?: string;
+};
+
+type DueDateFilterResolution = {
+    ranges: DueDateFilterRange[];
+    requiresOr: boolean;
+};
+
 const EMPTY_BOARD_FILTERS: BoardFilters = {
     members: [],
     cardStatus: [],
@@ -174,6 +186,138 @@ const EMPTY_BOARD_FILTERS: BoardFilters = {
     priorities: [],
     severities: []
 };
+
+/**
+ * Converts board-level due date filters to discrete API date ranges.
+ * "noDates" -> no due date set
+ * "overdue" -> dueDate < today
+ * "nextDay" -> dueDate tomorrow
+ * "nextWeek" -> dueDate within 7 days
+ * "nextMonth" -> dueDate within 30 days
+ */
+function calculateDueDateRange(filters: DueDateFilterKey[]): DueDateFilterResolution {
+    if (filters.length === 0) {
+        return { ranges: [], requiresOr: false };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const ranges: DueDateFilterRange[] = [];
+
+    for (const filter of filters) {
+        if (filter === "overdue") {
+            // Tasks due before today
+            const overdueTo = new Date(today);
+            overdueTo.setDate(overdueTo.getDate() - 1);
+            ranges.push({ to: overdueTo.toISOString() });
+        } else if (filter === "nextDay") {
+            // Tasks due tomorrow
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            ranges.push({ from: tomorrow.toISOString(), to: tomorrow.toISOString() });
+        } else if (filter === "nextWeek") {
+            // Tasks due within 7 days (today to +7 days)
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            ranges.push({ from: today.toISOString(), to: nextWeek.toISOString() });
+        } else if (filter === "nextMonth") {
+            // Tasks due within 30 days (today to +30 days)
+            const nextMonth = new Date(today);
+            nextMonth.setDate(nextMonth.getDate() + 30);
+            ranges.push({ from: today.toISOString(), to: nextMonth.toISOString() });
+        }
+        // "noDates" is represented via hasNoDueDate and handled separately.
+    }
+
+    return {
+        ranges,
+        requiresOr: ranges.length > 1
+    };
+}
+
+/**
+ * Extracts assigneeId from member filter if "assignedToMe" is selected
+ */
+function getAssigneeIdFromFilter(filters: MemberFilterKey[], currentUserId: string | null): string | undefined {
+    if (filters.includes("assignedToMe") && currentUserId) {
+        return currentUserId;
+    }
+    return undefined;
+}
+
+/**
+ * Builds API filter parameters from board-level filter state
+ * Note: Some filters (like cardStatus) are applied client-side; dueDateFrom/To support dueDate filter
+ */
+function buildApiFiltersFromBoardFilters(
+    filters: BoardFilters,
+    currentUserId: string | null
+): {
+    assigneeId?: string;
+    priority?: number;
+    severity?: number;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    statusCategory?: string;
+    hasNoAssignee?: boolean;
+    hasNoDueDate?: boolean;
+} {
+    const result: {
+        assigneeId?: string;
+        priority?: number;
+        severity?: number;
+        dueDateFrom?: string;
+        dueDateTo?: string;
+        statusCategory?: string;
+        hasNoAssignee?: boolean;
+        hasNoDueDate?: boolean;
+    } = {};
+
+    // Only apply "assignedToMe" to API; "noMembers" is now sent as hasNoAssignee
+    const assigneeId = getAssigneeIdFromFilter(filters.members, currentUserId);
+    if (assigneeId) result.assigneeId = assigneeId;
+
+    // Backend currently accepts one `priority` and one `severity` value only.
+    // If users choose multiple values, client-side filtering still keeps full semantics.
+    if (filters.priorities.length > 0) {
+        result.priority = filters.priorities[0];
+    }
+
+    if (filters.severities.length > 0) {
+        result.severity = filters.severities[0];
+    }
+
+    // Apply due date range filter only when it can be represented as one range.
+    // Multi-select due-date uses OR semantics and is handled client-side.
+    const dueDateRange = calculateDueDateRange(filters.dueDate);
+    if (!dueDateRange.requiresOr && dueDateRange.ranges.length === 1) {
+        const singleRange = dueDateRange.ranges[0];
+        if (singleRange.from) result.dueDateFrom = singleRange.from;
+        if (singleRange.to) result.dueDateTo = singleRange.to;
+    }
+
+    // Apply cardStatus filter: "complete" → "completed", "inProgress" → "inprogress"
+    if (filters.cardStatus.length > 0) {
+        if (filters.cardStatus.includes("complete")) {
+            result.statusCategory = "completed";
+        } else if (filters.cardStatus.includes("inProgress")) {
+            result.statusCategory = "inprogress";
+        }
+    }
+
+    // Apply noMembers filter
+    if (filters.members.includes("noMembers")) {
+        result.hasNoAssignee = true;
+    }
+
+    // Apply noDates filter
+    if (filters.dueDate.includes("noDates")) {
+        result.hasNoDueDate = true;
+    }
+
+    return result;
+}
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
@@ -390,6 +534,57 @@ function formatAssigneeName(
     return email || null;
 }
 
+function mapGroupTaskToBoardTask(apiTask: GroupTaskItemResponse, locale: string): Task {
+    const primaryAssignee = (apiTask.assignees ?? []).find((assignee) => !!assignee) ?? null;
+    const assigneeName = formatAssigneeName(primaryAssignee);
+    const assigneeAvatarUrl = String(primaryAssignee?.avatarUrl ?? "").trim() || null;
+    const assigneeInitials = buildInitials(primaryAssignee?.firstName, primaryAssignee?.lastName, assigneeName);
+    const dueRaw = apiTask.dueDate ? String(apiTask.dueDate) : "";
+    const startRaw = apiTask.startDate ? String(apiTask.startDate) : "";
+    const dueFmt = dueRaw ? formatDueCompact(dueRaw, locale) : "";
+    const startFmt = startRaw ? formatDueCompact(startRaw, locale) : "";
+
+    const rawTaskId = String(apiTask.taskId ?? "").trim();
+    if (!rawTaskId) {
+        console.error("[GroupBoardScreen] Missing taskId:", { apiTask });
+    }
+
+    const stableFallbackIdSource = [
+        String(apiTask.taskTitle ?? ""),
+        String(apiTask.createdAt ?? ""),
+        String(apiTask.statusId ?? ""),
+        String(apiTask.startDate ?? ""),
+        String(apiTask.dueDate ?? "")
+    ]
+        .join("|")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+    const task: Task = {
+        id: rawTaskId || `task_fallback_${stableFallbackIdSource || "unknown"}`,
+        title: String(apiTask.taskTitle ?? ""),
+        description: apiTask.taskDescription ?? null,
+        statusDot: priorityToStatusDot(apiTask.taskPriority),
+        assigneeId: String(primaryAssignee?.id ?? "").trim() || null,
+        assigneeName,
+        assigneeAvatarUrl,
+        assigneeInitials,
+        statusName: apiTask.statusName ?? null,
+        priority: apiTask.taskPriority ?? null,
+        severity: apiTask.taskSeverity ?? null,
+        progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0
+    };
+
+    if (startFmt) task.start = startFmt;
+    if (startRaw) task.startRaw = startRaw;
+    if (dueFmt) task.due = dueFmt;
+    if (dueRaw) task.dueRaw = dueRaw;
+
+    return task;
+}
+
 function isOverdue(raw?: string) {
     if (!raw) return false;
     const d = new Date(raw);
@@ -521,6 +716,150 @@ async function apiGetGroupMembers(groupId: string, messages: ApiMessages) {
     );
 
     return response;
+}
+
+async function apiGetGroupTasks(args: {
+    groupId: string;
+    search?: string;
+    statusId?: string;
+    assigneeId?: string;
+    priority?: number;
+    severity?: number;
+    startDateFrom?: string;
+    startDateTo?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    statusCategory?: string;
+    hasNoAssignee?: boolean;
+    hasNoDueDate?: boolean;
+    sortBy?: string;
+    sortAscending?: boolean;
+    page?: number;
+    pageSize?: number;
+    fallbackMessage: string;
+    missingApiBaseMessage: string;
+}) {
+    const base = getApiBase();
+    const token = getAccessTokenOrNull();
+    if (!base) throw new Error(args.missingApiBaseMessage);
+
+    const query = new URLSearchParams();
+    if (args.search) query.set("search", args.search);
+    if (args.statusId) query.set("statusId", args.statusId);
+    if (args.assigneeId) query.set("assigneeId", args.assigneeId);
+    if (args.priority !== undefined) query.set("priority", String(args.priority));
+    if (args.severity !== undefined) query.set("severity", String(args.severity));
+    if (args.startDateFrom) query.set("startDateFrom", args.startDateFrom);
+    if (args.startDateTo) query.set("startDateTo", args.startDateTo);
+    if (args.dueDateFrom) query.set("dueDateFrom", args.dueDateFrom);
+    if (args.dueDateTo) query.set("dueDateTo", args.dueDateTo);
+    if (args.statusCategory) query.set("statusCategory", args.statusCategory);
+    if (args.hasNoAssignee !== undefined) query.set("hasNoAssignee", String(args.hasNoAssignee));
+    if (args.hasNoDueDate !== undefined) query.set("hasNoDueDate", String(args.hasNoDueDate));
+    if (args.sortBy) query.set("sortBy", args.sortBy);
+    query.set("sortAscending", String(Boolean(args.sortAscending)));
+    query.set("page", String(args.page ?? 1));
+    query.set("pageSize", String(args.pageSize ?? 20));
+
+    const suffix = query.toString();
+    const url = apiUrl(`/group/${encodeURIComponent(args.groupId)}/tasks${suffix ? `?${suffix}` : ""}`);
+
+    const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: {
+            Accept: "text/plain, application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+    if (!res.ok || (json && !okByJsonStatus(json))) {
+        throw new Error(extractApiMessage(raw, json, args.fallbackMessage));
+    }
+
+    return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
+}
+
+async function apiGetAllGroupTasks(args: {
+    groupId: string;
+    search?: string;
+    statusId?: string;
+    assigneeId?: string;
+    priority?: number;
+    severity?: number;
+    startDateFrom?: string;
+    startDateTo?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    statusCategory?: string;
+    hasNoAssignee?: boolean;
+    hasNoDueDate?: boolean;
+    sortBy?: string;
+    sortAscending?: boolean;
+    fallbackMessage: string;
+    missingApiBaseMessage: string;
+}) {
+    const requestArgs = {
+        groupId: args.groupId,
+        search: args.search,
+        statusId: args.statusId,
+        assigneeId: args.assigneeId,
+        priority: args.priority,
+        severity: args.severity,
+        startDateFrom: args.startDateFrom,
+        startDateTo: args.startDateTo,
+        dueDateFrom: args.dueDateFrom,
+        dueDateTo: args.dueDateTo,
+        statusCategory: args.statusCategory,
+        hasNoAssignee: args.hasNoAssignee,
+        hasNoDueDate: args.hasNoDueDate,
+        sortBy: args.sortBy,
+        sortAscending: args.sortAscending,
+        fallbackMessage: args.fallbackMessage,
+        missingApiBaseMessage: args.missingApiBaseMessage
+    };
+
+    const firstPage = await apiGetGroupTasks({
+        ...requestArgs,
+        page: 1,
+        pageSize: 20
+    });
+    const firstData = firstPage?.data;
+    const totalPages = Math.max(1, Number(firstData?.totalPages ?? 1));
+    const items = [...(firstData?.items ?? [])];
+
+    if (totalPages > 1) {
+        const remainingPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+                apiGetGroupTasks({
+                    ...requestArgs,
+                    page: index + 2,
+                    pageSize: 100
+                })
+            )
+        );
+
+        remainingPages.forEach((pageResult) => {
+            items.push(...(pageResult?.data?.items ?? []));
+        });
+    }
+
+    return {
+        ...(firstPage ?? {}),
+        data: firstData
+            ? {
+                  ...firstData,
+                  items,
+                  page: 1,
+                  pageSize: items.length,
+                  totalCount: items.length,
+                  totalPages: Math.max(1, Math.ceil(items.length / 100))
+              }
+            : undefined
+    } as ApiResponse<GroupTaskListResponse> | null;
 }
 
 async function apiReorderGroupTaskStatus(
@@ -1758,6 +2097,11 @@ function ColumnView({
     col,
     tasks,
     taskIds,
+    statusId,
+    isTasksLoaded,
+    isTasksLoading,
+    taskLoadError,
+    onRetryLoadTasks,
     onOpenCreateTask,
     onOpenTaskDetail,
     dndEnabled,
@@ -1782,6 +2126,11 @@ function ColumnView({
     col: Column;
     tasks: Task[];
     taskIds: string[];
+    statusId?: string;
+    isTasksLoaded?: boolean;
+    isTasksLoading?: boolean;
+    taskLoadError?: string | null;
+    onRetryLoadTasks?: (statusId: string) => void;
     onOpenCreateTask: (columnId: ColumnId) => void;
     onOpenTaskDetail: (taskId: string) => void;
     dndEnabled: boolean;
@@ -1804,6 +2153,9 @@ function ColumnView({
     onColumnCancel: () => void;
 }) {
     const t = useTranslations("GroupBoardScreen");
+    const hasLoadedTasks = Boolean(isTasksLoaded);
+    const showLoadingState = Boolean(isTasksLoading && !hasLoadedTasks);
+    const showErrorState = Boolean(taskLoadError && !hasLoadedTasks && !isTasksLoading);
     const dropId = `${DROP_PREFIX}${col.id}`;
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
         id: dropId,
@@ -1838,7 +2190,7 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div className="rounded-xl border border-zinc-200/60 bg-white">
+        <div className="rounded-xl border border-zinc-200/60 bg-white" data-status-id={dndEnabled ? undefined : statusId}>
             <div
                 ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
                 {...(headerDragProps?.attributes ?? {})}
@@ -1901,7 +2253,7 @@ function ColumnView({
 
                     <div className="flex shrink-0 items-center gap-2">
                         <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 font-semibold text-xs text-zinc-700">
-                            {tasks.length}
+                            {hasLoadedTasks ? tasks.length : "…"}
                         </span>
 
                         <div className="relative">
@@ -1956,31 +2308,51 @@ function ColumnView({
                     {dndEnabled ? (
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                             <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                {rendered.map((item) => {
-                                    if (item.kind === "ghost")
-                                        return <GhostTaskCard key={item.key} task={ghost!.task} />;
+                                {showLoadingState ? (
+                                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white/70 px-3 py-8 text-center text-sm text-zinc-500 backdrop-blur-sm">
+                                        {t("loading")}
+                                    </div>
+                                ) : null}
 
-                                    const isEditingThis =
-                                        taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+                                {showErrorState ? (
+                                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-8 text-center text-sm text-rose-700">
+                                        <div className="font-semibold">{taskLoadError}</div>
+                                        <button
+                                            type="button"
+                                            onClick={() => statusId && onRetryLoadTasks?.(statusId)}
+                                            className="mt-3 inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-semibold text-xs text-rose-700 hover:bg-rose-50">
+                                            {t("retry")}
+                                        </button>
+                                    </div>
+                                ) : null}
 
-                                    return (
-                                        <TaskCard
-                                            key={item.task.id}
-                                            task={item.task}
-                                            columnId={col.id}
-                                            isEditing={isEditingThis}
-                                            draftTitle={isEditingThis ? taskEditState.draft : item.task.title}
-                                            onDraftChange={onTaskDraftChange}
-                                            onOpenDetail={() => onOpenTaskDetail(item.task.id)}
-                                            onStartEdit={() => onTaskStartEdit(item.task.id, col.id, item.task.title)}
-                                            onCancelEdit={onTaskCancelEdit}
-                                            onCommitEdit={onTaskCommitEdit}
-                                            onDelete={() => onDeleteTask(item.task.id, col.id)}
-                                        />
-                                    );
-                                })}
+                                {!showLoadingState && !showErrorState
+                                    ? rendered.map((item) => {
+                                          if (item.kind === "ghost")
+                                              return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
-                                {tasks.length === 0 ? (
+                                          const isEditingThis =
+                                              taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+
+                                          return (
+                                              <TaskCard
+                                                  key={item.task.id}
+                                                  task={item.task}
+                                                  columnId={col.id}
+                                                  isEditing={isEditingThis}
+                                                  draftTitle={isEditingThis ? taskEditState.draft : item.task.title}
+                                                  onDraftChange={onTaskDraftChange}
+                                                  onOpenDetail={() => onOpenTaskDetail(item.task.id)}
+                                                  onStartEdit={() => onTaskStartEdit(item.task.id, col.id, item.task.title)}
+                                                  onCancelEdit={onTaskCancelEdit}
+                                                  onCommitEdit={onTaskCommitEdit}
+                                                  onDelete={() => onDeleteTask(item.task.id, col.id)}
+                                              />
+                                          );
+                                      })
+                                    : null}
+
+                                {!showLoadingState && !showErrorState && tasks.length === 0 && hasLoadedTasks ? (
                                     <div className="rounded-xl border border-zinc-300 border-dashed bg-white/70 px-3 py-8 text-center backdrop-blur-sm">
                                         <div className="font-semibold text-sm text-zinc-700">{t("noTasks")}</div>
                                         <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
@@ -1998,26 +2370,46 @@ function ColumnView({
                         </SortableContext>
                     ) : (
                         <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                            {tasks.map((t) => {
-                                const isEditingThis =
-                                    taskEditState.taskId === t.id && taskEditState.columnId === col.id;
-                                return (
-                                    <TaskCard
-                                        key={t.id}
-                                        task={t}
-                                        columnId={col.id}
-                                        isEditing={isEditingThis}
-                                        draftTitle={isEditingThis ? taskEditState.draft : t.title}
-                                        onDraftChange={onTaskDraftChange}
-                                        onOpenDetail={() => onOpenTaskDetail(t.id)}
-                                        onStartEdit={() => onTaskStartEdit(t.id, col.id, t.title)}
-                                        onCancelEdit={onTaskCancelEdit}
-                                        onCommitEdit={onTaskCommitEdit}
-                                        onDelete={() => onDeleteTask(t.id, col.id)}
-                                    />
-                                );
-                            })}
-                            {tasks.length === 0 ? (
+                            {showLoadingState ? (
+                                <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                                    {t("loading")}
+                                </div>
+                            ) : null}
+
+                            {showErrorState ? (
+                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-8 text-center text-sm text-rose-700">
+                                    <div className="font-semibold">{taskLoadError}</div>
+                                    <button
+                                        type="button"
+                                        onClick={() => statusId && onRetryLoadTasks?.(statusId)}
+                                        className="mt-3 inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-semibold text-xs text-rose-700 hover:bg-rose-50">
+                                        {t("retry")}
+                                    </button>
+                                </div>
+                            ) : null}
+
+                            {!showLoadingState && !showErrorState
+                                ? tasks.map((t) => {
+                                      const isEditingThis = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
+                                      return (
+                                          <TaskCard
+                                              key={t.id}
+                                              task={t}
+                                              columnId={col.id}
+                                              isEditing={isEditingThis}
+                                              draftTitle={isEditingThis ? taskEditState.draft : t.title}
+                                              onDraftChange={onTaskDraftChange}
+                                              onOpenDetail={() => onOpenTaskDetail(t.id)}
+                                              onStartEdit={() => onTaskStartEdit(t.id, col.id, t.title)}
+                                              onCancelEdit={onTaskCancelEdit}
+                                              onCommitEdit={onTaskCommitEdit}
+                                              onDelete={() => onDeleteTask(t.id, col.id)}
+                                          />
+                                      );
+                                  })
+                                : null}
+
+                            {!showLoadingState && !showErrorState && tasks.length === 0 && hasLoadedTasks ? (
                                 <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
                                     <div className="font-semibold text-sm text-zinc-700">{t("noTasks")}</div>
                                     <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
@@ -2046,6 +2438,11 @@ function SortableColumn(props: {
     col: Column;
     tasks: Task[];
     taskIds: string[];
+    statusId?: string;
+    isTasksLoaded?: boolean;
+    isTasksLoading?: boolean;
+    taskLoadError?: string | null;
+    onRetryLoadTasks?: (statusId: string) => void;
     onOpenCreateTask: (columnId: ColumnId) => void;
     onOpenTaskDetail: (taskId: string) => void;
     dndEnabled: boolean;
@@ -2070,6 +2467,11 @@ function SortableColumn(props: {
         col,
         tasks,
         taskIds,
+        statusId,
+        isTasksLoaded,
+        isTasksLoading,
+        taskLoadError,
+        onRetryLoadTasks,
         onOpenCreateTask,
         onOpenTaskDetail,
         dndEnabled,
@@ -2105,11 +2507,14 @@ function SortableColumn(props: {
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="min-w-[300px] max-w-[300px] self-start">
+        <div ref={setNodeRef} style={style} className="min-w-[300px] max-w-[300px] self-start" data-status-id={statusId}>
             <ColumnView
                 col={col}
                 tasks={tasks}
                 taskIds={taskIds}
+                isTasksLoaded={isTasksLoaded}
+                isTasksLoading={isTasksLoading}
+                taskLoadError={taskLoadError}
                 onOpenCreateTask={onOpenCreateTask}
                 onOpenTaskDetail={onOpenTaskDetail}
                 dndEnabled={dndEnabled}
@@ -2130,6 +2535,7 @@ function SortableColumn(props: {
                 onColumnDraftChange={onColumnDraftChange}
                 onColumnCommit={onColumnCommit}
                 onColumnCancel={onColumnCancel}
+                onRetryLoadTasks={onRetryLoadTasks}
             />
         </div>
     );
@@ -2259,6 +2665,35 @@ export function GroupBoardScreen({
 
     const [columns, setColumns] = React.useState<Column[]>([]);
     const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
+    const [statusLoadingMap, setStatusLoadingMap] = React.useState<Record<ColumnId, boolean>>({});
+    const [statusLoadedMap, setStatusLoadedMap] = React.useState<Record<ColumnId, boolean>>({});
+    const [statusLoadErrors, setStatusLoadErrors] = React.useState<Record<ColumnId, string | null>>({});
+    const statusLoadLockRef = React.useRef<Set<ColumnId>>(new Set());
+    const statusLoadingRef = React.useRef<Record<ColumnId, boolean>>({});
+    const statusLoadedRef = React.useRef<Record<ColumnId, boolean>>({});
+    const loadTasksForStatusRef = React.useRef<(statusId: string) => Promise<void>>(async () => {});
+
+    const updateStatusLoadingMap = React.useCallback(
+        (update: React.SetStateAction<Record<ColumnId, boolean>>) => {
+            setStatusLoadingMap((prev) => {
+                const next = typeof update === "function" ? update(prev) : update;
+                statusLoadingRef.current = next;
+                return next;
+            });
+        },
+        []
+    );
+
+    const updateStatusLoadedMap = React.useCallback(
+        (update: React.SetStateAction<Record<ColumnId, boolean>>) => {
+            setStatusLoadedMap((prev) => {
+                const next = typeof update === "function" ? update(prev) : update;
+                statusLoadedRef.current = next;
+                return next;
+            });
+        },
+        []
+    );
 
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
@@ -2593,58 +3028,99 @@ export function GroupBoardScreen({
                 .map((s) => ({
                     id: String(s.statusId),
                     title: String(s.statusName ?? ""),
-                    position: typeof s.position === "number" && Number.isFinite(s.position) ? s.position : 0,
-                    taskList: s.taskList ?? []
+                    position: typeof s.position === "number" && Number.isFinite(s.position) ? s.position : 0
                 }))
                 .sort((a, b) => a.position - b.position);
 
             setColumns(statuses.map(({ id, title, position }) => ({ id, title, position })));
+            const nextBoard = Object.fromEntries(statuses.map((status) => [status.id, [] as Task[]])) as Record<
+                ColumnId,
+                Task[]
+            >;
+            const nextLoading = Object.fromEntries(statuses.map((status) => [status.id, false])) as Record<
+                ColumnId,
+                boolean
+            >;
+            const nextLoaded = Object.fromEntries(statuses.map((status) => [status.id, false])) as Record<
+                ColumnId,
+                boolean
+            >;
+            const nextErrors = Object.fromEntries(statuses.map((status) => [status.id, null])) as Record<
+                ColumnId,
+                string | null
+            >;
 
-            const nextBoard: Record<string, Task[]> = {};
-            for (const s of statuses) {
-                const apiTasks = (s.taskList ?? []).slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-                nextBoard[s.id] = apiTasks.map((apiTask) => {
-                    const dueRaw = apiTask.dueDate ? String(apiTask.dueDate) : "";
-                    const startRaw = apiTask.startDate ? String(apiTask.startDate) : "";
-                    const assigneeName = formatAssigneeName(apiTask.assignee);
-
-                    const dueFmt = dueRaw ? formatDueCompact(dueRaw, locale) : "";
-                    const startFmt = startRaw ? formatDueCompact(startRaw, locale) : "";
-
-                    const base: Task = {
-                        id: String(apiTask.taskId ?? `task_${Math.random().toString(16).slice(2)}`),
-                        title: String(apiTask.taskTitle ?? ""),
-                        statusDot: priorityToStatusDot(apiTask.taskPriority),
-                        assigneeId: String(apiTask.assignee?.id ?? "").trim() || null,
-                        assigneeName,
-                        assigneeAvatarUrl: String(apiTask.assignee?.avatarUrl ?? "").trim() || null,
-                        assigneeInitials: buildInitials(
-                            apiTask.assignee?.firstName,
-                            apiTask.assignee?.lastName,
-                            assigneeName
-                        ),
-                        priority: apiTask.taskPriority ?? null,
-                        severity: apiTask.taskSeverity ?? null,
-                        progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0
-                    };
-
-                    if (startFmt) base.start = startFmt;
-                    if (startRaw) base.startRaw = startRaw;
-
-                    if (dueFmt) base.due = dueFmt;
-                    if (dueRaw) base.dueRaw = dueRaw;
-                    if (apiTask.estimatedHours != null) base.estimatedHours = apiTask.estimatedHours;
-                    if (apiTask.actualHours != null) base.actualHours = apiTask.actualHours;
-                    if (apiTask.completedAt) base.completedAt = formatDueCompact(String(apiTask.completedAt), locale);
-
-                    return base;
-                });
-            }
-
+            statusLoadLockRef.current.clear();
             setBoard(nextBoard);
+            updateStatusLoadingMap(nextLoading);
+            updateStatusLoadedMap(nextLoaded);
+            setStatusLoadErrors(nextErrors);
         },
-        [locale]
+        [updateStatusLoadingMap, updateStatusLoadedMap]
     );
+
+    const loadTasksForStatus = React.useCallback(
+        async (statusId: string) => {
+            if (!groupId) return;
+            if (!isUuidLike(groupId)) return;
+            if (!statusId || !isUuidLike(statusId)) return;
+            if (statusLoadLockRef.current.has(statusId)) return;
+            if (statusLoadedRef.current[statusId] || statusLoadingRef.current[statusId]) return;
+
+            statusLoadLockRef.current.add(statusId);
+            updateStatusLoadingMap((prev) => ({ ...prev, [statusId]: true }));
+            setStatusLoadErrors((prev) => ({ ...prev, [statusId]: null }));
+
+            try {
+                // Build API filter parameters from board filters
+                const apiFilters = buildApiFiltersFromBoardFilters(filters, currentUserId);
+
+                const response = await apiGetAllGroupTasks({
+                    groupId,
+                    statusId,
+                    ...apiFilters,
+                    fallbackMessage: apiMessages.genericApiError,
+                    missingApiBaseMessage: apiMessages.missingApiBase
+                });
+
+                const tasks = (response?.data?.items ?? []).slice().sort((a, b) => {
+                    const aTime = Date.parse(String(a.createdAt ?? ""));
+                    const bTime = Date.parse(String(b.createdAt ?? ""));
+                    if (Number.isNaN(aTime) && Number.isNaN(bTime)) return 0;
+                    if (Number.isNaN(aTime)) return 1;
+                    if (Number.isNaN(bTime)) return -1;
+                    return aTime - bTime;
+                });
+                const mapped = tasks.map((apiTask) => mapGroupTaskToBoardTask(apiTask, locale));
+
+                setBoard((prev) => ({ ...prev, [statusId]: mapped }));
+                updateStatusLoadedMap((prev) => ({ ...prev, [statusId]: true }));
+            } catch (e: unknown) {
+                setStatusLoadErrors((prev) => ({
+                    ...prev,
+                    [statusId]: getErrorMessage(e, apiMessages.genericApiError)
+                }));
+                updateStatusLoadedMap((prev) => ({ ...prev, [statusId]: false }));
+            } finally {
+                statusLoadLockRef.current.delete(statusId);
+                updateStatusLoadingMap((prev) => ({ ...prev, [statusId]: false }));
+            }
+        },
+        [
+            apiMessages.genericApiError,
+            apiMessages.missingApiBase,
+            groupId,
+            locale,
+            filters,
+            currentUserId,
+            updateStatusLoadedMap,
+            updateStatusLoadingMap
+        ]
+    );
+
+    React.useEffect(() => {
+        loadTasksForStatusRef.current = loadTasksForStatus;
+    }, [loadTasksForStatus]);
 
     const fetchBoardData = React.useCallback(async () => {
         if (!groupId) throw new Error(t("missingGroupId"));
@@ -2739,16 +3215,6 @@ export function GroupBoardScreen({
         if (!candidateTaskId) return;
         if (autoOpenedTaskRef.current === candidateTaskId) return;
 
-        let found = false;
-        for (const col of columns) {
-            if ((board[col.id] ?? []).some((t) => t.id === candidateTaskId)) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) return;
-
         autoOpenedTaskRef.current = candidateTaskId;
         setDetailTaskId(candidateTaskId);
         setDetailOpen(true);
@@ -2756,7 +3222,60 @@ export function GroupBoardScreen({
         if (!initialTaskId && taskIdFromQuery && openTaskDetailFromQuery === "1") {
             router.replace(`/${locale}/group/${groupId}`, { scroll: false });
         }
-    }, [loading, searchParams, columns, board, router, groupId, locale, initialTaskId]);
+    }, [loading, searchParams, router, groupId, locale, initialTaskId]);
+
+    React.useEffect(() => {
+        const root = boardScrollRef.current;
+        if (!root || columns.length === 0) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (!entry.isIntersecting) continue;
+
+                    const statusId = (entry.target as HTMLElement).dataset.statusId;
+                    if (statusId) {
+                        void loadTasksForStatusRef.current(statusId);
+                    }
+                }
+            },
+            {
+                root,
+                threshold: 0.35
+            }
+        );
+
+        const nodes = root.querySelectorAll<HTMLElement>("[data-status-id]");
+        nodes.forEach((node) => observer.observe(node));
+
+        return () => observer.disconnect();
+    }, [columns]);
+
+    /**
+     * Effect to refetch already-loaded tasks when filters change
+     * This ensures the board reflects the new filter criteria immediately
+     */
+    React.useEffect(() => {
+        const loadedStatusIds = Object.entries(statusLoadedRef.current)
+            .filter(([_, isLoaded]) => isLoaded)
+            .map(([statusId]) => statusId);
+
+        if (loadedStatusIds.length === 0) return;
+
+        updateStatusLoadedMap((prev) => {
+            const next = { ...prev };
+            for (const statusId of loadedStatusIds) {
+                next[statusId] = false;
+            }
+            return next;
+        });
+
+        const reloadLoadedStatuses = async () => {
+            await Promise.all(loadedStatusIds.map((statusId) => loadTasksForStatus(statusId)));
+        };
+
+        void reloadLoadedStatuses();
+    }, [filters, loadTasksForStatus, updateStatusLoadedMap]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -3465,6 +3984,9 @@ export function GroupBoardScreen({
                             </FilterSection>
 
                             <FilterSection title={t("labels")}>
+                                {(filters.priorities.length > 1 || filters.severities.length > 1) ? (
+                                    <p className="px-2 pb-1 text-[11px] text-amber-700">{t("multiSelectApiHint")}</p>
+                                ) : null}
                                 <div className="px-2 pt-1 font-medium text-xs uppercase tracking-wide text-zinc-500">
                                     {t("priority")}
                                 </div>
@@ -3740,6 +4262,11 @@ export function GroupBoardScreen({
                                 col={col}
                                 tasks={filteredBoard[col.id] ?? []}
                                 taskIds={taskIdsByCol[col.id] ?? []}
+                                statusId={col.id}
+                                isTasksLoaded={statusLoadedMap[col.id] ?? false}
+                                isTasksLoading={statusLoadingMap[col.id] ?? false}
+                                taskLoadError={statusLoadErrors[col.id] ?? null}
+                                onRetryLoadTasks={loadTasksForStatus}
                                 onOpenCreateTask={openCreateTask}
                                 onOpenTaskDetail={openTaskDetail}
                                 dndEnabled={false}
@@ -3790,6 +4317,11 @@ export function GroupBoardScreen({
                                         col={col}
                                         tasks={filteredBoard[col.id] ?? []}
                                         taskIds={taskIdsByCol[col.id] ?? []}
+                                        statusId={col.id}
+                                        isTasksLoaded={statusLoadedMap[col.id] ?? false}
+                                        isTasksLoading={statusLoadingMap[col.id] ?? false}
+                                        taskLoadError={statusLoadErrors[col.id] ?? null}
+                                        onRetryLoadTasks={loadTasksForStatus}
                                         onOpenCreateTask={openCreateTask}
                                         onOpenTaskDetail={openTaskDetail}
                                         dndEnabled

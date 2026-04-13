@@ -4318,6 +4318,8 @@ export interface paths {
                     assigneeId?: string;
                     dueDateFrom?: string;
                     dueDateTo?: string;
+                    hasNoAssignee?: boolean;
+                    hasNoDueDate?: boolean;
                     page?: number;
                     pageSize?: number;
                     priority?: components["schemas"]["TaskPriority"];
@@ -4327,6 +4329,7 @@ export interface paths {
                     sortBy?: string;
                     startDateFrom?: string;
                     startDateTo?: string;
+                    statusCategory?: string;
                     statusId?: string;
                 };
                 header?: never;
@@ -7747,6 +7750,7 @@ export interface components {
         };
         GroupCardDto: {
             alias?: string | null;
+            allowMemberUpdateProgress?: boolean;
             avatarUrl?: string | null;
             bannerUrl?: string | null;
             colorHex?: string | null;
@@ -7802,6 +7806,7 @@ export interface components {
         };
         GroupDetailResponse: {
             alias?: string | null;
+            allowMemberUpdateProgress?: boolean;
             avatarUrl?: string | null;
             bannerUrl?: string | null;
             colorHex?: string | null;
@@ -9644,6 +9649,7 @@ export interface components {
         };
         UpdateGroupRequest: {
             alias?: string | null;
+            allowMemberUpdateProgress?: boolean | null;
             avatarUrl?: string | null;
             bannerUrl?: string | null;
             colorHex?: string | null;
@@ -9658,6 +9664,7 @@ export interface components {
         };
         UpdateGroupResponse: {
             alias?: string | null;
+            allowMemberUpdateProgress?: boolean;
             avatarUrl?: string | null;
             bannerUrl?: string | null;
             colorHex?: string | null;

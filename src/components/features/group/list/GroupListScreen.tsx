@@ -8,7 +8,9 @@ import {
     AlertTriangle,
     Flame,
     ListTodo,
-    CalendarDays
+    CalendarDays,
+    UserX,
+    CalendarX
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -244,10 +246,16 @@ async function apiGetGroupTasks(args: {
     groupId: string;
     search?: string;
     statusId?: string;
+    assigneeId?: string;
+    priority?: number;
+    severity?: number;
     startDateFrom?: string;
     startDateTo?: string;
     dueDateFrom?: string;
     dueDateTo?: string;
+    statusCategory?: string;
+    hasNoAssignee?: boolean;
+    hasNoDueDate?: boolean;
     sortBy?: string;
     sortAscending?: boolean;
     page?: number;
@@ -262,14 +270,20 @@ async function apiGetGroupTasks(args: {
     const query = new URLSearchParams();
     if (args.search) query.set("search", args.search);
     if (args.statusId) query.set("statusId", args.statusId);
+    if (args.assigneeId) query.set("assigneeId", args.assigneeId);
+    if (args.priority !== undefined) query.set("priority", String(args.priority));
+    if (args.severity !== undefined) query.set("severity", String(args.severity));
     if (args.startDateFrom) query.set("startDateFrom", args.startDateFrom);
     if (args.startDateTo) query.set("startDateTo", args.startDateTo);
     if (args.dueDateFrom) query.set("dueDateFrom", args.dueDateFrom);
     if (args.dueDateTo) query.set("dueDateTo", args.dueDateTo);
+    if (args.statusCategory) query.set("statusCategory", args.statusCategory);
+    if (args.hasNoAssignee !== undefined) query.set("hasNoAssignee", String(args.hasNoAssignee));
+    if (args.hasNoDueDate !== undefined) query.set("hasNoDueDate", String(args.hasNoDueDate));
     if (args.sortBy) query.set("sortBy", args.sortBy);
     query.set("sortAscending", String(Boolean(args.sortAscending)));
     query.set("page", String(args.page ?? 1));
-    query.set("pageSize", String(args.pageSize ?? 100));
+    query.set("pageSize", String(args.pageSize ?? 10));
 
     const suffix = query.toString();
     const url = apiUrl(`/group/${encodeURIComponent(args.groupId)}/tasks${suffix ? `?${suffix}` : ""}`);
@@ -293,72 +307,6 @@ async function apiGetGroupTasks(args: {
     return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
 }
 
-async function apiGetAllGroupTasks(args: {
-    groupId: string;
-    search?: string;
-    statusId?: string;
-    startDateFrom?: string;
-    startDateTo?: string;
-    dueDateFrom?: string;
-    dueDateTo?: string;
-    sortBy?: string;
-    sortAscending?: boolean;
-    fallbackMessage: string;
-    missingApiBaseMessage: string;
-}) {
-    const requestArgs = {
-        groupId: args.groupId,
-        search: args.search,
-        statusId: args.statusId,
-        startDateFrom: args.startDateFrom,
-        startDateTo: args.startDateTo,
-        dueDateFrom: args.dueDateFrom,
-        dueDateTo: args.dueDateTo,
-        sortBy: args.sortBy,
-        sortAscending: args.sortAscending,
-        fallbackMessage: args.fallbackMessage,
-        missingApiBaseMessage: args.missingApiBaseMessage
-    };
-
-    const firstPage = await apiGetGroupTasks({
-        ...requestArgs,
-        page: 1,
-        pageSize: 100
-    });
-    const firstData = firstPage?.data;
-    const totalPages = Math.max(1, Number(firstData?.totalPages ?? 1));
-    const items = [...(firstData?.items ?? [])];
-
-    if (totalPages > 1) {
-        const remainingPages = await Promise.all(
-            Array.from({ length: totalPages - 1 }, (_, index) =>
-                apiGetGroupTasks({
-                    ...requestArgs,
-                    page: index + 2,
-                    pageSize: 100
-                })
-            )
-        );
-
-        remainingPages.forEach((pageResult) => {
-            items.push(...(pageResult?.data?.items ?? []));
-        });
-    }
-
-    return {
-        ...(firstPage ?? {}),
-        data: firstData
-            ? {
-                  ...firstData,
-                  items,
-                  page: 1,
-                  pageSize: items.length,
-                  totalCount: items.length,
-                  totalPages: Math.max(1, Math.ceil(items.length / 100))
-              }
-            : undefined
-    } as ApiResponse<GroupTaskListResponse> | null;
-}
 
 function FilterChip({
     active,
@@ -681,17 +629,23 @@ export function GroupListScreen() {
     const [statusOptions, setStatusOptions] = React.useState<Array<{ id: string; name: string }>>([]);
     const [assigneeOptions, setAssigneeOptions] = React.useState<DropdownOption[]>([]);
     const [page, setPage] = React.useState(1);
+    const [totalCount, setTotalCount] = React.useState(0);
+    const [totalPages, setTotalPages] = React.useState(1);
 
     const [detailOpen, setDetailOpen] = React.useState(false);
     const [detailTaskId, setDetailTaskId] = React.useState<string | null>(null);
 
     const [searchInput, setSearchInput] = React.useState("");
     const [searchKeyword, setSearchKeyword] = React.useState("");
+    const [appliedSearchKeyword, setAppliedSearchKeyword] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
     const [assigneeFilter, setAssigneeFilter] = React.useState("all");
     const [severityFilter, setSeverityFilter] = React.useState("all");
     const [priorityFilter, setPriorityFilter] = React.useState("all");
     const [overdueOnly, setOverdueOnly] = React.useState(false);
+    const [cardStatusFilter, setCardStatusFilter] = React.useState("all");
+    const [hasNoAssignee, setHasNoAssignee] = React.useState(false);
+    const [hasNoDueDate, setHasNoDueDate] = React.useState(false);
     const [filterOpen, setFilterOpen] = React.useState(false);
     const [draftDateFilter, setDraftDateFilter] = React.useState<DateFilterValues>({
         startDate: "",
@@ -702,12 +656,32 @@ export function GroupListScreen() {
         dueDate: ""
     });
 
-    React.useEffect(() => {
-        const timer = window.setTimeout(() => {
-            setSearchKeyword(searchInput.trim());
-        }, 300);
-        return () => window.clearTimeout(timer);
-    }, [searchInput]);
+    // Applied filter state — only used in API calls
+    const [appliedAssigneeFilter, setAppliedAssigneeFilter] = React.useState("all");
+    const [appliedStatusFilter, setAppliedStatusFilter] = React.useState("all");
+    const [appliedSeverityFilter, setAppliedSeverityFilter] = React.useState("all");
+    const [appliedPriorityFilter, setAppliedPriorityFilter] = React.useState("all");
+    const [appliedOverdueOnly, setAppliedOverdueOnly] = React.useState(false);
+    const [appliedCardStatusFilter, setAppliedCardStatusFilter] = React.useState("all");
+    const [appliedHasNoAssignee, setAppliedHasNoAssignee] = React.useState(false);
+    const [appliedHasNoDueDate, setAppliedHasNoDueDate] = React.useState(false);
+
+    // Apply all filters to API call (triggered by Enter or Apply Filter button)
+    const applyFilters = React.useCallback(() => {
+        setAppliedAssigneeFilter(assigneeFilter);
+        setAppliedStatusFilter(statusFilter);
+        setAppliedSeverityFilter(severityFilter);
+        setAppliedPriorityFilter(priorityFilter);
+        setAppliedOverdueOnly(overdueOnly);
+        setAppliedCardStatusFilter(cardStatusFilter);
+        setAppliedHasNoAssignee(hasNoAssignee);
+        setAppliedHasNoDueDate(hasNoDueDate);
+        setAppliedDateFilter(draftDateFilter);
+        const normalizedSearch = searchInput.trim();
+        setSearchKeyword(normalizedSearch);
+        setAppliedSearchKeyword(normalizedSearch);
+        setPage(1);
+    }, [assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly, cardStatusFilter, hasNoAssignee, hasNoDueDate, draftDateFilter, searchInput]);
 
     const refresh = React.useCallback(async () => {
         if (!groupId) {
@@ -730,16 +704,24 @@ export function GroupListScreen() {
         setLoadError(null);
 
         try {
-            const res = await apiGetAllGroupTasks({
+            const res = await apiGetGroupTasks({
                 groupId,
                 search: searchKeyword || undefined,
-                statusId: statusFilter !== "all" ? statusFilter : undefined,
+                statusId: appliedStatusFilter !== "all" ? appliedStatusFilter : undefined,
+                assigneeId: appliedAssigneeFilter !== "all" ? appliedAssigneeFilter : undefined,
+                priority: appliedPriorityFilter !== "all" ? Number(appliedPriorityFilter) : undefined,
+                severity: appliedSeverityFilter !== "all" ? Number(appliedSeverityFilter) : undefined,
                 startDateFrom: appliedDateFilter.startDate || undefined,
                 startDateTo: appliedDateFilter.startDate || undefined,
                 dueDateFrom: appliedDateFilter.dueDate || undefined,
                 dueDateTo: appliedDateFilter.dueDate || undefined,
+                statusCategory: appliedCardStatusFilter !== "all" ? appliedCardStatusFilter : undefined,
+                hasNoAssignee: appliedHasNoAssignee || undefined,
+                hasNoDueDate: appliedHasNoDueDate || undefined,
                 sortBy: "dueDate",
                 sortAscending: false,
+                page,
+                pageSize,
                 fallbackMessage: t("cannotLoad"),
                 missingApiBaseMessage: t("missingApiBase")
             });
@@ -793,34 +775,46 @@ export function GroupListScreen() {
             setStatusOptions(mergeStatusOptions([], nextStatuses));
             setAssigneeOptions(mergeDropdownOptions([], nextAssignees));
             setRows(nextRows);
+            setTotalCount(Number(data?.totalCount ?? 0));
+            setTotalPages(Math.max(1, Number(data?.totalPages ?? 1)));
         } catch (e: unknown) {
             setLoadError(e instanceof Error ? e.message : t("cannotLoad"));
         } finally {
             setLoading(false);
         }
-    }, [appliedDateFilter, groupId, locale, searchKeyword, statusFilter, t]);
+    }, [
+        appliedDateFilter,
+        groupId,
+        locale,
+        searchKeyword,
+        appliedStatusFilter,
+        appliedAssigneeFilter,
+        appliedPriorityFilter,
+        appliedSeverityFilter,
+        appliedCardStatusFilter,
+        appliedHasNoAssignee,
+        appliedHasNoDueDate,
+        page,
+        pageSize,
+        t
+    ]);
 
     React.useEffect(() => {
         void refresh();
     }, [refresh]);
 
     const filteredRows = React.useMemo(() => {
-        return rows.filter((row) => {
-            if (assigneeFilter !== "all" && row.assigneeId !== assigneeFilter) return false;
-            if (statusFilter !== "all" && row.statusId !== statusFilter) return false;
-            if (severityFilter !== "all" && row.taskSeverity !== Number(severityFilter)) return false;
-            if (priorityFilter !== "all" && row.taskPriority !== Number(priorityFilter)) return false;
-            if (overdueOnly && !isOverdueTask(row.dueDate, row.progress)) return false;
-            return true;
-        });
-    }, [rows, assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly]);
+        const keyword = appliedSearchKeyword.trim().toLocaleLowerCase();
+        const keywordFilteredRows = keyword
+            ? rows.filter((row) => row.title.toLocaleLowerCase().includes(keyword))
+            : rows;
 
-    const totalCount = filteredRows.length;
-    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-    const paginatedRows = React.useMemo(() => {
-        const startIndex = (page - 1) * pageSize;
-        return filteredRows.slice(startIndex, startIndex + pageSize);
-    }, [filteredRows, page, pageSize]);
+        if (!appliedOverdueOnly) {
+            return keywordFilteredRows;
+        }
+
+        return keywordFilteredRows.filter((row) => isOverdueTask(row.dueDate, row.progress));
+    }, [rows, appliedSearchKeyword, appliedOverdueOnly]);
 
     React.useEffect(() => {
         if (page > totalPages) {
@@ -845,8 +839,11 @@ export function GroupListScreen() {
         Number(severityFilter !== "all") +
         Number(priorityFilter !== "all") +
         Number(overdueOnly) +
+        Number(cardStatusFilter !== "all") +
+        Number(hasNoAssignee) +
+        Number(hasNoDueDate) +
         Number(Boolean(appliedDateFilter.startDate || appliedDateFilter.dueDate)) +
-        Number(Boolean(searchKeyword));
+        Number(Boolean(appliedSearchKeyword));
 
     const openTaskDetail = (taskId: string) => {
         setDetailTaskId(taskId);
@@ -861,12 +858,25 @@ export function GroupListScreen() {
     const clearAllFilters = () => {
         setSearchInput("");
         setSearchKeyword("");
+        setAppliedSearchKeyword("");
         setStatusFilter("all");
         setAssigneeFilter("all");
         setSeverityFilter("all");
         setPriorityFilter("all");
         setOverdueOnly(false);
+        setCardStatusFilter("all");
+        setHasNoAssignee(false);
+        setHasNoDueDate(false);
         setDraftDateFilter({ startDate: "", dueDate: "" });
+        // Reset applied filters
+        setAppliedAssigneeFilter("all");
+        setAppliedStatusFilter("all");
+        setAppliedSeverityFilter("all");
+        setAppliedPriorityFilter("all");
+        setAppliedOverdueOnly(false);
+        setAppliedCardStatusFilter("all");
+        setAppliedHasNoAssignee(false);
+        setAppliedHasNoDueDate(false);
         setAppliedDateFilter({ startDate: "", dueDate: "" });
         setPage(1);
     };
@@ -886,7 +896,7 @@ export function GroupListScreen() {
                         <div className="pointer-events-none absolute -bottom-8 left-1/3 h-28 w-28 rounded-full bg-amber-200/20 blur-3xl" />
 
                         <div className="relative space-y-3">
-                            <div className="flex justify-end">
+                            <div className="flex items-center justify-end gap-2">
                                 {activeFilterCount > 0 ? (
                                     <button
                                         type="button"
@@ -895,6 +905,14 @@ export function GroupListScreen() {
                                         {t("clearFilter")}
                                     </button>
                                 ) : null}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        applyFilters();
+                                    }}
+                                    className="rounded-2xl bg-orange-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600">
+                                    {t("applyFilter")}
+                                </button>
                             </div>
 
                             <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
@@ -904,7 +922,12 @@ export function GroupListScreen() {
                                         value={searchInput}
                                         onChange={(e) => {
                                             setSearchInput(e.target.value);
-                                            setPage(1);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                applyFilters();
+                                            }
                                         }}
                                         placeholder={t("searchPlaceholder")}
                                         className="h-12 w-full rounded-2xl border border-zinc-200/80 bg-white/90 py-0 pr-4 pl-10 text-sm text-zinc-800 outline-none shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-all duration-200 placeholder:text-zinc-400 focus:border-orange-300 focus:bg-white focus:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]"
@@ -916,7 +939,6 @@ export function GroupListScreen() {
                                     options={[{ value: "all", label: allAssigneesLabel }, ...assigneeOptions]}
                                     onChange={(nextValue) => {
                                         setAssigneeFilter(nextValue);
-                                        setPage(1);
                                     }}
                                     ariaLabel={selectAssigneeLabel}
                                     emptyValue="all"
@@ -931,7 +953,6 @@ export function GroupListScreen() {
                                     ]}
                                     onChange={(nextValue) => {
                                         setStatusFilter(nextValue);
-                                        setPage(1);
                                     }}
                                     ariaLabel={t("selectStatusPlaceholder")}
                                     emptyValue="all"
@@ -949,7 +970,6 @@ export function GroupListScreen() {
                                     ]}
                                     onChange={(nextValue) => {
                                         setSeverityFilter(nextValue);
-                                        setPage(1);
                                     }}
                                     ariaLabel={t("selectSeverity")}
                                     emptyValue="all"
@@ -968,7 +988,6 @@ export function GroupListScreen() {
                                     ]}
                                     onChange={(nextValue) => {
                                         setPriorityFilter(nextValue);
-                                        setPage(1);
                                     }}
                                     ariaLabel={t("selectPriority")}
                                     emptyValue="all"
@@ -979,7 +998,6 @@ export function GroupListScreen() {
                                     active={overdueOnly}
                                     onClick={() => {
                                         setOverdueOnly((v) => !v);
-                                        setPage(1);
                                     }}
                                     label={t("overdueTasks")}
                                     icon={<AlertTriangle className="h-4 w-4" />}
@@ -990,6 +1008,42 @@ export function GroupListScreen() {
                                     onClick={() => setFilterOpen(true)}
                                     label={appliedDateFilterLabel || t("dateFilterButton")}
                                     icon={<CalendarDays className="h-4 w-4" />}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                                <FancyDropdown
+                                    value={cardStatusFilter}
+                                    options={[
+                                        { value: "all", label: t("allStatuses") },
+                                        { value: "notstarted", label: t("toDo") },
+                                        { value: "inprogress", label: t("inProgress") },
+                                        { value: "completed", label: t("completed") }
+                                    ]}
+                                    onChange={(nextValue) => {
+                                        setCardStatusFilter(nextValue);
+                                    }}
+                                    ariaLabel={t("selectCardStatus")}
+                                    emptyValue="all"
+                                    emptyLabel={t("allStatuses")}
+                                />
+
+                                <FilterChip
+                                    active={hasNoAssignee}
+                                    onClick={() => {
+                                        setHasNoAssignee((v) => !v);
+                                    }}
+                                    label={t("noAssignee")}
+                                    icon={<UserX className="h-4 w-4" />}
+                                />
+
+                                <FilterChip
+                                    active={hasNoDueDate}
+                                    onClick={() => {
+                                        setHasNoDueDate((v) => !v);
+                                    }}
+                                    label={t("noDueDate")}
+                                    icon={<CalendarX className="h-4 w-4" />}
                                 />
                             </div>
                         </div>
@@ -1029,7 +1083,7 @@ export function GroupListScreen() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {paginatedRows.map((row, index) => {
+                                    {filteredRows.map((row, index) => {
                                         const overdue = isOverdueTask(row.dueDate, row.progress);
 
                                         return (
