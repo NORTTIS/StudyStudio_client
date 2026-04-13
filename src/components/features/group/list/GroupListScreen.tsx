@@ -1050,7 +1050,7 @@ export function GroupListScreen() {
                                         });
                                         setPage(1);
                                     }}
-                                    label="Hoàn thành"
+                                    label={t("progressDone")}
                                     icon={
                                         <CheckCircle2
                                             className={cn("h-4 w-4", completedOnly ? "text-emerald-600" : "text-zinc-500")}
@@ -1106,7 +1106,9 @@ export function GroupListScreen() {
                                     {paginatedRows.map((row, index) => {
                                         const overdue = isOverdueTask(row.dueDate, row.progress);
                                         const completed = row.progress >= 100;
-                                        const dueDisplayLabel = completed ? row.dueLabel !== "-" ? row.dueLabel : "Hoàn thành" : row.dueLabel;
+                                        const dueDisplayLabel = completed
+                                            ? (row.dueLabel !== "-" ? row.dueLabel : t("progressDone"))
+                                            : row.dueLabel;
 
                                         return (
                                             <motion.button

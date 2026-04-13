@@ -2116,7 +2116,8 @@
         "minor": "Nhẹ",
         "moderate": "Vừa",
         "major": "Lớn",
-        "critical": "Khẩn cấp"
+        "critical": "Khẩn cấp",
+        "progressDone": "Hoàn thành"
     },
     "GroupTaskDeepLinkPage": {
         "loadingTitle": "Đang tải công việc",

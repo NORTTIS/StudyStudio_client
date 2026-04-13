@@ -33,7 +33,8 @@ export default function AssigneeAvatar({
 }: AssigneeAvatarProps) {
     const imageUrl = String(avatarUrl ?? "").trim();
     const label = String(name ?? "").trim() || (unassigned ? "Unassigned" : "Assignee");
-    const fallbackText = unassigned ? "U" : getAvatarInitials(initials || name, "U");
+    const normalizedInitials = String(initials ?? "").trim().toUpperCase();
+    const fallbackText = unassigned ? "U" : normalizedInitials || getAvatarInitials(name, "U");
 
     if (imageUrl) {
         return (
@@ -48,6 +49,7 @@ export default function AssigneeAvatar({
 
     return (
         <span
+            aria-label={label}
             className={cn(
                 "inline-flex shrink-0 items-center justify-center rounded-full font-bold",
                 unassigned ? "bg-zinc-200 text-zinc-700" : "bg-emerald-500 text-white",

@@ -521,12 +521,14 @@ function DuePill({
                 <Clock3 className="h-3.5 w-3.5 shrink-0" />
                 <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
                 {overdue ? (
-                    <span
-                        title={t("overdue") || "Quá hạn"}
-                        aria-label={t("overdue") || "Quá hạn"}
-                        className="shrink-0"
-                    >
-                        <svg viewBox="0 0 48 48" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <span title={t("overdue") || "Quá hạn"} className="shrink-0">
+                        <span className="sr-only">{t("overdue") || "Quá hạn"}</span>
+                        <svg
+                            viewBox="0 0 48 48"
+                            className="h-4 w-4"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true">
                             <path
                                 d="M25.9 3.4c.4 5.4-2.2 9.6-6.2 13.6-3.5 3.5-7.2 7.4-7.2 13.4 0 8.3 6.3 14.2 14.7 14.2 8.7 0 14.8-6.1 14.8-14.3 0-7.1-4.9-11.7-8.6-15.7-2.9-3.1-5.4-6-5.9-10.7-.1-.8-.7-1.4-1.5-1.4-.7 0-1.4.4-1.4.9Z"
                                 fill="#FF5A7A"
@@ -556,6 +558,8 @@ function SummaryCount({ count }: { count: number }) {
         </span>
     );
 }
+
+type HeaderDragProps = Pick<ReturnType<typeof useSortable>, "attributes" | "listeners" | "setActivatorNodeRef">;
 
 function PortalDropdown({
     open,
@@ -1005,11 +1009,11 @@ function PersonalTaskCard({
                                     onPointerDown={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        setOpenMenu((v) => !v);
                                     }}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        setOpenMenu((v) => !v);
                                     }}
                                     className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
                                     aria-label={t("menu")}>
@@ -1116,7 +1120,7 @@ function PersonalTaskCard({
                                     void submitEdit();
                                 }}
                                 className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
-                                Lưu
+                                {t("save")}
                             </button>
 
                             <button
@@ -1321,11 +1325,7 @@ function ColumnView({
     onColumnDraftChange: (value: string) => void;
     onColumnCommit: () => void;
     onColumnCancel: () => void;
-    headerDragProps?: {
-        attributes: any;
-        listeners: any;
-        setActivatorNodeRef?: (node: HTMLElement | null) => void;
-    };
+    headerDragProps?: HeaderDragProps;
     t: (key: string) => string;
 }) {
     const statusId = String(status.statusId ?? "");
@@ -1453,11 +1453,11 @@ function ColumnView({
                                 onPointerDown={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setOpenMenu((v) => !v);
                                 }}
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
+                                    setOpenMenu((v) => !v);
                                 }}
                                 className="grid h-8 w-8 place-items-center rounded-full text-zinc-500 transition hover:bg-white/80"
                                 aria-label={t("columnMenu")}>

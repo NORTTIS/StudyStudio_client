@@ -2037,7 +2037,8 @@
         "minor": "Minor",
         "moderate": "Moderate",
         "major": "Major",
-        "critical": "Critical"
+        "critical": "Critical",
+        "progressDone": "Done"
     },
     "GroupTaskDeepLinkPage": {
         "loadingTitle": "Loading task",

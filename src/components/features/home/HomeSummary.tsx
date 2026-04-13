@@ -102,19 +102,14 @@ function StatCard({ label, value, icon, tone = "neutral", note, index = 0, onCli
     };
 
     const s = styles[tone];
-    return (
-        <motion.button
-            type="button"
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.06 * index }}
-            whileHover={{ y: -6 }}
-            onClick={onClick}
-            className={cx(
-                "group relative w-full overflow-hidden rounded-[28px] border p-5 text-left shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.08)]",
-                onClick && "cursor-pointer",
-                s.card
-            )}>
+    const cardClassName = cx(
+        "group relative w-full overflow-hidden rounded-[28px] border p-5 text-left shadow-[0_10px_34px_rgba(15,23,42,0.06)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.08)]",
+        onClick && "cursor-pointer",
+        s.card
+    );
+
+    const cardContent = (
+        <>
             <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/60 opacity-70 blur-3xl" />
 
             <div className="relative flex items-start justify-between gap-4">
@@ -134,6 +129,31 @@ function StatCard({ label, value, icon, tone = "neutral", note, index = 0, onCli
                     <span className={s.iconSize}>{icon}</span>
                 </motion.div>
             </div>
+        </>
+    );
+
+    if (!onClick) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.06 * index }}
+                className={cardClassName}>
+                {cardContent}
+            </motion.div>
+        );
+    }
+
+    return (
+        <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.06 * index }}
+            whileHover={{ y: -6 }}
+            onClick={onClick}
+            className={cardClassName}>
+            {cardContent}
         </motion.button>
     );
 }

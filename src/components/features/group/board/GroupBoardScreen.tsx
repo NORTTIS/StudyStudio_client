@@ -957,6 +957,7 @@ function DuePill({
     assigneeInitials?: string | null;
     showAssigneeAvatar?: boolean;
 }) {
+    const t = useTranslations("GroupBoardScreen");
     const shouldShowDueText = Boolean(due) && !done;
 
     return (
@@ -976,8 +977,14 @@ function DuePill({
                 ) : null}
                 {shouldShowDueText ? <div className="whitespace-nowrap font-semibold text-xs">{due}</div> : null}
                 {overdue && !done ? (
-                    <span title="Overdue" aria-label="Overdue" className="shrink-0">
-                        <svg viewBox="0 0 48 48" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <span title={t("overdue")} className="shrink-0">
+                        <span className="sr-only">{t("overdue")}</span>
+                        <svg
+                            viewBox="0 0 48 48"
+                            className="h-4 w-4"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true">
                             <path
                                 d="M25.9 3.4c.4 5.4-2.2 9.6-6.2 13.6-3.5 3.5-7.2 7.4-7.2 13.4 0 8.3 6.3 14.2 14.7 14.2 8.7 0 14.8-6.1 14.8-14.3 0-7.1-4.9-11.7-8.6-15.7-2.9-3.1-5.4-6-5.9-10.7-.1-.8-.7-1.4-1.5-1.4-.7 0-1.4.4-1.4.9Z"
                                 fill="#FF5A7A"

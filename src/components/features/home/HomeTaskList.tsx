@@ -1257,7 +1257,7 @@ function TaskListDetailLayer({
                                                     const dueDisplayLabel = completed
                                                         ? item.dueDate
                                                             ? formatDueDate(item.dueDate, locale)
-                                                            : "Hoàn thành"
+                                                            : completedStatusLabel
                                                         : formatDueDate(item.dueDate, locale);
 
                                                     return (
