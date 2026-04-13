@@ -1495,12 +1495,21 @@ export default function HomeTaskList() {
         return groups.filter((group) => !!group.groupId && assignedGroupIds.has(group.groupId));
     }, [groups, sanitizedItems]);
 
+    const selectableGroups = React.useMemo(() => {
+        if (selectedSource === "all" || assignedGroups.some((group) => group.groupId === selectedSource)) {
+            return assignedGroups;
+        }
+
+        const selectedGroup = groups.find((group) => group.groupId === selectedSource);
+        return selectedGroup ? [selectedGroup, ...assignedGroups] : assignedGroups;
+    }, [assignedGroups, groups, selectedSource]);
+
     React.useEffect(() => {
-        if (selectedSource !== "all" && !assignedGroups.some((group) => group.groupId === selectedSource)) {
+        if (selectedSource !== "all" && !groups.some((group) => group.groupId === selectedSource)) {
             setSelectedSource("all");
             setPage(1);
         }
-    }, [selectedSource, assignedGroups]);
+    }, [selectedSource, groups]);
 
     const sourceFilteredItems = React.useMemo(() => {
         if (selectedSource !== "all") {
@@ -1782,7 +1791,7 @@ export default function HomeTaskList() {
                 open={openDetail}
                 onClose={handleCloseDetail}
                 isLoading={isLoading}
-                groups={assignedGroups}
+                groups={selectableGroups}
                 paginatedItems={paginatedItems}
                 page={page}
                 totalPages={totalPages}

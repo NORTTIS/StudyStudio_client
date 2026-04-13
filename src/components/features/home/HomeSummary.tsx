@@ -363,6 +363,8 @@ function DetailLayer({
     totalTasks,
     t
 }: DetailLayerProps) {
+    const titleId = React.useId();
+
     React.useEffect(() => {
         if (!open) return;
 
@@ -392,10 +394,13 @@ function DetailLayer({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 18, scale: 0.98 }}
                         transition={{ duration: 0.25 }}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={titleId}
                         className="relative flex max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(255,249,244,0.96))] shadow-[0_28px_90px_rgba(146,64,14,0.12)]">
                         <div className="flex items-center justify-between border-[#F0DED0] border-b bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,249,244,0.96))] px-6 py-5 md:px-8">
                             <div>
-                                <h2 className="font-bold text-2xl text-slate-900 tracking-tight md:text-3xl">
+                                <h2 id={titleId} className="font-bold text-2xl text-slate-900 tracking-tight md:text-3xl">
                                     {t("detailsTitle")}
                                 </h2>
                             </div>
@@ -403,6 +408,7 @@ function DetailLayer({
                             <button
                                 type="button"
                                 onClick={onClose}
+                                aria-label={t("close")}
                                 className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#F0DDCF] bg-white/90 text-[#9A6B4A] transition hover:bg-[#FFF8F3]">
                                 <X className="h-5 w-5" />
                             </button>
