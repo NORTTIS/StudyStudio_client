@@ -637,74 +637,45 @@ export default function HomeSummary() {
                                     </motion.div>
                                 ) : (
                                     <div className="space-y-5">
-                                        <SectionReveal delay={0.06}>
-                                            <section className="rounded-[32px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(255,246,238,0.62))] p-4 shadow-[0_18px_50px_rgba(180,83,9,0.06)] backdrop-blur-xl md:p-6">
-                                                {isLoading ? (
-                                                    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                                        {Array.from({ length: 3 }).map((_, index) => (
-                                                            <SkeletonCard key={index} />
-                                                        ))}
-                                                    </section>
-                                                ) : error ? (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: 12 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className="rounded-[28px] border border-red-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(254,242,242,0.96))] px-5 py-4 text-red-600 text-sm shadow-sm">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-red-500">
-                                                                <AlertTriangle className="h-5 w-5" />
-                                                            </div>
-                                                            <div>
-                                                                <p className="font-semibold">{t("loadingError")}</p>
-                                                                <p className="mt-1 text-red-400">{t("loadingErrorHint")}</p>
-                                                            </div>
-                                                        </div>
-                                                    </motion.div>
-                                                ) : (
-                                                    <div className="space-y-5">
-                                                        <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-                                                            <StatCard
-                                                                label={t("remainingTasksLabel")}
-                                                                value={remainingTaskCount}
-                                                                icon={<Clock3 className="h-5 w-5" />}
-                                                                note={t("remainingTasksNote")}
-                                                                tone="neutral"
-                                                                index={0}
-                                                                onClick={() => setOpenDetail(true)}
-                                                            />
+                                        <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                                            <StatCard
+                                                label={t("remainingTasksLabel")}
+                                                value={remainingTaskCount}
+                                                icon={<Clock3 className="h-5 w-5" />}
+                                                note={t("remainingTasksNote")}
+                                                tone="neutral"
+                                                index={0}
+                                                onClick={() => setOpenDetail(true)}
+                                            />
 
-                                                            <StatCard
-                                                                label={t("overdueTasksLabel")}
-                                                                value={overdueTaskCount}
-                                                                icon={<Flame className="h-5 w-5" />}
-                                                                tone="danger"
-                                                                note={t("overdueTasksNote")}
-                                                                index={1}
-                                                                onClick={() => setOpenDetail(true)}
-                                                            />
+                                            <StatCard
+                                                label={t("overdueTasksLabel")}
+                                                value={overdueTaskCount}
+                                                icon={<Flame className="h-5 w-5" />}
+                                                tone="danger"
+                                                note={t("overdueTasksNote")}
+                                                index={1}
+                                                onClick={() => setOpenDetail(true)}
+                                            />
 
-                                                            <StatCard
-                                                                label={t("completedTasksLabel")}
-                                                                value={completedTaskCount}
-                                                                icon={<CheckCircle2 className="h-5 w-5" />}
-                                                                tone="success"
-                                                                note={t("completedTasksNote")}
-                                                                index={2}
-                                                                onClick={() => setOpenDetail(true)}
-                                                            />
-                                                        </section>
+                                            <StatCard
+                                                label={t("completedTasksLabel")}
+                                                value={completedTaskCount}
+                                                icon={<CheckCircle2 className="h-5 w-5" />}
+                                                tone="success"
+                                                note={t("completedTasksNote")}
+                                                index={2}
+                                                onClick={() => setOpenDetail(true)}
+                                            />
+                                        </section>
 
-                                                        <div className="flex justify-end">
-                                                            <Button
-                                                                onClick={() => setOpenDetail(true)}
-                                                                className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-4">
-                                                                {t("viewDetails")}
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </section>
-                                        </SectionReveal>
+                                        <div className="flex justify-end">
+                                            <Button
+                                                onClick={() => setOpenDetail(true)}
+                                                className="h-11 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 px-5 text-white shadow-[0_14px_28px_rgba(15,23,42,0.12)] transition hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-4">
+                                                {t("viewDetails")}
+                                            </Button>
+                                        </div>
                                     </div>
                                 )}
                             </section>
