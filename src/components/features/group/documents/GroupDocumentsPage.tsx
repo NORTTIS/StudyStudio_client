@@ -190,10 +190,18 @@ export default function GroupDocumentsPage() {
 
     React.useEffect(() => {
         if (!groupId) return;
+
+        // Reset role to null immediately when groupId changes to prevent stale role
+        setCurrentUserRole(null);
+
         fetchGroupDetailRole(groupId).then((role) => setCurrentUserRole(role));
     }, [groupId]);
 
-    const canModify = currentUserRole !== null && currentUserRole !== "commenter" && currentUserRole !== "viewer";
+    const canModify = React.useMemo(() => {
+        // Default to false while role is loading for security
+        if (currentUserRole === null) return false;
+        return currentUserRole !== "commenter" && currentUserRole !== "viewer";
+    }, [currentUserRole]);
 
     const loadDocuments = React.useCallback(async () => {
         if (!groupId) return;
@@ -265,7 +273,7 @@ export default function GroupDocumentsPage() {
         }
 
         if (!canModify) {
-            toast({ variant: "destructive", description: "Bạn không có quyền upload tài liệu." });
+            toast({ variant: "destructive", description: t("noPermissionToUpload") });
             return;
         }
 

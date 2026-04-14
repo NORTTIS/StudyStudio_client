@@ -377,15 +377,16 @@ function _toInitials(firstName?: string | null, lastName?: string | null) {
     return res || "U";
 }
 
-export function mapRole(role?: string | null): "owner" | "moderator" | "member" | "commenter" | "viewer" {
+export function mapRole(role?: string | null): "owner" | "moderator" | "member" | "commenter" | "viewer" | null {
     const r = (role || "").toLowerCase().trim();
+    if (!r) return null;
     if (r.includes("owner")) return "owner";
     if (r.includes("moderator")) return "moderator";
     if (r.includes("member")) return "member";
     if (r.includes("commenter")) return "commenter";
     if (r.includes("viewer")) return "viewer";
     if (r === "admin") return "owner";
-    return "member";
+    return null;
 }
 
 export async function fetchGroupsPageData(): Promise<GroupsPageData> {
@@ -640,19 +641,26 @@ export async function fetchGroupDetailRole(
     const baseUrl = getBaseUrl();
     const token = getToken();
 
-    const res = await fetch(`${baseUrl}/group/${encodeURIComponent(groupId)}/detail`, {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        cache: "no-store"
-    });
+    try {
+        const res = await fetch(`${baseUrl}/group/${encodeURIComponent(groupId)}/detail`, {
+            method: "GET",
+            headers: {
+                Accept: "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            cache: "no-store"
+        });
 
-    if (!res.ok) return null;
+        if (!res.ok) return null;
 
-    const json = (await res.json()) as { data?: { userRole?: string } };
-    return mapRole(json?.data?.userRole);
+        const json = (await res.json()) as { data?: { userRole?: string } };
+        const role = mapRole(json?.data?.userRole);
+        
+        // Ensure we return null if role couldn't be determined
+        return role;
+    } catch {
+        return null;
+    }
 }
 
 export async function completeDocumentUpload(attachmentId: string) {

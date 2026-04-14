@@ -28,7 +28,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CalendarDays, CheckCircle2, Clock3, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
-import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
@@ -854,13 +853,13 @@ async function apiGetAllGroupTasks(args: {
         ...(firstPage ?? {}),
         data: firstData
             ? {
-                  ...firstData,
-                  items,
-                  page: 1,
-                  pageSize: items.length,
-                  totalCount: items.length,
-                  totalPages: Math.max(1, Math.ceil(items.length / 100))
-              }
+                ...firstData,
+                items,
+                page: 1,
+                pageSize: items.length,
+                totalCount: items.length,
+                totalPages: Math.max(1, Math.ceil(items.length / 100))
+            }
             : undefined
     } as ApiResponse<GroupTaskListResponse> | null;
 }
@@ -1198,8 +1197,8 @@ function applyTaskDrop(args: {
     const overKey = overRaw.startsWith(DROP_PREFIX)
         ? overRaw.replace(DROP_PREFIX, "")
         : overRaw.startsWith(END_PREFIX)
-          ? overRaw.replace(END_PREFIX, "")
-          : overRaw;
+            ? overRaw.replace(END_PREFIX, "")
+            : overRaw;
 
     const fromCol = findColumnOfTask(board, columns, activeTaskId);
     if (!fromCol) return null;
@@ -1338,10 +1337,20 @@ function DuePill({
                         </svg>
                     </span>
                 ) : null}
-                {due ? <div className="flex h-7 items-center whitespace-nowrap font-semibold text-xs gap-1.5 border border- bg-blue-50 px-1.5 py-0.5 rounded-full">
-                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width={16} height={16} fill="currentColor" className="inline-block">
-                   <path d="M466.6 114.2C461.2 115.9 455.3 116 450.4 113.3C444.6 110.1 438.6 107.1 432.6 104.4C422.2 99.7 418.9 86.1 428.5 79.8C443.5 69.9 461.5 64.1 480.8 64.1C533.4 64.1 576 106.7 576 159.3C576 172.5 573.3 185.1 568.4 196.6C563.9 207.1 550 206.4 543.5 197C539.7 191.5 535.7 186.2 531.5 181C528 176.6 527 170.8 527.7 165.2C527.9 163.3 528.1 161.3 528.1 159.3C528.1 133.2 506.9 112.1 480.9 112.1C476 112.1 471.2 112.9 466.7 114.3zM96.5 196.9C90 206.3 76 207 71.6 196.5C66.7 185 64 172.4 64 159.2C64 106.6 106.6 64 159.2 64C178.5 64 196.5 69.8 211.5 79.7C221.1 86 217.8 99.6 207.4 104.3C201.3 107.1 195.4 110 189.6 113.2C184.7 115.9 178.7 115.8 173.4 114.1C168.9 112.7 164.2 111.9 159.2 111.9C133.1 111.9 112 133.1 112 159.1C112 161.1 112.1 163.1 112.4 165C113.1 170.6 112.1 176.4 108.6 180.8C104.4 186 100.4 191.3 96.6 196.8zM496 352C496 254.8 417.2 176 320 176C222.8 176 144 254.8 144 352C144 449.2 222.8 528 320 528C417.2 528 496 449.2 496 352zM460.5 526.5C422.1 557.4 373.2 576 320 576C266.8 576 217.9 557.4 179.5 526.5L137 569C127.6 578.4 112.4 578.4 103.1 569C93.8 559.6 93.7 544.4 103.1 535.1L145.6 492.6C114.6 454.1 96 405.2 96 352C96 228.3 196.3 128 320 128C443.7 128 544 228.3 544 352C544 405.2 525.4 454.1 494.5 492.5L537 535C546.4 544.4 546.4 559.6 537 568.9C527.6 578.2 512.4 578.3 503.1 568.9L460.6 526.4zM344 248L344 342.1L385 383.1C394.4 392.5 394.4 407.7 385 417C375.6 426.3 360.4 426.4 351.1 417L303.1 369C298.6 364.5 296.1 358.4 296.1 352L296.1 248C296.1 234.7 306.8 224 320.1 224C333.4 224 344.1 234.7 344.1 248z"/></svg>
-                    {due}</div> : null}
+                {due ? (
+                    <div className="border- flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border bg-blue-50 px-1.5 py-0.5 font-semibold text-xs">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 640 640"
+                            width={16}
+                            height={16}
+                            fill="currentColor"
+                            className="inline-block">
+                            <path d="M466.6 114.2C461.2 115.9 455.3 116 450.4 113.3C444.6 110.1 438.6 107.1 432.6 104.4C422.2 99.7 418.9 86.1 428.5 79.8C443.5 69.9 461.5 64.1 480.8 64.1C533.4 64.1 576 106.7 576 159.3C576 172.5 573.3 185.1 568.4 196.6C563.9 207.1 550 206.4 543.5 197C539.7 191.5 535.7 186.2 531.5 181C528 176.6 527 170.8 527.7 165.2C527.9 163.3 528.1 161.3 528.1 159.3C528.1 133.2 506.9 112.1 480.9 112.1C476 112.1 471.2 112.9 466.7 114.3zM96.5 196.9C90 206.3 76 207 71.6 196.5C66.7 185 64 172.4 64 159.2C64 106.6 106.6 64 159.2 64C178.5 64 196.5 69.8 211.5 79.7C221.1 86 217.8 99.6 207.4 104.3C201.3 107.1 195.4 110 189.6 113.2C184.7 115.9 178.7 115.8 173.4 114.1C168.9 112.7 164.2 111.9 159.2 111.9C133.1 111.9 112 133.1 112 159.1C112 161.1 112.1 163.1 112.4 165C113.1 170.6 112.1 176.4 108.6 180.8C104.4 186 100.4 191.3 96.6 196.8zM496 352C496 254.8 417.2 176 320 176C222.8 176 144 254.8 144 352C144 449.2 222.8 528 320 528C417.2 528 496 449.2 496 352zM460.5 526.5C422.1 557.4 373.2 576 320 576C266.8 576 217.9 557.4 179.5 526.5L137 569C127.6 578.4 112.4 578.4 103.1 569C93.8 559.6 93.7 544.4 103.1 535.1L145.6 492.6C114.6 454.1 96 405.2 96 352C96 228.3 196.3 128 320 128C443.7 128 544 228.3 544 352C544 405.2 525.4 454.1 494.5 492.5L537 535C546.4 544.4 546.4 559.6 537 568.9C527.6 578.2 512.4 578.3 503.1 568.9L460.6 526.4zM344 248L344 342.1L385 383.1C394.4 392.5 394.4 407.7 385 417C375.6 426.3 360.4 426.4 351.1 417L303.1 369C298.6 364.5 296.1 358.4 296.1 352L296.1 248C296.1 234.7 306.8 224 320.1 224C333.4 224 344.1 234.7 344.1 248z" />
+                        </svg>
+                        {due}
+                    </div>
+                ) : null}
             </div>
         </div>
     );
@@ -1599,8 +1608,8 @@ function DueDateIcon({ tone, children }: { tone: "neutral" | "red" | "yellow" | 
         tone === "red"
             ? "bg-[#D64532] text-white"
             : tone === "yellow"
-              ? "bg-[#FFC21A] text-white"
-              : "bg-[#F3F4F6] text-zinc-500";
+                ? "bg-[#FFC21A] text-white"
+                : "bg-[#F3F4F6] text-zinc-500";
 
     return (
         <span className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full", toneClass)}>
@@ -1613,13 +1622,13 @@ function LabelToneDot({
     tone
 }: {
     tone:
-        | "priority-high"
-        | "priority-medium"
-        | "priority-low"
-        | "severity-critical"
-        | "severity-major"
-        | "severity-moderate"
-        | "severity-minor";
+    | "priority-high"
+    | "priority-medium"
+    | "priority-low"
+    | "severity-critical"
+    | "severity-major"
+    | "severity-moderate"
+    | "severity-minor";
 }) {
     const toneClass =
         tone === "priority-high"
@@ -1639,13 +1648,13 @@ function LabelToneDot({
     return <span className={cn("inline-flex h-3 w-3 rounded-full", toneClass)} />;
 }
 
-function useAutosizeTextarea(ref: React.RefObject<HTMLTextAreaElement | null>, _value: string) {
+function useAutosizeTextarea(ref: React.RefObject<HTMLTextAreaElement | null>, value: string) {
     React.useEffect(() => {
         const el = ref.current;
         if (!el) return;
         el.style.height = "0px";
         el.style.height = `${el.scrollHeight}px`;
-    }, [ref]);
+    }, [ref, value]);
 }
 
 type TaskCardProps = {
@@ -1822,14 +1831,14 @@ function TaskCard({
                             {severityLabel ? (
                                 <span
                                     className={cn(
-                                        "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+                                        "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 font-semibold text-xs",
                                         done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                                     )}>
                                     {severityLabel}
                                 </span>
                             ) : null}
                             {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
-                            {done ? <DonePill completedAt={task.completedAt}/> : null}
+                            {done ? <DonePill completedAt={task.completedAt} /> : null}
                             {task.estimatedHours != null ? (
                                 <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700 text-xs">
                                     {task.estimatedHours}
@@ -1950,7 +1959,7 @@ function GhostTaskCard({ task }: { task: Task }) {
                     {severityLabel ? (
                         <span
                             className={cn(
-                                "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+                                "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 font-semibold text-xs",
                                 done ? "border-zinc-200 bg-zinc-100 text-zinc-500" : severityTone(task.severity)
                             )}>
                             {severityLabel}
@@ -2229,7 +2238,9 @@ function ColumnView({
     }, [isColumnEditing]);
 
     return (
-        <div className="rounded-xl border border-zinc-200/60 bg-white" data-status-id={dndEnabled ? undefined : statusId}>
+        <div
+            className="rounded-xl border border-zinc-200/60 bg-white"
+            data-status-id={dndEnabled ? undefined : statusId}>
             <div
                 ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as any)}
                 {...(headerDragProps?.attributes ?? {})}
@@ -2352,50 +2363,53 @@ function ColumnView({
                         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                             <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {showLoadingState ? (
-                                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white/70 px-3 py-8 text-center text-sm text-zinc-500 backdrop-blur-sm">
+                                    <div className="rounded-xl border border-zinc-300 border-dashed bg-white/70 px-3 py-8 text-center text-sm text-zinc-500 backdrop-blur-sm">
                                         {t("loading")}
                                     </div>
                                 ) : null}
 
                                 {showErrorState ? (
-                                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-8 text-center text-sm text-rose-700">
+                                    <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-8 text-center text-rose-700 text-sm">
                                         <div className="font-semibold">{taskLoadError}</div>
                                         <button
                                             type="button"
                                             onClick={() => statusId && onRetryLoadTasks?.(statusId)}
-                                            className="mt-3 inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-semibold text-xs text-rose-700 hover:bg-rose-50">
+                                            className="mt-3 inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-semibold text-rose-700 text-xs hover:bg-rose-50">
                                             {t("retry")}
                                         </button>
                                     </div>
                                 ) : null}
 
-                                {!showLoadingState && !showErrorState
+                                {!(showLoadingState || showErrorState)
                                     ? rendered.map((item) => {
-                                          if (item.kind === "ghost")
-                                              return <GhostTaskCard key={item.key} task={ghost!.task} />;
+                                        if (item.kind === "ghost")
+                                            return <GhostTaskCard key={item.key} task={ghost!.task} />;
 
-                                          const isEditingThis =
-                                              taskEditState.taskId === item.task.id && taskEditState.columnId === col.id;
+                                        const isEditingThis =
+                                            taskEditState.taskId === item.task.id &&
+                                            taskEditState.columnId === col.id;
 
-                                          return (
-                                              <TaskCard
-                                                  key={item.task.id}
-                                                  task={item.task}
-                                                  columnId={col.id}
-                                                  isEditing={isEditingThis}
-                                                  draftTitle={isEditingThis ? taskEditState.draft : item.task.title}
-                                                  onDraftChange={onTaskDraftChange}
-                                                  onOpenDetail={() => onOpenTaskDetail(item.task.id)}
-                                                  onStartEdit={() => onTaskStartEdit(item.task.id, col.id, item.task.title)}
-                                                  onCancelEdit={onTaskCancelEdit}
-                                                  onCommitEdit={onTaskCommitEdit}
-                                                  onDelete={() => onDeleteTask(item.task.id, col.id)}
-                                              />
-                                          );
-                                      })
+                                        return (
+                                            <TaskCard
+                                                key={item.task.id}
+                                                task={item.task}
+                                                columnId={col.id}
+                                                isEditing={isEditingThis}
+                                                draftTitle={isEditingThis ? taskEditState.draft : item.task.title}
+                                                onDraftChange={onTaskDraftChange}
+                                                onOpenDetail={() => onOpenTaskDetail(item.task.id)}
+                                                onStartEdit={() =>
+                                                    onTaskStartEdit(item.task.id, col.id, item.task.title)
+                                                }
+                                                onCancelEdit={onTaskCancelEdit}
+                                                onCommitEdit={onTaskCommitEdit}
+                                                onDelete={() => onDeleteTask(item.task.id, col.id)}
+                                            />
+                                        );
+                                    })
                                     : null}
 
-                                {!showLoadingState && !showErrorState && tasks.length === 0 && hasLoadedTasks ? (
+                                {!(showLoadingState || showErrorState) && tasks.length === 0 && hasLoadedTasks ? (
                                     <div className="rounded-xl border border-zinc-300 border-dashed bg-white/70 px-3 py-8 text-center backdrop-blur-sm">
                                         <div className="font-semibold text-sm text-zinc-700">{t("noTasks")}</div>
                                         <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
@@ -2414,45 +2428,46 @@ function ColumnView({
                     ) : (
                         <div className="max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {showLoadingState ? (
-                                <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                                <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center text-sm text-zinc-500">
                                     {t("loading")}
                                 </div>
                             ) : null}
 
                             {showErrorState ? (
-                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-8 text-center text-sm text-rose-700">
+                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-8 text-center text-rose-700 text-sm">
                                     <div className="font-semibold">{taskLoadError}</div>
                                     <button
                                         type="button"
                                         onClick={() => statusId && onRetryLoadTasks?.(statusId)}
-                                        className="mt-3 inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-semibold text-xs text-rose-700 hover:bg-rose-50">
+                                        className="mt-3 inline-flex items-center rounded-lg border border-rose-200 bg-white px-3 py-1.5 font-semibold text-rose-700 text-xs hover:bg-rose-50">
                                         {t("retry")}
                                     </button>
                                 </div>
                             ) : null}
 
-                            {!showLoadingState && !showErrorState
+                            {!(showLoadingState || showErrorState)
                                 ? tasks.map((t) => {
-                                      const isEditingThis = taskEditState.taskId === t.id && taskEditState.columnId === col.id;
-                                      return (
-                                          <TaskCard
-                                              key={t.id}
-                                              task={t}
-                                              columnId={col.id}
-                                              isEditing={isEditingThis}
-                                              draftTitle={isEditingThis ? taskEditState.draft : t.title}
-                                              onDraftChange={onTaskDraftChange}
-                                              onOpenDetail={() => onOpenTaskDetail(t.id)}
-                                              onStartEdit={() => onTaskStartEdit(t.id, col.id, t.title)}
-                                              onCancelEdit={onTaskCancelEdit}
-                                              onCommitEdit={onTaskCommitEdit}
-                                              onDelete={() => onDeleteTask(t.id, col.id)}
-                                          />
-                                      );
-                                  })
+                                    const isEditingThis =
+                                        taskEditState.taskId === t.id && taskEditState.columnId === col.id;
+                                    return (
+                                        <TaskCard
+                                            key={t.id}
+                                            task={t}
+                                            columnId={col.id}
+                                            isEditing={isEditingThis}
+                                            draftTitle={isEditingThis ? taskEditState.draft : t.title}
+                                            onDraftChange={onTaskDraftChange}
+                                            onOpenDetail={() => onOpenTaskDetail(t.id)}
+                                            onStartEdit={() => onTaskStartEdit(t.id, col.id, t.title)}
+                                            onCancelEdit={onTaskCancelEdit}
+                                            onCommitEdit={onTaskCommitEdit}
+                                            onDelete={() => onDeleteTask(t.id, col.id)}
+                                        />
+                                    );
+                                })
                                 : null}
 
-                            {!showLoadingState && !showErrorState && tasks.length === 0 && hasLoadedTasks ? (
+                            {!(showLoadingState || showErrorState) && tasks.length === 0 && hasLoadedTasks ? (
                                 <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
                                     <div className="font-semibold text-sm text-zinc-700">{t("noTasks")}</div>
                                     <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
@@ -2481,6 +2496,11 @@ function SortableColumn({
     col,
     tasks,
     taskIds,
+    statusId,
+    isTasksLoaded,
+    isTasksLoading,
+    taskLoadError,
+    onRetryLoadTasks,
     onOpenCreateTask,
     onOpenTaskDetail,
     dndEnabled,
@@ -2535,36 +2555,6 @@ function SortableColumn({
     canDeleteTask: boolean;
     canAddTask: boolean;
 }) {
-    const {
-        col,
-        tasks,
-        taskIds,
-        statusId,
-        isTasksLoaded,
-        isTasksLoading,
-        taskLoadError,
-        onRetryLoadTasks,
-        onOpenCreateTask,
-        onOpenTaskDetail,
-        dndEnabled,
-        ghost,
-        creatingTask,
-        onRenameColumnInline,
-        onDeleteColumn,
-        taskEditState,
-        onTaskStartEdit,
-        onTaskCancelEdit,
-        onTaskDraftChange,
-        onTaskCommitEdit,
-        onDeleteTask,
-        isColumnEditing,
-        columnDraft,
-        columnError,
-        onColumnDraftChange,
-        onColumnCommit,
-        onColumnCancel
-    } = props;
-
     const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
         id: col.id,
         data: { type: "column" }
@@ -2579,7 +2569,11 @@ function SortableColumn({
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="min-w-[300px] max-w-[300px] self-start" data-status-id={statusId}>
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="min-w-[300px] max-w-[300px] self-start"
+            data-status-id={statusId}>
             <ColumnView
                 canEditStatus={canEditStatus}
                 canDeleteTask={canDeleteTask}
@@ -2746,29 +2740,23 @@ export function GroupBoardScreen({
     const statusLoadLockRef = React.useRef<Set<ColumnId>>(new Set());
     const statusLoadingRef = React.useRef<Record<ColumnId, boolean>>({});
     const statusLoadedRef = React.useRef<Record<ColumnId, boolean>>({});
-    const loadTasksForStatusRef = React.useRef<(statusId: string) => Promise<void>>(async () => {});
+    const loadTasksForStatusRef = React.useRef<(statusId: string) => Promise<void>>(async () => { });
 
-    const updateStatusLoadingMap = React.useCallback(
-        (update: React.SetStateAction<Record<ColumnId, boolean>>) => {
-            setStatusLoadingMap((prev) => {
-                const next = typeof update === "function" ? update(prev) : update;
-                statusLoadingRef.current = next;
-                return next;
-            });
-        },
-        []
-    );
+    const updateStatusLoadingMap = React.useCallback((update: React.SetStateAction<Record<ColumnId, boolean>>) => {
+        setStatusLoadingMap((prev) => {
+            const next = typeof update === "function" ? update(prev) : update;
+            statusLoadingRef.current = next;
+            return next;
+        });
+    }, []);
 
-    const updateStatusLoadedMap = React.useCallback(
-        (update: React.SetStateAction<Record<ColumnId, boolean>>) => {
-            setStatusLoadedMap((prev) => {
-                const next = typeof update === "function" ? update(prev) : update;
-                statusLoadedRef.current = next;
-                return next;
-            });
-        },
-        []
-    );
+    const updateStatusLoadedMap = React.useCallback((update: React.SetStateAction<Record<ColumnId, boolean>>) => {
+        setStatusLoadedMap((prev) => {
+            const next = typeof update === "function" ? update(prev) : update;
+            statusLoadedRef.current = next;
+            return next;
+        });
+    }, []);
 
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
@@ -3138,7 +3126,7 @@ export function GroupBoardScreen({
         async (statusId: string) => {
             if (!groupId) return;
             if (!isUuidLike(groupId)) return;
-            if (!statusId || !isUuidLike(statusId)) return;
+            if (!(statusId && isUuidLike(statusId))) return;
             if (statusLoadLockRef.current.has(statusId)) return;
             if (statusLoadedRef.current[statusId] || statusLoadingRef.current[statusId]) return;
 
@@ -3350,7 +3338,7 @@ export function GroupBoardScreen({
         };
 
         void reloadLoadedStatuses();
-    }, [filters, loadTasksForStatus, updateStatusLoadedMap]);
+    }, [loadTasksForStatus, updateStatusLoadedMap]);
 
     const activeTask = React.useMemo(() => {
         if (!activeTaskId) return null;
@@ -3372,8 +3360,8 @@ export function GroupBoardScreen({
         const overKey = overId.startsWith(DROP_PREFIX)
             ? overId.replace(DROP_PREFIX, "")
             : overId.startsWith(END_PREFIX)
-              ? overId.replace(END_PREFIX, "")
-              : overId;
+                ? overId.replace(END_PREFIX, "")
+                : overId;
 
         let toCol: ColumnId | null = null;
         if (columns.some((c) => c.id === overKey)) toCol = overKey;
@@ -3738,6 +3726,11 @@ export function GroupBoardScreen({
         }
 
         if (activeType === "column") {
+            // Check permission before allowing column reordering
+            if (!canEditStatus) {
+                return;
+            }
+
             if (!groupId) return;
 
             const activeColId = String(e.active.id);
@@ -4061,10 +4054,10 @@ export function GroupBoardScreen({
                             </FilterSection>
 
                             <FilterSection title={t("labels")}>
-                                {(filters.priorities.length > 1 || filters.severities.length > 1) ? (
+                                {filters.priorities.length > 1 || filters.severities.length > 1 ? (
                                     <p className="px-2 pb-1 text-[11px] text-amber-700">{t("multiSelectApiHint")}</p>
                                 ) : null}
-                                <div className="px-2 pt-1 font-medium text-xs uppercase tracking-wide text-zinc-500">
+                                <div className="px-2 pt-1 font-medium text-xs text-zinc-500 uppercase tracking-wide">
                                     {t("priority")}
                                 </div>
                                 <FilterCheckbox

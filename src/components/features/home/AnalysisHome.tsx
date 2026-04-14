@@ -421,10 +421,10 @@ function BarChartTooltip({ active, payload, label }: any) {
                         {entry.name === "you" || entry.name === "user"
                             ? t("benchmark.you")
                             : entry.name === "avg" || entry.name === "groupAvg"
-                              ? t("benchmark.groupAverage")
-                              : entry.name === "trend"
-                                ? t("benchmark.trend")
-                                : entry.name}
+                                ? t("benchmark.groupAverage")
+                                : entry.name === "trend"
+                                    ? t("benchmark.trend")
+                                    : entry.name}
                     </span>
                     <span className="ml-auto font-semibold text-slate-900">{entry.value}</span>
                 </div>
@@ -795,7 +795,9 @@ export default function AnalysisHome() {
                 setRiskAlertsLoading(false);
             })
         ]);
-    }, [benchmarkPeriod, locale, trendPeriod]);
+        // Empty deps: only run on mount. Dedicated effects handle period/locale changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // ── Refetch benchmark when group filter or period changes ─────
     const fetchBenchmark = useCallback(
@@ -951,11 +953,11 @@ export default function AnalysisHome() {
                                 badge={
                                     kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
                                         ? t("cards.totalTasks.badge", {
-                                              percent:
-                                                  kpiData.totalChangePercent > 0
-                                                      ? `+${kpiData.totalChangePercent}`
-                                                      : kpiData.totalChangePercent
-                                          })
+                                            percent:
+                                                kpiData.totalChangePercent > 0
+                                                    ? `+${kpiData.totalChangePercent}`
+                                                    : kpiData.totalChangePercent
+                                        })
                                         : undefined
                                 }
                                 badgeType={
@@ -1280,8 +1282,8 @@ export default function AnalysisHome() {
                                                                     ? "bg-red-50 text-red-600"
                                                                     : item.priority === "Trung bình" ||
                                                                         item.priority === "Medium"
-                                                                      ? "bg-orange-50 text-orange-600"
-                                                                      : "bg-slate-100 text-slate-500"
+                                                                        ? "bg-orange-50 text-orange-600"
+                                                                        : "bg-slate-100 text-slate-500"
                                                             )}>
                                                             {getLocalizedPriority(item.priority ?? "") || "—"}
                                                         </span>
@@ -1395,11 +1397,11 @@ export default function AnalysisHome() {
                                                             item.urgency === "Khẩn cấp" || item.urgency === "Critical"
                                                                 ? "bg-red-100 text-red-700"
                                                                 : item.urgency === "Cao" || item.urgency === "High"
-                                                                  ? "bg-orange-100 text-orange-700"
-                                                                  : item.urgency === "Trung bình" ||
-                                                                      item.urgency === "Medium"
-                                                                    ? "bg-amber-50 text-amber-600"
-                                                                    : "bg-orange-50 text-orange-600"
+                                                                    ? "bg-orange-100 text-orange-700"
+                                                                    : item.urgency === "Trung bình" ||
+                                                                        item.urgency === "Medium"
+                                                                        ? "bg-amber-50 text-amber-600"
+                                                                        : "bg-orange-50 text-orange-600"
                                                         )}>
                                                         {getLocalizedUrgency(item.urgency ?? "") || "—"}
                                                     </span>

@@ -152,7 +152,8 @@ export default function GroupAiQaPage() {
     }, [locale, groupId]);
 
     const isRestricted = React.useMemo(() => {
-        if (!currentUserRole) return false;
+        // Default to restricted while role is loading for security
+        if (currentUserRole === null) return true;
         const r = currentUserRole.toLowerCase().trim();
         return r === "viewer" || r === "view" || r === "commenter";
     }, [currentUserRole]);

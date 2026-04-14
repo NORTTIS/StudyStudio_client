@@ -80,10 +80,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-            | {
-                  role?: string | null;
-              }[]
-            | null;
+        | {
+            role?: string | null;
+        }[]
+        | null;
     } | null;
 };
 
@@ -222,7 +222,7 @@ export function GroupStudioHeader({
     const [groupDesc, setGroupDesc] = React.useState<string>("");
     const [studioName, setStudioName] = React.useState<string>("");
     const [memberCount, setMemberCount] = React.useState<number>(0);
-    const [userRole, setUserRole] = React.useState<GroupRole | "">("");
+    const [userRole, setUserRole] = React.useState<GroupRole>("");
     const [error, setError] = React.useState<string>("");
     const [groupTagline, setGroupTagline] = React.useState<string>("");
     const [groupAlias, setGroupAlias] = React.useState<string>("");
@@ -307,7 +307,7 @@ export function GroupStudioHeader({
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch {}
+                } catch { }
 
                 if (!res.ok) {
                     const msg = normalizeErrorMessage(
@@ -352,7 +352,7 @@ export function GroupStudioHeader({
                     let studioJson: unknown = null;
                     try {
                         studioJson = studioText ? JSON.parse(studioText) : null;
-                    } catch {}
+                    } catch { }
 
                     const studioData = (studioJson as StudioResponseApiResponse | null)?.data;
                     if (studioRes.ok && studioData) {
@@ -397,7 +397,7 @@ export function GroupStudioHeader({
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch {}
+                    } catch { }
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -522,7 +522,7 @@ export function GroupStudioHeader({
         let json: any = null;
         try {
             json = text ? JSON.parse(text) : null;
-        } catch {}
+        } catch { }
 
         if (res.ok) {
             const inviteData = json?.data ?? json ?? {};
@@ -591,7 +591,7 @@ export function GroupStudioHeader({
         let json: any = null;
         try {
             json = text ? JSON.parse(text) : null;
-        } catch {}
+        } catch { }
 
         if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -872,8 +872,8 @@ export function GroupStudioHeader({
                                             tabDisabled
                                                 ? "text-[#94A3B8] opacity-55"
                                                 : active
-                                                  ? "text-white shadow-md shadow-orange-200"
-                                                  : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                                    ? "text-white shadow-md shadow-orange-200"
+                                                    : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
                                         )}>
                                         {active && !tabDisabled ? (
                                             <motion.div
@@ -893,8 +893,8 @@ export function GroupStudioHeader({
                                                 tabDisabled
                                                     ? "text-[#94A3B8]"
                                                     : active
-                                                      ? "text-white"
-                                                      : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                        ? "text-white"
+                                                        : "text-[#8C8C8C] group-hover:text-[#EA580C]"
                                             )}
                                         />
                                         <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
