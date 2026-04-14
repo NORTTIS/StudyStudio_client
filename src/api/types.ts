@@ -8030,10 +8030,14 @@ export interface components {
         GroupTaskItemResponse: {
             assignees?: components["schemas"]["UserDto"][] | null;
             /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
             createdAt?: string;
             createdBy?: components["schemas"]["UserDto"];
             /** Format: date-time */
             dueDate?: string | null;
+            /** Format: int32 */
+            position?: number;
             /** Format: int32 */
             progress?: number;
             /** Format: date-time */

@@ -39,6 +39,8 @@ import { getCurrentUserId, mapRole } from "@/components/features/group/group.api
 import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 import TaskFormModal, { type TaskFormOption, type TaskFormValues } from "@/components/features/group/task/TaskForm";
+import locale from "antd/es/calendar/locale/en_US";
+import { formatDate } from "@fullcalendar/core/index.js";
 
 type ColumnId = string;
 
@@ -77,6 +79,7 @@ type Task = {
     estimatedHours?: number;
     actualHours?: number;
     completedAt?: string;
+    position?: number;
 };
 
 type Column = {
@@ -521,6 +524,22 @@ function formatDueCompact(input: string, locale: string) {
     }).format(d);
 }
 
+function formatDateTimeLocal(input: string, locale: string) {
+    const s = String(input ?? "").trim();
+    if (!s) return "";
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return s;
+
+    const normalizedLocale = locale.includes("-") ? locale : locale === "vi" ? "vi-VN" : "en-US";
+    return new Intl.DateTimeFormat(normalizedLocale, {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    }).format(d);
+}
+
 function formatAssigneeName(
     input?: {
         firstName?: string | null;
@@ -576,7 +595,9 @@ function mapGroupTaskToBoardTask(apiTask: GroupTaskItemResponse, locale: string)
         statusName: apiTask.statusName ?? null,
         priority: apiTask.taskPriority ?? null,
         severity: apiTask.taskSeverity ?? null,
-        progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0
+        progress: Number.isFinite(apiTask.progress as number) ? Number(apiTask.progress) : 0,
+        position: apiTask.position,
+        completedAt: apiTask.completedAt ?? undefined
     };
 
     if (startFmt) task.start = startFmt;
@@ -857,7 +878,6 @@ async function apiGetAllGroupTasks(args: {
                 items,
                 page: 1,
                 pageSize: items.length,
-                totalCount: items.length,
                 totalPages: Math.max(1, Math.ceil(items.length / 100))
             }
             : undefined
@@ -1262,10 +1282,13 @@ function Pill({ children }: { children: React.ReactNode }) {
 
 function DonePill({ completedAt }: { completedAt?: string | null }) {
     const t = useTranslations("GroupBoardScreen");
+    const locale = useLocale();
+    const formattedDate = completedAt ? formatDueCompact(completedAt, locale) : null;
+
     return (
         <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700 text-xs">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            {completedAt ? completedAt : t("done")}
+            {formattedDate ?? t("done")}
         </span>
     );
 }
@@ -1315,27 +1338,6 @@ function DuePill({
                         size={24}
                         className="text-[10px]"
                     />
-                ) : null}
-                {shouldShowDueText ? <div className="whitespace-nowrap font-semibold text-xs">{due}</div> : null}
-                {overdue && !done ? (
-                    <span title={t("overdue")} className="shrink-0">
-                        <span className="sr-only">{t("overdue")}</span>
-                        <svg
-                            viewBox="0 0 48 48"
-                            className="h-4 w-4"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true">
-                            <path
-                                d="M25.9 3.4c.4 5.4-2.2 9.6-6.2 13.6-3.5 3.5-7.2 7.4-7.2 13.4 0 8.3 6.3 14.2 14.7 14.2 8.7 0 14.8-6.1 14.8-14.3 0-7.1-4.9-11.7-8.6-15.7-2.9-3.1-5.4-6-5.9-10.7-.1-.8-.7-1.4-1.5-1.4-.7 0-1.4.4-1.4.9Z"
-                                fill="#FF5A7A"
-                            />
-                            <path
-                                d="M26.9 18.1c.2 3.1-1.2 5.5-3.4 7.8-1.9 2-4 4.3-4 7.8 0 5 3.7 8.4 8.7 8.4 5.2 0 8.8-3.7 8.8-8.5 0-4.1-2.8-6.9-5.1-9.3-1.8-1.9-3.4-3.7-3.6-6.5 0-.6-.5-1-1.1-1-.6 0-1.1.5-1.1 1.3Z"
-                                fill="#F21155"
-                            />
-                        </svg>
-                    </span>
                 ) : null}
                 {due ? (
                     <div className="border- flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border bg-blue-50 px-1.5 py-0.5 font-semibold text-xs">
@@ -1966,7 +1968,7 @@ function GhostTaskCard({ task }: { task: Task }) {
                         </span>
                     ) : null}
                     {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
-                    {done ? <DonePill /> : null}
+                    {done ? <DonePill completedAt={task.completedAt} /> : null}
                     {task.estimatedHours != null ? (
                         <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700 text-xs">
                             {task.estimatedHours}
@@ -2135,6 +2137,78 @@ function AddTaskButton({ disabled, onClick }: { disabled: boolean; onClick: () =
     );
 }
 
+function LoadMoreTrigger({ statusId, onLoadMore, isLoading }: { statusId?: string; onLoadMore?: (statusId: string) => void; isLoading?: boolean }) {
+    const ref = React.useRef<HTMLDivElement>(null);
+    const triggeredRef = React.useRef(false);
+    const hasUserScrolledRef = React.useRef(false);
+    const lastScrollTopRef = React.useRef(0);
+
+    React.useEffect(() => {
+        const scrollEl = ref.current?.parentElement as HTMLElement | null;
+        if (!scrollEl || !statusId || !onLoadMore) return;
+
+        // Reset trigger when loading completes
+        if (!isLoading) {
+            triggeredRef.current = false;
+        }
+
+        const tryLoadMore = () => {
+            if (triggeredRef.current || isLoading || !hasUserScrolledRef.current) return;
+
+            const { scrollTop, clientHeight, scrollHeight } = scrollEl;
+            const reachedBottom = scrollTop + clientHeight >= scrollHeight - 2;
+
+            if (reachedBottom) {
+                triggeredRef.current = true;
+                onLoadMore(statusId);
+            }
+        };
+
+        const handleScroll = () => {
+            const currentTop = scrollEl.scrollTop;
+
+            if (currentTop > 0) {
+                hasUserScrolledRef.current = true;
+            }
+
+            // Only attempt loading while the user is scrolling downward.
+            if (currentTop >= lastScrollTopRef.current) {
+                tryLoadMore();
+            }
+
+            lastScrollTopRef.current = currentTop;
+        };
+
+        scrollEl.addEventListener("scroll", handleScroll, { passive: true });
+
+        return () => {
+            scrollEl.removeEventListener("scroll", handleScroll);
+        };
+    }, [statusId, onLoadMore, isLoading]);
+
+    // Invisible trigger element at the end of the list
+    return <div ref={ref} className="h-px" />;
+}
+
+function LoadMoreLoading() {
+    const t = useTranslations("GroupBoardScreen");
+
+    return (
+        <div className="rounded-xl border border-zinc-200/80 bg-white/80 p-3">
+            <div className="flex items-center justify-center gap-2 text-zinc-500 text-xs">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+                <span className="font-medium">{t("loading")}</span>
+            </div>
+
+            <div className="mt-3 space-y-2">
+                <div className="h-2 w-full animate-pulse rounded-full bg-zinc-200" />
+                <div className="h-2 w-4/5 animate-pulse rounded-full bg-zinc-200 [animation-delay:120ms]" />
+                <div className="h-2 w-2/3 animate-pulse rounded-full bg-zinc-200 [animation-delay:240ms]" />
+            </div>
+        </div>
+    );
+}
+
 function ColumnView({
     col,
     tasks,
@@ -2166,7 +2240,11 @@ function ColumnView({
     onColumnCancel,
     canEditStatus,
     canDeleteTask,
-    canAddTask
+    canAddTask,
+    isLoadingMore,
+    hasMore,
+    onLoadMore,
+    totalCount
 }: {
     col: Column;
     tasks: Task[];
@@ -2174,8 +2252,12 @@ function ColumnView({
     statusId?: string;
     isTasksLoaded?: boolean;
     isTasksLoading?: boolean;
+    isLoadingMore?: boolean;
+    hasMore?: boolean;
+    totalCount?: number;
     taskLoadError?: string | null;
     onRetryLoadTasks?: (statusId: string) => void;
+    onLoadMore?: (statusId: string) => void;
     onOpenCreateTask: (columnId: ColumnId) => void;
     onOpenTaskDetail: (taskId: string) => void;
     dndEnabled: boolean;
@@ -2303,7 +2385,7 @@ function ColumnView({
 
                     <div className="flex shrink-0 items-center gap-2">
                         <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 font-semibold text-xs text-zinc-700">
-                            {hasLoadedTasks ? tasks.length : "…"}
+                            {totalCount ?? tasks.length}
                         </span>
 
                         {(canEditStatus || canDeleteTask) && (
@@ -2423,6 +2505,12 @@ function ColumnView({
                                         isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
                                     )}
                                 />
+
+                                {isLoadingMore && <LoadMoreLoading />}
+
+                                {!isLoadingMore && hasMore && (
+                                    <LoadMoreTrigger statusId={statusId} onLoadMore={onLoadMore} isLoading={isLoadingMore} />
+                                )}
                             </div>
                         </SortableContext>
                     ) : (
@@ -2473,6 +2561,12 @@ function ColumnView({
                                     <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
                                 </div>
                             ) : null}
+
+                            {isLoadingMore && <LoadMoreLoading />}
+
+                            {!isLoadingMore && hasMore && (
+                                <LoadMoreTrigger statusId={statusId} onLoadMore={onLoadMore} isLoading={isLoadingMore} />
+                            )}
                         </div>
                     )}
 
@@ -2522,7 +2616,11 @@ function SortableColumn({
     onColumnCancel,
     canEditStatus,
     canDeleteTask,
-    canAddTask
+    canAddTask,
+    isLoadingMore,
+    hasMore,
+    onLoadMore,
+    totalCount
 }: {
     col: Column;
     tasks: Task[];
@@ -2530,8 +2628,12 @@ function SortableColumn({
     statusId?: string;
     isTasksLoaded?: boolean;
     isTasksLoading?: boolean;
+    isLoadingMore?: boolean;
+    hasMore?: boolean;
+    totalCount?: number;
     taskLoadError?: string | null;
     onRetryLoadTasks?: (statusId: string) => void;
+    onLoadMore?: (statusId: string) => void;
     onOpenCreateTask: (columnId: ColumnId) => void;
     onOpenTaskDetail: (taskId: string) => void;
     dndEnabled: boolean;
@@ -2581,6 +2683,7 @@ function SortableColumn({
                 col={col}
                 tasks={tasks}
                 taskIds={taskIds}
+                statusId={statusId}
                 isTasksLoaded={isTasksLoaded}
                 isTasksLoading={isTasksLoading}
                 taskLoadError={taskLoadError}
@@ -2597,6 +2700,10 @@ function SortableColumn({
                 onTaskCancelEdit={onTaskCancelEdit}
                 onTaskDraftChange={onTaskDraftChange}
                 onTaskCommitEdit={onTaskCommitEdit}
+                isLoadingMore={isLoadingMore}
+                hasMore={hasMore}
+                onLoadMore={onLoadMore}
+                totalCount={totalCount}
                 onDeleteTask={onDeleteTask}
                 isColumnEditing={isColumnEditing}
                 columnDraft={columnDraft}
@@ -2647,7 +2754,7 @@ function TaskOverlay({ task }: { task: Task }) {
 
                             {showProgress ? <ProgressPill progress={Number(task.progress ?? 0)} /> : null}
 
-                            {done ? <DonePill /> : null}
+                            {done ? <DonePill completedAt={task.completedAt}/> : null}
                         </div>
                     ) : null}
                 </div>
@@ -2737,9 +2844,14 @@ export function GroupBoardScreen({
     const [statusLoadingMap, setStatusLoadingMap] = React.useState<Record<ColumnId, boolean>>({});
     const [statusLoadedMap, setStatusLoadedMap] = React.useState<Record<ColumnId, boolean>>({});
     const [statusLoadErrors, setStatusLoadErrors] = React.useState<Record<ColumnId, string | null>>({});
+    const [statusPageMap, setStatusPageMap] = React.useState<Record<ColumnId, number>>({});
+    const [statusLoadingMoreMap, setStatusLoadingMoreMap] = React.useState<Record<ColumnId, boolean>>({});
+    const [statusHasMoreMap, setStatusHasMoreMap] = React.useState<Record<ColumnId, boolean>>({});
+    const [statusTotalCountMap, setStatusTotalCountMap] = React.useState<Record<ColumnId, number>>({});
     const statusLoadLockRef = React.useRef<Set<ColumnId>>(new Set());
     const statusLoadingRef = React.useRef<Record<ColumnId, boolean>>({});
     const statusLoadedRef = React.useRef<Record<ColumnId, boolean>>({});
+    const statusLoadingMoreRef = React.useRef<Record<ColumnId, boolean>>({});
     const loadTasksForStatusRef = React.useRef<(statusId: string) => Promise<void>>(async () => { });
 
     const updateStatusLoadingMap = React.useCallback((update: React.SetStateAction<Record<ColumnId, boolean>>) => {
@@ -2749,6 +2861,17 @@ export function GroupBoardScreen({
             return next;
         });
     }, []);
+
+    const updateStatusLoadingMoreMap = React.useCallback(
+        (update: React.SetStateAction<Record<ColumnId, boolean>>) => {
+            setStatusLoadingMoreMap((prev) => {
+                const next = typeof update === "function" ? update(prev) : update;
+                statusLoadingMoreRef.current = next;
+                return next;
+            });
+        },
+        []
+    );
 
     const updateStatusLoadedMap = React.useCallback((update: React.SetStateAction<Record<ColumnId, boolean>>) => {
         setStatusLoadedMap((prev) => {
@@ -3112,61 +3235,110 @@ export function GroupBoardScreen({
                 ColumnId,
                 string | null
             >;
+            const nextPage = Object.fromEntries(statuses.map((status) => [status.id, 1])) as Record<
+                ColumnId,
+                number
+            >;
+            const nextLoadingMore = Object.fromEntries(statuses.map((status) => [status.id, false])) as Record<
+                ColumnId,
+                boolean
+            >;
+            const nextHasMore = Object.fromEntries(statuses.map((status) => [status.id, true])) as Record<
+                ColumnId,
+                boolean
+            >;
+            const nextTotalCount = Object.fromEntries(statuses.map((status) => [status.id, 0])) as Record<
+                ColumnId,
+                number
+            >;
 
             statusLoadLockRef.current.clear();
             setBoard(nextBoard);
             updateStatusLoadingMap(nextLoading);
             updateStatusLoadedMap(nextLoaded);
             setStatusLoadErrors(nextErrors);
+            setStatusPageMap(nextPage);
+            updateStatusLoadingMoreMap(nextLoadingMore);
+            setStatusHasMoreMap(nextHasMore);
+            setStatusTotalCountMap(nextTotalCount);
         },
-        [updateStatusLoadingMap, updateStatusLoadedMap]
+        [
+            updateStatusLoadingMap,
+            updateStatusLoadedMap,
+            updateStatusLoadingMoreMap,
+            setStatusPageMap,
+            setStatusHasMoreMap,
+            setStatusTotalCountMap
+        ]
     );
 
     const loadTasksForStatus = React.useCallback(
-        async (statusId: string) => {
+        async (statusId: string, append = false) => {
             if (!groupId) return;
             if (!isUuidLike(groupId)) return;
             if (!(statusId && isUuidLike(statusId))) return;
-            if (statusLoadLockRef.current.has(statusId)) return;
-            if (statusLoadedRef.current[statusId] || statusLoadingRef.current[statusId]) return;
 
-            statusLoadLockRef.current.add(statusId);
-            updateStatusLoadingMap((prev) => ({ ...prev, [statusId]: true }));
-            setStatusLoadErrors((prev) => ({ ...prev, [statusId]: null }));
+            const isInitialLoad = !append;
+            if (isInitialLoad && statusLoadLockRef.current.has(statusId)) return;
+            if (isInitialLoad && (statusLoadedRef.current[statusId] || statusLoadingRef.current[statusId])) return;
+            if (append && statusLoadingMoreRef.current[statusId]) return;
+
+            if (isInitialLoad) {
+                statusLoadLockRef.current.add(statusId);
+                updateStatusLoadingMap((prev) => ({ ...prev, [statusId]: true }));
+                setStatusLoadErrors((prev) => ({ ...prev, [statusId]: null }));
+                setStatusPageMap((prev) => ({ ...prev, [statusId]: 1 }));
+            } else {
+                updateStatusLoadingMoreMap((prev) => ({ ...prev, [statusId]: true }));
+            }
 
             try {
-                // Build API filter parameters from board filters
                 const apiFilters = buildApiFiltersFromBoardFilters(filters, currentUserId);
+                const currentPage = append ? (statusPageMap[statusId] ?? 1) + 1 : 1;
 
-                const response = await apiGetAllGroupTasks({
+                const response = await apiGetGroupTasks({
                     groupId,
                     statusId,
+                    page: currentPage,
+                    pageSize: 20,
                     ...apiFilters,
                     fallbackMessage: apiMessages.genericApiError,
                     missingApiBaseMessage: apiMessages.missingApiBase
                 });
 
                 const tasks = (response?.data?.items ?? []).slice().sort((a, b) => {
-                    const aTime = Date.parse(String(a.createdAt ?? ""));
-                    const bTime = Date.parse(String(b.createdAt ?? ""));
-                    if (Number.isNaN(aTime) && Number.isNaN(bTime)) return 0;
-                    if (Number.isNaN(aTime)) return 1;
-                    if (Number.isNaN(bTime)) return -1;
-                    return aTime - bTime;
+                    const aPos = a.position ?? 0;
+                    const bPos = b.position ?? 0;
+                    return aPos - bPos;
                 });
                 const mapped = tasks.map((apiTask) => mapGroupTaskToBoardTask(apiTask, locale));
 
-                setBoard((prev) => ({ ...prev, [statusId]: mapped }));
-                updateStatusLoadedMap((prev) => ({ ...prev, [statusId]: true }));
+                const totalPages = response?.data?.totalPages ?? 1;
+                const hasMore = currentPage < totalPages;
+
+                setBoard((prev) => {
+                    const existing = append ? prev[statusId] ?? [] : [];
+                    return { ...prev, [statusId]: existing.concat(mapped) };
+                });
+                setStatusPageMap((prev) => ({ ...prev, [statusId]: currentPage }));
+                setStatusHasMoreMap((prev) => ({ ...prev, [statusId]: hasMore }));
+                setStatusTotalCountMap((prev) => ({ ...prev, [statusId]: response?.data?.totalCount ?? 0 }));
+                if (isInitialLoad) updateStatusLoadedMap((prev) => ({ ...prev, [statusId]: true }));
             } catch (e: unknown) {
-                setStatusLoadErrors((prev) => ({
-                    ...prev,
-                    [statusId]: getErrorMessage(e, apiMessages.genericApiError)
-                }));
-                updateStatusLoadedMap((prev) => ({ ...prev, [statusId]: false }));
+                if (isInitialLoad) {
+                    setStatusLoadErrors((prev) => ({
+                        ...prev,
+                        [statusId]: getErrorMessage(e, apiMessages.genericApiError)
+                    }));
+                    updateStatusLoadedMap((prev) => ({ ...prev, [statusId]: false }));
+                }
             } finally {
-                statusLoadLockRef.current.delete(statusId);
-                updateStatusLoadingMap((prev) => ({ ...prev, [statusId]: false }));
+                if (isInitialLoad) {
+                    statusLoadLockRef.current.delete(statusId);
+                    updateStatusLoadingMap((prev) => ({ ...prev, [statusId]: false }));
+                } else {
+                    updateStatusLoadingMoreMap((prev) => ({ ...prev, [statusId]: false }));
+                }
             }
         },
         [
@@ -3177,8 +3349,19 @@ export function GroupBoardScreen({
             filters,
             currentUserId,
             updateStatusLoadedMap,
-            updateStatusLoadingMap
+            updateStatusLoadingMoreMap,
+            updateStatusLoadingMap,
+            statusPageMap
         ]
+    );
+
+    const loadMoreForStatus = React.useCallback(
+        (statusId: string) => {
+            if (statusHasMoreMap[statusId] && !statusLoadingMoreRef.current[statusId]) {
+                loadTasksForStatus(statusId, true);
+            }
+        },
+        [loadTasksForStatus, statusHasMoreMap]
     );
 
     React.useEffect(() => {
@@ -3705,6 +3888,15 @@ export function GroupBoardScreen({
 
             setBoard(dropped.nextBoard);
 
+            // Update totalCountMap when dragging between columns
+            if (dropped.fromCol !== dropped.toCol) {
+                setStatusTotalCountMap((prev) => ({
+                    ...prev,
+                    [dropped.fromCol]: Math.max(0, (prev[dropped.fromCol] ?? 1) - 1),
+                    [dropped.toCol]: (prev[dropped.toCol] ?? 0) + 1
+                }));
+            }
+
             void (async () => {
                 try {
                     await apiReorderTask(
@@ -3719,6 +3911,14 @@ export function GroupBoardScreen({
                     );
                 } catch {
                     setBoard(prevBoard);
+                    // Revert totalCountMap on error
+                    if (dropped.fromCol !== dropped.toCol) {
+                        setStatusTotalCountMap((prev) => ({
+                            ...prev,
+                            [dropped.fromCol]: (prev[dropped.fromCol] ?? 0) + 1,
+                            [dropped.toCol]: Math.max(0, (prev[dropped.toCol] ?? 1) - 1)
+                        }));
+                    }
                 }
             })();
 
@@ -4360,6 +4560,10 @@ export function GroupBoardScreen({
                                 onColumnDraftChange={onColumnDraftChange}
                                 onColumnCommit={() => void commitEditColumn()}
                                 onColumnCancel={cancelEditColumn}
+                                isLoadingMore={statusLoadingMoreMap[col.id] ?? false}
+                                hasMore={statusHasMoreMap[col.id] ?? false}
+                                onLoadMore={loadMoreForStatus}
+                                totalCount={statusTotalCountMap[col.id]}
                             />
                         ))}
 
@@ -4419,6 +4623,10 @@ export function GroupBoardScreen({
                                         onColumnDraftChange={onColumnDraftChange}
                                         onColumnCommit={() => void commitEditColumn()}
                                         onColumnCancel={cancelEditColumn}
+                                        isLoadingMore={statusLoadingMoreMap[col.id] ?? false}
+                                        hasMore={statusHasMoreMap[col.id] ?? false}
+                                        onLoadMore={loadMoreForStatus}
+                                        totalCount={statusTotalCountMap[col.id]}
                                     />
                                 ))}
 

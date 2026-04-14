@@ -2394,7 +2394,8 @@
     "deleteTaskButton": "Delete task",
     "close": "Close",
     "deleteStatusFailed": "Failed to delete status",
-    "retry": "Retry"
+    "retry": "Retry",
+    "loadMore": "Load more"
   },
   "TaskFormModal": {
     "priorityLow": "Low",

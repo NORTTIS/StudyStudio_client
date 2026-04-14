@@ -2471,7 +2471,8 @@
     "deleteTaskButton": "Xóa công việc",
     "close": "Đóng",
     "deleteStatusFailed": "Xóa trạng thái thất bại",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "loadMore": "Tải thêm"
   },
   "TaskFormModal": {
     "priorityLow": "Thấp",
