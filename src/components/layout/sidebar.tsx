@@ -105,7 +105,10 @@ export function DashboardSidebar() {
         if (href === "/") return currentPath === "/";
 
         const paths = activeGroups[href] || [href];
-        return paths.some((path) => currentPath === path || currentPath.startsWith(`${path}/`));
+        return paths.some((path) => {
+            if (path === "/home") return currentPath === "/home";
+            return currentPath === path || currentPath.startsWith(`${path}/`);
+        });
     };
 
     const navigation = isAdmin ? adminNavigation : userNavigation;

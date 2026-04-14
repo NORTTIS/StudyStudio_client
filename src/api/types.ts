@@ -4320,6 +4320,7 @@ export interface paths {
                     dueDateTo?: string;
                     hasNoAssignee?: boolean;
                     hasNoDueDate?: boolean;
+                    overdue?: boolean;
                     page?: number;
                     pageSize?: number;
                     priority?: components["schemas"]["TaskPriority"];
