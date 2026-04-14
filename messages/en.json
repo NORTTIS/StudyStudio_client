@@ -1407,6 +1407,8 @@
     "invalidFileType": "Invalid file type: {name}",
     "fileTooLarge": "File is larger than 5MB: {name}",
     "uploadFailed": "Upload failed",
+    "uploadHttpFailed": "Upload failed: {name} (HTTP {status})",
+    "noPermissionToUpload": "You do not have permission to upload documents.",
     "confirmDeleteTitle": "Confirm document deletion",
     "confirmDeleteDescriptionPrefix": "Are you sure you want to delete",
     "confirmDeleteDescriptionSuffix": "? This action cannot be undone.",

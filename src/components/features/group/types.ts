@@ -4,7 +4,7 @@ import type { components } from "@/api/types";
 export type GroupCardDto = components["schemas"]["GroupCardDto"];
 export type MemberPreviewDto = components["schemas"]["MemberPreviewDto"];
 
-export type GroupRole = "owner" | "moderator" | "member" | "commenter" | "viewer";
+export type GroupRole = "owner" | "moderator" | "member" | "commenter" | "viewer" | null;
 
 export type GroupsPageData = {
     usage: { current: number; max: number };

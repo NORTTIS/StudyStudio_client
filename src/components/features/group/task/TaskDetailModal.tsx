@@ -19,7 +19,6 @@ import { DayPicker } from "react-day-picker";
 import { createPortal } from "react-dom";
 import "react-day-picker/dist/style.css";
 import type { components } from "@/api/types";
-import { mapRole } from "@/components/features/group/group.api";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -37,8 +36,8 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import AssigneeAvatar from "./AssigneeAvatar";
 import { useToast } from "@/hooks/use-toast";
+import AssigneeAvatar from "./AssigneeAvatar";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
@@ -355,9 +354,7 @@ function RichTextWithMentions({
     );
 
     const normalizedDisplayText = React.useMemo(() => {
-        const aliases = ["all", "mọi người", mentionAllLabel]
-            .map((alias) => alias.trim())
-            .filter(Boolean);
+        const aliases = ["all", "mọi người", mentionAllLabel].map((alias) => alias.trim()).filter(Boolean);
 
         let output = displayText;
         for (const alias of aliases) {
@@ -509,7 +506,7 @@ const MentionTextarea = React.forwardRef<
 
     React.useLayoutEffect(() => {
         resizeTextarea();
-    }, [value, resizeTextarea]);
+    }, [resizeTextarea]);
 
     React.useEffect(() => {
         if (!(open && mounted)) return;
@@ -722,7 +719,7 @@ const MentionTextarea = React.forwardRef<
             .sort((a, b) => b.start - a.start);
 
         for (const m of ms) {
-            text = text.slice(0, m.start) + `@${m.id}` + text.slice(m.end);
+            text = `${text.slice(0, m.start)}@${m.id}${text.slice(m.end)}`;
         }
 
         const mentionAllAliases = mentionAllEnabled
@@ -784,83 +781,83 @@ const MentionTextarea = React.forwardRef<
     const popup =
         mounted && open && !disabled && popupPosition
             ? createPortal(
-                <div
-                    ref={popupRef}
-                    className="fixed z-[22000] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
-                    style={{
-                        left: popupPosition.left,
-                        top: popupPosition.top,
-                        width: popupPosition.width,
-                        maxHeight: 320,
-                        transform:
-                            popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
-                                ? "translateY(-100%)"
-                                : undefined
-                    }}>
-                    {filtered.length > 0 ? (
-                        <div className="max-h-80 overflow-y-auto py-2">
-                            {filtered.map((u, idx) => {
-                                const isActive = idx === activeIndex;
-                                const displayName = u.isAll ? mentionAllLabel : u.name;
-                                const subtitle = u.subtitle || (u.isAll ? mentionAllSubtitle : "");
+                  <div
+                      ref={popupRef}
+                      className="fixed z-[22000] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+                      style={{
+                          left: popupPosition.left,
+                          top: popupPosition.top,
+                          width: popupPosition.width,
+                          maxHeight: 320,
+                          transform:
+                              popupPosition.top < (taRef.current?.getBoundingClientRect().top ?? 0)
+                                  ? "translateY(-100%)"
+                                  : undefined
+                      }}>
+                      {filtered.length > 0 ? (
+                          <div className="max-h-80 overflow-y-auto py-2">
+                              {filtered.map((u, idx) => {
+                                  const isActive = idx === activeIndex;
+                                  const displayName = u.isAll ? mentionAllLabel : u.name;
+                                  const subtitle = u.subtitle || (u.isAll ? mentionAllSubtitle : "");
 
-                                return (
-                                    <button
-                                        key={u.id}
-                                        type="button"
-                                        onMouseDown={(ev) => {
-                                            ev.preventDefault();
-                                            insertMention(u);
-                                        }}
-                                        className={cn(
-                                            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
-                                            isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
-                                        )}>
-                                        <div className="shrink-0">
-                                            {u.isAll ? (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
-                                                    <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
-                                                        <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                                                    </svg>
-                                                </div>
-                                            ) : u.avatarUrl ? (
-                                                <Image
-                                                    src={u.avatarUrl}
-                                                    alt={displayName}
-                                                    width={40}
-                                                    height={40}
-                                                    unoptimized
-                                                    className="h-10 w-10 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 text-sm font-semibold text-zinc-700">
-                                                    {safeInitialsFromName(displayName)}
-                                                </div>
-                                            )}
-                                        </div>
+                                  return (
+                                      <button
+                                          key={u.id}
+                                          type="button"
+                                          onMouseDown={(ev) => {
+                                              ev.preventDefault();
+                                              insertMention(u);
+                                          }}
+                                          className={cn(
+                                              "flex w-full items-center gap-3 px-4 py-2.5 text-left transition",
+                                              isActive ? "bg-[#E7F3FF]" : "hover:bg-zinc-100"
+                                          )}>
+                                          <div className="shrink-0">
+                                              {u.isAll ? (
+                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-zinc-900">
+                                                      <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current">
+                                                          <path d="M16 11c1.66 0 2.99-1.57 2.99-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5zm-8 0c1.66 0 2.99-1.57 2.99-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.95 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                                                      </svg>
+                                                  </div>
+                                              ) : u.avatarUrl ? (
+                                                  <Image
+                                                      src={u.avatarUrl}
+                                                      alt={displayName}
+                                                      width={40}
+                                                      height={40}
+                                                      unoptimized
+                                                      className="h-10 w-10 rounded-full object-cover"
+                                                  />
+                                              ) : (
+                                                  <div className="grid h-10 w-10 place-items-center rounded-full bg-zinc-200 font-semibold text-sm text-zinc-700">
+                                                      {safeInitialsFromName(displayName)}
+                                                  </div>
+                                              )}
+                                          </div>
 
-                                        <div className="min-w-0 flex-1">
-                                            <div className="truncate text-[17px] font-medium leading-5 text-zinc-900">
-                                                {displayName}
-                                            </div>
-                                            {subtitle ? (
-                                                <div className="truncate pt-0.5 text-[15px] leading-5 text-zinc-500">
-                                                    {subtitle}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="px-4 py-3 text-sm text-zinc-500">
-                            {noResultsText ?? "No members to mention."}
-                        </div>
-                    )}
-                </div>,
-                document.body
-            )
+                                          <div className="min-w-0 flex-1">
+                                              <div className="truncate font-medium text-[17px] text-zinc-900 leading-5">
+                                                  {displayName}
+                                              </div>
+                                              {subtitle ? (
+                                                  <div className="truncate pt-0.5 text-[15px] text-zinc-500 leading-5">
+                                                      {subtitle}
+                                                  </div>
+                                              ) : null}
+                                          </div>
+                                      </button>
+                                  );
+                              })}
+                          </div>
+                      ) : (
+                          <div className="px-4 py-3 text-sm text-zinc-500">
+                              {noResultsText ?? "No members to mention."}
+                          </div>
+                      )}
+                  </div>,
+                  document.body
+              )
             : null;
 
     return (
@@ -870,11 +867,11 @@ const MentionTextarea = React.forwardRef<
                     <div
                         aria-hidden
                         className={cn(
-                            "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap break-words text-sm leading-6 text-zinc-900",
+                            "pointer-events-none absolute inset-0 z-0 max-w-full whitespace-pre-wrap break-words text-sm text-zinc-900 leading-6",
                             disabled && "opacity-60"
                         )}
                         style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
-                        {value ? <>{previewNodes}</> : <span className="text-zinc-400">{placeholder}</span>}
+                        {value ? previewNodes : <span className="text-zinc-400">{placeholder}</span>}
                     </div>
 
                     <textarea
@@ -888,7 +885,7 @@ const MentionTextarea = React.forwardRef<
                         disabled={disabled}
                         maxLength={maxChars}
                         className={cn(
-                            "relative z-10 block w-full max-w-full resize-none overflow-hidden bg-transparent text-sm leading-6 text-transparent caret-zinc-900 outline-none selection:bg-blue-200",
+                            "relative z-10 block w-full max-w-full resize-none overflow-hidden bg-transparent text-sm text-transparent leading-6 caret-zinc-900 outline-none selection:bg-blue-200",
                             "min-h-[24px]",
                             "disabled:cursor-not-allowed disabled:caret-transparent",
                             className
@@ -1340,152 +1337,152 @@ function TrelloDatePicker({
     const popup =
         mounted && open && popupPosition && portalTarget
             ? createPortal(
-                <div
-                    ref={rootRef}
-                    className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
-                    style={{
-                        top: popupPosition.top,
-                        left: popupPosition.left,
-                        width: popupPosition.width,
-                        maxHeight: "calc(100vh - 40px)",
-                        overflowY: "auto"
-                    }}>
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="flex-1">
-                            <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
-                                <SelectTrigger className="h-11 w-full text-sm font-semibold">
-                                    <SelectValue placeholder={i18n.months[month.getMonth()]} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {i18n.months.map((monthLabel, monthIndex) => (
-                                        <SelectItem key={monthLabel} value={String(monthIndex)}>
-                                            {monthLabel}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                  <div
+                      ref={rootRef}
+                      className="fixed z-[20000] rounded-[24px] border border-zinc-200 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]"
+                      style={{
+                          top: popupPosition.top,
+                          left: popupPosition.left,
+                          width: popupPosition.width,
+                          maxHeight: "calc(100vh - 40px)",
+                          overflowY: "auto"
+                      }}>
+                      <div className="mb-4 flex items-center gap-3">
+                          <div className="flex-1">
+                              <Select value={String(month.getMonth())} onValueChange={handleMonthChange}>
+                                  <SelectTrigger className="h-11 w-full font-semibold text-sm">
+                                      <SelectValue placeholder={i18n.months[month.getMonth()]} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      {i18n.months.map((monthLabel, monthIndex) => (
+                                          <SelectItem key={monthLabel} value={String(monthIndex)}>
+                                              {monthLabel}
+                                          </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                          </div>
 
-                        <div className="w-[140px]">
-                            <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
-                                <SelectTrigger className="h-11 w-full text-sm font-semibold">
-                                    <SelectValue placeholder={String(month.getFullYear())} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {yearOptions.map((year) => (
-                                        <SelectItem key={year} value={String(year)}>
-                                            {year}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
+                          <div className="w-[140px]">
+                              <Select value={String(month.getFullYear())} onValueChange={handleYearChange}>
+                                  <SelectTrigger className="h-11 w-full font-semibold text-sm">
+                                      <SelectValue placeholder={String(month.getFullYear())} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      {yearOptions.map((year) => (
+                                          <SelectItem key={year} value={String(year)}>
+                                              {year}
+                                          </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                          </div>
+                      </div>
 
-                    <div className="rounded-[20px] border border-zinc-200 p-4">
-                        <div className="mb-4 flex items-center justify-between">
-                            <button
-                                type="button"
-                                onClick={goPrevMonth}
-                                disabled={isPrevDisabled}
-                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
-                                <ChevronLeft className="h-5 w-5" />
-                            </button>
+                      <div className="rounded-[20px] border border-zinc-200 p-4">
+                          <div className="mb-4 flex items-center justify-between">
+                              <button
+                                  type="button"
+                                  onClick={goPrevMonth}
+                                  disabled={isPrevDisabled}
+                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40">
+                                  <ChevronLeft className="h-5 w-5" />
+                              </button>
 
-                            <div className="text-base font-bold text-zinc-900">
-                                {i18n.months[month.getMonth()]} {month.getFullYear()}
-                            </div>
+                              <div className="font-bold text-base text-zinc-900">
+                                  {i18n.months[month.getMonth()]} {month.getFullYear()}
+                              </div>
 
-                            <button
-                                type="button"
-                                onClick={goNextMonth}
-                                className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
-                                <ChevronRight className="h-5 w-5" />
-                            </button>
-                        </div>
+                              <button
+                                  type="button"
+                                  onClick={goNextMonth}
+                                  className="grid h-10 w-10 place-items-center rounded-2xl border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50">
+                                  <ChevronRight className="h-5 w-5" />
+                              </button>
+                          </div>
 
-                        <DayPicker
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={selectedDate}
-                            onSelect={pickDate}
-                            disabled={minDate ? { before: minDate } : undefined}
-                            showOutsideDays
-                            className="w-full"
-                            styles={{
-                                day: { outline: "none", boxShadow: "none" },
-                                button: { outline: "none", boxShadow: "none" }
-                            }}
-                            classNames={{
-                                months: "flex w-full flex-col",
-                                month: "w-full space-y-3",
-                                caption: "hidden",
-                                table: "w-full border-collapse",
-                                tbody: "w-full",
-                                head_row: "flex w-full justify-between",
-                                head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
-                                row: "mt-2 flex w-full justify-between",
-                                cell: "h-10 w-10 p-0 text-center",
-                                day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                day_button:
-                                    "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
-                                selected: "!bg-orange-500 !text-white",
-                                day_selected:
-                                    "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
-                                today: "text-orange-600 font-bold",
-                                day_today: "text-orange-600 font-bold",
-                                outside: "text-zinc-300",
-                                day_outside: "text-zinc-300",
-                                disabled: "text-zinc-300 opacity-40",
-                                day_disabled: "text-zinc-300 opacity-40",
-                                hidden: "invisible",
-                                day_hidden: "invisible"
-                            }}
-                        />
-                    </div>
+                          <DayPicker
+                              mode="single"
+                              month={month}
+                              onMonthChange={setMonth}
+                              selected={selectedDate}
+                              onSelect={pickDate}
+                              disabled={minDate ? { before: minDate } : undefined}
+                              showOutsideDays
+                              className="w-full"
+                              styles={{
+                                  day: { outline: "none", boxShadow: "none" },
+                                  button: { outline: "none", boxShadow: "none" }
+                              }}
+                              classNames={{
+                                  months: "flex w-full flex-col",
+                                  month: "w-full space-y-3",
+                                  caption: "hidden",
+                                  table: "w-full border-collapse",
+                                  tbody: "w-full",
+                                  head_row: "flex w-full justify-between",
+                                  head_cell: "h-10 w-10 text-center text-[12px] font-semibold text-zinc-500",
+                                  row: "mt-2 flex w-full justify-between",
+                                  cell: "h-10 w-10 p-0 text-center",
+                                  day: "h-10 w-10 rounded-xl border-0 bg-transparent p-0 text-sm font-medium text-zinc-800 shadow-none outline-none ring-0 transition hover:bg-orange-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                  day_button:
+                                      "h-10 w-10 rounded-xl border-0 bg-transparent p-0 font-medium text-inherit shadow-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0",
+                                  selected: "!bg-orange-500 !text-white",
+                                  day_selected:
+                                      "!bg-orange-500 !text-white hover:!bg-orange-500 hover:!text-white focus:!bg-orange-500 focus:!text-white focus-visible:!bg-orange-500 focus-visible:!text-white",
+                                  today: "text-orange-600 font-bold",
+                                  day_today: "text-orange-600 font-bold",
+                                  outside: "text-zinc-300",
+                                  day_outside: "text-zinc-300",
+                                  disabled: "text-zinc-300 opacity-40",
+                                  day_disabled: "text-zinc-300 opacity-40",
+                                  hidden: "invisible",
+                                  day_hidden: "invisible"
+                              }}
+                          />
+                      </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <button
-                            type="button"
-                            onClick={() => pickDate(new Date())}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            {i18n.today}
-                        </button>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                          <button
+                              type="button"
+                              onClick={() => pickDate(new Date())}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                              {i18n.today}
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 1))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            {i18n.tomorrow}
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 1))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                              {i18n.tomorrow}
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => pickDate(addDays(new Date(), 7))}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
-                            {i18n.nextWeek}
-                        </button>
+                          <button
+                              type="button"
+                              onClick={() => pickDate(addDays(new Date(), 7))}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-sm text-zinc-700 hover:bg-zinc-50">
+                              {i18n.nextWeek}
+                          </button>
 
-                        <button
-                            type="button"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                            className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-rose-500 hover:bg-rose-50">
-                            {i18n.noDate}
-                        </button>
-                    </div>
-                </div>,
-                portalTarget
-            )
+                          <button
+                              type="button"
+                              onClick={() => {
+                                  onChange("");
+                                  setOpen(false);
+                              }}
+                              className="rounded-2xl border border-zinc-200 bg-white px-4 py-3 font-semibold text-rose-500 text-sm hover:bg-rose-50">
+                              {i18n.noDate}
+                          </button>
+                      </div>
+                  </div>,
+                  portalTarget
+              )
             : null;
 
     return (
         <>
             <div className="relative">
-                <div className="text-sm font-semibold text-zinc-600">{label}</div>
+                <div className="font-semibold text-sm text-zinc-600">{label}</div>
 
                 <button
                     ref={triggerRef}
@@ -1499,8 +1496,8 @@ function TrelloDatePicker({
                         disabled
                             ? "cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-500 opacity-70"
                             : open
-                                ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
-                                : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
+                              ? "border-orange-400 bg-orange-50 text-zinc-900 ring-2 ring-orange-100"
+                              : "border-zinc-200 bg-white text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50"
                     )}>
                     <div className="flex min-w-0 items-center gap-2">
                         <div
@@ -1509,8 +1506,8 @@ function TrelloDatePicker({
                                 disabled
                                     ? "bg-zinc-100 text-zinc-400"
                                     : open
-                                        ? "bg-orange-100 text-orange-600"
-                                        : "bg-zinc-100 text-zinc-500"
+                                      ? "bg-orange-100 text-orange-600"
+                                      : "bg-zinc-100 text-zinc-500"
                             )}>
                             <CalendarDays className="h-4 w-4" />
                         </div>
@@ -2125,8 +2122,8 @@ export default function TaskDetailModal(props: {
     }, [isViewOnly]);
 
     const canEditTask = React.useMemo(() => {
-        return !isViewOnly;
-    }, [isViewOnly]);
+        return !isRestrictedMemberRole(currentUserRole);
+    }, [currentUserRole]);
 
     const canUpdateProgress = React.useMemo(() => {
         if (normalizedRole === "owner" || normalizedRole === "moderator") return true;
@@ -2198,7 +2195,7 @@ export default function TaskDetailModal(props: {
                     })
                     .filter(Boolean) as [string, string][]
             ),
-        [members]
+        [members, t]
     );
 
     const mentionUsers = React.useMemo<MentionUser[]>(
@@ -2214,12 +2211,12 @@ export default function TaskDetailModal(props: {
                     avatarUrl: safeAvatarUrl(m.avatarUrl)
                 };
             }),
-        [members]
+        [members, t]
     );
 
     // Calculate max hours allowed based on startDate and dueDate
     const maxHours = React.useMemo((): number | null => {
-        if (!startDate || !dueDate) return null;
+        if (!(startDate && dueDate)) return null;
 
         const startDay = Date.UTC(
             new Date(startDate).getFullYear(),
@@ -2241,8 +2238,8 @@ export default function TaskDetailModal(props: {
     // Validate and clamp estimated hours
     const handleEstimatedHoursChange = (rawVal: string) => {
         const val = rawVal;
-        const num = parseFloat(val);
-        const parsed = val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num;
+        const num = Number.parseFloat(val);
+        const parsed = val === "" ? undefined : Number.isNaN(num) || num < 0 ? 0 : num;
 
         if (parsed != null && maxHours != null && parsed > maxHours) {
             setEstimatedHoursError(t("estimatedHoursExceed", { max: maxHours }));
@@ -2256,8 +2253,8 @@ export default function TaskDetailModal(props: {
     // Validate and clamp actual hours
     const handleActualHoursChange = (rawVal: string) => {
         const val = rawVal;
-        const num = parseFloat(val);
-        const parsed = val === "" ? undefined : isNaN(num) || num < 0 ? 0 : num;
+        const num = Number.parseFloat(val);
+        const parsed = val === "" ? undefined : Number.isNaN(num) || num < 0 ? 0 : num;
 
         if (parsed != null && maxHours != null && parsed > maxHours) {
             setActualHoursError(t("actualHoursExceed", { max: maxHours }));
@@ -2284,7 +2281,7 @@ export default function TaskDetailModal(props: {
             setActualHoursError(null);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [maxHours]);
+    }, [maxHours, actualHours, estimatedHours, t]);
 
     const handleSendComment = async () => {
         if (!canComment || isViewOnly || !myUserId) return;
@@ -2362,7 +2359,7 @@ export default function TaskDetailModal(props: {
     React.useEffect(() => {
         if (!open) return;
         setIsEditing(false);
-    }, [open, taskId]);
+    }, [open]);
 
     React.useEffect(() => {
         if (!open) return;
@@ -2371,7 +2368,7 @@ export default function TaskDetailModal(props: {
         setReplyingTo(null);
         setDeleteOpen(false);
         setDeleteTarget(null);
-    }, [open, taskId]);
+    }, [open]);
 
     React.useEffect(() => {
         if (isViewOnly && isEditing) {
@@ -2412,7 +2409,7 @@ export default function TaskDetailModal(props: {
             try {
                 const canUseSnapshot =
                     !!groupDetailSnapshot
-                    && (!groupId || !groupDetailSnapshot?.groupId || String(groupDetailSnapshot.groupId) === groupId);
+                    && (!(groupId && groupDetailSnapshot?.groupId ) || String(groupDetailSnapshot.groupId) === groupId);
 
                 if (canUseSnapshot) {
                     const hit = findTaskInGroupDetail(groupDetailSnapshot, taskId);
@@ -2696,6 +2693,15 @@ export default function TaskDetailModal(props: {
             return;
         }
 
+        if (task?.assigneeId && !assigneeId) {
+            setSaveError(
+                locale === "vi"
+                    ? "Không thể huỷ người phụ trách sau khi đã phân công."
+                    : "Cannot unassign a task once it has been assigned."
+            );
+            return;
+        }
+
         // Check if assignee has restricted role
         if (assigneeId) {
             const selectedMember = members.find((m) => String(m?.userId ?? "") === assigneeId);
@@ -2813,10 +2819,10 @@ export default function TaskDetailModal(props: {
             <div
                 className="relative flex h-[88vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl"
                 onPointerDown={(e) => e.stopPropagation()}>
-                <div className="flex items-start justify-between border-b border-zinc-200 px-7 py-5">
+                <div className="flex items-start justify-between border-zinc-200 border-b px-7 py-5">
                     <div className="min-w-0 flex-1">
                         {loadingDetail ? (
-                            <h2 className="min-w-0 truncate text-[26px] font-extrabold leading-none text-zinc-900">
+                            <h2 className="min-w-0 truncate font-extrabold text-[26px] text-zinc-900 leading-none">
                                 {t("loading")}
                             </h2>
                         ) : isEditing ? (
@@ -2826,20 +2832,20 @@ export default function TaskDetailModal(props: {
                                     maxLength={TASK_TITLE_MAX_LENGTH}
                                     onChange={(e) => setTaskName(e.target.value.slice(0, TASK_TITLE_MAX_LENGTH))}
                                     placeholder={t("taskName")}
-                                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[24px] font-extrabold leading-none text-zinc-900 outline-none"
+                                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 font-extrabold text-[24px] text-zinc-900 leading-none outline-none"
                                 />
-                                <div className="mt-2 text-right text-xs font-medium text-zinc-500">
+                                <div className="mt-2 text-right font-medium text-xs text-zinc-500">
                                     {taskName.length}/{TASK_TITLE_MAX_LENGTH}
                                 </div>
                             </div>
                         ) : (
                             <div className="flex min-w-0 items-center gap-3">
-                                <h2 className="min-w-0 break-words text-[26px] font-extrabold leading-none text-zinc-900">
+                                <h2 className="min-w-0 break-words font-extrabold text-[26px] text-zinc-900 leading-none">
                                     {taskName || t("taskFallback")}
                                 </h2>
 
                                 {isRefreshingDetail ? (
-                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 text-[11px] font-semibold text-zinc-500">
+                                    <div className="shrink-0 rounded-full bg-zinc-100 px-2 py-1 font-semibold text-[11px] text-zinc-500">
                                         {t("syncing")}
                                     </div>
                                 ) : null}
@@ -2860,7 +2866,7 @@ export default function TaskDetailModal(props: {
                     <div className="grid h-full grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_560px]">
                         <div className="min-w-0 overflow-y-auto pr-1">
                             {detailError ? (
-                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                     {detailError}
                                 </div>
                             ) : null}
@@ -2873,20 +2879,20 @@ export default function TaskDetailModal(props: {
                             ) : null}
 
                             {membersError ? (
-                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                     {membersError}
                                 </div>
                             ) : null}
 
                             {saveError ? (
-                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                     {saveError}
                                 </div>
                             ) : null}
 
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                    <div className="text-lg font-bold text-zinc-900">{t("taskInformation")}</div>
+                                    <div className="font-bold text-lg text-zinc-900">{t("taskInformation")}</div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
@@ -2896,7 +2902,7 @@ export default function TaskDetailModal(props: {
                                                 type="button"
                                                 onClick={() => setIsEditing(true)}
                                                 disabled={loadingDetail || !!detailError || !task}
-                                                className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                                className="h-10 rounded-xl bg-[#f54a00] px-5 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                                                 {t("edit")}
                                             </button>
                                         ) : (
@@ -2906,7 +2912,7 @@ export default function TaskDetailModal(props: {
                                                     void handleSave();
                                                 }}
                                                 disabled={submitting}
-                                                className="h-10 rounded-xl bg-[#f54a00] px-5 text-sm font-semibold text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
+                                                className="h-10 rounded-xl bg-[#f54a00] px-5 font-semibold text-sm text-white hover:bg-[#f54a00]/80 disabled:opacity-60">
                                                 {submitting ? t("saving") : t("saveChange")}
                                             </button>
                                         )
@@ -2916,12 +2922,12 @@ export default function TaskDetailModal(props: {
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">{t("assignee")}</div>
+                                    <div className="font-semibold text-sm text-zinc-600">{t("assignee")}</div>
                                     <Select
                                         value={assigneeId || "unassigned"}
                                         onValueChange={(v) => setAssigneeId(v === "unassigned" ? "" : v)}
                                         disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                             <div className="flex min-w-0 items-center gap-2">
                                                 <AssigneeAvatar
                                                     avatarUrl={selectedAssigneeDisplay.avatarUrl}
@@ -2941,7 +2947,10 @@ export default function TaskDetailModal(props: {
                                             sideOffset={8}
                                             avoidCollisions
                                             className="z-[10010] min-w-[260px] rounded-2xl border border-zinc-200 bg-white p-1 shadow-xl">
-                                            <SelectItem value="unassigned" className={selectItemClassName}>
+                                            <SelectItem
+                                                value="unassigned"
+                                                className={selectItemClassName}
+                                                disabled={!!task?.assigneeId}>
                                                 <div className="flex items-center gap-2">
                                                     <AssigneeAvatar size={24} unassigned className="text-[11px]" />
                                                     <span>{t("unassigned")}</span>
@@ -2969,12 +2978,9 @@ export default function TaskDetailModal(props: {
                                 </div>
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">{t("status")}</div>
-                                    <Select
-                                        value={statusId}
-                                        onValueChange={setStatusId}
-                                        disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-medium text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
+                                    <div className="font-semibold text-sm text-zinc-600">{t("status")}</div>
+                                    <Select value={statusId} onValueChange={setStatusId} disabled={!isEditing}>
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                             <span className="truncate">{selectedStatusName}</span>
                                         </SelectTrigger>
 
@@ -2997,12 +3003,12 @@ export default function TaskDetailModal(props: {
                                     </Select>
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">{t("priority")}</div>
+                                    <div className="font-semibold text-sm text-zinc-600">{t("priority")}</div>
                                     <Select
                                         value={String(selectedPriorityValue)}
                                         onValueChange={setPriority}
                                         disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                             <span
                                                 className={cn(
                                                     "inline-flex items-center gap-2",
@@ -3033,12 +3039,12 @@ export default function TaskDetailModal(props: {
                                     </Select>
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">{t("severity")}</div>
+                                    <div className="font-semibold text-sm text-zinc-600">{t("severity")}</div>
                                     <Select
                                         value={String(selectedSeverityValue)}
                                         onValueChange={setSeverity}
                                         disabled={!isEditing}>
-                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
+                                        <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-semibold text-sm disabled:cursor-not-allowed disabled:opacity-70">
                                             <span
                                                 className={cn(
                                                     "inline-flex items-center gap-2",
@@ -3093,7 +3099,7 @@ export default function TaskDetailModal(props: {
                                 />
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">{t("estimatedHours")}</div>
+                                    <div className="font-semibold text-sm text-zinc-600">{t("estimatedHours")}</div>
                                     <input
                                         type="number"
                                         min="0"
@@ -3107,15 +3113,17 @@ export default function TaskDetailModal(props: {
                                         }}
                                         disabled={!isEditing}
                                         placeholder="0"
-                                        className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                     />
                                     {estimatedHoursError ? (
-                                        <div className="mt-1 text-xs font-medium text-rose-600">{estimatedHoursError}</div>
+                                        <div className="mt-1 font-medium text-rose-600 text-xs">
+                                            {estimatedHoursError}
+                                        </div>
                                     ) : null}
                                 </div>
 
                                 <div>
-                                    <div className="text-sm font-semibold text-zinc-600">{t("actualHours")}</div>
+                                    <div className="font-semibold text-sm text-zinc-600">{t("actualHours")}</div>
                                     <input
                                         type="number"
                                         min="0"
@@ -3129,15 +3137,15 @@ export default function TaskDetailModal(props: {
                                         }}
                                         disabled={!isEditing}
                                         placeholder="0"
-                                        className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        className="mt-2 flex h-10 w-full items-center rounded-xl border border-zinc-200 bg-white px-3 text-sm text-zinc-800 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                     />
                                     {actualHoursError ? (
-                                        <div className="mt-1 text-xs font-medium text-rose-600">{actualHoursError}</div>
+                                        <div className="mt-1 font-medium text-rose-600 text-xs">{actualHoursError}</div>
                                     ) : null}
                                 </div>
 
                                 <div className="md:col-span-2 xl:col-span-2">
-                                    <div className="text-sm font-semibold text-zinc-600">{t("progress")}</div>
+                                    <div className="font-semibold text-sm text-zinc-600">{t("progress")}</div>
 
                                     {canUpdateProgress ? (
                                     <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
@@ -3154,7 +3162,7 @@ export default function TaskDetailModal(props: {
                                                     onBlur={handleProgressInputBlur}
                                                     disabled={!isEditing}
                                                     placeholder="0"
-                                                    className="h-8 w-14 rounded-lg border border-zinc-200 px-0 text-center text-sm font-semibold leading-none text-zinc-900 outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
+                                                    className="h-8 w-14 rounded-lg border border-zinc-200 px-0 text-center font-semibold text-sm text-zinc-900 leading-none outline-none disabled:cursor-not-allowed disabled:bg-zinc-50"
                                                 />
                                                 <span className="font-bold text-zinc-900">%</span>
                                             </div>
@@ -3177,7 +3185,7 @@ export default function TaskDetailModal(props: {
                                                         disabled={!isEditing}
                                                         onClick={() => setProgress(String(value))}
                                                         className={cn(
-                                                            "h-9 rounded-xl border text-sm font-semibold transition",
+                                                            "h-9 rounded-xl border font-semibold text-sm transition",
                                                             active
                                                                 ? "border-orange-500 bg-orange-500 text-white"
                                                                 : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
@@ -3208,11 +3216,11 @@ export default function TaskDetailModal(props: {
 
                             <div className="mt-6">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <div className="text-sm font-semibold text-zinc-600">{t("description")}</div>
+                                    <div className="font-semibold text-sm text-zinc-600">{t("description")}</div>
                                     {isEditing ? (
                                         <div
                                             className={cn(
-                                                "text-xs font-medium",
+                                                "font-medium text-xs",
                                                 descriptionLength >= TASK_DESCRIPTION_MAX_LENGTH
                                                     ? "text-rose-500"
                                                     : "text-zinc-500"
@@ -3234,12 +3242,12 @@ export default function TaskDetailModal(props: {
                             </div>
                         </div>
 
-                        <div className="min-w-0 overflow-x-hidden overflow-y-auto xl:border-l xl:border-zinc-200 xl:pl-4 xl:pr-0">
+                        <div className="min-w-0 overflow-y-auto overflow-x-hidden xl:border-zinc-200 xl:border-l xl:pr-0 xl:pl-4">
                             <div className="sticky top-0 z-10 bg-white pb-4">
                                 <div className="flex items-center gap-2">
                                     <MessageSquare className="h-4 w-4 text-zinc-700" />
-                                    <div className="text-xl font-extrabold text-zinc-900">{t("comments")}</div>
-                                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-600">
+                                    <div className="font-extrabold text-xl text-zinc-900">{t("comments")}</div>
+                                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-bold text-xs text-zinc-600">
                                         {loadingComments ? "…" : comments.length}
                                     </span>
                                 </div>
@@ -3255,20 +3263,20 @@ export default function TaskDetailModal(props: {
                                         <button
                                             type="button"
                                             onClick={cancelReply}
-                                            className="ml-3 shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-orange-700 hover:bg-orange-100">
+                                            className="ml-3 shrink-0 rounded-lg px-2 py-1 font-semibold text-orange-700 text-xs hover:bg-orange-100">
                                             {t("cancel")}
                                         </button>
                                     </div>
                                 ) : null}
 
                                 {commentError ? (
-                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                         {commentError}
                                     </div>
                                 ) : null}
 
                                 {sendCommentError ? (
-                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                                    <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 font-semibold text-rose-700 text-sm">
                                         {sendCommentError}
                                     </div>
                                 ) : null}
@@ -3303,7 +3311,7 @@ export default function TaskDetailModal(props: {
                                                             className="h-9 w-9 rounded-full object-cover"
                                                         />
                                                     ) : (
-                                                        <div className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 text-xs font-extrabold text-white">
+                                                        <div className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 font-extrabold text-white text-xs">
                                                             {initials(u)}
                                                         </div>
                                                     )}
@@ -3312,13 +3320,13 @@ export default function TaskDetailModal(props: {
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="flex items-baseline gap-3">
-                                                                    <div className="text-sm font-bold text-zinc-900">
+                                                                    <div className="font-bold text-sm text-zinc-900">
                                                                         {name}
                                                                     </div>
                                                                     <div className="text-xs text-zinc-400">{when}</div>
                                                                 </div>
 
-                                                                <div className="mt-1 max-w-full whitespace-pre-wrap break-words overflow-wrap-anywhere text-sm text-zinc-800">
+                                                                <div className="overflow-wrap-anywhere mt-1 max-w-full whitespace-pre-wrap break-words text-sm text-zinc-800">
                                                                     <RichTextWithMentions
                                                                         text={String(c.content ?? "")}
                                                                         membersById={membersById}
@@ -3347,7 +3355,7 @@ export default function TaskDetailModal(props: {
                                                 </div>
 
                                                 {replies.length > 0 ? (
-                                                    <div className="mt-4 w-full space-y-4 border-l-2 border-zinc-200 pl-4">
+                                                    <div className="mt-4 w-full space-y-4 border-zinc-200 border-l-2 pl-4">
                                                         {replies.map((r) => {
                                                             const ru = r.user;
                                                             const rname =
@@ -3374,7 +3382,7 @@ export default function TaskDetailModal(props: {
                                                                             className="h-8 w-8 rounded-full object-cover"
                                                                         />
                                                                     ) : (
-                                                                        <div className="grid h-8 w-8 place-items-center rounded-full bg-indigo-500 text-[11px] font-extrabold text-white">
+                                                                        <div className="grid h-8 w-8 place-items-center rounded-full bg-indigo-500 font-extrabold text-[11px] text-white">
                                                                             {initials(ru)}
                                                                         </div>
                                                                     )}
@@ -3383,7 +3391,7 @@ export default function TaskDetailModal(props: {
                                                                         <div className="flex items-start justify-between gap-3">
                                                                             <div className="min-w-0">
                                                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                                                    <p className="text-sm font-semibold text-zinc-900">
+                                                                                    <p className="font-semibold text-sm text-zinc-900">
                                                                                         {rname}
                                                                                     </p>
                                                                                     <span className="text-xs text-zinc-400">
@@ -3457,7 +3465,7 @@ export default function TaskDetailModal(props: {
                                                 className="h-9 w-9 rounded-full object-cover"
                                             />
                                         ) : (
-                                            <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 text-sm font-bold text-white">
+                                            <div className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 font-bold text-sm text-white">
                                                 {buildInitials(myFullName || t("me"))}
                                             </div>
                                         )}
@@ -3510,7 +3518,7 @@ export default function TaskDetailModal(props: {
 
                                             <div
                                                 className={cn(
-                                                    "mt-2 text-right text-xs font-medium",
+                                                    "mt-2 text-right font-medium text-xs",
                                                     commentLength >= TASK_COMMENT_MAX_LENGTH
                                                         ? "text-rose-500"
                                                         : "text-zinc-500"
@@ -3529,7 +3537,7 @@ export default function TaskDetailModal(props: {
                     <AlertDialogContent className="z-[11000] rounded-2xl sm:max-w-2xl">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-lg">{t("confirmDeleteTitle")}</AlertDialogTitle>
-                            <AlertDialogDescription className="text-sm leading-6 text-[#111827]">
+                            <AlertDialogDescription className="text-[#111827] text-sm leading-6">
                                 {t("confirmDeleteDescription")}
                             </AlertDialogDescription>
                         </AlertDialogHeader>

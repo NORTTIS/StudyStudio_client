@@ -10,7 +10,7 @@ interface GroupRoleBadgeProps {
     maxNameLen?: number;
 }
 
-const ROLE_COLOR: Record<GroupRole, { border: string; text: string; bg: string }> = {
+const ROLE_COLOR: Record<Exclude<GroupRole, null>, { border: string; text: string; bg: string }> = {
     owner:     { border: "border-orange-500/60", text: "text-orange-600",   bg: "bg-orange-50" },
     moderator: { border: "border-blue-500/60",    text: "text-blue-600",     bg: "bg-blue-50" },
     member:    { border: "border-purple-500/60",  text: "text-purple-600",   bg: "bg-purple-50" },
@@ -18,7 +18,7 @@ const ROLE_COLOR: Record<GroupRole, { border: string; text: string; bg: string }
     viewer:    { border: "border-gray-400/60",   text: "text-gray-500",     bg: "bg-gray-100" }
 };
 
-const ROLE_KEY: Record<GroupRole, string> = {
+const ROLE_KEY: Record<Exclude<GroupRole, null>, string> = {
     owner: "owner",
     moderator: "moderator",
     member: "member",
@@ -29,6 +29,9 @@ const ROLE_KEY: Record<GroupRole, string> = {
 export function GroupRoleBadge({ groupName, role, alias, maxNameLen = 10 }: GroupRoleBadgeProps) {
     const t = useTranslations("GroupStudioHeader.roles");
 
+    // Guard: default to 'member' if role is null
+    const safeRole = role ?? "member";
+
     // Use alias if available, otherwise truncate groupName
     const displayName =
         alias?.trim()
@@ -37,8 +40,8 @@ export function GroupRoleBadge({ groupName, role, alias, maxNameLen = 10 }: Grou
                 ? groupName.slice(0, maxNameLen)
                 : groupName;
 
-    const roleLabel = t(ROLE_KEY[role], { defaultValue: role });
-    const colors = ROLE_COLOR[role];
+    const roleLabel = t(ROLE_KEY[safeRole], { defaultValue: safeRole });
+    const colors = ROLE_COLOR[safeRole];
 
     return (
         <span
