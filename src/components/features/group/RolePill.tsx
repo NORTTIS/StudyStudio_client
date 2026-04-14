@@ -20,6 +20,8 @@ interface RolePillProps {
 
 export function RolePill({ role, t }: RolePillProps) {
     const tHeader = useTranslations("GroupStudioHeader");
+    if (!role) return null;
+
     const normalizedRole = String(role).trim().toLowerCase() as Exclude<GroupRole, null>;
 
     const cls =
