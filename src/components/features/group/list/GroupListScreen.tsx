@@ -736,12 +736,11 @@ export function GroupListScreen() {
         setAppliedCompletedOnly(completedOnly);
         setAppliedCardStatusFilter(completedOnly ? "completed" : cardStatusFilter);
         setAppliedHasNoDueDate(hasNoDueDate);
-        setAppliedDateFilter(draftDateFilter);
         const normalizedSearch = searchInput.trim();
         setSearchKeyword(normalizedSearch);
         setAppliedSearchKeyword(normalizedSearch);
         setPage(1);
-    }, [assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly, completedOnly, cardStatusFilter, hasNoDueDate, draftDateFilter, searchInput]);
+    }, [assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly, completedOnly, cardStatusFilter, hasNoDueDate, searchInput]);
 
     const refresh = React.useCallback(async () => {
         if (!groupId) {
@@ -1082,7 +1081,10 @@ export function GroupListScreen() {
 
                                 <FilterChip
                                     active={Boolean(appliedDateFilterLabel)}
-                                    onClick={() => setFilterOpen(true)}
+                                    onClick={() => {
+                                        setDraftDateFilter(appliedDateFilter);
+                                        setFilterOpen(true);
+                                    }}
                                     label={appliedDateFilterLabel || t("dateFilterButton")}
                                     icon={<CalendarDays className="h-4 w-4" />}
                                 />
@@ -1331,7 +1333,10 @@ export function GroupListScreen() {
                 values={draftDateFilter}
                 t={t}
                 onChange={(patch) => setDraftDateFilter((prev) => ({ ...prev, ...patch }))}
-                onClose={() => setFilterOpen(false)}
+                onClose={() => {
+                    setDraftDateFilter(appliedDateFilter);
+                    setFilterOpen(false);
+                }}
                 onClear={() => {
                     const emptyFilter = {
                         startDate: "",

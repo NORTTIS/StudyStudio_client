@@ -512,6 +512,10 @@ function DuePill({
 }) {
     if (done) return null;
 
+    const overdueFlameId = React.useId();
+    const overdueFlameOuterId = `${overdueFlameId}-overdue-flame-outer`;
+    const overdueFlameInnerId = `${overdueFlameId}-overdue-flame-inner`;
+
     return (
         <div
             className={cn(
@@ -535,12 +539,12 @@ function DuePill({
                                 xmlns="http://www.w3.org/2000/svg"
                                 aria-hidden="true">
                                 <defs>
-                                    <linearGradient id="overdue-flame-outer" x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+                                    <linearGradient id={overdueFlameOuterId} x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
                                         <stop stopColor="#FB923C" />
                                         <stop offset="0.55" stopColor="#F97316" />
                                         <stop offset="1" stopColor="#E11D48" />
                                     </linearGradient>
-                                    <linearGradient id="overdue-flame-inner" x1="12" y1="8" x2="12" y2="19" gradientUnits="userSpaceOnUse">
+                                    <linearGradient id={overdueFlameInnerId} x1="12" y1="8" x2="12" y2="19" gradientUnits="userSpaceOnUse">
                                         <stop stopColor="#FFF7ED" />
                                         <stop offset="0.45" stopColor="#FDBA74" />
                                         <stop offset="1" stopColor="#FB7185" />
@@ -548,11 +552,11 @@ function DuePill({
                                 </defs>
                                 <path
                                     d="M12.4 2.8c.18 2.06-.65 3.72-1.96 5.07-1.31 1.34-2.88 2.81-2.88 5.17 0 3.69 2.72 6.16 6.22 6.16 3.66 0 6.22-2.61 6.22-6.18 0-2.87-1.9-4.79-3.43-6.45-1.18-1.28-2.21-2.43-2.47-4.05-.06-.36-.33-.64-.69-.64-.4 0-.72.35-.7.92Z"
-                                    fill="url(#overdue-flame-outer)"
+                                    fill={`url(#${overdueFlameOuterId})`}
                                 />
                                 <path
                                     d="M13.12 9.1c.1 1.28-.42 2.29-1.23 3.25-.82.96-1.74 1.96-1.74 3.42 0 2.15 1.54 3.6 3.66 3.6 2.22 0 3.77-1.57 3.77-3.63 0-1.69-1.13-2.88-2.08-3.93-.73-.8-1.37-1.53-1.48-2.72-.03-.31-.24-.55-.53-.55-.27 0-.41.23-.37.56Z"
-                                    fill="url(#overdue-flame-inner)"
+                                    fill={`url(#${overdueFlameInnerId})`}
                                 />
                             </svg>
                         </span>
