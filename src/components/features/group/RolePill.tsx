@@ -5,7 +5,7 @@ import type { GroupRole } from "./types";
 
 type Translator = ReturnType<typeof useTranslations>;
 
-const ROLE_LABELS: Record<GroupRole, string> = {
+const ROLE_LABELS: Record<Exclude<GroupRole, null>, string> = {
     owner: "Owner",
     moderator: "Moderator",
     member: "Member",
@@ -20,7 +20,7 @@ interface RolePillProps {
 
 export function RolePill({ role, t }: RolePillProps) {
     const tHeader = useTranslations("GroupStudioHeader");
-    const normalizedRole = String(role).trim().toLowerCase() as GroupRole;
+    const normalizedRole = String(role).trim().toLowerCase() as Exclude<GroupRole, null>;
 
     const cls =
         normalizedRole === "owner"

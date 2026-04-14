@@ -222,7 +222,7 @@ export function GroupStudioHeader({
     const [groupDesc, setGroupDesc] = React.useState<string>("");
     const [studioName, setStudioName] = React.useState<string>("");
     const [memberCount, setMemberCount] = React.useState<number>(0);
-    const [userRole, setUserRole] = React.useState<GroupRole>("");
+    const [userRole, setUserRole] = React.useState<GroupRole>(null);
     const [error, setError] = React.useState<string>("");
     const [groupTagline, setGroupTagline] = React.useState<string>("");
     const [groupAlias, setGroupAlias] = React.useState<string>("");
@@ -466,10 +466,11 @@ export function GroupStudioHeader({
     const backHref = fromStudioId ? `/${locale}/master/${encodeURIComponent(fromStudioId)}` : `/${locale}/group`;
 
     const visibleTabs = React.useMemo(() => {
-        const canSeeSetting = userRole === "owner" || userRole === "moderator";
-        const canSeeTrashed = userRole === "owner" || userRole === "moderator";
-        const canSeeAnalytic = userRole !== "viewer";
-        const canSeeAI = userRole === "owner" || userRole === "moderator" || userRole === "member";
+        const allowedRoles = userRole ? new Set([userRole]) : new Set<string>();
+        const canSeeSetting = allowedRoles.has("owner") || allowedRoles.has("moderator");
+        const canSeeTrashed = allowedRoles.has("owner") || allowedRoles.has("moderator");
+        const canSeeAnalytic = allowedRoles.has("owner") || allowedRoles.has("moderator") || allowedRoles.has("member") || allowedRoles.has("commenter");
+        const canSeeAI = allowedRoles.has("owner") || allowedRoles.has("moderator") || allowedRoles.has("member");
 
         return tabs.filter((tab) => {
             if (tab.key === "setting" && !canSeeSetting) return false;

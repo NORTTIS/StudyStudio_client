@@ -803,10 +803,12 @@ export default function AnalysisHome() {
     const fetchBenchmark = useCallback(
         (uid: string, groupId: string | undefined, weeks: number, currentLocale: string) => {
             setBenchmarkLoading(true);
-            getUserBenchmark(uid, weeks, groupId, currentLocale).then((r) => {
-                if (r.status === "success" && r.data) setBenchmarkData(r.data);
-                setBenchmarkLoading(false);
-            });
+            getUserBenchmark(uid, weeks, groupId, currentLocale)
+                .then((r) => {
+                    if (r.status === "success" && r.data) setBenchmarkData(r.data);
+                })
+                .catch(() => {})
+                .finally(() => setBenchmarkLoading(false));
         },
         []
     );
@@ -819,10 +821,12 @@ export default function AnalysisHome() {
     // ── Refetch trend when period changes ──────────────────────
     const fetchTrend = useCallback((uid: string, period: number, currentLocale: string) => {
         setTrendLoading(true);
-        getUserProductivityTrend(uid, period, currentLocale).then((r) => {
-            if (r.status === "success" && r.data) setTrendData(r.data);
-            setTrendLoading(false);
-        });
+        getUserProductivityTrend(uid, period, currentLocale)
+            .then((r) => {
+                if (r.status === "success" && r.data) setTrendData(r.data);
+            })
+            .catch(() => {})
+            .finally(() => setTrendLoading(false));
     }, []);
 
     useEffect(() => {
