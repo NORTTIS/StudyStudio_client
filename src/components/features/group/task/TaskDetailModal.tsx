@@ -36,11 +36,13 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import AssigneeAvatar from "./AssigneeAvatar";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
 type UserDto = {
-    id?: string;
+    id?: string | null;
     firstName?: string | null;
     lastName?: string | null;
     avatarUrl?: string | null;
@@ -298,6 +300,8 @@ type TrelloDatePickerProps = {
     disabled?: boolean;
     locale: string;
     i18n: DatePickerTranslations;
+    displayText?: string;
+    displayClassName?: string;
 };
 
 type DatePickerTranslations = {
@@ -1088,8 +1092,8 @@ function priorityTone(value?: number | null) {
 function severityTone(value?: number | null) {
     if (value === 3) return "text-red-600";
     if (value === 2) return "text-orange-600";
-    if (value === 1) return "text-yellow-500";
-    if (value === 0) return "text-sky-600";
+    if (value === 1) return "text-sky-600";
+    if (value === 0) return "text-emerald-600";
     return "text-zinc-700";
 }
 
@@ -1196,7 +1200,17 @@ function getGroupIdFromParams(params: Record<string, string | string[] | undefin
     return firstKey ? readParam(params, firstKey) : null;
 }
 
-function TrelloDatePicker({ label, value, onChange, min, disabled = false, locale, i18n }: TrelloDatePickerProps) {
+function TrelloDatePicker({
+    label,
+    value,
+    onChange,
+    min,
+    disabled = false,
+    locale,
+    i18n,
+    displayText,
+    displayClassName
+}: TrelloDatePickerProps) {
     const [open, setOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [popupPosition, setPopupPosition] = React.useState<PopupPosition | null>(null);
@@ -1502,9 +1516,10 @@ function TrelloDatePicker({ label, value, onChange, min, disabled = false, local
                             className={cn(
                                 "truncate text-left text-sm",
                                 value ? "font-medium text-zinc-900" : "text-zinc-400",
-                                disabled && "text-zinc-500"
+                                disabled && "text-zinc-500",
+                                disabled && displayClassName
                             )}>
-                            {formatDateDisplay(value, locale, i18n)}
+                            {disabled && displayText ? displayText : formatDateDisplay(value, locale, i18n)}
                         </span>
                     </div>
                 </button>
@@ -1621,7 +1636,8 @@ async function apiGetTaskDetailFromGroup(groupId: string, taskId: string) {
     return {
         task: mapTaskDetailFromTaskItem(hit.task, taskId, hit.statusName, hit.statusId),
         statusOptions: mapStatusOptions(group),
-        userRole: String(group?.userRole ?? "").trim()
+        userRole: String(group?.userRole ?? "").trim(),
+        allowMemberUpdateProgress: Boolean((group as Record<string, unknown>)?.allowMemberUpdateProgress ?? false)
     };
 }
 
@@ -1933,8 +1949,11 @@ export default function TaskDetailModal(props: {
     groupIdOverride?: string | null;
     onDelete?: (taskId: string) => void;
     onSaved?: () => Promise<void> | void;
+    groupDetailSnapshot?: GroupDetailResponse | null;
+    groupMembersSnapshot?: GroupMemberDto[] | null;
 }) {
-    const { open, onClose, taskId, groupIdOverride, onSaved } = props;
+    const { open, onClose, taskId, groupIdOverride, onSaved, groupDetailSnapshot, groupMembersSnapshot } = props;
+    const { toast } = useToast();
     const t = useTranslations("TaskDetailModal");
     const locale = useLocale();
     const mentionAllLabel = t("mentionAll.label");
@@ -2047,6 +2066,7 @@ export default function TaskDetailModal(props: {
     const [myUserId, setMyUserId] = React.useState("");
     const [myFullName, setMyFullName] = React.useState("");
     const [currentUserRole, setCurrentUserRole] = React.useState("");
+    const [allowMemberUpdateProgress, setAllowMemberUpdateProgress] = React.useState(false);
 
     const [replyingTo, setReplyingTo] = React.useState<TaskCommentDto | null>(null);
     const [deletingCommentId, setDeletingCommentId] = React.useState<string | null>(null);
@@ -2072,6 +2092,13 @@ export default function TaskDetailModal(props: {
     const [isEditing, setIsEditing] = React.useState(false);
 
     const isAliveRef = React.useRef(true);
+    const commentsCacheRef = React.useRef<Record<string, TaskCommentWithReplies[]>>({});
+    const membersCacheRef = React.useRef<Record<string, GroupMemberDto[]>>({});
+    const profileCacheRef = React.useRef<{
+        avatarUrl: string;
+        userId: string;
+        fullName: string;
+    } | null>(null);
 
     React.useEffect(() => {
         isAliveRef.current = true;
@@ -2098,6 +2125,12 @@ export default function TaskDetailModal(props: {
         return !isRestrictedMemberRole(currentUserRole);
     }, [currentUserRole]);
 
+    const canUpdateProgress = React.useMemo(() => {
+        if (normalizedRole === "owner" || normalizedRole === "moderator") return true;
+        if (normalizedRole === "viewer" || normalizedRole === "view" || normalizedRole === "commenter") return false;
+        return !!allowMemberUpdateProgress;
+    }, [normalizedRole, allowMemberUpdateProgress]);
+
     const canDeleteComment = React.useCallback(
         (comment: TaskCommentDto) => {
             if (isViewOnly) return false;
@@ -2118,7 +2151,9 @@ export default function TaskDetailModal(props: {
         if (!taskId) return;
         const refreshResp = await apiGetTaskComments(taskId);
         const list = (refreshResp?.data?.comments ?? []) as TaskCommentWithReplies[];
-        setComments((list ?? []).filter((c) => !c?.isDeleted));
+        const nextComments = (list ?? []).filter((c) => !c?.isDeleted);
+        commentsCacheRef.current[taskId] = nextComments;
+        setComments(nextComments);
     }, [taskId]);
 
     const handleReplyComment = (comment: TaskCommentDto) => {
@@ -2353,6 +2388,7 @@ export default function TaskDetailModal(props: {
             setTask(result.task);
             setStatusOptions(result.statusOptions);
             setCurrentUserRole(result.userRole);
+            setAllowMemberUpdateProgress(result.allowMemberUpdateProgress);
             setDetailError(null);
         } catch (e: unknown) {
             if (!isAliveRef.current) return;
@@ -2371,12 +2407,35 @@ export default function TaskDetailModal(props: {
             setDetailError(null);
 
             try {
+                const canUseSnapshot =
+                    !!groupDetailSnapshot
+                    && (!(groupId && groupDetailSnapshot?.groupId ) || String(groupDetailSnapshot.groupId) === groupId);
+
+                if (canUseSnapshot) {
+                    const hit = findTaskInGroupDetail(groupDetailSnapshot, taskId);
+
+                    if (hit) {
+                        if (!alive) return;
+                        setTask(mapTaskDetailFromTaskItem(hit.task, taskId, hit.statusName, hit.statusId));
+                        setStatusOptions(mapStatusOptions(groupDetailSnapshot));
+                        setCurrentUserRole(String(groupDetailSnapshot?.userRole ?? "").trim());
+                        setAllowMemberUpdateProgress(
+                            Boolean(
+                                (groupDetailSnapshot as Record<string, unknown>)?.allowMemberUpdateProgress
+                                ?? false
+                            )
+                        );
+                        return;
+                    }
+                }
+
                 if (!groupId) throw new Error(t("errors.missingGroupIdFromRoute"));
                 const result = await apiGetTaskDetailFromGroup(groupId, taskId);
                 if (!alive) return;
                 setTask(result.task);
                 setStatusOptions(result.statusOptions);
                 setCurrentUserRole(result.userRole);
+                setAllowMemberUpdateProgress(result.allowMemberUpdateProgress);
             } catch (e: unknown) {
                 if (!alive) return;
                 setDetailError(getErrorMessage(e, t("errors.loadTaskDetailFailed")));
@@ -2391,11 +2450,34 @@ export default function TaskDetailModal(props: {
         return () => {
             alive = false;
         };
-    }, [open, taskId, groupId, t]);
+    }, [open, taskId, groupId, t, groupDetailSnapshot]);
+
+    React.useEffect(() => {
+        if (!(open && groupId)) return;
+        const sourceMembers = (groupMembersSnapshot ?? [])
+            .filter((m) => !!String(m?.userId ?? "").trim())
+            .filter((m) => !isRestrictedMemberRole(m?.role));
+
+        if (sourceMembers.length === 0) return;
+
+        membersCacheRef.current[groupId] = sourceMembers;
+        setMembers(sourceMembers);
+        setMembersError(null);
+    }, [open, groupId, groupMembersSnapshot]);
 
     React.useEffect(() => {
         if (!(open && taskId)) return;
         let alive = true;
+
+        const cachedComments = commentsCacheRef.current[taskId];
+        if (cachedComments) {
+            setComments(cachedComments);
+            setCommentError(null);
+            setLoadingComments(false);
+            return () => {
+                alive = false;
+            };
+        }
 
         (async () => {
             setLoadingComments(true);
@@ -2404,8 +2486,10 @@ export default function TaskDetailModal(props: {
             try {
                 const resp = await apiGetTaskComments(taskId);
                 const list = (resp?.data?.comments ?? []) as TaskCommentWithReplies[];
+                const nextComments = (list ?? []).filter((c) => !c?.isDeleted);
                 if (!alive) return;
-                setComments((list ?? []).filter((c) => !c?.isDeleted));
+                commentsCacheRef.current[taskId] = nextComments;
+                setComments(nextComments);
             } catch (e: unknown) {
                 if (!alive) return;
                 setCommentError(getErrorMessage(e, t("errors.loadCommentsFailed")));
@@ -2424,6 +2508,15 @@ export default function TaskDetailModal(props: {
         if (!(open && groupId)) return;
         let alive = true;
 
+        const cachedMembers = membersCacheRef.current[groupId];
+        if (cachedMembers) {
+            setMembers(cachedMembers);
+            setMembersError(null);
+            return () => {
+                alive = false;
+            };
+        }
+
         (async () => {
             setMembersError(null);
 
@@ -2437,6 +2530,7 @@ export default function TaskDetailModal(props: {
                     .filter((m) => !!String(m?.userId ?? "").trim())
                     .filter((m) => !isRestrictedMemberRole(m?.role));
 
+                membersCacheRef.current[groupId] = filteredList;
                 setMembers(filteredList);
             } catch (e: unknown) {
                 if (!alive) return;
@@ -2451,8 +2545,17 @@ export default function TaskDetailModal(props: {
     }, [open, groupId, t]);
 
     React.useEffect(() => {
-        if (!open) return;
+        if (!(open && canComment)) return;
         let alive = true;
+
+        if (profileCacheRef.current) {
+            setMyAvatarUrl(profileCacheRef.current.avatarUrl);
+            setMyUserId(profileCacheRef.current.userId);
+            setMyFullName(profileCacheRef.current.fullName);
+            return () => {
+                alive = false;
+            };
+        }
 
         (async () => {
             try {
@@ -2460,9 +2563,16 @@ export default function TaskDetailModal(props: {
                 if (!alive) return;
 
                 const profile = resp?.data;
-                setMyAvatarUrl(safeAvatarUrl(profile?.avatarUrl ?? ""));
-                setMyUserId(String(profile?.userId ?? ""));
-                setMyFullName(`${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim());
+                const nextProfile = {
+                    avatarUrl: safeAvatarUrl(profile?.avatarUrl ?? ""),
+                    userId: String(profile?.userId ?? ""),
+                    fullName: `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim()
+                };
+
+                profileCacheRef.current = nextProfile;
+                setMyAvatarUrl(nextProfile.avatarUrl);
+                setMyUserId(nextProfile.userId);
+                setMyFullName(nextProfile.fullName);
             } catch {
                 if (!alive) return;
                 setMyAvatarUrl("");
@@ -2474,7 +2584,7 @@ export default function TaskDetailModal(props: {
         return () => {
             alive = false;
         };
-    }, [open]);
+    }, [open, canComment]);
 
     React.useEffect(() => {
         setTaskName((task?.title ?? "").slice(0, TASK_TITLE_MAX_LENGTH));
@@ -2556,6 +2666,12 @@ export default function TaskDetailModal(props: {
         () => progressLabelByValue(selectedProgressValue),
         [selectedProgressValue, progressLabelByValue]
     );
+    const dueDateDisplayText = !isEditing && selectedProgressValue >= 100
+        ? dueDate
+            ? formatDateDisplay(dueDate, locale, datePickerI18n)
+            : t("progressDone")
+        : undefined;
+    const dueDateDisplayClassName = !isEditing && selectedProgressValue >= 100 ? "text-emerald-700" : undefined;
     const descriptionLength = description.length;
     const commentLength = commentDraft.length;
 
@@ -2675,13 +2791,17 @@ export default function TaskDetailModal(props: {
             setProgress(String(normalizedProgressValue));
             setIsEditing(false);
 
+            toast({ variant: "success", description: t("saveSuccess") });
+
             void (async () => {
                 // Avoid immediately re-reading stale task detail right after update.
                 await delay(350);
                 await Promise.allSettled([refreshTaskDetailSilently(), Promise.resolve(onSaved?.())]);
             })();
         } catch (e: unknown) {
-            setSaveError(getErrorMessage(e, t("errors.updateTaskFailed")));
+            const errorMessage = getErrorMessage(e, t("errors.updateTaskFailed"));
+            toast({ variant: "destructive", description: errorMessage });
+            setSaveError(errorMessage);
         } finally {
             setSubmitting(false);
         }
@@ -2809,20 +2929,13 @@ export default function TaskDetailModal(props: {
                                         disabled={!isEditing}>
                                         <SelectTrigger className="mt-2 flex h-10 w-full items-center justify-between rounded-xl border border-zinc-200 px-3 font-medium text-sm text-zinc-800 disabled:cursor-not-allowed disabled:opacity-70">
                                             <div className="flex min-w-0 items-center gap-2">
-                                                {selectedAssigneeDisplay.avatarUrl ? (
-                                                    <Image
-                                                        src={selectedAssigneeDisplay.avatarUrl}
-                                                        alt={selectedAssigneeDisplay.label}
-                                                        width={24}
-                                                        height={24}
-                                                        unoptimized
-                                                        className="h-6 w-6 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
-                                                        {buildInitials(selectedAssigneeDisplay.label)}
-                                                    </div>
-                                                )}
+                                                <AssigneeAvatar
+                                                    avatarUrl={selectedAssigneeDisplay.avatarUrl}
+                                                    name={selectedAssigneeDisplay.label}
+                                                    size={24}
+                                                    unassigned={!assigneeId}
+                                                    className="text-[11px]"
+                                                />
                                                 <span className="truncate">{selectedAssigneeDisplay.label}</span>
                                             </div>
                                         </SelectTrigger>
@@ -2839,9 +2952,7 @@ export default function TaskDetailModal(props: {
                                                 className={selectItemClassName}
                                                 disabled={!!task?.assigneeId}>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
-                                                        U
-                                                    </div>
+                                                    <AssigneeAvatar size={24} unassigned className="text-[11px]" />
                                                     <span>{t("unassigned")}</span>
                                                 </div>
                                             </SelectItem>
@@ -2852,20 +2963,12 @@ export default function TaskDetailModal(props: {
                                                     value={m.userId}
                                                     className={selectItemClassName}>
                                                     <div className="flex items-center gap-2">
-                                                        {m.avatarUrl ? (
-                                                            <Image
-                                                                src={m.avatarUrl}
-                                                                alt={m.label}
-                                                                width={24}
-                                                                height={24}
-                                                                unoptimized
-                                                                className="h-6 w-6 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 font-bold text-[11px] text-white">
-                                                                {buildInitials(m.label)}
-                                                            </div>
-                                                        )}
+                                                        <AssigneeAvatar
+                                                            avatarUrl={m.avatarUrl}
+                                                            name={m.label}
+                                                            size={24}
+                                                            className="text-[11px]"
+                                                        />
                                                         <span className="truncate">{m.label}</span>
                                                     </div>
                                                 </SelectItem>
@@ -2991,6 +3094,8 @@ export default function TaskDetailModal(props: {
                                     disabled={!isEditing}
                                     locale={locale}
                                     i18n={datePickerI18n}
+                                    displayText={dueDateDisplayText}
+                                    displayClassName={dueDateDisplayClassName}
                                 />
 
                                 <div>
@@ -3042,6 +3147,7 @@ export default function TaskDetailModal(props: {
                                 <div className="md:col-span-2 xl:col-span-2">
                                     <div className="font-semibold text-sm text-zinc-600">{t("progress")}</div>
 
+                                    {canUpdateProgress ? (
                                     <div className="mt-2 rounded-xl border border-zinc-200 bg-white p-4">
                                         <div className="mb-3 flex items-center justify-between gap-3 text-sm">
                                             <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
@@ -3091,6 +3197,20 @@ export default function TaskDetailModal(props: {
                                             })}
                                         </div>
                                     </div>
+                                    ) : (
+                                    <div className="mt-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                                        <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+                                            <span className="font-medium text-zinc-800">{selectedProgressLabel}</span>
+                                            <span className="font-bold text-zinc-900">{selectedProgressValue}%</span>
+                                        </div>
+                                        <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                                            <div
+                                                className="h-full rounded-full bg-orange-500 transition-all"
+                                                style={{ width: `${selectedProgressValue}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                    )}
                                 </div>
                             </div>
 

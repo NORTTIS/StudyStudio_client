@@ -947,6 +947,7 @@ export default function AnalysisHome() {
                             <KpiCard
                                 title={t("cards.totalTasks.title")}
                                 value={kpiData.totalTasks ?? 0}
+                                sub={t("common.tasks")}
                                 badge={
                                     kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
                                         ? t("cards.totalTasks.badge", {

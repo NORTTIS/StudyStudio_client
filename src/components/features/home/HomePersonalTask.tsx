@@ -13,6 +13,7 @@ import {
     type DroppableContainer,
     KeyboardSensor,
     PointerSensor,
+    pointerWithin,
     useDroppable,
     useSensor,
     useSensors
@@ -48,6 +49,7 @@ import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { TaskProgressEditor } from "@/components/features/home/Editor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 type PersonalTaskBoardResponse = components["schemas"]["PersonalTaskBoardResponse"];
 type PersonalTaskBoardResponseApiResponse = components["schemas"]["PersonalTaskBoardResponseApiResponse"];
@@ -116,6 +118,13 @@ const selectItemClassName =
 
 function cn(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(" ");
+}
+
+function isInteractiveElement(target: EventTarget | null) {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+
+    return !!el.closest('button, input, textarea, select, option, a, [role="button"], [data-no-pan="true"]');
 }
 
 function parseDateString(value?: string) {
@@ -293,8 +302,8 @@ function priorityTone(value: "low" | "medium" | "high") {
 function severityTone(value: "minor" | "moderate" | "major" | "critical") {
     if (value === "critical") return "text-red-600";
     if (value === "major") return "text-orange-600";
-    if (value === "moderate") return "text-yellow-500";
-    return "text-sky-600";
+    if (value === "moderate") return "text-sky-600";
+    return "text-emerald-600";
 }
 
 function priorityLabel(value: "low" | "medium" | "high") {
@@ -339,7 +348,7 @@ function isTaskDone(task?: Pick<TaskItemResponse, "progress"> | null) {
 
 function ProgressPill({ progress }: { progress: number }) {
     return (
-        <span className="inline-flex items-center rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 font-semibold text-indigo-700 text-xs">
+        <span className="inline-flex h-7 items-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 font-semibold text-indigo-700 text-xs">
             {progress}%
         </span>
     );
@@ -349,8 +358,8 @@ import { CheckCircle2 } from "lucide-react";
 
 function DonePill({ label = "Done" }: { label?: string } = {}) {
     return (
-        <span className="inline-flex h-10 items-center gap-2 rounded-[16px] border border-emerald-300 bg-emerald-50 px-4 font-medium text-emerald-700 text-sm">
-            <CheckCircle2 className="h-4 w-4" />
+        <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700 text-xs">
+            <CheckCircle2 className="h-3.5 w-3.5" />
             {label}
         </span>
     );
@@ -501,22 +510,35 @@ function DuePill({
     done?: boolean;
     t: (key: string) => string;
 }) {
+    if (done) return null;
+
     return (
         <div
             className={cn(
-                "inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border px-3 py-2",
-                done
-                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                    : overdue
-                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                        : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                "inline-flex min-w-0 max-w-full items-center gap-2",
+                done ? "text-emerald-700" : overdue ? "text-rose-700" : "text-zinc-700"
             )}>
-            <Clock3 className="h-4 w-4 shrink-0" />
-            <div className="flex min-w-0 items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2 leading-none">
+                <Clock3 className="h-3.5 w-3.5 shrink-0" />
                 <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
-                {!done && overdue ? (
-                    <span className="whitespace-nowrap rounded-md bg-rose-100 px-2 py-0.5 font-bold text-rose-700 text-xs">
-                        {t("overdue")}
+                {overdue ? (
+                    <span title={t("overdue") || "Quá hạn"} className="shrink-0">
+                        <span className="sr-only">{t("overdue") || "Quá hạn"}</span>
+                        <svg
+                            viewBox="0 0 48 48"
+                            className="h-4 w-4"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true">
+                            <path
+                                d="M25.9 3.4c.4 5.4-2.2 9.6-6.2 13.6-3.5 3.5-7.2 7.4-7.2 13.4 0 8.3 6.3 14.2 14.7 14.2 8.7 0 14.8-6.1 14.8-14.3 0-7.1-4.9-11.7-8.6-15.7-2.9-3.1-5.4-6-5.9-10.7-.1-.8-.7-1.4-1.5-1.4-.7 0-1.4.4-1.4.9Z"
+                                fill="#FF5A7A"
+                            />
+                            <path
+                                d="M26.9 18.1c.2 3.1-1.2 5.5-3.4 7.8-1.9 2-4 4.3-4 7.8 0 5 3.7 8.4 8.7 8.4 5.2 0 8.8-3.7 8.8-8.5 0-4.1-2.8-6.9-5.1-9.3-1.8-1.9-3.4-3.7-3.6-6.5 0-.6-.5-1-1.1-1-.6 0-1.1.5-1.1 1.3Z"
+                                fill="#F21155"
+                            />
+                        </svg>
                     </span>
                 ) : null}
             </div>
@@ -537,6 +559,8 @@ function SummaryCount({ count }: { count: number }) {
         </span>
     );
 }
+
+type HeaderDragProps = Pick<ReturnType<typeof useSortable>, "attributes" | "listeners" | "setActivatorNodeRef">;
 
 function PortalDropdown({
     open,
@@ -773,8 +797,8 @@ function AddColumnInline({
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cn(
-                    "w-full rounded-xl bg-[#f54a00] px-4 py-3 text-left font-semibold text-sm text-white shadow-sm",
-                    "transition hover:bg-[#f54a00]/80"
+                    "w-full rounded-[22px] bg-[linear-gradient(135deg,#F97316_0%,#F54A00_100%)] px-5 py-3.5 text-left font-semibold text-sm text-white shadow-[0_14px_28px_rgba(245,74,0,0.24)]",
+                    "transition hover:brightness-105"
                 )}>
                 {labels.createStatus}
             </button>
@@ -782,7 +806,7 @@ function AddColumnInline({
     }
 
     return (
-        <div className="rounded-xl bg-white p-3 shadow-sm">
+        <div className="rounded-[24px] border border-white/85 bg-white/92 p-4 shadow-[0_12px_28px_rgba(148,163,184,0.14)]">
             <input
                 ref={inputRef}
                 value={title}
@@ -808,8 +832,8 @@ function AddColumnInline({
                     onClick={close}
                     disabled={isSubmitting}
                     className={cn(
-                        "rounded-xl px-3 py-2 font-semibold text-sm text-white",
-                        "bg-[#f54a00] transition hover:bg-[#f54a00]/80",
+                        "rounded-[18px] px-3.5 py-2 font-semibold text-sm text-white",
+                        "bg-[linear-gradient(135deg,#F97316_0%,#F54A00_100%)] transition hover:brightness-105",
                         isSubmitting && "pointer-events-none opacity-60"
                     )}>
                     {labels.cancel}
@@ -834,9 +858,9 @@ function AddTaskButton({
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 font-semibold text-sm",
-                "bg-[#f54a00] text-white",
-                "transition hover:bg-[#f54a00]/80",
+                "mt-3 flex w-full items-center justify-center gap-2 rounded-[20px] px-3 py-3 font-semibold text-sm",
+                "bg-[linear-gradient(135deg,#F97316_0%,#F54A00_100%)] text-white shadow-[0_14px_28px_rgba(245,74,0,0.20)]",
+                "transition hover:brightness-105",
                 disabled && "pointer-events-none opacity-60"
             )}>
             <Plus className="h-4 w-4" />
@@ -932,6 +956,7 @@ function PersonalTaskCard({
     return (
         <div
             ref={setNodeRef}
+            data-no-pan="true"
             style={style}
             {...attributes}
             {...listeners}
@@ -953,159 +978,166 @@ function PersonalTaskCard({
                     ? "bg-zinc-50 hover:bg-zinc-100/90 hover:shadow-[0_2px_6px_rgba(9,30,66,0.10),0_0_0_1px_rgba(9,30,66,0.04)]"
                     : "bg-white hover:bg-white hover:shadow-[0_4px_8px_rgba(9,30,66,0.16),0_0_0_1px_rgba(9,30,66,0.04)]"
             )}>
-            <div className="flex items-start gap-3">
-                <div className="pt-1">
-                    <div className={cn("h-2.5 w-2.5 rounded-full", priorityDotColor(task.taskPriority))} />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                    {!isEditing ? (
-                        <>
-                            <div className="flex items-start justify-between gap-3">
-                                <p
-                                    className={cn(
-                                        "line-clamp-3 pr-2 font-semibold text-sm leading-5",
-                                        done ? "text-zinc-500 line-through" : "text-zinc-900"
-                                    )}>
-                                    {title}
-                                </p>
-
+            <div className="min-w-0">
+                {!isEditing ? (
+                    <>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 flex-1 items-start gap-2">
                                 <div
-                                    className="relative shrink-0"
-                                    onClick={(e) => e.stopPropagation()}
-                                    onPointerDown={(e) => e.stopPropagation()}>
-                                    <button
-                                        ref={btnRef}
-                                        type="button"
-                                        onPointerDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setOpenMenu((v) => !v);
-                                        }}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 hover:bg-zinc-100"
-                                        aria-label={t("menu")}>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </button>
-
-                                    <PortalDropdown
-                                        open={openMenu}
-                                        onClose={() => setOpenMenu(false)}
-                                        anchorRef={btnRef as React.RefObject<HTMLElement>}>
-                                        <MenuItem
-                                            icon={<Pencil className="h-4 w-4" />}
-                                            label={t("editTaskName")}
-                                            onClick={() => {
-                                                setOpenMenu(false);
-                                                setIsEditing(true);
-                                            }}
-                                        />
-                                        <MenuItem
-                                            icon={<Trash2 className="h-4 w-4" />}
-                                            label={t("delete")}
-                                            danger
-                                            onClick={() => {
-                                                setOpenMenu(false);
-                                                void onDelete(task);
-                                            }}
-                                        />
-                                    </PortalDropdown>
+                                    className={cn(
+                                        "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+                                        priorityDotColor(task.taskPriority)
+                                    )}
+                                />
+                                <div className="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
+                                    <p
+                                        className={cn(
+                                            "min-w-0 flex-1 line-clamp-2 pr-1 font-medium text-sm leading-snug tracking-tight",
+                                            done ? "text-zinc-500 line-through" : "text-zinc-900"
+                                        )}>
+                                        {title}
+                                    </p>
                                 </div>
                             </div>
-                        </>
-                    ) : (
-                        <div
-                            className="space-y-2"
-                            onPointerDownCapture={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}>
-                            <input
-                                ref={inputRef}
-                                value={draftTitle}
-                                maxLength={30}
-                                disabled={isSubmitting}
-                                onChange={(e) => setDraftTitle(e.target.value.slice(0, 30))}
-                                onBlur={() => void submitEdit()}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        void submitEdit();
-                                    }
-                                    if (e.key === "Escape") {
-                                        e.preventDefault();
-                                        cancelEdit();
-                                    }
-                                }}
-                                className={cn(
-                                    "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2",
-                                    "select-text font-semibold text-sm text-zinc-900 outline-none",
-                                    "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
-                                )}
-                            />
 
-                            <div className="text-right text-[11px] text-zinc-500">{draftTitle.length}/30</div>
-
-                            <div className="flex items-center gap-2">
+                            <div
+                                className="relative shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                                onPointerDown={(e) => e.stopPropagation()}>
                                 <button
+                                    ref={btnRef}
                                     type="button"
+                                    onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        void submitEdit();
+                                        setOpenMenu((v) => !v);
                                     }}
-                                    className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
-                                    Lưu
+                                    className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                                    aria-label={t("menu")}>
+                                    <MoreHorizontal className="h-3.5 w-3.5" />
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        cancelEdit();
-                                    }}
-                                    className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
-                                    aria-label={t("cancel")}>
-                                    <X className="h-4 w-4" />
-                                </button>
+                                <PortalDropdown
+                                    open={openMenu}
+                                    onClose={() => setOpenMenu(false)}
+                                    anchorRef={btnRef as React.RefObject<HTMLElement>}>
+                                    <MenuItem
+                                        icon={<Pencil className="h-4 w-4" />}
+                                        label={t("editTaskName")}
+                                        onClick={() => {
+                                            setOpenMenu(false);
+                                            setIsEditing(true);
+                                        }}
+                                    />
+                                    <MenuItem
+                                        icon={<Trash2 className="h-4 w-4" />}
+                                        label={t("delete")}
+                                        danger
+                                        onClick={() => {
+                                            setOpenMenu(false);
+                                            void onDelete(task);
+                                        }}
+                                    />
+                                </PortalDropdown>
                             </div>
                         </div>
-                    )}
 
-                    {dueText || severity || done || showProgress ? (
-                        <div className="mt-3 space-y-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             {dueText ? <DuePill due={dueText} overdue={overdue} done={done} t={t} /> : null}
-
-                            {severity || done || showProgress ? (
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {severity ? (
-                                        <span
-                                            className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                                done
-                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                                    : severity === "critical"
-                                                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                                                        : severity === "major"
-                                                            ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                            : severity === "moderate"
-                                                                ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                                : "border-sky-200 bg-sky-50 text-sky-700"
-                                            )}>
-                                            {severityLabel(severity, t)}
-                                        </span>
-                                    ) : null}
-
-                                    {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
-
-                                    {done ? <DonePill label={t("progressDone")} /> : null}
-                                </div>
+                            {severity ? (
+                                <span
+                                    className={cn(
+                                        "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 font-semibold text-xs",
+                                        done
+                                            ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                            : severity === "critical"
+                                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                            : severity === "major"
+                                                ? "border-orange-200 bg-orange-50 text-orange-700"
+                                            : severity === "moderate"
+                                                        ? "border-sky-200 bg-sky-50 text-sky-700"
+                                                        : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                    )}>
+                                    {severityLabel(severity, t)}
+                                </span>
+                            ) : null}
+                            {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
+                            {done ? <DonePill label={t("progressDone")} /> : null}
+                            {task.estimatedHours != null ? (
+                                <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700 text-xs">
+                                    {task.estimatedHours}
+                                    {t("estimatedHours")}
+                                </span>
+                            ) : null}
+                            {task.actualHours != null ? (
+                                <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 font-semibold text-green-700 text-xs">
+                                    {task.actualHours}
+                                    {t("actualHours")}
+                                </span>
                             ) : null}
                         </div>
-                    ) : null}
-                </div>
+                    </>
+                ) : (
+                    <div
+                        className="space-y-2"
+                        onPointerDownCapture={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}>
+                        <input
+                            ref={inputRef}
+                            value={draftTitle}
+                            maxLength={30}
+                            disabled={isSubmitting}
+                            onChange={(e) => setDraftTitle(e.target.value.slice(0, 30))}
+                            onBlur={() => void submitEdit()}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    void submitEdit();
+                                }
+                                if (e.key === "Escape") {
+                                    e.preventDefault();
+                                    cancelEdit();
+                                }
+                            }}
+                            className={cn(
+                                "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2",
+                                "select-text font-semibold text-sm text-zinc-900 outline-none",
+                                "focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
+                            )}
+                        />
+
+                        <div className="text-right text-[11px] text-zinc-500">{draftTitle.length}/30</div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    void submitEdit();
+                                }}
+                                className="rounded-lg bg-[#f54a00] px-3 py-2 font-semibold text-sm text-white hover:bg-[#f54a00]/70">
+                                {t("save")}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    cancelEdit();
+                                }}
+                                className="grid h-9 w-9 place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
+                                aria-label={t("cancel")}>
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -1123,46 +1155,52 @@ function GhostTaskCard({ task, t }: { task: PersonalTaskItemResponse; t: (key: s
 
     return (
         <div className="rounded-xl border-2 border-blue-300 border-dashed bg-blue-50/70 p-3">
-            <div className="flex items-start gap-3">
-                <div className={cn("mt-1 h-2.5 w-2.5 rounded-full", priorityDotColor(task.taskPriority))} />
-                <div className="min-w-0 flex-1">
-                    <p
-                        className={cn(
-                            "line-clamp-3 font-semibold text-sm leading-5",
-                            done ? "text-zinc-500 line-through" : "text-zinc-800"
-                        )}>
-                        {title}
-                    </p>
+            <div className="min-w-0">
+                <div className="flex min-w-0 items-start gap-2">
+                    <div className={cn("mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full", priorityDotColor(task.taskPriority))} />
+                    <div className="min-w-0 flex flex-1 flex-wrap items-center gap-1.5">
+                        <p
+                            className={cn(
+                                "min-w-0 flex-1 line-clamp-2 font-medium text-sm leading-snug tracking-tight",
+                                done ? "text-zinc-500 line-through" : "text-zinc-800"
+                            )}>
+                            {title}
+                        </p>
+                    </div>
+                </div>
 
-                    {dueText || severity || done || showProgress ? (
-                        <div className="mt-3 space-y-2">
-                            {dueText ? <DuePill due={dueText} overdue={overdue} done={done} t={t} /> : null}
-
-                            {severity || done || showProgress ? (
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {severity ? (
-                                        <span
-                                            className={cn(
-                                                "inline-flex shrink-0 items-center rounded-xl border px-3 py-2 font-semibold text-xs",
-                                                done
-                                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
-                                                    : severity === "critical"
-                                                        ? "border-rose-200 bg-rose-50 text-rose-700"
-                                                        : severity === "major"
-                                                            ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                            : severity === "moderate"
-                                                                ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                                : "border-sky-200 bg-sky-50 text-sky-700"
-                                            )}>
-                                            {severityLabel(severity, t)}
-                                        </span>
-                                    ) : null}
-
-                                    {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
-                                    {done ? <DonePill label={t("progressDone")} /> : null}
-                                </div>
-                            ) : null}
-                        </div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {dueText ? <DuePill due={dueText} overdue={overdue} done={done} t={t} /> : null}
+                    {severity ? (
+                        <span
+                            className={cn(
+                                "inline-flex h-7 shrink-0 items-center rounded-full border px-2.5 py-1 font-semibold text-xs",
+                                done
+                                    ? "border-zinc-200 bg-zinc-100 text-zinc-500"
+                                    : severity === "critical"
+                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                        : severity === "major"
+                                            ? "border-orange-200 bg-orange-50 text-orange-700"
+                                        : severity === "moderate"
+                                                ? "border-sky-200 bg-sky-50 text-sky-700"
+                                                : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            )}>
+                            {severityLabel(severity, t)}
+                        </span>
+                    ) : null}
+                    {showProgress ? <ProgressPill progress={normalizedProgress} /> : null}
+                    {done ? <DonePill label={t("progressDone")} /> : null}
+                    {task.estimatedHours != null ? (
+                        <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 font-semibold text-blue-700 text-xs">
+                            {task.estimatedHours}
+                            {t("estimatedHours")}
+                        </span>
+                    ) : null}
+                    {task.actualHours != null ? (
+                        <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 font-semibold text-green-700 text-xs">
+                            {task.actualHours}
+                            {t("actualHours")}
+                        </span>
                     ) : null}
                 </div>
             </div>
@@ -1199,11 +1237,11 @@ function TaskOverlay({ task, t }: { task: PersonalTaskItemResponse; t: (key: str
                                             ? "border-zinc-200 bg-zinc-100 text-zinc-500"
                                             : severity === "critical"
                                                 ? "border-rose-200 bg-rose-50 text-rose-700"
-                                                : severity === "major"
-                                                    ? "border-orange-200 bg-orange-50 text-orange-700"
-                                                    : severity === "moderate"
-                                                        ? "border-amber-200 bg-amber-50 text-amber-700"
-                                                        : "border-sky-200 bg-sky-50 text-sky-700"
+                                            : severity === "major"
+                                                ? "border-orange-200 bg-orange-50 text-orange-700"
+                                            : severity === "moderate"
+                                                        ? "border-sky-200 bg-sky-50 text-sky-700"
+                                                        : "border-emerald-200 bg-emerald-50 text-emerald-700"
                                     )}>
                                     {severityLabel(severity, t)}
                                 </span>
@@ -1224,17 +1262,17 @@ function ColumnOverlay({ status, t }: { status: PersonalTaskStatusDto; t: (key: 
 
     return (
         <div className="min-w-[300px] max-w-[300px]">
-            <div className="rounded-xl bg-[#f1f2f4] shadow-xl">
-                <div className="rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2">
+            <div className="rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,252,248,0.94),rgba(250,244,237,0.9))] shadow-[0_16px_38px_rgba(180,83,9,0.10)]">
+                <div className="rounded-t-[28px] bg-[linear-gradient(180deg,rgba(255,252,248,0.92),rgba(249,241,233,0.88))] px-4 pt-4 pb-3">
                     <p className="truncate font-bold text-sm text-zinc-900">{status.statusName || t("untitledStatus")}</p>
                     <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
                 </div>
 
-                <div className="px-2 pb-2">
-                    <div className="rounded-b-xl bg-[#f1f2f4]">
+                <div className="px-3 pb-3">
+                    <div className="rounded-b-[28px] bg-transparent">
                         {tasks.map((task) => (
                             <div key={String(task.taskId)} className="mb-2 last:mb-0">
-                                <div className="rounded-xl border border-black/5 bg-white p-3 shadow-sm">
+                                <div className="rounded-[24px] border border-white/85 bg-white/95 p-3 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
                                     <p className="font-semibold text-sm text-zinc-900">
                                         {task.taskTitle || t("untitledTask")}
                                     </p>
@@ -1243,7 +1281,7 @@ function ColumnOverlay({ status, t }: { status: PersonalTaskStatusDto; t: (key: 
                         ))}
 
                         {tasks.length === 0 ? (
-                            <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center text-sm text-zinc-500">
+                            <div className="rounded-[24px] border border-zinc-300 border-dashed bg-white/95 px-3 py-8 text-center text-sm text-zinc-500">
                                 (Trạng thái trống)
                             </div>
                         ) : null}
@@ -1254,7 +1292,7 @@ function ColumnOverlay({ status, t }: { status: PersonalTaskStatusDto; t: (key: 
     );
 }
 
-function BoardColumn({
+function ColumnView({
     status,
     isSubmitting,
     onCreateTask,
@@ -1270,6 +1308,7 @@ function BoardColumn({
     onColumnDraftChange,
     onColumnCommit,
     onColumnCancel,
+    headerDragProps,
     t
 }: {
     status: PersonalTaskStatusDto;
@@ -1287,25 +1326,13 @@ function BoardColumn({
     onColumnDraftChange: (value: string) => void;
     onColumnCommit: () => void;
     onColumnCancel: () => void;
+    headerDragProps?: HeaderDragProps;
     t: (key: string) => string;
 }) {
     const statusId = String(status.statusId ?? "");
     const tasks = [...((status.taskList ?? []) as PersonalTaskItemResponse[])];
     const taskIds = tasks.map((task) => String(task.taskId ?? ""));
     const statusName = status.statusName || "Untitled";
-
-    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
-        id: statusId,
-        data: { type: "column" }
-    });
-
-    const style: React.CSSProperties = {
-        transform: CSS.Transform.toString(transform),
-        transition: transition ?? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
-        willChange: "transform",
-        touchAction: "none",
-        opacity: isDragging ? 0.25 : 1
-    };
 
     const dropId = `${DROP_PREFIX}${statusId}`;
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -1354,167 +1381,246 @@ function BoardColumn({
     }, [isEditing]);
 
     return (
-        <div ref={setNodeRef} style={style} className="min-w-[300px] max-w-[300px] self-start">
-            <div className="rounded-xl bg-[#f1f2f4]">
-                <div
-                    ref={(node) => setActivatorNodeRef(node as HTMLElement | null)}
-                    {...attributes}
-                    {...listeners}
-                    style={{ touchAction: "none" }}
-                    className={cn(
-                        "sticky top-0 z-10 rounded-t-xl bg-[#f1f2f4] px-3 pt-3 pb-2",
-                        "cursor-grab select-none active:cursor-grabbing"
-                    )}>
-                    <div className="flex items-center gap-3">
-                        <div className="flex min-w-0 flex-1 items-center gap-2">
-                            <div className="min-w-0 flex-1">
-                                {!isEditing ? (
-                                    <p className="truncate font-bold text-sm text-zinc-900">{statusName}</p>
-                                ) : (
-                                    <div className="space-y-1">
-                                        <input
-                                            ref={inputRef}
-                                            value={columnDraft}
-                                            maxLength={30}
-                                            disabled={isSubmitting}
-                                            onChange={(e) => onColumnDraftChange(e.target.value)}
-                                            onPointerDownCapture={(e) => e.stopPropagation()}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    onColumnCommit();
-                                                }
+        <div className="rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,252,248,0.94),rgba(250,244,237,0.9))] shadow-[0_16px_38px_rgba(180,83,9,0.10)]">
+            <div
+                ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as HTMLElement | null)}
+                data-no-pan="true"
+                {...(headerDragProps?.attributes ?? {})}
+                {...(headerDragProps?.listeners ?? {})}
+                style={{ touchAction: "none" }}
+                className={cn(
+                    "sticky top-0 z-10 rounded-t-[28px] bg-[linear-gradient(180deg,rgba(255,252,248,0.92),rgba(249,241,233,0.88))] px-4 pt-4 pb-3",
+                    "cursor-grab select-none active:cursor-grabbing"
+                )}>
+                <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                            {!isEditing ? (
+                                <p className="truncate font-bold text-sm text-zinc-900">{statusName}</p>
+                            ) : (
+                                <div className="space-y-1">
+                                    <input
+                                        ref={inputRef}
+                                        value={columnDraft}
+                                        maxLength={30}
+                                        disabled={isSubmitting}
+                                        onChange={(e) => onColumnDraftChange(e.target.value)}
+                                        onPointerDownCapture={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                onColumnCommit();
+                                            }
 
-                                                if (e.key === "Escape") {
-                                                    e.preventDefault();
-                                                    onColumnCancel();
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                setTimeout(() => onColumnCommit(), 0);
-                                            }}
-                                            className={cn(
-                                                "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
-                                                columnError
-                                                    ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
-                                                    : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
-                                                "select-text"
-                                            )}
-                                            style={{ maxWidth: 220 }}
-                                        />
+                                            if (e.key === "Escape") {
+                                                e.preventDefault();
+                                                onColumnCancel();
+                                            }
+                                        }}
+                                        onBlur={() => {
+                                            setTimeout(() => onColumnCommit(), 0);
+                                        }}
+                                        className={cn(
+                                            "h-9 w-full min-w-0 rounded-lg border bg-white px-3 font-bold text-sm text-zinc-900 outline-none",
+                                            columnError
+                                                ? "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                                                : "border-zinc-200 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200",
+                                            "select-text"
+                                        )}
+                                        style={{ maxWidth: 220 }}
+                                    />
 
-                                        <div className="flex justify-end text-[11px] text-zinc-500">
-                                            {columnDraft.length}/30
-                                        </div>
-
-                                        {columnError ? (
-                                            <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
-                                        ) : null}
+                                    <div className="flex justify-end text-[11px] text-zinc-500">
+                                        {columnDraft.length}/30
                                     </div>
-                                )}
-                            </div>
-                        </div>
 
-                        <div className="flex shrink-0 items-center gap-2">
-                            <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 font-semibold text-xs text-zinc-700">
-                                {tasks.length}
-                            </span>
-
-                            <div className="relative">
-                                <button
-                                    ref={btnRef}
-                                    type="button"
-                                    onPointerDown={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        setOpenMenu((v) => !v);
-                                    }}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                    }}
-                                    className="grid h-8 w-8 place-items-center rounded-lg text-zinc-500 hover:bg-black/5"
-                                    aria-label={t("columnMenu")}>
-                                    <MoreHorizontal className="h-5 w-5" />
-                                </button>
-
-                                <PortalDropdown
-                                    open={openMenu}
-                                    onClose={() => setOpenMenu(false)}
-                                    anchorRef={btnRef as React.RefObject<HTMLElement>}>
-                                    <MenuItem
-                                        icon={<Pencil className="h-4 w-4" />}
-                                        label={t("editStatusName")}
-                                        onClick={() => {
-                                            setOpenMenu(false);
-                                            void onRenameStatus(status);
-                                        }}
-                                    />
-                                    <MenuItem
-                                        icon={<Trash2 className="h-4 w-4" />}
-                                        label={t("deleteStatus")}
-                                        danger
-                                        onClick={() => {
-                                            setOpenMenu(false);
-                                            void onDeleteStatus(status);
-                                        }}
-                                    />
-                                </PortalDropdown>
-                            </div>
+                                    {columnError ? (
+                                        <div className="font-medium text-[11px] text-rose-600">{columnError}</div>
+                                    ) : null}
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
 
-                <div className="px-2 pb-2">
-                    <div
-                        ref={setDroppableRef}
-                        className={cn("rounded-b-xl bg-[#f1f2f4] transition", isOver && "bg-[#e9f2ff]")}>
-                        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-                            <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                {rendered.map((item, index) =>
-                                    item.kind === "ghost" ? (
-                                        <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} t={t} />
-                                    ) : (
-                                        <PersonalTaskCard
-                                            key={String(item.task.taskId)}
-                                            task={item.task}
-                                            columnId={statusId}
-                                            isSubmitting={isSubmitting}
-                                            onOpen={onOpenTask}
-                                            onRename={onRenameTask}
-                                            onDelete={onDeleteTask}
-                                            t={t}
-                                        />
-                                    )
-                                )}
+                    <div className="flex shrink-0 items-center gap-2">
+                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-white/80 bg-white/90 px-2 font-semibold text-xs text-[#9A3412] shadow-sm">
+                            {tasks.length}
+                        </span>
 
-                                {tasks.length === 0 ? (
-                                    <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
-                                        <div className="font-semibold text-sm text-zinc-700">
-                                            {t("noTasksInStatus")}
-                                        </div>
-                                        <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
-                                    </div>
-                                ) : null}
+                        <div className="relative">
+                            <button
+                                ref={btnRef}
+                                type="button"
+                                onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setOpenMenu((v) => !v);
+                                }}
+                                className="grid h-8 w-8 place-items-center rounded-full text-zinc-500 transition hover:bg-white/80"
+                                aria-label={t("columnMenu")}>
+                                <MoreHorizontal className="h-5 w-5" />
+                            </button>
 
-                                <div
-                                    ref={setEndRef}
-                                    className={cn(
-                                        "absolute right-0 bottom-0 left-0 h-12 rounded-xl border border-dashed transition",
-                                        isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
-                                    )}
+                            <PortalDropdown
+                                open={openMenu}
+                                onClose={() => setOpenMenu(false)}
+                                anchorRef={btnRef as React.RefObject<HTMLElement>}>
+                                <MenuItem
+                                    icon={<Pencil className="h-4 w-4" />}
+                                    label={t("editStatusName")}
+                                    onClick={() => {
+                                        setOpenMenu(false);
+                                        void onRenameStatus(status);
+                                    }}
                                 />
-                            </div>
-                        </SortableContext>
-
-                        <AddTaskButton
-                            disabled={isSubmitting}
-                            onClick={() => void onCreateTask(status)}
-                            labels={{ addTask: t("addTask") }}
-                        />
+                                <MenuItem
+                                    icon={<Trash2 className="h-4 w-4" />}
+                                    label={t("deleteStatus")}
+                                    danger
+                                    onClick={() => {
+                                        setOpenMenu(false);
+                                        void onDeleteStatus(status);
+                                    }}
+                                />
+                            </PortalDropdown>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div className="px-3 pb-3">
+                <div
+                    ref={setDroppableRef}
+                    className={cn(
+                        "rounded-b-[28px] bg-transparent transition",
+                        isOver && "bg-[linear-gradient(180deg,rgba(255,247,237,0.75),rgba(255,237,213,0.55))]"
+                    )}>
+                    <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+                        <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {rendered.map((item, index) =>
+                                item.kind === "ghost" ? (
+                                    <GhostTaskCard key={`ghost-${statusId}-${index}`} task={item.task} t={t} />
+                                ) : (
+                                    <PersonalTaskCard
+                                        key={String(item.task.taskId)}
+                                        task={item.task}
+                                        columnId={statusId}
+                                        isSubmitting={isSubmitting}
+                                        onOpen={onOpenTask}
+                                        onRename={onRenameTask}
+                                        onDelete={onDeleteTask}
+                                        t={t}
+                                    />
+                                )
+                            )}
+
+                            {tasks.length === 0 ? (
+                                <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
+                                    <div className="font-semibold text-sm text-zinc-700">
+                                        {t("noTasksInStatus")}
+                                    </div>
+                                    <div className="mt-1 text-xs text-zinc-500">{t("addTaskHint")}</div>
+                                </div>
+                            ) : null}
+
+                            <div
+                                ref={setEndRef}
+                                className={cn(
+                                    "h-3 rounded-xl border border-dashed transition",
+                                    isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
+                                )}
+                            />
+                        </div>
+                    </SortableContext>
+
+                    <AddTaskButton
+                        disabled={isSubmitting}
+                        onClick={() => void onCreateTask(status)}
+                        labels={{ addTask: t("addTask") }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function SortableColumn(props: {
+    status: PersonalTaskStatusDto;
+    isSubmitting: boolean;
+    onCreateTask: (status: PersonalTaskStatusDto) => Promise<void>;
+    onOpenTask: (task: PersonalTaskItemResponse) => void;
+    onRenameStatus: (status: PersonalTaskStatusDto) => void;
+    onDeleteStatus: (status: PersonalTaskStatusDto) => Promise<void>;
+    onRenameTask: (task: PersonalTaskItemResponse, nextTitle: string) => Promise<void>;
+    onDeleteTask: (task: PersonalTaskItemResponse) => Promise<void>;
+    ghost?: { task: PersonalTaskItemResponse; toCol: ColumnId; index: number } | null;
+    isEditing: boolean;
+    columnDraft: string;
+    columnError: string | null;
+    onColumnDraftChange: (value: string) => void;
+    onColumnCommit: () => void;
+    onColumnCancel: () => void;
+    t: (key: string) => string;
+}) {
+    const {
+        status,
+        isSubmitting,
+        onCreateTask,
+        onOpenTask,
+        onRenameStatus,
+        onDeleteStatus,
+        onRenameTask,
+        onDeleteTask,
+        ghost,
+        isEditing,
+        columnDraft,
+        columnError,
+        onColumnDraftChange,
+        onColumnCommit,
+        onColumnCancel,
+        t
+    } = props;
+
+    const statusId = String(status.statusId ?? "");
+
+    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+        id: statusId,
+        data: { type: "column" }
+    });
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition: transition ?? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+        willChange: "transform",
+        touchAction: "none",
+        opacity: isDragging ? 0.25 : 1
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="min-w-[300px] max-w-[300px] self-start">
+            <ColumnView
+                status={status}
+                isSubmitting={isSubmitting}
+                onCreateTask={onCreateTask}
+                onOpenTask={onOpenTask}
+                onRenameStatus={onRenameStatus}
+                onDeleteStatus={onDeleteStatus}
+                onRenameTask={onRenameTask}
+                onDeleteTask={onDeleteTask}
+                ghost={ghost}
+                isEditing={isEditing}
+                columnDraft={columnDraft}
+                columnError={columnError}
+                onColumnDraftChange={onColumnDraftChange}
+                onColumnCommit={onColumnCommit}
+                onColumnCancel={onColumnCancel}
+                headerDragProps={{ attributes, listeners, setActivatorNodeRef }}
+                t={t}
+            />
         </div>
     );
 }
@@ -2218,6 +2324,7 @@ function PersonalTaskDetailModal({
     onDelete: (task: PersonalTaskItemResponse) => Promise<void>;
     t: (key: string) => string;
 }) {
+    const locale = useLocale();
     const [mounted, setMounted] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -2571,6 +2678,7 @@ function PersonalTaskDetailModal({
 
 export default function HomePersonalTaskScreen() {
     const t = useTranslations("HomePersonalTask");
+    const { toast } = useToast();
     const [board, setBoard] = React.useState<PersonalTaskBoardResponse | null>(null);
     const [statuses, setStatuses] = React.useState<PersonalTaskStatusDto[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
@@ -2616,7 +2724,64 @@ export default function HomePersonalTaskScreen() {
         error: null
     });
 
+    const boardScrollRef = React.useRef<HTMLDivElement | null>(null);
+    const dragScrollRef = React.useRef({
+        isDown: false,
+        startX: 0,
+        startY: 0,
+        scrollLeft: 0,
+        scrollTop: 0,
+        moved: false
+    });
+
     React.useEffect(() => setMounted(true), []);
+
+    const handleBoardPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        if (isInteractiveElement(e.target)) return;
+
+        const el = boardScrollRef.current;
+        if (!el) return;
+
+        dragScrollRef.current = {
+            isDown: true,
+            startX: e.clientX,
+            startY: e.clientY,
+            scrollLeft: el.scrollLeft,
+            scrollTop: el.scrollTop,
+            moved: false
+        };
+
+        el.setPointerCapture(e.pointerId);
+    };
+
+    const handleBoardPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
+        const state = dragScrollRef.current;
+        const el = boardScrollRef.current;
+        if (!(state.isDown && el)) return;
+
+        const dx = e.clientX - state.startX;
+        const dy = e.clientY - state.startY;
+
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            state.moved = true;
+        }
+
+        el.scrollLeft = state.scrollLeft - dx;
+        el.scrollTop = state.scrollTop - dy;
+    };
+
+    const endBoardPointerDrag = React.useCallback(() => {
+        dragScrollRef.current.isDown = false;
+    }, []);
+
+    const handleBoardPointerUp: React.PointerEventHandler<HTMLDivElement> = () => {
+        endBoardPointerDrag();
+    };
+
+    const handleBoardPointerCancel: React.PointerEventHandler<HTMLDivElement> = () => {
+        endBoardPointerDrag();
+    };
 
     const fetchBoard = React.useCallback(async () => {
         try {
@@ -2744,6 +2909,8 @@ export default function HomePersonalTaskScreen() {
         }
 
         const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
+        const pointerHits = pointerWithin({ ...args, droppableContainers: allow });
+        if (pointerHits.length > 0) return pointerHits;
         return closestCorners({ ...args, droppableContainers: allow });
     }, []);
 
@@ -2773,7 +2940,9 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
+                void fetchBoard().catch((error) => {
+                    console.error("Failed to refresh personal task board after creating column:", error);
+                });
             } finally {
                 setIsSubmitting(false);
             }
@@ -2874,7 +3043,9 @@ export default function HomePersonalTaskScreen() {
                 }
             });
 
-            await fetchBoard();
+            void fetchBoard().catch((error) => {
+                console.error("Failed to refresh personal task board after updating column:", error);
+            });
 
             setEditingColumn({
                 id: null,
@@ -2916,7 +3087,9 @@ export default function HomePersonalTaskScreen() {
                 method: "DELETE"
             });
 
-            await fetchBoard();
+            void fetchBoard().catch((error) => {
+                console.error("Failed to refresh personal task board after deleting column:", error);
+            });
         } catch (error) {
             console.error("Failed to delete personal status:", error);
         } finally {
@@ -2969,7 +3142,9 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
+                void fetchBoard().catch((error) => {
+                    console.error("Failed to refresh personal task board after creating task:", error);
+                });
                 handleCloseCreateTask();
             } catch (error) {
                 console.error("Failed to create personal task:", error);
@@ -3008,7 +3183,9 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
+                void fetchBoard().catch((error) => {
+                    console.error("Failed to refresh personal task board after renaming task:", error);
+                });
             } catch (error) {
                 console.error("Failed to update personal task:", error);
                 throw error;
@@ -3069,8 +3246,6 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                await fetchBoard();
-
                 setDetailTask((prev) => {
                     if (!prev || String(prev.taskId) !== String(task.taskId)) return prev;
 
@@ -3101,6 +3276,15 @@ export default function HomePersonalTaskScreen() {
                                         : 0
                     };
                 });
+
+                                toast({
+                                    description: t("saveSuccess"),
+                                    variant: "success"
+                                });
+
+                                void fetchBoard().catch((error) => {
+                                    console.error("Failed to refresh personal task board after update:", error);
+                                });
             } catch (error) {
                 console.error("Failed to update personal task detail:", error);
                 throw error;
@@ -3108,7 +3292,7 @@ export default function HomePersonalTaskScreen() {
                 setIsSubmitting(false);
             }
         },
-        [fetchBoard, statuses]
+                        [fetchBoard, statuses, t, toast]
     );
 
     const handleDeleteTask = React.useCallback(async () => {
@@ -3122,7 +3306,9 @@ export default function HomePersonalTaskScreen() {
                 method: "DELETE"
             });
 
-            await fetchBoard();
+            void fetchBoard().catch((error) => {
+                console.error("Failed to refresh personal task board after deleting task:", error);
+            });
 
             if (detailTask?.taskId && String(detailTask.taskId) === String(task.taskId)) {
                 setDetailOpen(false);
@@ -3364,50 +3550,53 @@ export default function HomePersonalTaskScreen() {
             />
 
             <Container>
-                <div className="mt-5 rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,250,252,0.76))] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-                    <div className="mb-6 overflow-hidden rounded-[28px] border border-white/70 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.06),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.78))] px-5 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-                        <h2 className="font-bold text-[30px] text-slate-900 leading-tight tracking-[-0.02em] md:text-[36px]">
+                <div className="mt-5 overflow-hidden rounded-[40px] border border-white/75 bg-[linear-gradient(135deg,rgba(255,250,245,0.96)_0%,rgba(255,255,255,0.92)_42%,rgba(248,250,255,0.9)_100%)] p-6 shadow-[0_22px_70px_rgba(180,83,9,0.10)] backdrop-blur-xl">
+                    <div className="mb-6 overflow-hidden rounded-[32px] border border-white/80 bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.14),transparent_30%),radial-gradient(circle_at_top_right,rgba(96,165,250,0.12),transparent_28%),linear-gradient(180deg,rgba(255,252,248,0.92),rgba(249,241,233,0.82))] px-6 py-6 shadow-[0_14px_40px_rgba(180,83,9,0.08)] backdrop-blur-xl">
+                        <h2 className="bg-[linear-gradient(135deg,#7C2D12_0%,#EA580C_48%,#FB923C_100%)] bg-clip-text font-bold text-[30px] text-transparent leading-tight tracking-[-0.02em] md:text-[36px]">
                             {t("title")}
                         </h2>
                     </div>
 
                     {!mounted ? (
-                        <div className="flex items-start gap-4 overflow-x-auto pb-6">
+                        <div
+                            ref={boardScrollRef}
+                            onPointerDown={handleBoardPointerDown}
+                            onPointerMove={handleBoardPointerMove}
+                            onPointerUp={handleBoardPointerUp}
+                            onPointerCancel={handleBoardPointerCancel}
+                            className="flex items-start gap-4 overflow-x-auto pb-6">
                             {statuses.map((status, index) => (
-                                <div
+                                <SortableColumn
                                     key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                    className="min-w-[300px] max-w-[300px] self-start">
-                                    <BoardColumn
-                                        status={status}
-                                        isSubmitting={isSubmitting}
-                                        onCreateTask={handleOpenCreateTask}
-                                        onOpenTask={handleOpenTaskDetail}
-                                        onRenameStatus={handleRenameColumn}
-                                        onDeleteStatus={async (s) => {
-                                            setConfirmDeleteColumn({ open: true, status: s });
-                                        }}
-                                        onRenameTask={handleRenameTask}
-                                        onDeleteTask={async (task) => {
-                                            setConfirmDeleteTask({ open: true, task, fromDetail: false });
-                                        }}
-                                        ghost={null}
-                                        isEditing={editingColumn.id === String(status.statusId ?? "")}
-                                        columnDraft={
-                                            editingColumn.id === String(status.statusId ?? "")
-                                                ? editingColumn.draft
-                                                : ""
-                                        }
-                                        columnError={
-                                            editingColumn.id === String(status.statusId ?? "")
-                                                ? editingColumn.error
-                                                : null
-                                        }
-                                        onColumnDraftChange={handleColumnDraftChange}
-                                        onColumnCommit={() => void commitEditColumn()}
-                                        onColumnCancel={cancelEditColumn}
-                                        t={t}
-                                    />
-                                </div>
+                                    status={status}
+                                    isSubmitting={isSubmitting}
+                                    onCreateTask={handleOpenCreateTask}
+                                    onOpenTask={handleOpenTaskDetail}
+                                    onRenameStatus={handleRenameColumn}
+                                    onDeleteStatus={async (s) => {
+                                        setConfirmDeleteColumn({ open: true, status: s });
+                                    }}
+                                    onRenameTask={handleRenameTask}
+                                    onDeleteTask={async (task) => {
+                                        setConfirmDeleteTask({ open: true, task, fromDetail: false });
+                                    }}
+                                    ghost={ghost}
+                                    isEditing={editingColumn.id === String(status.statusId ?? "")}
+                                    columnDraft={
+                                        editingColumn.id === String(status.statusId ?? "")
+                                            ? editingColumn.draft
+                                            : ""
+                                    }
+                                    columnError={
+                                        editingColumn.id === String(status.statusId ?? "")
+                                            ? editingColumn.error
+                                            : null
+                                    }
+                                    onColumnDraftChange={handleColumnDraftChange}
+                                    onColumnCommit={() => void commitEditColumn()}
+                                    onColumnCancel={cancelEditColumn}
+                                    t={t}
+                                />
                             ))}
 
                             <div className="min-w-[300px] max-w-[300px] self-start">
@@ -3434,42 +3623,45 @@ export default function HomePersonalTaskScreen() {
                             onDragCancel={handleDragCancel}
                             onDragEnd={handleDragEnd}>
                             <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                                <div className="flex items-start gap-4 overflow-x-auto pb-6">
+                                <div
+                                    ref={boardScrollRef}
+                                    onPointerDown={handleBoardPointerDown}
+                                    onPointerMove={handleBoardPointerMove}
+                                    onPointerUp={handleBoardPointerUp}
+                                    onPointerCancel={handleBoardPointerCancel}
+                                    className="flex items-start gap-4 overflow-x-auto pb-6">
                                     {statuses.map((status, index) => (
-                                        <div
+                                        <SortableColumn
                                             key={status.statusId ?? `${status.statusName ?? "status"}-${index}`}
-                                            className="min-w-[300px] max-w-[300px] self-start">
-                                            <BoardColumn
-                                                status={status}
-                                                isSubmitting={isSubmitting}
-                                                onCreateTask={handleOpenCreateTask}
-                                                onOpenTask={handleOpenTaskDetail}
-                                                onRenameStatus={handleRenameColumn}
-                                                onDeleteStatus={async (s) => {
-                                                    setConfirmDeleteColumn({ open: true, status: s });
-                                                }}
-                                                onRenameTask={handleRenameTask}
-                                                onDeleteTask={async (task) => {
-                                                    setConfirmDeleteTask({ open: true, task, fromDetail: false });
-                                                }}
-                                                ghost={ghost}
-                                                isEditing={editingColumn.id === String(status.statusId ?? "")}
-                                                columnDraft={
-                                                    editingColumn.id === String(status.statusId ?? "")
-                                                        ? editingColumn.draft
-                                                        : ""
-                                                }
-                                                columnError={
-                                                    editingColumn.id === String(status.statusId ?? "")
-                                                        ? editingColumn.error
-                                                        : null
-                                                }
-                                                onColumnDraftChange={handleColumnDraftChange}
-                                                onColumnCommit={() => void commitEditColumn()}
-                                                onColumnCancel={cancelEditColumn}
-                                                t={t}
-                                            />
-                                        </div>
+                                            status={status}
+                                            isSubmitting={isSubmitting}
+                                            onCreateTask={handleOpenCreateTask}
+                                            onOpenTask={handleOpenTaskDetail}
+                                            onRenameStatus={handleRenameColumn}
+                                            onDeleteStatus={async (s) => {
+                                                setConfirmDeleteColumn({ open: true, status: s });
+                                            }}
+                                            onRenameTask={handleRenameTask}
+                                            onDeleteTask={async (task) => {
+                                                setConfirmDeleteTask({ open: true, task, fromDetail: false });
+                                            }}
+                                            ghost={ghost}
+                                            isEditing={editingColumn.id === String(status.statusId ?? "")}
+                                            columnDraft={
+                                                editingColumn.id === String(status.statusId ?? "")
+                                                    ? editingColumn.draft
+                                                    : ""
+                                            }
+                                            columnError={
+                                                editingColumn.id === String(status.statusId ?? "")
+                                                    ? editingColumn.error
+                                                    : null
+                                            }
+                                            onColumnDraftChange={handleColumnDraftChange}
+                                            onColumnCommit={() => void commitEditColumn()}
+                                            onColumnCancel={cancelEditColumn}
+                                            t={t}
+                                        />
                                     ))}
 
                                     <div className="min-w-[300px] max-w-[300px] self-start">
@@ -3489,13 +3681,18 @@ export default function HomePersonalTaskScreen() {
                                 </div>
                             </SortableContext>
 
-                            <DragOverlay>
-                                {activeTask ? (
-                                    <TaskOverlay task={activeTask} t={t} />
-                                ) : activeColumn ? (
-                                    <ColumnOverlay status={activeColumn} t={t} />
-                                ) : null}
-                            </DragOverlay>
+                            {mounted
+                                ? createPortal(
+                                    <DragOverlay>
+                                        {activeTask ? (
+                                            <TaskOverlay task={activeTask} t={t} />
+                                        ) : activeColumn ? (
+                                            <ColumnOverlay status={activeColumn} t={t} />
+                                        ) : null}
+                                    </DragOverlay>,
+                                    document.body
+                                )
+                                : null}
                         </DndContext>
                     )}
                 </div>
