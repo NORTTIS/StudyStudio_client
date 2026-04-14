@@ -513,15 +513,30 @@ function parseDateString(value?: string) {
 function formatDueCompact(input: string, locale: string) {
     const s = String(input ?? "").trim();
     if (!s) return "";
-    const d = parseDateString(s);
-    if (!d) return s;
+
+    let date: Date | undefined;
+
+    // Try parseDateString first (handles date-only strings like "2026-04-14")
+    const parsed = parseDateString(s);
+    if (parsed) {
+        date = parsed;
+    } else {
+        // Parse as ISO datetime and convert to local
+        const isoDate = new Date(s);
+        if (!Number.isNaN(isoDate.getTime())) {
+            date = isoDate;
+        }
+    }
+
+    if (!date) return s;
 
     const normalizedLocale = locale.includes("-") ? locale : locale === "vi" ? "vi-VN" : "en-US";
     return new Intl.DateTimeFormat(normalizedLocale, {
         day: "2-digit",
         month: "2-digit",
-        year: "numeric"
-    }).format(d);
+        year: "numeric",
+        timeZone: "Asia/Ho_Chi_Minh"
+    }).format(date);
 }
 
 function formatDateTimeLocal(input: string, locale: string) {
@@ -537,6 +552,21 @@ function formatDateTimeLocal(input: string, locale: string) {
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit"
+    }).format(d);
+}
+
+function formatDateOnlyGmt7(input: string) {
+    const s = String(input ?? "").trim();
+    if (!s) return "";
+
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return s;
+
+    return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "Asia/Ho_Chi_Minh"
     }).format(d);
 }
 
@@ -1282,8 +1312,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 
 function DonePill({ completedAt }: { completedAt?: string | null }) {
     const t = useTranslations("GroupBoardScreen");
-    const locale = useLocale();
-    const formattedDate = completedAt ? formatDueCompact(completedAt, locale) : null;
+    const formattedDate = completedAt ? formatDateOnlyGmt7(completedAt) : null;
 
     return (
         <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700 text-xs">
