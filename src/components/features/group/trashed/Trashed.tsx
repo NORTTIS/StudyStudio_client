@@ -1011,7 +1011,7 @@ function DeletedDateFilterPopover({
                 <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-xl bg-zinc-900 px-4 py-2 font-semibold text-sm text-white hover:bg-zinc-800">
+                    className="rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 font-semibold text-sm text-white shadow-[0_10px_24px_rgba(249,115,22,0.20)] transition hover:from-orange-600 hover:to-orange-700">
                     {t("filters.deletedDate.apply")}
                 </button>
             </div>
@@ -1551,29 +1551,28 @@ export default function Trashed() {
                             </table>
                         </div>
 
-                        <div className={cn("flex items-center justify-between gap-4", paginatedItems.length === 0 ? "mt-5" : "mt-8")}>
-                            <div className="flex items-center gap-2 text-xs text-zinc-500">
-                                <Trash2 className="h-4 w-4" />
-                                <span>
-                                    {t("pagination.summary", { count: filteredItems.length, page, totalPages })}
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
+                        <div className={cn(paginatedItems.length === 0 ? "mt-5" : "mt-8")}>
+                            <div className="flex items-center justify-center gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                                     disabled={page <= 1}
-                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 font-semibold text-sm text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
+                                    className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
+                                    <ChevronLeft className="h-4 w-4" />
                                     {t("pagination.previous")}
                                 </button>
+
+                                <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-center font-medium text-sm text-zinc-700 shadow-sm">
+                                    {t("pagination.pageInfo", { page, totalPages, totalCount: filteredItems.length })}
+                                </div>
 
                                 <button
                                     type="button"
                                     onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                                     disabled={page >= totalPages}
-                                    className="rounded-xl border border-zinc-200 bg-white px-5 py-2.5 font-semibold text-sm text-zinc-700 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50">
+                                    className="inline-flex h-11 items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 font-medium text-sm text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-45">
                                     {t("pagination.next")}
+                                    <ChevronRight className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>

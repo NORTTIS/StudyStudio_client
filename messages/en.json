@@ -8,7 +8,20 @@
     "inviteCreateFailed": "Failed to create invite link",
     "inviteByEmailFailed": "Failed to invite member",
     "members": "members",
-    "addMember": "Add member"
+    "addMember": "Add member",
+    "tabs": {
+      "analytic": "Analytics",
+      "board": "Board",
+      "calendar": "Calendar",
+      "discuss": "Discussion",
+      "documents": "Documents",
+      "list": "List",
+      "setting": "Settings",
+      "trashed": "Trash"
+    },
+    "errors": {
+      "fetchDetailFailed": "Failed to load details"
+    }
   },
   "Announcements": {
     "title": "Announcements",
@@ -1966,7 +1979,20 @@
     "leaving": "Leaving...",
     "createdBy": "Created by",
     "members": "members",
-    "tasks": "tasks"
+    "tasks": "tasks",
+    "tabs": {
+      "analytic": "Analytics",
+      "board": "Board",
+      "calendar": "Calendar",
+      "discuss": "Discussion",
+      "documents": "Documents",
+      "list": "List",
+      "setting": "Settings",
+      "trashed": "Trash"
+    },
+    "errors": {
+      "fetchDetailFailed": "Failed to load group details"
+    }
   },
   "UsageBar": {
     "limitReached": "Limit reached",
@@ -2005,6 +2031,7 @@
     "allPriorities": "All priorities",
     "selectSeverity": "Select severity",
     "selectPriority": "Select priority",
+    "advancedFilters": "Advanced filters",
     "overdueTasks": "Overdue tasks",
     "noAssignee": "Unassigned",
     "noDueDate": "No deadline",
@@ -2050,7 +2077,15 @@
     "moderate": "Moderate",
     "major": "Major",
     "critical": "Critical",
-    "progressDone": "Done"
+    "progressDone": "Done",
+    "tasks": "tasks",
+    "progress": "Progress",
+    "taskStatus": {
+      "todo": "To Do",
+      "inProgress": "In Progress",
+      "done": "Done",
+      "overdue": "Overdue"
+    }
   },
   "GroupTaskDeepLinkPage": {
     "loadingTitle": "Loading task",
@@ -2072,6 +2107,7 @@
     "badge": "Work Overview",
     "heroPill": "Dashboard Overview",
     "title": "Work Overview",
+    "close": "Close",
     "calendar": "Calendar",
     "detailedBadge": "Detailed Inventory",
     "detailsTitle": "Inventory Details",
@@ -2088,6 +2124,7 @@
     "currentOverview": "Current overview",
     "quantity": "Quantity",
     "viewDetails": "View details",
+    "close": "Close",
     "overview": {
       "completedTitle": "Completed tasks",
       "completedDescription": "Completed {count}/{total}",
@@ -2103,6 +2140,7 @@
     "ai": "AI"
   },
   "HomeTaskList": {
+    "progressDone": "Done",
     "selectDate": "Select a date",
     "today": "Today",
     "tomorrow": "Tomorrow",
@@ -2156,7 +2194,8 @@
     "taskCountLabel": "tasks",
     "topGroup": "Top group",
     "viewDetails": "View details",
-    "overdue": "Overdue"
+    "overdue": "Overdue",
+    "progressDone": "Done"
   },
   "HomePersonalTask": {
     "selectDate": "Select a date",
@@ -2223,7 +2262,8 @@
     "title": "Personal tasks",
     "createStatus": "Create status",
     "enterStatusName": "Enter status name",
-    "confirmDeleteTask": "Confirm delete task"
+    "confirmDeleteTask": "Confirm delete task",
+    "save": "Save"
   },
   "GroupStudioHeader": {
     "roles": {
@@ -2352,7 +2392,9 @@
     "confirmDeleteTask": "Confirm delete task",
     "confirmDeleteTaskDesc": "Are you sure you want to delete task \"{title}\"?",
     "deleteTaskButton": "Delete task",
-    "close": "Close"
+    "close": "Close",
+    "deleteStatusFailed": "Failed to delete status",
+    "retry": "Retry"
   },
   "TaskFormModal": {
     "priorityLow": "Low",
@@ -2430,7 +2472,8 @@
   },
   "GroupAnalyticPage": {
     "common": {
-      "tasks": "tasks"
+      "tasks": "tasks",
+      "loading": "Loading data..."
     },
     "formatLastActivity": {
       "noActivity": "No activity yet",
@@ -2449,6 +2492,12 @@
       },
       "updated": "Updated"
     },
+    "memberFilter": {
+      "selectMembers": "Select members",
+      "selectedMember": "1 member",
+      "selected": "{count} members",
+      "clearAll": "Clear all"
+    },
     "memberStatus": {
       "onTrack": "On track",
       "needsAttention": "Needs attention",
@@ -2465,6 +2514,7 @@
     },
     "memberModal": {
       "taskProgress": "Task progress",
+      "taskCount": "{completed}/{total} tasks completed",
       "completePts": "Completion points",
       "createPts": "Creation points",
       "updatePts": "Update points",
@@ -2735,6 +2785,7 @@
     },
     "pagination": {
       "summary": "{count} items • Page {page}/{totalPages}",
+      "pageInfo": "Page {page}/{totalPages} • {totalCount} items",
       "previous": "Previous",
       "next": "Next"
     },
@@ -3195,5 +3246,11 @@
     }
   },
   "startDate": "Date from",
-  "dueDate": "To date"
+  "dueDate": "To date",
+  "MemberDetailModal": {
+    "title": "Member Details",
+    "close": "Close",
+    "joinedGroups": "Joined Groups",
+    "noJoinedGroups": "No groups joined"
+  }
 }

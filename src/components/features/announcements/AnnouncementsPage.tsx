@@ -490,7 +490,7 @@ export function AnnouncementsPage() {
                                     <motion.h1
                                         layout
                                         transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                        className="font-extrabold text-3xl text-[#261E33] leading-[1.2] tracking-tight lg:text-5xl">
+                                        className="bg-[linear-gradient(135deg,#7C2D12_0%,#EA580C_48%,#FB923C_100%)] bg-clip-text font-bold text-3xl leading-[1.2] tracking-tight text-transparent md:text-[38px]">
                                         {t("title")}
                                     </motion.h1>
 

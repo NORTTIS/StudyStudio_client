@@ -203,14 +203,6 @@ export function UsageBar({ current, max }: { current: number; max: number }) {
                     ) : null}
                 </div>
 
-                {!isUnlimited && isFull ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="rounded-[22px] border border-orange-200/70 bg-white/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur">
-                        <p className="text-[#5F6C7B] text-sm leading-6">{t("usageNote")}</p>
-                    </motion.div>
-                ) : null}
             </div>
         </motion.div>
     );

@@ -480,7 +480,7 @@ export function GroupsPage() {
                                             </div>
 
                                             <div className="flex flex-wrap items-center gap-2.5">
-                                                <h1 className="bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#EA580C_100%)] bg-clip-text font-bold text-[1.8rem] text-transparent tracking-tight">
+                                                <h1 className="bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#EA580C_100%)] bg-clip-text font-bold text-3xl leading-[1.2] text-transparent tracking-tight md:text-[38px]">
                                                     {t("title")}
                                                 </h1>
                                                 <span className="rounded-full border border-orange-200/60 bg-orange-50/90 px-3 py-1 font-semibold text-[11px] text-orange-700 shadow-sm">

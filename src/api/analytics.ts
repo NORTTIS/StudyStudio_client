@@ -148,15 +148,18 @@ export async function getGroupSummary(groupId: string): Promise<ApiResponse<Grou
  * Used for Group Chart 3 (Line Chart).
  *
  * @param groupId - The group UUID
- * @param options - startDate, endDate (YYYY-MM-DD)
+ * @param options - startDate, endDate (YYYY-MM-DD), memberIds (optional filter)
  */
 export async function getGroupTrend(
     groupId: string,
-    options?: { startDate?: string; endDate?: string }
+    options?: { startDate?: string; endDate?: string; memberIds?: string[] }
 ): Promise<ApiResponse<MemberProgressTrendData[]>> {
     const params = new URLSearchParams();
     if (options?.startDate) params.set("startDate", options.startDate);
     if (options?.endDate) params.set("endDate", options.endDate);
+    if (options?.memberIds?.length) {
+        options.memberIds.forEach((id) => params.append("memberIds", id));
+    }
     const query = params.toString();
 
     return apiGet<MemberProgressTrendData[]>(`/analytics/group/${groupId}/trend${query ? `?${query}` : ""}`);

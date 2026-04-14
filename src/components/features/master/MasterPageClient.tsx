@@ -1255,7 +1255,7 @@ export default function MasterPageClient({
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.08 }}
-                                            className="mt-4 bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#FF5F3D_100%)] bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-[40px]">
+                                            className="mt-4 bg-[linear-gradient(135deg,#261E33_0%,#7C3AED_55%,#FF5F3D_100%)] bg-clip-text text-3xl font-bold leading-[1.2] tracking-tight text-transparent md:text-[38px]">
                                             {t("title")}
                                         </motion.h1>
 
