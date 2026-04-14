@@ -39,6 +39,59 @@ function getStrength(pw: string, labels: { weak: string; fair: string; good: str
     return { percent: 100, color: "#52c41a", label: labels.strong, score };
 }
 
+/* ── PwField: standalone component (must be outside parent to avoid focus loss on re-render) ── */
+function PwField({
+    id,
+    name,
+    label,
+    hint,
+    value,
+    error,
+    onChange
+}: {
+    id: string;
+    name: string;
+    label: string;
+    hint?: string;
+    value: string;
+    error?: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+    return (
+        <div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <label htmlFor={id} style={{ fontSize: 13, fontWeight: 600, color: DARK }}>
+                    {label}
+                </label>
+                {hint && <Text style={{ fontSize: 11, color: MUTED }}>{hint}</Text>}
+            </div>
+            <Input.Password
+                id={id}
+                name={name}
+                value={value}
+                onChange={onChange}
+                prefix={<LockOutlined style={{ color: MUTED }} />}
+                iconRender={(visible) =>
+                    visible ? (
+                        <EyeOutlined style={{ color: MUTED }} />
+                    ) : (
+                        <EyeInvisibleOutlined style={{ color: MUTED }} />
+                    )
+                }
+                status={error ? "error" : ""}
+                style={{ borderRadius: 10, fontSize: 14 }}
+                autoComplete="off"
+            />
+            {error && (
+                <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
+                    <ExclamationCircleFilled style={{ color: "#ff4d4f", fontSize: 12 }} />
+                    <Text style={{ color: "#ff4d4f", fontSize: 12 }}>{error}</Text>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function SecuritySettingsPage() {
     const t = useTranslations("SecurityPage");
     const pathname = usePathname();
@@ -130,55 +183,6 @@ export default function SecuritySettingsPage() {
         setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
         setErrors({});
     };
-
-    /* ── Field component ──────────────────────── */
-    const PwField = ({
-        id,
-        name,
-        label,
-        hint,
-        value,
-        error
-    }: {
-        id: string;
-        name: string;
-        label: string;
-        hint?: string;
-        value: string;
-        error?: string;
-    }) => (
-        <div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <label htmlFor={id} style={{ fontSize: 13, fontWeight: 600, color: DARK }}>
-                    {label}
-                </label>
-                {hint && <Text style={{ fontSize: 11, color: MUTED }}>{hint}</Text>}
-            </div>
-            <Input.Password
-                id={id}
-                name={name}
-                value={value}
-                onChange={handleChange}
-                prefix={<LockOutlined style={{ color: MUTED }} />}
-                iconRender={(visible) =>
-                    visible ? (
-                        <EyeOutlined style={{ color: MUTED }} />
-                    ) : (
-                        <EyeInvisibleOutlined style={{ color: MUTED }} />
-                    )
-                }
-                status={error ? "error" : ""}
-                style={{ borderRadius: 10, fontSize: 14 }}
-                autoComplete="off"
-            />
-            {error && (
-                <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                    <ExclamationCircleFilled style={{ color: "#ff4d4f", fontSize: 12 }} />
-                    <Text style={{ color: "#ff4d4f", fontSize: 12 }}>{error}</Text>
-                </div>
-            )}
-        </div>
-    );
 
     return (
         <ConfigProvider
@@ -335,6 +339,7 @@ export default function SecuritySettingsPage() {
                                     label={t("currentPassword")}
                                     value={passwordData.currentPassword}
                                     error={errors.currentPassword}
+                                    onChange={handleChange}
                                 />
                                 <PwField
                                     id="newPassword"
@@ -343,6 +348,7 @@ export default function SecuritySettingsPage() {
                                     hint={t("strength.title")}
                                     value={passwordData.newPassword}
                                     error={errors.newPassword}
+                                    onChange={handleChange}
                                 />
                                 <PwField
                                     id="confirmPassword"
@@ -350,6 +356,7 @@ export default function SecuritySettingsPage() {
                                     label={t("confirmPassword")}
                                     value={passwordData.confirmPassword}
                                     error={errors.confirmPassword}
+                                    onChange={handleChange}
                                 />
                                 {/* Confirm match hint */}
                                 {passwordData.confirmPassword && passwordData.newPassword && (

@@ -1,5 +1,5 @@
-import type { components, paths } from "@/api/types";
 import { getUserData } from "@/api/auth";
+import type { components, paths } from "@/api/types";
 import { sanitizeErrorMessage } from "@/utils/error-message";
 import type { GroupCardDto, GroupsPageData } from "./types";
 
@@ -181,7 +181,7 @@ function getUserIdFromToken(token: string) {
         const json = decodeURIComponent(
             atob(padded)
                 .split("")
-                .map((char) => "%" + ("00" + char.charCodeAt(0).toString(16)).slice(-2))
+                .map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
                 .join("")
         );
 
@@ -232,7 +232,7 @@ export function getCurrentUserId() {
 export function markPendingJoinRequestCanceled(groupId: string, marker?: CanceledPendingJoinMarker) {
     const normalizedGroupId = String(groupId ?? "").trim();
     const userId = String(marker?.userId ?? getCurrentUserId()).trim();
-    if (!normalizedGroupId || !userId) return;
+    if (!(normalizedGroupId && userId)) return;
 
     const next = {
         ...readCanceledPendingJoinMap(),
@@ -261,15 +261,12 @@ export function clearPendingJoinRequestCanceled(groupId: string) {
 export function isPendingJoinRequestCanceled(groupId: string, userId: string) {
     const normalizedGroupId = String(groupId ?? "").trim();
     const normalizedUserId = String(userId ?? "").trim();
-    if (!normalizedGroupId || !normalizedUserId) return false;
+    if (!(normalizedGroupId && normalizedUserId)) return false;
 
     return readCanceledPendingJoinMap()[normalizedGroupId]?.userId === normalizedUserId;
 }
 
-export function isPendingJoinRequestCanceledByMember(
-    groupId: string,
-    member: { userId?: string | null }
-) {
+export function isPendingJoinRequestCanceledByMember(groupId: string, member: { userId?: string | null }) {
     const normalizedGroupId = String(groupId ?? "").trim();
     if (!normalizedGroupId) return false;
 
@@ -295,9 +292,7 @@ function toBooleanLike(value: unknown): boolean | null {
 }
 
 function getApprovedFlag(group: Record<string, unknown>) {
-    return toBooleanLike(
-        group.isApproved ?? group.approved ?? group.is_approved ?? group.is_approve
-    );
+    return toBooleanLike(group.isApproved ?? group.approved ?? group.is_approved ?? group.is_approve);
 }
 
 function getIsMemberFlag(group: Record<string, unknown>) {
@@ -321,7 +316,9 @@ function isPendingMembership(group: Record<string, unknown>) {
     const status = getMembershipStatus(group);
     if (!status) return false;
 
-    return ["pending", "waiting", "requested", "request", "awaiting", "invited"].some((value) => status.includes(value));
+    return ["pending", "waiting", "requested", "request", "awaiting", "invited"].some((value) =>
+        status.includes(value)
+    );
 }
 
 function isApprovedMembership(group: Record<string, unknown>) {
@@ -357,7 +354,7 @@ export function removePendingJoinGroup(groupId: string) {
 
     const next = readPendingJoinGroups().filter((item) => getPendingGroupId(item) !== normalizedId);
     writePendingJoinGroups(next);
-    
+
     // Notify about the change
     pendingJoinEvents.dispatchEvent(new CustomEvent(PENDING_JOIN_CHANGED_EVENT, { detail: { groupId: normalizedId } }));
 }
@@ -371,7 +368,7 @@ function getBaseUrl() {
     return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
 }
 
-function toInitials(firstName?: string | null, lastName?: string | null) {
+function _toInitials(firstName?: string | null, lastName?: string | null) {
     const f = (firstName || "").trim();
     const l = (lastName || "").trim();
     const a = f ? f[0].toUpperCase() : "";
@@ -426,7 +423,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
         });
     };
 
-    const hasStudio = (group: GroupCardDto) => {
+    const _hasStudio = (group: GroupCardDto) => {
         const candidate = group as unknown as {
             studio?: { id?: string | null } | null;
             studioId?: string | null;
@@ -509,10 +506,7 @@ export async function fetchGroupsPageData(): Promise<GroupsPageData> {
         ...pendingFallbackFromLocal.map((group) => getPendingGroupId(group))
     ]);
 
-    const pending = [
-        ...pendingFromGroups,
-        ...pendingFallbackFromLocal
-    ].filter((group, index, array) => {
+    const pending = [...pendingFromGroups, ...pendingFallbackFromLocal].filter((group, index, array) => {
         const groupId = getPendingGroupId(group);
         if (!groupId) return false;
         return array.findIndex((item) => getPendingGroupId(item) === groupId) === index;
@@ -638,6 +632,27 @@ export async function requestDocumentUpload(payload: RequestDocumentUploadReques
     }
 
     return json.data;
+}
+
+export async function fetchGroupDetailRole(
+    groupId: string
+): Promise<"owner" | "moderator" | "member" | "commenter" | "viewer" | null> {
+    const baseUrl = getBaseUrl();
+    const token = getToken();
+
+    const res = await fetch(`${baseUrl}/group/${encodeURIComponent(groupId)}/detail`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    if (!res.ok) return null;
+
+    const json = (await res.json()) as { data?: { userRole?: string } };
+    return mapRole(json?.data?.userRole);
 }
 
 export async function completeDocumentUpload(attachmentId: string) {
@@ -860,10 +875,7 @@ export function parseSseBlock(
         if (parsed.type === "done") return { chunk: "", done: true };
         if (parsed.type === "error") {
             throw new Error(
-                sanitizeErrorMessage(
-                    typeof parsed.message === "string" ? parsed.message : "AI error",
-                    "Đã xảy ra lỗi"
-                )
+                sanitizeErrorMessage(typeof parsed.message === "string" ? parsed.message : "AI error", "Đã xảy ra lỗi")
             );
         }
 

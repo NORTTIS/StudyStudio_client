@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Download, FileText, MoreHorizontal, Trash2, Upload } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -28,6 +28,7 @@ import { useToast } from "@/components/ui/use-toast";
 import {
     completeDocumentUpload,
     deleteGroupDocument,
+    fetchGroupDetailRole,
     fetchGroupDocuments,
     getDocumentDownloadUrl,
     requestDocumentUpload
@@ -110,10 +111,12 @@ function formatUpdatedText(
 
 function DocumentCard({
     item,
+    canModify,
     onDelete,
     onDownload
 }: {
     item: DocItem;
+    canModify: boolean;
     onDelete: (id: string) => void;
     onDownload: (id: string) => void;
 }) {
@@ -149,11 +152,17 @@ function DocumentCard({
                             <Download className="mr-2 h-4 w-4" />
                             {t("download")}
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => onDelete(item.id)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {t("delete")}
-                        </DropdownMenuItem>
+                        {canModify && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    className="text-red-600 focus:text-red-600"
+                                    onClick={() => onDelete(item.id)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    {t("delete")}
+                                </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -177,6 +186,14 @@ export default function GroupDocumentsPage() {
     const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
     const [isDragActive, setIsDragActive] = React.useState(false);
     const fileRef = React.useRef<HTMLInputElement | null>(null);
+    const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        if (!groupId) return;
+        fetchGroupDetailRole(groupId).then((role) => setCurrentUserRole(role));
+    }, [groupId]);
+
+    const canModify = currentUserRole !== null && currentUserRole !== "commenter" && currentUserRole !== "viewer";
 
     const loadDocuments = React.useCallback(async () => {
         if (!groupId) return;
@@ -247,6 +264,11 @@ export default function GroupDocumentsPage() {
             return;
         }
 
+        if (!canModify) {
+            toast({ variant: "destructive", description: "Bạn không có quyền upload tài liệu." });
+            return;
+        }
+
         if (!isAllowedFile(file)) {
             toast({ variant: "destructive", description: t("invalidFileType", { name: file.name }) });
             return;
@@ -287,6 +309,7 @@ export default function GroupDocumentsPage() {
     };
 
     const onDelete = (id: string) => {
+        if (!canModify) return;
         const doc = docs.find((d) => d.id === id);
         if (!doc) {
             toast({ variant: "destructive", description: t("documentNotFound") });
@@ -356,27 +379,33 @@ export default function GroupDocumentsPage() {
 
     return (
         <div className="min-h-screen w-full bg-transparent">
-            <Container className="bg-white px-6 py-4 bg-transparent">
+            <Container className="bg-transparent bg-white px-6 py-4">
                 <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
-                        <p className="font-medium text-[#6F6B99] text-sm px-4 py-4 bg-white rounded-xl border border-[#E5E5E5]">{t("sharedProjectDocuments")}</p>
+                        <p className="rounded-xl border border-[#E5E5E5] bg-white px-4 py-4 font-medium text-[#6F6B99] text-sm">
+                            {t("sharedProjectDocuments")}
+                        </p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <input
-                            ref={fileRef}
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.txt,.docx,.md"
-                            onChange={onPickFiles}
-                        />
-                        <Button
-                            onClick={onUploadClick}
-                            disabled={isUploading}
-                            className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
-                            <Upload className="mr-2 h-4 w-4" />
-                            {isUploading ? t("uploading") : t("upload")}
-                        </Button>
+                        {canModify && (
+                            <>
+                                <input
+                                    ref={fileRef}
+                                    type="file"
+                                    className="hidden"
+                                    accept=".pdf,.txt,.docx,.md"
+                                    onChange={onPickFiles}
+                                />
+                                <Button
+                                    onClick={onUploadClick}
+                                    disabled={isUploading}
+                                    className="rounded-xl bg-[#FF5722] px-5 text-white hover:bg-[#e24d1e]">
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    {isUploading ? t("uploading") : t("upload")}
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -388,7 +417,13 @@ export default function GroupDocumentsPage() {
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {docs.map((d) => (
-                        <DocumentCard key={d.id} item={d} onDelete={onDelete} onDownload={onDownload} />
+                        <DocumentCard
+                            key={d.id}
+                            item={d}
+                            canModify={canModify}
+                            onDelete={onDelete}
+                            onDownload={onDownload}
+                        />
                     ))}
                 </div>
             </Container>

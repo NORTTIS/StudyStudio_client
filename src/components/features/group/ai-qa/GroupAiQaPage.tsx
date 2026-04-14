@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ChevronDown, Loader2, Send, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -8,9 +8,9 @@ import { getUserProfile } from "@/api/user-profile";
 import { Container } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { sanitizeErrorMessage } from "@/utils/error-message";
-import { askGroupAiStream } from "../group.api";
 import { renderMarkdown } from "@/lib/markdown";
+import { sanitizeErrorMessage } from "@/utils/error-message";
+import { askGroupAiStream, fetchGroupDetailRole } from "../group.api";
 
 type ChatMessage = {
     id: string;
@@ -36,19 +36,41 @@ const extractGroupIdFromPath = (pathname: string) => {
 const formatTime = (ts: number, locale: string) =>
     new Date(ts).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 
-function parseAIError(error: unknown) {
+function parseAIError(error: unknown, locale?: string) {
+    let msg = "";
     if (error instanceof Error && error.message) {
         try {
             const parsed = JSON.parse(error.message) as { message?: unknown };
             if (typeof parsed.message === "string" && parsed.message.trim()) {
-                return sanitizeErrorMessage(parsed.message, "Đã xảy ra lỗi");
+                msg = sanitizeErrorMessage(parsed.message, "Đã xảy ra lỗi");
             }
         } catch {
-            return sanitizeErrorMessage(error.message, "Đã xảy ra lỗi");
+            msg = sanitizeErrorMessage(error.message, "Đã xảy ra lỗi");
         }
-        return sanitizeErrorMessage(error.message, "Đã xảy ra lỗi");
+        if (!msg) {
+            msg = sanitizeErrorMessage(error.message, "Đã xảy ra lỗi");
+        }
+    } else if (typeof error === "string") {
+        msg = sanitizeErrorMessage(error, "Đã xảy ra lỗi");
     }
-    return "";
+
+    if (!msg) return "";
+
+    const lowerMsg = msg.toLowerCase();
+    if (
+        lowerMsg.includes("permission") ||
+        lowerMsg.includes("access") ||
+        lowerMsg.includes("owner") ||
+        lowerMsg.includes("moderator") ||
+        lowerMsg.includes("không có quyền") ||
+        lowerMsg.includes("role")
+    ) {
+        return locale === "en"
+            ? "You do not have permission to use the AI feature."
+            : "Bạn không có quyền sử dụng tính năng AI.";
+    }
+
+    return msg;
 }
 
 export default function GroupAiQaPage() {
@@ -64,6 +86,7 @@ export default function GroupAiQaPage() {
     const [remainingRequests, setRemainingRequests] = React.useState<number | null>(null);
     const [requestsUsedToday, setRequestsUsedToday] = React.useState<number | null>(null);
     const [dailyLimit, setDailyLimit] = React.useState<number | null>(null);
+    const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(null);
     const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
     const bottomAnchorRef = React.useRef<HTMLDivElement | null>(null);
     const shouldAutoScrollRef = React.useRef(true);
@@ -117,10 +140,22 @@ export default function GroupAiQaPage() {
 
         void loadUserProfile();
 
+        if (groupId) {
+            void fetchGroupDetailRole(groupId).then((role) => {
+                if (isMounted) setCurrentUserRole(role);
+            });
+        }
+
         return () => {
             isMounted = false;
         };
-    }, [locale]);
+    }, [locale, groupId]);
+
+    const isRestricted = React.useMemo(() => {
+        if (!currentUserRole) return false;
+        const r = currentUserRole.toLowerCase().trim();
+        return r === "viewer" || r === "view" || r === "commenter";
+    }, [currentUserRole]);
 
     const quickActions: QuickAction[] = React.useMemo(
         () => [
@@ -256,12 +291,12 @@ export default function GroupAiQaPage() {
                     flushTimer = null;
                 }
                 setMessages((prev) => prev.filter((m) => !(m.id === assistantMessageId && !m.content.trim())));
-                toast({ variant: "destructive", description: parseAIError(error) || t("aiResponseError") });
+                toast({ variant: "destructive", description: parseAIError(error, locale) || t("aiResponseError") });
             } finally {
                 setIsSending(false);
             }
         },
-        [dailyLimit, groupId, isSending, scrollToBottom, toast, t]
+        [groupId, isSending, scrollToBottom, toast, t, locale]
     );
 
     const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -312,7 +347,6 @@ export default function GroupAiQaPage() {
 
                 {messages.length === 0 ? (
                     <div className="relative overflow-hidden rounded-4xl border border-[#EDEDED] bg-white px-8 py-10 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-
                         <div className="relative mx-auto max-w-3xl text-center">
                             <div className="mx-auto mb-5 flex h-18 w-18 items-center justify-center rounded-[28px] border border-[#F5D9C6] bg-[linear-gradient(180deg,#FFF4EA_0%,#FFE5D1_100%)] shadow-[0_20px_40px_rgba(255,107,53,0.14),inset_0_1px_0_rgba(255,255,255,0.95)]">
                                 <Sparkles className="h-8 w-8 text-[#FF8A65]" />
@@ -331,9 +365,9 @@ export default function GroupAiQaPage() {
                                     key={action.key}
                                     type="button"
                                     variant="outline"
-                                    disabled={isSending}
+                                    disabled={isSending || isRestricted}
                                     onClick={() => void onQuickActionClick(action)}
-                                    className="rounded-full border border-[#E8E2DC] bg-white text-[#5E4E42] shadow-sm transition hover:bg-[#F8F4F1]">
+                                    className="rounded-full border border-[#E8E2DC] bg-white text-[#5E4E42] shadow-sm transition hover:bg-[#F8F4F1] disabled:opacity-50">
                                     {action.label}
                                 </Button>
                             ))}
@@ -380,9 +414,9 @@ export default function GroupAiQaPage() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                disabled={isSending}
+                                disabled={isSending || isRestricted}
                                 onClick={() => void onQuickActionClick(action)}
-                                className="rounded-full border-[#E5E5E5] bg-white text-[#4E4B66] hover:bg-[#FAFAFA]">
+                                className="rounded-full border-[#E5E5E5] bg-white text-[#4E4B66] hover:bg-[#FAFAFA] disabled:opacity-50">
                                 {action.label}
                             </Button>
                         ))}
@@ -393,13 +427,20 @@ export default function GroupAiQaPage() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={onInputKeyDown}
-                                placeholder={t("inputPlaceholder")}
-                                className="min-h-12.5 max-h-50 w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-sm text-[#2B2118] outline-none placeholder:text-[#B0A296]"
+                                disabled={isSending || isRestricted}
+                                placeholder={
+                                    isRestricted
+                                        ? locale === "vi"
+                                            ? "Bạn không có quyền sử dụng tính năng AI"
+                                            : "You do not have permission to use the AI feature"
+                                        : t("inputPlaceholder")
+                                }
+                                className="max-h-50 min-h-12.5 w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-3 text-[#2B2118] text-sm outline-none placeholder:text-[#B0A296] disabled:opacity-50"
                             />
                             <Button
                                 type="submit"
-                                disabled={isSending || !input.trim()}
-                                className="h-10 w-10 rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 flex items-center justify-center shrink-0">
+                                disabled={isSending || !input.trim() || isRestricted}
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500 p-0 text-white shadow-[0_16px_28px_rgba(255,107,53,0.26)] transition hover:bg-orange-600 disabled:opacity-50">
                                 {isSending ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (

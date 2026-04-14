@@ -1,14 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useLocale, useMessages, useTranslations } from "next-intl";
 import {
     Activity,
     AlertCircle,
     ArrowDownRight,
     ArrowUpRight,
     CheckCircle2,
-    ChevronDown,
     Clock,
     Filter,
     HelpCircle,
@@ -17,11 +15,13 @@ import {
     TrendingUp,
     Zap
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 
 type TrendPeriod = 7 | 14 | 30;
 type BenchmarkPeriod = 4 | 7 | 12;
+
 // Recharts
 import {
     Area,
@@ -110,7 +110,7 @@ function SkeletonCard() {
     );
 }
 
-function SkeletonChart({ height = 256 }: { height?: number }) {
+function _SkeletonChart({ height = 256 }: { height?: number }) {
     return (
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <SkeletonBlock className="mb-4 h-4 w-40" />
@@ -128,8 +128,8 @@ function cn(...classes: Array<string | false | null | undefined>) {
 function formatWeekRange(isoWeek: string): string {
     const match = isoWeek.match(/^(\d{4})-W(\d{2})$/);
     if (!match) return isoWeek;
-    const year = parseInt(match[1]);
-    const week = parseInt(match[2]);
+    const year = Number.parseInt(match[1], 10);
+    const week = Number.parseInt(match[2], 10);
 
     // Get Monday of the ISO week
     const jan4 = new Date(year, 0, 4); // Jan 4 is always in week 1
@@ -173,7 +173,7 @@ function BenchmarkTooltip() {
         <div className="relative inline-flex">
             <button
                 onClick={() => setOpen((o) => !o)}
-                className="flex h-4 w-4 items-center justify-center rounded-full text-slate-400 hover:text-orange-500 transition-colors cursor-help"
+                className="flex h-4 w-4 cursor-help items-center justify-center rounded-full text-slate-400 transition-colors hover:text-orange-500"
                 title={t("benchmark.formulaTitle")}>
                 <HelpCircle className="h-4 w-4" />
             </button>
@@ -181,7 +181,7 @@ function BenchmarkTooltip() {
             {open && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-                    <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl">
+                    <div className="absolute top-full left-0 z-50 mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl">
                         <p className="mb-3 font-bold text-slate-700 text-xs uppercase tracking-wide">
                             {t("benchmark.formulaTitle")}
                         </p>
@@ -191,24 +191,27 @@ function BenchmarkTooltip() {
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                     <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
-                                    <span className="font-semibold text-slate-700 text-xs">{t("benchmark.youScore")}</span>
+                                    <span className="font-semibold text-slate-700 text-xs">
+                                        {t("benchmark.youScore")}
+                                    </span>
                                 </div>
-                                <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
-                                    <span className="font-medium text-orange-600">{t("benchmark.completedTask")}</span> → 10 × Priority
-                                    × Severity
+                                <div className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-500 leading-relaxed">
+                                    <span className="font-medium text-orange-600">{t("benchmark.completedTask")}</span>{" "}
+                                    → 10 × Priority × Severity
                                     <br />
-                                    <span className="font-medium text-orange-600">{t("benchmark.createTask")}</span> → {t("benchmark.createTaskPoints")}
+                                    <span className="font-medium text-orange-600">{t("benchmark.createTask")}</span> →{" "}
+                                    {t("benchmark.createTaskPoints")}
                                     <br />
-                                    <span className="font-medium text-orange-600">{t("benchmark.updateTask")}</span> → {t("benchmark.updateTaskPoints")}
+                                    <span className="font-medium text-orange-600">{t("benchmark.updateTask")}</span> →{" "}
+                                    {t("benchmark.updateTaskPoints")}
                                     <br />
-                                    <span className="font-medium text-orange-600">{t("benchmark.commentMessage")}</span> → {t("benchmark.commentMessagePoints")}
+                                    <span className="font-medium text-orange-600">{t("benchmark.commentMessage")}</span>{" "}
+                                    → {t("benchmark.commentMessagePoints")}
                                     <br />
                                     <span className="mt-1 block text-slate-400 italic">
                                         {t("benchmark.priorityFormula")}
                                     </span>
-                                    <span className="text-slate-400 italic">
-                                        {t("benchmark.severityFormula")}
-                                    </span>
+                                    <span className="text-slate-400 italic">{t("benchmark.severityFormula")}</span>
                                 </div>
                             </div>
 
@@ -220,7 +223,7 @@ function BenchmarkTooltip() {
                                         {t("benchmark.groupAvg")}
                                     </span>
                                 </div>
-                                <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
+                                <div className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-500 leading-relaxed">
                                     {t("benchmark.groupAvgFormula")}
                                 </div>
                             </div>
@@ -233,7 +236,7 @@ function BenchmarkTooltip() {
                                         {t("benchmark.trendLabel")}
                                     </span>
                                 </div>
-                                <div className="rounded-lg bg-slate-50 px-3 py-2 text-slate-500 text-[11px] leading-relaxed">
+                                <div className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] text-slate-500 leading-relaxed">
                                     {t("benchmark.trendFormula")}
                                 </div>
                             </div>
@@ -346,7 +349,7 @@ function RankBadge({ rank, groupName }: { rank: number; groupName: string }) {
 }
 
 // ─── Delta Badge ─────────────────────────────────────────────
-function DeltaBadge({ delta }: { delta: number }) {
+function _DeltaBadge({ delta }: { delta: number }) {
     const positive = delta >= 0;
     return (
         <span
@@ -418,10 +421,10 @@ function BarChartTooltip({ active, payload, label }: any) {
                         {entry.name === "you" || entry.name === "user"
                             ? t("benchmark.you")
                             : entry.name === "avg" || entry.name === "groupAvg"
-                                ? t("benchmark.groupAverage")
-                                : entry.name === "trend"
-                                    ? t("benchmark.trend")
-                                    : entry.name}
+                              ? t("benchmark.groupAverage")
+                              : entry.name === "trend"
+                                ? t("benchmark.trend")
+                                : entry.name}
                     </span>
                     <span className="ml-auto font-semibold text-slate-900">{entry.value}</span>
                 </div>
@@ -736,7 +739,7 @@ export default function AnalysisHome() {
     const [taskStatusLoading, setTaskStatusLoading] = useState(true);
     const [rankingsLoading, setRankingsLoading] = useState(true);
     const [trendLoading, setTrendLoading] = useState(true);
-    const [onTimeLoading, setOnTimeLoading] = useState(true);
+    const [_onTimeLoading, setOnTimeLoading] = useState(true);
     const [priorityLoading, setPriorityLoading] = useState(true);
     const [urgencyLoading, setUrgencyLoading] = useState(true);
     const [benchmarkLoading, setBenchmarkLoading] = useState(true);
@@ -792,16 +795,19 @@ export default function AnalysisHome() {
                 setRiskAlertsLoading(false);
             })
         ]);
-    }, []);
+    }, [benchmarkPeriod, locale, trendPeriod]);
 
     // ── Refetch benchmark when group filter or period changes ─────
-    const fetchBenchmark = useCallback((uid: string, groupId: string | undefined, weeks: number, currentLocale: string) => {
-        setBenchmarkLoading(true);
-        getUserBenchmark(uid, weeks, groupId, currentLocale).then((r) => {
-            if (r.status === "success" && r.data) setBenchmarkData(r.data);
-            setBenchmarkLoading(false);
-        });
-    }, []);
+    const fetchBenchmark = useCallback(
+        (uid: string, groupId: string | undefined, weeks: number, currentLocale: string) => {
+            setBenchmarkLoading(true);
+            getUserBenchmark(uid, weeks, groupId, currentLocale).then((r) => {
+                if (r.status === "success" && r.data) setBenchmarkData(r.data);
+                setBenchmarkLoading(false);
+            });
+        },
+        []
+    );
 
     useEffect(() => {
         if (!userId) return;
@@ -822,14 +828,47 @@ export default function AnalysisHome() {
         fetchTrend(userId, trendPeriod, locale);
     }, [userId, trendPeriod, fetchTrend, locale]);
 
+    // ── Translation Helpers ─────────────────────────────────────
+    const getLocalizedStatus = (status: string) => {
+        if (!status) return status;
+        const s = status.toLowerCase();
+        if (s.includes("hoàn thành") || s.includes("done") || s.includes("completed")) return t("status.done");
+        if (s.includes("đang làm") || s.includes("thực hiện") || s.includes("progress")) return t("status.inProgress");
+        if (s.includes("chưa bắt đầu") || s.includes("cần làm") || s.includes("todo") || s.includes("to do"))
+            return t("status.todo") || t("status.notStarted");
+        if (s.includes("quá hạn") || s.includes("overdue")) return t("status.overdue");
+        return status;
+    };
+
+    const getLocalizedPriority = (priority: string) => {
+        if (!priority) return priority;
+        const p = priority.toLowerCase();
+        if (p.includes("cao") || p.includes("high")) return t("priority.high");
+        if (p.includes("trung bình") || p.includes("medium")) return t("priority.medium");
+        if (p.includes("thấp") || p.includes("low")) return t("priority.low");
+        return priority;
+    };
+
+    const getLocalizedUrgency = (urgency: string) => {
+        if (!urgency) return urgency;
+        const u = urgency.toLowerCase();
+        if (u.includes("khẩn cấp") || u.includes("critical")) return t("urgency.critical");
+        if (u.includes("cao") || u.includes("high")) return t("urgency.high");
+        if (u.includes("trung bình") || u.includes("medium")) return t("urgency.medium");
+        if (u.includes("thấp") || u.includes("low")) return t("urgency.low");
+        return urgency;
+    };
+
     // ── Derived values ──────────────────────────────────────────
-    const totalOnTime = onTimeData?.segments?.find((s) => s.name === "Đúng hạn")?.value ?? 0;
-    const totalOverdue = onTimeData?.segments?.find((s) => s.name === "Quá hạn")?.value ?? 0;
+    const totalOnTime = onTimeData?.segments?.find((s) => s.name === "Đúng hạn" || s.name === "On time")?.value ?? 0;
+    const totalOverdue = onTimeData?.segments?.find((s) => s.name === "Quá hạn" || s.name === "Overdue")?.value ?? 0;
     const totalTasks = totalOnTime + totalOverdue;
-    const onTimeRate = totalTasks > 0 ? Math.round((totalOnTime / totalTasks) * 100) : 0;
+    const _onTimeRate = totalTasks > 0 ? Math.round((totalOnTime / totalTasks) * 100) : 0;
 
     const taskStatusSegments = taskStatusData?.segments ?? [];
-    const completedValue = taskStatusSegments.find((s) => s.name === "Hoàn thành")?.value ?? 0;
+    const completedValue =
+        taskStatusSegments.find((s) => s.name === "Hoàn thành" || s.name === "Completed" || s.name === "Done")?.value ??
+        0;
     const taskStatusTotal = taskStatusSegments.reduce((sum, s) => sum + (s.value ?? 0), 0);
     const taskStatusRate = taskStatusTotal > 0 ? Math.round((completedValue / taskStatusTotal) * 100) : 0;
 
@@ -837,7 +876,7 @@ export default function AnalysisHome() {
     const latestBenchmark = benchmarkPoints[benchmarkPoints.length - 1];
     const userScore = latestBenchmark?.user ?? 0;
     const groupAvgScore = latestBenchmark?.groupAvg ?? 0;
-    const scoreDiff = userScore - groupAvgScore;
+    const _scoreDiff = userScore - groupAvgScore;
 
     const alertItems = riskAlertsData?.alerts ?? [];
     const rankings = groupRankingsData?.rankings ?? [];
@@ -910,7 +949,12 @@ export default function AnalysisHome() {
                                 value={kpiData.totalTasks ?? 0}
                                 badge={
                                     kpiData.totalChangePercent !== undefined && kpiData.totalChangePercent !== null
-                                        ? t("cards.totalTasks.badge", { percent: kpiData.totalChangePercent > 0 ? `+${kpiData.totalChangePercent}` : kpiData.totalChangePercent })
+                                        ? t("cards.totalTasks.badge", {
+                                              percent:
+                                                  kpiData.totalChangePercent > 0
+                                                      ? `+${kpiData.totalChangePercent}`
+                                                      : kpiData.totalChangePercent
+                                          })
                                         : undefined
                                 }
                                 badgeType={
@@ -970,7 +1014,7 @@ export default function AnalysisHome() {
                             ) : taskStatusSegments.length > 0 ? (
                                 <MyTaskStatusCard
                                     data={taskStatusSegments.map((s, i) => ({
-                                        name: s.name ?? "",
+                                        name: getLocalizedStatus(s.name ?? ""),
                                         value: s.value ?? 0,
                                         color: s.color ?? DONUT_STATUS_COLORS[i] ?? C.slate
                                     }))}
@@ -1011,7 +1055,7 @@ export default function AnalysisHome() {
 
                                             <div className="min-w-0 flex-1">
                                                 <div className="mb-1 flex items-center justify-between">
-                                                    <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="flex min-w-0 items-center gap-2">
                                                         <p className="truncate font-semibold text-slate-800 text-sm">
                                                             {item.groupName}
                                                         </p>
@@ -1231,15 +1275,18 @@ export default function AnalysisHome() {
                                                         <span
                                                             className={cn(
                                                                 "inline-block rounded-full px-2 py-0.5 font-bold text-xs uppercase tracking-wide",
-                                                                item.priority === "Cao"
+                                                                item.priority === "Cao" || item.priority === "High"
                                                                     ? "bg-red-50 text-red-600"
-                                                                    : item.priority === "Trung bình"
-                                                                        ? "bg-orange-50 text-orange-600"
-                                                                        : "bg-slate-100 text-slate-500"
+                                                                    : item.priority === "Trung bình" ||
+                                                                        item.priority === "Medium"
+                                                                      ? "bg-orange-50 text-orange-600"
+                                                                      : "bg-slate-100 text-slate-500"
                                                             )}>
-                                                            {item.priority ?? "—"}
+                                                            {getLocalizedPriority(item.priority ?? "") || "—"}
                                                         </span>
-                                                        <span className="text-slate-400 text-xs">{t("common.tasksCount", { count: total })}</span>
+                                                        <span className="text-slate-400 text-xs">
+                                                            {t("common.tasksCount", { count: total })}
+                                                        </span>
                                                     </div>
                                                     <div className="flex h-7 w-full overflow-hidden rounded-xl bg-slate-100 font-semibold text-xs shadow-inner">
                                                         {(item.completed ?? 0) > 0 && (
@@ -1344,17 +1391,20 @@ export default function AnalysisHome() {
                                                     <span
                                                         className={cn(
                                                             "inline-block rounded-full px-2 py-0.5 font-bold text-xs uppercase tracking-wide",
-                                                            item.urgency === "Khẩn cấp"
+                                                            item.urgency === "Khẩn cấp" || item.urgency === "Critical"
                                                                 ? "bg-red-100 text-red-700"
-                                                                : item.urgency === "Cao"
-                                                                    ? "bg-orange-100 text-orange-700"
-                                                                    : item.urgency === "Trung bình"
-                                                                        ? "bg-amber-50 text-amber-600"
-                                                                        : "bg-orange-50 text-orange-600"
+                                                                : item.urgency === "Cao" || item.urgency === "High"
+                                                                  ? "bg-orange-100 text-orange-700"
+                                                                  : item.urgency === "Trung bình" ||
+                                                                      item.urgency === "Medium"
+                                                                    ? "bg-amber-50 text-amber-600"
+                                                                    : "bg-orange-50 text-orange-600"
                                                         )}>
-                                                        {item.urgency ?? "—"}
+                                                        {getLocalizedUrgency(item.urgency ?? "") || "—"}
                                                     </span>
-                                                    <span className="text-slate-400 text-xs">{t("common.tasksCount", { count: total })}</span>
+                                                    <span className="text-slate-400 text-xs">
+                                                        {t("common.tasksCount", { count: total })}
+                                                    </span>
                                                 </div>
                                                 <div className="flex h-7 w-full overflow-hidden rounded-xl bg-slate-100 font-semibold text-xs shadow-inner">
                                                     {(item.completed ?? 0) > 0 && (
@@ -1495,72 +1545,70 @@ export default function AnalysisHome() {
                         {benchmarkLoading ? (
                             <SkeletonBlock className="h-60 w-full" />
                         ) : benchmarkPoints.length > 0 ? (
-                            <>
-                                <div className="h-60">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <ComposedChart
-                                            data={benchmarkPoints}
-                                            margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
-                                            <XAxis
-                                                dataKey="week"
-                                                tick={{ fontSize: 10, fill: C.slateMid }}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                tickFormatter={(val: string) => formatWeekRange(val)}
-                                            />
-                                            <YAxis
-                                                tick={{ fontSize: 11, fill: C.slateMid }}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                domain={[0, 100]}
-                                            />
-                                            <Tooltip content={<BarChartTooltip />} />
-                                            <Legend
-                                                iconType="circle"
-                                                iconSize={7}
-                                                wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-                                            />
-                                            <Bar
-                                                dataKey="user"
-                                                name={t("benchmark.you")}
-                                                fill={C.teal}
-                                                radius={[4, 4, 0, 0]}
-                                                maxBarSize={24}
-                                                barSize={20}
-                                            />
-                                            <Bar
-                                                dataKey="groupAvg"
-                                                name={t("benchmark.groupAverage")}
-                                                fill={C.slateMid}
-                                                radius={[4, 4, 0, 0]}
-                                                maxBarSize={24}
-                                                barSize={20}
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="trend"
-                                                name={t("benchmark.trend")}
-                                                stroke={C.orange}
-                                                strokeWidth={2}
-                                                dot={false}
-                                                activeDot={{ r: 5 }}
-                                            />
-                                            <ReferenceLine
-                                                y={groupAvgScore || 60}
-                                                stroke={C.slateMid}
-                                                strokeDasharray="4 4"
-                                                label={{
-                                                    value: t("common.averageShort"),
-                                                    position: "insideTopRight",
-                                                    fontSize: 10,
-                                                    fill: C.slateMid
-                                                }}
-                                            />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </>
+                            <div className="h-60">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart
+                                        data={benchmarkPoints}
+                                        margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="2 4" stroke="#f1f5f9" vertical={false} />
+                                        <XAxis
+                                            dataKey="week"
+                                            tick={{ fontSize: 10, fill: C.slateMid }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickFormatter={(val: string) => formatWeekRange(val)}
+                                        />
+                                        <YAxis
+                                            tick={{ fontSize: 11, fill: C.slateMid }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            domain={[0, 100]}
+                                        />
+                                        <Tooltip content={<BarChartTooltip />} />
+                                        <Legend
+                                            iconType="circle"
+                                            iconSize={7}
+                                            wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                                        />
+                                        <Bar
+                                            dataKey="user"
+                                            name={t("benchmark.you")}
+                                            fill={C.teal}
+                                            radius={[4, 4, 0, 0]}
+                                            maxBarSize={24}
+                                            barSize={20}
+                                        />
+                                        <Bar
+                                            dataKey="groupAvg"
+                                            name={t("benchmark.groupAverage")}
+                                            fill={C.slateMid}
+                                            radius={[4, 4, 0, 0]}
+                                            maxBarSize={24}
+                                            barSize={20}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="trend"
+                                            name={t("benchmark.trend")}
+                                            stroke={C.orange}
+                                            strokeWidth={2}
+                                            dot={false}
+                                            activeDot={{ r: 5 }}
+                                        />
+                                        <ReferenceLine
+                                            y={groupAvgScore || 60}
+                                            stroke={C.slateMid}
+                                            strokeDasharray="4 4"
+                                            label={{
+                                                value: t("common.averageShort"),
+                                                position: "insideTopRight",
+                                                fontSize: 10,
+                                                fill: C.slateMid
+                                            }}
+                                        />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </div>
                         ) : (
                             <div className="flex h-60 flex-col items-center justify-center">
                                 <Activity className="mb-2 h-8 w-8 text-slate-300" />

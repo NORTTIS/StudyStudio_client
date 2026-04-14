@@ -2,23 +2,14 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogHeader,
-    AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import {
     ArrowLeft,
     BarChart3,
     Calendar,
     FileText,
     LayoutGrid,
     List,
-    MessageSquare,
     LogOut,
+    MessageSquare,
     Settings,
     Sparkles,
     Trash2,
@@ -30,13 +21,22 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
+import { components } from "@/api/types";
 import { Container } from "@/components/common";
 import { InviteMemberModal, type InviteRole } from "@/components/features/group/setting/InviteMemberModal";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { leaveGroup } from "../group.api";
 import { RolePill } from "../RolePill";
 import type { GroupRole } from "../types";
-import { components } from "@/api/types";
 
 type Tab = {
     key: string;
@@ -80,10 +80,10 @@ type ApiGroupMembersResponse = {
     message?: string | null;
     data?: {
         members?:
-        | {
-            role?: string | null;
-        }[]
-        | null;
+            | {
+                  role?: string | null;
+              }[]
+            | null;
     } | null;
 };
 
@@ -110,7 +110,7 @@ const okByJsonStatus = (obj: any) => {
     return s === "" || s === "success" || s === "ok" || s === "true";
 };
 
-const ROLE_FORMATS = (role: string) => {
+const _ROLE_FORMATS = (role: string) => {
     const raw = String(role).trim();
     const upper = raw.toUpperCase();
     const roleUpper = `ROLE_${upper}`;
@@ -132,8 +132,11 @@ const normalizeErrorMessage = (value: string, fallback: string) => {
 
     const lowered = raw.toLowerCase();
     const isInviteLimitError =
-        (lowered.includes("invite") || lowered.includes("lời mời"))
-        && (lowered.includes("limit") || lowered.includes("quota") || lowered.includes("too many") || lowered.includes("maximum"));
+        (lowered.includes("invite") || lowered.includes("lời mời")) &&
+        (lowered.includes("limit") ||
+            lowered.includes("quota") ||
+            lowered.includes("too many") ||
+            lowered.includes("maximum"));
 
     if (isInviteLimitError) {
         return "Bạn đã vượt quá giới hạn tạo lời mời. Vui lòng thử lại sau.";
@@ -219,7 +222,7 @@ export function GroupStudioHeader({
     const [groupDesc, setGroupDesc] = React.useState<string>("");
     const [studioName, setStudioName] = React.useState<string>("");
     const [memberCount, setMemberCount] = React.useState<number>(0);
-    const [userRole, setUserRole] = React.useState<GroupRole>("member");
+    const [userRole, setUserRole] = React.useState<GroupRole | "">("");
     const [error, setError] = React.useState<string>("");
     const [groupTagline, setGroupTagline] = React.useState<string>("");
     const [groupAlias, setGroupAlias] = React.useState<string>("");
@@ -269,12 +272,15 @@ export function GroupStudioHeader({
         [t, tCommon]
     );
 
-    const withNavigationContext = React.useCallback((href: string) => {
-        if (!fromStudioId) return href;
+    const withNavigationContext = React.useCallback(
+        (href: string) => {
+            if (!fromStudioId) return href;
 
-        const separator = href.includes("?") ? "&" : "?";
-        return `${href}${separator}fromStudioId=${encodeURIComponent(fromStudioId)}`;
-    }, [fromStudioId]);
+            const separator = href.includes("?") ? "&" : "?";
+            return `${href}${separator}fromStudioId=${encodeURIComponent(fromStudioId)}`;
+        },
+        [fromStudioId]
+    );
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -301,7 +307,7 @@ export function GroupStudioHeader({
 
                 try {
                     json = text ? JSON.parse(text) : null;
-                } catch { }
+                } catch {}
 
                 if (!res.ok) {
                     const msg = normalizeErrorMessage(
@@ -346,7 +352,7 @@ export function GroupStudioHeader({
                     let studioJson: unknown = null;
                     try {
                         studioJson = studioText ? JSON.parse(studioText) : null;
-                    } catch { }
+                    } catch {}
 
                     const studioData = (studioJson as StudioResponseApiResponse | null)?.data;
                     if (studioRes.ok && studioData) {
@@ -360,14 +366,18 @@ export function GroupStudioHeader({
                 }
 
                 const memberApprovalValue =
-                    (data as GroupDetail & {
-                        requiresMemberApproval?: boolean | null;
-                        memberApprovalRequired?: boolean | null;
-                    })?.requiresMemberApproval ??
-                    (data as GroupDetail & {
-                        requiresMemberApproval?: boolean | null;
-                        memberApprovalRequired?: boolean | null;
-                    })?.memberApprovalRequired ??
+                    (
+                        data as GroupDetail & {
+                            requiresMemberApproval?: boolean | null;
+                            memberApprovalRequired?: boolean | null;
+                        }
+                    )?.requiresMemberApproval ??
+                    (
+                        data as GroupDetail & {
+                            requiresMemberApproval?: boolean | null;
+                            memberApprovalRequired?: boolean | null;
+                        }
+                    )?.memberApprovalRequired ??
                     false;
                 setRequiresMemberApproval(Boolean(memberApprovalValue));
 
@@ -387,7 +397,7 @@ export function GroupStudioHeader({
                     let mJson: any = null;
                     try {
                         mJson = mText ? JSON.parse(mText) : null;
-                    } catch { }
+                    } catch {}
 
                     if (alive && mRes.ok) {
                         const members = (mJson as ApiGroupMembersResponse)?.data?.members ?? [];
@@ -415,7 +425,7 @@ export function GroupStudioHeader({
         return () => {
             alive = false;
         };
-    }, [groupId, locale, router, toast]);
+    }, [groupId, locale, router, toast, t]);
 
     React.useEffect(() => {
         if (!groupId) return;
@@ -459,11 +469,13 @@ export function GroupStudioHeader({
         const canSeeSetting = userRole === "owner" || userRole === "moderator";
         const canSeeTrashed = userRole === "owner" || userRole === "moderator";
         const canSeeAnalytic = userRole !== "viewer";
+        const canSeeAI = userRole === "owner" || userRole === "moderator" || userRole === "member";
 
         return tabs.filter((tab) => {
             if (tab.key === "setting" && !canSeeSetting) return false;
             if (tab.key === "trashed" && !canSeeTrashed) return false;
             if (tab.key === "analytic" && !canSeeAnalytic) return false;
+            if (tab.key === "ai-qa" && !canSeeAI) return false;
             return true;
         });
     }, [userRole, tabs]);
@@ -510,7 +522,7 @@ export function GroupStudioHeader({
         let json: any = null;
         try {
             json = text ? JSON.parse(text) : null;
-        } catch { }
+        } catch {}
 
         if (res.ok) {
             const inviteData = json?.data ?? json ?? {};
@@ -579,7 +591,7 @@ export function GroupStudioHeader({
         let json: any = null;
         try {
             json = text ? JSON.parse(text) : null;
-        } catch { }
+        } catch {}
 
         if (res.ok && (!json || okByJsonStatus(json))) return true;
 
@@ -619,12 +631,11 @@ export function GroupStudioHeader({
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className={`relative w-full overflow-visible rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6`}>
+                className={
+                    "relative w-full overflow-visible rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6"
+                }>
                 <div className="mb-6 flex flex-col justify-between gap-4">
-
-
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-
                         <div className="min-w-0">
                             <AnimatePresence mode="wait">
                                 {studioName ? (
@@ -638,12 +649,11 @@ export function GroupStudioHeader({
                                         <span
                                             aria-label={isStudioArchived ? "inactive" : "active"}
                                             title={isStudioArchived ? "Đang dừng" : "Đang hoạt động"}
-                                            className="relative inline-flex h-2.5 w-2.5 items-center justify-center"
-                                        >
+                                            className="relative inline-flex h-2.5 w-2.5 items-center justify-center">
                                             <span
                                                 aria-hidden="true"
                                                 className={twMerge(
-                                                    "absolute inset-0 rounded-full animate-ping motion-reduce:animate-none",
+                                                    "absolute inset-0 animate-ping rounded-full motion-reduce:animate-none",
                                                     isStudioArchived ? "bg-red-500/75" : "bg-emerald-400/60"
                                                 )}
                                             />
@@ -703,7 +713,7 @@ export function GroupStudioHeader({
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                                                className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium"
+                                                className="inline-flex items-center rounded-full border px-2.5 py-0.5 font-medium text-xs"
                                                 style={{
                                                     backgroundColor: `${groupColorHex}18`,
                                                     borderColor: `${groupColorHex}40`,
@@ -716,7 +726,6 @@ export function GroupStudioHeader({
                                         <motion.div layout transition={{ type: "spring", stiffness: 280, damping: 26 }}>
                                             <RolePill role={userRole} />
                                         </motion.div>
-
                                     </div>
 
                                     <AnimatePresence mode="wait">
@@ -727,7 +736,7 @@ export function GroupStudioHeader({
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -6 }}
                                                 transition={{ duration: 0.22 }}
-                                                className="mt-1 italic text-[#9B8CA8] text-sm">
+                                                className="mt-1 text-[#9B8CA8] text-sm italic">
                                                 {groupTagline}
                                             </motion.p>
                                         ) : null}
@@ -746,7 +755,6 @@ export function GroupStudioHeader({
                                             </motion.p>
                                         ) : null}
                                     </AnimatePresence>
-
                                 </div>
                             </div>
 
@@ -829,7 +837,9 @@ export function GroupStudioHeader({
                     <div className="flex w-fit max-w-full items-center gap-2 overflow-x-auto rounded-2xl border border-[#F3E4D7] bg-[#FFFCF8] p-1.5 shadow-sm">
                         {visibleTabs.map((tab) => {
                             const Icon = tab.icon;
-                            const target = stripLocale((tab.href(locale, groupId) || "").split("?")[0] || tab.href(locale, groupId));
+                            const target = stripLocale(
+                                (tab.href(locale, groupId) || "").split("?")[0] || tab.href(locale, groupId)
+                            );
                             const tabDisabled = isArchived && tab.key !== "setting";
 
                             const active =
@@ -852,8 +862,7 @@ export function GroupStudioHeader({
                                         setStatusPulseKey((prev) => prev + 1);
                                     }}
                                     aria-disabled={tabDisabled}
-                                    className={twMerge("relative shrink-0", tabDisabled ? "cursor-not-allowed" : "")}
-                                >
+                                    className={twMerge("relative shrink-0", tabDisabled ? "cursor-not-allowed" : "")}>
                                     <motion.div
                                         whileHover={tabDisabled ? undefined : { y: -1 }}
                                         whileTap={tabDisabled ? undefined : { scale: 0.98 }}
@@ -863,8 +872,8 @@ export function GroupStudioHeader({
                                             tabDisabled
                                                 ? "text-[#94A3B8] opacity-55"
                                                 : active
-                                                ? "text-white shadow-md shadow-orange-200"
-                                                : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
+                                                  ? "text-white shadow-md shadow-orange-200"
+                                                  : "text-[#6B7280] hover:bg-[#FFF1E6] hover:text-[#EA580C]"
                                         )}>
                                         {active && !tabDisabled ? (
                                             <motion.div
@@ -884,8 +893,8 @@ export function GroupStudioHeader({
                                                 tabDisabled
                                                     ? "text-[#94A3B8]"
                                                     : active
-                                                    ? "text-white"
-                                                    : "text-[#8C8C8C] group-hover:text-[#EA580C]"
+                                                      ? "text-white"
+                                                      : "text-[#8C8C8C] group-hover:text-[#EA580C]"
                                             )}
                                         />
                                         <span className="relative z-10 whitespace-nowrap">{tab.label}</span>
