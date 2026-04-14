@@ -196,14 +196,11 @@ async function getCurrentUserProfile(): Promise<UserProfileLike | null> {
 }
 
 async function getCurrentUserRoleInGroup(
-    groupId: string
+    groupId: string,
+    profile: UserProfileLike | null
 ): Promise<{ role: GroupRole; groupName: string }> {
-    const [profileRes, membersRes] = await Promise.all([
-        getCurrentUserProfile(),
-        apiGet<GroupMemberListData>(`/group/${groupId}/members`)
-    ]);
+    const membersRes = await apiGet<GroupMemberListData>(`/group/${groupId}/members`);
     const members = membersRes?.data?.members ?? [];
-    const profile = profileRes;
     const matchedMember =
         members.find((m) => m.isCurrentUser === true) ??
         members.find((m) => !!profile?.userId && (m.userId === profile.userId || m.id === profile.userId)) ??
@@ -1227,6 +1224,13 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
         isPersonal: boolean;
     }>({ type: null, isPersonal: true });
 
+    // Trigger refresh of analytics data when task is updated in popup
+    const [refreshKey, setRefreshKey] = React.useState(0);
+
+    const handlePopupClosed = React.useCallback(() => {
+        setRefreshKey((k) => k + 1);
+    }, []);
+
     const filterTypes: StatusFilterType[] = ["notstarted", "inprogress", "completed", "overdue"];
 
     // Default select members when summary loads (only once on mount)
@@ -1267,6 +1271,20 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
             }
         }
     }, [summary, currentUserId]);
+    // Load user profile — runs ONCE on mount
+    const currentProfileRef = React.useRef<UserProfileLike | null>(null);
+    React.useEffect(() => {
+        let isMounted = true;
+        void (async () => {
+            const profileRes = await getCurrentUserProfile();
+            if (!isMounted) return;
+            currentProfileRef.current = profileRes;
+            setCurrentUserId(profileRes?.userId ?? profileRes?.id ?? null);
+        })();
+        return () => { isMounted = false; };
+    }, []);
+
+    // Load analytics data — runs on mount and on refreshKey change
     React.useEffect(() => {
         if (!groupId) return;
 
@@ -1275,10 +1293,9 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
         async function loadSummary() {
             try {
                 setLoading(true);
-                const [summaryRes, roleRes, profileRes] = await Promise.all([
+                const [summaryRes, roleRes] = await Promise.all([
                     getGroupSummary(groupId),
-                    getCurrentUserRoleInGroup(groupId),
-                    getCurrentUserProfile()
+                    getCurrentUserRoleInGroup(groupId, currentProfileRef.current)
                 ]);
 
                 if (!isMounted) return;
@@ -1289,7 +1306,6 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
 
                 setCurrentUserRole(roleRes.role);
                 setResolvedGroupName(roleRes.groupName);
-                setCurrentUserId(profileRes?.userId ?? profileRes?.id ?? null);
             } catch {
                 if (!isMounted) return;
                 setSummary(null);
@@ -1303,7 +1319,7 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
         return () => {
             isMounted = false;
         };
-    }, [groupId]);
+    }, [groupId, refreshKey]);
 
     // Load trend data with date filter - Chart 3
     React.useEffect(() => {
@@ -2635,6 +2651,7 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
                         isPersonal={statusFilter.isPersonal}
                         groupId={groupId}
                         currentUserId={statusFilter.isPersonal ? effectivePieMemberId : (currentUserId ?? "")}
+                        onPopupClosed={handlePopupClosed}
                     />
 
                     {loading && <div className="text-slate-500 text-sm">{t("common.loading")}</div>}

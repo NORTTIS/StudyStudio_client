@@ -17,6 +17,8 @@ export type ToggleIsOpenRequest = components["schemas"]["ToggleIsOpenRequest"];
 export type ToggleIsOpenResponse = components["schemas"]["ToggleIsOpenResponse"];
 export type ToggleArchiveRequest = components["schemas"]["ToggleArchiveRequest"];
 export type ArchiveGroupResponse = components["schemas"]["ArchiveGroupResponse"];
+export type GroupMemberDto = components["schemas"]["GroupMemberDto"];
+export type GroupMemberListResponse = components["schemas"]["GroupMemberListResponse"];
 
 export async function updateGroupSettings(data: UpdateGroupRequest, locale = "vi") {
     return apiFetch<UpdateGroupResponse>("/group", {
@@ -44,6 +46,13 @@ export async function toggleGroupArchive(groupId: string, isArchived: boolean, l
     return apiFetch<ArchiveGroupResponse>(`/group/${groupId}/archive`, {
         method: "PUT",
         body: JSON.stringify(body),
+        locale
+    });
+}
+
+export async function getGroupMembers(groupId: string, locale = "vi") {
+    return apiFetch<GroupMemberListResponse>(`/group/${groupId}/members`, {
+        method: "GET",
         locale
     });
 }

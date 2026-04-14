@@ -21,6 +21,8 @@ import type { components } from "@/api/types";
 import { Container } from "@/components/common";
 import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
+import { getGroupMembers } from "@/api/groups";
+import type { GroupMemberDto } from "@/api/groups";
 
 type ApiResponse<T> = { status?: string; code?: string; message?: string; data?: T };
 
@@ -688,6 +690,7 @@ export function GroupListScreen() {
     const [rows, setRows] = React.useState<TaskRow[]>([]);
     const [statusOptions, setStatusOptions] = React.useState<Array<{ id: string; name: string }>>([]);
     const [assigneeOptions, setAssigneeOptions] = React.useState<DropdownOption[]>([]);
+    const [groupMembers, setGroupMembers] = React.useState<GroupMemberDto[]>([]);
     const [page, setPage] = React.useState(1);
     const [totalCount, setTotalCount] = React.useState(0);
     const [totalPages, setTotalPages] = React.useState(1);
@@ -840,10 +843,35 @@ export function GroupListScreen() {
             });
 
             setStatusOptions((prev) => mergeStatusOptions(prev, nextStatuses));
-            setAssigneeOptions((prev) => prioritizeUnassignedOption(mergeDropdownOptions(prev, nextAssignees)));
+            // Build assignee options from group members API
+            const allMembers: DropdownOption[] = groupMembers.map((m) => {
+                const fullName = `${String(m.firstName ?? "").trim()} ${String(m.lastName ?? "").trim()}`.trim() || t("unassigned");
+                return {
+                    value: String(m.userId ?? "").trim() || "__unknown__",
+                    label: fullName,
+                    avatarUrl: String(m.avatarUrl ?? "").trim() || null,
+                    initials: buildInitials(fullName),
+                    unassigned: false
+                };
+            });
+            const taskAssignees = nextRows.map((row) => ({
+                value: row.assigneeId,
+                label: row.assigneeName,
+                avatarUrl: row.assigneeAvatarUrl,
+                initials: row.assigneeInitials,
+                unassigned: row.assigneeId === "__unassigned__"
+            }));
+            // Merge group members with task-derived assignees (fallback if API not available yet)
+            const memberMap = new Map<string, DropdownOption>();
+            [...allMembers, ...taskAssignees].forEach((opt) => {
+                if (!opt.value) return;
+                memberMap.set(opt.value, opt);
+            });
+            const merged = Array.from(memberMap.values());
+            setAssigneeOptions(prioritizeUnassignedOption(merged));
             setRows(visibleRows);
-            setTotalCount(visibleRows.length);
-            setTotalPages(Math.max(1, Math.ceil(visibleRows.length / pageSize)));
+            setTotalCount(data?.totalCount ?? visibleRows.length);
+            setTotalPages(data?.totalPages ?? Math.max(1, Math.ceil(visibleRows.length / pageSize)));
         } catch (e: unknown) {
             setLoadError(e instanceof Error ? e.message : t("cannotLoad"));
         } finally {
@@ -852,6 +880,7 @@ export function GroupListScreen() {
     }, [
         appliedDateFilter,
         groupId,
+        groupMembers,
         locale,
         searchKeyword,
         appliedStatusFilter,
@@ -874,6 +903,16 @@ export function GroupListScreen() {
     React.useEffect(() => {
         setStatusOptions([]);
         setAssigneeOptions([]);
+        setGroupMembers([]);
+        if (!groupId || !isUuidLike(groupId)) return;
+        void (async () => {
+            try {
+                const res = await getGroupMembers(groupId);
+                if (res?.data?.members) {
+                    setGroupMembers(res.data.members);
+                }
+            } catch { /* keep using task-derived assignees as fallback */ }
+        })();
     }, [groupId]);
 
     React.useEffect(() => {

@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { env } from "@/env";
 import type { components } from "@/api/types";
 import AssigneeAvatar from "@/components/features/group/task/AssigneeAvatar";
+import TaskDetailModal from "@/components/features/group/task/TaskDetailModal";
 
 // ==================== Types ====================
 
@@ -220,6 +221,7 @@ type TaskStatusPopupProps = {
     isPersonal: boolean;
     groupId: string;
     currentUserId: string;
+    onPopupClosed?: () => void;
 };
 
 function isOverdue(dueDate: string | null | undefined, progress?: number | null) {
@@ -279,7 +281,8 @@ export default function TaskStatusPopup({
     filter,
     isPersonal,
     groupId,
-    currentUserId
+    currentUserId,
+    onPopupClosed
 }: TaskStatusPopupProps) {
     const locale = useLocale();
     const t = useTranslations("GroupTaskListPage");
@@ -288,6 +291,8 @@ export default function TaskStatusPopup({
     const [loading, setLoading] = React.useState(false);
     const [loadError, setLoadError] = React.useState<string | null>(null);
     const [rows, setRows] = React.useState<TaskRow[]>([]);
+    const [detailOpen, setDetailOpen] = React.useState(false);
+    const [detailTaskId, setDetailTaskId] = React.useState<string | null>(null);
     const [page, setPage] = React.useState(1);
     const [totalPages, setTotalPages] = React.useState(1);
     const [totalCount, setTotalCount] = React.useState(0);
@@ -353,6 +358,13 @@ export default function TaskStatusPopup({
             window.removeEventListener("keydown", onKeyDown);
         };
     }, [open, onClose]);
+
+    // Notify parent when popup closes (task may have been updated)
+    React.useEffect(() => {
+        if (!open && onPopupClosed) {
+            onPopupClosed();
+        }
+    }, [open, onPopupClosed]);
 
     // Reset when popup opens with new filter
     React.useEffect(() => {
@@ -483,6 +495,16 @@ export default function TaskStatusPopup({
     const title = filterTitles[filter] ?? "";
     const showPagination = !loading && loadError === null;
 
+    const openTaskDetail = (taskId: string) => {
+        setDetailTaskId(taskId);
+        setDetailOpen(true);
+    };
+
+    const closeTaskDetail = () => {
+        setDetailOpen(false);
+        setDetailTaskId(null);
+    };
+
     const paginationItems: Array<number | "..."> = React.useMemo(() => {
         if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
         const items: Array<number | "..."> = [1];
@@ -498,7 +520,10 @@ export default function TaskStatusPopup({
     if (!mounted) return null;
 
     return createPortal((
-        <AnimatePresence>
+        <>
+            <TaskDetailModal open={detailOpen} onClose={closeTaskDetail} taskId={detailTaskId} onSaved={refresh} />
+
+            <AnimatePresence>
             {open && (
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -688,12 +713,14 @@ export default function TaskStatusPopup({
                                                 : row.dueLabel;
 
                                             return (
-                                                <motion.div
+                                                <motion.button
+                                                    type="button"
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ duration: 0.22, delay: index * 0.02 }}
                                                     key={row.id}
-                                                    className="grid w-full grid-cols-8 gap-4 rounded-3xl border border-zinc-200/80 bg-linear-to-r from-white via-zinc-50/40 to-orange-50/20 px-5 py-5 text-center shadow-sm transition-[background-color,border-color,color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-zinc-300 hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+                                                    onClick={() => openTaskDetail(row.id)}
+                                                    className="grid w-full grid-cols-8 gap-4 rounded-3xl border border-zinc-200/80 bg-linear-to-r from-white via-zinc-50/40 to-orange-50/20 px-5 py-5 text-center shadow-sm transition-[background-color,border-color,color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-zinc-300 hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)] cursor-pointer">
                                                     {/* Title */}
                                                     <div className="flex items-center justify-center">
                                                         <p className="line-clamp-2 font-semibold text-[15px] text-zinc-900">
@@ -783,7 +810,7 @@ export default function TaskStatusPopup({
                                                         )}>
                                                         {dueDisplayLabel}
                                                     </div>
-                                                </motion.div>
+                                                </motion.button>
                                             );
                                         })}
                                     </div>
@@ -837,5 +864,6 @@ export default function TaskStatusPopup({
                 </motion.div>
             )}
         </AnimatePresence>
+        </>
     ), document.body);
 }
