@@ -2108,6 +2108,7 @@
     "allPriorities": "Tất cả độ ưu tiên",
     "selectSeverity": "Chọn độ nghiêm trọng",
     "selectPriority": "Chọn độ ưu tiên",
+    "advancedFilters": "Bộ lọc nâng cao",
     "overdueTasks": "Công việc quá hạn",
     "noAssignee": "Chưa giao việc",
     "noDueDate": "Chưa có hạn",
@@ -2200,6 +2201,7 @@
     "currentOverview": "Tổng quan hiện tại",
     "quantity": "Số lượng",
     "viewDetails": "Xem chi tiết",
+    "close": "Đóng",
     "overview": {
       "completedTitle": "Công việc đã hoàn thành",
       "completedDescription": "Hoàn thành {count}/{total}",
@@ -2269,7 +2271,8 @@
     "taskCountLabel": "công việc",
     "topGroup": "Nhóm hàng đầu",
     "viewDetails": "Xem chi tiết",
-    "overdue": "Quá hạn"
+    "overdue": "Quá hạn",
+    "progressDone": "Hoàn thành"
   },
   "HomePersonalTask": {
     "selectDate": "Chọn ngày",
@@ -2859,6 +2862,7 @@
     },
     "pagination": {
       "summary": "{count} mục • Trang {page}/{totalPages}",
+      "pageInfo": "Trang {page}/{totalPages} • {totalCount} mục",
       "previous": "Trước",
       "next": "Tiếp"
     },

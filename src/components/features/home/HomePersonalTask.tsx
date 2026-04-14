@@ -512,6 +512,10 @@ function DuePill({
 }) {
     if (done) return null;
 
+    const overdueFlameId = React.useId();
+    const overdueFlameOuterId = `${overdueFlameId}-overdue-flame-outer`;
+    const overdueFlameInnerId = `${overdueFlameId}-overdue-flame-inner`;
+
     return (
         <div
             className={cn(
@@ -522,23 +526,40 @@ function DuePill({
                 <Clock3 className="h-3.5 w-3.5 shrink-0" />
                 <div className="whitespace-nowrap font-semibold text-xs">{due}</div>
                 {overdue ? (
-                    <span title={t("overdue") || "Quá hạn"} className="shrink-0">
+                    <span
+                        title={t("overdue") || "Quá hạn"}
+                        className="inline-flex shrink-0 items-center justify-center">
                         <span className="sr-only">{t("overdue") || "Quá hạn"}</span>
-                        <svg
-                            viewBox="0 0 48 48"
-                            className="h-4 w-4"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true">
-                            <path
-                                d="M25.9 3.4c.4 5.4-2.2 9.6-6.2 13.6-3.5 3.5-7.2 7.4-7.2 13.4 0 8.3 6.3 14.2 14.7 14.2 8.7 0 14.8-6.1 14.8-14.3 0-7.1-4.9-11.7-8.6-15.7-2.9-3.1-5.4-6-5.9-10.7-.1-.8-.7-1.4-1.5-1.4-.7 0-1.4.4-1.4.9Z"
-                                fill="#FF5A7A"
-                            />
-                            <path
-                                d="M26.9 18.1c.2 3.1-1.2 5.5-3.4 7.8-1.9 2-4 4.3-4 7.8 0 5 3.7 8.4 8.7 8.4 5.2 0 8.8-3.7 8.8-8.5 0-4.1-2.8-6.9-5.1-9.3-1.8-1.9-3.4-3.7-3.6-6.5 0-.6-.5-1-1.1-1-.6 0-1.1.5-1.1 1.3Z"
-                                fill="#F21155"
-                            />
-                        </svg>
+                        <span className="relative inline-flex h-4 w-4 items-center justify-center">
+                            <span className="absolute inset-[-4px] rounded-full bg-[radial-gradient(circle,rgba(251,113,133,0.22)_0%,rgba(251,146,60,0.12)_38%,rgba(251,113,133,0)_74%)] blur-[2px]" />
+                            <svg
+                                viewBox="0 0 24 24"
+                                className="relative h-4 w-4 animate-[pulse_1.8s_ease-in-out_infinite] drop-shadow-[0_2px_8px_rgba(244,63,94,0.24)]"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden="true">
+                                <defs>
+                                    <linearGradient id={overdueFlameOuterId} x1="12" y1="3" x2="12" y2="21" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#FB923C" />
+                                        <stop offset="0.55" stopColor="#F97316" />
+                                        <stop offset="1" stopColor="#E11D48" />
+                                    </linearGradient>
+                                    <linearGradient id={overdueFlameInnerId} x1="12" y1="8" x2="12" y2="19" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#FFF7ED" />
+                                        <stop offset="0.45" stopColor="#FDBA74" />
+                                        <stop offset="1" stopColor="#FB7185" />
+                                    </linearGradient>
+                                </defs>
+                                <path
+                                    d="M12.4 2.8c.18 2.06-.65 3.72-1.96 5.07-1.31 1.34-2.88 2.81-2.88 5.17 0 3.69 2.72 6.16 6.22 6.16 3.66 0 6.22-2.61 6.22-6.18 0-2.87-1.9-4.79-3.43-6.45-1.18-1.28-2.21-2.43-2.47-4.05-.06-.36-.33-.64-.69-.64-.4 0-.72.35-.7.92Z"
+                                    fill={`url(#${overdueFlameOuterId})`}
+                                />
+                                <path
+                                    d="M13.12 9.1c.1 1.28-.42 2.29-1.23 3.25-.82.96-1.74 1.96-1.74 3.42 0 2.15 1.54 3.6 3.66 3.6 2.22 0 3.77-1.57 3.77-3.63 0-1.69-1.13-2.88-2.08-3.93-.73-.8-1.37-1.53-1.48-2.72-.03-.31-.24-.55-.53-.55-.27 0-.41.23-.37.56Z"
+                                    fill={`url(#${overdueFlameInnerId})`}
+                                />
+                            </svg>
+                        </span>
                     </span>
                 ) : null}
             </div>
@@ -1262,14 +1283,14 @@ function ColumnOverlay({ status, t }: { status: PersonalTaskStatusDto; t: (key: 
 
     return (
         <div className="min-w-[300px] max-w-[300px]">
-            <div className="rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,252,248,0.94),rgba(250,244,237,0.9))] shadow-[0_16px_38px_rgba(180,83,9,0.10)]">
-                <div className="rounded-t-[28px] bg-[linear-gradient(180deg,rgba(255,252,248,0.92),rgba(249,241,233,0.88))] px-4 pt-4 pb-3">
+            <div className="rounded-[28px] border border-[#E7DDD3] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,245,241,0.98))] shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
+                <div className="rounded-t-[28px] border-[#EFE6DD] border-b bg-[linear-gradient(180deg,rgba(248,244,240,0.98),rgba(241,236,231,0.96))] px-4 pt-4 pb-3">
                     <p className="truncate font-bold text-sm text-zinc-900">{status.statusName || t("untitledStatus")}</p>
-                    <p className="text-[11px] text-zinc-500">Đang di chuyển trạng thái…</p>
+                    <p className="text-[11px] text-zinc-600">Đang di chuyển trạng thái…</p>
                 </div>
 
                 <div className="px-3 pb-3">
-                    <div className="rounded-b-[28px] bg-transparent">
+                    <div className="rounded-b-[24px] bg-transparent pt-3">
                         {tasks.map((task) => (
                             <div key={String(task.taskId)} className="mb-2 last:mb-0">
                                 <div className="rounded-[24px] border border-white/85 bg-white/95 p-3 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
@@ -1281,7 +1302,7 @@ function ColumnOverlay({ status, t }: { status: PersonalTaskStatusDto; t: (key: 
                         ))}
 
                         {tasks.length === 0 ? (
-                            <div className="rounded-[24px] border border-zinc-300 border-dashed bg-white/95 px-3 py-8 text-center text-sm text-zinc-500">
+                            <div className="rounded-[24px] border border-[#D8D1CA] border-dashed bg-white/95 px-3 py-8 text-center text-sm text-zinc-500">
                                 (Trạng thái trống)
                             </div>
                         ) : null}
@@ -1381,7 +1402,7 @@ function ColumnView({
     }, [isEditing]);
 
     return (
-        <div className="rounded-[28px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,252,248,0.94),rgba(250,244,237,0.9))] shadow-[0_16px_38px_rgba(180,83,9,0.10)]">
+        <div className="rounded-[28px] border border-[#E7DDD3] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,245,241,0.98))] shadow-[0_16px_36px_rgba(15,23,42,0.08)]">
             <div
                 ref={(node) => headerDragProps?.setActivatorNodeRef?.(node as HTMLElement | null)}
                 data-no-pan="true"
@@ -1389,7 +1410,7 @@ function ColumnView({
                 {...(headerDragProps?.listeners ?? {})}
                 style={{ touchAction: "none" }}
                 className={cn(
-                    "sticky top-0 z-10 rounded-t-[28px] bg-[linear-gradient(180deg,rgba(255,252,248,0.92),rgba(249,241,233,0.88))] px-4 pt-4 pb-3",
+                    "sticky top-0 z-10 rounded-t-[28px] border-[#EFE6DD] border-b bg-[linear-gradient(180deg,rgba(248,244,240,0.98),rgba(241,236,231,0.96))] px-4 pt-4 pb-3",
                     "cursor-grab select-none active:cursor-grabbing"
                 )}>
                 <div className="flex items-center gap-3">
@@ -1443,7 +1464,7 @@ function ColumnView({
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2">
-                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-white/80 bg-white/90 px-2 font-semibold text-xs text-[#9A3412] shadow-sm">
+                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-[#D9D2CC] bg-white px-2 font-semibold text-xs text-zinc-700 shadow-sm">
                             {tasks.length}
                         </span>
 
@@ -1460,7 +1481,7 @@ function ColumnView({
                                     e.stopPropagation();
                                     setOpenMenu((v) => !v);
                                 }}
-                                className="grid h-8 w-8 place-items-center rounded-full text-zinc-500 transition hover:bg-white/80"
+                                className="grid h-8 w-8 place-items-center rounded-full text-zinc-500 transition hover:bg-white hover:text-zinc-700"
                                 aria-label={t("columnMenu")}>
                                 <MoreHorizontal className="h-5 w-5" />
                             </button>
@@ -1496,8 +1517,8 @@ function ColumnView({
                 <div
                     ref={setDroppableRef}
                     className={cn(
-                        "rounded-b-[28px] bg-transparent transition",
-                        isOver && "bg-[linear-gradient(180deg,rgba(255,247,237,0.75),rgba(255,237,213,0.55))]"
+                        "rounded-b-[24px] bg-transparent pt-3 transition",
+                        isOver && "bg-[linear-gradient(180deg,rgba(250,246,241,0.9),rgba(245,239,233,0.82))]"
                     )}>
                     <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
                         <div className="relative max-h-[68vh] space-y-2 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -1519,7 +1540,7 @@ function ColumnView({
                             )}
 
                             {tasks.length === 0 ? (
-                                <div className="rounded-xl border border-zinc-300 border-dashed bg-white px-3 py-8 text-center">
+                                <div className="rounded-xl border border-[#D8D1CA] border-dashed bg-white px-3 py-8 text-center">
                                     <div className="font-semibold text-sm text-zinc-700">
                                         {t("noTasksInStatus")}
                                     </div>
@@ -1531,7 +1552,7 @@ function ColumnView({
                                 ref={setEndRef}
                                 className={cn(
                                     "h-3 rounded-xl border border-dashed transition",
-                                    isOverEnd ? "border-blue-300 bg-blue-50/60" : "border-transparent"
+                                    isOverEnd ? "border-[#CFC7BF] bg-[#ECE7E2]" : "border-transparent"
                                 )}
                             />
                         </div>

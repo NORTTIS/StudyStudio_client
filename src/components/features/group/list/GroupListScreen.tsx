@@ -9,7 +9,6 @@ import {
     CheckCircle2,
     ListTodo,
     CalendarDays,
-    UserX,
     CalendarX
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -243,6 +242,12 @@ function mergeDropdownOptions(current: DropdownOption[], incoming: DropdownOptio
     return Array.from(merged.values());
 }
 
+function prioritizeUnassignedOption(options: DropdownOption[]) {
+    const unassignedOptions = options.filter((option) => option.value === "__unassigned__");
+    const assignedOptions = options.filter((option) => option.value !== "__unassigned__");
+    return [...unassignedOptions, ...assignedOptions];
+}
+
 function startOfLocalDay(date: Date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -362,9 +367,9 @@ function FilterChip({
                 "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border px-3.5 text-sm font-semibold transition-all duration-200",
                 active
                     ? activeTone === "red"
-                        ? "border-rose-200 bg-gradient-to-r from-rose-50 via-red-50 to-rose-100/80 text-rose-700 shadow-[0_10px_24px_rgba(244,63,94,0.14)]"
-                        : "border-orange-200 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-100/80 text-orange-700 shadow-[0_10px_24px_rgba(251,146,60,0.14)]"
-                    : "border-zinc-200/80 bg-white/90 text-zinc-700 shadow-[0_2px_10px_rgba(15,23,42,0.03)] hover:-translate-y-[1px] hover:border-orange-200 hover:bg-white hover:shadow-[0_10px_24px_rgba(251,146,60,0.10)]"
+                        ? "border-rose-200 bg-[linear-gradient(135deg,rgba(255,241,242,0.98),rgba(255,228,230,0.96))] text-rose-700 shadow-[0_12px_26px_rgba(244,63,94,0.15)]"
+                        : "border-orange-200 bg-[linear-gradient(135deg,rgba(255,247,237,0.98),rgba(254,243,199,0.96))] text-orange-700 shadow-[0_12px_26px_rgba(251,146,60,0.16)]"
+                    : "border-[#F0D9C8] bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,248,241,0.92))] text-zinc-700 shadow-[0_6px_18px_rgba(15,23,42,0.04)] hover:-translate-y-[1px] hover:border-orange-200 hover:bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(255,244,230,0.94))] hover:shadow-[0_12px_24px_rgba(251,146,60,0.10)]"
             )}>
             {icon ? <span className="flex shrink-0 items-center justify-center">{icon}</span> : null}
             <span className={cn("truncate text-center", labelClassName)}>{label}</span>
@@ -555,8 +560,8 @@ function FancyDropdown({
                 onClick={() => setOpen((current) => !current)}
                 className={cn(
                     "group flex h-12 w-full min-w-0 items-center justify-between gap-3 rounded-2xl border px-3.5 text-left outline-none transition-all duration-200",
-                    "border-zinc-200/80 bg-white/90 shadow-[0_2px_10px_rgba(15,23,42,0.03)]",
-                    "hover:-translate-y-[1px] hover:border-orange-200 hover:bg-white hover:shadow-[0_10px_24px_rgba(251,146,60,0.10)]",
+                    "border-[#ECD8C9] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(255,247,240,0.92))] shadow-[0_6px_18px_rgba(15,23,42,0.04)]",
+                    "hover:-translate-y-[1px] hover:border-orange-200 hover:bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(255,244,230,0.94))] hover:shadow-[0_12px_24px_rgba(251,146,60,0.10)]",
                     "focus:border-orange-300 focus:bg-white focus:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]"
                 )}>
                 <span className="flex min-w-0 items-center gap-2.5">
@@ -608,7 +613,7 @@ function FancyDropdown({
                             exit={{ opacity: 0, y: -4, scale: 0.98 }}
                             transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
                             style={dropdownStyle}
-                            className="z-[9999] overflow-hidden rounded-3xl border border-white/80 bg-white/95 shadow-[0_24px_60px_rgba(15,23,42,0.16)] backdrop-blur">
+                            className="z-[9999] overflow-hidden rounded-3xl border border-[#F2DDCE] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(255,247,241,0.96))] shadow-[0_24px_60px_rgba(15,23,42,0.16)] backdrop-blur">
                             <div className="max-h-[320px] overflow-y-auto p-2">
                                 {options.map((option) => {
                                     const isActive = option.value === value;
@@ -672,6 +677,7 @@ export function GroupListScreen() {
     const t = useTranslations("GroupTaskListPage");
     const allAssigneesLabel = t("allAssignees");
     const selectAssigneeLabel = t("selectAssignee");
+    const advancedFiltersLabel = t("advancedFilters");
 
     const params = useParams<{ groupId: string }>();
     const groupId = params?.groupId ? String(params.groupId) : "";
@@ -699,8 +705,8 @@ export function GroupListScreen() {
     const [overdueOnly, setOverdueOnly] = React.useState(false);
     const [completedOnly, setCompletedOnly] = React.useState(false);
     const [cardStatusFilter, setCardStatusFilter] = React.useState("all");
-    const [hasNoAssignee, setHasNoAssignee] = React.useState(false);
     const [hasNoDueDate, setHasNoDueDate] = React.useState(false);
+    const [showAdvancedFilters, setShowAdvancedFilters] = React.useState(false);
     const [filterOpen, setFilterOpen] = React.useState(false);
     const [draftDateFilter, setDraftDateFilter] = React.useState<DateFilterValues>({
         startDate: "",
@@ -717,27 +723,24 @@ export function GroupListScreen() {
     const [appliedSeverityFilter, setAppliedSeverityFilter] = React.useState("all");
     const [appliedPriorityFilter, setAppliedPriorityFilter] = React.useState("all");
     const [appliedOverdueOnly, setAppliedOverdueOnly] = React.useState(false);
+    const [appliedCompletedOnly, setAppliedCompletedOnly] = React.useState(false);
     const [appliedCardStatusFilter, setAppliedCardStatusFilter] = React.useState("all");
-    const [appliedHasNoAssignee, setAppliedHasNoAssignee] = React.useState(false);
     const [appliedHasNoDueDate, setAppliedHasNoDueDate] = React.useState(false);
 
-    // Apply all filters to API call (triggered by Enter or Apply Filter button)
-    const applyFilters = React.useCallback(() => {
+    React.useEffect(() => {
         setAppliedAssigneeFilter(assigneeFilter);
         setAppliedStatusFilter(statusFilter);
         setAppliedSeverityFilter(severityFilter);
         setAppliedPriorityFilter(priorityFilter);
         setAppliedOverdueOnly(overdueOnly);
-        // When "Progress Done" is active, set cardStatusFilter to "completed" via the same API param
+        setAppliedCompletedOnly(completedOnly);
         setAppliedCardStatusFilter(completedOnly ? "completed" : cardStatusFilter);
-        setAppliedHasNoAssignee(hasNoAssignee);
         setAppliedHasNoDueDate(hasNoDueDate);
-        setAppliedDateFilter(draftDateFilter);
         const normalizedSearch = searchInput.trim();
         setSearchKeyword(normalizedSearch);
         setAppliedSearchKeyword(normalizedSearch);
         setPage(1);
-    }, [assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly, completedOnly, cardStatusFilter, hasNoAssignee, hasNoDueDate, draftDateFilter, searchInput]);
+    }, [assigneeFilter, statusFilter, severityFilter, priorityFilter, overdueOnly, completedOnly, cardStatusFilter, hasNoDueDate, searchInput]);
 
     const refresh = React.useCallback(async () => {
         if (!groupId) {
@@ -772,7 +775,7 @@ export function GroupListScreen() {
                 dueDateFrom: appliedDateFilter.startDate ? formatDateForApi(appliedDateFilter.startDate) : undefined,
                 dueDateTo: appliedDateFilter.dueDate ? formatDueDateForApi(appliedDateFilter.dueDate) : undefined,
                 statusCategory: appliedCardStatusFilter !== "all" ? appliedCardStatusFilter : undefined,
-                hasNoAssignee: appliedAssigneeFilter === "__unassigned__" || appliedHasNoAssignee ? true : undefined,
+                hasNoAssignee: appliedAssigneeFilter === "__unassigned__" ? true : undefined,
                 hasNoDueDate: appliedHasNoDueDate || undefined,
                 overdue: appliedOverdueOnly || undefined,
                 sortBy: "createdAt",
@@ -830,11 +833,17 @@ export function GroupListScreen() {
                 unassigned: row.assigneeId === "__unassigned__"
             }));
 
-            setStatusOptions(mergeStatusOptions([], nextStatuses));
-            setAssigneeOptions(mergeDropdownOptions([], nextAssignees));
-            setRows(nextRows);
-            setTotalCount(Number(data?.totalCount ?? 0));
-            setTotalPages(Math.max(1, Number(data?.totalPages ?? 1)));
+            const visibleRows = nextRows.filter((row) => {
+                if (appliedCompletedOnly && row.progress < 100) return false;
+                if (appliedOverdueOnly && !isOverdueTask(row.dueDate, row.progress)) return false;
+                return true;
+            });
+
+            setStatusOptions((prev) => mergeStatusOptions(prev, nextStatuses));
+            setAssigneeOptions((prev) => prioritizeUnassignedOption(mergeDropdownOptions(prev, nextAssignees)));
+            setRows(visibleRows);
+            setTotalCount(visibleRows.length);
+            setTotalPages(Math.max(1, Math.ceil(visibleRows.length / pageSize)));
         } catch (e: unknown) {
             setLoadError(e instanceof Error ? e.message : t("cannotLoad"));
         } finally {
@@ -849,8 +858,8 @@ export function GroupListScreen() {
         appliedAssigneeFilter,
         appliedPriorityFilter,
         appliedSeverityFilter,
+        appliedCompletedOnly,
         appliedCardStatusFilter,
-        appliedHasNoAssignee,
         appliedHasNoDueDate,
         appliedOverdueOnly,
         page,
@@ -861,6 +870,11 @@ export function GroupListScreen() {
     React.useEffect(() => {
         void refresh();
     }, [refresh]);
+
+    React.useEffect(() => {
+        setStatusOptions([]);
+        setAssigneeOptions([]);
+    }, [groupId]);
 
     React.useEffect(() => {
         if (page > totalPages) {
@@ -885,9 +899,8 @@ export function GroupListScreen() {
         Number(appliedSeverityFilter !== "all") +
         Number(appliedPriorityFilter !== "all") +
         Number(appliedOverdueOnly) +
-        Number(completedOnly) +
-        Number(appliedCardStatusFilter !== "all") +
-        Number(appliedHasNoAssignee) +
+        Number(appliedCompletedOnly) +
+        Number(appliedCardStatusFilter !== "all" && !(appliedCompletedOnly && appliedCardStatusFilter === "completed")) +
         Number(appliedHasNoDueDate) +
         Number(Boolean(appliedDateFilter.startDate || appliedDateFilter.dueDate)) +
         Number(Boolean(appliedSearchKeyword));
@@ -913,7 +926,6 @@ export function GroupListScreen() {
         setOverdueOnly(false);
         setCompletedOnly(false);
         setCardStatusFilter("all");
-        setHasNoAssignee(false);
         setHasNoDueDate(false);
         setDraftDateFilter({ startDate: "", dueDate: "" });
         // Reset applied filters
@@ -922,8 +934,8 @@ export function GroupListScreen() {
         setAppliedSeverityFilter("all");
         setAppliedPriorityFilter("all");
         setAppliedOverdueOnly(false);
+        setAppliedCompletedOnly(false);
         setAppliedCardStatusFilter("all");
-        setAppliedHasNoAssignee(false);
         setAppliedHasNoDueDate(false);
         setAppliedDateFilter({ startDate: "", dueDate: "" });
         setPage(1);
@@ -939,31 +951,43 @@ export function GroupListScreen() {
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                        className="relative overflow-hidden rounded-[32px] border border-white/70 bg-gradient-to-br from-white via-white to-orange-50/40 p-4 shadow-[0_10px_35px_rgba(15,23,42,0.06)] backdrop-blur sm:p-5">
-                        <div className="pointer-events-none absolute -top-10 -right-10 h-36 w-36 rounded-full bg-orange-200/20 blur-3xl" />
-                        <div className="pointer-events-none absolute -bottom-8 left-1/3 h-28 w-28 rounded-full bg-amber-200/20 blur-3xl" />
+                        className="relative overflow-hidden rounded-[32px] border border-[#F2DECF] bg-[linear-gradient(145deg,rgba(255,250,245,0.96)_0%,rgba(255,244,235,0.93)_48%,rgba(255,239,227,0.92)_100%)] p-4 shadow-[0_18px_48px_rgba(180,83,9,0.10)] backdrop-blur sm:p-5">
+                        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-orange-200/30 blur-3xl" />
+                        <div className="pointer-events-none absolute -bottom-8 left-1/3 h-32 w-32 rounded-full bg-amber-200/30 blur-3xl" />
+                        <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
 
-                        <div className="relative space-y-3">
-                            <div className="flex items-center justify-end gap-2">
+                        <div className="relative space-y-4">
+                            <div className="flex justify-end">
                                 {activeFilterCount > 0 ? (
                                     <button
                                         type="button"
                                         onClick={clearAllFilters}
-                                        className="rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50">
+                                        className="rounded-2xl border border-[#EBCFBE] bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,246,238,0.92))] px-4 py-2 text-sm font-semibold text-[#8A4B22] shadow-[0_8px_20px_rgba(180,83,9,0.08)] transition hover:bg-[linear-gradient(135deg,rgba(255,250,245,0.98),rgba(255,241,230,0.96))]">
                                         {t("clearFilter")}
                                     </button>
                                 ) : null}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        applyFilters();
-                                    }}
-                                    className="rounded-2xl bg-orange-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600">
-                                    {t("applyFilter")}
-                                </button>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                            <div className="grid grid-cols-1 gap-3 xl:grid-cols-[auto_minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                    aria-label={advancedFiltersLabel}
+                                    title={advancedFiltersLabel}
+                                    className={cn(
+                                        "inline-flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-all duration-200",
+                                        showAdvancedFilters
+                                            ? "border-orange-300 bg-orange-500 text-white shadow-[0_12px_26px_rgba(249,115,22,0.24)] hover:bg-orange-600"
+                                            : "border-orange-200 bg-orange-50/90 text-orange-600 hover:border-orange-300 hover:bg-orange-100"
+                                    )}>
+                                    <ChevronDown
+                                        className={cn(
+                                            "h-4 w-4 transition-transform duration-200",
+                                            showAdvancedFilters && "rotate-180"
+                                        )}
+                                    />
+                                </button>
+
                                 <label className="group relative min-w-0">
                                     <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-zinc-400 transition group-focus-within:text-orange-500" />
                                     <input
@@ -971,14 +995,8 @@ export function GroupListScreen() {
                                         onChange={(e) => {
                                             setSearchInput(e.target.value);
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                e.preventDefault();
-                                                applyFilters();
-                                            }
-                                        }}
                                         placeholder={t("searchPlaceholder")}
-                                        className="h-12 w-full rounded-2xl border border-zinc-200/80 bg-white/90 py-0 pr-4 pl-10 text-sm text-zinc-800 outline-none shadow-[0_2px_10px_rgba(15,23,42,0.03)] transition-all duration-200 placeholder:text-zinc-400 focus:border-orange-300 focus:bg-white focus:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]"
+                                        className="h-12 w-full rounded-2xl border border-[#ECD8C9] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(255,247,240,0.92))] py-0 pr-4 pl-10 text-sm text-zinc-800 outline-none shadow-[0_6px_18px_rgba(15,23,42,0.04)] transition-all duration-200 placeholder:text-zinc-400 focus:border-orange-300 focus:bg-white focus:shadow-[0_0_0_4px_rgba(251,146,60,0.12)]"
                                     />
                                 </label>
 
@@ -1007,47 +1025,21 @@ export function GroupListScreen() {
                                     emptyLabel={t("selectStatusPlaceholder")}
                                 />
 
-                                <FancyDropdown
-                                    value={severityFilter}
-                                    options={[
-                                        { value: "all", label: t("allSeverities") },
-                                        { value: "0", label: t("minor"), textClassName: severityFilterTone("0") },
-                                        { value: "1", label: t("moderate"), textClassName: severityFilterTone("1") },
-                                        { value: "2", label: t("major"), textClassName: severityFilterTone("2") },
-                                        { value: "3", label: t("critical"), textClassName: severityFilterTone("3") }
-                                    ]}
-                                    onChange={(nextValue) => {
-                                        setSeverityFilter(nextValue);
-                                    }}
-                                    ariaLabel={t("selectSeverity")}
-                                    emptyValue="all"
-                                    emptyLabel={t("selectSeverity")}
-                                />
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-                                <FancyDropdown
-                                    value={priorityFilter}
-                                    options={[
-                                        { value: "all", label: t("allPriorities") },
-                                        { value: "0", label: t("low"), textClassName: priorityFilterTone("0") },
-                                        { value: "1", label: t("medium"), textClassName: priorityFilterTone("1") },
-                                        { value: "2", label: t("high"), textClassName: priorityFilterTone("2") }
-                                    ]}
-                                    onChange={(nextValue) => {
-                                        setPriorityFilter(nextValue);
-                                    }}
-                                    ariaLabel={t("selectPriority")}
-                                    emptyValue="all"
-                                    emptyLabel={t("selectPriority")}
-                                />
-
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                                 <FilterChip
                                     active={overdueOnly}
                                     onClick={() => {
                                         setOverdueOnly((v) => {
                                             const nextValue = !v;
-                                            if (nextValue) setCompletedOnly(false);
+                                            setAppliedOverdueOnly(nextValue);
+                                            if (nextValue) {
+                                                setCompletedOnly(false);
+                                                setAppliedCompletedOnly(false);
+                                                setCardStatusFilter("all");
+                                                setAppliedCardStatusFilter("all");
+                                            }
                                             return nextValue;
                                         });
                                         setPage(1);
@@ -1067,7 +1059,13 @@ export function GroupListScreen() {
                                     onClick={() => {
                                         setCompletedOnly((v) => {
                                             const nextValue = !v;
-                                            if (nextValue) setOverdueOnly(false);
+                                            setAppliedCompletedOnly(nextValue);
+                                            setCardStatusFilter(nextValue ? "completed" : "all");
+                                            setAppliedCardStatusFilter(nextValue ? "completed" : "all");
+                                            if (nextValue) {
+                                                setOverdueOnly(false);
+                                                setAppliedOverdueOnly(false);
+                                            }
                                             return nextValue;
                                         });
                                         setPage(1);
@@ -1083,36 +1081,12 @@ export function GroupListScreen() {
 
                                 <FilterChip
                                     active={Boolean(appliedDateFilterLabel)}
-                                    onClick={() => setFilterOpen(true)}
+                                    onClick={() => {
+                                        setDraftDateFilter(appliedDateFilter);
+                                        setFilterOpen(true);
+                                    }}
                                     label={appliedDateFilterLabel || t("dateFilterButton")}
                                     icon={<CalendarDays className="h-4 w-4" />}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-                                <FancyDropdown
-                                    value={cardStatusFilter}
-                                    options={[
-                                        { value: "all", label: t("allStatuses") },
-                                        { value: "notstarted", label: t("toDo") },
-                                        { value: "inprogress", label: t("inProgress") },
-                                        { value: "completed", label: t("completed") }
-                                    ]}
-                                    onChange={(nextValue) => {
-                                        setCardStatusFilter(nextValue);
-                                    }}
-                                    ariaLabel={t("selectCardStatus")}
-                                    emptyValue="all"
-                                    emptyLabel={t("allStatuses")}
-                                />
-
-                                <FilterChip
-                                    active={hasNoAssignee}
-                                    onClick={() => {
-                                        setHasNoAssignee((v) => !v);
-                                    }}
-                                    label={t("noAssignee")}
-                                    icon={<UserX className="h-4 w-4" />}
                                 />
 
                                 <FilterChip
@@ -1124,6 +1098,74 @@ export function GroupListScreen() {
                                     icon={<CalendarX className="h-4 w-4" />}
                                 />
                             </div>
+
+                            <AnimatePresence initial={false}>
+                                {showAdvancedFilters ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0, y: -6 }}
+                                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                                        exit={{ opacity: 0, height: 0, y: -6 }}
+                                        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                                        className="overflow-hidden">
+                                        <div className="rounded-[28px] border border-[#EBCFBE] bg-[linear-gradient(145deg,rgba(255,252,248,0.96),rgba(255,243,233,0.92))] p-3 shadow-[0_14px_32px_rgba(180,83,9,0.08)]">
+                                            <div className="mb-3 px-1">
+                                                <p className="font-semibold text-sm text-[#9A5627]">{advancedFiltersLabel}</p>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                                <FancyDropdown
+                                                    value={severityFilter}
+                                                    options={[
+                                                        { value: "all", label: t("allSeverities") },
+                                                        { value: "0", label: t("minor"), textClassName: severityFilterTone("0") },
+                                                        { value: "1", label: t("moderate"), textClassName: severityFilterTone("1") },
+                                                        { value: "2", label: t("major"), textClassName: severityFilterTone("2") },
+                                                        { value: "3", label: t("critical"), textClassName: severityFilterTone("3") }
+                                                    ]}
+                                                    onChange={(nextValue) => {
+                                                        setSeverityFilter(nextValue);
+                                                    }}
+                                                    ariaLabel={t("selectSeverity")}
+                                                    emptyValue="all"
+                                                    emptyLabel={t("selectSeverity")}
+                                                />
+
+                                                <FancyDropdown
+                                                    value={priorityFilter}
+                                                    options={[
+                                                        { value: "all", label: t("allPriorities") },
+                                                        { value: "0", label: t("low"), textClassName: priorityFilterTone("0") },
+                                                        { value: "1", label: t("medium"), textClassName: priorityFilterTone("1") },
+                                                        { value: "2", label: t("high"), textClassName: priorityFilterTone("2") }
+                                                    ]}
+                                                    onChange={(nextValue) => {
+                                                        setPriorityFilter(nextValue);
+                                                    }}
+                                                    ariaLabel={t("selectPriority")}
+                                                    emptyValue="all"
+                                                    emptyLabel={t("selectPriority")}
+                                                />
+
+                                                <FancyDropdown
+                                                    value={cardStatusFilter}
+                                                    options={[
+                                                        { value: "all", label: t("allStatuses") },
+                                                        { value: "notstarted", label: t("toDo") },
+                                                        { value: "inprogress", label: t("inProgress") },
+                                                        { value: "completed", label: t("completed") }
+                                                    ]}
+                                                    onChange={(nextValue) => {
+                                                        setCardStatusFilter(nextValue);
+                                                    }}
+                                                    ariaLabel={t("selectCardStatus")}
+                                                    emptyValue="all"
+                                                    emptyLabel={t("allStatuses")}
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ) : null}
+                            </AnimatePresence>
                         </div>
                     </motion.div>
 
@@ -1291,7 +1333,10 @@ export function GroupListScreen() {
                 values={draftDateFilter}
                 t={t}
                 onChange={(patch) => setDraftDateFilter((prev) => ({ ...prev, ...patch }))}
-                onClose={() => setFilterOpen(false)}
+                onClose={() => {
+                    setDraftDateFilter(appliedDateFilter);
+                    setFilterOpen(false);
+                }}
                 onClear={() => {
                     const emptyFilter = {
                         startDate: "",

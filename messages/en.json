@@ -2029,6 +2029,7 @@
     "allPriorities": "All priorities",
     "selectSeverity": "Select severity",
     "selectPriority": "Select priority",
+    "advancedFilters": "Advanced filters",
     "overdueTasks": "Overdue tasks",
     "noAssignee": "Unassigned",
     "noDueDate": "No deadline",
@@ -2121,6 +2122,7 @@
     "currentOverview": "Current overview",
     "quantity": "Quantity",
     "viewDetails": "View details",
+    "close": "Close",
     "overview": {
       "completedTitle": "Completed tasks",
       "completedDescription": "Completed {count}/{total}",
@@ -2190,7 +2192,8 @@
     "taskCountLabel": "tasks",
     "topGroup": "Top group",
     "viewDetails": "View details",
-    "overdue": "Overdue"
+    "overdue": "Overdue",
+    "progressDone": "Done"
   },
   "HomePersonalTask": {
     "selectDate": "Select a date",
@@ -2780,6 +2783,7 @@
     },
     "pagination": {
       "summary": "{count} items • Page {page}/{totalPages}",
+      "pageInfo": "Page {page}/{totalPages} • {totalCount} items",
       "previous": "Previous",
       "next": "Next"
     },
