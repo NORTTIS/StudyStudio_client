@@ -2556,7 +2556,7 @@
       "daysAgo": "{count} ngày trước"
     },
     "heatmap": {
-      "title": "Bản đồ hoạt động thành viên",
+      "title": "Biểu đồ hoạt động thành viên",
       "subtitle": "Theo dõi hoạt động của {count} thành viên trong {period}",
       "week": "7 ngày qua",
       "month": "30 ngày qua",

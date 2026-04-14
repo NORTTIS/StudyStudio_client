@@ -8,7 +8,6 @@ import { usePathname } from "next/navigation";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import type {
-    DailyActivityPoint,
     GroupSummaryResponse,
     MemberHeatmapData,
     MemberProgressTrendData
@@ -317,7 +316,7 @@ function GroupActivityHeatmap({
     locale,
     t
 }: {
-    members: { id: string; name: string; activityByDate: DailyActivityPoint[] }[];
+    members: { id: string; name: string; activityByDate: Array<{ date: string; activityLevel: number; activityCount: number }> }[];
     range: HeatmapRangeFilter;
     anchorDate: Date;
     onPrev: () => void;
@@ -334,6 +333,67 @@ function GroupActivityHeatmap({
     locale: string;
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
+    const [infoOpen, setInfoOpen] = React.useState(false);
+    const infoButtonRef = React.useRef<HTMLButtonElement | null>(null);
+    const infoCloseTimerRef = React.useRef<number | null>(null);
+    const [infoTooltipPos, setInfoTooltipPos] = React.useState<{ top: number; left: number } | null>(null);
+
+    const clearInfoCloseTimer = React.useCallback(() => {
+        if (infoCloseTimerRef.current) {
+            window.clearTimeout(infoCloseTimerRef.current);
+            infoCloseTimerRef.current = null;
+        }
+    }, []);
+
+    const openInfoTooltip = React.useCallback(() => {
+        clearInfoCloseTimer();
+        setInfoOpen(true);
+    }, [clearInfoCloseTimer]);
+
+    const scheduleCloseInfoTooltip = React.useCallback(() => {
+        clearInfoCloseTimer();
+        infoCloseTimerRef.current = window.setTimeout(() => {
+            setInfoOpen(false);
+            infoCloseTimerRef.current = null;
+        }, 120);
+    }, [clearInfoCloseTimer]);
+
+    React.useEffect(() => {
+        return () => {
+            clearInfoCloseTimer();
+        };
+    }, [clearInfoCloseTimer]);
+
+    const updateInfoTooltipPosition = React.useCallback(() => {
+        if (!infoButtonRef.current) return;
+        const rect = infoButtonRef.current.getBoundingClientRect();
+        const panelWidth = 320;
+        const viewportPadding = 12;
+        const left = Math.min(
+            Math.max(viewportPadding, rect.left),
+            window.innerWidth - panelWidth - viewportPadding
+        );
+        setInfoTooltipPos({
+            top: rect.bottom + 8,
+            left
+        });
+    }, []);
+
+    React.useEffect(() => {
+        if (!infoOpen) return;
+
+        updateInfoTooltipPosition();
+
+        const handleReposition = () => updateInfoTooltipPosition();
+        window.addEventListener("resize", handleReposition);
+        window.addEventListener("scroll", handleReposition, true);
+
+        return () => {
+            window.removeEventListener("resize", handleReposition);
+            window.removeEventListener("scroll", handleReposition, true);
+        };
+    }, [infoOpen, updateInfoTooltipPosition]);
+
     const { start, end } = React.useMemo(() => {
         return range === "week" ? getWeekRange(anchorDate) : getMonthRange(anchorDate);
     }, [anchorDate, range]);
@@ -353,7 +413,65 @@ function GroupActivityHeatmap({
         <div className="rounded-[26px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
             <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
+                <div className="flex items-center gap-2">
                     <h2 className="font-semibold text-lg text-slate-900">{t("heatmap.title")}</h2>
+                    <div className="relative">
+                        <button
+                            ref={infoButtonRef}
+                            type="button"
+                            onMouseEnter={openInfoTooltip}
+                            onMouseLeave={scheduleCloseInfoTooltip}
+                            onFocus={openInfoTooltip}
+                            onBlur={scheduleCloseInfoTooltip}
+                            className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-500 text-xs font-bold transition-all duration-200 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600">
+                            ?
+                        </button>
+                        {infoOpen && (
+                            createPortal(
+                                <div
+                                    className="fixed z-[220] w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_40px_rgba(15,23,42,0.18)]"
+                                    style={{
+                                        top: infoTooltipPos?.top ?? 12,
+                                        left: infoTooltipPos?.left ?? 12
+                                    }}
+                                    onMouseEnter={openInfoTooltip}
+                                    onMouseLeave={scheduleCloseInfoTooltip}>
+                                    <h3 className="mb-2 font-semibold text-slate-800 text-sm">Cách tính điểm Activity</h3>
+                                    <div className="mb-3 space-y-1.5 text-xs text-slate-600">
+                                        <p><span className="font-medium">Task hoàn thành:</span> 10 × Priority × Severity (10–40 điểm)</p>
+                                        <p><span className="font-medium">Task tạo mới:</span> 3 điểm (flat)</p>
+                                        <p><span className="font-medium">Task cập nhật:</span> 1 điểm (flat)</p>
+                                        <p><span className="font-medium">Tin nhắn / Bình luận:</span> 1 điểm (flat)</p>
+                                    </div>
+                                    <h3 className="mb-2 font-semibold text-slate-800 text-sm">Mức Activity Level</h3>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-3.5 w-3.5 rounded-[4px] bg-[#ecfdf3]" />
+                                            <span className="text-slate-600 text-sm"><strong>Level 0</strong> — 0 activity</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-3.5 w-3.5 rounded-[4px] bg-[#d1fadf]" />
+                                            <span className="text-slate-600 text-sm"><strong>Level 1</strong> — 1–5 points</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-3.5 w-3.5 rounded-[4px] bg-[#73e2a3]" />
+                                            <span className="text-slate-600 text-sm"><strong>Level 2</strong> — 6–15 points</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-3.5 w-3.5 rounded-[4px] bg-[#16a34a]" />
+                                            <span className="text-slate-600 text-sm"><strong>Level 3</strong> — 16–30 points</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-3.5 w-3.5 rounded-[4px] bg-[#166534]" />
+                                            <span className="text-slate-600 text-sm"><strong>Level 4</strong> — 31+ points</span>
+                                        </div>
+                                    </div>
+                                </div>,
+                                document.body
+                            )
+                        )}
+                    </div>
+                </div>
                     <p className="mt-1 text-slate-500 text-sm">
                         {t("heatmap.subtitle", {
                             count: members.length,
@@ -552,11 +670,12 @@ function GroupActivityHeatmap({
                                         const dateKey = formatDateLocal(date);
                                         const activityPoint = member.activityByDate.find((p) => p.date === dateKey);
                                         const value = activityPoint?.activityLevel ?? 0;
+                                        const count = activityPoint?.activityCount ?? 0;
 
                                         return (
                                             <motion.div
                                                 key={`${member.id}-${dateKey}`}
-                                                title={`${member.name} • ${dateKey}: Level ${value}`}
+                                                title={`${member.name} • ${dateKey}: ${count} points (Level ${value})`}
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{
@@ -686,7 +805,6 @@ function MemberProgressCard({
                     <Layers3 className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                     <h3 className="truncate font-semibold text-[14px] text-slate-900">{member.name}</h3>
                 </div>
-                <div className={cn("shrink-0 font-medium text-[12px]", status.textClass)}>{status.label}</div>
             </div>
 
             <div className="mb-2.5 flex items-center gap-2.5">
@@ -816,12 +934,11 @@ function TeamMemberProgressSection({
     return (
         <>
             <section className="rounded-[24px] border border-white/70 bg-white/85 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-5">
-                <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="mb-4">
                     <div>
                         <h2 className="font-semibold text-lg text-slate-900">{t("memberProgress.title")}</h2>
                         <p className="mt-1 text-slate-500 text-sm">{t("memberProgress.subtitle")}</p>
                     </div>
-                    <ProgressLegend t={t} />
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -1196,19 +1313,19 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
 
         async function loadTrend() {
             try {
-                const end = trendAnchorDate;
-                const start = new Date(end);
-                if (trendFilter === "week") {
-                    start.setDate(end.getDate() - 7);
-                } else if (trendFilter === "month") {
-                    start.setMonth(end.getMonth() - 1);
-                } else {
-                    start.setFullYear(end.getFullYear() - 1);
-                }
+                const { start, end } =
+                    trendFilter === "week"
+                        ? getWeekRange(trendAnchorDate)
+                        : trendFilter === "month"
+                          ? getMonthRange(trendAnchorDate)
+                          : {
+                                start: new Date(trendAnchorDate.getFullYear(), 0, 1),
+                                end: new Date(trendAnchorDate.getFullYear(), 11, 31)
+                            };
 
                 const res = await getGroupTrend(groupId, {
-                    startDate: start.toISOString().slice(0, 10),
-                    endDate: end.toISOString().slice(0, 10),
+                    startDate: formatDateLocal(start),
+                    endDate: formatDateLocal(end),
                     memberIds: selectedTrendMembers.length > 0 ? selectedTrendMembers : undefined
                 });
 
@@ -1237,17 +1354,12 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
 
         async function loadHeatmap() {
             try {
-                const end = heatmapAnchorDate;
-                const start = new Date(end);
-                if (heatmapRange === "week") {
-                    start.setDate(end.getDate() - 7);
-                } else {
-                    start.setMonth(end.getMonth() - 1);
-                }
+                const { start, end } =
+                    heatmapRange === "week" ? getWeekRange(heatmapAnchorDate) : getMonthRange(heatmapAnchorDate);
 
                 const res = await getGroupHeatmap(groupId, {
-                    startDate: start.toISOString().slice(0, 10),
-                    endDate: end.toISOString().slice(0, 10)
+                    startDate: formatDateLocal(start),
+                    endDate: formatDateLocal(end)
                 });
 
                 if (!isMounted) return;
@@ -1512,10 +1624,11 @@ export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
             activityByDate:
                 member.activityByDate?.map((p) => ({
                     date: typeof p.date === "string" ? p.date : formatDateLocal(new Date(p.date as unknown as string)),
-                    activityLevel: p.activityLevel ?? 0
+                    activityLevel: p.activityLevel ?? 0,
+                    activityCount: p.activityCount ?? 0
                 })) ?? []
         }));
-    }, [summary]);
+    }, [heatmapData]);
 
     const filteredHeatmapMembers = React.useMemo(() => {
         if (selectedHeatmapMembers.length === 0) {

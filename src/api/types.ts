@@ -7655,6 +7655,8 @@ export interface components {
         };
         DailyActivityPoint: {
             /** Format: int32 */
+            activityCount?: number;
+            /** Format: int32 */
             activityLevel?: number;
             /** Format: date */
             date?: string;
