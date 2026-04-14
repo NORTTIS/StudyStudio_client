@@ -1919,6 +1919,7 @@ export interface paths {
             parameters: {
                 query?: {
                     endDate?: string;
+                    memberIds?: string[];
                     startDate?: string;
                 };
                 header?: never;
@@ -4320,6 +4321,7 @@ export interface paths {
                     dueDateTo?: string;
                     hasNoAssignee?: boolean;
                     hasNoDueDate?: boolean;
+                    overdue?: boolean;
                     page?: number;
                     pageSize?: number;
                     priority?: components["schemas"]["TaskPriority"];
@@ -7996,6 +7998,7 @@ export interface components {
             totalGroups?: number;
         };
         GroupSummaryResponse: {
+            groupTaskBreakdown?: components["schemas"]["GroupTaskBreakdownData"];
             memberActivitySummary?: components["schemas"]["MemberActivitySummary"][] | null;
             memberContribution?: components["schemas"]["MemberContributionData"][] | null;
             memberTaskBreakdown?: components["schemas"]["MemberTaskBreakdownData"][] | null;
@@ -8005,6 +8008,22 @@ export interface components {
             data?: components["schemas"]["GroupSummaryResponse"];
             message?: string | null;
             status?: string | null;
+        };
+        GroupTaskBreakdownData: {
+            /** Format: int32 */
+            doneTasks?: number;
+            /** Format: int32 */
+            inProgressOverdueTasks?: number;
+            /** Format: int32 */
+            inProgressTasks?: number;
+            /** Format: int32 */
+            overdueTasks?: number;
+            /** Format: int32 */
+            todoOverdueTasks?: number;
+            /** Format: int32 */
+            todoTasks?: number;
+            /** Format: int32 */
+            totalTasks?: number;
         };
         GroupTaskItemResponse: {
             assignees?: components["schemas"]["UserDto"][] | null;
@@ -8315,11 +8334,15 @@ export interface components {
             /** Format: int32 */
             doneTasks?: number;
             /** Format: int32 */
+            inProgressOverdueTasks?: number;
+            /** Format: int32 */
             inProgressTasks?: number;
             /** Format: int32 */
             messagesSent?: number;
             /** Format: int32 */
             overdueTasks?: number;
+            /** Format: int32 */
+            todoOverdueTasks?: number;
             /** Format: int32 */
             todoTasks?: number;
             /** Format: int32 */

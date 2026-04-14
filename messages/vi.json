@@ -8,7 +8,20 @@
     "inviteCreateFailed": "Tạo link thất bại",
     "inviteByEmailFailed": "Mời thành viên thất bại",
     "members": "thành viên",
-    "addMember": "Thêm thành viên"
+    "addMember": "Thêm thành viên",
+    "tabs": {
+      "analytic": "Phân tích",
+      "board": "Bảng",
+      "calendar": "Lịch",
+      "discuss": "Thảo luận",
+      "documents": "Tài liệu",
+      "list": "Danh sách",
+      "setting": "Cài đặt",
+      "trashed": "Thùng rác"
+    },
+    "errors": {
+      "fetchDetailFailed": "Tải thông tin thất bại"
+    }
   },
   "Announcements": {
     "title": "Thông báo",
@@ -2043,7 +2056,20 @@
     "leaving": "Đang rời...",
     "createdBy": "Tạo bởi",
     "members": "thành viên",
-    "tasks": "công việc"
+    "tasks": "công việc",
+    "tabs": {
+      "analytic": "Phân tích",
+      "board": "Bảng",
+      "calendar": "Lịch",
+      "discuss": "Thảo luận",
+      "documents": "Tài liệu",
+      "list": "Danh sách",
+      "setting": "Cài đặt",
+      "trashed": "Thùng rác"
+    },
+    "errors": {
+      "fetchDetailFailed": "Tải thông tin nhóm thất bại"
+    }
   },
   "UsageBar": {
     "limitReached": "Đã đầy nhóm",
@@ -2127,7 +2153,15 @@
     "moderate": "Vừa",
     "major": "Lớn",
     "critical": "Khẩn cấp",
-    "progressDone": "Hoàn thành"
+    "progressDone": "Hoàn thành",
+    "tasks": "công việc",
+    "progress": "Tiến độ",
+    "taskStatus": {
+      "todo": "Cần làm",
+      "inProgress": "Đang thực hiện",
+      "done": "Hoàn thành",
+      "overdue": "Quá hạn"
+    }
   },
   "GroupTaskDeepLinkPage": {
     "loadingTitle": "Đang tải công việc",
@@ -2149,6 +2183,7 @@
     "badge": "Tổng quan công việc",
     "heroPill": "Tổng quan",
     "title": "Tổng quan công việc",
+    "close": "Đóng",
     "calendar": "Lịch",
     "detailedBadge": "Thống kê chi tiết",
     "detailsTitle": "Chi tiết thống kê",
@@ -2180,6 +2215,7 @@
     "ai": "AI"
   },
   "HomeTaskList": {
+    "progressDone": "Hoàn thành",
     "selectDate": "Chọn ngày",
     "today": "Hôm nay",
     "tomorrow": "Ngày mai",
@@ -2300,7 +2336,8 @@
     "title": "Công việc cá nhân",
     "createStatus": "Tạo trạng thái",
     "enterStatusName": "Nhập tên trạng thái",
-    "confirmDeleteTask": "Xác nhận xóa công việc"
+    "confirmDeleteTask": "Xác nhận xóa công việc",
+    "save": "Lưu"
   },
   "GroupStudioHeader": {
     "roles": {
@@ -2429,7 +2466,9 @@
     "confirmDeleteTask": "Xác nhận xóa công việc",
     "confirmDeleteTaskDesc": "Bạn có chắc chắn muốn xóa công việc \"{title}\" không?",
     "deleteTaskButton": "Xóa công việc",
-    "close": "Đóng"
+    "close": "Đóng",
+    "deleteStatusFailed": "Xóa trạng thái thất bại",
+    "retry": "Thử lại"
   },
   "TaskFormModal": {
     "priorityLow": "Thấp",
@@ -2507,7 +2546,8 @@
   },
   "GroupAnalyticPage": {
     "common": {
-      "tasks": "công việc"
+      "tasks": "công việc",
+      "loading": "Đang tải dữ liệu..."
     },
     "formatLastActivity": {
       "noActivity": "Chưa có hoạt động",
@@ -2526,6 +2566,12 @@
       },
       "updated": "Cập nhật"
     },
+    "memberFilter": {
+      "selectMembers": "Chọn thành viên",
+      "selectedMember": "1 thành viên",
+      "selected": "{count} thành viên",
+      "clearAll": "Bỏ chọn tất cả"
+    },
     "memberStatus": {
       "onTrack": "Đúng tiến độ",
       "needsAttention": "Cần chú ý",
@@ -2542,6 +2588,7 @@
     },
     "memberModal": {
       "taskProgress": "Tiến độ công việc",
+      "taskCount": "Đã hoàn thành {completed}/{total} công việc",
       "completePts": "Điểm hoàn thành",
       "createPts": "Điểm tạo mới",
       "updatePts": "Điểm cập nhật",
@@ -3193,5 +3240,11 @@
     }
   },
   "startDate": "Từ ngày",
-  "dueDate": "Đến ngày"
+  "dueDate": "Đến ngày",
+  "MemberDetailModal": {
+    "title": "Chi tiết thành viên",
+    "close": "Đóng",
+    "joinedGroups": "Nhóm đã tham gia",
+    "noJoinedGroups": "Chưa tham gia nhóm nào"
+  }
 }

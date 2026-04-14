@@ -16,6 +16,11 @@ import type {
 import { getGroupHeatmap, getGroupSummary, getGroupTrend } from "@/api/analytics";
 import { apiGet } from "@/api/api-client";
 import { Container } from "@/components/common";
+import TaskStatusPopup from "@/components/features/group/analytic/TaskStatusPopup";
+
+type Props = {
+    groupName?: string;
+};
 
 // ==================== Types ====================
 
@@ -191,7 +196,9 @@ async function getCurrentUserProfile(): Promise<UserProfileLike | null> {
     return res.data ?? null;
 }
 
-async function getCurrentUserRoleInGroup(groupId: string): Promise<GroupRole> {
+async function getCurrentUserRoleInGroup(
+    groupId: string
+): Promise<{ role: GroupRole; groupName: string }> {
     const [profileRes, membersRes] = await Promise.all([
         getCurrentUserProfile(),
         apiGet<GroupMemberListData>(`/group/${groupId}/members`)
@@ -207,7 +214,10 @@ async function getCurrentUserRoleInGroup(groupId: string): Promise<GroupRole> {
         normalizeRole(matchedMember?.role) ??
         normalizeRole(matchedMember?.groupRole) ??
         normalizeRole(matchedMember?.memberRole);
-    return role ?? "member";
+    return {
+        role: role ?? "member",
+        groupName: membersRes?.data?.groupName ?? ""
+    };
 }
 
 // ==================== Sub-components ====================
@@ -296,6 +306,14 @@ function GroupActivityHeatmap({
     onPrev,
     onNext,
     onChangeRange,
+    canFilterMembers,
+    memberOptions,
+    selectedMemberIds,
+    dropdownOpen,
+    onToggleDropdown,
+    onCloseDropdown,
+    onToggleMember,
+    onClearMembers,
     locale,
     t
 }: {
@@ -305,6 +323,14 @@ function GroupActivityHeatmap({
     onPrev: () => void;
     onNext: () => void;
     onChangeRange: (value: HeatmapRangeFilter) => void;
+    canFilterMembers: boolean;
+    memberOptions: Array<{ userId?: string | null; userName?: string | null }>;
+    selectedMemberIds: string[];
+    dropdownOpen: boolean;
+    onToggleDropdown: () => void;
+    onCloseDropdown: () => void;
+    onToggleMember: (memberId: string) => void;
+    onClearMembers: () => void;
     locale: string;
     t: (key: string, values?: Record<string, string | number>) => string;
 }) {
@@ -337,6 +363,8 @@ function GroupActivityHeatmap({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
+                    
+
                     <div className="inline-flex rounded-2xl bg-slate-100 p-1">
                         {[
                             { key: "week", label: t("heatmap.week") },
@@ -374,6 +402,105 @@ function GroupActivityHeatmap({
                             ›
                         </button>
                     </div>
+                    {canFilterMembers && memberOptions.length > 0 && (
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={onToggleDropdown}
+                                className={cn(
+                                    "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
+                                    selectedMemberIds.length > 0
+                                        ? "border-orange-500 bg-orange-500 text-white"
+                                        : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"
+                                )}>
+                                <Users className="h-4 w-4" />
+                                <span>
+                                    {selectedMemberIds.length > 0
+                                        ? t("memberFilter.selected", { count: selectedMemberIds.length })
+                                        : t("memberFilter.selectMembers")}
+                                </span>
+                                {selectedMemberIds.length > 0 && (
+                                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                                        {selectedMemberIds.length}
+                                    </span>
+                                )}
+                                <svg
+                                    className={cn(
+                                        "h-4 w-4 transition-transform duration-200",
+                                        dropdownOpen && "rotate-180"
+                                    )}
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {dropdownOpen && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-10"
+                                        onClick={onCloseDropdown}
+                                    />
+                                    <div className="absolute right-0 top-full z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                                        <div className="max-h-64 overflow-y-auto p-2">
+                                            {memberOptions.map((member) => {
+                                                const memberId = member.userId ?? "";
+                                                const isSelected = selectedMemberIds.includes(memberId);
+                                                return (
+                                                    <button
+                                                        key={memberId}
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onToggleMember(memberId);
+                                                        }}
+                                                        className={cn(
+                                                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition",
+                                                            isSelected
+                                                                ? "bg-orange-50 text-orange-600"
+                                                                : "text-slate-600 hover:bg-slate-50"
+                                                        )}>
+                                                        <div
+                                                            className={cn(
+                                                                "flex h-5 w-5 items-center justify-center rounded-md border-2 transition",
+                                                                isSelected
+                                                                    ? "border-orange-500 bg-orange-500"
+                                                                    : "border-slate-300"
+                                                            )}>
+                                                            {isSelected && (
+                                                                <svg
+                                                                    className="h-3 w-3 text-white"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            )}
+                                                        </div>
+                                                        <span className="flex-1 truncate font-medium">{member.userName}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        {selectedMemberIds.length > 0 && (
+                                            <div className="border-t border-slate-100 p-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onClearMembers();
+                                                    }}
+                                                    className="w-full rounded-xl px-3 py-2 text-center text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+                                                    {t("memberFilter.clearAll")}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -946,7 +1073,7 @@ function MemberDetailModal({
 
 // ==================== Main Component ====================
 
-export default function GroupMemberAnalyticsPage() {
+export default function GroupMemberAnalyticsPage({ groupName = "" }: Props) {
     const t = useTranslations("GroupAnalyticPage");
     const locale = useLocale();
     const pathname = usePathname();
@@ -958,15 +1085,71 @@ export default function GroupMemberAnalyticsPage() {
     const [heatmapData, setHeatmapData] = React.useState<MemberHeatmapData[] | null>(null);
     const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
     const [currentUserRole, setCurrentUserRole] = React.useState<GroupRole>("member");
+    const [resolvedGroupName, setResolvedGroupName] = React.useState("");
     const [selectedMember, setSelectedMember] = React.useState<MemberProgressItem | null>(null);
 
+    type StatusFilterType = "notstarted" | "inprogress" | "completed" | "overdue";
+
     const [trendFilter, setTrendFilter] = React.useState<TrendFilter>("week");
-    const [trendAnchorDate, setTrendAnchorDate] = React.useState(new Date(2026, 3, 20));
+    const [trendAnchorDate, setTrendAnchorDate] = React.useState(new Date());
 
     const [heatmapRange, setHeatmapRange] = React.useState<HeatmapRangeFilter>("month");
-    const [heatmapAnchorDate, setHeatmapAnchorDate] = React.useState(new Date(2026, 2, 24));
+    const [heatmapAnchorDate, setHeatmapAnchorDate] = React.useState(new Date());
 
-    // Load summary data (no date filter) - Chart 1, 2, 4, 6
+    const [selectedTrendMembers, setSelectedTrendMembers] = React.useState<string[]>([]);
+    const [selectedBarMembers, setSelectedBarMembers] = React.useState<string[]>([]);
+    const [selectedHeatmapMembers, setSelectedHeatmapMembers] = React.useState<string[]>([]);
+    const [selectedPieMembers, setSelectedPieMembers] = React.useState<string[]>([]);
+    const [trendDropdownOpen, setTrendDropdownOpen] = React.useState(false);
+    const [barDropdownOpen, setBarDropdownOpen] = React.useState(false);
+    const [heatmapDropdownOpen, setHeatmapDropdownOpen] = React.useState(false);
+    const [pieDropdownOpen, setPieDropdownOpen] = React.useState(false);
+
+    const [statusFilter, setStatusFilter] = React.useState<{
+        type: StatusFilterType | null;
+        isPersonal: boolean;
+    }>({ type: null, isPersonal: true });
+
+    const filterTypes: StatusFilterType[] = ["notstarted", "inprogress", "completed", "overdue"];
+
+    // Default select members when summary loads (only once on mount)
+    const hasInitialized = React.useRef({ trend: false, bar: false, heatmap: false, pie: false });
+    React.useEffect(() => {
+        if (!summary?.memberActivitySummary) return;
+        const members = summary.memberActivitySummary;
+
+        // Trend: first 5 members
+        if (!hasInitialized.current.trend && selectedTrendMembers.length === 0) {
+            hasInitialized.current.trend = true;
+            const firstFive = members.slice(0, 5).map((m) => m.userId ?? "").filter(Boolean);
+            setSelectedTrendMembers(firstFive);
+        }
+
+        // Bar: first 5 members
+        if (!hasInitialized.current.bar && selectedBarMembers.length === 0) {
+            hasInitialized.current.bar = true;
+            const firstFive = members.slice(0, 5).map((m) => m.userId ?? "").filter(Boolean);
+            setSelectedBarMembers(firstFive);
+        }
+
+        // Heatmap: first 5 members
+        if (!hasInitialized.current.heatmap && selectedHeatmapMembers.length === 0) {
+            hasInitialized.current.heatmap = true;
+            const firstFive = members.slice(0, 5).map((m) => m.userId ?? "").filter(Boolean);
+            setSelectedHeatmapMembers(firstFive);
+        }
+
+        // Pie: current user only (default)
+        if (!hasInitialized.current.pie && selectedPieMembers.length === 0 && currentUserId) {
+            hasInitialized.current.pie = true;
+            const currentUser = members.find((m) => m.userId === currentUserId);
+            if (currentUser?.userId) {
+                setSelectedPieMembers([currentUser.userId]);
+            } else if (members.length > 0) {
+                setSelectedPieMembers([members[0].userId ?? ""]);
+            }
+        }
+    }, [summary, currentUserId]);
     React.useEffect(() => {
         if (!groupId) return;
 
@@ -987,7 +1170,8 @@ export default function GroupMemberAnalyticsPage() {
                     setSummary(summaryRes.data);
                 }
 
-                setCurrentUserRole(roleRes);
+                setCurrentUserRole(roleRes.role);
+                setResolvedGroupName(roleRes.groupName);
                 setCurrentUserId(profileRes?.userId ?? profileRes?.id ?? null);
             } catch {
                 if (!isMounted) return;
@@ -1024,7 +1208,8 @@ export default function GroupMemberAnalyticsPage() {
 
                 const res = await getGroupTrend(groupId, {
                     startDate: start.toISOString().slice(0, 10),
-                    endDate: end.toISOString().slice(0, 10)
+                    endDate: end.toISOString().slice(0, 10),
+                    memberIds: selectedTrendMembers.length > 0 ? selectedTrendMembers : undefined
                 });
 
                 if (!isMounted) return;
@@ -1042,7 +1227,7 @@ export default function GroupMemberAnalyticsPage() {
         return () => {
             isMounted = false;
         };
-    }, [groupId, trendFilter, trendAnchorDate]);
+    }, [groupId, trendFilter, trendAnchorDate, selectedTrendMembers]);
 
     // Load heatmap data with date filter - Chart 5
     React.useEffect(() => {
@@ -1083,59 +1268,92 @@ export default function GroupMemberAnalyticsPage() {
     }, [groupId, heatmapRange, heatmapAnchorDate]);
 
     const canViewPersonalPieChart = currentUserRole !== "commenter";
+    const canFilterMembers = currentUserRole === "owner" || currentUserRole === "moderator";
+
+    const effectivePieMemberId = React.useMemo(() => {
+        if (canFilterMembers && selectedPieMembers.length > 0) {
+            return selectedPieMembers[0] ?? "";
+        }
+        return currentUserId ?? "";
+    }, [canFilterMembers, selectedPieMembers, currentUserId]);
+
+    const displayGroupName = React.useMemo(() => {
+        return groupName || resolvedGroupName || "";
+    }, [groupName, resolvedGroupName]);
 
     // ==================== Derived Data from API ====================
 
-    // Personal donut data
+    // Personal donut data - Venn diagram with intersection support
     const personalPieData = React.useMemo(() => {
-        if (!(summary?.memberTaskBreakdown && currentUserId)) {
-            return { data: [], total: 0 };
+        if (!summary?.memberTaskBreakdown) {
+            return { data: [], total: 0, intersections: { inProgressOverdue: 0, todoOverdue: 0 } };
         }
 
         const currentMember =
-            summary.memberTaskBreakdown.find((m) => m.userId === currentUserId) ?? summary.memberTaskBreakdown[0];
+            summary.memberTaskBreakdown.find((m) => m.userId === effectivePieMemberId) ?? summary.memberTaskBreakdown[0];
 
         if (!currentMember) {
-            return { data: [], total: 0 };
+            return { data: [], total: 0, intersections: { inProgressOverdue: 0, todoOverdue: 0 } };
         }
 
+        const todoTasks = currentMember.todoTasks ?? 0;
+        const inProgressTasks = currentMember.inProgressTasks ?? 0;
+        const doneTasks = currentMember.doneTasks ?? 0;
+        const overdueTasks = currentMember.overdueTasks ?? 0;
+        const inProgressOverdue = currentMember.inProgressOverdueTasks ?? 0;
+        const todoOverdue = currentMember.todoOverdueTasks ?? 0;
+
+        // For Venn: Todo = TodoOnly + TodoOverdue, InProgress = InProgressOnly + InProgressOverdue
+        const todoOnly = todoTasks - todoOverdue;
+        const inProgressOnly = inProgressTasks - inProgressOverdue;
+
         const data = [
-            { name: t("taskStatus.todo"), value: currentMember.todoTasks ?? 0 },
-            { name: t("taskStatus.inProgress"), value: currentMember.inProgressTasks ?? 0 },
-            { name: t("taskStatus.done"), value: currentMember.doneTasks ?? 0 },
-            { name: t("taskStatus.overdue"), value: currentMember.overdueTasks ?? 0 }
+            { name: t("taskStatus.todo"), value: todoTasks, itemStyle: { color: "#3b82f6" } },
+            { name: t("taskStatus.inProgress"), value: inProgressTasks, itemStyle: { color: "#f59e0b" } },
+            { name: t("taskStatus.done"), value: doneTasks, itemStyle: { color: "#10b981" } },
+            { name: t("taskStatus.overdue"), value: overdueTasks, itemStyle: { color: "#ef4444" } }
         ];
-        const total = data.reduce((sum, item) => sum + item.value, 0);
+        // Use totalTasks from backend (already unique, no Venn double-count). Fallback to exclusive sum.
+        const total = currentMember.totalTasks ?? (todoOnly + inProgressOnly + doneTasks + overdueTasks);
 
-        return { data, total };
-    }, [summary, currentUserId, t]);
+        return { data, total, totalTasks: total, intersections: { inProgressOverdue, todoOverdue, todoOnly, inProgressOnly } };
+    }, [summary, effectivePieMemberId, t]);
 
-    // Group donut data
+    // Group donut data - Venn diagram with intersection support
     const teamPieData = React.useMemo(() => {
-        if (!summary?.memberTaskBreakdown) {
-            return { data: [], total: 0 };
+        // Use unique task breakdown from API (GroupTaskBreakdown)
+        const groupBreakdown = summary?.groupTaskBreakdown;
+        if (!groupBreakdown) {
+            return { data: [], total: 0, intersections: { inProgressOverdue: 0, todoOverdue: 0 } };
         }
 
-        const sumTodo = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.todoTasks ?? 0), 0);
-        const sumInProgress = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.inProgressTasks ?? 0), 0);
-        const sumDone = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.doneTasks ?? 0), 0);
-        const sumOverdue = summary.memberTaskBreakdown.reduce((sum, m) => sum + (m.overdueTasks ?? 0), 0);
+        const todoTasks = groupBreakdown.todoTasks ?? 0;
+        const inProgressTasks = groupBreakdown.inProgressTasks ?? 0;
+        const doneTasks = groupBreakdown.doneTasks ?? 0;
+        const overdueTasks = groupBreakdown.overdueTasks ?? 0;
+        const inProgressOverdue = groupBreakdown.inProgressOverdueTasks ?? 0;
+        const todoOverdue = groupBreakdown.todoOverdueTasks ?? 0;
+
+        // Venn exclusive counts
+        const todoOnly = todoTasks - todoOverdue;
+        const inProgressOnly = inProgressTasks - inProgressOverdue;
 
         const data = [
-            { name: t("taskStatus.todo"), value: sumTodo },
-            { name: t("taskStatus.inProgress"), value: sumInProgress },
-            { name: t("taskStatus.done"), value: sumDone },
-            { name: t("taskStatus.overdue"), value: sumOverdue }
+            { name: t("taskStatus.todo"), value: todoTasks, itemStyle: { color: "#3b82f6" } },
+            { name: t("taskStatus.inProgress"), value: inProgressTasks, itemStyle: { color: "#f59e0b" } },
+            { name: t("taskStatus.done"), value: doneTasks, itemStyle: { color: "#10b981" } },
+            { name: t("taskStatus.overdue"), value: overdueTasks, itemStyle: { color: "#ef4444" } }
         ];
-        const total = data.reduce((sum, item) => sum + item.value, 0);
+        // Use totalTasks from backend (already unique, no Venn double-count). Fallback to exclusive sum.
+        const total = groupBreakdown.totalTasks ?? (todoOnly + inProgressOnly + doneTasks + overdueTasks);
 
-        return { data, total };
+        return { data, total, intersections: { inProgressOverdue, todoOverdue } };
     }, [summary, t]);
 
     // Line chart data
     const lineChartData = React.useMemo(() => {
         if (!trendData) {
-            return { myData: [], groupData: [], labels: [] as string[] };
+            return { groupData: [], labels: [] as string[], dates: [] as Date[] };
         }
 
         const { start, end } =
@@ -1160,19 +1378,9 @@ export default function GroupMemberAnalyticsPage() {
                     .filter(Boolean)
               : [];
 
-        // Current user's trend
-        const currentUserTrend = trendData?.find((m) => m.userId === currentUserId) ?? trendData?.[0];
-
-        let myData: number[] = [];
         let groupData: number[] = [];
 
         if (trendFilter === "week") {
-            myData = dates.map((date) => {
-                const dateStr = formatDateLocal(date);
-                const point = currentUserTrend?.dailyCompletions?.find((p) => p.date === dateStr);
-                return point?.completedTasks ?? 0;
-            });
-
             groupData = dates.map((date) => {
                 const dateStr = formatDateLocal(date);
                 return (
@@ -1187,13 +1395,6 @@ export default function GroupMemberAnalyticsPage() {
             for (let i = 0; i < 5; i++) {
                 const bucketStart = i * bucketSize;
                 const bucketEnd = Math.min((i + 1) * bucketSize, dates.length);
-                const mySum = dates.slice(bucketStart, bucketEnd).reduce((acc, date) => {
-                    const dateStr = formatDateLocal(date);
-                    const point = currentUserTrend?.dailyCompletions?.find((p) => p.date === dateStr);
-                    return acc + (point?.completedTasks ?? 0);
-                }, 0);
-                myData.push(mySum);
-
                 const groupSum = dates.slice(bucketStart, bucketEnd).reduce((acc, date) => {
                     const dateStr = formatDateLocal(date);
                     return (
@@ -1211,15 +1412,6 @@ export default function GroupMemberAnalyticsPage() {
                 const monthStart = new Date(trendAnchorDate.getFullYear(), month, 1);
                 const monthEnd = new Date(trendAnchorDate.getFullYear(), month + 1, 0);
 
-                const mySum = dates
-                    .filter((d) => d >= monthStart && d <= monthEnd)
-                    .reduce((acc, date) => {
-                        const dateStr = formatDateLocal(date);
-                        const point = currentUserTrend?.dailyCompletions?.find((p) => p.date === dateStr);
-                        return acc + (point?.completedTasks ?? 0);
-                    }, 0);
-                myData.push(mySum);
-
                 const groupSum = dates
                     .filter((d) => d >= monthStart && d <= monthEnd)
                     .reduce((acc, date) => {
@@ -1236,8 +1428,54 @@ export default function GroupMemberAnalyticsPage() {
             }
         }
 
-        return { myData, groupData, labels };
-    }, [trendData, currentUserId, trendFilter, trendAnchorDate, t]);
+        return { groupData, labels, dates };
+    }, [trendData, trendFilter, trendAnchorDate, t]);
+
+    // Helper to compute data array for a specific member
+    function computeMemberData(
+        member: { dailyCompletions?: { date?: string; completedTasks?: number }[] | null },
+        filter: TrendFilter,
+        dates: Date[],
+        fmt: (d: Date) => string
+    ): number[] {
+        if (filter === "week") {
+            return dates.map((date) => {
+                const dateStr = fmt(date);
+                const point = member.dailyCompletions?.find((p) => p.date === dateStr);
+                return point?.completedTasks ?? 0;
+            });
+        }
+        if (filter === "month") {
+            const bucketSize = Math.max(1, Math.ceil(dates.length / 5));
+            const result: number[] = [];
+            for (let i = 0; i < 5; i++) {
+                const bucketStart = i * bucketSize;
+                const bucketEnd = Math.min((i + 1) * bucketSize, dates.length);
+                const sum = dates.slice(bucketStart, bucketEnd).reduce((acc, date) => {
+                    const dateStr = fmt(date);
+                    const point = member.dailyCompletions?.find((p) => p.date === dateStr);
+                    return acc + (point?.completedTasks ?? 0);
+                }, 0);
+                result.push(sum);
+            }
+            return result;
+        }
+        // year
+        const result: number[] = [];
+        for (let month = 0; month < 12; month++) {
+            const monthStart = new Date(trendAnchorDate.getFullYear(), month, 1);
+            const monthEnd = new Date(trendAnchorDate.getFullYear(), month + 1, 0);
+            const sum = dates
+                .filter((d) => d >= monthStart && d <= monthEnd)
+                .reduce((acc, date) => {
+                    const dateStr = fmt(date);
+                    const point = member.dailyCompletions?.find((p) => p.date === dateStr);
+                    return acc + (point?.completedTasks ?? 0);
+                }, 0);
+            result.push(sum);
+        }
+        return result;
+    }
 
     // Bar chart data
     const barCompareMembers = React.useMemo(() => {
@@ -1257,6 +1495,13 @@ export default function GroupMemberAnalyticsPage() {
         }));
     }, [summary]);
 
+    const filteredBarCompareMembers = React.useMemo(() => {
+        if (!canFilterMembers || selectedBarMembers.length === 0) {
+            return barCompareMembers;
+        }
+        return barCompareMembers.filter((member) => selectedBarMembers.includes(member.userId));
+    }, [barCompareMembers, canFilterMembers, selectedBarMembers]);
+
     // Heatmap data
     const heatmapMembers = React.useMemo(() => {
         if (!heatmapData) return [];
@@ -1271,6 +1516,13 @@ export default function GroupMemberAnalyticsPage() {
                 })) ?? []
         }));
     }, [summary]);
+
+    const filteredHeatmapMembers = React.useMemo(() => {
+        if (selectedHeatmapMembers.length === 0) {
+            return heatmapMembers;
+        }
+        return heatmapMembers.filter((member) => selectedHeatmapMembers.includes(member.id));
+    }, [heatmapMembers, selectedHeatmapMembers]);
 
     // Member progress cards - combine with contribution data
     const memberProgressItems = React.useMemo((): MemberProgressItem[] => {
@@ -1386,7 +1638,9 @@ export default function GroupMemberAnalyticsPage() {
     }, [heatmapRange]);
 
     const statusDonutOption = React.useMemo<echarts.EChartsOption>(() => {
-        const { data, total } = personalPieData;
+        const { data, total, intersections } = personalPieData;
+        const { inProgressOverdue = 0, todoOverdue = 0 } = intersections ?? {};
+
         return {
             animationDuration: 700,
             animationDurationUpdate: 400,
@@ -1398,15 +1652,26 @@ export default function GroupMemberAnalyticsPage() {
                 backgroundColor: "#0f172a",
                 borderWidth: 0,
                 textStyle: { color: "#fff" },
-                formatter: (params: unknown) =>
-                    `${(params as { name: string; value: number; percent: number }).name}<br/>${(params as { value: number; percent: number }).value} tasks (${(params as { percent: number }).percent}%)`
+                formatter: (params: unknown) => {
+                    const p = params as { name: string; value: number; percent: number };
+                    const taskUnit = t("common.tasks");
+                    const overdueLabel = t("taskStatus.overdue");
+                    let extra = "";
+                    if (p.name === t("taskStatus.inProgress") && inProgressOverdue > 0) {
+                        extra = `<br/><span style="color:#ef4444">↳ ${inProgressOverdue} ${overdueLabel}</span>`;
+                    }
+                    if (p.name === t("taskStatus.todo") && todoOverdue > 0) {
+                        extra = `<br/><span style="color:#ef4444">↳ ${todoOverdue} ${overdueLabel}</span>`;
+                    }
+                    return `${p.name}<br/>${p.value} ${taskUnit} (${p.percent}%)${extra}`;
+                }
             },
             legend: { show: false },
             graphic: [
                 {
                     type: "text",
                     left: "center",
-                    top: "42%",
+                    top: "38%",
                     style: {
                         text: `${total}`,
                         textAlign: "center",
@@ -1418,7 +1683,7 @@ export default function GroupMemberAnalyticsPage() {
                 {
                     type: "text",
                     left: "center",
-                    top: "56%",
+                    top: "52%",
                     style: {
                         text: t("chart.myTasks"),
                         textAlign: "center",
@@ -1429,6 +1694,7 @@ export default function GroupMemberAnalyticsPage() {
                 }
             ],
             series: [
+                // Main pie chart (donut)
                 {
                     name: t("chart.taskStatus"),
                     type: "pie",
@@ -1460,7 +1726,9 @@ export default function GroupMemberAnalyticsPage() {
     }, [personalPieData, t]);
 
     const teamStatusDonutOption = React.useMemo<echarts.EChartsOption>(() => {
-        const { data, total } = teamPieData;
+        const { data, total, intersections } = teamPieData;
+        const { inProgressOverdue = 0, todoOverdue = 0 } = intersections ?? {};
+
         return {
             animationDuration: 700,
             animationDurationUpdate: 400,
@@ -1472,15 +1740,26 @@ export default function GroupMemberAnalyticsPage() {
                 backgroundColor: "#0f172a",
                 borderWidth: 0,
                 textStyle: { color: "#fff" },
-                formatter: (params: unknown) =>
-                    `${(params as { name: string; value: number; percent: number }).name}<br/>${(params as { value: number; percent: number }).value} tasks (${(params as { percent: number }).percent}%)`
+                formatter: (params: unknown) => {
+                    const p = params as { name: string; value: number; percent: number };
+                    const taskUnit = t("common.tasks");
+                    const overdueLabel = t("taskStatus.overdue");
+                    let extra = "";
+                    if (p.name === t("taskStatus.inProgress") && inProgressOverdue > 0) {
+                        extra = `<br/><span style="color:#ef4444">↳ ${inProgressOverdue} ${overdueLabel}</span>`;
+                    }
+                    if (p.name === t("taskStatus.todo") && todoOverdue > 0) {
+                        extra = `<br/><span style="color:#ef4444">↳ ${todoOverdue} ${overdueLabel}</span>`;
+                    }
+                    return `${p.name}<br/>${p.value} ${taskUnit} (${p.percent}%)${extra}`;
+                }
             },
             legend: { show: false },
             graphic: [
                 {
                     type: "text",
                     left: "center",
-                    top: "42%",
+                    top: "38%",
                     style: {
                         text: `${total}`,
                         textAlign: "center",
@@ -1492,7 +1771,7 @@ export default function GroupMemberAnalyticsPage() {
                 {
                     type: "text",
                     left: "center",
-                    top: "56%",
+                    top: "52%",
                     style: {
                         text: t("chart.groupTasks"),
                         textAlign: "center",
@@ -1534,7 +1813,40 @@ export default function GroupMemberAnalyticsPage() {
     }, [teamPieData, t]);
 
     const compareLineOption = React.useMemo<echarts.EChartsOption>(() => {
-        const { myData, groupData, labels } = lineChartData;
+        const { groupData, labels, dates } = lineChartData;
+        const seriesList: echarts.LineSeriesOption[] = [];
+
+        // Selected members (only when owner/moderator filters)
+        if (canFilterMembers && selectedTrendMembers.length > 0 && trendData) {
+            selectedTrendMembers.forEach((memberId, idx) => {
+                const member = trendData.find((m) => m.userId === memberId);
+                if (!member) return;
+                const color = MEMBER_COLORS[(idx + 2) % MEMBER_COLORS.length];
+                seriesList.push({
+                    name: member.userName ?? "",
+                    type: "line",
+                    smooth: true,
+                    symbol: "circle",
+                    symbolSize: 7,
+                    data: computeMemberData(member, trendFilter, dates, formatDateLocal),
+                    lineStyle: { width: 3, color, opacity: 0.95 },
+                    itemStyle: { color, borderColor: "#fff", borderWidth: 2 }
+                });
+            });
+        }
+
+        // "Nhóm" line (always shown)
+        seriesList.push({
+            name: t("chart.group"),
+            type: "line",
+            smooth: true,
+            symbol: "circle",
+            symbolSize: 7,
+            data: groupData,
+            lineStyle: { width: 3, color: "#f97316", opacity: 0.95 },
+            itemStyle: { color: "#f97316", borderColor: "#fff", borderWidth: 2 }
+        });
+
         return {
             animationDuration: 700,
             animationDurationUpdate: 400,
@@ -1571,52 +1883,9 @@ export default function GroupMemberAnalyticsPage() {
                 axisLabel: { color: "#64748B" },
                 splitLine: { lineStyle: { color: "#E2E8F0" } }
             },
-            series: [
-                {
-                    name: t("chart.me"),
-                    type: "line",
-                    smooth: true,
-                    symbol: "circle",
-                    symbolSize: 9,
-                    data: myData,
-                    lineStyle: {
-                        width: 4,
-                        color: "#2563eb",
-                        opacity: 1
-                    },
-                    itemStyle: {
-                        color: "#2563eb",
-                        borderColor: "#fff",
-                        borderWidth: 2
-                    },
-                    areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: "rgba(37,99,235,0.20)" },
-                            { offset: 1, color: "rgba(37,99,235,0.03)" }
-                        ])
-                    }
-                },
-                {
-                    name: t("chart.group"),
-                    type: "line",
-                    smooth: true,
-                    symbol: "circle",
-                    symbolSize: 7,
-                    data: groupData,
-                    lineStyle: {
-                        width: 3,
-                        color: "#f97316",
-                        opacity: 0.95
-                    },
-                    itemStyle: {
-                        color: "#f97316",
-                        borderColor: "#fff",
-                        borderWidth: 2
-                    }
-                }
-            ]
+            series: seriesList
         };
-    }, [trendData, t]);
+    }, [trendData, selectedTrendMembers, lineChartData, t, canFilterMembers]);
 
     const compareBarOption = React.useMemo<echarts.EChartsOption>(() => {
         const categories = [
@@ -1625,7 +1894,7 @@ export default function GroupMemberAnalyticsPage() {
             t("taskStatus.done"),
             t("taskStatus.overdue")
         ];
-        const series: echarts.BarSeriesOption[] = barCompareMembers.map((member, index) => ({
+        const series: echarts.BarSeriesOption[] = filteredBarCompareMembers.map((member, index) => ({
             name: member.userName,
             type: "bar",
             barMaxWidth: 18,
@@ -1686,7 +1955,7 @@ export default function GroupMemberAnalyticsPage() {
             },
             series
         };
-    }, [barCompareMembers, t]);
+    }, [filteredBarCompareMembers, t]);
 
     // ==================== Render ====================
 
@@ -1710,13 +1979,93 @@ export default function GroupMemberAnalyticsPage() {
                                 )}>
                                 {canViewPersonalPieChart && (
                                     <div className="rounded-[26px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
-                                        <div className="mb-5">
-                                            <h2 className="font-semibold text-lg text-slate-900">
-                                                {t("chart.myTaskDistribution")}
-                                            </h2>
-                                            <p className="mt-1 text-slate-500 text-sm">
-                                                {t("chart.myTaskDistributionDesc")}
-                                            </p>
+                                        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                            <div>
+                                                <h2 className="font-semibold text-lg text-slate-900">
+                                                    {t("chart.myTaskDistribution")}
+                                                </h2>
+                                                <p className="mt-1 text-slate-500 text-sm">
+                                                    {t("chart.myTaskDistributionDesc")}
+                                                </p>
+                                            </div>
+
+                                            {/* Member filter dropdown - single selection for pie chart */}
+                                            {canFilterMembers &&
+                                                summary?.memberActivitySummary && (
+                                                <div className="relative">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPieDropdownOpen(!pieDropdownOpen)}
+                                                        className={cn(
+                                                            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
+                                                            selectedPieMembers.length > 0
+                                                                ? "border-orange-500 bg-orange-500 text-white"
+                                                                : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"
+                                                        )}>
+                                                        <Users className="h-4 w-4" />
+                                                        <span>
+                                                            {selectedPieMembers.length > 0
+                                                                ? summary.memberActivitySummary.find((m) => m.userId === selectedPieMembers[0])?.userName ?? t("memberFilter.selectedMember")
+                                                                : t("memberFilter.selectMembers")}
+                                                        </span>
+                                                        <svg
+                                                            className={cn(
+                                                                "h-4 w-4 transition-transform duration-200",
+                                                                pieDropdownOpen && "rotate-180"
+                                                            )}
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+
+                                                    {pieDropdownOpen && (
+                                                        <>
+                                                            <div
+                                                                className="fixed inset-0 z-10"
+                                                                onClick={() => setPieDropdownOpen(false)}
+                                                            />
+                                                            <div className="absolute right-0 top-full z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                                                                <div className="max-h-64 overflow-y-auto p-2">
+                                                                    {summary.memberActivitySummary.map((member) => {
+                                                                        const isSelected = selectedPieMembers.includes(member.userId ?? "");
+                                                                        return (
+                                                                            <button
+                                                                                key={member.userId}
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setSelectedPieMembers([member.userId ?? ""]);
+                                                                                    setPieDropdownOpen(false);
+                                                                                }}
+                                                                                className={cn(
+                                                                                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition",
+                                                                                    isSelected
+                                                                                        ? "bg-orange-50 text-orange-600"
+                                                                                        : "text-slate-600 hover:bg-slate-50"
+                                                                                )}>
+                                                                                <div
+                                                                                    className={cn(
+                                                                                        "flex h-5 w-5 items-center justify-center rounded-full border-2 transition",
+                                                                                        isSelected
+                                                                                            ? "border-orange-500 bg-orange-500"
+                                                                                            : "border-slate-300"
+                                                                                    )}>
+                                                                                    {isSelected && (
+                                                                                        <div className="h-2 w-2 rounded-full bg-white" />
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="flex-1 truncate font-medium">{member.userName}</span>
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="grid grid-cols-1 items-center gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
@@ -1727,10 +2076,22 @@ export default function GroupMemberAnalyticsPage() {
                                             <div className="grid grid-cols-2 gap-3">
                                                 {personalPieData.data.map((item, index) => {
                                                     const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+                                                    const intersections = personalPieData.intersections ?? {};
+                                                    const isInProgress = index === 1;
+                                                    const isTodo = index === 0;
+                                                    const intersectionCount = isInProgress
+                                                        ? intersections.inProgressOverdue
+                                                        : isTodo
+                                                          ? intersections.todoOverdue
+                                                          : 0;
                                                     return (
-                                                        <div
+                                                        <button
                                                             key={item.name}
-                                                            className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3">
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setStatusFilter({ type: filterTypes[index], isPersonal: true });
+                                                            }}
+                                                            className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3 text-left cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:border-slate-200 hover:shadow-[0_8px_24px_rgba(15,23,42,0.10)] active:scale-[0.98]">
                                                             <div className="flex items-center gap-2">
                                                                 <span
                                                                     className="h-2.5 w-2.5 rounded-full"
@@ -1743,7 +2104,12 @@ export default function GroupMemberAnalyticsPage() {
                                                             <div className="mt-2 font-bold text-lg text-slate-900">
                                                                 {item.value}
                                                             </div>
-                                                        </div>
+                                                            {intersectionCount > 0 && (
+                                                                <div className="mt-1 text-xs text-rose-500">
+                                                                    ↳ {intersectionCount} {t("taskStatus.overdue")}
+                                                                </div>
+                                                            )}
+                                                        </button>
                                                     );
                                                 })}
                                             </div>
@@ -1757,6 +2123,11 @@ export default function GroupMemberAnalyticsPage() {
                                             {canViewPersonalPieChart
                                                 ? t("chart.groupTaskDistribution")
                                                 : t("chart.groupTaskDistribution")}
+                                            {displayGroupName && (
+                                                <span className="ml-2 font-normal text-slate-500">
+                                                    — <span className="inline-block max-w-[200px] truncate align-bottom">{displayGroupName}</span>
+                                                </span>
+                                            )}
                                         </h2>
                                         <p className="mt-1 text-slate-500 text-sm">
                                             {t("chart.groupTaskDistributionDesc")}
@@ -1771,10 +2142,22 @@ export default function GroupMemberAnalyticsPage() {
                                         <div className="grid grid-cols-2 gap-3">
                                             {teamPieData.data.map((item, index) => {
                                                 const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+                                                const intersections = teamPieData.intersections ?? {};
+                                                const isInProgress = index === 1;
+                                                const isTodo = index === 0;
+                                                const intersectionCount = isInProgress
+                                                    ? intersections.inProgressOverdue
+                                                    : isTodo
+                                                      ? intersections.todoOverdue
+                                                      : 0;
                                                 return (
-                                                    <div
+                                                    <button
                                                         key={item.name}
-                                                        className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3">
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setStatusFilter({ type: filterTypes[index], isPersonal: false });
+                                                        }}
+                                                        className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-3 text-left cursor-pointer transition-all duration-200 hover:-translate-y-[1px] hover:border-slate-200 hover:shadow-[0_8px_24px_rgba(15,23,42,0.10)] active:scale-[0.98]">
                                                         <div className="flex items-center gap-2">
                                                             <span
                                                                 className="h-2.5 w-2.5 rounded-full"
@@ -1787,7 +2170,12 @@ export default function GroupMemberAnalyticsPage() {
                                                         <div className="mt-2 font-bold text-lg text-slate-900">
                                                             {item.value}
                                                         </div>
-                                                    </div>
+                                                        {intersectionCount > 0 && (
+                                                            <div className="mt-1 text-xs text-rose-500">
+                                                                ↳ {intersectionCount} {t("taskStatus.overdue")}
+                                                            </div>
+                                                        )}
+                                                    </button>
                                                 );
                                             })}
                                         </div>
@@ -1796,7 +2184,7 @@ export default function GroupMemberAnalyticsPage() {
                             </div>
 
                             <div className="rounded-[30px] border border-white/70 bg-white p-5 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl lg:p-6">
-                                <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                <div className="mb-5 flex flex-col items-center gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div>
                                         <h2 className="font-semibold text-lg text-slate-900">
                                             {canViewPersonalPieChart
@@ -1819,13 +2207,7 @@ export default function GroupMemberAnalyticsPage() {
                                                     onClick={() => {
                                                         const nextFilter = item.key as TrendFilter;
                                                         setTrendFilter(nextFilter);
-                                                        if (nextFilter === "week") {
-                                                            setTrendAnchorDate(new Date(2026, 3, 20));
-                                                        } else if (nextFilter === "month") {
-                                                            setTrendAnchorDate(new Date(2026, 3, 1));
-                                                        } else {
-                                                            setTrendAnchorDate(new Date(2026, 0, 1));
-                                                        }
+                                                        setTrendAnchorDate(new Date());
                                                     }}
                                                     className={cn(
                                                         "rounded-xl px-4 py-2 font-medium text-sm transition",
@@ -1856,6 +2238,111 @@ export default function GroupMemberAnalyticsPage() {
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Member filter dropdown — only for owner/moderator */}
+                                    {canFilterMembers &&
+                                        summary?.memberActivitySummary && (
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setTrendDropdownOpen(!trendDropdownOpen)}
+                                                className={cn(
+                                                    "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
+                                                    selectedTrendMembers.length > 0
+                                                        ? "border-orange-500 bg-orange-500 text-white"
+                                                        : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"
+                                                )}>
+                                                <Users className="h-4 w-4" />
+                                                <span>
+                                                    {selectedTrendMembers.length > 0
+                                                        ? t("memberFilter.selected", { count: selectedTrendMembers.length })
+                                                        : t("memberFilter.selectMembers")}
+                                                </span>
+                                                {selectedTrendMembers.length > 0 && (
+                                                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                                                        {selectedTrendMembers.length}
+                                                    </span>
+                                                )}
+                                                <svg
+                                                    className={cn(
+                                                        "h-4 w-4 transition-transform duration-200",
+                                                        trendDropdownOpen && "rotate-180"
+                                                    )}
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+
+                                            {trendDropdownOpen && (
+                                                <>
+                                                    <div
+                                                        className="fixed inset-0 z-10"
+                                                        onClick={() => setTrendDropdownOpen(false)}
+                                                    />
+                                                    <div className="absolute right-0 top-full z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                                                        <div className="max-h-64 overflow-y-auto p-2">
+                                                            {summary.memberActivitySummary.map((member) => {
+                                                                const isSelected = selectedTrendMembers.includes(member.userId ?? "");
+                                                                return (
+                                                                    <button
+                                                                        key={member.userId}
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedTrendMembers((prev) =>
+                                                                                isSelected
+                                                                                    ? prev.filter((id) => id !== member.userId)
+                                                                                    : [...prev, member.userId ?? ""]
+                                                                            );
+                                                                        }}
+                                                                        className={cn(
+                                                                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition",
+                                                                            isSelected
+                                                                                ? "bg-orange-50 text-orange-600"
+                                                                                : "text-slate-600 hover:bg-slate-50"
+                                                                        )}>
+                                                                        <div
+                                                                            className={cn(
+                                                                                "flex h-5 w-5 items-center justify-center rounded-md border-2 transition",
+                                                                                isSelected
+                                                                                    ? "border-orange-500 bg-orange-500"
+                                                                                    : "border-slate-300"
+                                                                            )}>
+                                                                            {isSelected && (
+                                                                                <svg
+                                                                                    className="h-3 w-3 text-white"
+                                                                                    fill="none"
+                                                                                    viewBox="0 0 24 24"
+                                                                                    stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                                                </svg>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="flex-1 truncate font-medium text-black">{member.userName}</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        {selectedTrendMembers.length > 0 && (
+                                                            <div className="border-t border-slate-100 p-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedTrendMembers([]);
+                                                                    }}
+                                                                    className="w-full rounded-xl px-3 py-2 text-center text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+                                                                    {t("memberFilter.clearAll")}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <EChart option={compareLineOption} height={460} />
@@ -1874,18 +2361,137 @@ export default function GroupMemberAnalyticsPage() {
                                                 : t("chart.compareByMember")}
                                         </h2>
                                     </div>
+
+                                    {/* Member filter dropdown for bar chart */}
+                                    {(currentUserRole === "owner" || currentUserRole === "moderator") &&
+                                        summary?.memberActivitySummary && (
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setBarDropdownOpen(!barDropdownOpen)}
+                                                className={cn(
+                                                    "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition",
+                                                    selectedBarMembers.length > 0
+                                                        ? "border-orange-500 bg-orange-500 text-white"
+                                                        : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"
+                                                )}>
+                                                <Users className="h-4 w-4" />
+                                                <span>
+                                                    {selectedBarMembers.length > 0
+                                                        ? t("memberFilter.selected", { count: selectedBarMembers.length })
+                                                        : t("memberFilter.selectMembers")}
+                                                </span>
+                                                {selectedBarMembers.length > 0 && (
+                                                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+                                                        {selectedBarMembers.length}
+                                                    </span>
+                                                )}
+                                                <svg
+                                                    className={cn(
+                                                        "h-4 w-4 transition-transform duration-200",
+                                                        barDropdownOpen && "rotate-180"
+                                                    )}
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+
+                                            {barDropdownOpen && (
+                                                <>
+                                                    <div
+                                                        className="fixed inset-0 z-10"
+                                                        onClick={() => setBarDropdownOpen(false)}
+                                                    />
+                                                    <div className="absolute right-0 top-full z-20 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                                                        <div className="max-h-64 overflow-y-auto p-2">
+                                                            {summary.memberActivitySummary.map((member) => {
+                                                                const isSelected = selectedBarMembers.includes(member.userId ?? "");
+                                                                return (
+                                                                    <button
+                                                                        key={member.userId}
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedBarMembers((prev) =>
+                                                                                isSelected
+                                                                                    ? prev.filter((id) => id !== member.userId)
+                                                                                    : [...prev, member.userId ?? ""]
+                                                                            );
+                                                                        }}
+                                                                        className={cn(
+                                                                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition",
+                                                                            isSelected
+                                                                                ? "bg-orange-50 text-orange-600"
+                                                                                : "text-slate-600 hover:bg-slate-50"
+                                                                        )}>
+                                                                        <div
+                                                                            className={cn(
+                                                                                "flex h-5 w-5 items-center justify-center rounded-md border-2 transition",
+                                                                                isSelected
+                                                                                    ? "border-orange-500 bg-orange-500"
+                                                                                    : "border-slate-300"
+                                                                            )}>
+                                                                            {isSelected && (
+                                                                                <svg
+                                                                                    className="h-3 w-3 text-white"
+                                                                                    fill="none"
+                                                                                    viewBox="0 0 24 24"
+                                                                                    stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                                                </svg>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="flex-1 truncate font-medium">{member.userName}</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        {selectedBarMembers.length > 0 && (
+                                                            <div className="border-t border-slate-100 p-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedBarMembers([]);
+                                                                    }}
+                                                                    className="w-full rounded-xl px-3 py-2 text-center text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+                                                                    {t("memberFilter.clearAll")}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <EChart option={compareBarOption} height={430} />
                             </div>
 
                             <GroupActivityHeatmap
-                                members={heatmapMembers}
+                                members={filteredHeatmapMembers}
                                 range={heatmapRange}
                                 anchorDate={heatmapAnchorDate}
                                 onPrev={handlePrevHeatmapRange}
                                 onNext={handleNextHeatmapRange}
                                 onChangeRange={setHeatmapRange}
+                                canFilterMembers={canFilterMembers}
+                                memberOptions={summary?.memberActivitySummary ?? []}
+                                selectedMemberIds={selectedHeatmapMembers}
+                                dropdownOpen={heatmapDropdownOpen}
+                                onToggleDropdown={() => setHeatmapDropdownOpen((prev) => !prev)}
+                                onCloseDropdown={() => setHeatmapDropdownOpen(false)}
+                                onToggleMember={(memberId) => {
+                                    setSelectedHeatmapMembers((prev) =>
+                                        prev.includes(memberId)
+                                            ? prev.filter((id) => id !== memberId)
+                                            : [...prev, memberId]
+                                    );
+                                }}
+                                onClearMembers={() => setSelectedHeatmapMembers([])}
                                 locale={locale}
                                 t={t}
                             />
@@ -1908,7 +2514,17 @@ export default function GroupMemberAnalyticsPage() {
                         t={t}
                     />
 
-                    {loading && <div className="text-slate-500 text-sm">Đang tải dữ liệu...</div>}
+                    {/* Task Status Popup */}
+                    <TaskStatusPopup
+                        open={statusFilter.type !== null}
+                        onClose={() => setStatusFilter({ type: null, isPersonal: true })}
+                        filter={statusFilter.type ?? "notstarted"}
+                        isPersonal={statusFilter.isPersonal}
+                        groupId={groupId}
+                        currentUserId={statusFilter.isPersonal ? effectivePieMemberId : (currentUserId ?? "")}
+                    />
+
+                    {loading && <div className="text-slate-500 text-sm">{t("common.loading")}</div>}
                 </div>
             </Container>
         </div>
