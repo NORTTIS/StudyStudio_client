@@ -66,11 +66,19 @@ function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
         return out;
     };
 
-    const favorites = uniqKeepOrder(raw.favorites ?? []);
+    const favorites = uniqKeepOrder((raw.favorites ?? []).filter((group) => !isArchivedGroup(group)));
     const managed = uniqKeepOrder((raw.managed ?? []).filter((group) => !isArchivedGroup(group)));
     const independent = uniqKeepOrder((raw.independent ?? []).filter((group) => !isArchivedGroup(group)));
     const joined = uniqKeepOrder((raw.joined ?? []).filter((group) => !isArchivedGroup(group)));
-    const inactive = uniqKeepOrder((raw.inactive ?? []).filter((group) => isArchivedGroup(group)));
+    const inactive = uniqKeepOrder(
+        [
+            ...(raw.inactive ?? []),
+            ...(raw.favorites ?? []),
+            ...(raw.managed ?? []),
+            ...(raw.independent ?? []),
+            ...(raw.joined ?? [])
+        ].filter((group) => isArchivedGroup(group))
+    );
 
     const inactiveIds = new Set(inactive.map((group) => getGroupId(group)).filter(Boolean));
     const stripInactiveDuplicates = (list: GroupCardDto[]) =>

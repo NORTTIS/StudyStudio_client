@@ -1684,7 +1684,7 @@ function mapTaskDetailFromGroupTaskItem(task: GroupTaskItemResponse, taskId: str
 async function apiGetGroupTasksPage(args: { groupId: string; statusId?: string; page?: number; pageSize?: number }) {
     const token = getAccessTokenOrNull();
     const base = getApiBase();
-    if (!base) throw new Error("Thiáº¿u NEXT_PUBLIC_API_BASE_URL.");
+    if (!base) throw new Error("Thiếu NEXT_PUBLIC_API_BASE_URL.");
 
     const query = new URLSearchParams();
     if (args.statusId) query.set("statusId", args.statusId);

@@ -156,8 +156,14 @@ export function GroupShell({
                 if (result.error) {
                     console.error("[GroupShell] Failed to load data:", { status: result.error.status });
                     if (!cancelled) {
-                        // Nếu không có quyền truy cập thì chuyển sang trang báo lỗi quyền.
-                        if (result.error.status === 401 || result.error.status === 403) {
+                        // Phiên đăng nhập hết hạn thì quay về login; chỉ 403 mới là bị cấm truy cập thật sự.
+                        if (result.error.status === 401) {
+                            const redirectPath = encodeURIComponent(pathname || `/${locale}/group/${groupId}`);
+                            setRedirectTarget(`/${locale}/login?redirect=${redirectPath}&fromLogin=1`);
+                            return;
+                        }
+
+                        if (result.error.status === 403) {
                             setRedirectTarget(`/${locale}/task-access-denied?reason=forbidden`);
                             return;
                         }
@@ -191,7 +197,7 @@ export function GroupShell({
         return () => {
             cancelled = true;
         };
-    }, [groupId, locale, tGroupHeader]);
+    }, [groupId, locale, pathname, tGroupHeader]);
 
     React.useEffect(() => {
         if (!redirectTarget) return;

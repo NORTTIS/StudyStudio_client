@@ -375,6 +375,34 @@ export function GroupSettingView() {
         return normalizeErrorMessage(rawText);
     };
 
+    const resetLoadedGroupState = () => {
+        setGroupName("");
+        setDescription("");
+        setMasterStudio("");
+        setInitialSettings({ groupName: "", description: "" });
+        setMembers([]);
+        setAvatarUrl(null);
+        setColorHex("#FF5F3D");
+        setIconEmoji("");
+        setBannerUrl(null);
+        setTagline("");
+        setAlias("");
+        setInitialAvatarUrl(null);
+        setInitialColorHex("#FF5F3D");
+        setInitialIconEmoji("");
+        setInitialBannerUrl(null);
+        setInitialTagline("");
+        setInitialAlias("");
+        setIsTemplate(false);
+        setInitialIsTemplate(false);
+        setRequiresMemberApproval(false);
+        setInitialRequiresMemberApproval(false);
+        setAllowMemberUpdateProgress(false);
+        setInitialAllowMemberUpdateProgress(false);
+        setIsArchived(false);
+        setIsParentStudioArchived(false);
+    };
+
     const getTokenOrFail = () => {
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
@@ -429,29 +457,8 @@ export function GroupSettingView() {
         const token = localStorage.getItem("accessToken") || "";
         if (!token) {
             setNotFound(true);
-            setGroupName("");
-            setDescription("");
-            setMasterStudio("");
-            setInitialSettings({ groupName: "", description: "" });
-            setMembers([]);
+            resetLoadedGroupState();
             setMyRoleInGroup("Member");
-            setAvatarUrl(null);
-            setColorHex("#FF5F3D");
-            setIconEmoji("");
-            setBannerUrl(null);
-            setTagline("");
-            setAlias("");
-            setInitialAvatarUrl(null);
-            setInitialColorHex("#FF5F3D");
-            setInitialIconEmoji("");
-            setInitialBannerUrl(null);
-            setInitialTagline("");
-            setInitialAlias("");
-            setIsTemplate(false);
-            setInitialIsTemplate(false);
-            setRequiresMemberApproval(false);
-            setInitialRequiresMemberApproval(false);
-            setIsArchived(false);
             return false;
         }
 
@@ -466,27 +473,8 @@ export function GroupSettingView() {
         if (!detailRes.ok) {
             setNotFound(true);
             setGeneralError(extractApiMessage(text, detailJson));
-            setGroupName("");
-            setDescription("");
-            setMasterStudio("");
-            setInitialSettings({ groupName: "", description: "" });
-            setMembers([]);
+            resetLoadedGroupState();
             setMyRoleInGroup("Member");
-            setAvatarUrl(null);
-            setColorHex("#FF5F3D");
-            setIconEmoji("");
-            setBannerUrl(null);
-            setTagline("");
-            setAlias("");
-            setInitialAvatarUrl(null);
-            setInitialColorHex("#FF5F3D");
-            setInitialIconEmoji("");
-            setInitialBannerUrl(null);
-            setInitialTagline("");
-            setInitialAlias("");
-            setIsTemplate(false);
-            setInitialIsTemplate(false);
-            setIsArchived(false);
             return false;
         }
 
@@ -495,11 +483,22 @@ export function GroupSettingView() {
 
         if (!data?.groupId) {
             setNotFound(true);
+            resetLoadedGroupState();
+            setMyRoleInGroup("Member");
             setGeneralError(t("errors.loadGroupFailed"));
             return false;
         }
 
+        const roleFromDetail = toMemberRole(data.userRole);
+        setMyRoleInGroup(roleFromDetail);
         setNotFound(false);
+
+        if (roleFromDetail !== "Owner" && roleFromDetail !== "Moderator") {
+            // Chỉ xác nhận quyền hiện tại rồi dừng, không nạp thêm settings/members cho người không đủ quyền.
+            resetLoadedGroupState();
+            return true;
+        }
+
         setGroupName(data.groupName ?? "");
         setDescription(data.description ?? "");
         setInitialSettings({ groupName: data.groupName ?? "", description: data.description ?? "" });
@@ -559,9 +558,6 @@ export function GroupSettingView() {
             (data as Record<string, unknown>).allowMemberUpdateProgress ?? false;
         setAllowMemberUpdateProgress(Boolean(allowProgressValue));
         setInitialAllowMemberUpdateProgress(Boolean(allowProgressValue));
-
-        const roleFromDetail = toMemberRole(data.userRole);
-        setMyRoleInGroup(roleFromDetail);
 
         try {
             const membersJson = await fetchGroupMembers(id, token);

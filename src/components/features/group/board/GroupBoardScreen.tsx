@@ -458,22 +458,6 @@ function getAccessTokenOrNull() {
     return t ? String(t) : null;
 }
 
-function getUserRoleOrNull() {
-    if (typeof window === "undefined") return null;
-
-    // Đọc role cache trong localStorage để UI có thể ra quyết định sớm trước khi fetch xong.
-    const candidates = [
-        localStorage.getItem("role"),
-        localStorage.getItem("userRole"),
-        localStorage.getItem("groupRole")
-    ]
-        .map((v) => normalizeGroupRole(v))
-        .filter(Boolean);
-
-    if (!candidates.length) return null;
-    return candidates[0] ?? null;
-}
-
 function normalizeGroupRole(role: string | null | undefined) {
     const raw = String(role ?? "")
         .trim()
@@ -2875,17 +2859,18 @@ export function GroupBoardScreen({
         [t]
     );
 
-    // Các cờ quyền bên dưới là lớp phân quyền trực tiếp cho thao tác trên board.
-    const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(() => getUserRoleOrNull());
-    const canDeleteTask = canDelete || canDeleteByRole(currentUserRole);
-    const isRestricted = currentUserRole === "commenter" || currentUserRole === "viewer";
-    const canEditStatus =
-        !isRestricted &&
+    // Các cờ quyền bên dưới chỉ mở sau khi board nhận được role theo đúng `groupId` hiện tại.
+    const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(null);
+    const [resolvedRoleGroupId, setResolvedRoleGroupId] = React.useState<string | null>(null);
+    const hasAuthoritativeRole = !!groupId && resolvedRoleGroupId === groupId;
+    const canContributeToBoard =
+        hasAuthoritativeRole &&
         (currentUserRole === "owner" || currentUserRole === "moderator" || currentUserRole === "member");
-    const canAddTask = !isRestricted;
-    const canAddStatus =
-        !isRestricted &&
-        (currentUserRole === "owner" || currentUserRole === "moderator" || currentUserRole === "member");
+    const canDeleteTask = canDelete || (hasAuthoritativeRole && canDeleteByRole(currentUserRole));
+    const isRestricted = !canContributeToBoard;
+    const canEditStatus = canContributeToBoard;
+    const canAddTask = canContributeToBoard;
+    const canAddStatus = canContributeToBoard;
 
     const [columns, setColumns] = React.useState<Column[]>([]);
     const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
@@ -3439,8 +3424,9 @@ export function GroupBoardScreen({
 
         syncColumnsFromDetail(detail?.data);
         setGroupDetailSnapshot(detail?.data ?? null);
-        // Role từ backend sẽ ghi đè role cache trong localStorage nếu có.
-        setCurrentUserRole(normalizeGroupRole(detail?.data?.userRole) ?? getUserRoleOrNull());
+        // Chỉ tin role do backend trả về cho đúng group hiện tại; trước đó UI giữ ở trạng thái restricted.
+        setCurrentUserRole(normalizeGroupRole(detail?.data?.userRole));
+        setResolvedRoleGroupId(groupId);
 
         const list = members?.data?.members ?? [];
 
