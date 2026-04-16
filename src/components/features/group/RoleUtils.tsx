@@ -15,6 +15,7 @@ export const roleDisplayText: Record<GroupRole, string> = {
 export function getRoleIcon(role: MemberRole | GroupRole, className = "h-4 w-4"): React.ReactNode {
     const iconProps = { className };
 
+    // Dua role ve chu thuong de ho tro ca du lieu tu API va gia tri hien thi.
     const rolesLower = String(role).toLowerCase();
 
     if (rolesLower === "owner") {
@@ -41,6 +42,7 @@ export function getRoleColor(role: MemberRole | GroupRole): {
     text: string;
     border: string;
 } {
+    // Chuan hoa role mot lan de viec gan mau luon dong nhat.
     const rolesLower = String(role).toLowerCase();
 
     if (rolesLower === "owner") {
@@ -79,6 +81,7 @@ export function getRoleColor(role: MemberRole | GroupRole): {
         };
     }
 
+    // Neu role khong hop le thi dung bang mau trung tinh de tranh vo giao dien.
     return {
         bg: "bg-gray-50",
         text: "text-gray-700",

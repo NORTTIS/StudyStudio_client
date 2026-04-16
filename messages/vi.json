@@ -2688,6 +2688,11 @@
       "noGroupId": "Không tìm thấy groupId",
       "notFound": "Không tìm thấy nhóm"
     },
+    "unauthorized": {
+      "title": "Bạn không có thẩm quyền",
+      "description": "Bạn không có quyền truy cập trang cài đặt của nhóm này.",
+      "backToGroup": "Quay lại nhóm"
+    },
     "general": {
       "title": "Cài đặt chung",
       "subtitle": "Cập nhật thông tin cơ bản của nhóm",
@@ -2746,7 +2751,7 @@
       },
       "selectPlaceholder": "Chọn vai trò",
       "emptyState": "Chưa có thành viên",
-      "oneModeratorError": "Nhóm phải có ít nhất một điều phối viên"
+      "oneModeratorError": "Mỗi nhóm chỉ được có 1 điều phối viên"
     },
     "dangerZone": {
       "title": "Vùng nguy hiểm",
@@ -3253,3 +3258,4 @@
     "noJoinedGroups": "Chưa tham gia nhóm nào"
   }
 }
+

@@ -63,6 +63,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     const router = useRouter();
     const locale = useLocale();
     const pathname = usePathname();
+    const headerClassName = "sticky top-0 z-40 border-b border-[#E5E5E5]/80 bg-white/90 backdrop-blur-md";
 
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -151,7 +152,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
 
     if (isLoadingProfile) {
         return (
-            <header className="sticky top-0 z-40 border-b border-[#E5E5E5]/80 bg-white/90 backdrop-blur-md">
+            <header className={headerClassName}>
                 <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
                     <div className="hidden h-10 w-[420px] animate-pulse rounded-2xl bg-gray-200 lg:block" />
                     <div className="flex-1 lg:hidden" />
@@ -168,7 +169,7 @@ export function Header({ userProfile: userProfileProp }: HeaderProps = {}) {
     }
 
     return (
-        <header className="sticky top-0 z-40 border-b border-[#E5E5E5]/80 bg-white/90 backdrop-blur-md">
+        <header className={headerClassName}>
             <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
                 {isAdmin ? (
                     <div className="min-w-0 flex-1">

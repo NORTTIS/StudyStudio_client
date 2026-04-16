@@ -464,6 +464,8 @@ export function GroupStudioHeader({
     const canLeaveGroup = userRole !== "owner";
     const apiBase = getApiBase();
     const backHref = fromStudioId ? `/${locale}/master/${encodeURIComponent(fromStudioId)}` : `/${locale}/group`;
+    const oneModeratorError =
+        locale.startsWith("vi") ? "Mỗi nhóm chỉ được có 1 điều phối viên." : "Each group can only have 1 moderator.";
 
     const visibleTabs = React.useMemo(() => {
         const allowedRoles = userRole ? new Set([userRole]) : new Set<string>();
@@ -495,6 +497,11 @@ export function GroupStudioHeader({
 
         const token = getTokenOrFail();
         if (!token) return null;
+
+        if (role === "Moderator" && hasModerator) {
+            toast({ description: oneModeratorError, variant: "destructive" });
+            return null;
+        }
 
         const apiRole = normalizeInviteRoleForApi(role);
         const requestBody: Record<string, unknown> = {
@@ -563,6 +570,11 @@ export function GroupStudioHeader({
 
         const token = getTokenOrFail();
         if (!token) return false;
+
+        if (role === "Moderator" && hasModerator) {
+            toast({ description: oneModeratorError, variant: "destructive" });
+            return false;
+        }
 
         const apiRole = normalizeInviteRoleForApi(role);
         const requestBody: Record<string, unknown> = {
@@ -633,7 +645,7 @@ export function GroupStudioHeader({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 className={
-                    "relative w-full overflow-visible rounded-3xl border border-[#F3E4D7] bg-linear-to-br from-[#FFFDFB] via-[#FFF8F2] to-[#FFF3E8] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6"
+                    "relative w-full overflow-visible rounded-3xl border border-[#F3E4D7] bg-[#FFF8F3] px-4 py-5 shadow-[0_10px_40px_rgba(234,88,12,0.06)] lg:px-6 lg:py-6"
                 }>
                 <div className="mb-6 flex flex-col justify-between gap-4">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">

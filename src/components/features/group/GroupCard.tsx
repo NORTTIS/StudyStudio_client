@@ -45,14 +45,12 @@ export function GroupCard({
     onToggleStar,
     onLeaveGroup,
     onCancelPending,
-    isStudioOpen,
     view = "grid"
 }: {
     group: GroupCardDto;
     onToggleStar: () => Promise<void>;
     onLeaveGroup: () => Promise<void>;
     onCancelPending?: () => Promise<void>;
-    isStudioOpen?: boolean;
     view?: "grid" | "list";
 }) {
     const t = useTranslations("GroupCard");
@@ -66,13 +64,11 @@ export function GroupCard({
     const groupRole = mapRole(group.role);
     const isOwner = groupRole === "owner";
     const isArchived = toBooleanLike((group as Record<string, unknown>).isArchived) === true;
-    const isGroupOpen = group.isOpen !== false;
     // Status dot is meant to represent Active vs Archived (per UI copy),
     // not whether the group/studio is temporarily paused/closed.
     const isDotActive = !isArchived;
-    const isEffectiveOpen = !isArchived && isGroupOpen && isStudioOpen !== false;
     const localizedStatusLabel = isArchived ? t("statusArchived") : t("statusActive");
-    const isInactiveForViewer = !isOwner && !isEffectiveOpen;
+    const isInactiveForViewer = !isOwner && isArchived;
     const rawStatus = String(
         (group as Record<string, unknown>).membershipStatus ??
         (group as Record<string, unknown>).status ??

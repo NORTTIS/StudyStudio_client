@@ -2611,6 +2611,11 @@
       "noGroupId": "GroupId not found",
       "notFound": "Group not found"
     },
+    "unauthorized": {
+      "title": "You do not have permission",
+      "description": "You are not allowed to access this group's settings page.",
+      "backToGroup": "Back to group"
+    },
     "general": {
       "title": "General settings",
       "subtitle": "Update basic group information",
@@ -2669,7 +2674,7 @@
       },
       "selectPlaceholder": "Select role",
       "emptyState": "No members yet",
-      "oneModeratorError": "Group must have at least one moderator"
+      "oneModeratorError": "Each group can only have 1 moderator"
     },
     "dangerZone": {
       "title": "Danger zone",

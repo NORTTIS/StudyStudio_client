@@ -46,6 +46,7 @@ type GroupBannerResult =
       };
 
 function getApiBase() {
+    // Loại bỏ dấu "/" thừa ở cuối để việc nối path API luôn ổn định.
     const raw = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
     return String(raw).replace(/\/+$/, "");
 }
@@ -56,12 +57,14 @@ function extractBannerSettings(raw: unknown) {
 
     const normalizeRole = (role?: string | null) => {
         const normalized = String(role ?? "").trim().toLowerCase();
+        // Chỉ giữ lại các role hợp lệ để tránh đẩy giá trị lạ vào UI.
         if (normalized === "owner" || normalized === "moderator" || normalized === "member" || normalized === "commenter" || normalized === "viewer") {
             return normalized;
         }
         return null;
     };
 
+    // Gộp dữ liệu từ nhiều dạng response khác nhau về một cấu trúc dùng chung trong component.
     return {
         bannerUrl: data?.bannerUrl ? toPublicUrl(data.bannerUrl) : null,
         colorHex: data?.colorHex ?? null,
@@ -75,6 +78,7 @@ async function fetchGroupBanner(groupId: string): Promise<GroupBannerResult> {
     const base = getApiBase();
     const apiBase = base.endsWith("/api") ? base : `${base}/api`;
     const url = `${apiBase}/group/${encodeURIComponent(groupId)}/detail`;
+    // Lấy token ở client để hỗ trợ cả cơ chế Bearer token lẫn cookie.
     const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
     const res = await fetch(url, {
@@ -99,6 +103,7 @@ async function fetchGroupBanner(groupId: string): Promise<GroupBannerResult> {
 
     const raw = await res.text();
     try {
+        // Loại bỏ BOM nếu có để tránh lỗi parse JSON từ một số backend.
         return {
             data: JSON.parse(raw.replace(/^\uFEFF/, "")),
             error: null
@@ -141,6 +146,7 @@ export function GroupShell({
         void (async () => {
             try {
                 if (!cancelled) {
+                    // Reset trạng thái trước mỗi lần tải lại dữ liệu theo group hiện tại.
                     setIsReady(false);
                     setLoadError(null);
                     setRedirectTarget(null);
@@ -150,7 +156,14 @@ export function GroupShell({
                 if (result.error) {
                     console.error("[GroupShell] Failed to load data:", { status: result.error.status });
                     if (!cancelled) {
-                        if (result.error.status === 401 || result.error.status === 403) {
+                        // Phiên đăng nhập hết hạn thì quay về login; chỉ 403 mới là bị cấm truy cập thật sự.
+                        if (result.error.status === 401) {
+                            const redirectPath = encodeURIComponent(pathname || `/${locale}/group/${groupId}`);
+                            setRedirectTarget(`/${locale}/login?redirect=${redirectPath}&fromLogin=1`);
+                            return;
+                        }
+
+                        if (result.error.status === 403) {
                             setRedirectTarget(`/${locale}/task-access-denied?reason=forbidden`);
                             return;
                         }
@@ -163,6 +176,7 @@ export function GroupShell({
                 const bannerSettings = extractBannerSettings(result.data);
                 if (cancelled) return;
 
+                // Chỉ lưu những giá trị cần thiết cho phần khung giao diện của group.
                 setBannerUrl(bannerSettings.bannerUrl);
                 setColorHex(bannerSettings.colorHex);
                 setIsArchived(Boolean(bannerSettings.isArchived));
@@ -183,10 +197,11 @@ export function GroupShell({
         return () => {
             cancelled = true;
         };
-    }, [groupId, locale, tGroupHeader]);
+    }, [groupId, locale, pathname, tGroupHeader]);
 
     React.useEffect(() => {
         if (!redirectTarget) return;
+        // Tách effect redirect riêng để render không bị trộn với logic tải dữ liệu.
         router.replace(redirectTarget);
     }, [redirectTarget, router]);
 
@@ -196,6 +211,7 @@ export function GroupShell({
         const settingPrefix = `/group/${groupId}/setting`;
         if (pathname === settingPrefix || pathname.startsWith(`${settingPrefix}/`)) return;
 
+        // Group đã bị lưu trữ thì khóa người dùng vào khu vực cài đặt tương ứng.
         const localePrefix = pathname.split("/").filter(Boolean)[0] || "vi";
         router.replace(`/${localePrefix}/group/${groupId}/setting`);
     }, [groupId, isArchived, isReady, pathname, router]);
@@ -216,10 +232,12 @@ export function GroupShell({
         <GroupHeaderActionContext.Provider value={{ setHeaderAction }}>
             <div className="relative min-h-screen overflow-x-hidden">
                 <div className="pointer-events-none absolute inset-0 z-0">
+                    {/* Nền banner chỉ để hiển thị nên không nhận tương tác chuột. */}
                     <GroupBannerBackground bannerUrl={bannerUrl} colorHex={colorHex} />
                 </div>
 
                 <div className="relative z-20 back-ground-transparent">
+                    {/* Header có thể nhận action động từ các màn con thông qua context. */}
                     <GroupStudioHeader groupId={groupId} headerAction={headerAction} />
                     <div className="relative z-20 overflow-visible">{children}</div>
                 </div>
