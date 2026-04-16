@@ -4,7 +4,6 @@ import { Archive, ChevronDown, FolderKanban, Layers, LayoutGrid, List, Plus, Sea
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { getStudioById } from "@/api/studios";
 import { cancelPendingJoinRequest } from "@/api/invites";
 import { CreateGroupModal } from "@/components/features/group/create/CreateGroupModal";
 import { Button } from "@/components/ui/button";
@@ -38,6 +37,21 @@ const PREVIEW_COUNT = 3;
 
 const normId = (v: unknown) => String(v ?? "").trim();
 const getGroupId = (g: any) => normId(g?.id ?? g?.groupId ?? g?.group_id);
+const toBooleanLike = (value: unknown): boolean | null => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") {
+        if (value === 1) return true;
+        if (value === 0) return false;
+    }
+    if (typeof value === "string") {
+        const normalized = value.trim().toLowerCase();
+        if (normalized === "true" || normalized === "1") return true;
+        if (normalized === "false" || normalized === "0") return false;
+    }
+    return null;
+};
+
+const isArchivedGroup = (group: GroupCardDto) => toBooleanLike((group as Record<string, unknown>).isArchived) === true;
 
 function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
     const uniqKeepOrder = (list: GroupCardDto[]) => {
@@ -52,13 +66,26 @@ function sanitizeGroupsPageData(raw: GroupsPageData): GroupsPageData {
         return out;
     };
 
+    const favorites = uniqKeepOrder(raw.favorites ?? []);
+    const managed = uniqKeepOrder((raw.managed ?? []).filter((group) => !isArchivedGroup(group)));
+    const independent = uniqKeepOrder((raw.independent ?? []).filter((group) => !isArchivedGroup(group)));
+    const joined = uniqKeepOrder((raw.joined ?? []).filter((group) => !isArchivedGroup(group)));
+    const inactive = uniqKeepOrder((raw.inactive ?? []).filter((group) => isArchivedGroup(group)));
+
+    const inactiveIds = new Set(inactive.map((group) => getGroupId(group)).filter(Boolean));
+    const stripInactiveDuplicates = (list: GroupCardDto[]) =>
+        list.filter((group) => {
+            const groupId = getGroupId(group);
+            return !groupId || !inactiveIds.has(groupId);
+        });
+
     return {
         ...raw,
-        favorites: uniqKeepOrder(raw.favorites ?? []),
-        managed: uniqKeepOrder(raw.managed ?? []),
-        independent: uniqKeepOrder(raw.independent ?? []),
-        inactive: uniqKeepOrder(raw.inactive ?? []),
-        joined: uniqKeepOrder(raw.joined ?? [])
+        favorites: stripInactiveDuplicates(favorites),
+        managed: stripInactiveDuplicates(managed),
+        independent: stripInactiveDuplicates(independent),
+        inactive,
+        joined: stripInactiveDuplicates(joined)
     };
 }
 
@@ -85,35 +112,6 @@ function filterGroupsBySearch(groups: GroupCardDto[], query: string) {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return groups;
     return groups.filter((group) => getGroupSearchText(group).includes(normalized));
-}
-
-function getStudioId(group: GroupCardDto) {
-    const studio = (group as { studio?: { id?: string | null } }).studio;
-    return normId(studio?.id);
-}
-
-async function loadStudioOpenById(groups: GroupCardDto[]) {
-    const studioIds = Array.from(new Set(groups.map(getStudioId).filter((id) => !!id)));
-    if (studioIds.length === 0) return {} as Record<string, boolean>;
-
-    const results = await Promise.allSettled(
-        studioIds.map(async (studioId) => {
-            const result = await getStudioById(studioId);
-            return {
-                studioId,
-                isOpen: result.status === "success" ? result.data?.isOpen !== false : true
-            };
-        })
-    );
-
-    const studioOpenById: Record<string, boolean> = {};
-    for (const result of results) {
-        if (result.status === "fulfilled") {
-            studioOpenById[result.value.studioId] = result.value.isOpen;
-        }
-    }
-
-    return studioOpenById;
 }
 
 function SectionReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -260,7 +258,6 @@ export function GroupsPage() {
     const [data, setData] = useState<GroupsPageData>(emptyData);
     const [error, setError] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
-    const [studioOpenById, setStudioOpenById] = useState<Record<string, boolean>>({});
     const [openCreate, setOpenCreate] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [groupTypeFilter, setGroupTypeFilter] = useState<"all" | "independent" | "managed" | "joined" | "archived">("all");
@@ -280,16 +277,8 @@ export function GroupsPage() {
             const res = await fetchGroupsPageData();
             const sanitized = sanitizeGroupsPageData(res);
             setData(sanitized);
-            const allGroups = uniqueByIdKeepFirst([
-                ...sanitized.favorites,
-                ...sanitized.managed,
-                ...sanitized.independent,
-                ...sanitized.joined
-            ]);
-            setStudioOpenById(await loadStudioOpenById(allGroups));
         } catch (e: unknown) {
             setData(emptyData);
-            setStudioOpenById({});
             setError(e instanceof Error ? e.message : "Failed to load groups");
         } finally {
             setLoading(false);
@@ -307,19 +296,9 @@ export function GroupsPage() {
                 if (!alive) return;
                 const sanitized = sanitizeGroupsPageData(res);
                 setData(sanitized);
-                const allGroups = uniqueByIdKeepFirst([
-                    ...sanitized.favorites,
-                    ...sanitized.managed,
-                    ...sanitized.independent,
-                    ...sanitized.joined
-                ]);
-                const studioOpenMap = await loadStudioOpenById(allGroups);
-                if (!alive) return;
-                setStudioOpenById(studioOpenMap);
             } catch (e: unknown) {
                 if (!alive) return;
                 setData(emptyData);
-                setStudioOpenById({});
                 setError(e instanceof Error ? e.message : "Failed to load groups");
             } finally {
                 if (!alive) return;
@@ -626,7 +605,6 @@ export function GroupsPage() {
                                     onCancelPending={onCancelPending}
                                     emptyText={t("favoritesEmpty")}
                                     loading={loading}
-                                    studioOpenById={studioOpenById}
                                     t={t}
                                     titleOnly
                                 />
@@ -649,7 +627,6 @@ export function GroupsPage() {
                                     onCancelPending={onCancelPending}
                                     emptyText={t("managedEmpty")}
                                     loading={loading}
-                                    studioOpenById={studioOpenById}
                                     t={t}
                                     titleOnly
                                 />
@@ -672,7 +649,6 @@ export function GroupsPage() {
                                     onCancelPending={onCancelPending}
                                     emptyText={t("independentEmpty")}
                                     loading={loading}
-                                    studioOpenById={studioOpenById}
                                     t={t}
                                     titleOnly
                                 />
@@ -695,7 +671,6 @@ export function GroupsPage() {
                                     onCancelPending={onCancelPending}
                                     emptyText={t("inactiveEmpty")}
                                     loading={loading}
-                                    studioOpenById={studioOpenById}
                                     t={t}
                                     titleOnly
                                 />
@@ -718,7 +693,6 @@ export function GroupsPage() {
                                     onCancelPending={onCancelPending}
                                     emptyText={t("joinedEmpty")}
                                     loading={loading}
-                                    studioOpenById={studioOpenById}
                                     t={t}
                                     titleOnly
                                 />
@@ -741,7 +715,6 @@ export function GroupsPage() {
                                     onCancelPending={onCancelPending}
                                     emptyText={t("pendingApprovalEmpty")}
                                     loading={loading}
-                                    studioOpenById={studioOpenById}
                                     t={t}
                                     titleOnly
                                 />
@@ -778,7 +751,6 @@ function GroupsSection({
     onCancelPending,
     emptyText,
     loading = false,
-    studioOpenById,
     t,
     titleOnly = false
 }: {
@@ -796,7 +768,6 @@ function GroupsSection({
     onCancelPending: (groupId: string) => Promise<void>;
     emptyText: string;
     loading?: boolean;
-    studioOpenById: Record<string, boolean>;
     t: (key: string) => string;
     titleOnly?: boolean;
 }) {
@@ -1042,10 +1013,6 @@ function GroupsSection({
                                                     onToggleStar={() => onToggleStar(getGroupId(g))}
                                                     onLeaveGroup={() => onLeaveGroup(getGroupId(g))}
                                                     onCancelPending={() => onCancelPending(getGroupId(g))}
-                                                    isStudioOpen={(() => {
-                                                        const studioId = getStudioId(g);
-                                                        return studioId ? studioOpenById[studioId] !== false : true;
-                                                    })()}
                                                     view={view}
                                                 />
                                             </div>

@@ -71,6 +71,32 @@ type TaskStatusDto = {
     taskList?: TaskItemResponse[] | null;
 };
 
+type GroupTaskItemResponse = {
+    taskId?: string;
+    taskTitle?: string | null;
+    dueDate?: string | null;
+    startDate?: string | null;
+    estimatedHours?: number | null;
+    actualHours?: number | null;
+    position?: number;
+    taskPriority?: number;
+    taskSeverity?: number;
+    progress?: number;
+    taskDescription?: string | null;
+    assignees?: UserDto[] | null;
+    statusId?: string;
+    statusName?: string | null;
+};
+
+type GroupTaskListResponse = {
+    items?: GroupTaskItemResponse[] | null;
+    totalPages?: number;
+    groupStatuses?: Array<{
+        statusId?: string;
+        statusName?: string | null;
+    }> | null;
+};
+
 type StatusOption = {
     statusId: string;
     statusName: string;
@@ -104,6 +130,7 @@ type GroupDetailResponse = {
     groupName?: string | null;
     taskStatuses?: TaskStatusDto[] | null;
     userRole?: string | null;
+    allowMemberUpdateProgress?: boolean;
 };
 
 export type TaskDetail = {
@@ -1626,18 +1653,145 @@ function mapStatusOptions(detail: GroupDetailResponse | null | undefined): Statu
         .filter((s): s is StatusOption => s != null);
 }
 
+function mapTaskDetailFromGroupTaskItem(task: GroupTaskItemResponse, taskId: string): TaskDetail {
+    const primaryAssignee = task.assignees?.[0] ?? null;
+
+    return mapTaskDetailFromTaskItem(
+        {
+            taskId: task.taskId,
+            taskTitle: task.taskTitle,
+            dueDate: task.dueDate ?? undefined,
+            startDate: task.startDate ?? undefined,
+            estimatedHours: task.estimatedHours ?? null,
+            actualHours: task.actualHours ?? null,
+            position: task.position,
+            taskPriority: task.taskPriority,
+            taskSeverity: task.taskSeverity,
+            progress: task.progress,
+            taskDescription: task.taskDescription ?? null,
+            assignee: primaryAssignee,
+            groupStatus: {
+                statusId: task.statusId,
+                statusName: task.statusName ?? null
+            }
+        },
+        taskId,
+        task.statusName ?? null,
+        task.statusId ?? null
+    );
+}
+
+async function apiGetGroupTasksPage(args: { groupId: string; statusId?: string; page?: number; pageSize?: number }) {
+    const token = getAccessTokenOrNull();
+    const base = getApiBase();
+    if (!base) throw new Error("Thiáº¿u NEXT_PUBLIC_API_BASE_URL.");
+
+    const query = new URLSearchParams();
+    if (args.statusId) query.set("statusId", args.statusId);
+    query.set("page", String(args.page ?? 1));
+    query.set("pageSize", String(args.pageSize ?? 100));
+
+    const suffix = query.toString();
+    const url = apiUrl(`/group/${encodeURIComponent(args.groupId)}/tasks${suffix ? `?${suffix}` : ""}`);
+    const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            Accept: "text/plain, application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        cache: "no-store"
+    });
+
+    const raw = await readText(res);
+    const { json } = parseMaybeJson(raw);
+
+    if (!res.ok || (json && !okByJsonStatus(json))) {
+        throw new Error(extractApiMessage(raw, json));
+    }
+
+    return (json ?? null) as ApiResponse<GroupTaskListResponse> | null;
+}
+
+async function apiFindTaskViaGroupTasks(
+    groupId: string,
+    taskId: string,
+    statusOptions: StatusOption[]
+): Promise<{ task: GroupTaskItemResponse; statusOptions: StatusOption[] } | null> {
+    const normalizedTaskId = String(taskId).trim();
+    if (!normalizedTaskId) return null;
+
+    const candidateStatusIds = Array.from(
+        new Set(
+            statusOptions
+                .map((status) => String(status.statusId ?? "").trim())
+                .filter(Boolean)
+        )
+    );
+
+    const scopes = candidateStatusIds.length > 0 ? candidateStatusIds : [undefined];
+
+    for (const statusId of scopes) {
+        let page = 1;
+        let totalPages = 1;
+
+        while (page <= totalPages) {
+            const response = await apiGetGroupTasksPage({
+                groupId,
+                statusId,
+                page,
+                pageSize: 100
+            });
+
+            const data = response?.data;
+            const found = (data?.items ?? []).find((item) => String(item?.taskId ?? "").trim() === normalizedTaskId);
+            if (found) {
+                const fallbackStatusOptions = (data?.groupStatuses ?? [])
+                    .map((status) => {
+                        const nextStatusId = String(status?.statusId ?? "").trim();
+                        const nextStatusName = String(status?.statusName ?? "").trim();
+                        if (!(nextStatusId && nextStatusName)) return null;
+                        return { statusId: nextStatusId, statusName: nextStatusName };
+                    })
+                    .filter((status): status is StatusOption => status != null);
+
+                return {
+                    task: found,
+                    statusOptions: fallbackStatusOptions
+                };
+            }
+
+            totalPages = Math.max(1, Number(data?.totalPages ?? 1));
+            page += 1;
+        }
+    }
+
+    return null;
+}
+
 async function apiGetTaskDetailFromGroup(groupId: string, taskId: string) {
     const resp = await apiGetGroupDetail(groupId);
     const group = resp?.data ?? null;
+    const statusOptions = mapStatusOptions(group);
     const hit = findTaskInGroupDetail(group, taskId);
+    const fallbackTask = !hit ? await apiFindTaskViaGroupTasks(groupId, taskId, statusOptions) : null;
+
+    if (fallbackTask) {
+        return {
+            task: mapTaskDetailFromGroupTaskItem(fallbackTask.task, taskId),
+            statusOptions: fallbackTask.statusOptions.length > 0 ? fallbackTask.statusOptions : statusOptions,
+            userRole: String(group?.userRole ?? "").trim(),
+            allowMemberUpdateProgress: Boolean(group?.allowMemberUpdateProgress ?? false)
+        };
+    }
 
     if (!hit) throw new Error("Không tìm thấy task trong group");
 
     return {
         task: mapTaskDetailFromTaskItem(hit.task, taskId, hit.statusName, hit.statusId),
-        statusOptions: mapStatusOptions(group),
+        statusOptions,
         userRole: String(group?.userRole ?? "").trim(),
-        allowMemberUpdateProgress: Boolean((group as Record<string, unknown>)?.allowMemberUpdateProgress ?? false)
+        allowMemberUpdateProgress: Boolean(group?.allowMemberUpdateProgress ?? false)
     };
 }
 

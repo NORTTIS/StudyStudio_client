@@ -272,6 +272,7 @@ export function GroupSettingView() {
     const groupIdFromQuery = sp.get("id") || undefined;
     const groupIdFromParams = params?.groupId ? String(params.groupId) : undefined;
     const groupId = groupIdFromParams || groupIdFromQuery;
+    const fromStudioId = String(sp.get("fromStudioId") ?? "").trim();
 
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -332,6 +333,7 @@ export function GroupSettingView() {
     const canEditDetails = myRoleInGroup === "Owner" && !isGroupPaused;
     const canManageMembers = (myRoleInGroup === "Owner" || myRoleInGroup === "Moderator") && !isGroupPaused;
     const canDelete = useMemo(() => myRoleInGroup === "Owner" && !isGroupPaused, [myRoleInGroup, isGroupPaused]);
+    const canViewSettings = myRoleInGroup === "Owner" || myRoleInGroup === "Moderator";
 
     const apiBase = getApiBase();
 
@@ -969,6 +971,11 @@ export function GroupSettingView() {
 
         setMembersError("");
 
+        if (role === "Moderator" && hasModerator) {
+            setMembersError(t("members.oneModeratorError"));
+            return false;
+        }
+
         const apiRole = normalizeInviteRoleForApi(role);
         const requestBody: Record<string, unknown> = {
             groupId,
@@ -1009,6 +1016,11 @@ export function GroupSettingView() {
         if (!token) return null;
 
         setMembersError("");
+
+        if (role === "Moderator" && hasModerator) {
+            setMembersError(t("members.oneModeratorError"));
+            return null;
+        }
 
         const apiRole = normalizeInviteRoleForApi(role);
         const requestBody: Record<string, unknown> = {
@@ -1177,6 +1189,37 @@ export function GroupSettingView() {
             <div className="p-6 text-gray-500 text-sm">
                 {t("loading.notFound")}
                 {generalError ? <div className="mt-2 text-red-600 text-xs">{generalError}</div> : null}
+            </div>
+        );
+    }
+
+    if (!canViewSettings) {
+        const groupHref = fromStudioId
+            ? `/${locale}/group/${groupId}?fromStudioId=${encodeURIComponent(fromStudioId)}`
+            : `/${locale}/group/${groupId}`;
+
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+                <div className="w-full max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
+                    <div className="mb-6 flex items-center justify-center gap-3">
+                        <svg width="48" height="48" viewBox="0 0 64 64">
+                            <path d="M32 6L2 20L32 34L62 20L32 6Z" fill="#F97316" />
+                            <path d="M12 26V38C12 45 20 50 32 50C44 50 52 45 52 38V26L32 36L12 26Z" fill="#FB923C" />
+                        </svg>
+                        <span className="text-3xl font-bold leading-tight text-orange-500">
+                            Study <br /> Studio
+                        </span>
+                    </div>
+
+                    <h1 className="mb-2 font-bold text-2xl text-[#261E33]">{t("unauthorized.title")}</h1>
+                    <p className="mb-6 text-sm text-muted-foreground">{t("unauthorized.description")}</p>
+
+                    <Button
+                        className="w-full bg-orange-600 text-white hover:bg-orange-700"
+                        onClick={() => router.push(groupHref)}>
+                        {t("unauthorized.backToGroup")}
+                    </Button>
+                </div>
             </div>
         );
     }

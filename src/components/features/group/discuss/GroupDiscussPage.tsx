@@ -140,6 +140,13 @@ function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/**
+ * Nếu nội dung thực tế đang mention toàn bộ thành viên trong nhóm
+ * (trừ chính tác giả), hàm này sẽ rút gọn chuỗi hiển thị về dạng `@__all__`.
+ *
+ * Mục tiêu là giúp UI render gọn hơn khi backend đang lưu mention dưới dạng
+ * nhiều `@userId` liên tiếp trong cùng một nội dung.
+ */
 function compressAllMentionsForDisplay(text: string, membersById: Record<string, string>, authorId?: string) {
     const allMemberIds = Object.keys(membersById)
         .map((id) => String(id).trim())
@@ -151,7 +158,7 @@ function compressAllMentionsForDisplay(text: string, membersById: Record<string,
     const expectedAllIds = allMemberIds.filter((id) => normalizeUserId(id) !== normalizedAuthorId);
     if (expectedAllIds.length < 2) return text;
 
-    // Detect all mentions in the text
+    // Quét toàn bộ mention theo định dạng UUID để biết người dùng đã mention những ai.
     const mentionRegex = /@([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/g;
     const mentionedIds = new Set<string>();
 
@@ -202,6 +209,10 @@ function compressAllMentionsForDisplay(text: string, membersById: Record<string,
     return output;
 }
 
+/**
+ * Mở rộng token đặc biệt `@__all__` thành danh sách mention thật gửi cho backend.
+ * Việc loại trừ một số `excludedIds` giúp tránh tự mention chính mình khi đăng bài hoặc trả lời.
+ */
 function expandMentionAll(payloadText: string, membersById: Record<string, string>, excludedIds: string[] = []) {
     if (!payloadText.includes("@__all__")) return payloadText;
 
@@ -302,6 +313,10 @@ function mergeReply(post: PostItem, nextReply: ReplyItem) {
     return { ...post, replies: nextReplies };
 }
 
+/**
+ * Chuyển mảng message phẳng từ API thành cấu trúc bài viết và phản hồi
+ * để UI thảo luận có thể render theo dạng cây 1 cấp: post -> replies.
+ */
 function buildPostsFromMessages(messages: GroupMessageDto[] | null | undefined, t: DiscussTranslate) {
     const source = messages || [];
     const postMap = new Map<string, PostItem>();
@@ -531,6 +546,8 @@ const MentionTextarea = React.forwardRef<
         }
     }, [value]);
 
+    // Tự động tăng chiều cao textarea theo nội dung, nhưng vẫn giữ chiều cao tối thiểu
+    // để ô nhập luôn ổn định ngay cả khi chưa có nhiều dòng.
     const resizeTextarea = React.useCallback(() => {
         const el = taRef.current;
         if (!el) return;
@@ -541,6 +558,8 @@ const MentionTextarea = React.forwardRef<
         setInputHeight(nextHeight);
     }, []);
 
+    // Tính lại vị trí popup mention dựa trên vị trí thật của textarea trên viewport.
+    // Popup sẽ tự đẩy sang trái hoặc hiển thị phía trên nếu không còn đủ chỗ bên dưới.
     const updatePopupPosition = React.useCallback(() => {
         const el = taRef.current;
         if (!el) return;
@@ -594,6 +613,8 @@ const MentionTextarea = React.forwardRef<
         };
     }, [open, mounted, updatePopupPosition]);
 
+    // Danh sách gợi ý mention được lọc theo từ khóa hiện tại, đồng thời thêm tùy chọn
+    // `@mọi người` khi trong nhóm còn thành viên khác ngoài chính người đang nhập.
     const filtered = React.useMemo(() => {
         const q = query.trim().toLowerCase();
         const mentionAllShort = t("mentionAllShort");
@@ -1288,7 +1309,8 @@ export default function GroupDiscussPage() {
             avatarUrl: safeAvatarUrl(user?.avatarUrl ?? "")
         });
 
-        // Fetch full profile to get avatar
+        // Lấy thêm hồ sơ đầy đủ để ưu tiên avatar mới nhất của người dùng hiện tại,
+        // vì dữ liệu auth cache đôi khi chỉ chứa thông tin tối giản.
         const fetchProfile = async () => {
             try {
                 const result = await getUserProfile(locale);
@@ -1364,6 +1386,8 @@ export default function GroupDiscussPage() {
         if (!id) return;
 
         const connection = connectionRef.current;
+        // Xóa message đang phụ thuộc vào kết nối hub thời gian thực.
+        // Nếu đã mất kết nối thì dừng sớm và báo rõ cho người dùng.
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
             toast({ variant: "destructive", description: t("cannotDeleteWhenDisconnected") });
             closeDeleteConfirm();
@@ -1429,6 +1453,8 @@ export default function GroupDiscussPage() {
 
         const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "";
 
+        // Tải lịch sử thảo luận ban đầu để đồng bộ UI với dữ liệu server
+        // trước khi hoặc sau khi các sự kiện realtime tiếp tục đổ về.
         const loadHistory = async () => {
             if (!rawBase) return;
 
@@ -1442,6 +1468,7 @@ export default function GroupDiscussPage() {
             setPosts(buildPostsFromMessages(response.data.messages, t));
         };
 
+        // Chuẩn hóa dữ liệu role backend về tập quyền nội bộ mà màn discuss đang sử dụng.
         const toRole = (raw: any): GroupRole => {
             const s = String(raw || "")
                 .toLowerCase()
@@ -1454,6 +1481,7 @@ export default function GroupDiscussPage() {
             return "member";
         };
 
+        // Lấy role của người dùng trong nhóm để quyết định có được bình luận hay xóa hay không.
         const loadUserRole = async () => {
             if (!rawBase) return;
 
@@ -1474,6 +1502,8 @@ export default function GroupDiscussPage() {
             }
         };
 
+        // Tải danh sách thành viên để phục vụ hiển thị mention, map tên người dùng
+        // và suy luận một số quy tắc quyền theo từng thành viên.
         const loadMembers = async () => {
             if (!rawBase) return;
 
@@ -1547,6 +1577,8 @@ export default function GroupDiscussPage() {
 
             let parentExists = false;
 
+            // Nếu bài cha đã có trong state thì gắn reply trực tiếp vào đúng post.
+            // Ngược lại sẽ fallback sang tải lại lịch sử để tránh mất đồng bộ.
             setPosts((prev) => {
                 const nextReply = dtoToReplyItem(reply, t);
                 if (!nextReply) return prev;
@@ -1564,6 +1596,8 @@ export default function GroupDiscussPage() {
         });
 
         connection.on("MessageDeleted", (data: MessageDeletedPayload) => {
+            // Sự kiện xóa có thể là xóa bài gốc hoặc xóa một reply,
+            // nên cần dọn dữ liệu ở cả hai cấp trong state hiện tại.
             setPosts((prev) =>
                 prev
                     .filter((p) => p.id !== data.messageId)
@@ -1613,11 +1647,13 @@ export default function GroupDiscussPage() {
                     try {
                         await connection.stop();
                     } catch {
-                        // Ignore errors
+                        // Bỏ qua lỗi cleanup vì component đã rời khỏi màn hình.
                     }
                     return;
                 }
 
+                // Sau khi kết nối thành công, client phải tham gia đúng room của nhóm
+                // rồi mới tải dữ liệu ban đầu để tránh nhận sự kiện lệch ngữ cảnh.
                 await connection.invoke("JoinGroup", groupId);
                 if (isDisposed) return;
 
@@ -1663,6 +1699,7 @@ export default function GroupDiscussPage() {
                     ) {
                         try {
                             if (state === signalR.HubConnectionState.Connected) {
+                                // Chủ động rời room trước khi dừng kết nối để server giải phóng subscription.
                                 await connection.invoke("LeaveGroup", groupId);
                             }
                         } catch { }
@@ -1691,6 +1728,8 @@ export default function GroupDiscussPage() {
         const v = composerText.trim();
         if (!v) return;
 
+        // Payload gửi đi ưu tiên lấy từ mention editor để giữ đúng token mention nội bộ,
+        // sau đó mới bung `@__all__` thành danh sách userId thật trước khi gọi hub.
         const rawPayload = composerMentionRef.current?.getPayloadText() ?? v;
         const payload = expandMentionAll(rawPayload, membersById, [me.id]);
 
@@ -1720,6 +1759,8 @@ export default function GroupDiscussPage() {
         }
 
         try {
+            // Reply cũng dùng cùng cơ chế mention như bài viết chính
+            // để bảo đảm backend luôn nhận được nội dung đã được chuẩn hóa.
             const content = expandMentionAll(payloadText, membersById, [me.id]);
             const payload = { groupId, parentMessageId: postId, content };
 

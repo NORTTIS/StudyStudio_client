@@ -185,6 +185,9 @@ const readGroupArchiveOverride = (groupId: string): boolean | null => {
     }
 };
 
+const resolveApiGroupArchived = (group: GroupCardDto & { isArchived?: boolean | number | string | null }): boolean | null =>
+    toBooleanLike(group.isArchived);
+
 const writeGroupArchiveOverride = (groupId: string, value: boolean) => {
     if (!groupId) return;
     try {
@@ -397,7 +400,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 if (!groupId) return acc;
 
                 const overrideArchived = readGroupArchiveOverride(groupId);
-                acc[groupId] = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
+                const apiArchived = resolveApiGroupArchived(group as GroupCardDto & { isArchived?: boolean | number | string | null });
+                acc[groupId] = apiArchived ?? overrideArchived ?? false;
                 return acc;
             }, {})
         );
@@ -407,7 +411,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
         return groupList.map((group) => {
             const groupId = String(group.id || "").trim();
             const overrideArchived = readGroupArchiveOverride(groupId);
-            const fallbackArchived = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
+            const apiArchived = resolveApiGroupArchived(group as GroupCardDto & { isArchived?: boolean | number | string | null });
+            const fallbackArchived = apiArchived ?? overrideArchived ?? false;
             const isArchived = groupId in groupArchiveStateById ? groupArchiveStateById[groupId] : fallbackArchived;
 
             return {
@@ -455,7 +460,8 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
             .filter((group) => {
                 const groupId = String(group.id || "").trim();
                 const overrideArchived = readGroupArchiveOverride(groupId);
-                const fallbackArchived = overrideArchived ?? (toBooleanLike((group as GroupCardDto & { isArchived?: boolean | number | string | null }).isArchived) === true);
+                const apiArchived = resolveApiGroupArchived(group as GroupCardDto & { isArchived?: boolean | number | string | null });
+                const fallbackArchived = apiArchived ?? overrideArchived ?? false;
                 const isArchived = groupId in groupArchiveStateById ? groupArchiveStateById[groupId] : fallbackArchived;
                 return !isArchived && !isStudioArchived;
             })
@@ -476,12 +482,12 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 .filter((groupId) => {
                     if (!groupId) return false;
 
-                    const fallbackArchived = Boolean(
-                        readGroupArchiveOverride(groupId)
-                        ?? (groupList.find((group) => String(group.id || "").trim() === groupId) as GroupCardDto & { isArchived?: boolean | null } | undefined)
-                            ?.isArchived
-                        ?? false
-                    );
+                    const sourceGroup = groupList.find((group) => String(group.id || "").trim() === groupId) as (GroupCardDto & {
+                        isArchived?: boolean | number | string | null;
+                    }) | undefined;
+                    const fallbackArchived = resolveApiGroupArchived(sourceGroup ?? { isArchived: null } as GroupCardDto & {
+                        isArchived?: boolean | number | string | null;
+                    }) ?? readGroupArchiveOverride(groupId) ?? false;
                     const isArchived = groupId in groupArchiveStateById ? groupArchiveStateById[groupId] : fallbackArchived;
                     return !isArchived;
                 });
@@ -748,11 +754,17 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                 const groupId = String(group.id || "").trim();
                 if (!groupId) return;
 
+                const apiArchived = resolveApiGroupArchived(group as GroupCardDto & { isArchived?: boolean | number | string | null });
                 const overrideArchived = readGroupArchiveOverride(groupId);
-                if (overrideArchived === null) return;
+                const resolvedArchived = apiArchived ?? overrideArchived;
+                if (resolvedArchived === null) return;
 
-                if (next[groupId] !== overrideArchived) {
-                    next[groupId] = overrideArchived;
+                if (apiArchived !== null && overrideArchived !== apiArchived) {
+                    writeGroupArchiveOverride(groupId, apiArchived);
+                }
+
+                if (next[groupId] !== resolvedArchived) {
+                    next[groupId] = resolvedArchived;
                     hasChanged = true;
                 }
             });
@@ -1700,7 +1712,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                         exit={{ opacity: 0, y: -8 }}
                                         className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                                         <div className={`min-w-0 ${isStudioOwner ? "lg:col-span-8" : "lg:col-span-12"}`}>
-                                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                            <div className="grid grid-cols-1 justify-start gap-5 sm:[grid-template-columns:repeat(auto-fit,minmax(320px,390px))]">
                                                 {activeFilteredGroups.length > 0 ? (
                                                     activeFilteredGroups.map((group) => (
                                                         <motion.div
@@ -1710,7 +1722,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                                             whileHover={{ y: -6 }}
                                                             transition={{ duration: 0.24 }}
-                                                            className="w-full max-w-[390px]">
+                                                            className="w-full">
                                                             {(() => {
                                                                 const isGroupArchived = toBooleanLike(group.isArchived) === true;
                                                                 const isGroupActive = !isGroupArchived;
@@ -1945,7 +1957,7 @@ export default function StudioDetailPage({ initialStudio, initialGroups, bannerU
                                                         </span>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                    <div className="grid grid-cols-1 justify-start gap-3 sm:[grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]">
                                                         {archivedFilteredGroups.map((group) => {
                                                             const isTogglingArchive = updatingGroupArchiveId === group.id;
                                                             const canUnarchiveGroup = isStudioOwner && !isStudioArchived;

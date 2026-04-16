@@ -192,12 +192,15 @@ const EMPTY_BOARD_FILTERS: BoardFilters = {
 };
 
 /**
- * Converts board-level due date filters to discrete API date ranges.
- * "noDates" -> no due date set
- * "overdue" -> dueDate < today
- * "nextDay" -> dueDate tomorrow
- * "nextWeek" -> dueDate within 7 days
- * "nextMonth" -> dueDate within 30 days
+ * Chuyển các bộ lọc hạn chót ở cấp board thành các khoảng ngày cụ thể
+ * để có thể truyền xuống API khi backend hỗ trợ biểu diễn trực tiếp.
+ *
+ * Quy ước:
+ * - `noDates`: task chưa có hạn chót
+ * - `overdue`: hạn chót nhỏ hơn hôm nay
+ * - `nextDay`: hạn chót rơi vào ngày mai
+ * - `nextWeek`: hạn chót nằm trong 7 ngày tới
+ * - `nextMonth`: hạn chót nằm trong 30 ngày tới
  */
 function calculateDueDateRange(filters: DueDateFilterKey[]): DueDateFilterResolution {
     if (filters.length === 0) {
@@ -211,27 +214,27 @@ function calculateDueDateRange(filters: DueDateFilterKey[]): DueDateFilterResolu
 
     for (const filter of filters) {
         if (filter === "overdue") {
-            // Tasks due before today
+            // Nhóm "quá hạn": chỉ lấy các task có hạn chót trước ngày hiện tại.
             const overdueTo = new Date(today);
             overdueTo.setDate(overdueTo.getDate() - 1);
             ranges.push({ to: overdueTo.toISOString() });
         } else if (filter === "nextDay") {
-            // Tasks due tomorrow
+            // Nhóm "ngày mai": từ và đến đều là đúng ngày mai.
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             ranges.push({ from: tomorrow.toISOString(), to: tomorrow.toISOString() });
         } else if (filter === "nextWeek") {
-            // Tasks due within 7 days (today to +7 days)
+            // Nhóm "7 ngày tới": tính từ hôm nay đến hết ngày thứ 7 tiếp theo.
             const nextWeek = new Date(today);
             nextWeek.setDate(nextWeek.getDate() + 7);
             ranges.push({ from: today.toISOString(), to: nextWeek.toISOString() });
         } else if (filter === "nextMonth") {
-            // Tasks due within 30 days (today to +30 days)
+            // Nhóm "30 ngày tới": tính từ hôm nay đến hết ngày thứ 30 tiếp theo.
             const nextMonth = new Date(today);
             nextMonth.setDate(nextMonth.getDate() + 30);
             ranges.push({ from: today.toISOString(), to: nextMonth.toISOString() });
         }
-        // "noDates" is represented via hasNoDueDate and handled separately.
+        // `noDates` không sinh ra khoảng ngày mà sẽ được gửi riêng qua cờ `hasNoDueDate`.
     }
 
     return {
@@ -241,7 +244,8 @@ function calculateDueDateRange(filters: DueDateFilterKey[]): DueDateFilterResolu
 }
 
 /**
- * Extracts assigneeId from member filter if "assignedToMe" is selected
+ * Trả về `assigneeId` nếu bộ lọc thành viên đang chọn "giao cho tôi".
+ * Nếu không có người dùng hiện tại hoặc không bật bộ lọc này thì bỏ qua.
  */
 function getAssigneeIdFromFilter(filters: MemberFilterKey[], currentUserId: string | null): string | undefined {
     if (filters.includes("assignedToMe") && currentUserId) {
@@ -251,8 +255,12 @@ function getAssigneeIdFromFilter(filters: MemberFilterKey[], currentUserId: stri
 }
 
 /**
- * Builds API filter parameters from board-level filter state
- * Note: Some filters (like cardStatus) are applied client-side; dueDateFrom/To support dueDate filter
+ * Dựng bộ tham số filter gửi xuống API từ state filter của board.
+ *
+ * Lưu ý:
+ * - Chỉ những điều kiện backend hiểu được mới được đẩy xuống API.
+ * - Các trường hợp cần nhiều giá trị hoặc logic OR vẫn sẽ được giữ lại
+ *   để lọc tiếp ở phía client nhằm bảo toàn đúng ngữ nghĩa.
  */
 function buildApiFiltersFromBoardFilters(
     filters: BoardFilters,
@@ -278,12 +286,15 @@ function buildApiFiltersFromBoardFilters(
         hasNoDueDate?: boolean;
     } = {};
 
-    // Only apply "assignedToMe" to API; "noMembers" is now sent as hasNoAssignee
+    // Chỉ đẩy xuống API những điều kiện mà backend biểu diễn được trực tiếp.
+    // Các trường hợp nhiều lựa chọn hoặc cần OR sẽ được giữ lại để lọc tiếp ở client.
+    // Với bộ lọc thành viên, chỉ "assignedToMe" chuyển thành `assigneeId`;
+    // còn "noMembers" sẽ được ánh xạ sang cờ `hasNoAssignee`.
     const assigneeId = getAssigneeIdFromFilter(filters.members, currentUserId);
     if (assigneeId) result.assigneeId = assigneeId;
 
-    // Backend currently accepts one `priority` and one `severity` value only.
-    // If users choose multiple values, client-side filtering still keeps full semantics.
+    // Backend hiện chỉ nhận một giá trị `priority` và một giá trị `severity`.
+    // Nếu người dùng chọn nhiều mức, ta gửi giá trị đầu tiên cho API để thu hẹp dữ liệu và tiếp tục lọc đầy đủ ở client.
     if (filters.priorities.length > 0) {
         result.priority = filters.priorities[0];
     }
@@ -292,8 +303,8 @@ function buildApiFiltersFromBoardFilters(
         result.severity = filters.severities[0];
     }
 
-    // Apply due date range filter only when it can be represented as one range.
-    // Multi-select due-date uses OR semantics and is handled client-side.
+    // Chỉ áp dụng khoảng hạn chót ở API khi có thể biểu diễn thành đúng một khoảng duy nhất.
+    // Trường hợp chọn nhiều mốc thời gian cần logic OR sẽ được xử lý ở client.
     const dueDateRange = calculateDueDateRange(filters.dueDate);
     if (!dueDateRange.requiresOr && dueDateRange.ranges.length === 1) {
         const singleRange = dueDateRange.ranges[0];
@@ -301,7 +312,7 @@ function buildApiFiltersFromBoardFilters(
         if (singleRange.to) result.dueDateTo = singleRange.to;
     }
 
-    // Apply cardStatus filter: "complete" → "completed", "inProgress" → "inprogress"
+    // Ánh xạ trạng thái hiển thị của card sang giá trị mà API chấp nhận: "complete" -> "completed", "inProgress" -> "inprogress".
     if (filters.cardStatus.length > 0) {
         if (filters.cardStatus.includes("complete")) {
             result.statusCategory = "completed";
@@ -310,12 +321,12 @@ function buildApiFiltersFromBoardFilters(
         }
     }
 
-    // Apply noMembers filter
+    // Nếu người dùng lọc "không có người phụ trách" thì bật cờ tương ứng.
     if (filters.members.includes("noMembers")) {
         result.hasNoAssignee = true;
     }
 
-    // Apply noDates filter
+    // Nếu người dùng lọc "không có hạn chót" thì bật cờ tương ứng.
     if (filters.dueDate.includes("noDates")) {
         result.hasNoDueDate = true;
     }
@@ -450,6 +461,7 @@ function getAccessTokenOrNull() {
 function getUserRoleOrNull() {
     if (typeof window === "undefined") return null;
 
+    // Đọc role cache trong localStorage để UI có thể ra quyết định sớm trước khi fetch xong.
     const candidates = [
         localStorage.getItem("role"),
         localStorage.getItem("userRole"),
@@ -469,6 +481,7 @@ function normalizeGroupRole(role: string | null | undefined) {
         .toLowerCase();
     if (!raw) return null;
 
+    // Gom nhiều biến thể role backend/localStorage về cùng một bộ giá trị chuẩn của board.
     if (raw.includes("owner") || raw === "admin") return "owner";
     if (raw.includes("moderator")) return "moderator";
     if (raw.includes("member")) return "member";
@@ -516,12 +529,12 @@ function formatDueCompact(input: string, locale: string) {
 
     let date: Date | undefined;
 
-    // Try parseDateString first (handles date-only strings like "2026-04-14")
+    // Ưu tiên parse chuỗi dạng ngày thuần trước để tránh lệch múi giờ với các giá trị như "2026-04-14".
     const parsed = parseDateString(s);
     if (parsed) {
         date = parsed;
     } else {
-        // Parse as ISO datetime and convert to local
+        // Nếu không phải chuỗi ngày thuần, thử parse như ISO datetime rồi hiển thị theo giờ local.
         const isoDate = new Date(s);
         if (!Number.isNaN(isoDate.getTime())) {
             date = isoDate;
@@ -796,6 +809,7 @@ async function apiGetGroupTasks(args: {
     const token = getAccessTokenOrNull();
     if (!base) throw new Error(args.missingApiBaseMessage);
 
+    // Bộ lọc của board được chuyển toàn bộ thành query string trước khi gọi API danh sách task.
     const query = new URLSearchParams();
     if (args.search) query.set("search", args.search);
     if (args.statusId) query.set("statusId", args.statusId);
@@ -855,6 +869,7 @@ async function apiGetAllGroupTasks(args: {
     fallbackMessage: string;
     missingApiBaseMessage: string;
 }) {
+    // Khi cần toàn bộ task, hàm này sẽ tự gom dữ liệu từ tất cả các trang về một mảng duy nhất.
     const requestArgs = {
         groupId: args.groupId,
         search: args.search,
@@ -931,6 +946,7 @@ async function apiReorderGroupTaskStatus(
 
     const url = apiUrl(`/GroupTaskStatus/${encodeURIComponent(args.groupId)}/reorder`);
 
+    // API reorder cột dựa trên phần tử đứng trước và đứng sau thay vì index tuyệt đối.
     await apiFetchJson<unknown>(
         url,
         {
@@ -2176,7 +2192,7 @@ function LoadMoreTrigger({ statusId, onLoadMore, isLoading }: { statusId?: strin
         const scrollEl = ref.current?.parentElement as HTMLElement | null;
         if (!scrollEl || !statusId || !onLoadMore) return;
 
-        // Reset trigger when loading completes
+        // Khi một lượt tải hoàn tất, cho phép trigger infinite scroll được kích hoạt lại.
         if (!isLoading) {
             triggeredRef.current = false;
         }
@@ -2200,7 +2216,7 @@ function LoadMoreTrigger({ statusId, onLoadMore, isLoading }: { statusId?: strin
                 hasUserScrolledRef.current = true;
             }
 
-            // Only attempt loading while the user is scrolling downward.
+            // Chỉ thử tải thêm khi người dùng đang cuộn xuống để tránh bắn request không cần thiết.
             if (currentTop >= lastScrollTopRef.current) {
                 tryLoadMore();
             }
@@ -2215,7 +2231,7 @@ function LoadMoreTrigger({ statusId, onLoadMore, isLoading }: { statusId?: strin
         };
     }, [statusId, onLoadMore, isLoading]);
 
-    // Invisible trigger element at the end of the list
+    // Phần tử mốc vô hình nằm cuối danh sách để theo dõi thời điểm cần tải thêm.
     return <div ref={ref} className="h-px" />;
 }
 
@@ -2859,6 +2875,7 @@ export function GroupBoardScreen({
         [t]
     );
 
+    // Các cờ quyền bên dưới là lớp phân quyền trực tiếp cho thao tác trên board.
     const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(() => getUserRoleOrNull());
     const canDeleteTask = canDelete || canDeleteByRole(currentUserRole);
     const isRestricted = currentUserRole === "commenter" || currentUserRole === "viewer";
@@ -2866,7 +2883,9 @@ export function GroupBoardScreen({
         !isRestricted &&
         (currentUserRole === "owner" || currentUserRole === "moderator" || currentUserRole === "member");
     const canAddTask = !isRestricted;
-    const canAddStatus = !isRestricted && (currentUserRole === "owner" || currentUserRole === "moderator");
+    const canAddStatus =
+        !isRestricted &&
+        (currentUserRole === "owner" || currentUserRole === "moderator" || currentUserRole === "member");
 
     const [columns, setColumns] = React.useState<Column[]>([]);
     const [board, setBoard] = React.useState<Record<ColumnId, Task[]>>({});
@@ -2877,6 +2896,7 @@ export function GroupBoardScreen({
     const [statusLoadingMoreMap, setStatusLoadingMoreMap] = React.useState<Record<ColumnId, boolean>>({});
     const [statusHasMoreMap, setStatusHasMoreMap] = React.useState<Record<ColumnId, boolean>>({});
     const [statusTotalCountMap, setStatusTotalCountMap] = React.useState<Record<ColumnId, number>>({});
+    // Dùng ref song song với state để callback async luôn thấy trạng thái mới nhất, tránh stale closure.
     const statusLoadLockRef = React.useRef<Set<ColumnId>>(new Set());
     const statusLoadingRef = React.useRef<Record<ColumnId, boolean>>({});
     const statusLoadedRef = React.useRef<Record<ColumnId, boolean>>({});
@@ -2920,6 +2940,7 @@ export function GroupBoardScreen({
         const el = boardScrollRef.current;
         if (!el) return;
 
+        // Board hỗ trợ kéo để cuộn nên cần chụp lại điểm bắt đầu và vị trí cuộn hiện tại.
         dragScrollRef.current = {
             isDown: true,
             startX: e.clientX,
@@ -2929,7 +2950,7 @@ export function GroupBoardScreen({
             moved: false
         };
 
-        // FIX 3: Cast to HTMLElement before calling setPointerCapture
+        // Ép kiểu rõ ràng sang `HTMLElement` trước khi gọi `setPointerCapture` để TypeScript hiểu đúng API.
         (el as HTMLElement).setPointerCapture(e.pointerId);
     };
 
@@ -3088,6 +3109,7 @@ export function GroupBoardScreen({
     React.useLayoutEffect(() => {
         window.scrollTo(0, 0);
 
+        // Mỗi lần vào màn board thì đưa toàn bộ vùng cuộn về trạng thái đầu.
         if (boardScrollRef.current) {
             boardScrollRef.current.scrollTop = 0;
             boardScrollRef.current.scrollLeft = 0;
@@ -3116,6 +3138,7 @@ export function GroupBoardScreen({
         const scrollWidth = boardEl.scrollWidth;
         const clientWidth = boardEl.clientWidth;
 
+        // Chỉ bật thanh cuộn giả phía trên khi nội dung kanban tràn ngang.
         setTopScrollbarWidth(scrollWidth);
         setShowTopScrollbar(scrollWidth > clientWidth + 1);
 
@@ -3173,6 +3196,7 @@ export function GroupBoardScreen({
         const boardEl = boardScrollRef.current;
         if (!boardEl) return;
 
+        // `syncSourceRef` ngăn việc hai thanh cuộn kích hoạt lẫn nhau vô hạn.
         if (syncSourceRef.current === "board") {
             syncSourceRef.current = null;
             return;
@@ -3238,6 +3262,8 @@ export function GroupBoardScreen({
 
     const syncColumnsFromDetail = React.useCallback(
         (detail: GroupDetailResponse | undefined) => {
+            // Group detail là nguồn sự thật của danh sách status.
+            // Khi status thay đổi, toàn bộ state phụ trợ theo cột cũng phải reset tương ứng.
             const statuses = (detail?.taskStatuses ?? [])
                 .filter((s) => typeof s?.statusId === "string" && !!s.statusId && typeof s?.statusName === "string")
                 .map((s) => ({
@@ -3308,6 +3334,7 @@ export function GroupBoardScreen({
             if (!(statusId && isUuidLike(statusId))) return;
 
             const isInitialLoad = !append;
+            // Chặn gọi lặp cùng một cột trong lúc đang fetch hoặc đã có dữ liệu ban đầu.
             if (isInitialLoad && statusLoadLockRef.current.has(statusId)) return;
             if (isInitialLoad && (statusLoadedRef.current[statusId] || statusLoadingRef.current[statusId])) return;
             if (append && statusLoadingMoreRef.current[statusId]) return;
@@ -3325,6 +3352,7 @@ export function GroupBoardScreen({
                 const apiFilters = buildApiFiltersFromBoardFilters(filters, currentUserId);
                 const currentPage = append ? (statusPageMap[statusId] ?? 1) + 1 : 1;
 
+                // Mỗi cột tải task riêng để board có thể hiển thị dần theo status.
                 const response = await apiGetGroupTasks({
                     groupId,
                     statusId,
@@ -3345,6 +3373,7 @@ export function GroupBoardScreen({
                 const totalPages = response?.data?.totalPages ?? 1;
                 const hasMore = currentPage < totalPages;
 
+                // `append` phục vụ infinite scroll, còn lần tải đầu sẽ thay mới danh sách của cột.
                 setBoard((prev) => {
                     const existing = append ? prev[statusId] ?? [] : [];
                     return { ...prev, [statusId]: existing.concat(mapped) };
@@ -3402,6 +3431,7 @@ export function GroupBoardScreen({
         if (!isUuidLike(groupId)) throw new Error(t("invalidGroupId"));
         if (!getApiBase()) throw new Error(t("missingApiBase"));
 
+        // Lấy detail và members song song để giảm thời gian chờ khi mở board.
         const [detail, members] = await Promise.all([
             apiGetGroupDetail(groupId, apiMessages),
             apiGetGroupMembers(groupId, apiMessages)
@@ -3409,20 +3439,21 @@ export function GroupBoardScreen({
 
         syncColumnsFromDetail(detail?.data);
         setGroupDetailSnapshot(detail?.data ?? null);
+        // Role từ backend sẽ ghi đè role cache trong localStorage nếu có.
         setCurrentUserRole(normalizeGroupRole(detail?.data?.userRole) ?? getUserRoleOrNull());
 
         const list = members?.data?.members ?? [];
 
-        // Helper to check if role is restricted (commenter or viewer)
+        // Hàm phụ để xác định role có bị hạn chế quyền thao tác hay không, ví dụ commenter hoặc viewer.
         const isRestrictedRole = (role?: string | null | number): boolean => {
             if (role === null || role === undefined || role === "") return false;
 
             const roleStr = String(role).trim().toLowerCase();
 
-            // Handle numeric values: 3 = commenter, 4 = viewer (also as string "3", "4")
+            // Hỗ trợ cả giá trị số lẫn chuỗi số: `3` là commenter, `4` là viewer.
             if (roleStr === "3" || roleStr === "4") return true;
 
-            // Handle text values using mapRole
+            // Với dữ liệu dạng text, chuẩn hóa qua `mapRole` để so sánh thống nhất.
             const mapped = mapRole(String(role));
             return mapped === "commenter" || mapped === "viewer";
         };
@@ -3430,11 +3461,12 @@ export function GroupBoardScreen({
         const filteredMembers = list
             .filter((m) => typeof m?.userId === "string" && !!m.userId)
             .filter((m) => {
-                // Exclude roles: commenter (3) and viewer (4)
+                // Loại các role không được phép nhận task như commenter và viewer.
                 const restricted = isRestrictedRole(m?.role);
                 return !restricted;
             });
 
+        // Chỉ những thành viên có thể được giao việc mới đi vào option của TaskForm.
         setGroupMembersSnapshot(filteredMembers);
 
         setMembersOptions(
@@ -3444,7 +3476,7 @@ export function GroupBoardScreen({
                     value: String(m.userId),
                     label: name || m.email || t("unnamed"),
                     avatarUrl: m.avatarUrl ?? null,
-                    role: m.role ?? null // Include role for validation
+                    role: m.role ?? null // Giữ lại role để modal có thể kiểm tra quyền hợp lệ khi cần.
                 };
             })
         );
@@ -3527,8 +3559,8 @@ export function GroupBoardScreen({
     }, [columns]);
 
     /**
-     * Effect to refetch already-loaded tasks when filters change
-     * This ensures the board reflects the new filter criteria immediately
+     * Khi bộ lọc thay đổi, effect này sẽ nạp lại các cột đã từng được tải.
+     * Nhờ vậy board phản ánh tiêu chí lọc mới ngay lập tức mà không cần reload toàn trang.
      */
     React.useEffect(() => {
         const loadedStatusIds = Object.entries(statusLoadedRef.current)
@@ -3741,7 +3773,7 @@ export function GroupBoardScreen({
             return;
         }
 
-        // FIX 1: Use `task` variable (not `t` which is the translation function)
+        // Tìm đúng task theo `taskId` để lấy tiêu đề hiển thị trong hộp xác nhận xóa, tránh nhầm với `t` là hàm dịch.
         const task = (board[columnId] ?? []).find((x) => x.id === taskId);
 
         setConfirmDeleteTask({
@@ -3863,10 +3895,12 @@ export function GroupBoardScreen({
         const activeType = args.active.data.current?.type;
 
         if (activeType === "column") {
+            // Khi kéo cột thì chỉ xét va chạm giữa các cột với nhau.
             const onlyColumns = filterDroppablesByType(args.droppableContainers, ["column"]);
             return closestCenter({ ...args, droppableContainers: onlyColumns });
         }
 
+        // Khi kéo task, ưu tiên vị trí con trỏ thật; nếu không có thì fallback theo góc gần nhất.
         const allow = filterDroppablesByType(args.droppableContainers, ["task", "column-drop", "column-end"]);
         const pointerHits = pointerWithin({ ...args, droppableContainers: allow });
         if (pointerHits.length > 0) return pointerHits;
@@ -3907,6 +3941,7 @@ export function GroupBoardScreen({
             const activeId = String(e.active.id);
             const prevBoard = board;
 
+            // Optimistic update: đổi UI ngay sau khi thả để thao tác mượt hơn.
             const dropped = applyTaskDrop({
                 board,
                 columns,
@@ -3917,7 +3952,7 @@ export function GroupBoardScreen({
 
             setBoard(dropped.nextBoard);
 
-            // Update totalCountMap when dragging between columns
+            // Nếu kéo task sang cột khác, cập nhật ngay tổng số task của hai cột liên quan.
             if (dropped.fromCol !== dropped.toCol) {
                 setStatusTotalCountMap((prev) => ({
                     ...prev,
@@ -3939,8 +3974,9 @@ export function GroupBoardScreen({
                         apiMessages
                     );
                 } catch {
+                    // Nếu backend không chấp nhận reorder thì rollback về snapshot cũ.
                     setBoard(prevBoard);
-                    // Revert totalCountMap on error
+                    // Hoàn tác cả bộ đếm tổng số task nếu request reorder thất bại.
                     if (dropped.fromCol !== dropped.toCol) {
                         setStatusTotalCountMap((prev) => ({
                             ...prev,
@@ -3955,7 +3991,7 @@ export function GroupBoardScreen({
         }
 
         if (activeType === "column") {
-            // Check permission before allowing column reordering
+            // Kiểm tra quyền trước khi cho phép người dùng kéo đổi vị trí cột.
             if (!canEditStatus) {
                 return;
             }
@@ -3983,9 +4019,10 @@ export function GroupBoardScreen({
             const prevCols = columns;
             const nextCols = arrayMove(columns, oldIndex, newIndex);
 
+            // Reorder cột cũng áp dụng optimistic update rồi mới đồng bộ với backend.
             setColumns(nextCols);
 
-            // FIX 4: Use findIndex on nextCols to get the correct post-move index
+            // Tính lại chỉ số của cột trong `nextCols` để suy ra chính xác phần tử đứng trước và đứng sau sau khi di chuyển.
             const movedIndex = nextCols.findIndex((c) => c.id === activeColId);
             const prevStatusId = movedIndex > 0 ? nextCols[movedIndex - 1].id : null;
             const nextStatusId = movedIndex < nextCols.length - 1 ? nextCols[movedIndex + 1].id : null;
@@ -4534,7 +4571,7 @@ export function GroupBoardScreen({
             />
 
             <div className="px-4 pt-2 sm:px-6 lg:px-8">
-                {/* FIX 2: Move top scrollbar ABOVE the board */}
+                {/* Đặt thanh cuộn phụ phía trên board để người dùng cuộn ngang thuận tiện hơn. */}
                 {showTopScrollbar ? (
                     <div className="sticky top-0 z-30 pb-2">
                         <div

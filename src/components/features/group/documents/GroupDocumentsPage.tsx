@@ -387,7 +387,7 @@ export default function GroupDocumentsPage() {
 
     return (
         <div className="min-h-screen w-full bg-transparent">
-            <Container className="bg-transparent bg-white px-6 py-4">
+            <Container className="min-h-screen bg-transparent px-6 py-4">
                 <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
                         <p className="rounded-xl border border-[#E5E5E5] bg-white px-4 py-4 font-medium text-[#6F6B99] text-sm">
