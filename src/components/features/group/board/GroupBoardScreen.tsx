@@ -2909,7 +2909,8 @@ export function GroupBoardScreen({
     const canContributeToBoard =
         hasAuthoritativeRole &&
         (currentUserRole === "owner" || currentUserRole === "moderator" || currentUserRole === "member");
-    const canManageStatus = canDelete || (hasAuthoritativeRole && canDeleteByRole(currentUserRole));
+    // Quyền quản lý trạng thái chỉ dành cho owner/moderator theo role thực tế của group.
+    const canManageStatus = hasAuthoritativeRole && canDeleteByRole(currentUserRole);
     const canEditTask = canContributeToBoard;
     const canDeleteStatus = canManageStatus;
     const canDeleteTask = canDelete || (hasAuthoritativeRole && canDeleteTaskByRole(currentUserRole));
@@ -3657,6 +3658,11 @@ export function GroupBoardScreen({
     }, [activeTaskId, overId, board, columns]);
 
     const submitAddColumn = async (title: string) => {
+        if (!canAddStatus) {
+            openNoPermissionModal(t("noPermissionCreateStatus"));
+            return;
+        }
+
         if (!groupId) throw new Error(t("missingGroupId"));
         if (!isUuidLike(groupId)) throw new Error(t("invalidGroupId"));
 
