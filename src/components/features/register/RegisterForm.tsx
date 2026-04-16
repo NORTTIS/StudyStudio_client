@@ -16,9 +16,8 @@ import type { components } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PASSWORD_POLICY_REGEX } from "@/lib/password-policy";
 import { RegisterSuccess } from "./RegisterSuccess";
-
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)\S{10,20}$/;
 
 export function RegisterForm() {
     const router = useRouter();
@@ -51,7 +50,8 @@ export function RegisterForm() {
                 .min(1, t("emailRequired"))
                 .refine((val) => !val.includes(" "), t("emailNoSpaces"))
                 .email(t("emailInvalid")),
-            password: z.string().min(1, t("passwordRequired")).regex(passwordRegex, t("passwordInvalid")),
+            // Ky tu dac biet duoc phep, nhung khong bat buoc; chi can du 10-20 ky tu, co chu hoa, chu thuong, chu so va khong co space.
+            password: z.string().min(1, t("passwordRequired")).regex(PASSWORD_POLICY_REGEX, t("passwordInvalid")),
             confirmPassword: z.string().min(1, t("confirmPasswordRequired"))
         })
         .refine((data) => data.password === data.confirmPassword, {

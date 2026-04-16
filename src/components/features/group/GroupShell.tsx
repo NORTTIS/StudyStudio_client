@@ -118,6 +118,18 @@ async function fetchGroupBanner(groupId: string): Promise<GroupBannerResult> {
     }
 }
 
+function isAbortLikeError(error: unknown) {
+    if (!error) return false;
+    if (error instanceof DOMException && error.name === "AbortError") return true;
+
+    const name = typeof error === "object" && error !== null && "name" in error ? String((error as { name?: unknown }).name ?? "") : "";
+    return name === "AbortError";
+}
+
+function isUuidLike(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value ?? "").trim());
+}
+
 export function GroupShell({
     groupId,
     children
@@ -140,6 +152,12 @@ export function GroupShell({
 
     React.useEffect(() => {
         if (!groupId) return;
+        if (!isUuidLike(groupId)) {
+            setRedirectTarget(`/${locale}/group-access-denied?reason=forbidden`);
+            setIsReady(true);
+            setLoadError(null);
+            return;
+        }
 
         let cancelled = false;
 
@@ -154,7 +172,11 @@ export function GroupShell({
 
                 const result = await fetchGroupBanner(groupId);
                 if (result.error) {
-                    console.error("[GroupShell] Failed to load data:", { status: result.error.status });
+                    if (typeof result.error.status === "number") {
+                        console.error(`[GroupShell] Failed to load data. Status: ${result.error.status}`);
+                    } else {
+                        console.error("[GroupShell] Failed to load data.");
+                    }
                     if (!cancelled) {
                         // Phiên đăng nhập hết hạn thì quay về login; chỉ 403 mới là bị cấm truy cập thật sự.
                         if (result.error.status === 401) {
@@ -163,8 +185,13 @@ export function GroupShell({
                             return;
                         }
 
-                        if (result.error.status === 403) {
-                            setRedirectTarget(`/${locale}/task-access-denied?reason=forbidden`);
+                        if (result.error.status === 400 || result.error.status === 403) {
+                            setRedirectTarget(`/${locale}/group-access-denied?reason=forbidden`);
+                            return;
+                        }
+
+                        if (result.error.status === 404) {
+                            setRedirectTarget(`/${locale}/group-access-denied?reason=not_found`);
                             return;
                         }
 
@@ -181,9 +208,16 @@ export function GroupShell({
                 setColorHex(bannerSettings.colorHex);
                 setIsArchived(Boolean(bannerSettings.isArchived));
             } catch (error) {
-                console.error("[GroupShell] Failed to load data:", {
-                    status: error instanceof Response ? error.status : undefined
-                });
+                if (cancelled || isAbortLikeError(error)) {
+                    return;
+                }
+
+                const status = error instanceof Response ? error.status : undefined;
+                if (typeof status === "number") {
+                    console.error("[GroupShell] Failed to load data:", { status });
+                } else {
+                    console.error("[GroupShell] Failed to load data.");
+                }
                 if (!cancelled) {
                     setLoadError(tGroupHeader("errors.fetchDetailFailed"));
                 }
