@@ -4083,7 +4083,13 @@ export function GroupBoardScreen({
         const translatedRect = e.active.rect.current.translated;
         const activeCenterY = translatedRect ? translatedRect.top + translatedRect.height / 2 : null;
 
-        const insertAfter = false;
+        const insertAfter = getStableInsertAfter({
+            overType,
+            activeCenterY,
+            overTop: e.over?.rect.top ?? null,
+            overHeight: e.over?.rect.height ?? null,
+            previous: overTaskInsertAfterRef.current
+        });
 
         const normalizedOverRaw = normalizeTaskOverTarget({
             board,
@@ -4167,7 +4173,13 @@ export function GroupBoardScreen({
         const translatedRect = e.active.rect.current.translated;
         const activeCenterY = translatedRect ? translatedRect.top + translatedRect.height / 2 : null;
 
-        const insertAfter = false;
+        const insertAfter = getStableInsertAfter({
+            overType,
+            activeCenterY,
+            overTop: e.over?.rect.top ?? null,
+            overHeight: e.over?.rect.height ?? null,
+            previous: overTaskInsertAfterRef.current
+        });
 
         const normalizedOverRaw = normalizeTaskOverTarget({
             board,

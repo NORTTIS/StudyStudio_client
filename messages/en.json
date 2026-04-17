@@ -139,6 +139,11 @@
       "management": "Management workspace preview",
       "group": "Group workspace preview",
       "personal": "Personal workspace preview"
+    },
+    "carousel": {
+      "previous": "Previous {section} preview",
+      "next": "Next {section} preview",
+      "goTo": "Go to {section} preview {index}"
     }
   },
   "TaskDetailModal": {

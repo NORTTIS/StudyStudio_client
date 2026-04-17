@@ -114,6 +114,11 @@
       "group": "Xem trước không gian nhóm",
       "personal": "Xem trước không gian cá nhân"
     },
+    "carousel": {
+      "previous": "Xem tr\u01b0\u1edbc {section}",
+      "next": "Xem sau {section}",
+      "goTo": "\u0110i \u0111\u1ebfn b\u1ea3n xem tr\u01b0\u1edbc {section} {index}"
+    },
     "management": {
       "title": "Không gian quản lý",
       "description": "Quản lý các không gian và nhóm của riêng bạn",

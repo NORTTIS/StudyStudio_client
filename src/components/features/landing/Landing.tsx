@@ -171,22 +171,22 @@ function PreviewCarousel({
                     </div>
                 ))}
 
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
                     <button
                         type="button"
                         onClick={goToPrevious}
                         aria-label={previousLabel}
-                        className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-2xl font-light text-gray-700 shadow-lg backdrop-blur transition-all duration-300 hover:scale-105 hover:bg-white">
+                        className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-2xl font-light text-gray-700 shadow-lg backdrop-blur transition-all duration-300 hover:scale-105 hover:bg-white focus-visible:scale-105 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 active:scale-95">
                         &lt;
                     </button>
                 </div>
 
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
                     <button
                         type="button"
                         onClick={goToNext}
                         aria-label={nextLabel}
-                        className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-2xl font-light text-gray-700 shadow-lg backdrop-blur transition-all duration-300 hover:scale-105 hover:bg-white">
+                        className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-2xl font-light text-gray-700 shadow-lg backdrop-blur transition-all duration-300 hover:scale-105 hover:bg-white focus-visible:scale-105 focus-visible:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 active:scale-95">
                         &gt;
                     </button>
                 </div>
@@ -221,6 +221,9 @@ export default function LandingPage() {
     const delay3 = "landing-delay-3";
     const delay4 = "landing-delay-4";
     const delay5 = "landing-delay-5";
+    const managementLabel = t("badges.management");
+    const groupLabel = t("badges.group");
+    const personalLabel = t("badges.personal");
 
     return (
         <div className="flex min-h-screen flex-col scroll-smooth bg-[linear-gradient(180deg,#FFF8F1_0%,#FFFDFB_35%,#FFF7ED_68%,#FFFFFF_100%)] text-gray-800">
@@ -318,9 +321,9 @@ export default function LandingPage() {
                                     { src: "/images/Studio%201.png", className: "object-contain object-center p-3 md:p-4" },
                                     { src: "/images/Studio%202.png", className: "object-contain object-center p-3 md:p-4" }
                                 ]}
-                                previousLabel="Previous management preview"
-                                nextLabel="Next management preview"
-                                dotLabel={(index) => `Go to management preview ${index + 1}`}
+                                previousLabel={t("carousel.previous", { section: managementLabel })}
+                                nextLabel={t("carousel.next", { section: managementLabel })}
+                                dotLabel={(index) => t("carousel.goTo", { section: managementLabel, index: index + 1 })}
                             />
                         </div>
                     </div>
@@ -337,9 +340,9 @@ export default function LandingPage() {
                                     { src: "/images/group1.png", className: "object-contain object-center p-3 md:p-4" },
                                     { src: "/images/Group%202.png", className: "object-contain object-center p-3 md:p-4" }
                                 ]}
-                                previousLabel="Previous group preview"
-                                nextLabel="Next group preview"
-                                dotLabel={(index) => `Go to group preview ${index + 1}`}
+                                previousLabel={t("carousel.previous", { section: groupLabel })}
+                                nextLabel={t("carousel.next", { section: groupLabel })}
+                                dotLabel={(index) => t("carousel.goTo", { section: groupLabel, index: index + 1 })}
                             />
                         </div>
 
@@ -409,9 +412,9 @@ export default function LandingPage() {
                                     { src: "/images/Personal%201.png", className: "object-contain object-center p-3 md:p-4" },
                                     { src: "/images/Personal%202.png", className: "object-contain object-center p-3 md:p-4" }
                                 ]}
-                                previousLabel="Previous personal preview"
-                                nextLabel="Next personal preview"
-                                dotLabel={(index) => `Go to personal preview ${index + 1}`}
+                                previousLabel={t("carousel.previous", { section: personalLabel })}
+                                nextLabel={t("carousel.next", { section: personalLabel })}
+                                dotLabel={(index) => t("carousel.goTo", { section: personalLabel, index: index + 1 })}
                             />
                         </div>
                     </div>

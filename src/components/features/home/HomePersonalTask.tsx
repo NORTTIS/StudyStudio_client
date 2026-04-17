@@ -3313,38 +3313,71 @@ export default function HomePersonalTaskScreen() {
                     }
                 });
 
-                setStatuses((prevStatuses) =>
-                    prevStatuses.map((status) => {
-                        const statusId = String(status.statusId ?? "");
-                        const nextTaskList = ((status.taskList ?? []) as PersonalTaskItemResponse[]).map((item) => {
-                            if (String(item.taskId ?? "") !== String(task.taskId)) return item;
+                setStatuses((prevStatuses) => {
+                    const normalizedTaskId = String(task.taskId ?? "");
+                    const nextStatuses = prevStatuses.map((status) => ({
+                        ...status,
+                        taskList: [...((status.taskList ?? []) as PersonalTaskItemResponse[])]
+                    }));
 
-                            return {
-                                ...item,
-                                taskTitle: values.title.trim(),
-                                taskDescription: values.description.trim() || null,
-                                progress: values.progress,
-                                personalStatus: {
-                                    ...(item.personalStatus ?? {}),
-                                    statusId: resolvedStatusId ?? undefined,
-                                    statusName: nextStatus?.statusName ?? item.personalStatus?.statusName ?? null,
-                                    position: nextStatus?.position ?? item.personalStatus?.position,
-                                    userId: nextStatus?.userId ?? item.personalStatus?.userId
-                                },
-                                startDate: nextStartDate,
-                                dueDate: nextDueDate,
-                                estimatedHours: values.estimatedHours ?? undefined,
-                                actualHours: values.actualHours ?? undefined,
-                                taskPriority: nextPriority,
-                                taskSeverity: nextSeverity
-                            };
-                        });
+                    let updatedTask: PersonalTaskItemResponse | null = null;
+                    let sourceStatusId: string | null = null;
+                    let sourceTaskIndex = -1;
 
-                        return statusId === String(resolvedStatusId ?? "")
-                            ? { ...status, taskList: nextTaskList }
-                            : { ...status, taskList: nextTaskList };
-                    })
-                );
+                    for (const status of nextStatuses) {
+                        const tasks = status.taskList as PersonalTaskItemResponse[];
+                        const taskIndex = tasks.findIndex((item) => String(item.taskId ?? "") === normalizedTaskId);
+                        if (taskIndex === -1) continue;
+
+                        const [currentTask] = tasks.splice(taskIndex, 1);
+                        sourceStatusId = String(status.statusId ?? "");
+                        sourceTaskIndex = taskIndex;
+                        updatedTask = {
+                            ...currentTask,
+                            taskTitle: values.title.trim(),
+                            taskDescription: values.description.trim() || null,
+                            progress: values.progress,
+                            personalStatus: {
+                                ...(currentTask.personalStatus ?? {}),
+                                statusId: resolvedStatusId ?? undefined,
+                                statusName: nextStatus?.statusName ?? currentTask.personalStatus?.statusName ?? null,
+                                position: nextStatus?.position ?? currentTask.personalStatus?.position,
+                                userId: nextStatus?.userId ?? currentTask.personalStatus?.userId
+                            },
+                            startDate: nextStartDate,
+                            dueDate: nextDueDate,
+                            estimatedHours: values.estimatedHours ?? undefined,
+                            actualHours: values.actualHours ?? undefined,
+                            taskPriority: nextPriority,
+                            taskSeverity: nextSeverity
+                        };
+                        break;
+                    }
+
+                    if (!updatedTask) return prevStatuses;
+
+                    const targetStatusId = String(resolvedStatusId ?? "");
+                    const targetStatus = nextStatuses.find((status) => String(status.statusId ?? "") === targetStatusId);
+
+                    if (!targetStatus) {
+                        if (sourceStatusId) {
+                            const sourceStatus = nextStatuses.find(
+                                (status) => String(status.statusId ?? "") === sourceStatusId
+                            );
+                            if (sourceStatus?.taskList) {
+                                sourceStatus.taskList.splice(Math.max(0, sourceTaskIndex), 0, updatedTask);
+                            }
+                        }
+                        return nextStatuses;
+                    }
+
+                    if (sourceStatusId === targetStatusId && targetStatus.taskList) {
+                        targetStatus.taskList.splice(Math.max(0, sourceTaskIndex), 0, updatedTask);
+                    } else {
+                        targetStatus.taskList?.push(updatedTask);
+                    }
+                    return nextStatuses;
+                });
 
                 setDetailTask((prev) => {
                     if (!prev || String(prev.taskId) !== String(task.taskId)) return prev;
